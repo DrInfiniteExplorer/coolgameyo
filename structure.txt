@@ -1,0 +1,14 @@
+hiya
+
+coolgameyo      - source !!!
+
+gameroot        - root of game
+   saves        - contains worlds etc
+      XXXX      - world xxxx
+   textures
+      tiles     - guess what lolololol
+      ???
+   ???          - settings and stuff
+   coolgameyo[.exe]
+   [irrlicht.dll]
+   

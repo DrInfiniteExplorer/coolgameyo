@@ -1,0 +1,18 @@
+#pragma once
+
+#include "Sector.h"
+
+class World
+{
+public:
+	World(void);
+	~World(void);
+
+private:
+	/* sparse array med sectorer som är laddade? */
+
+	/* Funktion för att generera världen? */
+
+	/* Data som används som parametrar för att generera världen? */
+};
+
