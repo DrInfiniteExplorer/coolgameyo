@@ -79,6 +79,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="include.h" />
+    <ClInclude Include="os.h" />
     <ClInclude Include="Sector.h" />
     <ClInclude Include="UDPSocket.h" />
     <ClInclude Include="World.h" />

@@ -11,7 +11,7 @@ public:
 	/* Make socket operations asynchronous? */
 
 	bool Connect(); /* Maybe sometime in the future, also support passing port and address! *snicker* */
-	bool Host();
+	bool Host(int port);
 
 	/* Maybe support features like, durr.. waiting first, and/or ehr.. channels? stuff? */
 	unsigned int Send(/*Whereto?, */ void *Data, u32 Count);
@@ -21,5 +21,6 @@ public:
 
 private:
 	/* Socket data stuff */
+	SOCKET m_socket;
 };
 

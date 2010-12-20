@@ -9,3 +9,13 @@
 #else
 #include <irrlicht/irrlicht.h>
 #endif
+
+
+
+#ifdef WIN32
+#define BREAKPOINT __asm int 3;
+#else
+/* Might want to make this something awesome or somesuch */
+#define BREAKPOINT
+#endif
+
