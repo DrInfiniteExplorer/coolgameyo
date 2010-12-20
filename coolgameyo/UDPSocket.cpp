@@ -13,26 +13,36 @@ static void initNetwork(){
 		printf("WSAStartup error: %d\n", err);
 		BREAKPOINT;
 	}
+	g_inited = true;
 }
+#define INITNETWORK if(!g_inited){ initNetwork(); }
+#else
+#define INITNETWORK
 #endif
 
 
 UDPSocket::UDPSocket(void)
 {
-#ifdef WIN32
-	if(!g_inited){
-		initNetwork();
-	}
-#endif
+	INITNETWORK;
 
 	m_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 	if(INVALID_SOCKET == m_socket){
 		printf("Could not create socket lol!\n");
 		BREAKPOINT;
 	}
-
+	m_isConnected = false;
 }
 
+UDPSocket::UDPSocket(SOCKET sock){
+	m_socket = sock;
+	m_isConnected = true;
+}
+
+
+UDPSocket::UDPSocket(const UDPSocket &o){
+	printf("Implement\n");
+	BREAKPOINT;
+}
 
 UDPSocket::~UDPSocket(void)
 {
@@ -47,24 +57,133 @@ UDPSocket::~UDPSocket(void)
 	}
 }
 
+bool UDPSocket::Connect(/* Address, */ int port){
+	sockaddr_in addr;
+	addr.sin_family = AF_INET;
+	addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+	addr.sin_port = htons(port);
 
-bool UDPSocket::Host(int port){ /* Make special class UDPServerSocket that only creates, binds, listens and accepts? */
+	if(SOCKET_ERROR == connect(m_socket, (const sockaddr*)&addr, sizeof(addr))){
+		printf("connect failed\n");
+		BREAKPOINT;
+
+		//Eventually return false here, maybe more diagnostic errors and stuff also.
+	}
+
+	m_isConnected = true;
+	return m_isConnected;
+}
+
+s32 UDPSocket::Send(void *Data, u32 Count){
+	s32 ret = send(m_socket, (char*)Data, Count, 0);
+	if(SOCKET_ERROR == ret){
+		printf("Socket error in send! probably a closed socket!!\n");
+		BREAKPOINT;
+	}
+
+	return ret;
+}
+
+s32 UDPSocket::Recv(void *Data, u32 BuffSize){
+	s32 gotted = recv(m_socket, (char*)Data, BuffSize, 0);
+	if(SOCKET_ERROR == gotted){
+		printf("Socker error in recv!!\n");
+		BREAKPOINT;
+	}
+	if(!gotted){
+		printf("Socket gracefully closed @otherside!!\n");
+		BREAKPOINT;
+	}
+	return gotted;
+}
+
+
+
+
+
+
+
+
+
+
+
+UDPServerSocket::UDPServerSocket(int port, int backlog){
+	INITNETWORK;
+
+	m_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+	if(INVALID_SOCKET == m_socket){
+		printf("Could not create server socket lol!\n");
+		BREAKPOINT;
+	}
+
+	/* Put in private Host()-function yeah. */
 	sockaddr_in addr;
 	addr.sin_family = AF_INET;
 	addr.sin_addr.s_addr = INADDR_ANY; /* inet_addr("127.0.0.1"); */
 	addr.sin_port = htons(port);
 
 	if(SOCKET_ERROR == bind(m_socket, (const sockaddr*)&addr, sizeof(addr))){
-		printf("Binding socket failed!!! port: %d\n", port);
+		printf("Binding server socket failed!!! port: %d\n", port);
 		BREAKPOINT;
 	}
 
 
-	if(SOCKET_ERROR == listen(m_socket, 2)){
-		printf("Listen on socket failed!!\n");
+	if(SOCKET_ERROR == listen(m_socket, backlog)){
+		printf("Listen on server socket failed!!\n");
 		BREAKPOINT;
 	}
-
-	/* Derp now allow stuff to happen derp */
-
+	FD_ZERO(&m_acceptFD);
+	FD_SET(m_socket, &m_acceptFD);
 }
+
+UDPServerSocket::UDPServerSocket(const UDPServerSocket& o){
+	printf("Implement\n");
+	BREAKPOINT;
+}
+
+
+UDPServerSocket::~UDPServerSocket(){
+	if(SOCKET_ERROR == shutdown(m_socket, /* SD_BOTH*/ 2)){
+		printf("Lol couldnt shutdown server socket?\n");
+		BREAKPOINT;
+	}
+
+	if(SOCKET_ERROR == closesocket(m_socket)){
+		printf("Wut lol couldnt close server socket? :S\n");
+		BREAKPOINT;
+	}
+}
+
+TIMEVAL nonblock= {0, 0};
+
+bool UDPServerSocket::NewClient(){
+	if(SOCKET_ERROR == select(1, &m_acceptFD, NULL, NULL, &nonblock)){
+		printf("Durr select failed on server socket\n");
+		BREAKPOINT;
+	}
+	if(FD_ISSET(m_socket, &m_acceptFD)){
+		FD_CLR(m_socket, &m_acceptFD));
+		return true;
+	}
+	return false;
+}
+
+UDPSocket UDPServerSocket::GetClient(){
+	SOCKET clientSocket;
+#ifdef CHECK_CONNECTING_ADDRESS
+	/* Must be the same format as the one used to create m_socket, i think */
+	/* See addr-parameter @ http://msdn.microsoft.com/en-us/library/ms737526%28VS.85%29.aspx */
+	sockaddr_in addr; 
+	int addrSize = sizeof(addr);
+	clientSocket = accept(m_socket, (sockaddr*)&addr, &addrSize);
+#endif
+	clientSocket = accept(m_socket, NULL, NULL);
+
+	if(INVALID_SOCKET == clientSocket){
+		printf("Got invalid socket from accept!\n");
+		BREAKPOINT;
+	}
+
+	return UDPSocket(clientSocket);
+}
+
