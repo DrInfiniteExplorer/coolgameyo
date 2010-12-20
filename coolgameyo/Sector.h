@@ -1,11 +1,8 @@
 #pragma once
 
-#ifndef ISceneNode //Lolol tills inkluderat irrlicht
-class ISceneNode{};
-#endif
+#include "include.h"
 
-class Sector :
-	public ISceneNode
+class Sector
 {
 public:
 	Sector(void);

@@ -162,7 +162,7 @@ bool UDPServerSocket::NewClient(){
 		BREAKPOINT;
 	}
 	if(FD_ISSET(m_socket, &m_acceptFD)){
-		FD_CLR(m_socket, &m_acceptFD));
+		FD_CLR(m_socket, &m_acceptFD);
 		return true;
 	}
 	return false;

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Sector.h"
-
+#include "WorldGenerator.h"
 
 
 class World
@@ -18,5 +18,6 @@ private:
 	/* Funktion för att generera världen? */
 
 	/* Data som används som parametrar för att generera världen? */
+	WorldGenerator m_worldGen;
 };
 
