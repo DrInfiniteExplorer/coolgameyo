@@ -7,17 +7,17 @@
 class World
 {
 public:
-	World(void);
-	~World(void);
+   World(void);
+   ~World(void);
 
-	void render();
+   void render();
 
 private:
-	/* sparse array med sectorer som är laddade? */
+   /* sparse array med sectorer som är laddade? */
 
-	/* Funktion för att generera världen? */
+   /* Funktion för att generera världen? */
 
-	/* Data som används som parametrar för att generera världen? */
-	WorldGenerator m_worldGen;
+   /* Data som används som parametrar för att generera världen? */
+   WorldGenerator    m_worldGen;
 };
 

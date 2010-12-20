@@ -6,11 +6,11 @@
 class Game
 {
 public:
-	Game(void);
-	~Game(void);
+   Game(void);
+   ~Game(void);
 
 
 
-	World m_world;
+   World m_world;
 };
 
