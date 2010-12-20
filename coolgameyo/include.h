@@ -1,5 +1,6 @@
 
-#include <irrlicht/irrlicht.h>
+#include "os.h"
+
 
 using namespace irr;
 using namespace irr::core;
