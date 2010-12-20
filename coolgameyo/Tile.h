@@ -2,7 +2,7 @@
 
 #include "include.h"
 
-enum E_TILE_TYPES{
+enum E_TILE_TYPES {
 	ETT_AIR,
 	ETT_RETARDIUM,
 };

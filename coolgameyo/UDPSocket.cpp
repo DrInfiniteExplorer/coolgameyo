@@ -33,37 +33,40 @@ UDPSocket::UDPSocket(void)
 	m_isConnected = false;
 }
 
-UDPSocket::UDPSocket(SOCKET sock){
+UDPSocket::UDPSocket(SOCKET sock)
+{
 	m_socket = sock;
 	m_isConnected = true;
 }
 
 
-UDPSocket::UDPSocket(const UDPSocket &o){
+UDPSocket::UDPSocket(const UDPSocket &o)
+{
 	printf("Implement\n");
 	BREAKPOINT;
 }
 
 UDPSocket::~UDPSocket(void)
 {
-	if(SOCKET_ERROR == shutdown(m_socket, /* SD_BOTH*/ 2)){
+	if (SOCKET_ERROR == shutdown(m_socket, /* SD_BOTH*/ 2)) {
 		printf("Lol couldnt shutdown socket?\n");
 		BREAKPOINT;
 	}
 
-	if(SOCKET_ERROR == closesocket(m_socket)){
+	if (SOCKET_ERROR == closesocket(m_socket)) {
 		printf("Wut lol couldnt close socket? :S\n");
 		BREAKPOINT;
 	}
 }
 
-bool UDPSocket::Connect(/* Address, */ int port){
+bool UDPSocket::connect(/* Address, */ int port)
+{
 	sockaddr_in addr;
 	addr.sin_family = AF_INET;
 	addr.sin_addr.s_addr = inet_addr("127.0.0.1");
 	addr.sin_port = htons(port);
 
-	if(SOCKET_ERROR == connect(m_socket, (const sockaddr*)&addr, sizeof(addr))){
+	if (SOCKET_ERROR == connect(m_socket, (const sockaddr*)&addr, sizeof(addr))) {
 		printf("connect failed\n");
 		BREAKPOINT;
 
@@ -74,9 +77,10 @@ bool UDPSocket::Connect(/* Address, */ int port){
 	return m_isConnected;
 }
 
-s32 UDPSocket::Send(void *Data, u32 Count){
-	s32 ret = send(m_socket, (char*)Data, Count, 0);
-	if(SOCKET_ERROR == ret){
+s32 UDPSocket::send(void *data, u32 count)
+{
+	s32 ret = send(m_socket, (char*)data, count, 0);
+	if (SOCKET_ERROR == ret) {
 		printf("Socket error in send! probably a closed socket!!\n");
 		BREAKPOINT;
 	}
@@ -84,13 +88,14 @@ s32 UDPSocket::Send(void *Data, u32 Count){
 	return ret;
 }
 
-s32 UDPSocket::Recv(void *Data, u32 BuffSize){
-	s32 gotted = recv(m_socket, (char*)Data, BuffSize, 0);
-	if(SOCKET_ERROR == gotted){
+s32 UDPSocket::recv(void *data, u32 buffSize)
+{
+	s32 gotted = recv(m_socket, (char*)data, buffSize, 0);
+	if (SOCKET_ERROR == gotted) {
 		printf("Socker error in recv!!\n");
 		BREAKPOINT;
 	}
-	if(!gotted){
+	if (!gotted) {
 		printf("Socket gracefully closed @otherside!!\n");
 		BREAKPOINT;
 	}
@@ -107,11 +112,12 @@ s32 UDPSocket::Recv(void *Data, u32 BuffSize){
 
 
 
-UDPServerSocket::UDPServerSocket(int port, int backlog){
+UDPServerSocket::UDPServerSocket(int port, int backlog)
+{
 	INITNETWORK;
 
 	m_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-	if(INVALID_SOCKET == m_socket){
+	if (INVALID_SOCKET == m_socket) {
 		printf("Could not create server socket lol!\n");
 		BREAKPOINT;
 	}
@@ -122,13 +128,13 @@ UDPServerSocket::UDPServerSocket(int port, int backlog){
 	addr.sin_addr.s_addr = INADDR_ANY; /* inet_addr("127.0.0.1"); */
 	addr.sin_port = htons(port);
 
-	if(SOCKET_ERROR == bind(m_socket, (const sockaddr*)&addr, sizeof(addr))){
+	if (SOCKET_ERROR == bind(m_socket, (const sockaddr*)&addr, sizeof(addr))) {
 		printf("Binding server socket failed!!! port: %d\n", port);
 		BREAKPOINT;
 	}
 
 
-	if(SOCKET_ERROR == listen(m_socket, backlog)){
+	if (SOCKET_ERROR == listen(m_socket, backlog)) {
 		printf("Listen on server socket failed!!\n");
 		BREAKPOINT;
 	}
@@ -136,19 +142,21 @@ UDPServerSocket::UDPServerSocket(int port, int backlog){
 	FD_SET(m_socket, &m_acceptFD);
 }
 
-UDPServerSocket::UDPServerSocket(const UDPServerSocket& o){
+UDPServerSocket::UDPServerSocket(const UDPServerSocket& o)
+{
 	printf("Implement\n");
 	BREAKPOINT;
 }
 
 
-UDPServerSocket::~UDPServerSocket(){
-	if(SOCKET_ERROR == shutdown(m_socket, /* SD_BOTH*/ 2)){
+UDPServerSocket::~UDPServerSocket()
+{
+	if (SOCKET_ERROR == shutdown(m_socket, /* SD_BOTH*/ 2)) {
 		printf("Lol couldnt shutdown server socket?\n");
 		BREAKPOINT;
 	}
 
-	if(SOCKET_ERROR == closesocket(m_socket)){
+	if (SOCKET_ERROR == closesocket(m_socket)) {
 		printf("Wut lol couldnt close server socket? :S\n");
 		BREAKPOINT;
 	}
@@ -156,19 +164,21 @@ UDPServerSocket::~UDPServerSocket(){
 
 TIMEVAL nonblock= {0, 0};
 
-bool UDPServerSocket::NewClient(){
-	if(SOCKET_ERROR == select(1, &m_acceptFD, NULL, NULL, &nonblock)){
+bool UDPServerSocket::newClient()
+{
+	if (SOCKET_ERROR == select(1, &m_acceptFD, NULL, NULL, &nonblock)) {
 		printf("Durr select failed on server socket\n");
 		BREAKPOINT;
 	}
-	if(FD_ISSET(m_socket, &m_acceptFD)){
+	if (FD_ISSET(m_socket, &m_acceptFD)) {
 		FD_CLR(m_socket, &m_acceptFD);
 		return true;
 	}
 	return false;
 }
 
-UDPSocket UDPServerSocket::GetClient(){
+UDPSocket UDPServerSocket::getClient()
+{
 	SOCKET clientSocket;
 #ifdef CHECK_CONNECTING_ADDRESS
 	/* Must be the same format as the one used to create m_socket, i think */
@@ -179,7 +189,7 @@ UDPSocket UDPServerSocket::GetClient(){
 #endif
 	clientSocket = accept(m_socket, NULL, NULL);
 
-	if(INVALID_SOCKET == clientSocket){
+	if (INVALID_SOCKET == clientSocket) {
 		printf("Got invalid socket from accept!\n");
 		BREAKPOINT;
 	}

@@ -13,11 +13,11 @@ public:
 
 	/* Make socket operations asynchronous? */
 
-	bool Connect(/* Address, */ int port); /* Maybe sometime in the future, also support passing port and address! *snicker* */
+	bool connect(/* Address, */ int port); /* Maybe sometime in the future, also support passing port and address! *snicker* */
 
 	/* Maybe support features like, durr.. waiting first, and/or ehr.. channels? stuff? */
-	s32 Send(void *Data, u32 Count);
-	s32 Recv(void *Data, u32 BuffSize);
+	s32 send(void *Data, u32 Count);
+	s32 recv(void *Data, u32 BuffSize);
 
 
 
@@ -34,8 +34,8 @@ public:
 	UDPServerSocket(const UDPServerSocket& o);
 	~UDPServerSocket();
 
-	bool NewClient(); //Returns true if we can get a client without blocking
-	UDPSocket GetClient();
+	bool newClient(); //Returns true if we can get a client without blocking
+	UDPSocket getClient();
 
 private:
 	SOCKET m_socket;

@@ -8,7 +8,7 @@
 #define BLOCK_SIZE_Z (8)
 
 #define BLOCK_UNSEEN		(1<<0)
-#define BLOCK_AIR			(1<<1)
+#define BLOCK_AIR		(1<<1)
 
 class Block
 {
@@ -16,9 +16,8 @@ public:
 	Block(void);
 	~Block(void);
 
-	const Tile &GetTile(iVec relativeTilePosition);
-	void SetTile(iVec relativeTilePosition, Tile& tile);
-
+	const Tile &getTile(iVec relativeTilePosition);
+	void setTile(iVec relativeTilePosition, Tile& tile);
 
 private:
 

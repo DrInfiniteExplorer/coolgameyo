@@ -10,7 +10,7 @@ Block::~Block(void)
 {
 }
 
-const Tile& Block::GetTile(iVec relativeTilePosition){
+const Tile& Block::getTile(iVec relativeTilePosition){
 	/* Remove this sometime? */
 	relativeTilePosition.X %= BLOCK_SIZE_X;
 	relativeTilePosition.Y %= BLOCK_SIZE_Y;
@@ -19,7 +19,7 @@ const Tile& Block::GetTile(iVec relativeTilePosition){
 	return m_tiles[relativeTilePosition.X][relativeTilePosition.Y][relativeTilePosition.Z];
 }
 
-void Block::SetTile(iVec relativeTilePosition, Tile& newTile){
+void Block::setTile(iVec relativeTilePosition, Tile& newTile){
 	/* Remove this sometime? */
 	relativeTilePosition.X %= BLOCK_SIZE_X;
 	relativeTilePosition.Y %= BLOCK_SIZE_Y;

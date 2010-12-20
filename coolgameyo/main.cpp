@@ -24,7 +24,7 @@ int main() {
 	/* How to actually handle that? I mean like should one enter DF-style-mode if NULL is passed? */
 	/* Camera information like position is handled by world anyway? */
 
-	while(pDevice->run()){
+	while (pDevice->run()) {
 		pDevice->getVideoDriver()->beginScene(true, true, SColor(255, 128, 0, 0));
 
 		/* Call world->Render etc */
