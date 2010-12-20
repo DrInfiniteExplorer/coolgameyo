@@ -1,14 +1,14 @@
 
 #include "include.h"
 
-void main(){
+int main() {
 
 
 	bool isClient = false;
 	bool isHost = true;
 	bool playLocal = true;
 
-	IrrlichtDevice *pDevice = createDevice(EDT_OPENGL);
+	IrrlichtDevice *pDevice = createDevice(EDT_SOFTWARE);
 
 	/* Connect to server */
 	/* Create world */
@@ -35,6 +35,7 @@ void main(){
 
 	pDevice->drop();
 
+        return 0;
 }
 
 
