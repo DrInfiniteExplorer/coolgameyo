@@ -12,11 +12,11 @@ World::~World(void)
 }
 
 
-void World::getTile(const iVec3 tilePos, Tile &outTile){
+void World::getTile(const vec3i tilePos, Tile &outTile){
 
    /* Speed things up by keeping a cache of the last x indexed sectors? */
 
-   iVec2 xyPos(tilePos.X, tilePos.Y);
+   vec2i xyPos(tilePos.X, tilePos.Y);
    auto iter = m_sectors.find(xyPos);
    if(m_sectors.end() != iter){
       SectorZMap *zMap = iter->second; // (*iter)->second

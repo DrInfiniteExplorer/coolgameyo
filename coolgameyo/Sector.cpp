@@ -11,12 +11,12 @@ Sector::~Sector(void)
 {
 }
 
-iVec3 Sector::getChunkPos(const iVec3 &tilePos){
+vec3i Sector::getChunkPos(const vec3i &tilePos){
    static_assert(TILES_PER_CHUNK_X == (1<<(6)), "Derp a herp");
    static_assert(TILES_PER_CHUNK_Y == (1<<(6)), "Derp a herp");
    static_assert(TILES_PER_CHUNK_Z == (1<<(5)), "Derp a herp");
 
-   return iVec3(
+   return vec3i(
       tilePos.X>>6,
       tilePos.Y>>6,
       tilePos.Z>>5);
@@ -25,8 +25,8 @@ iVec3 Sector::getChunkPos(const iVec3 &tilePos){
 
 
 
-void Sector::getTile(const iVec3 &tilePos, Tile &outTile){
-   iVec3 chunkPos = getChunkPos(tilePos);
+void Sector::getTile(const vec3i &tilePos, Tile &outTile){
+   vec3i chunkPos = getChunkPos(tilePos);
    //Make relative blargh blargh blargh
    chunkPos.X %= SECTOR_SIZE_X;
    chunkPos.Y %= SECTOR_SIZE_Y;

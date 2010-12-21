@@ -10,9 +10,9 @@ using namespace irr::scene;
 using namespace irr::video;
 
 
-typedef vector3df fVec3;
-typedef vector3di iVec3;
-typedef vector2di iVec2;
+typedef vector3df vec3f;
+typedef vector3di vec3i;
+typedef vector2di vec2i;
 
 template <typename A, typename B>
 inline void SetFlag(A &val, B flag) {

@@ -16,8 +16,8 @@
 class Chunk
 {
 private:
-   iVec3 getBlockPos(const iVec3 &tilePos);
-   iVec3 getRelativeBlockPos(const iVec3 &tilePos);
+   vec3i getBlockPos(const vec3i &tilePos);
+   vec3i getRelativeBlockPos(const vec3i &tilePos);
 
    BlockPtr    m_pBlocks[CHUNK_SIZE_X][CHUNK_SIZE_Y][CHUNK_SIZE_Z];
 
@@ -25,7 +25,7 @@ public:
    Chunk(void);
    ~Chunk(void);
 
-   void getTile(const iVec3 tilePos, Tile &outTile);
+   void getTile(const vec3i tilePos, Tile &outTile);
 
 };
 

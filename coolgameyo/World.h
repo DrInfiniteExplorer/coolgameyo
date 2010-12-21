@@ -13,7 +13,7 @@ private:
 
    /* Eventually put this into a sector-handling class? */
    typedef class std::map<u32, Sector*>         SectorZMap;
-   typedef class std::map<iVec2, SectorZMap*>   SectorXYMap;
+   typedef class std::map<vec2i, SectorZMap*>   SectorXYMap;
 
    SectorXYMap        m_sectors;
 
@@ -31,7 +31,7 @@ public:
    void render();
 
    /* Funktion för att generera världen? */
-   void getTile(const iVec3 tilePos, Tile &outTile);
-   void setTile(iVec3 tilePos, const Tile &newTile);
+   void getTile(const vec3i tilePos, Tile &outTile);
+   void setTile(vec3i tilePos, const Tile &newTile);
 };
 

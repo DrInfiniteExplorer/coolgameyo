@@ -22,13 +22,13 @@ private:
    u8       m_flags;
    ChunkPtr m_pChunks[SECTOR_SIZE_X][SECTOR_SIZE_Y][SECTOR_SIZE_Z];
 
-   iVec3 getChunkPos(const iVec3 &tilePos);
+   vec3i getChunkPos(const vec3i &tilePos);
 
 public:
     Sector(void);
     virtual ~Sector(void);
 
-   void getTile(const iVec3 &tilePos, Tile &outTile);
+   void getTile(const vec3i &tilePos, Tile &outTile);
 
    
 };

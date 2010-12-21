@@ -20,21 +20,21 @@ class Block
 private:
 
    //Keep position of block like this or should instance above keep block position?
-   iVec3  m_worldPos; //Position of (upper left front?? derp) corner?
+   vec3i  m_worldPos; //Position of (upper left front?? derp) corner?
 
    /* Really make this private? */
    Tile  m_tiles[BLOCK_SIZE_X][BLOCK_SIZE_Y][BLOCK_SIZE_Z];
 
    u8    m_flags;
 
-   iVec3 getRelativeTilePosition(const iVec3 &tilePosition);
+   vec3i getRelativeTilePosition(const vec3i &tilePosition);
 
 public:
    Block(void);
    ~Block(void);
 
-   void getTile(const iVec3 &relativeTilePosition, Tile &outTile);
-   void setTile(const iVec3 &relativeTilePosition, const Tile& tile);
+   void getTile(const vec3i &relativeTilePosition, Tile &outTile);
+   void setTile(const vec3i &relativeTilePosition, const Tile& tile);
 
 };
 
