@@ -1,7 +1,9 @@
 #include "Game.h"
 
 
-Game::Game(void)
+Game::Game(IrrlichtDevice *pDevice)
+   : m_world(pDevice->getVideoDriver()),
+   m_pDevice(pDevice)
 {
 }
 

@@ -5,12 +5,13 @@
 
 class Game
 {
+private:
+   IrrlichtDevice *m_pDevice;
+   World           m_world;
 public:
-   Game(void);
+   Game(IrrlichtDevice *pDevice);
    ~Game(void);
 
 
-
-   World m_world;
 };
 
