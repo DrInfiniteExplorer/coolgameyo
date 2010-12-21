@@ -13,9 +13,10 @@ struct WorldGenParams{
 
 class WorldGenerator
 {
+public:
     WorldGenerator(void);
     ~WorldGenerator(void);
 
-    void getTile(iVec position, Tile &outTile); //Derp by using reference we dont need to create intermediate instances etc
+    void getTile(iVec3 position, Tile &outTile); //Derp by using reference we dont need to create intermediate instances etc
 };
 

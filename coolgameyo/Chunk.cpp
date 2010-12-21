@@ -38,6 +38,7 @@ iVec3 Chunk::GetRelativeBlockPos(const iVec3 &tilePos){
    blockPos.Y %= BLOCK_SIZE_Y;
    blockPos.Z %= BLOCK_SIZE_Z;
 */
+   return blockPos;
 }
 
 

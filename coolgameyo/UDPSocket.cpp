@@ -66,7 +66,7 @@ bool UDPSocket::connect(/* Address, */ int port)
     addr.sin_addr.s_addr = inet_addr("127.0.0.1");
     addr.sin_port = htons(port);
 
-    if (SOCKET_ERROR == connect(m_socket, (const sockaddr*)&addr, sizeof(addr))) {
+    if (SOCKET_ERROR == ::connect(m_socket, (const sockaddr*)&addr, sizeof(addr))) {
         printf("connect failed\n");
         BREAKPOINT;
 
@@ -79,7 +79,7 @@ bool UDPSocket::connect(/* Address, */ int port)
 
 s32 UDPSocket::send(void *data, u32 count)
 {
-    s32 ret = send(m_socket, (char*)data, count, 0);
+    s32 ret = ::send(m_socket, (char*)data, count, 0);
     if (SOCKET_ERROR == ret) {
         printf("Socket error in send! probably a closed socket!!\n");
         BREAKPOINT;
@@ -90,7 +90,7 @@ s32 UDPSocket::send(void *data, u32 count)
 
 s32 UDPSocket::recv(void *data, u32 buffSize)
     {
-    s32 gotted = recv(m_socket, (char*)data, buffSize, 0);
+    s32 gotted = ::recv(m_socket, (char*)data, buffSize, 0);
     if (SOCKET_ERROR == gotted) {
         printf("Socker error in recv!!\n");
         BREAKPOINT;

@@ -5,6 +5,11 @@
 
 class UDPSocket
 {
+private:
+    /* Socket data stuff */
+    SOCKET   m_socket;
+    bool     m_isConnected;
+public:
     UDPSocket(void);
     UDPSocket(SOCKET sock); /* Populate the m_socket with this sock. Set is connected. Yeah awesome. */
     UDPSocket(const UDPSocket &o);
@@ -20,10 +25,6 @@ class UDPSocket
 
 
 
-private:
-    /* Socket data stuff */
-    SOCKET   m_socket;
-    bool     m_isConnected;
 };
 
 class UDPServerSocket
