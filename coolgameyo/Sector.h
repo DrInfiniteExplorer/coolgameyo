@@ -22,8 +22,6 @@ private:
    u8       m_flags;
    ChunkPtr m_pChunks[SECTOR_SIZE_X][SECTOR_SIZE_Y][SECTOR_SIZE_Z];
 
-   vec3i getChunkPos(const vec3i &tilePos);
-
 public:
     Sector(void);
     virtual ~Sector(void);

@@ -1,5 +1,5 @@
 #include "Sector.h"
-
+#include "Util.h"
 
 Sector::Sector(void)
 {
@@ -11,22 +11,10 @@ Sector::~Sector(void)
 {
 }
 
-vec3i Sector::getChunkPos(const vec3i &tilePos){
-   static_assert(TILES_PER_CHUNK_X == (1<<(6)), "Derp a herp");
-   static_assert(TILES_PER_CHUNK_Y == (1<<(6)), "Derp a herp");
-   static_assert(TILES_PER_CHUNK_Z == (1<<(5)), "Derp a herp");
-
-   return vec3i(
-      tilePos.X>>6,
-      tilePos.Y>>6,
-      tilePos.Z>>5);
-
-}
-
 
 
 Tile Sector::getTile(const vec3i &tilePos){
-   vec3i chunkPos = getChunkPos(tilePos);
+   vec3i chunkPos = GetChunkPosition(tilePos);
    //Make relative blargh blargh blargh
    chunkPos.X %= SECTOR_SIZE_X;
    chunkPos.Y %= SECTOR_SIZE_Y;

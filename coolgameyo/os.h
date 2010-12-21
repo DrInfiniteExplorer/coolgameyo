@@ -16,6 +16,6 @@
 #define BREAKPOINT __asm int 3;
 #else
 /* Might want to make this something awesome or somesuch */
-#define BREAKPOINT
+#define BREAKPOINT assert (0);
 #endif
 

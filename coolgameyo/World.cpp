@@ -1,8 +1,8 @@
 #include "World.h"
+#include "Game.h"
 
-
-World::World(IVideoDriver *pDriver)
-   : m_pDriver(pDriver)
+World::World(Game *pGame)
+   : m_pGame(pGame)
 {
 }
 
@@ -11,34 +11,37 @@ World::~World(void)
 {
 }
 
+Tile World::loadTileFromDisk(const vec3i &tilePos){
 
-Tile World::getTile(const vec3i tilePos)
+    return INVALID_TILE();
+}
+
+Tile World::getTile(const vec3i &tilePos)
 {
    /* Speed things up by keeping a cache of the last x indexed sectors? */
 
-   vec2i xyPos(tilePos.X, tilePos.Y);
-   auto iter = m_sectors.find(xyPos);
-   if(m_sectors.end() != iter){
-      SectorZMap *zMap = iter->second; // (*iter)->second
-      auto iter2 = zMap->find(tilePos.Z);
-      if(zMap->end() != iter2){
-         Sector *pSector = iter2->second;
-         auto t = pSector->getTile(tilePos, outTile);
-         //Implement the rest?
-         BREAKPOINT;
-         return t;
-      }
-   }
+    Tile returnTile;
+    
+    vec2i xyPos(tilePos.X, tilePos.Y);
+    auto iter = m_sectors.find(xyPos);
+    if(m_sectors.end() != iter){
+        SectorZMap *zMap = iter->second; // (*iter)->second
+        auto iter2 = zMap->find(tilePos.Z);
+        if(zMap->end() != iter2){
+            Sector *pSector = iter2->second;
+            returnTile = pSector->getTile(tilePos);
+            //Implement the rest?
+            BREAKPOINT;
+            return returnTile;
+        }
+    }
 
-   /* How to handle not having this tile when we need it? */
-   /* Maybe by requesting it, and returning some exception or error code, */
-   /*  and let the caller be suspended until we have the tile(somehow) */
-   /* The suspension should work on all levels(sector[pos], chunk[pos]) */
-   /* Things like rendering should not be suspended but like other stuff */
-   /* may be, like where a dwarf walks or something */
+    /* May fail, but if it works we're all good */
+    returnTile = loadTileFromDisk(tilePos);
+    if(GetFlag(returnTile.flags, TILE_INVALID)){
+        //Invalid tile! loading was not successfull! :):):):)
+        m_pGame->requestTileFromServer(tilePos);
+    }
 
-
-   /* Get tile!!  */
-   /* Is server? GENERATE/LOAD/ROAR! */
-   /* Else ask server for data */
+    return returnTile;
 }

@@ -86,6 +86,7 @@
     <ClInclude Include="Sector.h" />
     <ClInclude Include="Tile.h" />
     <ClInclude Include="UDPSocket.h" />
+    <ClInclude Include="Util.h" />
     <ClInclude Include="World.h" />
     <ClInclude Include="WorldGenerator.h" />
   </ItemGroup>
@@ -97,6 +98,7 @@
     <ClCompile Include="Sector.cpp" />
     <ClCompile Include="Tile.cpp" />
     <ClCompile Include="UDPSocket.cpp" />
+    <ClCompile Include="Util.cpp" />
     <ClCompile Include="World.cpp" />
     <ClCompile Include="WorldGenerator.cpp" />
   </ItemGroup>

@@ -7,7 +7,10 @@ enum E_TILE_TYPES {
     ETT_RETARDIUM,
 };
 
-#define TILE_SEEN     (1<<0)
+#define TILE_SEEN       (1<<0)
+
+#define TILE_INVALID    (1<<7)
+
 
 #pragma pack(push, 1)
 struct Tile
@@ -21,3 +24,7 @@ struct Tile
 
 static_assert(sizeof(Tile) == 8, "Size of tile != 8 bytes :( :( :(");
 
+inline Tile INVALID_TILE(){
+    Tile t={0, 0, TILE_INVALID, 0};
+    return t;
+}

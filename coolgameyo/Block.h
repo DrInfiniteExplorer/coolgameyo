@@ -27,8 +27,6 @@ private:
 
    u8    m_flags;
 
-   vec3i getRelativeTilePosition(const vec3i &tilePosition);
-
 public:
    Block(void);
    ~Block(void);
