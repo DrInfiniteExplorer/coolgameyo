@@ -33,8 +33,8 @@ public:
    Block(void);
    ~Block(void);
 
-   void GetTile(const iVec3 &relativeTilePosition, Tile &outTile);
-   void SetTile(const iVec3 &relativeTilePosition, const Tile& tile);
+   void getTile(const iVec3 &relativeTilePosition, Tile &outTile);
+   void setTile(const iVec3 &relativeTilePosition, const Tile& tile);
 
 };
 

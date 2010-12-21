@@ -31,7 +31,7 @@ public:
    void render();
 
    /* Funktion för att generera världen? */
-   void GetTile(const iVec3 tilePos, Tile &outTile);
-   void SetTile(iVec3 tilePos, const Tile &newTile);
+   void getTile(const iVec3 tilePos, Tile &outTile);
+   void setTile(iVec3 tilePos, const Tile &newTile);
 };
 

@@ -11,7 +11,7 @@ Sector::~Sector(void)
 {
 }
 
-iVec3 Sector::GetChunkPos(const iVec3 &tilePos){
+iVec3 Sector::getChunkPos(const iVec3 &tilePos){
    static_assert(TILES_PER_CHUNK_X == (1<<(6)), "Derp a herp");
    static_assert(TILES_PER_CHUNK_Y == (1<<(6)), "Derp a herp");
    static_assert(TILES_PER_CHUNK_Z == (1<<(5)), "Derp a herp");
@@ -25,8 +25,8 @@ iVec3 Sector::GetChunkPos(const iVec3 &tilePos){
 
 
 
-void Sector::GetTile(const iVec3 &tilePos, Tile &outTile){
-   iVec3 chunkPos = GetChunkPos(tilePos);
+void Sector::getTile(const iVec3 &tilePos, Tile &outTile){
+   iVec3 chunkPos = getChunkPos(tilePos);
    //Make relative blargh blargh blargh
    chunkPos.X %= SECTOR_SIZE_X;
    chunkPos.Y %= SECTOR_SIZE_Y;
@@ -36,7 +36,7 @@ void Sector::GetTile(const iVec3 &tilePos, Tile &outTile){
 
    ChunkPtr pChunk = m_pChunks[chunkPos.X][chunkPos.Y][chunkPos.Z];
    if(pChunk){
-      pChunk->GetTile(tilePos, outTile);
+      pChunk->getTile(tilePos, outTile);
       return;
    }
    

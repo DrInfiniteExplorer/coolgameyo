@@ -31,13 +31,13 @@ iVec3 Block::getRelativeTilePosition(const iVec3 &tilePosition){
 */
 }
 
-void Block::GetTile(const iVec3 &tilePosition, Tile& outTile){
+void Block::getTile(const iVec3 &tilePosition, Tile& outTile){
    /* Remove this sometime? */
    iVec3 relativeTilePosition = getRelativeTilePosition(tilePosition);
    outTile = m_tiles[relativeTilePosition.X][relativeTilePosition.Y][relativeTilePosition.Z];
 }
 
-void Block::SetTile(const iVec3 &tilePosition, const Tile& newTile){
+void Block::setTile(const iVec3 &tilePosition, const Tile& newTile){
    /* Remove this sometime? */
    iVec3 relativeTilePosition = getRelativeTilePosition(tilePosition);
 
