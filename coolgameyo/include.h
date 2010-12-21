@@ -15,24 +15,24 @@ typedef vector2di iVec2;
 
 template <typename A, typename B>
 inline void SetFlag(A &val, B flag) {
-   val |= flag;
+    val |= flag;
 }
 
 template <typename A, typename B>
 inline void ClearFlag(A &val, B flag) {
-   val &= ~flag;
+    val &= ~flag;
 }
 
 template <typename A, typename B>
 inline A GetFlag(A &val, B flag) {
-   return val & flag;
+    return val & flag;
 }
 
 template <typename A, typename B>
 inline void SetFlag(A &val, B flag, bool Value) {
-   if (Value) {
-    SetFlag(val, flag);
-   } else {
-      ClearFlag(val, flag);
-   }
+    if (Value) {
+        SetFlag(val, flag);
+    } else {
+        ClearFlag(val, flag);
+    }
 }

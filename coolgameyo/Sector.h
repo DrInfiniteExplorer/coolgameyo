@@ -5,8 +5,8 @@
 class Sector
 {
 public:
-   Sector(void);
-   virtual ~Sector(void);
+    Sector(void);
+    virtual ~Sector(void);
 
 private:
 
