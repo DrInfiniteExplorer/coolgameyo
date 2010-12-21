@@ -33,7 +33,7 @@ public:
    Block(void);
    ~Block(void);
 
-   void getTile(const vec3i &relativeTilePosition, Tile &outTile);
+   Tile getTile(const vec3i &relativeTilePosition);
    void setTile(const vec3i &relativeTilePosition, const Tile& tile);
 
 };

@@ -12,8 +12,8 @@ World::~World(void)
 }
 
 
-void World::getTile(const vec3i tilePos, Tile &outTile){
-
+Tile World::getTile(const vec3i tilePos)
+{
    /* Speed things up by keeping a cache of the last x indexed sectors? */
 
    vec2i xyPos(tilePos.X, tilePos.Y);
@@ -23,10 +23,10 @@ void World::getTile(const vec3i tilePos, Tile &outTile){
       auto iter2 = zMap->find(tilePos.Z);
       if(zMap->end() != iter2){
          Sector *pSector = iter2->second;
-         pSector->getTile(tilePos, outTile);
+         auto t = pSector->getTile(tilePos, outTile);
          //Implement the rest?
          BREAKPOINT;
-         return;
+         return t;
       }
    }
 

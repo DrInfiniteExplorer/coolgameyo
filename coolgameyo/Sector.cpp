@@ -25,7 +25,7 @@ vec3i Sector::getChunkPos(const vec3i &tilePos){
 
 
 
-void Sector::getTile(const vec3i &tilePos, Tile &outTile){
+Tile Sector::getTile(const vec3i &tilePos){
    vec3i chunkPos = getChunkPos(tilePos);
    //Make relative blargh blargh blargh
    chunkPos.X %= SECTOR_SIZE_X;
@@ -36,8 +36,7 @@ void Sector::getTile(const vec3i &tilePos, Tile &outTile){
 
    ChunkPtr pChunk = m_pChunks[chunkPos.X][chunkPos.Y][chunkPos.Z];
    if(pChunk){
-      pChunk->getTile(tilePos, outTile);
-      return;
+      return pChunk->getTile(tilePos);
    }
    
    /* We got here. Means that the tile resides in a sparse chunk. */

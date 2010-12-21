@@ -28,7 +28,7 @@ public:
     Sector(void);
     virtual ~Sector(void);
 
-   void getTile(const vec3i &tilePos, Tile &outTile);
+   Tile getTile(const vec3i &tilePos);
 
    
 };

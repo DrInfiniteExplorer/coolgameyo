@@ -31,10 +31,10 @@ vec3i Block::getRelativeTilePosition(const vec3i &tilePosition){
 */
 }
 
-void Block::getTile(const vec3i &tilePosition, Tile& outTile){
+Tile Block::getTile(const vec3i &tilePosition){
    /* Remove this sometime? */
    vec3i relativeTilePosition = getRelativeTilePosition(tilePosition);
-   outTile = m_tiles[relativeTilePosition.X][relativeTilePosition.Y][relativeTilePosition.Z];
+   return m_tiles[relativeTilePosition.X][relativeTilePosition.Y][relativeTilePosition.Z];
 }
 
 void Block::setTile(const vec3i &tilePosition, const Tile& newTile){

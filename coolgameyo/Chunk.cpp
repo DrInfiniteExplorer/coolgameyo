@@ -42,16 +42,15 @@ vec3i Chunk::getRelativeBlockPos(const vec3i &tilePos){
 }
 
 
-void Chunk::getTile(const vec3i tilePos, Tile &outTile){
+Tile Chunk::getTile(const vec3i tilePos){
    vec3i blockPos = getRelativeBlockPos(tilePos);
 
    /* Keep cache of last 2 indexed blocks? */
 
    BlockPtr pBlock = m_pBlocks[blockPos.X][blockPos.Y][blockPos.Z];
    if(pBlock){
-      pBlock->getTile(tilePos, outTile);
-      return;
+      return pBlock->getTile(tilePos);
    }
-
+   assert (0); //huh?
 }
 

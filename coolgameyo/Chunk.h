@@ -25,7 +25,7 @@ public:
    Chunk(void);
    ~Chunk(void);
 
-   void getTile(const vec3i tilePos, Tile &outTile);
+   Tile getTile(const vec3i tilePos);
 
 };
 
