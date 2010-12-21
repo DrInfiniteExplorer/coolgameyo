@@ -3,6 +3,7 @@
 #include "os.h"
 
 #include <map>
+#include <vector>
 
 using namespace irr;
 using namespace irr::core;

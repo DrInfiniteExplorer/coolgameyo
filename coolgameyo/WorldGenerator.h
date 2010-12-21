@@ -17,6 +17,6 @@ public:
     WorldGenerator(void);
     ~WorldGenerator(void);
 
-    Tile getTile(vec3i pos);
+    Tile getTile(const vec3i &pos);
 };
 

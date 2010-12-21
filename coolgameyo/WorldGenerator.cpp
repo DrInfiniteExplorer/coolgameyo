@@ -10,10 +10,10 @@ WorldGenerator::~WorldGenerator(void)
 {
 }
 
-Tile getTile(vec3i pos) {
+Tile WorldGenerator::getTile(const vec3i &pos) {
 
-    static Tile air(0,0,0,0);
-    static Tile ground(1,0,0,0);
+    static Tile air = {0,0,0,0};
+    static Tile ground = {1,0,0,0};
 
     auto x = pos.X;
     auto y = pos.Y;

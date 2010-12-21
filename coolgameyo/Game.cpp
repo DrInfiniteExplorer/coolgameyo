@@ -7,6 +7,8 @@ Game::Game(IrrlichtDevice *pDevice, bool isServer, bool isWorker)
    m_isWorker(isWorker)
 {
     m_pWorld = new World(this);
+
+    pDevice->getSceneManager()->addCameraSceneNodeFPS();
 }
 
 
@@ -16,11 +18,16 @@ Game::~Game(void)
 }
 
 
-void Game::requestTileFromServer(const vec3i &tilePosition){
-    if(m_isServer){
+void Game::run(){
+    while (m_pDevice->run()) {
+        m_pDevice->getVideoDriver()->beginScene(true, true, SColor(255, 128, 0, 0));
 
-    }else{
-        printf("Tell the server to feed me with a sector!!!\n");
-        BREAKPOINT;
+        /* Call world->Render etc */
+        /* Actually might already be in world->run() or something */
+        m_pDevice->getSceneManager()->drawAll(); //Is only camera.
+        m_pWorld->render();
+
+        m_pDevice->getVideoDriver()->endScene();
     }
 }
+

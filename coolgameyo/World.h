@@ -11,18 +11,19 @@ class World
 private:
    /* sparse array med sectorer som är laddade? */
 
-
-   /* Eventually put this into a sector-handling class? */
-   typedef class std::map<u32, Sector*>         SectorZMap;
-   typedef class std::map<vec2i, SectorZMap*>   SectorXYMap;
-
    SectorXYMap       m_sectors;
+   SectorList        m_sectorList;
 
    /* Data som används som parametrar för att generera världen? */
    WorldGenerator    m_worldGen;
    Game             *m_pGame;
+   IVideoDriver     *m_pDriver;
 
    Tile loadTileFromDisk(const vec3i &tilePos);
+
+   void generateBlock(const vec3i &tilePos);
+
+   const SectorList& getAllSectors();
 
 public:
    World(Game* pGame);

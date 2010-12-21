@@ -1,12 +1,9 @@
 
 #include "include.h"
+#include "Game.h"
 
 int main() {
 
-
-    bool isClient = false;
-    bool isHost = true;
-    bool playLocal = true;
 
     IrrlichtDevice *pDevice = createDevice(EDT_SOFTWARE);
 
@@ -24,14 +21,11 @@ int main() {
     /* How to actually handle that? I mean like should one enter DF-style-mode if NULL is passed? */
     /* Camera information like position is handled by world anyway? */
 
-    while (pDevice->run()) {
-        pDevice->getVideoDriver()->beginScene(true, true, SColor(255, 128, 0, 0));
+    Game game(pDevice, true, true);
 
-        /* Call world->Render etc */
-        /* Actually might already be in world->run() or something */
+    game.run();
 
-        pDevice->getVideoDriver()->endScene();
-    }
+
 
     pDevice->drop();
 

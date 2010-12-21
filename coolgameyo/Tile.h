@@ -9,8 +9,10 @@ enum E_TILE_TYPES {
 
 #define TILE_SEEN       (1<<0)
 
+#define TILE_SPARSE     (1<<6)
 #define TILE_INVALID    (1<<7)
 
+#define TILE_OK(X)      ((X.flags)&TILE_SPARSE-1)
 
 #pragma pack(push, 1)
 struct Tile
@@ -26,5 +28,10 @@ static_assert(sizeof(Tile) == 8, "Size of tile != 8 bytes :( :( :(");
 
 inline Tile INVALID_TILE(){
     Tile t={0, 0, TILE_INVALID, 0};
+    return t;
+}
+
+inline Tile SPARSE_TILE(){
+    Tile t={0, 0, TILE_SPARSE, 0};
     return t;
 }

@@ -14,7 +14,14 @@ public:
    Game(IrrlichtDevice *pDevice, bool isServer, bool isWorker); //isServer and isWorker are mutually exclusive.
    ~Game(void);
 
-   void requestTileFromServer(const vec3i &tilePosition);
+   IrrlichtDevice *getDevice() const{
+       return m_pDevice;
+   };
 
+   void run();
+
+   bool isServer() const{
+       return m_isServer;
+   }
 };
 

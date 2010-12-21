@@ -3,6 +3,8 @@
 #include "include.h"
 #include "Tile.h"
 
+class WorldGenerator;
+
 #define BLOCK_SIZE_X (8)
 #define BLOCK_SIZE_Y (8)
 #define BLOCK_SIZE_Z (8)
@@ -26,13 +28,30 @@ private:
    Tile  m_tiles[BLOCK_SIZE_X][BLOCK_SIZE_Y][BLOCK_SIZE_Z];
 
    u8    m_flags;
+   vec3i m_blockPosition;
 
 public:
    Block(void);
    ~Block(void);
 
+   void generateBlock(const vec3i &tilePos, WorldGenerator *pWorldGen);
+
    Tile getTile(const vec3i &relativeTilePosition);
    void setTile(const vec3i &relativeTilePosition, const Tile& tile);
+
+   vec3i getPosition() const{
+       return m_blockPosition;
+   }
+
+   bool isSeen() const{
+       return GetFlag(m_flags, BLOCK_UNSEEN) == 0;
+   }
+
+   bool isAir() const{
+       return GetFlag(m_flags, BLOCK_AIR) != 0;
+   }
+
+   void render(IVideoDriver *pDriver);
 
 };
 
