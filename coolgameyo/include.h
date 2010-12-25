@@ -1,9 +1,10 @@
 #pragma once
 
-#include "os.h"
-
 #include <map>
 #include <vector>
+#include <assert.h>
+
+#include "os.h"
 
 using namespace irr;
 using namespace irr::core;

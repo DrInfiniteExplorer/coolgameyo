@@ -29,6 +29,11 @@ public:
 
 class UDPServerSocket
 {
+private:
+    SOCKET   m_socket;
+    fd_set   m_acceptFD;
+
+public:
     UDPServerSocket(int port, int backlog=2);
     UDPServerSocket(const UDPServerSocket& o);
     ~UDPServerSocket();
@@ -36,7 +41,4 @@ class UDPServerSocket
     bool newClient(); //Returns true if we can get a client without blocking
     UDPSocket getClient();
 
-private:
-    SOCKET   m_socket;
-    fd_set   m_acceptFD;
 };
