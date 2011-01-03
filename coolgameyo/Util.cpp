@@ -3,7 +3,7 @@
 
 
 /* Returns a/b rounded towards -inf instead of rounded towards 0 */
-s32 NegDiv(const s32 &a, const s32 &b){
+s32 NegDiv(const s32 a, const s32 b){
     static_assert(15/8 == 1, "asd");
     static_assert(8/8 == 1, "asd");
 
@@ -15,14 +15,16 @@ s32 NegDiv(const s32 &a, const s32 &b){
 
     static_assert((-9-7)/8 == -2, "asd");
 
-    if(a<0){
-        return a-b+1 / b;
+    assert (b > 0);
+
+    if (a < 0) {
+        return (a-b+1)/b;
     }
     return a/b;
 }
 
 /* Snaps to multiples of b. See assertions. */
-s32 Snap(const s32 &a, const s32 &b){
+s32 Snap(const s32 a, const s32 b){
     static_assert( (-16-7)-(-16-7)  % 8 ==  -16, "Blargh");
     static_assert( (-9-7)-(-9-7)  % 8 ==  -16, "Blargh");
 
@@ -35,8 +37,13 @@ s32 Snap(const s32 &a, const s32 &b){
     static_assert(  8- 8  % 8 ==  8, "Blargh");
     static_assert( 15- 15 % 8 ==  8, "Blargh");
 
+    assert (b > 0);
+
+    //return NegDiv(a,b) * b;
+
     if(a<0){
-        return a- ((a-b-1) % b);
+        auto x = a-b+1;
+        return x - (x % b);
     }
     return a - a % b;
 }
@@ -140,6 +147,26 @@ vec3i GetSectorPosition(const vec3i &tilePosition)
 
 
 
+namespace Util {
+    void Test() {
 
+        assert(NegDiv(15, 8) == 1);
+        assert(NegDiv( 8, 8) == 1);
+        assert(NegDiv( 7, 8) == 0);
+        assert(NegDiv( 0, 8) == 0);
+        assert(NegDiv(-1, 8) == -1);
+        assert(NegDiv(-8, 8) == -1);
+        assert(NegDiv(-9, 8) == -2);
 
+        printf("%d\n\n\n", Snap(-16,  8));
+        assert(Snap(-16,  8) == -16);
+        assert(Snap( -9,  8) == -16);
+        assert(Snap( -8,  8) == -8);
+        assert(Snap( -1,  8) == -8);
+        assert(Snap(  0,  8) == 0);
+        assert(Snap(  7,  8) == 0);
+        assert(Snap(  8,  8) == 8);
+        assert(Snap( 15,  8) == 8);
+    }
+}
 
