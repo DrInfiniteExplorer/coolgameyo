@@ -28,21 +28,22 @@ World::~World(void)
 {
 }
 
-Tile World::loadTileFromDisk(const vec3i &tilePos){
-
+Tile World::loadTileFromDisk(const vec3i &tilePos)
+{
     return INVALID_TILE();
 }
 
-void World::generateBlock(const vec3i &tilePos){
+void World::generateBlock(const vec3i &tilePos)
+{
     vec3i sectorPos = GetSectorPosition(tilePos);
     vec2i sectorXY(sectorPos.X, sectorPos.Y);
     auto xy = m_sectors[sectorXY];
-    if(!xy){
+    if (!xy) {
         xy = new SectorZMap;
         m_sectors[sectorXY] = xy;
     }
     Sector* pSector = (*xy)[sectorPos.Z];
-    if(!pSector){
+    if (!pSector) {
         pSector = new Sector();
         (*xy)[sectorPos.Z] = pSector;
         m_sectorList.push_back(pSector);
@@ -55,12 +56,14 @@ void World::generateBlock(const vec3i &tilePos){
 }
 
 //const SectorList& World::getAllSectors(){
-const SectorList& World::getAllSectors(){
+const SectorList& World::getAllSectors()
+{
     return m_sectorList;
 }
 
 
-void World::render(){
+void World::render()
+{
     /* Implement sector iterator sometime? */
     auto sectorList = getAllSectors();
     for(auto sect = sectorList.begin(); sect != sectorList.end(); sect++){
@@ -135,4 +138,26 @@ Tile World::getTile(const vec3i &tilePos)
     }
 
     return returnTile;
+}
+
+
+
+// boring notification functions :(
+void World::notifySectorLoad(vec3i sectorPos)
+{
+    for (auto it = m_listeners.begin(); it != m_listeners.end(); ++it) {
+        (*it)->notifySectorLoad(sectorPos);
+    }
+}
+void World::notifySectorUnload(vec3i sectorPos)
+{
+    for (auto it = m_listeners.begin(); it != m_listeners.end(); ++it) {
+        (*it)->notifySectorUnload(sectorPos);
+    }
+}
+void World::notifyTileChange(vec3i tilePos)
+{
+    for (auto it = m_listeners.begin(); it != m_listeners.end(); ++it) {
+        (*it)->notifyTileChange(tilePos);
+    }
 }

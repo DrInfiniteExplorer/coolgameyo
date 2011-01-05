@@ -2,9 +2,12 @@
 #include "include.h"
 #include "Game.h"
 
-int main() {
+#include "UnitModule.h"
 
+int main()
+{
 
+    return 0;
     IrrlichtDevice *pDevice = createDevice(EDT_SOFTWARE);
 
     /* Connect to server */
