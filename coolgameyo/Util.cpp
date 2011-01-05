@@ -158,7 +158,7 @@ namespace Util {
         assert(NegDiv(-8, 8) == -1);
         assert(NegDiv(-9, 8) == -2);
 
-        printf("%d\n\n\n", Snap(-16,  8));
+        //printf("%d\n\n\n", Snap(-16,  8));
         assert(Snap(-16,  8) == -16);
         assert(Snap( -9,  8) == -16);
         assert(Snap( -8,  8) == -8);
