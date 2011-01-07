@@ -2,9 +2,13 @@
 
 #include "include.h"
 #include "Sector.h"
-#include "WorldListener.h"
+#include "World.h"
 
-class Module : WorldListener
+class Module : public WorldListener
 {
+protected:
+    World* world;
+    Module(World* w) : world(w) { }
+public:
     virtual void tick() = 0;
 };

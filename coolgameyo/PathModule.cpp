@@ -1,19 +1,117 @@
 
 #include "PathModule.h"
 
-PathFindingState::PathFindingState(vec3i from, vec3i to)
-{
-    // initialize stuff!!~~
+
+static float heuristic(vec3i a, vec3i b) {
+    return a.getDistanceFrom(b);
 }
-void PathFindingState::tick()
+static float dist_between(vec3i a, vec3i b) {
+    return heuristic(a,b);
+}
+
+vec3i PathFindingState::get_smallest()
+{
+    auto it = openset.begin();
+    float smallest_f_score = f_score[*it];
+    vec3i smallest = *it;
+
+    for (++it; it != openset.end(); ++it) {
+        if (f_score[*it] < smallest_f_score) {
+            smallest_f_score = f_score[*it];
+            smallest = *it;
+        }
+    }
+    return smallest;
+}
+void PathFindingState::finish_up(vec3i x)
+{
+    auto push = [&](vec3i a) { path.nodes.push_back(a); };
+
+    push(x);
+    
+    while (true) {
+        auto it = came_from.find(x);
+
+        if (it == came_from.end()) { break; }
+
+        x = it->second;
+        push(x);
+    }
+}
+
+std::vector<vec3i> PathFindingState::neighbor_nodes(World* world, vec3i a)
+{
+    BREAKPOINT;
+    std::vector<vec3i> ret;
+    return ret;
+}
+
+
+PathFindingState::PathFindingState(vec3i from, vec3i to)
+    : from(from), goal(to)
+{
+    openset.insert(from);
+    g_score[from] = 0;
+    f_score[from] = heuristic(from, to);
+}
+void PathFindingState::tick(World* world)
 {
     // do a smallest possible step in the pathfinding algorithm, ish.
-    // WOo!!!
+
+    if (openset.empty()) { // we failed, ish!
+        _finished = true;
+        return;
+    }
+
+    auto x = get_smallest();
+
+    if (x == goal) {
+        return finish_up(x);
+    }
+
+    closedset.insert(x);
+
+    auto neighbors = neighbor_nodes(world, x);
+    for (auto it = neighbors.begin(); it != neighbors.end(); ++it) {
+        auto y = *it;
+
+        auto tentative = g_score[x] + dist_between(x,y);
+        bool tentative_is_better = false;
+
+        auto inserted = openset.insert(y);
+        if (inserted.second) { // means it wasn't there before
+            tentative_is_better = true;
+        } else {
+            tentative_is_better = tentative < g_score[y];
+        }
+
+        if (tentative_is_better) {
+            came_from[y] = x;
+            g_score[y] = tentative;
+            f_score[y] = tentative + heuristic(y, goal);
+        }
+    }
 }
 bool PathFindingState::finished()
 {
-    return false;
+    return _finished;
 }
+
+
+
+
+
+
+
+
+
+PathModule::PathModule(World* world)
+    : Module(world)
+{
+}
+
+
+
 
 
 
@@ -46,7 +144,7 @@ void PathModule::tick()
         auto id = it->first;
         auto state = it->second;
 
-        state->tick();
+        state->tick(world);
 
         if (state->finished()) {
             active_states.erase(it);

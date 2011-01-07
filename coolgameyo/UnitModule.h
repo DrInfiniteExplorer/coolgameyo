@@ -17,7 +17,7 @@
  *
  */
 
-class UnitModule : Module
+class UnitModule : public Module
 {
     struct U
     {
@@ -34,6 +34,7 @@ class UnitModule : Module
     std::map<vec3i, std::vector<U> > units;
 
 public:
+    UnitModule(World* world);
     void tick();
 
     void notifySectorLoad(vec3i sectorPos);

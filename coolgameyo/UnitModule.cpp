@@ -2,6 +2,13 @@
 
 #include "Util.h"
 
+
+
+UnitModule::UnitModule(World* world)
+    : Module(world)
+{
+}
+
 void UnitModule::tick()
 {
     for (auto sit = units.begin(); sit != units.end(); ++sit) {
