@@ -72,18 +72,15 @@ void PathFindingState::tick(World* world)
     closedset.insert(x);
 
     auto neighbors = neighbor_nodes(world, x);
-    for (auto it = neighbors.begin(); it != neighbors.end(); ++it) {
+    foreach (it, neighbors) {
         auto y = *it;
 
         auto tentative = g_score[x] + dist_between(x,y);
-        bool tentative_is_better = false;
 
         auto inserted = openset.insert(y);
-        if (inserted.second) { // means it wasn't there before
-            tentative_is_better = true;
-        } else {
-            tentative_is_better = tentative < g_score[y];
-        }
+
+        bool was_inserted = inserted.second;
+        bool tentative_is_better = was_inserted || tentative < g_score[y];
 
         if (tentative_is_better) {
             came_from[y] = x;
@@ -110,12 +107,8 @@ PathModule::PathModule(World* world)
 {
 }
 
-
-
-
-
-
 PathFindingID PathModule::id_counter; // probably not thread safe D:
+
 
 PathFindingID PathModule::findPath(vec3i from, vec3i to)
 {
@@ -139,8 +132,7 @@ bool PathModule::poll(PathFindingID id, Path& path)
 
 void PathModule::tick()
 {
-    // foreach (id, state; active_states) WOULDN'T THAT BE COOL?!?!??
-    for (auto it = active_states.begin(); it != active_states.end(); ++it) {
+    foreach (it, active_states) {
         auto id = it->first;
         auto state = it->second;
 

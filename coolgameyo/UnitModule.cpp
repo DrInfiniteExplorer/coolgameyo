@@ -11,10 +11,10 @@ UnitModule::UnitModule(World* world)
 
 void UnitModule::tick()
 {
-    for (auto sit = units.begin(); sit != units.end(); ++sit) {
-        for (auto it = sit->second.begin(); it != sit->second.end(); ++it) {
+    foreach (sit, units) {
+        foreach (it, sit->second) {
             if (it->delay == 0) {
-                it->delay = it->unit->tick();
+                it->delay = it->unit->tick(world);
             }
         }
     }

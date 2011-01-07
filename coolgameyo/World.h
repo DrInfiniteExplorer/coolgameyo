@@ -39,7 +39,7 @@ public:
    void render();
 
    /* Funktion för att generera världen? */
-   Tile getTile(const vec3i &tilePos);
+   Tile getTile(const vec3i tilePos);
    void setTile(vec3i tilePos, const Tile &newTile);
 
    void addListener(WorldListener* listener) {

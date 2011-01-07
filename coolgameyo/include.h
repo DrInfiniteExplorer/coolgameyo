@@ -40,3 +40,7 @@ inline void SetFlag(A &val, B flag, bool Value) {
         ClearFlag(val, flag);
     }
 }
+
+
+#define foreach(it, container) \
+    for (auto it = container.begin(); it != container.end(); ++it)

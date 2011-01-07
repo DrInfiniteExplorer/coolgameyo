@@ -8,17 +8,17 @@ World::World(Game *pGame)
 {
     const s32 limit = 32;//BLOCK_SIZE_X*CHUNK_SIZE_X*SECTOR_SIZE_X;
     s32 cnt = 0;
-    for(int x=-limit; x<limit; x++){
-    for(int y=-limit; y<limit; y++){
-    for(int z=-limit; z<limit; z++){
-        if(TILE_OK(getTile(vec3i(x,y,z)))) {
-            cnt++;
+    for (int x = -limit; x<limit; x++) {
+        for (int y = -limit; y<limit; y++) {
+            for (int z = -limit; z<limit; z++) {
+                if (TILE_OK(getTile(vec3i(x,y,z)))) {
+                    cnt++;
+                }
+            }
         }
-    }
-    }
-    if(x > 3){
-        BREAKPOINT;
-    }
+        if (x > 3) {
+            BREAKPOINT;
+        }
     }
     printf("%d\n", cnt);
 }
@@ -66,11 +66,11 @@ void World::render()
 {
     /* Implement sector iterator sometime? */
     auto sectorList = getAllSectors();
-    for(auto sect = sectorList.begin(); sect != sectorList.end(); sect++){
+    foreach (sect, sectorList) {
         /* Culling based on sectors */
         Sector *pSector = *sect;
         ChunkPtr *pChunks = pSector->lockChunks();
-        for(int i=0;i<CHUNKS_PER_SECTOR; i++){
+        for (int i=0;i<CHUNKS_PER_SECTOR; i++) {
             ChunkPtr pChunk = pChunks[i];
             if(!CHUNK_OK(pChunk)){
                 continue;
@@ -79,9 +79,9 @@ void World::render()
             /* At some point, maybe move rendering to chunk-level. :) */
 
             BlockPtr *pBlocks = pChunk->lockBlocks();
-            for(int c=0;c<BLOCKS_PER_CHUNK;c++){
+            for (int c=0;c<BLOCKS_PER_CHUNK;c++) {
                 BlockPtr pBlock = pBlocks[c];
-                if(!BLOCK_OK(pBlock)){
+                if (!BLOCK_OK(pBlock)) {
                     continue;
                 }
 
@@ -102,7 +102,7 @@ void World::render()
 }
 
 
-Tile World::getTile(const vec3i &tilePos)
+Tile World::getTile(const vec3i tilePos)
 {
    /* Speed things up by keeping a cache of the last x indexed sectors? */
 
@@ -111,13 +111,13 @@ Tile World::getTile(const vec3i &tilePos)
     
     vec2i xyPos(sectorPos.X, sectorPos.Y);
     auto iter = m_sectors.find(xyPos);
-    if(m_sectors.end() != iter){
+    if (m_sectors.end() != iter) {
         SectorZMap *zMap = iter->second; // (*iter)->second
         auto iter2 = zMap->find(sectorPos.Z);
-        if(zMap->end() != iter2){
+        if (zMap->end() != iter2) {
             Sector *pSector = iter2->second;
             returnTile = pSector->getTile(tilePos);
-            if(!GetFlag(returnTile.flags, TILE_INVALID)){
+            if (!GetFlag(returnTile.flags, TILE_INVALID)) {
                 return returnTile;
             }
         }
@@ -125,12 +125,12 @@ Tile World::getTile(const vec3i &tilePos)
 
     /* May fail, but if it works we're all good */
     returnTile = loadTileFromDisk(tilePos);
-    if(!TILE_OK(returnTile)){
+    if (!TILE_OK(returnTile)) {
         //Invalid tile! loading was not successfull! :):):):)
-        if(m_pGame->isServer()){
+        if (m_pGame->isServer()) {
             generateBlock(tilePos);
             return getTile(tilePos); //Derp a herp!!
-        }else{
+        } else {
             /* Send request to sever!! */
             printf("Implement etc\n");
             BREAKPOINT;
@@ -140,24 +140,22 @@ Tile World::getTile(const vec3i &tilePos)
     return returnTile;
 }
 
-
-
 // boring notification functions :(
 void World::notifySectorLoad(vec3i sectorPos)
 {
-    for (auto it = m_listeners.begin(); it != m_listeners.end(); ++it) {
+    foreach (it, m_listeners) {
         (*it)->notifySectorLoad(sectorPos);
     }
 }
 void World::notifySectorUnload(vec3i sectorPos)
 {
-    for (auto it = m_listeners.begin(); it != m_listeners.end(); ++it) {
+    foreach (it, m_listeners) {
         (*it)->notifySectorUnload(sectorPos);
     }
 }
 void World::notifyTileChange(vec3i tilePos)
 {
-    for (auto it = m_listeners.begin(); it != m_listeners.end(); ++it) {
+    foreach (it, m_listeners) {
         (*it)->notifyTileChange(tilePos);
     }
 }

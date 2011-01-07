@@ -1,6 +1,6 @@
 
 #include "Unit.h"
 
-int Unit::tick() {
+int Unit::tick(World* world) {
     return 0;
 }

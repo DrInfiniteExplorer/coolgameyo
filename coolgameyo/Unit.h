@@ -1,8 +1,9 @@
 #pragma once
 
 #include "include.h"
+#include "World.h"
 
-class AI;
+class AI; // NOT IMPLEMENTED D::!!!
 
 class Unit
 {
@@ -13,5 +14,5 @@ public:
 
     AI* ai;
 
-    virtual int tick();
+    virtual int tick(World* world);
 };
