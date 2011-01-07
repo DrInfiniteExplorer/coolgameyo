@@ -6,7 +6,6 @@
 
 int main()
 {
-
     return 0;
     IrrlichtDevice *pDevice = createDevice(EDT_SOFTWARE);
 

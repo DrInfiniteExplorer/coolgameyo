@@ -4,7 +4,6 @@
 
 void UnitModule::tick()
 {
-    printf("waa?\n");
     for (auto sit = units.begin(); sit != units.end(); ++sit) {
         for (auto it = sit->second.begin(); it != sit->second.end(); ++it) {
             if (it->delay == 0) {
@@ -22,7 +21,6 @@ void UnitModule::notifySectorUnoad(vec3i sectorPos)
 {
     units.erase(sectorPos);
 }
-
 
 void UnitModule::addUnit(Unit* unit)
 {

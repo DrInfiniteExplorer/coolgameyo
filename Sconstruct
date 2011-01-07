@@ -9,6 +9,7 @@ env = Environment();
 names = """
 main Block Chunk Game Sector Tile
 Util World WorldGenerator UnitModule Unit
+PathModule
 """
 
 files = ["build/%s.cpp"%s for s in names.split()];
