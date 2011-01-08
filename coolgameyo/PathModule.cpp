@@ -25,7 +25,8 @@ vec3i PathFindingState::get_smallest()
 }
 void PathFindingState::finish_up(vec3i x)
 {
-    auto push = [&](vec3i a) { path.nodes.push_back(a); };
+    path = new Path;
+    auto push = [&](vec3i a) { path->nodes.push_back(a); };
 
     push(x);
     
@@ -117,13 +118,13 @@ PathFindingID PathModule::findPath(vec3i from, vec3i to)
     return id;
 }
 
-bool PathModule::poll(PathFindingID id, Path& path)
+bool PathModule::poll(PathFindingID id, Path*& path)
 {
     auto a = finished_paths.find(id);
 
     if (a == finished_paths.end()) { return false; }
 
-    path.swap(a->second);
+    path = a->second;
 
     finished_paths.erase(a);
 
@@ -141,9 +142,7 @@ void PathModule::tick()
         if (state->finished()) {
             active_states.erase(it);
 
-            finished_paths[id] = Path();
-
-            state->path.swap(finished_paths[id]);
+            finished_paths[id] = state->path;
 
             delete state;
         }
