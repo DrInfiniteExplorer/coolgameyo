@@ -16,7 +16,7 @@ void UnitModule::tick()
             if (it->delay == 0) {
                 it->delay = it->unit->tick(world);
             } else {
-                --it->delay;
+                it->delay -= 1;
             }
         }
     }
