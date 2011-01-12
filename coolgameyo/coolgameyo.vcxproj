@@ -14,7 +14,7 @@
     <ProjectGuid>{0AB4D453-F44E-49CB-A813-DD01E24B140D}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>coolgameyo</RootNamespace>
-    <ProjectName>colgameyo</ProjectName>
+    <ProjectName>coolgameyo</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

@@ -1,13 +1,17 @@
 
 #include "include.h"
 #include "Game.h"
+#include "Util.h"
 
 #include "UnitModule.h"
 
 int main()
 {
-    return 0;
-    IrrlichtDevice *pDevice = createDevice(EDT_SOFTWARE);
+    Util::Test();
+
+    //return 0;  <-- wtf? ^_-
+    IrrlichtDevice *pDevice = createDevice(EDT_OPENGL); /* Plol har riktig dator nu. Ingen ändrar. */
+    /* Dessutom om vi kodar i opengl kan vi dra nytta av OpenCL senare kanske */
 
     /* Connect to server */
     /* Create world */

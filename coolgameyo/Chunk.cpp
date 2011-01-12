@@ -33,13 +33,17 @@ void Chunk::unlockBlocks(BlockPtr* pBlocks){
 
 
 void Chunk::generateBlock(const vec3i &tilePos, WorldGenerator *pWorldGen){
-    vec3i blockPos = GetChunkRelativeBlockPosition(tilePos);
+    vec3i blockPos = GetChunkRelativeBlockIndex(tilePos);
     BlockPtr pBlock = m_pBlocks[blockPos.X][blockPos.Y][blockPos.Z];
-    if(!pBlock){
-        m_blockCount++;
-        pBlock = new Block();
-        m_pBlocks[blockPos.X][blockPos.Y][blockPos.Z] = pBlock;
+    if(pBlock){
+        /*  If we've got a block, then we must've loaded or generated  */
+        /*  it already, right?  */
+        return;
     }
+    m_blockCount++;
+    pBlock = new Block(GetBlockWorldPosition(tilePos));
+    m_pBlocks[blockPos.X][blockPos.Y][blockPos.Z] = pBlock;
+
     pBlock->generateBlock(tilePos, pWorldGen);
 
     if(pBlock->isAir()){
@@ -54,7 +58,7 @@ void Chunk::generateBlock(const vec3i &tilePos, WorldGenerator *pWorldGen){
 
 
 Tile Chunk::getTile(const vec3i &tilePos){
-   vec3i blockPos = GetChunkRelativeBlockPosition(tilePos);
+   vec3i blockPos = GetChunkRelativeBlockIndex(tilePos);
 
    /* Keep cache of last 2 indexed blocks? */
 

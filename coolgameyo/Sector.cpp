@@ -32,7 +32,7 @@ void Sector::unlockChunks(ChunkPtr *pChunks){
 
 
 void Sector::generateBlock(const vec3i &tilePos, WorldGenerator *pWorldGen){
-    vec3i chunkPos = GetSectorRelativeChunkPosition(tilePos);
+    vec3i chunkPos = GetSectorRelativeChunkIndex(tilePos);
     ChunkPtr pChunk = m_pChunks[chunkPos.X][chunkPos.Y][chunkPos.Z];
     if(!pChunk){
         pChunk = new Chunk();
@@ -52,7 +52,7 @@ void Sector::generateBlock(const vec3i &tilePos, WorldGenerator *pWorldGen){
 }
 
 Tile Sector::getTile(const vec3i &tilePos){
-    vec3i chunkPos = GetSectorRelativeChunkPosition(tilePos);
+    vec3i chunkPos = GetSectorRelativeChunkIndex(tilePos);
 
     /* Keep cache of last 2 indexed chunks? */
 

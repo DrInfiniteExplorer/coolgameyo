@@ -21,8 +21,12 @@ class WorldGenerator;
 
 #define NOBLOCK     (0)
 #define AIRBLOCK    (1)
-#define BLOCK_SPARSE(X) (u32(X)==AIRBLOCK)
-#define BLOCK_OK(X)     (u32(X)>AIRBLOCK)
+
+#define BLOCK_SPARSE(X)         (u32(X)==AIRBLOCK)
+#define BLOCK_VISIBLE(X)        (u32(X)>AIRBLOCK)
+
+
+
 
 class Chunk
 {

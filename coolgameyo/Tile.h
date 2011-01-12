@@ -12,7 +12,7 @@ enum E_TILE_TYPES {
 #define TILE_SPARSE     (1<<6)
 #define TILE_INVALID    (1<<7)
 
-#define TILE_OK(X)      ((X.flags)&TILE_SPARSE-1)
+#define TILE_VISIBLE(X)      (!( (X.flags)&(TILE_SPARSE|TILE_INVALID)))  /*  All tiles except sparse and invalid tiles are visible?  */
 
 #pragma pack(push, 1)
 struct Tile

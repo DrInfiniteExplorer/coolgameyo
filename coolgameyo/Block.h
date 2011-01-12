@@ -28,10 +28,9 @@ private:
    Tile  m_tiles[BLOCK_SIZE_X][BLOCK_SIZE_Y][BLOCK_SIZE_Z];
 
    u8    m_flags;
-   vec3i m_blockPosition;
 
 public:
-   Block(void);
+   Block(const vec3i &worldPosition);
    ~Block(void);
 
    void generateBlock(const vec3i &tilePos, WorldGenerator *pWorldGen);
@@ -40,7 +39,7 @@ public:
    void setTile(const vec3i &relativeTilePosition, const Tile& tile);
 
    vec3i getPosition() const{
-       return m_blockPosition;
+       return m_worldPos;
    }
 
    bool isSeen() const{

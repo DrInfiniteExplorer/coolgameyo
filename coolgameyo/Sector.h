@@ -17,13 +17,13 @@ class WorldGenerator;
 
 
 #define  SECTOR_AIR     (1<<0)
-#define  SECTOR_UNSEEN  (1<<0)
+#define  SECTOR_UNSEEN  (1<<1)
 
-#define NOCHUNK    (0)
-#define AIRCHUNK   (1)
+#define NOCHUNK     (0)     /*  Magic pointer defines!!  */
+#define AIRCHUNK    (1)
 
-#define CHUNK_SPARSE(X) (u32(X) == AIRCHUNK)
-#define CHUNK_OK(X)     (u32(X) > AIRCHUNK)
+#define CHUNK_SPARSE(X)         (u32(X) == AIRCHUNK)
+#define CHUNK_VISIBLE(X)        (u32(X) > AIRCHUNK)
 
 class Sector
 {
@@ -35,7 +35,7 @@ private:
 
 public:
     Sector(void);
-    virtual ~Sector(void);
+    ~Sector(void);
 
     /* Used by rendering for example */
     ChunkPtr* lockChunks();

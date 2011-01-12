@@ -6,21 +6,21 @@ World::World(Game *pGame)
    : m_pGame(pGame),
    m_pDriver(pGame->getDevice()->getVideoDriver())
 {
+
     const s32 limit = 32;//BLOCK_SIZE_X*CHUNK_SIZE_X*SECTOR_SIZE_X;
     s32 cnt = 0;
     for (int x = -limit; x<limit; x++) {
         for (int y = -limit; y<limit; y++) {
             for (int z = -limit; z<limit; z++) {
-                if (TILE_OK(getTile(vec3i(x,y,z)))) {
+                if (TILE_VISIBLE(getTile(vec3i(x,y,z)))) {
                     cnt++;
                 }
             }
         }
-        if (x > 3) {
-            BREAKPOINT;
-        }
     }
     printf("%d\n", cnt);
+    printf("%d\n", (2*limit)*(2*limit)*(2*limit));
+
 }
 
 
@@ -35,7 +35,7 @@ Tile World::loadTileFromDisk(const vec3i &tilePos)
 
 void World::generateBlock(const vec3i &tilePos)
 {
-    vec3i sectorPos = GetSectorPosition(tilePos);
+    vec3i sectorPos = GetSectorNumber(tilePos);
     vec2i sectorXY(sectorPos.X, sectorPos.Y);
     auto xy = m_sectors[sectorXY];
     if (!xy) {
@@ -72,7 +72,7 @@ void World::render()
         ChunkPtr *pChunks = pSector->lockChunks();
         for (int i=0;i<CHUNKS_PER_SECTOR; i++) {
             ChunkPtr pChunk = pChunks[i];
-            if(!CHUNK_OK(pChunk)){
+            if(!CHUNK_VISIBLE(pChunk)){
                 continue;
             }
 
@@ -81,7 +81,7 @@ void World::render()
             BlockPtr *pBlocks = pChunk->lockBlocks();
             for (int c=0;c<BLOCKS_PER_CHUNK;c++) {
                 BlockPtr pBlock = pBlocks[c];
-                if (!BLOCK_OK(pBlock)) {
+                if (!BLOCK_VISIBLE(pBlock)) {
                     continue;
                 }
 
@@ -106,7 +106,7 @@ Tile World::getTile(const vec3i tilePos)
 {
    /* Speed things up by keeping a cache of the last x indexed sectors? */
 
-    vec3i sectorPos = GetSectorPosition(tilePos);
+    vec3i sectorPos = GetSectorNumber(tilePos);
     Tile returnTile;
     
     vec2i xyPos(sectorPos.X, sectorPos.Y);
@@ -125,7 +125,7 @@ Tile World::getTile(const vec3i tilePos)
 
     /* May fail, but if it works we're all good */
     returnTile = loadTileFromDisk(tilePos);
-    if (!TILE_OK(returnTile)) {
+    if (GetFlag(returnTile.flags, TILE_INVALID)) {
         //Invalid tile! loading was not successfull! :):):):)
         if (m_pGame->isServer()) {
             generateBlock(tilePos);
