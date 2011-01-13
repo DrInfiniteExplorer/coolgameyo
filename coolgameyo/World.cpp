@@ -78,15 +78,15 @@ void World::render()
 
             /* At some point, maybe move rendering to chunk-level. :) */
 
-            BlockPtr *pBlocks = pChunk->lockBlocks();
+            auto *pBlocks = pChunk->lockBlocks();
             for (int c=0;c<BLOCKS_PER_CHUNK;c++) {
-                BlockPtr pBlock = pBlocks[c];
+                BlockPtr pBlock = pBlocks[c].block;
                 if (!BLOCK_VISIBLE(pBlock)) {
                     continue;
                 }
 
                 matrix4 mat;
-                vec3i blockPosition = pBlock->getPosition();
+                vec3i blockPosition = pBlocks[c].pos;
                 mat.setTranslation(vec3f(
                     (f32)blockPosition.X,
                     (f32)blockPosition.Y,

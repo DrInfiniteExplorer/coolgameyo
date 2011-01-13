@@ -33,6 +33,6 @@ void UnitModule::notifySectorUnoad(vec3i sectorPos)
 
 void UnitModule::addUnit(Unit* unit)
 {
-    units[GetSectorPosition(unit->pos)].push_back(U(0,unit));
+    units[GetSectorNumber(unit->pos)].push_back(U(0,unit));
 }
 

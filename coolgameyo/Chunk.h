@@ -25,14 +25,30 @@ class WorldGenerator;
 #define BLOCK_SPARSE(X)         (u32(X)==AIRBLOCK)
 #define BLOCK_VISIBLE(X)        (u32(X)>AIRBLOCK)
 
+// make private to chunk when rendering lives there >:(
+struct BlockData // TODO: Figure out a better name
+{
+    Block* block;
+    vec3i pos;
+    u8 flags;
 
-
+    int isAir() const
+    {
+        return flags & BLOCK_AIR;
+    }
+    int isSeen() const
+    {
+        return !(flags & BLOCK_UNSEEN);
+    }
+};
 
 class Chunk
 {
 private:
 
-    BlockPtr    m_pBlocks[CHUNK_SIZE_X][CHUNK_SIZE_Y][CHUNK_SIZE_Z];
+
+
+    BlockData   m_pBlocks[CHUNK_SIZE_X][CHUNK_SIZE_Y][CHUNK_SIZE_Z];
 
     u8          m_flags;
     u8          m_blockCount;
@@ -41,8 +57,8 @@ public:
     Chunk(void);
     ~Chunk(void);
 
-    BlockPtr* lockBlocks();
-    void unlockBlocks(BlockPtr* pBlocks);
+    BlockData* lockBlocks();
+    void unlockBlocks(BlockData* pBlocks);
 
     void generateBlock(const vec3i &tilePos, WorldGenerator *pWorldGen);
 

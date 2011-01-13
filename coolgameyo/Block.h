@@ -21,39 +21,31 @@ class Block
 {
 private:
 
-   //Keep position of block like this or should instance above keep block position?
-   vec3i  m_worldPos; //Position of (upper left front?? derp) corner?
+    /* Really make this private? */
+    Tile  m_tiles[BLOCK_SIZE_X][BLOCK_SIZE_Y][BLOCK_SIZE_Z];
 
-   /* Really make this private? */
-   Tile  m_tiles[BLOCK_SIZE_X][BLOCK_SIZE_Y][BLOCK_SIZE_Z];
-
-   u8    m_flags;
-
+    void* operator new(size_t) { throw 2; } // NOT VALID LOL
+    void operator delete(void*, size_t) { throw 2; } // NOT VALID LOL
+    void* operator new(size_t size, void* place)
+    {
+        assert (size == sizeof Block);
+        return place;
+    }
 public:
-   Block(const vec3i &worldPosition);
-   ~Block(void);
 
-   void generateBlock(const vec3i &tilePos, WorldGenerator *pWorldGen);
+    static Block* alloc();
+    static void free(Block* block, bool drop=false);
 
-   Tile getTile(const vec3i &relativeTilePosition);
-   void setTile(const vec3i &relativeTilePosition, const Tile& tile);
+    Block();
+    ~Block();
 
-   vec3i getPosition() const{
-       return m_worldPos;
-   }
+    void generateBlock(const vec3i tilePos, WorldGenerator *pWorldGen, bool& should_i_become_air);
 
-   bool isSeen() const{
-       return GetFlag(m_flags, BLOCK_UNSEEN) == 0;
-   }
+    Tile getTile(const vec3i relativeTilePosition);
+    void setTile(const vec3i relativeTilePosition, const Tile tile);
 
-   bool isAir() const{
-       return GetFlag(m_flags, BLOCK_AIR) != 0;
-   }
-
-   void render(IVideoDriver *pDriver);
+    void render(IVideoDriver *pDriver);
 
 };
 
 typedef Block *BlockPtr;
-
-

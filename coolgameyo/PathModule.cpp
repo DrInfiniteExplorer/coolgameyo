@@ -2,10 +2,12 @@
 #include "PathModule.h"
 
 
-static float heuristic(vec3i a, vec3i b) {
+static float heuristic(vec3i a, vec3i b)
+{
     return a.getDistanceFrom(b);
 }
-static float dist_between(vec3i a, vec3i b) {
+static float dist_between(vec3i a, vec3i b)
+{
     return heuristic(a,b);
 }
 
@@ -26,9 +28,8 @@ vec3i PathFindingState::get_smallest()
 void PathFindingState::finish_up(vec3i x)
 {
     path = new Path;
-    auto push = [&](vec3i a) { path->nodes.push_back(a); };
 
-    push(x);
+    path->nodes.push_back(x);
     
     while (true) {
         auto it = came_from.find(x);
@@ -36,11 +37,11 @@ void PathFindingState::finish_up(vec3i x)
         if (it == came_from.end()) { break; }
 
         x = it->second;
-        push(x);
+        path->nodes.push_back(x);
     }
 }
 
-std::vector<vec3i> PathFindingState::neighbor_nodes(World* world, vec3i a)
+std::vector<vec3i> PathFindingState::neighbor_nodes(World* world, vec3i a) 
 {
     BREAKPOINT;
     std::vector<vec3i> ret;

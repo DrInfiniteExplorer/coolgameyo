@@ -14,45 +14,48 @@ Chunk::~Chunk(void)
     for(int x=0;x<CHUNK_SIZE_X;x++){
     for(int y=0;y<CHUNK_SIZE_Y;y++){
     for(int z=0;z<CHUNK_SIZE_Z;z++){
-        BlockPtr pBlock = m_pBlocks[x][y][z];
-        if(pBlock){
-            if(!BLOCK_SPARSE(pBlock)){
-                delete pBlock;
+        auto pBlock = m_pBlocks[x][y][z];
+        if (pBlock.block) {
+            if (!BLOCK_SPARSE(pBlock.block)) {
+                Block::free(pBlock.block, true);
             }
         }
     }}}
 }
 
-BlockPtr* Chunk::lockBlocks(){
+BlockData* Chunk::lockBlocks(){
     return &m_pBlocks[0][0][0];
 }
 
-void Chunk::unlockBlocks(BlockPtr* pBlocks){
+void Chunk::unlockBlocks(BlockData* pBlocks){
     /* Herp a derp */
 }
 
 
 void Chunk::generateBlock(const vec3i &tilePos, WorldGenerator *pWorldGen){
     vec3i blockPos = GetChunkRelativeBlockIndex(tilePos);
-    BlockPtr pBlock = m_pBlocks[blockPos.X][blockPos.Y][blockPos.Z];
-    if(pBlock){
+    auto pBlock = m_pBlocks[blockPos.X][blockPos.Y][blockPos.Z];
+    if(pBlock.block){
         /*  If we've got a block, then we must've loaded or generated  */
         /*  it already, right?  */
         return;
     }
     m_blockCount++;
-    pBlock = new Block(GetBlockWorldPosition(tilePos));
+    pBlock.pos = GetBlockWorldPosition(tilePos);
+    pBlock.block = Block::alloc();
     m_pBlocks[blockPos.X][blockPos.Y][blockPos.Z] = pBlock;
 
-    pBlock->generateBlock(tilePos, pWorldGen);
+    bool air;
+    pBlock.block->generateBlock(tilePos, pWorldGen, air);
 
-    if(pBlock->isAir()){
-        m_pBlocks[blockPos.X][blockPos.Y][blockPos.Z] = (BlockPtr)AIRBLOCK;
-        delete pBlock;
+    if (air) {
+        m_pBlocks[blockPos.X][blockPos.Y][blockPos.Z].flags &= BLOCK_AIR;
+        m_pBlocks[blockPos.X][blockPos.Y][blockPos.Z].block = (BlockPtr)AIRBLOCK;
+        Block::free(pBlock.block);
         return;
     }
 
-    SetFlag(m_flags, CHUNK_UNSEEN, GetFlag(m_flags, CHUNK_UNSEEN) && !pBlock->isSeen());
+    SetFlag(m_flags, CHUNK_UNSEEN, GetFlag(m_flags, CHUNK_UNSEEN) && !pBlock.isSeen());
     SetFlag(m_flags, CHUNK_AIR,    false);
 }
 
@@ -62,12 +65,12 @@ Tile Chunk::getTile(const vec3i &tilePos){
 
    /* Keep cache of last 2 indexed blocks? */
 
-    BlockPtr pBlock = m_pBlocks[blockPos.X][blockPos.Y][blockPos.Z];
-    if(pBlock){
-        if(BLOCK_SPARSE(pBlock)){
+    auto pBlock = m_pBlocks[blockPos.X][blockPos.Y][blockPos.Z];
+    if (pBlock.block) {
+        if(BLOCK_SPARSE(pBlock.block)){
             return SPARSE_TILE();
         }
-        return pBlock->getTile(tilePos);
+        return pBlock.block->getTile(tilePos);
     }
     return INVALID_TILE();
 }

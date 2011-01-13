@@ -85,22 +85,28 @@
     <ClInclude Include="Chunk.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="include.h" />
+    <ClInclude Include="Module.h" />
     <ClInclude Include="os.h" />
+    <ClInclude Include="PathModule.h" />
     <ClInclude Include="Sector.h" />
     <ClInclude Include="Tile.h" />
     <ClInclude Include="UDPSocket.h" />
+    <ClInclude Include="UnitModule.h" />
     <ClInclude Include="Util.h" />
     <ClInclude Include="World.h" />
     <ClInclude Include="WorldGenerator.h" />
+    <ClInclude Include="WorldListener.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Block.cpp" />
     <ClCompile Include="Chunk.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="PathModule.cpp" />
     <ClCompile Include="Sector.cpp" />
     <ClCompile Include="Tile.cpp" />
     <ClCompile Include="UDPSocket.cpp" />
+    <ClCompile Include="UnitModule.cpp" />
     <ClCompile Include="Util.cpp" />
     <ClCompile Include="World.cpp" />
     <ClCompile Include="WorldGenerator.cpp" />
