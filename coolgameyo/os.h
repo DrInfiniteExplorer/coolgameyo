@@ -22,10 +22,16 @@
 inline void* AllocatePage() {
     return VirtualAlloc(NULL, 4096, MEM_COMMIT, PAGE_READWRITE);
 }
+inline void FreePage(void* page) {
+    VirtualFree(page, 0, MEM_RELEASE);
+}
 #else
 #define TLS __thread
 inline void* AllocatePage() {
     return valloc(4096);
+}
+inline void FreePage(void* page) {
+    vfree(page);
 }
 #endif
 

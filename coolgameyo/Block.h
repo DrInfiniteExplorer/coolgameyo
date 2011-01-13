@@ -14,38 +14,45 @@ class WorldGenerator;
 #define TILES_PER_BLOCK_Z   (BLOCK_SIZE_Z)
 
 
-#define BLOCK_UNSEEN    (1<<0)
-#define BLOCK_AIR       (1<<1)
+#define BLOCK_SEEN    (1<<0)
+#define BLOCK_AIR     (1<<1)
+#define BLOCK_SPARSE  (1<<1)
+#define BLOCK_VALID   (1<<7) 
+
+struct BlockData;
 
 class Block
 {
 private:
+    BlockData* tiles;
+    u8 flags;
 
-    /* Really make this private? */
-    Tile  m_tiles[BLOCK_SIZE_X][BLOCK_SIZE_Y][BLOCK_SIZE_Z];
-
-    void* operator new(size_t) { throw 2; } // NOT VALID LOL
-    void operator delete(void*, size_t) { throw 2; } // NOT VALID LOL
-    void* operator new(size_t size, void* place)
-    {
-        assert (size == sizeof Block);
-        return place;
-    }
 public:
+    
+    vec3i pos;
 
-    static Block* alloc();
-    static void free(Block* block, bool drop=false);
+    static Block alloc();
+    static void free(Block block);
+
+    static Block generateBlock(const vec3i tilePos, WorldGenerator *pWorldGen);
 
     Block();
     ~Block();
-
-    void generateBlock(const vec3i tilePos, WorldGenerator *pWorldGen, bool& should_i_become_air);
 
     Tile getTile(const vec3i relativeTilePosition);
     void setTile(const vec3i relativeTilePosition, const Tile tile);
 
     void render(IVideoDriver *pDriver);
 
+    int valid()    const { return flags & BLOCK_VALID;  }
+    int isSparse() const { return flags & BLOCK_SPARSE; }
+    int isAir()    const { return flags & BLOCK_AIR;    }
+    int isSeen()   const { return flags & BLOCK_SEEN;   }
+
+    static Block AIR_BLOCK() {
+        Block b;
+        b.flags |= BLOCK_VALID | BLOCK_AIR;
+        return b;
+    }
 };
 
-typedef Block *BlockPtr;

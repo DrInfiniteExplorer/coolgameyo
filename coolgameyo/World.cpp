@@ -80,8 +80,8 @@ void World::render()
 
             auto *pBlocks = pChunk->lockBlocks();
             for (int c=0;c<BLOCKS_PER_CHUNK;c++) {
-                BlockPtr pBlock = pBlocks[c].block;
-                if (!BLOCK_VISIBLE(pBlock)) {
+                auto pBlock = pBlocks[c];
+                if (!(pBlock.valid())) {
                     continue;
                 }
 
@@ -92,7 +92,7 @@ void World::render()
                     (f32)blockPosition.Y,
                     (f32)blockPosition.Z));
                 m_pDriver->setTransform(ETS_WORLD, mat); 
-                pBlock->render(m_pDriver);
+                pBlock.render(m_pDriver);
             }
             pChunk->unlockBlocks(pBlocks);
         }

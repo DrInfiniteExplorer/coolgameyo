@@ -35,3 +35,8 @@ inline Tile SPARSE_TILE(){
     Tile t={0, 0, TILE_SPARSE, 0};
     return t;
 }
+
+inline Tile AIR_TILE(){
+    Tile t={ETT_AIR, 0, 0, 0};
+    return t;
+}
