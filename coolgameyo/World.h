@@ -6,6 +6,7 @@
 #include "WorldListener.h"
 
 class Game;
+class Renderer;
 
 class World
 {
@@ -18,7 +19,9 @@ private:
    /* Data som används som parametrar för att generera världen? */
    WorldGenerator    m_worldGen;
    Game             *m_pGame;
-   IVideoDriver     *m_pDriver;
+   //IVideoDriver     *m_pDriver;
+   Renderer         *m_pRenderer;
+
 
    std::set<WorldListener*> m_listeners;
 

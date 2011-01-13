@@ -28,7 +28,7 @@ inline void ClearFlag(A &val, B flag) {
 }
 
 template <typename A, typename B>
-inline A GetFlag(A &val, B flag) {
+inline A GetFlag(A val, B flag) {
     return val & flag;
 }
 

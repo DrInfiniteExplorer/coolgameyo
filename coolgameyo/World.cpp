@@ -1,11 +1,12 @@
 #include "World.h"
 #include "Game.h"
 #include "Util.h"
+#include "Renderer.h"
 
 World::World(Game *pGame)
-   : m_pGame(pGame),
-   m_pDriver(pGame->getDevice()->getVideoDriver())
+   : m_pGame(pGame)
 {
+    m_pRenderer = new Renderer(this, m_pGame->getDevice()->getVideoDriver());
 
     const s32 limit = 32;//BLOCK_SIZE_X*CHUNK_SIZE_X*SECTOR_SIZE_X;
     s32 cnt = 0;
@@ -18,14 +19,15 @@ World::World(Game *pGame)
             }
         }
     }
+
     printf("%d\n", cnt);
     printf("%d\n", (2*limit)*(2*limit)*(2*limit));
-
 }
 
 
 World::~World(void)
 {
+    delete m_pRenderer;
 }
 
 Tile World::loadTileFromDisk(const vec3i &tilePos)
@@ -62,8 +64,10 @@ const SectorList& World::getAllSectors()
 }
 
 
+
 void World::render()
 {
+    m_pRenderer->preRender();
     /* Implement sector iterator sometime? */
     auto sectorList = getAllSectors();
     foreach (sect, sectorList) {
@@ -75,30 +79,12 @@ void World::render()
             if(!CHUNK_VISIBLE(pChunk)){
                 continue;
             }
-
-            /* At some point, maybe move rendering to chunk-level. :) */
-
-            auto *pBlocks = pChunk->lockBlocks();
-            for (int c=0;c<BLOCKS_PER_CHUNK;c++) {
-                auto pBlock = pBlocks[c];
-                if (!(pBlock.valid())) {
-                    continue;
-                }
-
-                matrix4 mat;
-                vec3i blockPosition = pBlocks[c].pos;
-                mat.setTranslation(vec3f(
-                    (f32)blockPosition.X,
-                    (f32)blockPosition.Y,
-                    (f32)blockPosition.Z));
-                m_pDriver->setTransform(ETS_WORLD, mat); 
-                pBlock.render(m_pDriver);
-            }
-            pChunk->unlockBlocks(pBlocks);
+            m_pRenderer->renderChunk(pChunk);
         }
 
         pSector->unlockChunks(pChunks);
     }
+    m_pRenderer->postRender();
 }
 
 

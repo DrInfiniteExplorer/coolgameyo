@@ -23,10 +23,27 @@ void Game::run(){
     pCam->setPosition(vec3f(32, 0, 32));
     pCam->setTarget(vec3f(0, 0, 0));
 
-    m_pDevice->getSceneManager()->addCubeSceneNode(1);
-
+    //m_pDevice->getSceneManager()->addCubeSceneNode(1);
+    ITimer *pTimer = m_pDevice->getTimer();
+    u32 last = pTimer->getRealTime();
     IVideoDriver *pDriver = m_pDevice->getVideoDriver();
+    const int CNT=5;
+    u32 times[CNT];
     while (m_pDevice->run()) {
+        u32 now = pTimer->getRealTime();
+        u32 delta = now-last;
+        last = now;
+
+        u32 sum = 0;
+        for(int i=0;i<CNT-1;i++){
+            sum+= times[i]=times[i+1];
+        }
+        sum+= times[CNT-1] = delta;
+        float fps = (CNT*1000.0f) / float(sum);
+        wchar_t arr[80];
+        swprintf_s(arr, L"FPS %5.2f over %d frames", fps, CNT);
+        m_pDevice->setWindowCaption(arr);
+
         pDriver->beginScene(true, true, SColor(255, 128, 0, 0));
 
         /* Call world->Render etc */
@@ -34,39 +51,6 @@ void Game::run(){
         m_pDevice->getSceneManager()->drawAll(); //Is only camera.
 
         m_pWorld->render();
-
-/*        SMaterial mat;
-        //mat.Lighting = false;
-        pDriver->setMaterial(mat);
-        aabbox3df box(-0.5f, -0.5f, -0.5f, 0.5f, 0.5f, 0.5f);
-        {
-        matrix4 mat;
-        mat.setTranslation(vec3f(1, 0, 0));
-        pDriver->setTransform(ETS_WORLD, mat); 
-        pDriver->draw3DBox(box);
-        }
-*/
-        /*
-            SMaterial mat;
-            mat.Lighting = false;
-            //pDriver->setMaterial(mat);
-            matrix4 matr;
-            matr = pDriver->getTransform(ETS_WORLD);
-            vec3f blockPos = matr.getTranslation();
-            vec3f pos;
-            for(int x=-32;x<32;x++){
-                pos.X = blockPos.X + x;
-            for(int y=-32;y<32;y++){
-                pos.Y = blockPos.Y + y;
-            for(int z=-32;z<32;z++){
-                pos.Z = blockPos.Z + z;
-                matr.setTranslation(pos);
-                pDriver->setTransform(ETS_WORLD, matr);
-                pDriver->draw3DBox(box);
-            }
-            }
-            }
-*/
 
         pDriver->endScene();
     }

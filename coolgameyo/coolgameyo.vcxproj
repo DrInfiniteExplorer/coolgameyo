@@ -84,9 +84,12 @@
     <ClInclude Include="Block.h" />
     <ClInclude Include="Chunk.h" />
     <ClInclude Include="Game.h" />
+    <ClInclude Include="gl.h" />
     <ClInclude Include="include.h" />
     <ClInclude Include="Module.h" />
     <ClInclude Include="os.h" />
+    <ClInclude Include="Renderer.h" />
+    <ClInclude Include="RenderStrategy.h" />
     <ClInclude Include="PathModule.h" />
     <ClInclude Include="Sector.h" />
     <ClInclude Include="Tile.h" />
@@ -102,6 +105,8 @@
     <ClCompile Include="Chunk.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Renderer.cpp" />
+    <ClCompile Include="RenderStrategy.cpp" />
     <ClCompile Include="PathModule.cpp" />
     <ClCompile Include="Sector.cpp" />
     <ClCompile Include="Tile.cpp" />

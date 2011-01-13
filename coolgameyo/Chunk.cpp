@@ -15,10 +15,8 @@ Chunk::~Chunk(void)
     for(int y=0;y<CHUNK_SIZE_Y;y++){
     for(int z=0;z<CHUNK_SIZE_Z;z++){
         auto pBlock = m_blocks[x][y][z];
-        if (pBlock.valid()) {
-            if (pBlock.valid()) {
-                Block::free(pBlock);
-            }
+        if (pBlock.isValid()) {
+            Block::free(pBlock);
         }
     }}}
 }
@@ -35,7 +33,7 @@ void Chunk::unlockBlocks(Block* pBlocks){
 void Chunk::generateBlock(const vec3i &tilePos, WorldGenerator *pWorldGen){
     vec3i blockPos = GetChunkRelativeBlockIndex(tilePos);
     auto block = m_blocks[blockPos.X][blockPos.Y][blockPos.Z];
-    if(block.valid()){
+    if(block.isValid()){
         /*  If we've got a block, then we must've loaded or generated  */
         /*  it already, right?  */
         return;
@@ -56,7 +54,7 @@ Tile Chunk::getTile(const vec3i tilePos){
    /* Keep cache of last 2 indexed blocks? */
 
     auto pBlock = m_blocks[blockPos.X][blockPos.Y][blockPos.Z];
-    if (pBlock.valid()) {
+    if (pBlock.isValid()) {
         return pBlock.getTile(tilePos);
     }
     return INVALID_TILE();

@@ -12,15 +12,20 @@ enum E_TILE_TYPES {
 #define TILE_SPARSE     (1<<6)
 #define TILE_INVALID    (1<<7)
 
-#define TILE_VISIBLE(X)      (!( (X.flags)&(TILE_SPARSE|TILE_INVALID)))  /*  All tiles except sparse and invalid tiles are visible?  */
+#define TILE_VISIBLE(X)      (!( (X.flags)&(TILE_SPARSE|TILE_INVALID)))  /*  All tiles except sparse and invalid tiles are visible?       */
+                                                                         /*  Not air tiles!!!! (currently manual check besides this one)  */
 
 #pragma pack(push, 1)
 struct Tile
 {
+    bool operator==(const Tile &o){
+        return type == o.type && hp == o.hp && flags == o.flags && textureTile == o.textureTile;
+    }
+
     u16 type;	//Maps to E_TILE_TYPES. Durr would be awesome to force E_TILE_TYPES to be 16 bits big instead herp a derp.
     u16 hp;
     u16 flags;
-    u16 derp;
+    u16 textureTile;
 };
 #pragma pack(pop)
 

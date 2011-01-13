@@ -53,17 +53,18 @@ Block Block::alloc()
 {
     void* mem = FreeList::getMem();
     Block ret;
-    ret.tiles = (BlockData*)mem;
+    ret.m_pTiles = (BlockData*)mem;
     return ret;
 }
 void Block::free(Block block)
 {
-    FreeList::returnMem(block.tiles);
+    FreeList::returnMem(block.m_pTiles);
 }
 
 
-Block::Block() : flags(0)
+Block::Block() : m_flags(0), m_idxCnt(0), m_pTiles(0)
 {
+    m_VBO[0] = m_VBO[1] = 0;
 }
 
 
@@ -78,8 +79,9 @@ Block Block::generateBlock(const vec3i tilePos, WorldGenerator *pWorldGen)
     vec3i pos;
     
     Block b = alloc();
-    b.flags |= BLOCK_VALID;
-    b.pos = blockPos;
+    SetFlag(b.m_flags, BLOCK_VALID);
+    SetFlag(b.m_flags, BLOCK_DIRTY);
+    b.m_pos = blockPos;
     bool any_non_air = false;
 
     for(int x=0;x<BLOCK_SIZE_X;x++){
@@ -90,15 +92,16 @@ Block Block::generateBlock(const vec3i tilePos, WorldGenerator *pWorldGen)
                 pos.Z = blockPos.Z + z;
 
                 Tile t = pWorldGen->getTile(pos);
-                b.tiles->tiles[x][y][z] = t;
+                b.m_pTiles->tiles[x][y][z] = t;
                 
-                if (!(t.type & ETT_AIR)) {
+                if(!GetFlag(t.type, ETT_AIR)){
                     any_non_air = true;
                 }
 
             }
         }
     }
+
     if (any_non_air) {
         return b;
     } else {
@@ -109,50 +112,33 @@ Block Block::generateBlock(const vec3i tilePos, WorldGenerator *pWorldGen)
 
 Tile Block::getTile(const vec3i tilePosition)
 {
-    assert (valid());
+    assert (isValid());
 
     if (isAir()) return AIR_TILE();
     if (isSparse()) return SPARSE_TILE();
 
     /* Remove this sometime? */
     vec3i relativeTilePosition = GetBlockRelativeTileIndex(tilePosition);
-    return tiles->tiles[relativeTilePosition.X][relativeTilePosition.Y][relativeTilePosition.Z];
+    return m_pTiles->tiles[relativeTilePosition.X][relativeTilePosition.Y][relativeTilePosition.Z];
 }
 
 void Block::setTile(const vec3i tilePosition, const Tile newTile)
 {
+    assert(isValid()); //Same as line below?
+    assert(m_pTiles); //Derp a herp; When we fail and try to set a tile in an air block, start thinkging and implementing.
+
     /* Remove this sometime? */
     vec3i relativeTilePosition = GetBlockRelativeTileIndex(tilePosition);
-    tiles->tiles[relativeTilePosition.X][relativeTilePosition.Y][relativeTilePosition.Z] = newTile;
-}
+
+    bool same = m_pTiles->tiles[relativeTilePosition.X][relativeTilePosition.Y][relativeTilePosition.Z] == newTile;
+    SetFlag(m_flags, BLOCK_DIRTY, !same);
 
 
+    m_pTiles->tiles[relativeTilePosition.X][relativeTilePosition.Y][relativeTilePosition.Z] = newTile;
 
+    /*  Make improvement like thingy with optimizations and such */
 
-
-
-void Block::render(IVideoDriver *pDriver){
-    static aabbox3df box(-0.5f, -0.5f, -0.5f, 0.5f, 0.5f, 0.5f);
-    SMaterial mat;
-    mat.Lighting = false;
-    mat.Wireframe = true;
-    pDriver->setMaterial(mat);
-    matrix4 matr;
-    matr = pDriver->getTransform(ETS_WORLD);
-    vec3f blockPos = matr.getTranslation();
-    vec3f pos;
-    for(int x=0;x<BLOCK_SIZE_X;x++){
-        pos.X = blockPos.X + x;
-    for(int y=0;y<BLOCK_SIZE_Y;y++){
-        pos.Y = blockPos.Y + y;
-    for(int z=0;z<BLOCK_SIZE_Z;z++){
-        pos.Z = blockPos.Z + z;
-        matr.setTranslation(pos);
-        pDriver->setTransform(ETS_WORLD, matr);
-        pDriver->draw3DBox(box);
-    }
-    }
-    }
+    SetFlag(m_flags, BLOCK_AIR,     GetFlag(m_flags, BLOCK_AIR)    && (newTile.type == ETT_AIR));
 }
 
 
