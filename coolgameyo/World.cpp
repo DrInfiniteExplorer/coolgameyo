@@ -9,13 +9,13 @@ World::World(Game *pGame)
     m_pRenderer = new Renderer(this, m_pGame->getDevice()->getVideoDriver());
 
 //*
-    const s32 limit = 96;//BLOCK_SIZE_X*CHUNK_SIZE_X*SECTOR_SIZE_X;
+    const s32 limit = 64;//BLOCK_SIZE_X*CHUNK_SIZE_X*SECTOR_SIZE_X;
     const s32 offset = 0;
 
     s32 cnt = 0;
-    for (int x = -limit; x<limit; x++) {
-        for (int y = -limit+offset; y<limit+offset; y++) {
-            for (int z = -limit; z<limit; z++) {
+    for (int x = -limit; x<limit; x += BLOCK_SIZE_X) {
+        for (int y = -limit+offset; y<limit+offset; y += BLOCK_SIZE_Y) {
+            for (int z = -limit; z<limit; z += BLOCK_SIZE_Z) {
                 Tile t = getTile(vec3i(x,y,z));
                 if (TILE_VISIBLE(t) && t.type != ETT_AIR) {
                     cnt++;
