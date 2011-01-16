@@ -16,14 +16,120 @@ RenderStrategy::RenderStrategy(IVideoDriver *pDriver)
     gen = (PFNGLGENBUFFERSARBPROC)wglGetProcAddress("glGenBuffersARB");
     bind = (PFNGLBINDBUFFERARBPROC )wglGetProcAddress("glBindBufferARB");
     bufferdata = (PFNGLBUFFERDATAARBPROC)wglGetProcAddress("glBufferDataARB");
+    buffersubdata = (PFNGLBUFFERSUBDATAARBPROC)wglGetProcAddress("glBufferSubDataARB");
     del = (PFNGLDELETEBUFFERSARBPROC)wglGetProcAddress("glDeleteBuffersARB");
 
+    createshader = (PFNGLCREATESHADERPROC)wglGetProcAddress("glCreateShader");
+    shadersource = (PFNGLSHADERSOURCEPROC)wglGetProcAddress("glShaderSource");
+    compileshader= (PFNGLCOMPILESHADERPROC)wglGetProcAddress("glCompileShader");
+    getshaderiv = (PFNGLGETSHADERIVPROC)wglGetProcAddress("glGetShaderiv");
+    getshaderinfolog = (PFNGLGETSHADERINFOLOGPROC)wglGetProcAddress("glGetShaderInfoLog");
+
+    createprogram = (PFNGLCREATEPROGRAMPROC)wglGetProcAddress("glCreateProgram");
+    attachshader = (PFNGLATTACHSHADERPROC)wglGetProcAddress("glAttachShader");
+    linkprogram = (PFNGLLINKPROGRAMPROC)wglGetProcAddress("glLinkProgram");
+    useprogram = (PFNGLUSEPROGRAMPROC)wglGetProcAddress("glUseProgram");
+    getprogramiv = (PFNGLGETPROGRAMIVPROC)wglGetProcAddress("glGetProgramiv");
+
+    getuniformlocation = (PFNGLGETUNIFORMLOCATIONPROC)wglGetProcAddress("glGetUniformLocation");
+    uniform1i = (PFNGLUNIFORM1IPROC)wglGetProcAddress("glUniform1i");
+    uniform3iv = (PFNGLUNIFORM3IVPROC)wglGetProcAddress("glUniform3iv");
+    uniform3fv = (PFNGLUNIFORM3FVPROC)wglGetProcAddress("glUniform3fv");
+    uniformmatrix4fv = (PFNGLUNIFORMMATRIX4FVPROC)wglGetProcAddress("glUniformMatrix4fv");
+
+    getattriblocation = (PFNGLGETATTRIBLOCATIONPROC)wglGetProcAddress("glGetAttribLocation");
+    vertexattribpointer = (PFNGLVERTEXATTRIBPOINTERPROC)wglGetProcAddress("glVertexAttribPointer");
+    enablevertexattribarray = (PFNGLENABLEVERTEXATTRIBARRAYPROC)wglGetProcAddress("glEnableVertexAttribArray");
+    disablevertexattribarray = (PFNGLDISABLEVERTEXATTRIBARRAYPROC)wglGetProcAddress("glDisableVertexAttribArray");
+
     getbufparam = (PFNGLGETBUFFERPARAMETERIVARBPROC)wglGetProcAddress("glGetBufferParameterivARB");
+
 }
 
 
 RenderStrategy::~RenderStrategy(void)
 {
+}
+
+char *readFile(const char *filename){
+    if(!filename){
+        return NULL;
+    }
+    FILE *f = NULL;
+    fopen_s(&f, filename, "rb");
+    if(!f){
+        return NULL;
+    }
+    fseek(f, 0, SEEK_END);
+    int size = ftell(f);
+    fseek(f, 0, SEEK_SET);
+    char *ret = new char[size+1];
+    ret[size] = 0;
+    fread(ret, 1, size, f);
+    fclose(f);
+    return ret;
+}
+
+void RenderStrategy::printShaderError(u32 shader){
+    s32 len, len2;
+    getshaderiv(shader, GL_INFO_LOG_LENGTH, &len);
+    if(len>0){
+        char *arr = new char[len+1];
+        arr[len]=0;
+        getshaderinfolog(shader, len, &len2, arr);
+        printf("!!! %s\n", arr);
+        delete [] arr;
+    }
+}
+
+void RenderStrategy::makeProgram(const char *vert, const char *frag){
+    int c=0;
+    const char *vertSource = readFile(vert);
+    const char *fragSource = readFile(frag);
+    s32 p;
+    if(vertSource){
+        c++;
+        vertProgram = createshader(GL_VERTEX_SHADER);
+        shadersource(vertProgram, 1, &vertSource, 0);
+        compileshader(vertProgram);
+        delete [] vertSource;
+        getshaderiv(vertProgram, GL_COMPILE_STATUS, &p);
+        if(p != GL_TRUE){
+            printShaderError(vertProgram);
+            BREAKPOINT; //Get error log
+        }
+    }
+    if(fragSource){
+        c++;
+        fragProgram = createshader(GL_FRAGMENT_SHADER);
+        shadersource(fragProgram, 1, &fragSource, 0);
+        compileshader(fragProgram);
+        delete [] fragSource;
+        getshaderiv(fragProgram, GL_COMPILE_STATUS, &p);
+        if(p != GL_TRUE){
+            printShaderError(fragProgram);
+            BREAKPOINT; //Get error log
+        }
+    }
+    if(!c){
+        BREAKPOINT; //Yeah no shaders specifieced! :(
+    }
+    shaderProgram = createprogram();
+    if(vertSource){
+        attachshader(shaderProgram, vertProgram);
+    }
+    if(fragSource){
+        attachshader(shaderProgram, fragProgram);
+    }
+    linkprogram(shaderProgram);
+    getprogramiv(shaderProgram, GL_LINK_STATUS, &p);
+    if(p != GL_TRUE){
+        BREAKPOINT; //YAYA
+    }
+
+    //TODO: Add deleting and/or checking for already created programs.
+
+
 }
 
 void RenderStrategy::renderChunk(Chunk *pChunk){
@@ -32,7 +138,7 @@ void RenderStrategy::renderChunk(Chunk *pChunk){
     for (int c=0;c<BLOCKS_PER_CHUNK;c++) {
         Block *pBlock = &pBlocks[c];
 
-        if (!pBlock->isVisible()) {
+        if (!pBlock->isValid() ||!pBlock->isVisible()) {
             continue;
         }
         renderBlock(pBlock);
@@ -42,42 +148,94 @@ void RenderStrategy::renderChunk(Chunk *pChunk){
 }
 
 static GLfloat cubeVertices[]={
-    0, 0, 0,
+    0, 0, 0,    // 0, 0
+    1, 0, 0,    // 1, 0
+    1, 0, 1,    // 1, 1
+    0, 0, 1,    // 0, 1
+
     1, 0, 0,
-    0, 0, 1,
+    1, 1, 0,
+    1, 1, 1,
     1, 0, 1,
+
     1, 1, 0,
     0, 1, 0,
+    0, 1, 1,
     1, 1, 1,
-    0, 1, 1
+
+    0, 1, 0,
+    0, 0, 0,
+    0, 0, 1,
+    0, 1, 1,
+
+    0, 0, 1,
+    1, 0, 1,
+    1, 1, 1,
+    0, 1, 1,
+
+    0, 1, 0,
+    1, 1, 0,
+    1, 0, 0,
+    0, 0, 0
+
 };
 static unsigned int cubeVertexCount = sizeof(cubeVertices)/(sizeof(cubeVertices[0])*3);
 
+const float pixelWidth = 1.0f/1024.0f;
+const float tileWidth = 16;
+const float Z = 0.5f * pixelWidth;
+const float O = (tileWidth-0.5f)*pixelWidth;
+const float n = (tileWidth+0.5f)*pixelWidth;
+const float N = (2*tileWidth-0.5f)*pixelWidth;
+const float s = (2*tileWidth+0.5f)*pixelWidth;
+const float S = (3*tileWidth-0.5f)*pixelWidth;
 static GLfloat cubeTextCoords[]={
-    0
+    Z, O,
+    O, O,
+    O, Z,
+    Z, Z,
+
+    Z, O,
+    O, O,
+    O, Z,
+    Z, Z,
+
+    Z, O,
+    O, O,
+    O, Z,
+    Z, Z,
+
+    Z, O,
+    O, O,
+    O, Z,
+    Z, Z,
+
+    Z, N,
+    O, N,
+    O, n,
+    Z, n,
+
+    Z, S,
+    O, S,
+    O, s,
+    Z, s,
+
 };
 
+static unsigned int cubeTexCoordElementCount = sizeof(cubeTextCoords)/sizeof(cubeTextCoords[0]);
+
 static GLubyte cubeIndices[]={
-    0, 1, 2,
-    1, 3, 2,
-    4, 5, 6,
-    5, 7, 6,
-    1, 4, 3,
-    4, 6, 3,
-
-    5, 0, 7,
-    0, 2, 7,
-    2, 3, 7,
-    3, 6, 7,
-    1, 0, 4,
-    0, 5, 4
-
+     0,  1,  2,  3,
+     4,  5,  6,  7,
+     8,  9, 10, 11,
+    12, 13, 14, 15,
+    16, 17, 18, 19,
+    20, 21, 22, 23
 };
 static unsigned int cubeIndexCount = sizeof(cubeIndices)/sizeof(cubeIndices[0]);
 
 
-
-
+#pragma region RenderStrategySimple
 RenderStrategySimple::RenderStrategySimple(IVideoDriver *pDriver)
     : RenderStrategy(pDriver)
 {
@@ -88,12 +246,16 @@ RenderStrategySimple::~RenderStrategySimple(){
 
 }
 
-void RenderStrategySimple::preRender(){
+void RenderStrategySimple::preRender(const matrix4 &viewProj){
     glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
     glVertexPointer(3, GL_FLOAT, 0, cubeVertices);
+    glTexCoordPointer(2, GL_FLOAT, 0, cubeTextCoords);
+
 }
 void RenderStrategySimple::postRender(){
     glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 }
 void RenderStrategySimple::renderBlock(Block *pBlock){
     matrix4 blockOrigin;
@@ -116,19 +278,24 @@ void RenderStrategySimple::renderBlock(Block *pBlock){
         SMaterial mat;
         m_pDriver->setMaterial(mat);
 
-        glDrawElements(GL_TRIANGLES, sizeof(cubeIndices)/(sizeof(cubeIndices[0])), GL_UNSIGNED_BYTE, cubeIndices);
+        glDrawElements(GL_QUADS, sizeof(cubeIndices)/(sizeof(cubeIndices[0])), GL_UNSIGNED_BYTE, cubeIndices);
     }
     }
     }
 }
 
+#pragma endregion
+
+#pragma region RenderStrategyVBO
 RenderStrategyVBO::RenderStrategyVBO(IVideoDriver *pDriver)
     : RenderStrategy(pDriver)
 {
     gen(2, cubeVBO);
 
     bind(GL_ARRAY_BUFFER_ARB, cubeVBO[0]);
-    bufferdata(GL_ARRAY_BUFFER_ARB, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW_ARB);
+    bufferdata(GL_ARRAY_BUFFER_ARB, sizeof(cubeVertices)+sizeof(cubeTextCoords), 0, GL_STATIC_DRAW_ARB);
+    buffersubdata(GL_ARRAY_BUFFER_ARB, 0, sizeof(cubeVertices), cubeVertices);
+    buffersubdata(GL_ARRAY_BUFFER_ARB, sizeof(cubeVertices), sizeof(cubeTextCoords), cubeTextCoords);
 
     bind(GL_ELEMENT_ARRAY_BUFFER_ARB, cubeVBO[1]);
     bufferdata(GL_ELEMENT_ARRAY_BUFFER_ARB, sizeof(cubeIndices), cubeIndices, GL_STATIC_DRAW_ARB);
@@ -141,14 +308,17 @@ RenderStrategyVBO::~RenderStrategyVBO(){
 }
 
 
-void RenderStrategyVBO::preRender(){
+void RenderStrategyVBO::preRender(const matrix4 &viewProj){
     bind(GL_ARRAY_BUFFER_ARB, cubeVBO[0]);
     bind(GL_ELEMENT_ARRAY_BUFFER_ARB, cubeVBO[1]);
     glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
     glVertexPointer(3, GL_FLOAT, 0, 0);
+    glTexCoordPointer(2, GL_FLOAT, 0, (void*)sizeof(cubeVertices));
 }
 void RenderStrategyVBO::postRender(){
     glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
     bind(GL_ARRAY_BUFFER_ARB, 0);
     bind(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
 }
@@ -173,39 +343,47 @@ void RenderStrategyVBO::renderBlock(Block *pBlock){
         SMaterial mat;
         m_pDriver->setMaterial(mat);
 
-        glDrawElements(GL_TRIANGLES, sizeof(cubeIndices)/(sizeof(cubeIndices[0])), GL_UNSIGNED_BYTE, 0);
+        glDrawElements(GL_QUADS, sizeof(cubeIndices)/(sizeof(cubeIndices[0])), GL_UNSIGNED_BYTE, 0);
     }
     }
     }
 }
 
-
+#pragma endregion
 
 
 ////////////////////////////   RenderStrategyVBOPerBlock //////////////////
-
-
+#pragma region RenderStrategyVBOPerBlock
 RenderStrategyVBOPerBlock::RenderStrategyVBOPerBlock(IVideoDriver *pDriver)
     : RenderStrategy(pDriver)
 {    
+    m_pVertices = new float[sizeof(cubeVertices)*TILES_PER_BLOCK];
+    m_pTexCoords= new float[sizeof(cubeTextCoords)*TILES_PER_BLOCK];
+    m_pIndices  = new u16[sizeof(cubeIndices)*TILES_PER_BLOCK];
 }
 
 RenderStrategyVBOPerBlock::~RenderStrategyVBOPerBlock(){
+    delete [] m_pVertices;
+    delete [] m_pTexCoords;
+    delete [] m_pIndices;
 }
 
 
-void RenderStrategyVBOPerBlock::preRender(){
+void RenderStrategyVBOPerBlock::preRender(const matrix4 &viewProj){
     glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 }
 void RenderStrategyVBOPerBlock::postRender(){
     glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
     bind(GL_ARRAY_BUFFER_ARB, 0);
     bind(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
 }
 unsigned short RenderStrategyVBOPerBlock::uploadBlock(Block *pBlock){
 
-    vec3f *vertPtr = (vec3f*)m_vertices;
-    unsigned short *indPtr = m_indices;
+    vec3f *vertPtr = (vec3f*)m_pVertices;
+    float *texCoordPtr = m_pTexCoords;
+    unsigned short *indPtr = m_pIndices;
     unsigned short idx = 0;
     unsigned short cnt=0;
     for(int x=0;x<BLOCK_SIZE_X;x++){
@@ -216,6 +394,10 @@ unsigned short RenderStrategyVBOPerBlock::uploadBlock(Block *pBlock){
             for(u32 i=0;i<cubeVertexCount;i++){
                 vertPtr->set(cubeVertices[i*3+0]+x, cubeVertices[i*3+1]+y, cubeVertices[i*3+2]+z);
                 vertPtr++;
+            }
+            for(u32 i=0;i<cubeTexCoordElementCount;i++){
+                *texCoordPtr = cubeTextCoords[i];
+                texCoordPtr++;
             }
             for(u32 i=0;i<cubeIndexCount;i++){
                 indPtr[i] = cubeIndices[i]+cubeVertexCount*cnt;
@@ -228,21 +410,27 @@ unsigned short RenderStrategyVBOPerBlock::uploadBlock(Block *pBlock){
     }
     }
 
-    int dataSize = sizeof(cubeVertices)*cnt;
-    int indexSize = idx*sizeof(m_indices[0]); //sizeof(cubeIndices)*cnt <-- not that because cubeIndices is made of unsigned chars
-    bufferdata(GL_ARRAY_BUFFER_ARB, dataSize, m_vertices, GL_STATIC_DRAW_ARB);
-    bufferdata(GL_ELEMENT_ARRAY_BUFFER_ARB, indexSize, m_indices, GL_STATIC_DRAW_ARB);
+    m_vertSize = sizeof(cubeVertices)*cnt;
+    m_vertOffset = 0;
+    m_texSize  = sizeof(cubeTextCoords)*cnt;
+    m_texOffset = m_vertOffset + m_vertSize;
+    m_indSize  = idx*sizeof(m_pIndices[0]); //sizeof(cubeIndices)*cnt <-- not that because cubeIndices is made of unsigned chars
+
+    bufferdata(GL_ARRAY_BUFFER_ARB, m_vertSize+m_texSize, 0, GL_STATIC_DRAW_ARB);
+    buffersubdata(GL_ARRAY_BUFFER_ARB, m_vertOffset, m_vertSize, m_pVertices);
+    buffersubdata(GL_ARRAY_BUFFER_ARB, m_texOffset, m_texSize, m_pVertices);
+    bufferdata(GL_ELEMENT_ARRAY_BUFFER_ARB, m_indSize, m_pIndices, GL_STATIC_DRAW_ARB);
 
     int bufferSize;
     getbufparam(GL_ARRAY_BUFFER_ARB, GL_BUFFER_SIZE_ARB, &bufferSize);
-    assert(bufferSize == dataSize);
+    ASSERT(bufferSize == m_vertSize+m_texSize);
     getbufparam(GL_ELEMENT_ARRAY_BUFFER_ARB, GL_BUFFER_SIZE_ARB, &bufferSize);
-    assert(bufferSize == indexSize);
+    ASSERT(bufferSize == m_indSize);
     //printf("%d\n%d\n", dataSize, indexSize);
     static int ccc=0;
     ccc++;
     static int sum = 0;
-    sum += dataSize + indexSize;
+    sum += m_vertSize + m_texSize + m_indSize;
     //printf("!%d %d %d\n", sum, sum/(1024*1024), ccc);
 
     pBlock->setClean(idx);
@@ -256,7 +444,8 @@ void RenderStrategyVBOPerBlock::renderBlock(Block *pBlock){
     }
 
     bind(GL_ARRAY_BUFFER_ARB, vbo[0]);
-    glVertexPointer(3, GL_FLOAT, 0, 0);
+    glVertexPointer(3, GL_FLOAT, 0, (void*)m_vertOffset);
+    glTexCoordPointer(3, GL_FLOAT, 0, (void*)m_texOffset);
     bind(GL_ELEMENT_ARRAY_BUFFER_ARB, vbo[1]);
 
     if(pBlock->isDirty()){
@@ -272,17 +461,33 @@ void RenderStrategyVBOPerBlock::renderBlock(Block *pBlock){
         (f32)(blockPos.Z)
         ));
     m_pDriver->setTransform(ETS_WORLD, blockOrigin);
-    glDrawElements(GL_TRIANGLES, idxCnt, GL_UNSIGNED_SHORT, 0);
+    glDrawElements(GL_QUADS, idxCnt, GL_UNSIGNED_SHORT, 0);
 }
 
+#pragma endregion
 
 ////////////////////////////   RenderStrategyVBOPerBlockSharedCubes //////////////////
 
-
+#pragma region RenderStrategyVBOPerBlockSharedCubes
 RenderStrategyVBOPerBlockSharedCubes::RenderStrategyVBOPerBlockSharedCubes(IVideoDriver *pDriver)
     : RenderStrategy(pDriver)
 {    
+    makeProgram(
+        "shaders/RS_VBO_PerBlockSharedCubes.vert",
+        "shaders/RS_VBO_PerBlockSharedCubes.frag"
+        );    
+
+    m_loc_MVP =     getuniformlocation(shaderProgram, "MVP");
+    m_loc_textureAtlas = getuniformlocation(shaderProgram, "textureAtlas");
+    m_loc_blockPosition = getuniformlocation(shaderProgram, "blockPos");
+    m_loc_vertex =  getattriblocation(shaderProgram, "in_vertex");
+    m_loc_tex =     getattriblocation(shaderProgram, "in_texcoord");
+
+    m_pIndices  = new u16[sizeof(cubeIndices)*TILES_PER_BLOCK];
+
     float *vertices = new float[cubeVertexCount*3*TILES_PER_BLOCK];
+    float *texcoords= new float[cubeTexCoordElementCount*TILES_PER_BLOCK];
+    float *texPtr = texcoords;
     vec3f *vertPtr = (vec3f*)vertices;
     unsigned short cnt=0;
     for(int x=0;x<BLOCK_SIZE_X;x++){
@@ -292,39 +497,57 @@ RenderStrategyVBOPerBlockSharedCubes::RenderStrategyVBOPerBlockSharedCubes(IVide
             vertPtr->set(cubeVertices[i*3+0]+x, cubeVertices[i*3+1]+y, cubeVertices[i*3+2]+z);
             vertPtr++;
         }
+        for(u32 i=0;i<cubeTexCoordElementCount;i++){
+            *texPtr = cubeTextCoords[i];
+            texPtr++;
+        }
     }
     }
     }
 
-    int dataSize = sizeof(cubeVertices)*TILES_PER_BLOCK;
+    m_vertOffset = 0;
+    m_vertSize = sizeof(cubeVertices)*TILES_PER_BLOCK;
+    m_texOffset = m_vertSize;
+    m_texSize = sizeof(cubeTextCoords)*TILES_PER_BLOCK;
 
     gen(1, &m_cubesVBO);
     bind(GL_ARRAY_BUFFER_ARB, m_cubesVBO);
-    bufferdata(GL_ARRAY_BUFFER_ARB, dataSize, vertices, GL_STATIC_DRAW_ARB);
+    bufferdata(GL_ARRAY_BUFFER_ARB, m_vertSize+m_texSize, 0, GL_STATIC_DRAW_ARB);
+    buffersubdata(GL_ARRAY_BUFFER_ARB, m_vertOffset, m_vertSize, vertices);
+    buffersubdata(GL_ARRAY_BUFFER_ARB, m_texOffset, m_texSize, texcoords);
 
     int bufferSize;
     getbufparam(GL_ARRAY_BUFFER_ARB, GL_BUFFER_SIZE_ARB, &bufferSize);
-    assert(bufferSize == dataSize);
+    assert(bufferSize == m_vertSize + m_texSize);
 
+    delete [] texcoords;
     delete [] vertices;
 }
 
 RenderStrategyVBOPerBlockSharedCubes::~RenderStrategyVBOPerBlockSharedCubes(){
+    delete [] m_pIndices;
 }
 
 
-void RenderStrategyVBOPerBlockSharedCubes::preRender(){
+void RenderStrategyVBOPerBlockSharedCubes::preRender(const matrix4 &viewProj){
     bind(GL_ARRAY_BUFFER_ARB, m_cubesVBO);
-    glVertexPointer(3, GL_FLOAT, 0, 0);
-    glEnableClientState(GL_VERTEX_ARRAY);
+
+    vertexattribpointer(m_loc_vertex, 3, GL_FLOAT, GL_FALSE, 0, (void*)m_vertOffset);
+    vertexattribpointer(m_loc_tex, 2, GL_FLOAT, 0, 0, (void*)m_texOffset);
+    enablevertexattribarray(m_loc_vertex);
+    enablevertexattribarray(m_loc_tex);
+
+    useprogram(shaderProgram);
+    uniform1i(m_loc_textureAtlas, 0);
+    uniformmatrix4fv(m_loc_MVP, 1, GL_FALSE, viewProj.pointer());
 }
 void RenderStrategyVBOPerBlockSharedCubes::postRender(){
-    glDisableClientState(GL_VERTEX_ARRAY);
     bind(GL_ARRAY_BUFFER_ARB, 0);
     bind(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
+    useprogram(0);
 }
 unsigned short RenderStrategyVBOPerBlockSharedCubes::uploadBlock(Block *pBlock){
-    unsigned short *indPtr = m_indices;
+    unsigned short *indPtr = m_pIndices;
     unsigned short idx = 0;
     unsigned short cnt=0;
     for(int x=0;x<BLOCK_SIZE_X;x++){
@@ -343,8 +566,8 @@ unsigned short RenderStrategyVBOPerBlockSharedCubes::uploadBlock(Block *pBlock){
     }
     }
 
-    int indexSize = idx*sizeof(m_indices[0]); //sizeof(cubeIndices)*cnt;
-    bufferdata(GL_ELEMENT_ARRAY_BUFFER_ARB, indexSize, m_indices, GL_STATIC_DRAW_ARB);
+    int indSize = idx*sizeof(m_pIndices[0]); //sizeof(cubeIndices)*cnt;
+    bufferdata(GL_ELEMENT_ARRAY_BUFFER_ARB, indSize, m_pIndices, GL_STATIC_DRAW_ARB);
 
     static int ccc=0;
     ccc++;
@@ -352,7 +575,7 @@ unsigned short RenderStrategyVBOPerBlockSharedCubes::uploadBlock(Block *pBlock){
 
     int bufferSize;
     getbufparam(GL_ELEMENT_ARRAY_BUFFER_ARB, GL_BUFFER_SIZE_ARB, &bufferSize);
-    assert(bufferSize == indexSize);
+    assert(bufferSize == indSize);
 
     pBlock->setClean(idx);
     return idx;
@@ -378,10 +601,11 @@ void RenderStrategyVBOPerBlockSharedCubes::renderBlock(Block *pBlock){
         (f32)(blockPos.Y),
         (f32)(blockPos.Z)
         ));
-    m_pDriver->setTransform(ETS_WORLD, blockOrigin);
-    glDrawElements(GL_TRIANGLES, idxCnt, GL_UNSIGNED_SHORT, 0);
+    //m_pDriver->setTransform(ETS_WORLD, blockOrigin);
+    uniform3iv(m_loc_blockPosition, 1, &blockPos.X);
+    glDrawElements(GL_QUADS, idxCnt, GL_UNSIGNED_SHORT, 0);
 }
 
-
+#pragma endregion
 
 

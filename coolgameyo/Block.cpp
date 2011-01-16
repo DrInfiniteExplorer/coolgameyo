@@ -75,7 +75,7 @@ Block::~Block()
 Block Block::generateBlock(const vec3i tilePos, WorldGenerator *pWorldGen)
 {
     vec3i blockPos = GetBlockWorldPosition(tilePos);
-    printf("Generating block @%6d,%5d,%5d\n", blockPos.X, blockPos.Y, blockPos.Z);
+    //printf("Generating block @%6d,%5d,%5d\n", blockPos.X, blockPos.Y, blockPos.Z);
     vec3i pos;
     
     Block b = alloc();

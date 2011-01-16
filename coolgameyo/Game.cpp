@@ -20,8 +20,11 @@ void Game::run(){
 
     ICameraSceneNode *pCam = m_pDevice->getSceneManager()->addCameraSceneNodeFPS(0, 100, 0.05f);
 //    pCam->setUpVector(vec3f(0, 0, 1));
-    pCam->setPosition(vec3f(32, 0, 32));
+    pCam->setPosition(vec3f(96, 0, 0));
     pCam->setTarget(vec3f(0, 0, 0));
+
+    SMaterial mat;
+    mat.Lighting = false;
 
     //m_pDevice->getSceneManager()->addCubeSceneNode(1);
     ITimer *pTimer = m_pDevice->getTimer();
@@ -49,6 +52,7 @@ void Game::run(){
         /* Call world->Render etc */
         /* Actually might already be in world->run() or something */
         m_pDevice->getSceneManager()->drawAll(); //Is only camera.
+        m_pDevice->getVideoDriver()->setMaterial(mat);
 
         m_pWorld->render();
 

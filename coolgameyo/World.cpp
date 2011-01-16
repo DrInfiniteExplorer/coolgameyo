@@ -8,20 +8,36 @@ World::World(Game *pGame)
 {
     m_pRenderer = new Renderer(this, m_pGame->getDevice()->getVideoDriver());
 
-    const s32 limit = 32;//BLOCK_SIZE_X*CHUNK_SIZE_X*SECTOR_SIZE_X;
+//*
+    const s32 limit = 96;//BLOCK_SIZE_X*CHUNK_SIZE_X*SECTOR_SIZE_X;
+    const s32 offset = 0;
     s32 cnt = 0;
     for (int x = -limit; x<limit; x++) {
-        for (int y = -limit; y<limit; y++) {
+        for (int y = -limit+offset; y<limit+offset; y++) {
             for (int z = -limit; z<limit; z++) {
-                if (TILE_VISIBLE(getTile(vec3i(x,y,z)))) {
+                Tile t = getTile(vec3i(x,y,z));
+                if (TILE_VISIBLE(t) && t.type != ETT_AIR) {
                     cnt++;
                 }
             }
         }
     }
-
-    printf("%d\n", cnt);
+    printf("%d of\n", cnt);
     printf("%d\n", (2*limit)*(2*limit)*(2*limit));
+/*/
+    {
+    s32 x =0,
+        y =0,
+        z =-1;
+    getTile(vec3i(x,y,z));
+    }
+    {
+    s32 x =0,
+        y =0,
+        z =8;
+    getTile(vec3i(x,y,z));
+    }
+//*/
 }
 
 

@@ -10,8 +10,21 @@
 #include <irrlicht/irrlicht.h>
 #endif
 
+#ifdef BREAKPOINT
+#pragma warning(
+    static_assert(0, "ERROR BREAKPOINT ALREADY DEFINED");    
+#endif 
+#ifdef ASSERT
+    static_assert(0, "ERROR_ASSERT_ALREADY_DEFINED");
+#endif
+
 #ifdef WIN32
 #define BREAKPOINT __asm int 3;
+inline void ASSERT(int x){
+    if(!x){
+        BREAKPOINT;
+    }
+}
 #else
 /* Might want to make this something awesome or somesuch */
 #define BREAKPOINT assert (0);

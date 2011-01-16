@@ -13,7 +13,8 @@ private:
     World           *m_pWorld;
     IVideoDriver    *m_pDriver;
 
-    ITexture        *m_pTextureAtlas;
+    u32              m_TextureAtlas;
+
     RenderStrategy  *m_pRenderStrategy;
 
     void renderBlock(Block *pBlock);

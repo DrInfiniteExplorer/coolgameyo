@@ -5,14 +5,16 @@
 
 class WorldGenerator;
 
-#define BLOCK_SIZE_X (8)
-#define BLOCK_SIZE_Y (8)
-#define BLOCK_SIZE_Z (8)
+//#define BLOCK_SIZE_X (8)
+const s32 BLOCK_SIZE_X  =   8;
+const s32 BLOCK_SIZE_Y  =   8;
+const s32 BLOCK_SIZE_Z  =   8;
 
-#define TILES_PER_BLOCK_X   (BLOCK_SIZE_X)
-#define TILES_PER_BLOCK_Y   (BLOCK_SIZE_Y)
-#define TILES_PER_BLOCK_Z   (BLOCK_SIZE_Z)
-#define TILES_PER_BLOCK     (TILES_PER_BLOCK_X * TILES_PER_BLOCK_Y * TILES_PER_BLOCK_Z)
+
+const s32 TILES_PER_BLOCK_X   = BLOCK_SIZE_X;
+const s32 TILES_PER_BLOCK_Y   = BLOCK_SIZE_Y;
+const s32 TILES_PER_BLOCK_Z   = BLOCK_SIZE_Z;
+const s32 TILES_PER_BLOCK     = TILES_PER_BLOCK_X * TILES_PER_BLOCK_Y * TILES_PER_BLOCK_Z;
 
 
 #define BLOCK_SEEN      (1<<0)
