@@ -11,6 +11,7 @@ World::World(Game *pGame)
 //*
     const s32 limit = 96;//BLOCK_SIZE_X*CHUNK_SIZE_X*SECTOR_SIZE_X;
     const s32 offset = 0;
+
     s32 cnt = 0;
     for (int x = -limit; x<limit; x++) {
         for (int y = -limit+offset; y<limit+offset; y++) {
@@ -103,43 +104,45 @@ void World::render()
     m_pRenderer->postRender();
 }
 
+static Sector* getSector(const vec3i tilePos, SectorXYMap sectors)
+{
+    vec3i sectorPos = GetSectorNumber(tilePos);
+    vec2i xyPos(sectorPos.X, sectorPos.Y);
+    auto xy = sectors.find(xyPos);
+
+    if (xy == sectors.end()) { return 0; }
+
+    SectorZMap *zMap = xy->second;
+    auto z = zMap->find(sectorPos.Z);
+
+    if (z == zMap->end()) { return 0; }
+
+    return z->second;
+}
+
 
 Tile World::getTile(const vec3i tilePos)
 {
-   /* Speed things up by keeping a cache of the last x indexed sectors? */
+    auto sector = getSector(tilePos, m_sectors);
+    if (sector) {
+        auto lookedUp = sector->getTile(tilePos);
 
-    vec3i sectorPos = GetSectorNumber(tilePos);
-    Tile returnTile;
-    
-    vec2i xyPos(sectorPos.X, sectorPos.Y);
-    auto iter = m_sectors.find(xyPos);
-    if (m_sectors.end() != iter) {
-        SectorZMap *zMap = iter->second; // (*iter)->second
-        auto iter2 = zMap->find(sectorPos.Z);
-        if (zMap->end() != iter2) {
-            Sector *pSector = iter2->second;
-            returnTile = pSector->getTile(tilePos);
-            if (!GetFlag(returnTile.flags, TILE_INVALID)) {
-                return returnTile;
-            }
-        }
+        if (!GetFlag(lookedUp.flags, TILE_INVALID)) { return lookedUp; }
     }
 
     /* May fail, but if it works we're all good */
-    returnTile = loadTileFromDisk(tilePos);
-    if (GetFlag(returnTile.flags, TILE_INVALID)) {
-        //Invalid tile! loading was not successfull! :):):):)
-        if (m_pGame->isServer()) {
-            generateBlock(tilePos);
-            return getTile(tilePos); //Derp a herp!!
-        } else {
-            /* Send request to sever!! */
-            printf("Implement etc\n");
-            BREAKPOINT;
-        }
-    }
+    auto fromDisk = loadTileFromDisk(tilePos);
+    if (!GetFlag(fromDisk.flags, TILE_INVALID)) { return fromDisk; }
 
-    return returnTile;
+    //Invalid tile! loading was not successfull! :):):):)
+    if (m_pGame->isServer()) {
+        generateBlock(tilePos);
+        return (sector ? sector : getSector(tilePos, m_sectors))->getTile(tilePos);
+    } else {
+        /* Send request to sever!! */
+        printf("Implement etc\n");
+        BREAKPOINT;
+    }
 }
 
 // boring notification functions :(

@@ -29,7 +29,7 @@ class Sector
 {
 private:
 
-    u8       m_chunkCount;
+    int       m_chunkCount;
     u8       m_flags;
     ChunkPtr m_pChunks[SECTOR_SIZE_X][SECTOR_SIZE_Y][SECTOR_SIZE_Z];
 
@@ -41,9 +41,9 @@ public:
     ChunkPtr* lockChunks();
     void unlockChunks(ChunkPtr *pChunks);
 
-    void generateBlock(const vec3i &tilePos, WorldGenerator *pWorldGen);
+    void generateBlock(const vec3i tilePos, WorldGenerator *pWorldGen);
 
-    Tile getTile(const vec3i &tilePos);
+    Tile getTile(const vec3i tilePos);
 
     bool isAir() const{
         return m_chunkCount == CHUNKS_PER_SECTOR &&

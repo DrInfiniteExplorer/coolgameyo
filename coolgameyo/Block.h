@@ -27,7 +27,7 @@ struct BlockData;
 class Block
 {
 private:
-    BlockData       *m_pTiles;
+    BlockData       *m_tiles;
     u8               m_flags;
 
     u16              m_idxCnt; //For VBO-usage and stuff
@@ -36,7 +36,8 @@ private:
     vec3i            m_pos; //Whyy public?
 public:    
 
-    vec3i   getPosition() const{
+    vec3i   getPosition() const
+    {
         return m_pos;
     }
 
@@ -53,11 +54,13 @@ public:
 
     void render(IVideoDriver *pDriver);
 
-    u32* getVBO(u16 &outIdxCnt){
+    u32* getVBO(u16 &outIdxCnt)
+    {
         outIdxCnt = m_idxCnt;
         return m_VBO;
     }
-    bool isDirty() const{
+    bool isDirty() const
+    {
         return GetFlag(m_flags, BLOCK_DIRTY) != 0;
     }
     void setClean(unsigned short idxCnt){
@@ -65,17 +68,21 @@ public:
         m_idxCnt = idxCnt;
     }
 
-    int isValid()   const {     return m_flags & BLOCK_VALID;  }
-    int isSparse()  const {     return m_flags & BLOCK_SPARSE; }
-    int isAir()     const {     return m_flags & BLOCK_AIR;    }
-    int isSeen()    const {     return m_flags & BLOCK_SEEN;   }
+    int isValid()  const { return m_flags & BLOCK_VALID;  }
+    int isSparse() const { return m_flags & BLOCK_SPARSE; }
+    int isAir()    const { return m_flags & BLOCK_AIR;    }
+    int isSeen()   const { return m_flags & BLOCK_SEEN;   }
 
-    int isVisible() const {     return GetFlag(m_flags, BLOCK_SPARSE) == 0;  }
+    int isVisible() const { return GetFlag(m_flags, BLOCK_SPARSE) == 0;  }
 
     static Block AIR_BLOCK() {
         Block b;
         SetFlag(b.m_flags, BLOCK_VALID | BLOCK_AIR);
         return b;
     }
+
+
+    void writeTo(std::function<void(void*,size_t)> f);
+    size_t readFrom(void* ptr, size_t size);
 };
 

@@ -53,16 +53,16 @@ Block Block::alloc()
 {
     void* mem = FreeList::getMem();
     Block ret;
-    ret.m_pTiles = (BlockData*)mem;
+    ret.m_tiles = (BlockData*)mem;
     return ret;
 }
 void Block::free(Block block)
 {
-    FreeList::returnMem(block.m_pTiles);
+    FreeList::returnMem(block.m_tiles);
 }
 
 
-Block::Block() : m_flags(0), m_idxCnt(0), m_pTiles(0)
+Block::Block() : m_flags(0), m_idxCnt(0), m_tiles(0)
 {
     m_VBO[0] = m_VBO[1] = 0;
 }
@@ -92,7 +92,7 @@ Block Block::generateBlock(const vec3i tilePos, WorldGenerator *pWorldGen)
                 pos.Z = blockPos.Z + z;
 
                 Tile t = pWorldGen->getTile(pos);
-                b.m_pTiles->tiles[x][y][z] = t;
+                b.m_tiles->tiles[x][y][z] = t;
                 
                 if(!GetFlag(t.type, ETT_AIR)){
                     any_non_air = true;
@@ -119,26 +119,60 @@ Tile Block::getTile(const vec3i tilePosition)
 
     /* Remove this sometime? */
     vec3i relativeTilePosition = GetBlockRelativeTileIndex(tilePosition);
-    return m_pTiles->tiles[relativeTilePosition.X][relativeTilePosition.Y][relativeTilePosition.Z];
+    return m_tiles->tiles[relativeTilePosition.X][relativeTilePosition.Y][relativeTilePosition.Z];
 }
 
 void Block::setTile(const vec3i tilePosition, const Tile newTile)
 {
     assert(isValid()); //Same as line below?
-    assert(m_pTiles); //Derp a herp; When we fail and try to set a tile in an air block, start thinkging and implementing.
+    assert(m_tiles); //Derp a herp; When we fail and try to set a tile in an air block, start thinkging and implementing.
 
     /* Remove this sometime? */
     vec3i relativeTilePosition = GetBlockRelativeTileIndex(tilePosition);
 
-    bool same = m_pTiles->tiles[relativeTilePosition.X][relativeTilePosition.Y][relativeTilePosition.Z] == newTile;
+    bool same = m_tiles->tiles[relativeTilePosition.X][relativeTilePosition.Y][relativeTilePosition.Z] == newTile;
     SetFlag(m_flags, BLOCK_DIRTY, !same);
 
 
-    m_pTiles->tiles[relativeTilePosition.X][relativeTilePosition.Y][relativeTilePosition.Z] = newTile;
+    m_tiles->tiles[relativeTilePosition.X][relativeTilePosition.Y][relativeTilePosition.Z] = newTile;
 
     /*  Make improvement like thingy with optimizations and such */
 
     SetFlag(m_flags, BLOCK_AIR,     GetFlag(m_flags, BLOCK_AIR)    && (newTile.type == ETT_AIR));
 }
 
+void Block::writeTo(std::function<void(void*,size_t)> f)
+{
+    assert (isValid());
 
+    f(&m_flags, sizeof m_flags);
+    f(&m_pos, sizeof m_pos);
+
+    if (isSparse()) return;
+
+    auto t = &m_tiles->tiles[0][0][0];
+    for (int i = 0; i < TILES_PER_BLOCK; i += 1) {
+        t->writeTo(f);
+    }
+}
+
+size_t Block::readFrom(void* ptr, size_t size)
+{
+
+    auto readsize = sizeof this->m_flags + sizeof this->m_pos;
+
+    if (size < readsize) return 0;
+
+    memcpy(&m_flags, ptr, sizeof m_flags);
+    memcpy(&m_pos, ptr, sizeof m_pos);
+
+    if (isSparse()) return readsize;
+
+    m_tiles = (BlockData*)FreeList::getMem();
+
+    assert (size >= readsize + sizeof *m_tiles);
+
+    memcpy(m_tiles, ptr, sizeof *m_tiles);
+
+    return readsize + sizeof *m_tiles;
+}

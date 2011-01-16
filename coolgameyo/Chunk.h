@@ -30,7 +30,7 @@ private:
     Block       m_blocks[CHUNK_SIZE_X][CHUNK_SIZE_Y][CHUNK_SIZE_Z];
 
     u8          m_flags;
-    u8          m_blockCount;
+    int         m_blockCount;
 
 public:
     Chunk(void);
@@ -51,6 +51,8 @@ public:
             GetFlag(m_flags, CHUNK_AIR) != 0;
     }
 
+    void writeTo(std::function<void(void*,size_t)> f);
+    size_t readFrom(void* ptr, size_t size);
 };
 
 typedef Chunk *ChunkPtr;

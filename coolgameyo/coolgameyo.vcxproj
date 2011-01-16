@@ -92,6 +92,7 @@
     <ClInclude Include="RenderStrategy.h" />
     <ClInclude Include="PathModule.h" />
     <ClInclude Include="Sector.h" />
+    <ClInclude Include="serialization.h" />
     <ClInclude Include="Tile.h" />
     <ClInclude Include="UDPSocket.h" />
     <ClInclude Include="UnitModule.h" />

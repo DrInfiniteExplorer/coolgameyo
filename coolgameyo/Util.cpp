@@ -61,7 +61,7 @@ s32 PosMod_IF(const s32 a, const s32 b){
     static_assert(7 +((1-9)%8) == 7, "DASD");
     static_assert(7 +((1-16)%8) == 0, "DASD");
 
-    if(a<0){
+    if (a<0) {
        return b-1  +(1+a)%b;
     }
     return a%b;

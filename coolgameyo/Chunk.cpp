@@ -60,3 +60,30 @@ Tile Chunk::getTile(const vec3i tilePos){
     return INVALID_TILE();
 }
 
+
+
+
+void Chunk::writeTo(std::function<void(void*,size_t)> f)
+{
+    f(&m_flags, sizeof m_flags);
+    f(&m_blockCount, sizeof m_blockCount);
+
+    auto b = lockBlocks();
+    int bc = m_blockCount;
+    for (int i = 0; i < BLOCKS_PER_CHUNK; i += 1) {
+        if (b->isValid()) {
+            b->writeTo(f);
+            bc -= 1;
+        }
+    }
+    if (bc != 0) {
+        printf("wtf...?");
+        BREAKPOINT;
+    }
+}
+
+size_t Chunk::readFrom(void* ptr, size_t size)
+{
+    BREAKPOINT;
+    return 0;
+}

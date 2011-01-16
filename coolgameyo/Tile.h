@@ -2,6 +2,8 @@
 
 #include "include.h"
 
+#include "serialization.h"
+
 enum E_TILE_TYPES {
     ETT_AIR,
     ETT_RETARDIUM,
@@ -26,6 +28,17 @@ struct Tile
     u16 hp;
     u16 flags;
     u16 textureTile;
+
+    void writeTo(std::function<void(void*, size_t)> f)
+    {
+        f(this, sizeof(*this));
+    }
+    size_t readFrom(void* ptr, size_t size)
+    {
+        assert (size >= sizeof *this);
+        memmove(this, ptr, sizeof *this);
+        return sizeof *this;
+    }
 };
 #pragma pack(pop)
 
