@@ -95,6 +95,7 @@
     <ClInclude Include="serialization.h" />
     <ClInclude Include="Tile.h" />
     <ClInclude Include="UDPSocket.h" />
+    <ClInclude Include="Unit.h" />
     <ClInclude Include="UnitModule.h" />
     <ClInclude Include="Util.h" />
     <ClInclude Include="World.h" />
@@ -112,6 +113,7 @@
     <ClCompile Include="Sector.cpp" />
     <ClCompile Include="Tile.cpp" />
     <ClCompile Include="UDPSocket.cpp" />
+    <ClCompile Include="Unit.cpp" />
     <ClCompile Include="UnitModule.cpp" />
     <ClCompile Include="Util.cpp" />
     <ClCompile Include="World.cpp" />

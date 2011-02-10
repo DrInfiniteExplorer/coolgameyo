@@ -11,7 +11,6 @@
 #endif
 
 #ifdef BREAKPOINT
-#pragma warning(
     static_assert(0, "ERROR BREAKPOINT ALREADY DEFINED");    
 #endif 
 #ifdef ASSERT
@@ -20,8 +19,9 @@
 
 #ifdef WIN32
 #define BREAKPOINT __asm int 3;
-inline void ASSERT(int x){
-    if(!x){
+inline void ASSERT(int x)
+{
+    if (!x) {
         BREAKPOINT;
     }
 }
@@ -32,10 +32,10 @@ inline void ASSERT(int x){
 
 #ifdef WIN32
 #define TLS __declspec(thread)
-inline void* AllocatePage() {
-    return VirtualAlloc(NULL, 4096, MEM_COMMIT, PAGE_READWRITE);
+inline void* AllocateBlob(size_t size) {
+    return VirtualAlloc(NULL, 4096 * size, MEM_COMMIT, PAGE_READWRITE);
 }
-inline void FreePage(void* page) {
+inline void FreeBlob(void* page) {
     VirtualFree(page, 0, MEM_RELEASE);
 }
 #else

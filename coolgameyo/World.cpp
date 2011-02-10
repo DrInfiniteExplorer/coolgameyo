@@ -3,13 +3,13 @@
 #include "Util.h"
 #include "Renderer.h"
 
-World::World(Game *pGame)
-   : m_pGame(pGame)
+World::World(IVideoDriver *driver)
+    : m_isServer(true)
 {
-    m_pRenderer = new Renderer(this, m_pGame->getDevice()->getVideoDriver());
+    m_pRenderer = new Renderer(this, driver);
 
 //*
-    const s32 limit = 64;//BLOCK_SIZE_X*CHUNK_SIZE_X*SECTOR_SIZE_X;
+    const s32 limit = 32;//BLOCK_SIZE_X*CHUNK_SIZE_X*SECTOR_SIZE_X;
     const s32 offset = 0;
 
     s32 cnt = 0;
@@ -52,21 +52,29 @@ Tile World::loadTileFromDisk(const vec3i &tilePos)
     return INVALID_TILE();
 }
 
-void World::generateBlock(const vec3i &tilePos)
+Sector* World::allocateSector(vec3i sectorPos)
+{
+    auto sector = new Sector;
+    m_sectors[sectorPos] = sector;
+    
+    return sector;
+}
+
+
+Sector* World::getSector(const vec3i tilePos, bool get)
 {
     vec3i sectorPos = GetSectorNumber(tilePos);
-    vec2i sectorXY(sectorPos.X, sectorPos.Y);
-    auto xy = m_sectors[sectorXY];
-    if (!xy) {
-        xy = new SectorZMap;
-        m_sectors[sectorXY] = xy;
-    }
-    Sector* pSector = (*xy)[sectorPos.Z];
-    if (!pSector) {
-        pSector = new Sector();
-        (*xy)[sectorPos.Z] = pSector;
-        m_sectorList.push_back(pSector);
-    }
+    auto found = m_sectors.find(sectorPos);
+    
+    return found == m_sectors.end()
+        ? (get ? allocateSector(sectorPos) : 0)
+        : found->second;
+}
+
+void World::generateBlock(const vec3i &tilePos)
+{
+    auto pSector = getSector(tilePos, true);
+
     pSector->generateBlock(tilePos, &m_worldGen);
 
     /* DO OPTIMIZATION LIKE CHECKING IF ALL THINGS ARE AIR ETC */
@@ -74,22 +82,33 @@ void World::generateBlock(const vec3i &tilePos)
     /* Store to harddrive? schedule it? */
 }
 
-//const SectorList& World::getAllSectors(){
-const SectorList& World::getAllSectors()
+//const SectorList& World::getAllSectors()
+//{
+//    return m_sectorList;
+//}
+
+void World::addUnit(Unit* u)
 {
-    return m_sectorList;
+    m_unitCount += 1;
+    getSector(u->pos, true)->addUnit(u);
+
+    RangeFromTo range(
+        u->pos.X-2, u->pos.X + 3,
+        u->pos.Y-2, u->pos.Y + 3,
+        u->pos.Z-2, u->pos.Z + 3);
+    foreach (posit, range) {
+        auto pos = *posit;
+        getSector(pos)->incCount();
+    }
 }
-
-
 
 void World::render()
 {
     m_pRenderer->preRender();
-    /* Implement sector iterator sometime? */
-    auto sectorList = getAllSectors();
-    foreach (sect, sectorList) {
+
+    foreach (sect, m_sectors) {
         /* Culling based on sectors */
-        Sector *pSector = *sect;
+        Sector *pSector = sect->second;
         ChunkPtr *pChunks = pSector->lockChunks();
         for (int i=0;i<CHUNKS_PER_SECTOR; i++) {
             ChunkPtr pChunk = pChunks[i];
@@ -104,40 +123,26 @@ void World::render()
     m_pRenderer->postRender();
 }
 
-static Sector* getSector(const vec3i tilePos, SectorXYMap sectors)
+
+Tile World::getTile(const vec3i tilePos, bool loadFromDisk, bool create)
 {
-    vec3i sectorPos = GetSectorNumber(tilePos);
-    vec2i xyPos(sectorPos.X, sectorPos.Y);
-    auto xy = sectors.find(xyPos);
+    auto sector = getSector(tilePos, loadFromDisk || create);
+    
+    if (!sector) { return INVALID_TILE(); }
 
-    if (xy == sectors.end()) { return 0; }
+    auto lookedUp = sector->getTile(tilePos);
+    if (!GetFlag(lookedUp.flags, TILE_INVALID)) { return lookedUp; }
 
-    SectorZMap *zMap = xy->second;
-    auto z = zMap->find(sectorPos.Z);
+    if (!loadFromDisk) { return INVALID_TILE(); }
 
-    if (z == zMap->end()) { return 0; }
-
-    return z->second;
-}
-
-
-Tile World::getTile(const vec3i tilePos)
-{
-    auto sector = getSector(tilePos, m_sectors);
-    if (sector) {
-        auto lookedUp = sector->getTile(tilePos);
-
-        if (!GetFlag(lookedUp.flags, TILE_INVALID)) { return lookedUp; }
-    }
-
-    /* May fail, but if it works we're all good */
     auto fromDisk = loadTileFromDisk(tilePos);
     if (!GetFlag(fromDisk.flags, TILE_INVALID)) { return fromDisk; }
+  
+    if (!create) { return INVALID_TILE(); }
 
-    //Invalid tile! loading was not successfull! :):):):)
-    if (m_pGame->isServer()) {
+    if (m_isServer) {
         generateBlock(tilePos);
-        return (sector ? sector : getSector(tilePos, m_sectors))->getTile(tilePos);
+        return sector->getTile(tilePos);
     } else {
         /* Send request to sever!! */
         printf("Implement etc\n");

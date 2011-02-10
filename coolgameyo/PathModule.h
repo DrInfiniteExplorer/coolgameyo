@@ -46,9 +46,9 @@ class PathModule : public Module {
     // DOESN'T C++0X INCLUDE ATOMIC STUFF FOR STUFF LIKE THIS???????
     static PathFindingID id_counter; // probably not thread safe D:
 
-    std::map<PathFindingID, PathFindingState*> active_states;
+    std::unordered_map<PathFindingID, PathFindingState*> active_states;
 
-    std::map<PathFindingID, Path*> finished_paths;
+    std::unordered_map<PathFindingID, Path*> finished_paths;
 public:
 
     PathModule(World* world);

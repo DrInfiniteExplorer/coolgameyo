@@ -2,8 +2,12 @@
 
 #include <map>
 #include <set>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 #include <assert.h>
+
+//#include <thread>
 
 #include "os.h"
 
@@ -43,4 +47,7 @@ inline void SetFlag(A &val, B flag, bool Value) {
 
 
 #define foreach(it, container) \
-    for (auto it = container.begin(); it != container.end(); ++it)
+    for (auto it = (container).begin(); it != (container).end(); ++it)
+
+
+// blah llhas

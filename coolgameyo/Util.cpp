@@ -246,6 +246,24 @@ namespace Util {
         ASSERT(GetBlockWorldPosition(vec3i(-1, -1, -1)) == vec3i(-TILES_PER_BLOCK_X, -TILES_PER_BLOCK_Y, -TILES_PER_BLOCK_Z));
         ASSERT(GetBlockWorldPosition(vec3i( 0,  0,  0)) == vec3i(0, 0, 0));
         ASSERT(GetBlockWorldPosition(vec3i( TILES_PER_BLOCK_X,  TILES_PER_BLOCK_Y,  TILES_PER_BLOCK_Z)) == vec3i(TILES_PER_BLOCK_X, TILES_PER_BLOCK_Y, TILES_PER_BLOCK_Z));
+
+
+
+        int x[5][5][5];
+        memset(x,0,sizeof x);
+        RangeFromTo range(0,5,0,5,0,5);
+        foreach (it, range) {
+            auto p = *it;
+            x[p.X][p.Y][p.Z] = 1;
+        }
+        auto xx = &x[0][0][0];
+        for (int i = 0; i < (sizeof x/sizeof x[0]); i += 1) {
+            int j = sizeof x;
+            if (xx[i] != 1) {
+                printf("Something terrible! %d\n", xx[i]);
+                BREAKPOINT;
+            }
+        }
     }
 }
 

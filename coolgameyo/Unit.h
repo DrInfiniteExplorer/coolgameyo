@@ -1,18 +1,22 @@
 #pragma once
 
 #include "include.h"
-#include "World.h"
+//#include "World.h" // WTF!!!
+
+class World;
 
 class AI; // NOT IMPLEMENTED D::!!!
 
-class Unit
+struct Unit
 {
-public:
-    // is this sane?
+    bool active;
+    bool alive;
+    float hitpoints;
+
     vec3i pos;
-    vec3f offset;
 
     AI* ai;
 
-    virtual int tick(World* world);
+    int tick(World* world);
 };
+

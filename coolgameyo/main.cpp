@@ -27,7 +27,18 @@ int main()
     /* How to actually handle that? I mean like should one enter DF-style-mode if NULL is passed? */
     /* Camera information like position is handled by world anyway? */
 
-    Game game(pDevice, true, true);
+    World* world = new World(pDevice->getVideoDriver());
+
+
+    auto u = new Unit;
+
+    world->addUnit(u);
+
+
+
+    BREAKPOINT;
+
+    Game game(pDevice, world, true, true);
 
     game.run();
 

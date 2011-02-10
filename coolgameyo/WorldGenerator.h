@@ -3,7 +3,8 @@
 #include "include.h"
 #include "Tile.h"
 
-struct WorldGenParams{
+struct WorldGenParams
+{
     u32 RandomSeed;
     /* MOAR PARAMETERS! */
 };

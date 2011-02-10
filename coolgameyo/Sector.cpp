@@ -21,11 +21,13 @@ Sector::~Sector(void)
     }}}
 }
 
-ChunkPtr* Sector::lockChunks(){
+ChunkPtr* Sector::lockChunks()
+{
     /* Implement mutex or something */
     return &m_pChunks[0][0][0];
 }
-void Sector::unlockChunks(ChunkPtr *pChunks){
+void Sector::unlockChunks(ChunkPtr *pChunks)
+{
     /* Herp a derp */
 
 }
@@ -52,7 +54,8 @@ void Sector::generateBlock(const vec3i tilePos, WorldGenerator *pWorldGen)
     /* DO OPTIMIZATION LIKE RECOGNIZE ALL AIR ETC */
 }
 
-Tile Sector::getTile(const vec3i tilePos){
+Tile Sector::getTile(const vec3i tilePos)
+{
     vec3i chunkPos = GetSectorRelativeChunkIndex(tilePos);
 
     /* Keep cache of last 2 indexed chunks? */

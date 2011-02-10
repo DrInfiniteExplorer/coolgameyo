@@ -3,6 +3,8 @@
 #include "include.h"
 #include "Chunk.h"
 
+#include "Unit.h"
+
 class WorldGenerator;
 
 const s32 SECTOR_SIZE_X =   8;
@@ -29,9 +31,12 @@ class Sector
 {
 private:
 
-    int       m_chunkCount;
+    int      m_chunkCount;
     u8       m_flags;
     ChunkPtr m_pChunks[SECTOR_SIZE_X][SECTOR_SIZE_Y][SECTOR_SIZE_Z];
+
+    std::unordered_set<Unit*> m_activeUnits;
+    int m_activityCount;
 
 public:
     Sector(void);
@@ -45,7 +50,17 @@ public:
 
     Tile getTile(const vec3i tilePos);
 
-    bool isAir() const{
+    void addUnit(Unit* u)
+    {
+        m_activeUnits.insert(u);
+    }
+    void incCount()
+    {
+        m_activityCount += 1;
+    }
+
+    bool isAir() const
+    {
         return m_chunkCount == CHUNKS_PER_SECTOR &&
             GetFlag(m_flags, SECTOR_AIR);
     }
@@ -54,8 +69,8 @@ public:
 
 
 /* Eventually put this into a sector-handling class? */
-typedef class std::map<u32, Sector*>         SectorZMap;
-typedef class std::map<vec2i, SectorZMap*>   SectorXYMap;
-typedef class std::vector<Sector*>           SectorList;
+typedef std::map<u32, Sector*>         SectorZMap;
+typedef std::map<vec2i, SectorZMap*>   SectorXYMap;
+typedef std::vector<Sector*>           SectorList;
 
 

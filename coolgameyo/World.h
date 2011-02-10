@@ -13,17 +13,18 @@ class World
 private:
    /* sparse array med sectorer som är laddade? */
 
-   SectorXYMap       m_sectors;
-   SectorList        m_sectorList;
+   std::map<vec3i, Sector*>  m_sectors;
+   //SectorList                m_sectorList;
 
    /* Data som används som parametrar för att generera världen? */
-   WorldGenerator    m_worldGen;
-   Game             *m_pGame;
+   WorldGenerator            m_worldGen;
+   bool                      m_isServer; // TODO: FIX
    //IVideoDriver     *m_pDriver;
-   Renderer         *m_pRenderer;
+   Renderer                 *m_pRenderer;
 
+   int                       m_unitCount;
 
-   std::set<WorldListener*> m_listeners;
+   std::unordered_set<WorldListener*> m_listeners;
 
    void notifySectorLoad(vec3i sectorPos);
    void notifySectorUnload(vec3i sectorPos);
@@ -33,22 +34,29 @@ private:
 
    void generateBlock(const vec3i &tilePos);
 
-   const SectorList& getAllSectors();
+   //const SectorList& getAllSectors();
+
+   Sector* allocateSector(vec3i sectorPos);
+   Sector* getSector(const vec3i sectorPos, bool get=true);
 
 public:
-   World(Game* pGame);
+   World(IVideoDriver* driver);
    ~World(void);
 
    void render();
 
-   /* Funktion för att generera världen? */
-   Tile getTile(const vec3i tilePos);
+   void addUnit(Unit* unit);
+
+   Tile getTile(const vec3i tilePos, bool pageIn=true, bool create=true);
+
    void setTile(vec3i tilePos, const Tile &newTile);
 
-   void addListener(WorldListener* listener) {
+   void addListener(WorldListener* listener)
+   {
        m_listeners.insert(listener);
    }
-   void removeListener(WorldListener* listener) {
+   void removeListener(WorldListener* listener)
+   {
        m_listeners.erase(listener);
    }
 };

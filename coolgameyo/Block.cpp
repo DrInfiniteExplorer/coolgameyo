@@ -6,59 +6,80 @@ struct BlockData {
     Tile tiles[BLOCK_SIZE_X][BLOCK_SIZE_Y][BLOCK_SIZE_Z];
 };
 
-namespace FreeList
+namespace Allocator
 {
-    enum { max_size = 100 };
-    union Link
+    struct Link
     {
-        char memory[sizeof BlockData];
+        BlockData* mem;
         Link* next;
+        size_t size;
+
+        size_t index;
+        std::vector<bool> freeBits;
+
+        Link(size_t size, Link* lst)
+            : mem((BlockData*)AllocateBlob(size)), next(lst), size(size),
+            index(0), freeBits(size, false)
+        {
+            if (!mem) {
+                printf("Memory allocation seems to have failed :(\n");
+                BREAKPOINT;
+            }
+        }
     };
 
-    static_assert(sizeof Link == sizeof BlockData, "Cry cry cry");
     static_assert(sizeof BlockData == 4096, "Cry cry cry");
 
-    TLS int size = 0;
-    TLS Link* list = 0;
+    TLS Link* linklist = 0;
 
-    static void* getMem()
+    static BlockData* getMem()
     {
-        if (list) {
-            void* ret = list;
-            list = list->next;
-            size -= 1;
-            return ret;
-        } else {
-            // allocate here
-            void* ret = AllocatePage();
-            assert (ret);
-            return ret;
+        auto link = linklist;
+        while (link) {
+            for (size_t k = 0; k < link->size; k += 1) {
+                auto i = link->index;
+                link->index = (link->index+1) % link->size;
+                if (!link->freeBits[i]) {
+                    link->freeBits[i] = true;
+                    return ((BlockData*)link->mem) + i;
+                }
+            }
+            link = link->next;
         }
+        // No free blob found! Time to allocate!
+
+        linklist = new Link(64, linklist);
+        return getMem(); // hee
     }
     void returnMem(BlockData* mem)
     {
-        if (size >= max_size) {
-            // free here
-            FreePage(mem);
-        } else {
-            auto link = (Link*)mem;
-            link->next = list;
-            list = link;
-            size += 1;
+        Link* link = linklist;
+        while (link) {
+            size_t diff = mem - link->mem;
+            if (diff < link->size) {
+                // woo!
+                link->freeBits[diff] = false;
+                link->index = diff;
+                return;
+            }
+            link = link->next;
         }
+        printf("Tried to return something.. blah blah\n");
+        BREAKPOINT;
     }
 }
 
 Block Block::alloc()
 {
-    void* mem = FreeList::getMem();
+    auto mem = Allocator::getMem();
+    memset(mem, 0, sizeof *mem);
     Block ret;
-    ret.m_tiles = (BlockData*)mem;
+    ret.m_tiles = mem;
     return ret;
 }
 void Block::free(Block block)
 {
-    FreeList::returnMem(block.m_tiles);
+    Allocator::returnMem(block.m_tiles);
 }
 
 
@@ -168,7 +189,7 @@ size_t Block::readFrom(void* ptr, size_t size)
 
     if (isSparse()) return readsize;
 
-    m_tiles = (BlockData*)FreeList::getMem();
+    m_tiles = Allocator::getMem();
 
     assert (size >= readsize + sizeof *m_tiles);
 

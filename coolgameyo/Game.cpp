@@ -1,12 +1,12 @@
 #include "Game.h"
 
 
-Game::Game(IrrlichtDevice *pDevice, bool isServer, bool isWorker)
+Game::Game(IrrlichtDevice *pDevice, World* world, bool isServer, bool isWorker)
    : m_pDevice(pDevice),
    m_isServer(isServer),
-   m_isWorker(isWorker)
+   m_isWorker(isWorker),
+   m_pWorld(world)
 {
-    m_pWorld = new World(this);
 }
 
 
