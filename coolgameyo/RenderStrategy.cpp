@@ -265,7 +265,7 @@ void RenderStrategySimple::renderBlock(Block *pBlock){
     for(int y=0;y<BLOCK_SIZE_Y;y++){
     for(int z=0;z<BLOCK_SIZE_Z;z++){
         const Tile &t = pBlock->getTile(vec3i(x,y,z));
-        if(!TILE_VISIBLE(t) || t.type == ETT_AIR){
+        if(!t.isSeen() || t.type == ETT_AIR){
             continue;
         }
         blockOrigin.setTranslation(vec3f(
@@ -331,7 +331,7 @@ void RenderStrategyVBO::renderBlock(Block *pBlock){
     for(int y=0;y<BLOCK_SIZE_Y;y++){
     for(int z=0;z<BLOCK_SIZE_Z;z++){
         const Tile &t = pBlock->getTile(vec3i(x,y,z));
-        if(!TILE_VISIBLE(t) || t.type == ETT_AIR){
+        if(!t.isSeen() || t.type == ETT_AIR){
             continue;
         }
         blockOrigin.setTranslation(vec3f(
@@ -390,7 +390,7 @@ unsigned short RenderStrategyVBOPerBlock::uploadBlock(Block *pBlock){
     for(int y=0;y<BLOCK_SIZE_Y;y++){
     for(int z=0;z<BLOCK_SIZE_Z;z++){
         const Tile t = pBlock->getTile(vec3i(x, y, z));
-        if(TILE_VISIBLE(t) && t.type != ETT_AIR){
+        if(t.isSeen() && t.type != ETT_AIR){
             for(u32 i=0;i<cubeVertexCount;i++){
                 vertPtr->set(cubeVertices[i*3+0]+x, cubeVertices[i*3+1]+y, cubeVertices[i*3+2]+z);
                 vertPtr++;
@@ -554,7 +554,7 @@ unsigned short RenderStrategyVBOPerBlockSharedCubes::uploadBlock(Block *pBlock){
     for(int y=0;y<BLOCK_SIZE_Y;y++){
     for(int z=0;z<BLOCK_SIZE_Z;z++){
         const Tile t = pBlock->getTile(vec3i(x, y, z));
-        if(TILE_VISIBLE(t) && t.type != ETT_AIR){
+        if(t.isSeen() && t.type != ETT_AIR){
             for(u32 i=0;i<cubeIndexCount;i++){
                 indPtr[i] = cubeIndices[i]+cubeVertexCount*cnt;
             }

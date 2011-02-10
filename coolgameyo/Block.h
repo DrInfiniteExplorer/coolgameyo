@@ -33,8 +33,9 @@ private:
     u16              m_idxCnt; //For VBO-usage and stuff
     u32              m_VBO[2];
 
-    vec3i            m_pos; //Whyy public?
-public:    
+    vec3i            m_pos;
+public:
+    u16              type; // maps to E_TILE_TYPE in case of isSparse()
 
     vec3i   getPosition() const
     {
@@ -72,6 +73,7 @@ public:
     int isSparse() const { return m_flags & BLOCK_SPARSE; }
     int isAir()    const { return m_flags & BLOCK_AIR;    }
     int isSeen()   const { return m_flags & BLOCK_SEEN;   }
+    void setSeen(bool seen=true) { SetFlag(m_flags, BLOCK_SEEN, seen); }
 
     int isVisible() const { return GetFlag(m_flags, BLOCK_SPARSE) == 0;  }
 
@@ -86,3 +88,7 @@ public:
     size_t readFrom(void* ptr, size_t size);
 };
 
+inline Block INVALID_BLOCK() {
+    Block b;
+    return b;
+}

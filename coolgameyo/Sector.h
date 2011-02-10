@@ -7,8 +7,8 @@
 
 class WorldGenerator;
 
-const s32 SECTOR_SIZE_X =   8;
-const s32 SECTOR_SIZE_Y =   8;
+const s32 SECTOR_SIZE_X =   4;
+const s32 SECTOR_SIZE_Y =   4;
 const s32 SECTOR_SIZE_Z =   2;
 
 const s32 CHUNKS_PER_SECTOR =   SECTOR_SIZE_X * SECTOR_SIZE_Y * SECTOR_SIZE_Z;
@@ -49,6 +49,10 @@ public:
     void generateBlock(const vec3i tilePos, WorldGenerator *pWorldGen);
 
     Tile getTile(const vec3i tilePos);
+    void setTile(vec3i tilePos, const Tile newTile);
+
+    Block getBlock(vec3i tilePos);
+    void setBlock(vec3i tilePos, Block newBlock);
 
     void addUnit(Unit* u)
     {

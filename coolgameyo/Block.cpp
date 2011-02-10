@@ -135,8 +135,16 @@ Tile Block::getTile(const vec3i tilePosition)
 {
     assert (isValid());
 
-    if (isAir()) return AIR_TILE();
-    if (isSparse()) return SPARSE_TILE();
+    if (isAir()) {
+        Tile t = AIR_TILE();
+        SetFlag(t.flags, TILE_SEEN);
+        return t;
+    }
+    if (isSparse()) {
+        Tile t = {type, 0, TILE_VALID, 0};
+        t.setSeen(isSeen());
+        return t;
+    }
 
     /* Remove this sometime? */
     vec3i relativeTilePosition = GetBlockRelativeTileIndex(tilePosition);

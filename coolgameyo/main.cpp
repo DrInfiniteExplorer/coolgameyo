@@ -9,12 +9,22 @@ int main()
 {
     Util::Test();
 
-    //return 0;  <-- wtf? ^_-
     IrrlichtDevice *pDevice = createDevice(EDT_OPENGL); /* Plol har riktig dator nu. Ingen ändrar. */
     /* Dessutom om vi kodar i opengl kan vi dra nytta av OpenCL senare kanske */
 
     /* Connect to server */
     /* Create world */
+    World* world = new World(pDevice->getVideoDriver());
+
+    vec2i xy(20,30);
+
+    auto u = new Unit;
+    u->pos = world->getTopTilePos(xy);
+    u->pos.Z += 1;
+
+    world->addUnit(u);
+
+    world->floodFillVisibility(xy);
 
     /* connection to server lies in world? World handles everything, ie
     connection and irrlicht and mainlooping and a list of critters(dwarves etc)
@@ -27,16 +37,12 @@ int main()
     /* How to actually handle that? I mean like should one enter DF-style-mode if NULL is passed? */
     /* Camera information like position is handled by world anyway? */
 
-    World* world = new World(pDevice->getVideoDriver());
-
-
-    auto u = new Unit;
-
-    world->addUnit(u);
 
 
 
-    BREAKPOINT;
+
+
+    //BREAKPOINT;
 
     Game game(pDevice, world, true, true);
 

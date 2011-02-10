@@ -8,18 +8,16 @@
 class Game;
 class Renderer;
 
+struct SectorXY;
+
 class World
 {
 private:
-   /* sparse array med sectorer som är laddade? */
+   std::map<vec2i, SectorXY>  m_sectorXY;
+   std::vector<Sector*>       m_sectorList;
 
-   std::map<vec3i, Sector*>  m_sectors;
-   //SectorList                m_sectorList;
-
-   /* Data som används som parametrar för att generera världen? */
    WorldGenerator            m_worldGen;
    bool                      m_isServer; // TODO: FIX
-   //IVideoDriver     *m_pDriver;
    Renderer                 *m_pRenderer;
 
    int                       m_unitCount;
@@ -34,10 +32,11 @@ private:
 
    void generateBlock(const vec3i &tilePos);
 
-   //const SectorList& getAllSectors();
-
+   SectorXY getSectorXY(vec2i xy);
    Sector* allocateSector(vec3i sectorPos);
    Sector* getSector(const vec3i sectorPos, bool get=true);
+   Block getBlock(const vec3i tilePos, bool getSector=true, bool get=true);
+   void setBlock(const vec3i tilePos, Block newBlock);
 
 public:
    World(IVideoDriver* driver);
@@ -47,17 +46,23 @@ public:
 
    void addUnit(Unit* unit);
 
-   Tile getTile(const vec3i tilePos, bool pageIn=true, bool create=true);
+   Tile getTile(const vec3i tilePos, bool fetch=true, bool createBlock=true, bool createSector=false);
 
-   void setTile(vec3i tilePos, const Tile &newTile);
+   vec3i getTopTilePos(const vec2i xy);
 
-   void addListener(WorldListener* listener)
-   {
-       m_listeners.insert(listener);
-   }
-   void removeListener(WorldListener* listener)
-   {
-       m_listeners.erase(listener);
-   }
+   void setTile(vec3i tilePos, const Tile newTile);
+
+   void floodFillVisibility(const vec2i xypos);
+
+   void addListener(WorldListener* listener) { m_listeners.insert(listener); }
+   void removeListener(WorldListener* listener) { m_listeners.erase(listener); }
+};
+
+
+struct SectorXY {
+    typedef int Heightmap[TILES_PER_SECTOR_X][TILES_PER_SECTOR_Y];
+
+    std::map<s32, Sector*> sectors;
+    Heightmap* heightmap;
 };
 

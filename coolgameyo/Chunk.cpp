@@ -60,6 +60,27 @@ Tile Chunk::getTile(const vec3i tilePos){
     return INVALID_TILE();
 }
 
+void Chunk::setTile(vec3i tilePos, const Tile newTile)
+{
+    vec3i blockPos = GetChunkRelativeBlockIndex(tilePos);
+    auto pBlock = m_blocks[blockPos.X][blockPos.Y][blockPos.Z];
+    if (pBlock.isValid()) {
+        return pBlock.setTile(tilePos, newTile);
+    }
+    BREAKPOINT;
+}
+    
+Block Chunk::getBlock(vec3i tilePos)
+{
+    vec3i blockPos = GetChunkRelativeBlockIndex(tilePos);
+    auto pBlock = m_blocks[blockPos.X][blockPos.Y][blockPos.Z];
+    return pBlock;
+}
+void Chunk::setBlock(vec3i tilePos, Block newBlock)
+{
+    vec3i blockPos = GetChunkRelativeBlockIndex(tilePos);
+    m_blocks[blockPos.X][blockPos.Y][blockPos.Z] = newBlock;
+}
 
 
 

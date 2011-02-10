@@ -7,38 +7,6 @@ World::World(IVideoDriver *driver)
     : m_isServer(true)
 {
     m_pRenderer = new Renderer(this, driver);
-
-//*
-    const s32 limit = 32;//BLOCK_SIZE_X*CHUNK_SIZE_X*SECTOR_SIZE_X;
-    const s32 offset = 0;
-
-    s32 cnt = 0;
-    for (int x = -limit; x<limit; x += BLOCK_SIZE_X) {
-        for (int y = -limit+offset; y<limit+offset; y += BLOCK_SIZE_Y) {
-            for (int z = -limit; z<limit; z += BLOCK_SIZE_Z) {
-                Tile t = getTile(vec3i(x,y,z));
-                if (TILE_VISIBLE(t) && t.type != ETT_AIR) {
-                    cnt++;
-                }
-            }
-        }
-    }
-    printf("%d of\n", cnt);
-    printf("%d\n", (2*limit)*(2*limit)*(2*limit));
-/*/
-    {
-    s32 x =0,
-        y =0,
-        z =-1;
-    getTile(vec3i(x,y,z));
-    }
-    {
-    s32 x =0,
-        y =0,
-        z =8;
-    getTile(vec3i(x,y,z));
-    }
-//*/
 }
 
 
@@ -52,11 +20,39 @@ Tile World::loadTileFromDisk(const vec3i &tilePos)
     return INVALID_TILE();
 }
 
+SectorXY World::getSectorXY(vec2i xy)
+{
+    SectorXY ret;
+    ret.heightmap = (SectorXY::Heightmap*)malloc(sizeof *ret.heightmap);
+
+    // look at disk for xy ???
+    
+    RangeFromTo range(0,128,0,128,0,1);
+    foreach (it, range) {
+        auto v = *it;
+        (*ret.heightmap)[v.X][v.Y] = m_worldGen.maxZ(vec2i(v.X,v.Y));
+    }
+    return ret;
+}
+
 Sector* World::allocateSector(vec3i sectorPos)
 {
-    auto sector = new Sector;
-    m_sectors[sectorPos] = sector;
+    vec2i xy(sectorPos.X, sectorPos.Y);
+    auto it = m_sectorXY.find(xy);
+
+    if (it == m_sectorXY.end()) {
+        it = m_sectorXY.insert(std::make_pair(xy, getSectorXY(xy))).first;
+    }
     
+    auto z = sectorPos.Z;
+
+    auto sector = new Sector;
+
+    auto ins2 = it->second.sectors.insert(std::make_pair(z, sector));
+    assert (ins2.second);
+
+    m_sectorList.push_back(sector);
+
     return sector;
 }
 
@@ -64,11 +60,37 @@ Sector* World::allocateSector(vec3i sectorPos)
 Sector* World::getSector(const vec3i tilePos, bool get)
 {
     vec3i sectorPos = GetSectorNumber(tilePos);
-    auto found = m_sectors.find(sectorPos);
-    
-    return found == m_sectors.end()
-        ? (get ? allocateSector(sectorPos) : 0)
-        : found->second;
+    vec2i xy(sectorPos.X, sectorPos.Y);
+    auto found = m_sectorXY.find(xy);
+
+    if (found != m_sectorXY.end()) {
+        auto foundz = found->second.sectors.find(sectorPos.Z);
+        if (foundz != found->second.sectors.end()) {
+            return foundz->second;
+        }
+    }
+        
+    return get ? allocateSector(sectorPos) : 0;
+}
+
+
+Block World::getBlock(const vec3i tilePos, bool getSector, bool get)
+{
+    auto s = this->getSector(tilePos, getSector);
+    if (!s) return INVALID_BLOCK();
+
+    auto b = s->getBlock(tilePos);
+    if (!b.isValid() && get) {
+        generateBlock(tilePos);
+        b = s->getBlock(tilePos);
+    }
+    return b;
+}
+
+void World::setBlock(const vec3i tilePos, Block newBlock)
+{
+    getBlock(tilePos, true);
+    getSector(tilePos)->setBlock(tilePos, newBlock);
 }
 
 void World::generateBlock(const vec3i &tilePos)
@@ -82,22 +104,18 @@ void World::generateBlock(const vec3i &tilePos)
     /* Store to harddrive? schedule it? */
 }
 
-//const SectorList& World::getAllSectors()
-//{
-//    return m_sectorList;
-//}
-
 void World::addUnit(Unit* u)
 {
     m_unitCount += 1;
-    getSector(u->pos, true)->addUnit(u);
+    getSector(u->pos)->addUnit(u);
 
-    RangeFromTo range(
-        u->pos.X-2, u->pos.X + 3,
-        u->pos.Y-2, u->pos.Y + 3,
-        u->pos.Z-2, u->pos.Z + 3);
+    //RangeFromTo range(-2, 3, -2, 3, -2, 3);
+    RangeFromTo range(0, 2, 0, 2, 0, 2);
     foreach (posit, range) {
-        auto pos = *posit;
+        auto pos = u->pos;
+        pos.X += TILES_PER_SECTOR_X * (*posit).X;
+        pos.Y += TILES_PER_SECTOR_Y * (*posit).Y;
+        pos.Z += TILES_PER_SECTOR_Z * (*posit).Z;
         getSector(pos)->incCount();
     }
 }
@@ -106,9 +124,9 @@ void World::render()
 {
     m_pRenderer->preRender();
 
-    foreach (sect, m_sectors) {
+    foreach (sect, m_sectorList) {
         /* Culling based on sectors */
-        Sector *pSector = sect->second;
+        Sector *pSector = *sect;
         ChunkPtr *pChunks = pSector->lockChunks();
         for (int i=0;i<CHUNKS_PER_SECTOR; i++) {
             ChunkPtr pChunk = pChunks[i];
@@ -124,22 +142,22 @@ void World::render()
 }
 
 
-Tile World::getTile(const vec3i tilePos, bool loadFromDisk, bool create)
+Tile World::getTile(const vec3i tilePos, bool fetch, bool createBlock, bool createSector)
 {
-    auto sector = getSector(tilePos, loadFromDisk || create);
+    auto sector = getSector(tilePos, createSector);
     
     if (!sector) { return INVALID_TILE(); }
 
     auto lookedUp = sector->getTile(tilePos);
-    if (!GetFlag(lookedUp.flags, TILE_INVALID)) { return lookedUp; }
+    if (lookedUp.isValid()) { return lookedUp; }
 
-    if (!loadFromDisk) { return INVALID_TILE(); }
+    if (!fetch) { return INVALID_TILE(); }
 
     auto fromDisk = loadTileFromDisk(tilePos);
-    if (!GetFlag(fromDisk.flags, TILE_INVALID)) { return fromDisk; }
-  
-    if (!create) { return INVALID_TILE(); }
-
+    if (fromDisk.isValid()) { return fromDisk; }
+    
+    if (!createBlock) { return INVALID_TILE(); }
+    
     if (m_isServer) {
         generateBlock(tilePos);
         return sector->getTile(tilePos);
@@ -149,6 +167,130 @@ Tile World::getTile(const vec3i tilePos, bool loadFromDisk, bool create)
         BREAKPOINT;
     }
 }
+
+vec3i World::getTopTilePos(const vec2i xy)
+{
+    auto x = xy.X;
+    auto y = xy.Y; 
+    auto z = m_worldGen.maxZ(xy);
+    while (m_worldGen.getTile(vec3i(x, y, z)).type == ETT_AIR) {
+        z -= 1;
+    }
+    return vec3i(x,y,z);
+}
+
+void World::floodFillVisibility(const vec2i xypos)
+{
+
+    // Z is now the air above highest ground level at xypos
+    auto startPos = getTopTilePos(xypos);
+    
+    startPos.Z += 1;
+    
+    std::set<vec3i> work;
+    work.insert(GetBlockWorldPosition(startPos));
+    
+    while (!work.empty()) {
+        auto pos = *work.begin();
+        work.erase(pos);
+        
+        printf("DOING %5d%5d%5d\n", pos.X,pos.Y,pos.Z);
+        
+        auto block = getBlock(pos, false, true);
+        if (block.isValid() && !block.isSeen()) {
+            block.setSeen();
+            if (block.isSparse()) {
+                if (block.type == ETT_AIR) {
+                    //work.insert(pos + vec3i(TILES_PER_BLOCK_X, 0, 0));
+                    //work.insert(pos - vec3i(TILES_PER_BLOCK_X, 0, 0));
+                   // work.insert(pos + vec3i(0, TILES_PER_BLOCK_Y, 0));
+                    //work.insert(pos - vec3i(0, TILES_PER_BLOCK_Y, 0));
+                    //work.insert(pos + vec3i(0, 0, TILES_PER_BLOCK_Z));
+                    //work.insert(pos - vec3i(0, 0, TILES_PER_BLOCK_Z));
+                }
+            } else {
+                // map through all the tiles in the block; if any edge is air,
+                // add that edge block to work
+                
+                // this will be shitty
+                
+                RangeFromTo range(0, TILES_PER_BLOCK_X,
+                    0, TILES_PER_BLOCK_Y,
+                    0, TILES_PER_BLOCK_Z);
+                foreach (it, range) {
+                    auto rel = *it;
+                    //printf("% ...> tile %5d%5d%5d\n", rel.X,rel.Y,rel.Z);
+                    auto tp = rel + pos;
+                    Tile t = block.getTile(tp);
+                    if (t.type == ETT_AIR) {
+                        t.setSeen();
+                        if (rel.X == 0) {
+                            work.insert(pos - vec3i(TILES_PER_BLOCK_X, 0, 0));
+                        } else if (rel.X == TILES_PER_BLOCK_X - 1) {
+                            work.insert(pos + vec3i(TILES_PER_BLOCK_X, 0, 0));
+                        }
+                        if (rel.Y == 0) {
+                            work.insert(pos - vec3i(0, TILES_PER_BLOCK_Y, 0));
+                        } else if (rel.Y == TILES_PER_BLOCK_Y - 1) {
+                            work.insert(pos + vec3i(0, TILES_PER_BLOCK_Y, 0));
+                        }
+                        if (rel.Z == 0) {
+                            work.insert(pos - vec3i(0, 0, TILES_PER_BLOCK_Z));
+                        } else if (rel.Z == TILES_PER_BLOCK_Z - 1) {
+                            work.insert(pos + vec3i(0, 0, TILES_PER_BLOCK_Z));
+                        }
+                    } else {
+                        Tile neighbor;
+                        neighbor = getTile(vec3i(tp.X-1, tp.Y, tp.Z));
+                        if (!neighbor.isValid() || neighbor.type == ETT_AIR) {
+                            t.setSeen();
+                            goto END_LOL;
+                        }
+                        neighbor = getTile(vec3i(tp.X+1, tp.Y, tp.Z));
+                        if (!neighbor.isValid() || neighbor.type == ETT_AIR) {
+                            t.setSeen();
+                            goto END_LOL;
+                        }
+                        neighbor = getTile(vec3i(tp.X, tp.Y-1, tp.Z));
+                        if (!neighbor.isValid() || neighbor.type == ETT_AIR) {
+                            t.setSeen();
+                            goto END_LOL;
+                        }
+                        neighbor = getTile(vec3i(tp.X, tp.Y+1, tp.Z));
+                        if (!neighbor.isValid() || neighbor.type == ETT_AIR) {
+                            t.setSeen();
+                            goto END_LOL;
+                        }
+                        neighbor = getTile(vec3i(tp.X, tp.Y, tp.Z-1));
+                        if (!neighbor.isValid() || neighbor.type == ETT_AIR) {
+                            t.setSeen();
+                            goto END_LOL;
+                        }
+                        neighbor = getTile(vec3i(tp.X, tp.Y, tp.Z+1));
+                        if (!neighbor.isValid() || neighbor.type == ETT_AIR) {
+                            t.setSeen();
+                            goto END_LOL;
+                        }
+                        END_LOL:;
+                    }
+                    block.setTile(tp, t);
+                }
+            }
+            setBlock(pos, block);
+        }
+    }
+}
+
+void World::setTile(vec3i tilePos, const Tile newTile)
+{
+    getSector(tilePos, true)->setTile(tilePos, newTile);
+    notifyTileChange(tilePos);
+}
+
+
+
+
+
 
 // boring notification functions :(
 void World::notifySectorLoad(vec3i sectorPos)

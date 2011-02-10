@@ -9,7 +9,7 @@ class WorldGenerator;
 
 const s32 CHUNK_SIZE_X  =   4;
 const s32 CHUNK_SIZE_Y  =   4;
-const s32 CHUNK_SIZE_Z  =   4;
+const s32 CHUNK_SIZE_Z  =   2;
 
 const s32 BLOCKS_PER_CHUNK  =   CHUNK_SIZE_X * CHUNK_SIZE_Y * CHUNK_SIZE_Z;
 
@@ -42,6 +42,10 @@ public:
     void generateBlock(const vec3i &tilePos, WorldGenerator *pWorldGen);
 
     Tile getTile(const vec3i tilePos);
+    void setTile(vec3i tilePos, const Tile newTile);
+    
+    Block getBlock(vec3i tilePos);
+    void setBlock(vec3i tilePos, Block newBlock);
 
     bool isSeen() const{
         return GetFlag(m_flags, CHUNK_UNSEEN) == 0;
