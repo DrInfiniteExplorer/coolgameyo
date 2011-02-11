@@ -2,6 +2,7 @@
 #include "Chunk.h"
 #include "Block.h"
 #include "Tile.h"
+#include "Camera.h"
 
 #pragma comment(lib, "opengl32.lib")
 
@@ -82,54 +83,60 @@ void RenderStrategy::printShaderError(u32 shader){
     }
 }
 
-void RenderStrategy::makeProgram(const char *vert, const char *frag){
+u32 RenderStrategy::compileShader(const char *filename, GLenum type){
+    const char *source = readFile(filename);
+    s32 p;
+    if(source){
+        u32 shader = createshader(type);
+        shadersource(shader, 1, &source, 0);
+        compileshader(shader);
+        delete [] source;
+        getshaderiv(shader, GL_COMPILE_STATUS, &p);
+        if(p != GL_TRUE){
+            printShaderError(shader);
+            BREAKPOINT; //Get error log
+        }
+        return shader;
+    }
+    return 0;
+}
+
+u32 RenderStrategy::makeProgram(const char *vert, const char *frag){
     int c=0;
-    const char *vertSource = readFile(vert);
     const char *fragSource = readFile(frag);
     s32 p;
-    if(vertSource){
-        c++;
-        vertProgram = createshader(GL_VERTEX_SHADER);
-        shadersource(vertProgram, 1, &vertSource, 0);
-        compileshader(vertProgram);
-        delete [] vertSource;
-        getshaderiv(vertProgram, GL_COMPILE_STATUS, &p);
-        if(p != GL_TRUE){
-            printShaderError(vertProgram);
-            BREAKPOINT; //Get error log
-        }
-    }
-    if(fragSource){
-        c++;
-        fragProgram = createshader(GL_FRAGMENT_SHADER);
-        shadersource(fragProgram, 1, &fragSource, 0);
-        compileshader(fragProgram);
-        delete [] fragSource;
-        getshaderiv(fragProgram, GL_COMPILE_STATUS, &p);
-        if(p != GL_TRUE){
-            printShaderError(fragProgram);
-            BREAKPOINT; //Get error log
-        }
-    }
-    if(!c){
+
+    u32 vertShader = compileShader(vert, GL_VERTEX_SHADER);
+    u32 fragShader = compileShader(frag, GL_FRAGMENT_SHADER);
+
+    if(vertShader+fragShader == 0){ // <-- ASSUME that vert+frag <= wrap-around-limit(=>0)
         BREAKPOINT; //Yeah no shaders specifieced! :(
     }
-    shaderProgram = createprogram();
-    if(vertSource){
-        attachshader(shaderProgram, vertProgram);
+    s32 program = createprogram();
+    if(vertShader){
+        attachshader(program, vertShader);
     }
-    if(fragSource){
-        attachshader(shaderProgram, fragProgram);
+    if(fragShader){
+        attachshader(program, fragShader);
     }
-    linkprogram(shaderProgram);
-    getprogramiv(shaderProgram, GL_LINK_STATUS, &p);
+    linkprogram(program);
+    getprogramiv(program, GL_LINK_STATUS, &p);
     if(p != GL_TRUE){
         BREAKPOINT; //YAYA
     }
 
     //TODO: Add deleting and/or checking for already created programs.
 
+    return program;
+}
 
+void RenderStrategy::preRender(Camera *pCamera){
+    matrix4 projection, view;
+    pCamera->getProjectionMatrix(projection);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glLoadMatrixf(projection.pointer());
+    glMatrixMode(GL_MODELVIEW);
 }
 
 void RenderStrategy::renderChunk(Chunk *pChunk){
@@ -145,6 +152,29 @@ void RenderStrategy::renderChunk(Chunk *pChunk){
     }
 
     pChunk->unlockBlocks(pBlocks);
+}
+
+void RenderStrategy::setPass(bool color, bool depth){
+    GLbitfield flags = 0;
+    if(color && depth){
+        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+        glDepthMask(GL_TRUE);
+        glDepthFunc(GL_LESS);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    }else{
+        if(color){
+            glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+            glDepthMask(GL_FALSE);
+            glDepthFunc(GL_EQUAL);
+            glClear(GL_COLOR_BUFFER_BIT);
+        }
+        if(depth){
+            glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+            glDepthMask(GL_TRUE);
+            glDepthFunc(GL_LESS);
+            glClear(GL_DEPTH_BUFFER_BIT);
+        }
+    }
 }
 
 static GLfloat cubeVertices[]={
@@ -183,12 +213,21 @@ static unsigned int cubeVertexCount = sizeof(cubeVertices)/(sizeof(cubeVertices[
 
 const float pixelWidth = 1.0f/1024.0f;
 const float tileWidth = 16;
+//*
 const float Z = 0.5f * pixelWidth;
 const float O = (tileWidth-0.5f)*pixelWidth;
 const float n = (tileWidth+0.5f)*pixelWidth;
 const float N = (2*tileWidth-0.5f)*pixelWidth;
 const float s = (2*tileWidth+0.5f)*pixelWidth;
 const float S = (3*tileWidth-0.5f)*pixelWidth;
+/*/
+const float Z = 0;
+const float O = (tileWidth)*pixelWidth;
+const float n = (tileWidth)*pixelWidth;
+const float N = (2*tileWidth)*pixelWidth;
+const float s = (2*tileWidth)*pixelWidth;
+const float S = (3*tileWidth)*pixelWidth;
+//*/
 static GLfloat cubeTextCoords[]={
     Z, O,
     O, O,
@@ -246,7 +285,8 @@ RenderStrategySimple::~RenderStrategySimple(){
 
 }
 
-void RenderStrategySimple::preRender(const matrix4 &viewProj){
+void RenderStrategySimple::preRender(Camera *pCamera){
+    RenderStrategy::preRender(pCamera);
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
     glVertexPointer(3, GL_FLOAT, 0, cubeVertices);
@@ -308,7 +348,8 @@ RenderStrategyVBO::~RenderStrategyVBO(){
 }
 
 
-void RenderStrategyVBO::preRender(const matrix4 &viewProj){
+void RenderStrategyVBO::preRender(Camera *pCamera){
+    RenderStrategy::preRender(pCamera);
     bind(GL_ARRAY_BUFFER_ARB, cubeVBO[0]);
     bind(GL_ELEMENT_ARRAY_BUFFER_ARB, cubeVBO[1]);
     glEnableClientState(GL_VERTEX_ARRAY);
@@ -369,7 +410,8 @@ RenderStrategyVBOPerBlock::~RenderStrategyVBOPerBlock(){
 }
 
 
-void RenderStrategyVBOPerBlock::preRender(const matrix4 &viewProj){
+void RenderStrategyVBOPerBlock::preRender(Camera *pCamera){
+    RenderStrategy::preRender(pCamera);
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 }
@@ -472,16 +514,16 @@ void RenderStrategyVBOPerBlock::renderBlock(Block *pBlock){
 RenderStrategyVBOPerBlockSharedCubes::RenderStrategyVBOPerBlockSharedCubes(IVideoDriver *pDriver)
     : RenderStrategy(pDriver)
 {    
-    makeProgram(
+    m_fullProgram = makeProgram(
         "shaders/RS_VBO_PerBlockSharedCubes.vert",
         "shaders/RS_VBO_PerBlockSharedCubes.frag"
         );    
 
-    m_loc_MVP =     getuniformlocation(shaderProgram, "MVP");
-    m_loc_textureAtlas = getuniformlocation(shaderProgram, "textureAtlas");
-    m_loc_blockPosition = getuniformlocation(shaderProgram, "blockPos");
-    m_loc_vertex =  getattriblocation(shaderProgram, "in_vertex");
-    m_loc_tex =     getattriblocation(shaderProgram, "in_texcoord");
+    m_loc_MVP =     getuniformlocation(m_fullProgram, "MVP");
+    m_loc_textureAtlas = getuniformlocation(m_fullProgram, "textureAtlas");
+    m_loc_blockPosition = getuniformlocation(m_fullProgram, "blockPos");
+    m_loc_vertex =  getattriblocation(m_fullProgram, "in_vertex");
+    m_loc_tex =     getattriblocation(m_fullProgram, "in_texcoord");
 
     m_pIndices  = new u16[sizeof(cubeIndices)*TILES_PER_BLOCK];
 
@@ -529,7 +571,8 @@ RenderStrategyVBOPerBlockSharedCubes::~RenderStrategyVBOPerBlockSharedCubes(){
 }
 
 
-void RenderStrategyVBOPerBlockSharedCubes::preRender(const matrix4 &viewProj){
+void RenderStrategyVBOPerBlockSharedCubes::preRender(Camera *pCamera){
+    //RenderStrategy::preRender(pCamera);  <-- No U :D
     bind(GL_ARRAY_BUFFER_ARB, m_cubesVBO);
 
     vertexattribpointer(m_loc_vertex, 3, GL_FLOAT, GL_FALSE, 0, (void*)m_vertOffset);
@@ -537,10 +580,17 @@ void RenderStrategyVBOPerBlockSharedCubes::preRender(const matrix4 &viewProj){
     enablevertexattribarray(m_loc_vertex);
     enablevertexattribarray(m_loc_tex);
 
-    useprogram(shaderProgram);
+    useprogram(m_fullProgram);
     uniform1i(m_loc_textureAtlas, 0);
-    uniformmatrix4fv(m_loc_MVP, 1, GL_FALSE, viewProj.pointer());
+    matrix4 proj;
+    matrix4 view;
+    matrix4 projView;
+    pCamera->getProjectionMatrix(proj);
+    pCamera->getViewMatrix(view);
+    projView = proj*view;
+    uniformmatrix4fv(m_loc_MVP, 1, GL_FALSE, projView.pointer());
 }
+
 void RenderStrategyVBOPerBlockSharedCubes::postRender(){
     bind(GL_ARRAY_BUFFER_ARB, 0);
     bind(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
@@ -593,14 +643,7 @@ void RenderStrategyVBOPerBlockSharedCubes::renderBlock(Block *pBlock){
         idxCnt = uploadBlock(pBlock);
     }
 
-    matrix4 blockOrigin;
     vec3i blockPos = pBlock->getPosition();
-
-    blockOrigin.setTranslation(vec3f(
-        (f32)(blockPos.X),
-        (f32)(blockPos.Y),
-        (f32)(blockPos.Z)
-        ));
     //m_pDriver->setTransform(ETS_WORLD, blockOrigin);
     uniform3iv(m_loc_blockPosition, 1, &blockPos.X);
     glDrawElements(GL_QUADS, idxCnt, GL_UNSIGNED_SHORT, 0);

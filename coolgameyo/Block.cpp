@@ -142,7 +142,7 @@ Tile Block::getTile(const vec3i tilePosition)
     }
     if (isSparse()) {
         Tile t = {type, 0, TILE_VALID, 0};
-        t.setSeen(isSeen());
+        t.setSeen(isSeen() != 0);
         return t;
     }
 

@@ -3,16 +3,22 @@
 #include "Util.h"
 #include "Renderer.h"
 
-World::World(IVideoDriver *driver)
+World::World()
     : m_isServer(true)
 {
-    m_pRenderer = new Renderer(this, driver);
+
+    vec2i xy(20,30);
+    auto u = new Unit;
+    u->pos = getTopTilePos(xy);
+    u->pos.Z += 1;
+    addUnit(u);
+    floodFillVisibility(xy);
+
 }
 
 
 World::~World(void)
 {
-    delete m_pRenderer;
 }
 
 Tile World::loadTileFromDisk(const vec3i &tilePos)
@@ -104,6 +110,22 @@ void World::generateBlock(const vec3i &tilePos)
     /* Store to harddrive? schedule it? */
 }
 
+
+
+SectorList *World::lock()
+{
+    // Implement thread thingies.
+    return &m_sectorList;
+}
+
+void World::unlock(SectorList *data)
+{
+    assert(data == &m_sectorList);
+}
+
+
+
+
 void World::addUnit(Unit* u)
 {
     m_unitCount += 1;
@@ -118,27 +140,6 @@ void World::addUnit(Unit* u)
         pos.Z += TILES_PER_SECTOR_Z * (*posit).Z;
         getSector(pos)->incCount();
     }
-}
-
-void World::render()
-{
-    m_pRenderer->preRender();
-
-    foreach (sect, m_sectorList) {
-        /* Culling based on sectors */
-        Sector *pSector = *sect;
-        ChunkPtr *pChunks = pSector->lockChunks();
-        for (int i=0;i<CHUNKS_PER_SECTOR; i++) {
-            ChunkPtr pChunk = pChunks[i];
-            if(!CHUNK_VISIBLE(pChunk)){
-                continue;
-            }
-            m_pRenderer->renderChunk(pChunk);
-        }
-
-        pSector->unlockChunks(pChunks);
-    }
-    m_pRenderer->postRender();
 }
 
 

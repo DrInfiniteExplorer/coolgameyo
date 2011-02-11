@@ -18,8 +18,13 @@ private:
 
    WorldGenerator            m_worldGen;
    bool                      m_isServer; // TODO: FIX
-   Renderer                 *m_pRenderer;
 
+
+   /* Data som används som parametrar för att generera världen? */
+/*
+   WorldGenerator    m_worldGen;
+   Game             *m_pGame;
+*///Was removed luben unsure etc remove if not breaks lolololololol   
    int                       m_unitCount;
 
    std::unordered_set<WorldListener*> m_listeners;
@@ -39,10 +44,11 @@ private:
    void setBlock(const vec3i tilePos, Block newBlock);
 
 public:
-   World(IVideoDriver* driver);
+   World();
    ~World(void);
 
-   void render();
+   SectorList *lock();
+   void unlock(SectorList *data);
 
    void addUnit(Unit* unit);
 

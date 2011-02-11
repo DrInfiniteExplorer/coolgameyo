@@ -33,18 +33,36 @@ Renderer::Renderer(World *pWorld, IVideoDriver *pDriver)
     PFNGLTEXSUBIMAGE3DPROC glTexSubImage3D = (PFNGLTEXSUBIMAGE3DPROC)wglGetProcAddress("glTexSubImage3D");
     ASSERT(glTexSubImage3D != NULL);
 
+
     glGenTextures(1, &m_TextureAtlas);
-    glBindTexture(GL_TEXTURE_2D_ARRAY_EXT, m_TextureAtlas);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, m_TextureAtlas);
 
-    glTexParameteri(GL_TEXTURE_2D_ARRAY_EXT, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY_EXT, GL_TEXTURE_MIN_FILTER, GL_NEAREST); //TODO: Check GL_NEAREST_MIPMAP_NEAREST / GL_NEAREST_CLIPMAP_NEAREST_SGIX
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST); //TODO: Check GL_NEAREST_MIPMAP_NEAREST / GL_NEAREST_CLIPMAP_NEAREST_SGIX
 
-    glTexParameteri(GL_TEXTURE_2D_ARRAY_EXT, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY_EXT, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); //Like, why not? TODO: Think about it.
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-    //TODO: Find out what this SGIS is. Apparently same id as non-_SGIS. ?
-    //glTexParameteri(GL_TEXTURE_2D_ARRAY_EXT, GL_GENERATE_MIPMAP_SGIS, GL_TRUE);
-    glTexImage3D(GL_TEXTURE_2D_ARRAY_EXT, 0, GL_RGBA8, width, height, ImgCnt, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+///////// THESE ARE ATTEMPTS TO REMOVE UGLY WHITE LINES
+//*
+    f32 max;
+    glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &max);
+    printf("%f\n", max);
+    glTexParameterf(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAX_ANISOTROPY_EXT, max);
+    //glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+//*/
+/////////
+
+//*
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST); //TODO: Check GL_NEAREST_MIPMAP_NEAREST / GL_NEAREST_CLIPMAP_NEAREST_SGIX
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAX_LEVEL, 6); // (2^10)/(2^6) = 2^4 = 16 yeah! tiles reduced to one pixel!
+    //glHint(GL_GENERATE_MIPMAP_HINT, GL_FASTEST);
+    //IF 1.4 <= GL-VERSION < 3.0
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_GENERATE_MIPMAP, GL_TRUE);
+    //END IF 1.4 <= GL-VERSION < 3.0
+//*/
+
+    glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA8, width, height, ImgCnt, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
     for(int i=0;i<ImgCnt;i++){
         if(pImages[i]){
             ASSERT(width == pImages[i]->getDimension().Width);
@@ -59,18 +77,27 @@ Renderer::Renderer(World *pWorld, IVideoDriver *pDriver)
                 BREAKPOINT(); //Derp a herp. Maybe add support later. Maybe.
             }
             void *pData = pImages[i]->lock();
-            glTexSubImage3D(GL_TEXTURE_2D_ARRAY_EXT, 0, 0, 0, i, width, height, 1, format, GL_UNSIGNED_BYTE, pData);
+            glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, i, width, height, 1, format, GL_UNSIGNED_BYTE, pData);
             pImages[i]->unlock();
             pImages[i]->drop();
             pImages[i] = NULL;
         }
     }
+    //IF 3.0 <= GL-VERSION
+    //glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
+    //END IF 3.0 <= GL-VERSION
+
+
 
     //m_pRenderStrategy = new RenderStrategySimple(pDriver);        //Veeerrry slow
     //m_pRenderStrategy = new RenderStrategyVBO(pDriver);           //Likewise
     //m_pRenderStrategy = new RenderStrategyVBOPerBlock(pDriver);   //Acceptable rates
     m_pRenderStrategy = new RenderStrategyVBOPerBlockSharedCubes(pDriver);  //Acceptable rates as well
     
+
+    glDisable(GL_LIGHTING);
+    glFrontFace(GL_CCW);
+
 }
 
 
@@ -79,16 +106,69 @@ Renderer::~Renderer(void)
     delete m_pRenderStrategy;
 }
 
-void Renderer::preRender(){
 
-    matrix4 proj, view;
-    proj = m_pDriver->getTransform(ETS_PROJECTION);
-    view = m_pDriver->getTransform(ETS_VIEW);
 
-    glDisable(GL_LIGHTING);
-    glEnable(GL_TEXTURE_2D);
+void Renderer::renderChunk(Chunk *pChunk){
+    m_pRenderStrategy->renderChunk(pChunk);
+}
+
+void Renderer::getChunksToRender(){
+    SectorList *pSectors = m_pWorld->lock();
+    m_chunksToRender.set_used(0);
+    foreach(it, (*pSectors)){
+        Sector *pSector = *it;
+        Chunk **pChunks = pSector->lockChunks();
+        for(int i=0;i<CHUNKS_PER_SECTOR;i++){
+            Chunk* pChunk = pChunks[i];
+            if(!CHUNK_VISIBLE(pChunk)){
+                continue;
+            }
+            /* IF IN FRUSTUM OR LIKE SO, ELSE CONTIUNUE */
+            pChunk->lockBlocks(); //Release when done with the chunk.
+            m_chunksToRender.push_back(pChunk);
+        }
+        pSector->unlockChunks(pChunks);
+    }
+    m_pWorld->unlock(pSectors);
+
+    //TODO: Sort chunks front to back?
+
+}
+
+
+
+void Renderer::preRender(Camera *pCamera){
+//    glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D_ARRAY_EXT, m_TextureAtlas);
-    m_pRenderStrategy->preRender(proj * view);
+    m_pRenderStrategy->preRender(pCamera);
+    getChunksToRender();
+}
+
+void Renderer::renderWorld(){
+    Chunk **pChunks = m_chunksToRender.pointer();
+    int size = m_chunksToRender.size();
+
+    const bool DepthFirst = false;
+    if(DepthFirst){    
+        m_pRenderStrategy->setPass(false, true);
+        for(int i=0;i<size;i++){
+            Chunk *pChunk = pChunks[i];
+            renderChunk(pChunk);
+        }
+        m_pRenderStrategy->setPass(true, false);
+        for(int i=0;i<size;i++){
+            Chunk *pChunk = pChunks[i];
+            renderChunk(pChunk);
+            pChunk->unlockBlocks(NULL); //TODO: Figure out way to do this nicelylylyl.
+        }
+    }else{
+        m_pRenderStrategy->setPass(true, true);
+        for(int i=0;i<size;i++){
+            Chunk *pChunk = pChunks[i];
+            renderChunk(pChunk);
+            pChunk->unlockBlocks(NULL); //TODO: Figure out way to do this nicelylylyl.
+        }
+    }
 }
 
 void Renderer::postRender(){
@@ -96,20 +176,5 @@ void Renderer::postRender(){
 
 }
 
-void Renderer::renderBlock(Block *pBlock){
-    /*     Bind texture atlas!!!     */
-    /*        (already bound?)       */
-    /*  (consider unbound rendering  */
-    // m_pRenderStrategy->renderBlock(pBlock);
-    /*  Unbind texture atlas?  */
-
-    BREAKPOINT; //Should we at all keep this function? 
-
-}
-
-
-void Renderer::renderChunk(Chunk *pChunk){
-    m_pRenderStrategy->renderChunk(pChunk);
-}
 
 

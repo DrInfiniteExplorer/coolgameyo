@@ -6,6 +6,7 @@
 
 class Block;
 class Chunk;
+class Camera;
 
 class RenderStrategy
 {
@@ -41,11 +42,9 @@ protected:
     PFNGLENABLEVERTEXATTRIBARRAYPROC enablevertexattribarray;
     PFNGLDISABLEVERTEXATTRIBARRAYPROC disablevertexattribarray;
 
-    u32 vertProgram;
-    u32 fragProgram;
-    u32 shaderProgram;
     void printShaderError(u32 shader);
-    void makeProgram(const char *vert, const char *frag);
+    u32 compileShader(const char *filename, GLenum type);
+    u32 makeProgram(const char *vert, const char *frag);
 
     static bool m_bFixTC; //set to true when we've recalculated the texcoords according to atlas size.
     IVideoDriver *m_pDriver;
@@ -54,8 +53,9 @@ public:
     RenderStrategy(IVideoDriver *pDriver);
     virtual ~RenderStrategy(void);
 
-    virtual void preRender(const matrix4 &viewProj) = 0;
+    virtual void preRender(Camera *pCamera);
     virtual void renderChunk(Chunk *pChunk);
+    virtual void setPass(bool color, bool depth);
     virtual void postRender() = 0;
 };
 
@@ -67,7 +67,7 @@ public:
     RenderStrategySimple(IVideoDriver *pDriver);
     virtual ~RenderStrategySimple();
 
-    virtual void preRender(const matrix4 &viewProj);
+    virtual void preRender(Camera *pCamera);
     virtual void renderBlock(Block *pBlock);
     virtual void postRender();
 };
@@ -81,7 +81,7 @@ public:
     RenderStrategyVBO(IVideoDriver *pDriver);
     virtual ~RenderStrategyVBO();
 
-    virtual void preRender(const matrix4 &viewProj);
+    virtual void preRender(Camera *pCamera);
     virtual void renderBlock(Block *pBlock);
     virtual void postRender();
 };
@@ -104,7 +104,7 @@ public:
     RenderStrategyVBOPerBlock(IVideoDriver *pDriver);
     virtual ~RenderStrategyVBOPerBlock();
 
-    virtual void preRender(const matrix4 &viewProj);
+    virtual void preRender(Camera *pCamera);
     virtual void renderBlock(Block *pBlock);
     virtual void postRender();
 };
@@ -121,6 +121,8 @@ private:
     u32 m_texSize;
     u32 m_texOffset;
 
+    u32 m_fullProgram;
+
     u32 m_loc_MVP;
     u32 m_loc_textureAtlas;
     u32 m_loc_blockPosition;
@@ -131,7 +133,9 @@ public:
     RenderStrategyVBOPerBlockSharedCubes(IVideoDriver *pDriver);
     virtual ~RenderStrategyVBOPerBlockSharedCubes();
 
-    virtual void preRender(const matrix4 &viewProj);
+
+
+    virtual void preRender(Camera *pCamera);
     virtual void renderBlock(Block *pBlock);
     virtual void postRender();
 };

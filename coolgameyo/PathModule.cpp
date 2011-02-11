@@ -4,7 +4,7 @@
 
 static float heuristic(vec3i a, vec3i b)
 {
-    return a.getDistanceFrom(b);
+    return (float)a.getDistanceFrom(b);
 }
 static float dist_between(vec3i a, vec3i b)
 {

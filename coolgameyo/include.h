@@ -18,7 +18,15 @@ using namespace irr::core;
 using namespace irr::scene;
 using namespace irr::video;
 
+template <typename A, typename B>
+inline vector3d<A> convert(const vector3d<B> in){
+    return vector3d<A>(
+        (A)in.X,
+        (A)in.Y,
+        (A)in.Z);
+}
 
+typedef vector3d<f64> vec3d;
 typedef vector3df vec3f;
 typedef vector3di vec3i;
 typedef vector2di vec2i;
