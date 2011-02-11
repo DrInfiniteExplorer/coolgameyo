@@ -165,8 +165,9 @@ Tile World::getTile(const vec3i tilePos, bool fetch, bool createBlock, bool crea
     } else {
         /* Send request to sever!! */
         printf("Implement etc\n");
-        BREAKPOINT;
     }
+
+    BREAKPOINT;
 }
 
 vec3i World::getTopTilePos(const vec2i xy)

@@ -18,7 +18,7 @@
 #endif
 
 #ifdef WIN32
-#define BREAKPOINT __asm int 3;
+#define BREAKPOINT _CrtDbgBreak();
 inline void ASSERT(int x)
 {
     if (!x) {
