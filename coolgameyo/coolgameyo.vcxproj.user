@@ -14,4 +14,9 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <LocalDebuggerEnvironment>PATH=%PATH%;$(SolutionDir)libraries\irrlicht\bin\win32-visualstudio
 $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LocalDebuggerEnvironment>PATH=%PATH%;$(SolutionDir)\libraries\irrlicht\bin\Win64-VisualStudio\</LocalDebuggerEnvironment>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <LocalDebuggerWorkingDirectory>$(SolutionDir)gameroot</LocalDebuggerWorkingDirectory>
+  </PropertyGroup>
 </Project>
