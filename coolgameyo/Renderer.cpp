@@ -74,7 +74,7 @@ Renderer::Renderer(World *pWorld, IVideoDriver *pDriver)
             }else if(fmt == ECF_R8G8B8){
                 format = GL_RGB;
             }else{
-                BREAKPOINT(); //Derp a herp. Maybe add support later. Maybe.
+                BREAKPOINT; //Derp a herp. Maybe add support later. Maybe.
             }
             void *pData = pImages[i]->lock();
             glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, i, width, height, 1, format, GL_UNSIGNED_BYTE, pData);
