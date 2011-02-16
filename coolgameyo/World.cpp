@@ -90,6 +90,7 @@ Block World::getBlock(const vec3i tilePos, bool getSector, bool get)
         generateBlock(tilePos);
         b = s->getBlock(tilePos);
     }
+    assert (b.isValid());
     return b;
 }
 
@@ -199,87 +200,91 @@ void World::floodFillVisibility(const vec2i xypos)
         printf("DOING %5d%5d%5d\n", pos.X,pos.Y,pos.Z);
         
         auto block = getBlock(pos, false, true);
-        if (block.isValid() && !block.isSeen()) {
-            block.setSeen();
-            if (block.isSparse()) {
-                if (block.type == ETT_AIR) {
-                    //work.insert(pos + vec3i(TILES_PER_BLOCK_X, 0, 0));
-                    //work.insert(pos - vec3i(TILES_PER_BLOCK_X, 0, 0));
-                   // work.insert(pos + vec3i(0, TILES_PER_BLOCK_Y, 0));
-                    //work.insert(pos - vec3i(0, TILES_PER_BLOCK_Y, 0));
-                    //work.insert(pos + vec3i(0, 0, TILES_PER_BLOCK_Z));
-                    //work.insert(pos - vec3i(0, 0, TILES_PER_BLOCK_Z));
-                }
-            } else {
-                // map through all the tiles in the block; if any edge is air,
-                // add that edge block to work
-                
-                // this will be shitty
-                
-                RangeFromTo range(0, TILES_PER_BLOCK_X,
+        if (!block.isValid() || block.isSeen()) {
+            if (!block.isValid()) {
+                printf("Block not valid: %d %d %d", pos.X, pos.Y, pos.Z);
+            }
+            continue;
+        }
+        block.setSeen();
+        if (block.isSparse()) {
+            if (block.type == ETT_AIR) {
+                work.insert(pos + vec3i(TILES_PER_BLOCK_X, 0, 0));
+                work.insert(pos - vec3i(TILES_PER_BLOCK_X, 0, 0));
+                work.insert(pos + vec3i(0, TILES_PER_BLOCK_Y, 0));
+                work.insert(pos - vec3i(0, TILES_PER_BLOCK_Y, 0));
+                work.insert(pos + vec3i(0, 0, TILES_PER_BLOCK_Z));
+                work.insert(pos - vec3i(0, 0, TILES_PER_BLOCK_Z));
+            }
+        } else {
+            // map through all the tiles in the block; if any edge is air,
+            // add that edge block to work
+
+            // this will be shitty
+
+            RangeFromTo range(0, TILES_PER_BLOCK_X,
                     0, TILES_PER_BLOCK_Y,
                     0, TILES_PER_BLOCK_Z);
-                foreach (it, range) {
-                    auto rel = *it;
-                    //printf("% ...> tile %5d%5d%5d\n", rel.X,rel.Y,rel.Z);
-                    auto tp = rel + pos;
-                    Tile t = block.getTile(tp);
-                    if (t.type == ETT_AIR) {
-                        t.setSeen();
-                        if (rel.X == 0) {
-                            work.insert(pos - vec3i(TILES_PER_BLOCK_X, 0, 0));
-                        } else if (rel.X == TILES_PER_BLOCK_X - 1) {
-                            work.insert(pos + vec3i(TILES_PER_BLOCK_X, 0, 0));
-                        }
-                        if (rel.Y == 0) {
-                            work.insert(pos - vec3i(0, TILES_PER_BLOCK_Y, 0));
-                        } else if (rel.Y == TILES_PER_BLOCK_Y - 1) {
-                            work.insert(pos + vec3i(0, TILES_PER_BLOCK_Y, 0));
-                        }
-                        if (rel.Z == 0) {
-                            work.insert(pos - vec3i(0, 0, TILES_PER_BLOCK_Z));
-                        } else if (rel.Z == TILES_PER_BLOCK_Z - 1) {
-                            work.insert(pos + vec3i(0, 0, TILES_PER_BLOCK_Z));
-                        }
-                    } else {
-                        Tile neighbor;
-                        neighbor = getTile(vec3i(tp.X-1, tp.Y, tp.Z));
-                        if (!neighbor.isValid() || neighbor.type == ETT_AIR) {
-                            t.setSeen();
-                            goto END_LOL;
-                        }
-                        neighbor = getTile(vec3i(tp.X+1, tp.Y, tp.Z));
-                        if (!neighbor.isValid() || neighbor.type == ETT_AIR) {
-                            t.setSeen();
-                            goto END_LOL;
-                        }
-                        neighbor = getTile(vec3i(tp.X, tp.Y-1, tp.Z));
-                        if (!neighbor.isValid() || neighbor.type == ETT_AIR) {
-                            t.setSeen();
-                            goto END_LOL;
-                        }
-                        neighbor = getTile(vec3i(tp.X, tp.Y+1, tp.Z));
-                        if (!neighbor.isValid() || neighbor.type == ETT_AIR) {
-                            t.setSeen();
-                            goto END_LOL;
-                        }
-                        neighbor = getTile(vec3i(tp.X, tp.Y, tp.Z-1));
-                        if (!neighbor.isValid() || neighbor.type == ETT_AIR) {
-                            t.setSeen();
-                            goto END_LOL;
-                        }
-                        neighbor = getTile(vec3i(tp.X, tp.Y, tp.Z+1));
-                        if (!neighbor.isValid() || neighbor.type == ETT_AIR) {
-                            t.setSeen();
-                            goto END_LOL;
-                        }
-                        END_LOL:;
+            foreach (it, range) {
+                auto rel = *it;
+                //printf("% ...> tile %5d%5d%5d\n", rel.X,rel.Y,rel.Z);
+                auto tp = rel + pos;
+                Tile t = block.getTile(tp);
+                if (t.type == ETT_AIR) {
+                    t.setSeen();
+                    if (rel.X == 0) {
+                        work.insert(pos - vec3i(TILES_PER_BLOCK_X, 0, 0));
+                    } else if (rel.X == TILES_PER_BLOCK_X - 1) {
+                        work.insert(pos + vec3i(TILES_PER_BLOCK_X, 0, 0));
                     }
-                    block.setTile(tp, t);
+                    if (rel.Y == 0) {
+                        work.insert(pos - vec3i(0, TILES_PER_BLOCK_Y, 0));
+                    } else if (rel.Y == TILES_PER_BLOCK_Y - 1) {
+                        work.insert(pos + vec3i(0, TILES_PER_BLOCK_Y, 0));
+                    }
+                    if (rel.Z == 0) {
+                        work.insert(pos - vec3i(0, 0, TILES_PER_BLOCK_Z));
+                    } else if (rel.Z == TILES_PER_BLOCK_Z - 1) {
+                        work.insert(pos + vec3i(0, 0, TILES_PER_BLOCK_Z));
+                    }
+                } else {
+                    Tile neighbor;
+                    neighbor = getTile(vec3i(tp.X-1, tp.Y, tp.Z));
+                    if (!neighbor.isValid() || neighbor.type == ETT_AIR) {
+                        t.setSeen();
+                        goto END_LOL;
+                    }
+                    neighbor = getTile(vec3i(tp.X+1, tp.Y, tp.Z));
+                    if (!neighbor.isValid() || neighbor.type == ETT_AIR) {
+                        t.setSeen();
+                        goto END_LOL;
+                    }
+                    neighbor = getTile(vec3i(tp.X, tp.Y-1, tp.Z));
+                    if (!neighbor.isValid() || neighbor.type == ETT_AIR) {
+                        t.setSeen();
+                        goto END_LOL;
+                    }
+                    neighbor = getTile(vec3i(tp.X, tp.Y+1, tp.Z));
+                    if (!neighbor.isValid() || neighbor.type == ETT_AIR) {
+                        t.setSeen();
+                        goto END_LOL;
+                    }
+                    neighbor = getTile(vec3i(tp.X, tp.Y, tp.Z-1));
+                    if (!neighbor.isValid() || neighbor.type == ETT_AIR) {
+                        t.setSeen();
+                        goto END_LOL;
+                    }
+                    neighbor = getTile(vec3i(tp.X, tp.Y, tp.Z+1));
+                    if (!neighbor.isValid() || neighbor.type == ETT_AIR) {
+                        t.setSeen();
+                        goto END_LOL;
+                    }
+                END_LOL:;
                 }
+                block.setTile(tp, t);
             }
-            setBlock(pos, block);
         }
+        setBlock(pos, block);
     }
 }
 
