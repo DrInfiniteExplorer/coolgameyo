@@ -126,7 +126,7 @@ void Renderer::renderWorld(){
         auto blocks = sector->lockBlocks();
         for(int i=0;i<BLOCKS_PER_SECTOR;i++){
             auto block = blocks[i];
-            if (!block.isVisible()) {
+            if (!block.isValid() || !block.isVisible()) {
                 continue;
             }
             /* IF IN FRUSTUM OR LIKE SO, ELSE CONTIUNUE */
