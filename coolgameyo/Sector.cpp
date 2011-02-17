@@ -2,108 +2,67 @@
 #include "Util.h"
 
 Sector::Sector(void)
-    : m_activityCount(0)
+    : m_activityCount(0), m_blockCount(0), m_flags(0)
 {
-   memset(m_pChunks, 0, sizeof(m_pChunks));
-   m_chunkCount=0;
-   m_flags = SECTOR_AIR | SECTOR_UNSEEN;
+   memset(m_blocks, 0, sizeof(m_blocks));
 }
 
 
 Sector::~Sector(void)
 {
     for(int x=0;x<SECTOR_SIZE_X;x++){
-    for(int y=0;y<SECTOR_SIZE_Y;y++){
-    for(int z=0;z<SECTOR_SIZE_Z;z++){
-        ChunkPtr pChunk = m_pChunks[x][y][z];
-        if(pChunk){
-            delete pChunk;
+        for(int y=0;y<SECTOR_SIZE_Y;y++){
+            for(int z=0;z<SECTOR_SIZE_Z;z++){
+                Block::free(m_blocks[x][y][z]);
+            }
         }
-    }}}
+    }
 }
 
-ChunkPtr* Sector::lockChunks()
+Block* Sector::lockBlocks()
 {
     /* Implement mutex or something */
-    return &m_pChunks[0][0][0];
+    return &m_blocks[0][0][0];
 }
-void Sector::unlockChunks(ChunkPtr *pChunks)
+void Sector::unlockBlocks(Block *blocks)
 {
     /* Herp a derp */
 
 }
 
 
-void Sector::generateBlock(const vec3i tilePos, WorldGenerator *pWorldGen)
+void Sector::generateBlock(const vec3i tilePos, WorldGenerator *worldGen)
 {
-    vec3i chunkPos = GetSectorRelativeChunkIndex(tilePos);
-    ChunkPtr pChunk = m_pChunks[chunkPos.X][chunkPos.Y][chunkPos.Z];
-    if(!pChunk){
-        pChunk = new Chunk();
-        m_pChunks[chunkPos.X][chunkPos.Y][chunkPos.Z] = pChunk;
-        m_chunkCount++;
-    }
+    auto bp = GetSectorRelativeBlockIndex(tilePos);
+    auto block = m_blocks[bp.X][bp.Y][bp.Z];
 
-    pChunk->generateBlock(tilePos, pWorldGen);
-    if(pChunk->isAir()){
-        delete pChunk;
-        m_pChunks[chunkPos.X][chunkPos.Y][chunkPos.Z] = (ChunkPtr)AIRCHUNK;
-    }
+    assert (!block.isValid());
 
-    SetFlag(m_flags, SECTOR_UNSEEN, GetFlag(m_flags, SECTOR_UNSEEN) && !pChunk->isSeen());
+    m_blocks[bp.X][bp.Y][bp.Z] = Block::generateBlock(tilePos, worldGen);
 
     /* DO OPTIMIZATION LIKE RECOGNIZE ALL AIR ETC */
 }
 
 Tile Sector::getTile(const vec3i tilePos)
 {
-    vec3i chunkPos = GetSectorRelativeChunkIndex(tilePos);
-
-    /* Keep cache of last 2 indexed chunks? */
-
-    ChunkPtr pChunk = m_pChunks[chunkPos.X][chunkPos.Y][chunkPos.Z];
-    if(pChunk){
-        if(CHUNK_SPARSE(pChunk)){
-            return INVALID_TILE();
-        }
-        return pChunk->getTile(tilePos);
-    }
-   
-    /* We got here. Means that the tile resides in a sparse chunk. */
-    /* What to do then? We should keep track of why a chunk is sparse. */
-    /* If the chunk is all air; return air constant thing */
-    /* Also think and reason about why chunks may want to be sparse */
-    return INVALID_TILE();
+    return getBlock(tilePos).getTile(tilePos);
 }
 
 void Sector::setTile(vec3i tilePos, const Tile newTile)
 {
-    // copy paste
-    vec3i chunkPos = GetSectorRelativeChunkIndex(tilePos);
-    ChunkPtr pChunk = m_pChunks[chunkPos.X][chunkPos.Y][chunkPos.Z];
-    if(!pChunk){
-        pChunk = new Chunk();
-        m_pChunks[chunkPos.X][chunkPos.Y][chunkPos.Z] = pChunk;
-        m_chunkCount++;
-    }
-    // /copy paste
-
-    pChunk->setTile(tilePos, newTile);
+    getBlock(tilePos).setTile(tilePos, newTile);
 }
 
 Block Sector::getBlock(vec3i tilePos)
 {
-    vec3i chunkPos = GetSectorRelativeChunkIndex(tilePos);
-    ChunkPtr pChunk = m_pChunks[chunkPos.X][chunkPos.Y][chunkPos.Z];
-    if(!pChunk){ return INVALID_BLOCK(); }
-
-    return pChunk->getBlock(tilePos);
+    auto bp = GetSectorRelativeBlockIndex(tilePos);
+    return m_blocks[bp.X][bp.Y][bp.Z];
 }
 void Sector::setBlock(vec3i tilePos, Block newBlock)
 {
-    vec3i chunkPos = GetSectorRelativeChunkIndex(tilePos);
-    ChunkPtr pChunk = m_pChunks[chunkPos.X][chunkPos.Y][chunkPos.Z];
-    if(!pChunk){ ASSERT(0); }
+    auto bp = GetSectorRelativeBlockIndex(tilePos);
+    auto b = &m_blocks[bp.X][bp.Y][bp.Z];
 
-    pChunk->setBlock(tilePos, newBlock);
+    if (b->isValid()) { Block::free(*b); }
+    *b = newBlock;
 }

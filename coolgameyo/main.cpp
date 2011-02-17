@@ -9,6 +9,8 @@ int main()
 {
     Util::Test();
 
+    printf("Block: %d\nSector: %d\n", sizeof (Block), sizeof (Sector));
+
     /* Connect to server */
     /* Create world */
 /*

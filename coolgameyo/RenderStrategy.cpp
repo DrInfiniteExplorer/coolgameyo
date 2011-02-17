@@ -1,5 +1,4 @@
 #include "RenderStrategy.h"
-#include "Chunk.h"
 #include "Block.h"
 #include "Tile.h"
 #include "Camera.h"
@@ -137,21 +136,6 @@ void RenderStrategy::preRender(Camera *pCamera){
     glLoadIdentity();
     glLoadMatrixf(projection.pointer());
     glMatrixMode(GL_MODELVIEW);
-}
-
-void RenderStrategy::renderChunk(Chunk *pChunk){
-    auto *pBlocks = pChunk->lockBlocks();
-
-    for (int c=0;c<BLOCKS_PER_CHUNK;c++) {
-        Block *pBlock = &pBlocks[c];
-
-        if (!pBlock->isValid() ||!pBlock->isVisible()) {
-            continue;
-        }
-        renderBlock(pBlock);
-    }
-
-    pChunk->unlockBlocks(pBlocks);
 }
 
 void RenderStrategy::setPass(bool color, bool depth){

@@ -47,8 +47,8 @@ public:
    World();
    ~World(void);
 
-   SectorList *lock();
-   void unlock(SectorList *data);
+   std::vector<Sector*> *lock();
+   void unlock(std::vector<Sector*> *data);
 
    void addUnit(Unit* unit);
 

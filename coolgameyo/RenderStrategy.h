@@ -48,13 +48,13 @@ protected:
 
     static bool m_bFixTC; //set to true when we've recalculated the texcoords according to atlas size.
     IVideoDriver *m_pDriver;
-    virtual void renderBlock(Block *pBlock) = 0;
 public:
     RenderStrategy(IVideoDriver *pDriver);
     virtual ~RenderStrategy(void);
 
+    virtual void renderBlock(Block *pBlock) = 0;
+
     virtual void preRender(Camera *pCamera);
-    virtual void renderChunk(Chunk *pChunk);
     virtual void setPass(bool color, bool depth);
     virtual void postRender() = 0;
 };

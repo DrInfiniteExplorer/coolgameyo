@@ -79,7 +79,9 @@ Block Block::alloc()
 }
 void Block::free(Block block)
 {
-    Allocator::returnMem(block.m_tiles);
+    if (block.isValid()) {
+        Allocator::returnMem(block.m_tiles);
+    }
 }
 
 
@@ -133,7 +135,7 @@ Block Block::generateBlock(const vec3i tilePos, WorldGenerator *pWorldGen)
 
 Tile Block::getTile(const vec3i tilePosition)
 {
-    assert (isValid());
+    if (!isValid()) return INVALID_TILE();
 
     if (isSparse()) {
         Tile t = {type, 0, TILE_VALID, 0};

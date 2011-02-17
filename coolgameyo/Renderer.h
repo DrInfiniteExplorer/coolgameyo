@@ -20,13 +20,12 @@ private:
     RenderStrategy  *m_pRenderStrategy;
 
     void renderBlock(Block *pBlock);
-    void renderChunk(Chunk *pChunk);
 
     /*  Aquire a nd fill a list of pointers to locked chunks. The world(sectors[actually chunkptr's]) is locked
         until a lock is aquired for all chunks[actually blocks] in the world, upon which the world is released,
         and the chunks[blocks] are released when they are rendered.*/
-    void getChunksToRender();
-    core::array<Chunk*> m_chunksToRender; //TODO: Determine if to use irrlicht or stl-container.
+    void getBlocksToRender();
+    core::array<Block> m_blocksToRender; //TODO: Determine if to use irrlicht or stl-container.
 
 
 public:

@@ -84,7 +84,7 @@ Block World::getBlock(const vec3i tilePos, bool getSector, bool get)
 {
     auto s = this->getSector(tilePos, getSector);
     if (!s){
-        BREAKPOINT;
+        //BREAKPOINT;
         return INVALID_BLOCK();
     }
 
@@ -116,13 +116,13 @@ void World::generateBlock(const vec3i &tilePos)
 
 
 
-SectorList *World::lock()
+std::vector<Sector*> *World::lock()
 {
     // Implement thread thingies.
     return &m_sectorList;
 }
 
-void World::unlock(SectorList *data)
+void World::unlock(std::vector<Sector*> *data)
 {
     assert(data == &m_sectorList);
 }
@@ -205,11 +205,10 @@ void World::floodFillVisibility(const vec2i xypos)
         auto pos = *work.begin();
         work.erase(pos);
         
-        
         auto block = getBlock(pos, false, true);
         if (!block.isValid() || block.isSeen()) {
             if (!block.isValid()) {
-                printf("Block not valid: %d %d %d\n", pos.X, pos.Y, pos.Z);
+                //printf("Block not valid: %d %d %d", pos.X, pos.Y, pos.Z);
             }
             continue;
         }

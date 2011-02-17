@@ -108,28 +108,27 @@ Renderer::~Renderer(void)
 
 
 
-void Renderer::renderChunk(Chunk *pChunk){
-    m_pRenderStrategy->renderChunk(pChunk);
+void Renderer::renderBlock(Block *block){
+    m_pRenderStrategy->renderBlock(block);
 }
 
-void Renderer::getChunksToRender(){
-    SectorList *pSectors = m_pWorld->lock();
-    m_chunksToRender.set_used(0);
-    foreach(it, (*pSectors)){
-        Sector *pSector = *it;
-        Chunk **pChunks = pSector->lockChunks();
-        for(int i=0;i<CHUNKS_PER_SECTOR;i++){
-            Chunk* pChunk = pChunks[i];
-            if(!CHUNK_VISIBLE(pChunk)){
+void Renderer::getBlocksToRender(){
+    auto sectors = m_pWorld->lock();
+    m_blocksToRender.set_used(0);
+    foreach(it, (*sectors)){
+        auto *sector = *it;
+        auto blocks = sector->lockBlocks();
+        for(int i=0;i<BLOCKS_PER_SECTOR;i++){
+            auto block = blocks[i];
+            if (!block.isVisible()) {
                 continue;
             }
             /* IF IN FRUSTUM OR LIKE SO, ELSE CONTIUNUE */
-            pChunk->lockBlocks(); //Release when done with the chunk.
-            m_chunksToRender.push_back(pChunk);
+            m_blocksToRender.push_back(block);
         }
-        pSector->unlockChunks(pChunks);
+        sector->unlockBlocks(blocks); //???
     }
-    m_pWorld->unlock(pSectors);
+    m_pWorld->unlock(sectors);
 
     //TODO: Sort chunks front to back?
 
@@ -141,32 +140,30 @@ void Renderer::preRender(Camera *pCamera){
 //    glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D_ARRAY_EXT, m_TextureAtlas);
     m_pRenderStrategy->preRender(pCamera);
-    getChunksToRender();
+    getBlocksToRender();
 }
 
 void Renderer::renderWorld(){
-    Chunk **pChunks = m_chunksToRender.pointer();
-    int size = m_chunksToRender.size();
+    auto blocks = m_blocksToRender.pointer();
+    auto size = m_blocksToRender.size();
 
     const bool DepthFirst = false;
     if(DepthFirst){    
         m_pRenderStrategy->setPass(false, true);
-        for(int i=0;i<size;i++){
-            Chunk *pChunk = pChunks[i];
-            renderChunk(pChunk);
+        for (size_t i=0; i<size; i++) {
+            auto block = &blocks[i];
+            renderBlock(block);
         }
         m_pRenderStrategy->setPass(true, false);
-        for(int i=0;i<size;i++){
-            Chunk *pChunk = pChunks[i];
-            renderChunk(pChunk);
-            pChunk->unlockBlocks(NULL); //TODO: Figure out way to do this nicelylylyl.
+        for (size_t i=0; i<size; i++) {
+            auto block = &blocks[i];
+            renderBlock(block);
         }
     }else{
         m_pRenderStrategy->setPass(true, true);
-        for(int i=0;i<size;i++){
-            Chunk *pChunk = pChunks[i];
-            renderChunk(pChunk);
-            pChunk->unlockBlocks(NULL); //TODO: Figure out way to do this nicelylylyl.
+        for (size_t i=0; i < size; i++) {
+            auto block = &blocks[i];
+            renderBlock(block);
         }
     }
 }

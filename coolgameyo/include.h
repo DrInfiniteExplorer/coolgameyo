@@ -5,13 +5,13 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
-#include <assert.h>
-
 #include <utility>
 
 //#include <thread>
 
 #include "os.h"
+
+#define assert(X) do { if (!(X)) BREAKPOINT; } while (0)
 
 using namespace irr;
 using namespace irr::core;
