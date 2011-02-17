@@ -114,7 +114,7 @@ void Game::run(){
             m_pCamera->axisMove( 0.0f,  0.0f,  0.1f);
         }
 
-        pDriver->beginScene(false, false, SColor(255, 128, 0, 0));
+        pDriver->beginScene(true, true, SColor(255, 128, 0, 0));
         //m_pDevice->getSceneManager()->drawAll(); //Is only camera. <--Not even that anymore, MOAOAAOA!
 
         m_pRenderer->preRender(m_pCamera);

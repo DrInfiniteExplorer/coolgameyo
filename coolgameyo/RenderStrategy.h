@@ -55,7 +55,6 @@ public:
     virtual void renderBlock(Block *pBlock) = 0;
 
     virtual void preRender(Camera *pCamera);
-    virtual void setPass(bool color, bool depth);
     virtual void postRender() = 0;
 };
 

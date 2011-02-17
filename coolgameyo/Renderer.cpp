@@ -112,9 +112,15 @@ void Renderer::renderBlock(Block *block){
     m_pRenderStrategy->renderBlock(block);
 }
 
-void Renderer::getBlocksToRender(){
+void Renderer::preRender(Camera *pCamera){
+//    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D_ARRAY_EXT, m_TextureAtlas);
+    m_pRenderStrategy->preRender(pCamera);
+}
+
+void Renderer::renderWorld(){
+
     auto sectors = m_pWorld->lock();
-    m_blocksToRender.set_used(0);
     foreach(it, (*sectors)){
         auto *sector = *it;
         auto blocks = sector->lockBlocks();
@@ -124,48 +130,12 @@ void Renderer::getBlocksToRender(){
                 continue;
             }
             /* IF IN FRUSTUM OR LIKE SO, ELSE CONTIUNUE */
-            m_blocksToRender.push_back(block);
+            renderBlock(&block);
         }
         sector->unlockBlocks(blocks); //???
     }
     m_pWorld->unlock(sectors);
 
-    //TODO: Sort chunks front to back?
-
-}
-
-
-
-void Renderer::preRender(Camera *pCamera){
-//    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D_ARRAY_EXT, m_TextureAtlas);
-    m_pRenderStrategy->preRender(pCamera);
-    getBlocksToRender();
-}
-
-void Renderer::renderWorld(){
-    auto blocks = m_blocksToRender.pointer();
-    auto size = m_blocksToRender.size();
-
-    const bool DepthFirst = false;
-    if(DepthFirst){    
-        m_pRenderStrategy->setPass(false, true);
-        for (size_t i=0; i<size; i++) {
-            auto block = &blocks[i];
-            renderBlock(block);
-        }
-        m_pRenderStrategy->setPass(true, false);
-        for (size_t i=0; i<size; i++) {
-            auto block = &blocks[i];
-            renderBlock(block);
-        }
-    }else{
-        m_pRenderStrategy->setPass(true, true);
-        for (size_t i=0; i < size; i++) {
-            auto block = &blocks[i];
-            renderBlock(block);
-        }
-    }
 }
 
 void Renderer::postRender(){

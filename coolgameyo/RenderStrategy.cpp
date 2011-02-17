@@ -138,29 +138,6 @@ void RenderStrategy::preRender(Camera *pCamera){
     glMatrixMode(GL_MODELVIEW);
 }
 
-void RenderStrategy::setPass(bool color, bool depth){
-    GLbitfield flags = 0;
-    if(color && depth){
-        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-        glDepthMask(GL_TRUE);
-        glDepthFunc(GL_LESS);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    }else{
-        if(color){
-            glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-            glDepthMask(GL_FALSE);
-            glDepthFunc(GL_EQUAL);
-            glClear(GL_COLOR_BUFFER_BIT);
-        }
-        if(depth){
-            glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-            glDepthMask(GL_TRUE);
-            glDepthFunc(GL_LESS);
-            glClear(GL_DEPTH_BUFFER_BIT);
-        }
-    }
-}
-
 static GLfloat cubeVertices[]={
     0, 0, 0,    // 0, 0
     1, 0, 0,    // 1, 0
