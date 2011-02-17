@@ -14,7 +14,6 @@ s32 NegDiv(const s32 a, const s32 b);
 /*  [0, <bigger thing>_SIZE_?[  */
 vec3i GetBlockRelativeTileIndex(const vec3i &tilePosition);
 /*  See GetBlockRelativeTileIndex for description  */
-//vec3i GetChunkRelativeBlockIndex(const vec3i &tilePosition);
 /*  See GetBlockRelativeTileIndex for description  */
 vec3i GetSectorRelativeBlockIndex(const vec3i &tilePosition);
 

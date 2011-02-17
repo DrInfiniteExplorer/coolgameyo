@@ -4,7 +4,6 @@
 
 class World;
 class Block;
-class Chunk;
 class RenderStrategy;
 class Camera;
 
@@ -20,8 +19,6 @@ private:
     RenderStrategy  *m_pRenderStrategy;
 
     void renderBlock(Block *pBlock);
-
-
 
 public:
     Renderer(World *pWorld, IVideoDriver *pDriver);

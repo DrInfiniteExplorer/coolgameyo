@@ -1,7 +1,6 @@
 #include "Renderer.h"
 #include "World.h"
 #include "Block.h"
-#include "Chunk.h"
 #include "RenderStrategy.h"
 #include "gl.h"
 
@@ -135,7 +134,6 @@ void Renderer::renderWorld(){
         sector->unlockBlocks(blocks); //???
     }
     m_pWorld->unlock(sectors);
-
 }
 
 void Renderer::postRender(){

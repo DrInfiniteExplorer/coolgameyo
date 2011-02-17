@@ -97,14 +97,6 @@ vec3i GetBlockRelativeTileIndex(const vec3i &tilePosition){
         );
 }
 /*  See GetBlockRelativeTileIndex for description  */
-//vec3i GetChunkRelativeBlockIndex(const vec3i &tilePosition){
-//    return vec3i(
-//        PosMod(NegDiv(tilePosition.X, TILES_PER_BLOCK_X), CHUNK_SIZE_X),
-//        PosMod(NegDiv(tilePosition.Y, TILES_PER_BLOCK_Y), CHUNK_SIZE_Y),
-//        PosMod(NegDiv(tilePosition.Z, TILES_PER_BLOCK_Z), CHUNK_SIZE_Z)
-//      );
-//}
-/*  See GetBlockRelativeTileIndex for description  */
 vec3i GetSectorRelativeBlockIndex(const vec3i &tilePosition){
     return vec3i(
         PosMod(NegDiv(tilePosition.X, TILES_PER_BLOCK_X), SECTOR_SIZE_X),
@@ -130,14 +122,6 @@ vec3i GetBlockWorldPosition (const vec3i &tilePosition){
 /*
 Implement lite GetBlockWorldPosition
 
-vec3i GetChunkWorldPosition (const vec3i &tilePosition){
-    return vec3i(
-        tilePosition.X - tilePosition.X % TILES_PER_CHUNK_X,
-        tilePosition.Y - tilePosition.Y % TILES_PER_CHUNK_Y,
-        tilePosition.Z - tilePosition.Z % TILES_PER_CHUNK_Z
-        );
-}
-
 vec3i GetSectorWorldPosition(const vec3i &tilePosition)
 {
     return vec3i(
@@ -158,15 +142,6 @@ vec3i GetBlockNumber (const vec3i &tilePosition){
         tilePosition.X / TILES_PER_BLOCK_X,
         tilePosition.Y / TILES_PER_BLOCK_Y,
         tilePosition.Z / TILES_PER_BLOCK_Z
-        );
-}
-
-vec3i GetChunkNumber (const vec3i &tilePosition)
-{
-    return vec3i(
-        tilePosition.X / TILES_PER_CHUNK_X,
-        tilePosition.Y / TILES_PER_CHUNK_Y,
-        tilePosition.Z / TILES_PER_CHUNK_Z
         );
 }
 
@@ -225,21 +200,6 @@ namespace Util {
         ASSERT(GetBlockRelativeTileIndex(vec3i(TILES_PER_BLOCK_X-1,  TILES_PER_BLOCK_Y-1,  TILES_PER_BLOCK_Z-1)) == vec3i(BLOCK_SIZE_X-1, BLOCK_SIZE_Y-1, BLOCK_SIZE_Z-1));
         ASSERT(GetBlockRelativeTileIndex(vec3i( 0,  0,  0)) == vec3i(0, 0, 0));
         ASSERT(GetBlockRelativeTileIndex(vec3i( TILES_PER_BLOCK_X  ,  TILES_PER_BLOCK_Y  ,  TILES_PER_BLOCK_Z  )) == vec3i(0, 0, 0));
-
-        /*  Block index tests  */
-        //ASSERT(GetChunkRelativeBlockIndex(vec3i(-2,                    -2,                 -2))                == vec3i(CHUNK_SIZE_X-1, CHUNK_SIZE_Y-1, CHUNK_SIZE_Z-1));
-        //ASSERT(GetChunkRelativeBlockIndex(vec3i(-1,                    -1,                 -1))                == vec3i(CHUNK_SIZE_X-1, CHUNK_SIZE_Y-1, CHUNK_SIZE_Z-1));
-        //ASSERT(GetChunkRelativeBlockIndex(vec3i( 0,                    0,                  0))                 == vec3i(0, 0, 0));
-        //ASSERT(GetChunkRelativeBlockIndex(vec3i( 1,                    2,                  3))                 == vec3i(0, 0, 0));
-        //ASSERT(GetChunkRelativeBlockIndex(vec3i( TILES_PER_BLOCK_X,    TILES_PER_BLOCK_Y,  TILES_PER_BLOCK_Z)) == vec3i(1, 1, 1));
-        //ASSERT(GetChunkRelativeBlockIndex(vec3i( TILES_PER_CHUNK_X-1,    TILES_PER_CHUNK_Y-1,  TILES_PER_CHUNK_Z-1)) == vec3i(CHUNK_SIZE_X-1, CHUNK_SIZE_Y-1, CHUNK_SIZE_Z-1));
-
-        /*  Chunk index tests  */
-        //ASSERT(GetSectorRelativeChunkIndex(vec3i(-2,                    -2,                 -2))                == vec3i(SECTOR_SIZE_X-1, SECTOR_SIZE_Y-1, SECTOR_SIZE_Z-1));
-        //ASSERT(GetSectorRelativeChunkIndex(vec3i(-1,                    -1,                 -1))                == vec3i(SECTOR_SIZE_X-1, SECTOR_SIZE_Y-1, SECTOR_SIZE_Z-1));
-        //ASSERT(GetSectorRelativeChunkIndex(vec3i( 0,                    0,                  0))                 == vec3i(0, 0, 0));
-        //ASSERT(GetSectorRelativeChunkIndex(vec3i( 1,                    2,                  3))                 == vec3i(0, 0, 0));
-        //ASSERT(GetSectorRelativeChunkIndex(vec3i( TILES_PER_CHUNK_X,    TILES_PER_CHUNK_Y,  TILES_PER_CHUNK_Z)) == vec3i(1, 1, 1));
 
 
         /*  Block world position, where block start in world, tile-counted  */
