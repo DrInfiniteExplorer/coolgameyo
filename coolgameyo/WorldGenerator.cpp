@@ -27,6 +27,7 @@ Tile WorldGenerator::getTile(const vec3i pos)
 
     auto temp = foo(x,y);
 
+    return z > 10 + 10*sin(x*0.1) ? air : ground;
     return z > temp ? air : ground;
 }
 

@@ -4,10 +4,10 @@
 #include "Renderer.h"
 
 World::World()
-    : m_isServer(true)
+    : m_isServer(true), m_unitCount(0)
 {
 
-    vec2i xy(20,30);
+    vec2i xy(8,8);
     auto u = new Unit;
     u->pos = getTopTilePos(xy);
     u->pos.Z += 1;
@@ -83,7 +83,10 @@ Sector* World::getSector(const vec3i tilePos, bool get)
 Block World::getBlock(const vec3i tilePos, bool getSector, bool get)
 {
     auto s = this->getSector(tilePos, getSector);
-    if (!s) return INVALID_BLOCK();
+    if (!s){
+        BREAKPOINT;
+        return INVALID_BLOCK();
+    }
 
     auto b = s->getBlock(tilePos);
     if (!b.isValid() && get) {
@@ -133,7 +136,8 @@ void World::addUnit(Unit* u)
     getSector(u->pos)->addUnit(u);
 
     //RangeFromTo range(-2, 3, -2, 3, -2, 3);
-    RangeFromTo range(0, 2, 0, 2, 0, 2);
+//    RangeFromTo range(0, 2, 0, 2, 0, 2);
+    RangeFromTo range(0, 2, 0, 1, 0, 1);
     foreach (posit, range) {
         auto pos = u->pos;
         pos.X += TILES_PER_SECTOR_X * (*posit).X;
@@ -141,6 +145,7 @@ void World::addUnit(Unit* u)
         pos.Z += TILES_PER_SECTOR_Z * (*posit).Z;
         getSector(pos)->incCount();
     }
+
 }
 
 
@@ -162,9 +167,11 @@ Tile World::getTile(const vec3i tilePos, bool fetch, bool createBlock, bool crea
     
     if (m_isServer) {
         generateBlock(tilePos);
+        ASSERT(sector->getTile(tilePos).isValid());
         return sector->getTile(tilePos);
     } else {
         /* Send request to sever!! */
+        BREAKPOINT;
         printf("Implement etc\n");
     }
 
@@ -182,6 +189,7 @@ vec3i World::getTopTilePos(const vec2i xy)
     return vec3i(x,y,z);
 }
 
+
 void World::floodFillVisibility(const vec2i xypos)
 {
 
@@ -197,12 +205,11 @@ void World::floodFillVisibility(const vec2i xypos)
         auto pos = *work.begin();
         work.erase(pos);
         
-        printf("DOING %5d%5d%5d\n", pos.X,pos.Y,pos.Z);
         
         auto block = getBlock(pos, false, true);
         if (!block.isValid() || block.isSeen()) {
             if (!block.isValid()) {
-                printf("Block not valid: %d %d %d", pos.X, pos.Y, pos.Z);
+                printf("Block not valid: %d %d %d\n", pos.X, pos.Y, pos.Z);
             }
             continue;
         }
@@ -215,6 +222,8 @@ void World::floodFillVisibility(const vec2i xypos)
                 work.insert(pos - vec3i(0, TILES_PER_BLOCK_Y, 0));
                 work.insert(pos + vec3i(0, 0, TILES_PER_BLOCK_Z));
                 work.insert(pos - vec3i(0, 0, TILES_PER_BLOCK_Z));
+            }else{
+                BREAKPOINT;
             }
         } else {
             // map through all the tiles in the block; if any edge is air,

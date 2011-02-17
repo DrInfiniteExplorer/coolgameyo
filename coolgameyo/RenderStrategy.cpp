@@ -525,6 +525,8 @@ RenderStrategyVBOPerBlockSharedCubes::RenderStrategyVBOPerBlockSharedCubes(IVide
     m_loc_vertex =  getattriblocation(m_fullProgram, "in_vertex");
     m_loc_tex =     getattriblocation(m_fullProgram, "in_texcoord");
 
+    m_loc_blockSeen = getuniformlocation(m_fullProgram, "derp");
+
     m_pIndices  = new u16[sizeof(cubeIndices)*TILES_PER_BLOCK];
 
     float *vertices = new float[cubeVertexCount*3*TILES_PER_BLOCK];
@@ -646,6 +648,8 @@ void RenderStrategyVBOPerBlockSharedCubes::renderBlock(Block *pBlock){
     vec3i blockPos = pBlock->getPosition();
     //m_pDriver->setTransform(ETS_WORLD, blockOrigin);
     uniform3iv(m_loc_blockPosition, 1, &blockPos.X);
+    int isSeen = pBlock->isSeen() ? 1 : 0;
+    uniform1i(m_loc_blockSeen, isSeen);
     glDrawElements(GL_QUADS, idxCnt, GL_UNSIGNED_SHORT, 0);
 }
 

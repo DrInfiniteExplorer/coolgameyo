@@ -83,7 +83,7 @@ void Block::free(Block block)
 }
 
 
-Block::Block() : m_flags(0), m_idxCnt(0), m_tiles(0)
+Block::Block() : m_flags(BLOCK_DIRTY), m_idxCnt(0), m_tiles(0)
 {
     m_VBO[0] = m_VBO[1] = 0;
 }
@@ -135,11 +135,6 @@ Tile Block::getTile(const vec3i tilePosition)
 {
     assert (isValid());
 
-    if (isAir()) {
-        Tile t = AIR_TILE();
-        SetFlag(t.flags, TILE_SEEN);
-        return t;
-    }
     if (isSparse()) {
         Tile t = {type, 0, TILE_VALID, 0};
         t.setSeen(isSeen() != 0);
@@ -167,7 +162,6 @@ void Block::setTile(const vec3i tilePosition, const Tile newTile)
 
     /*  Make improvement like thingy with optimizations and such */
 
-    SetFlag(m_flags, BLOCK_AIR,     GetFlag(m_flags, BLOCK_AIR)    && (newTile.type == ETT_AIR));
 }
 
 void Block::writeTo(std::function<void(void*,size_t)> f)

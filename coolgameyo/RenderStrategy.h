@@ -129,6 +129,8 @@ private:
     u32 m_loc_vertex;
     u32 m_loc_tex;
 
+    u32 m_loc_blockSeen;
+
 public:
     RenderStrategyVBOPerBlockSharedCubes(IVideoDriver *pDriver);
     virtual ~RenderStrategyVBOPerBlockSharedCubes();
