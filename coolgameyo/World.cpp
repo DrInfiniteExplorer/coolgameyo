@@ -13,17 +13,27 @@ World::World()
     addUnit(u);
 
     /*
-    foreach (it, m_sectorList) {
-        auto sector = *it;
-        RangeFromTo range(0, TILES_PER_SECTOR_X / TILES_PER_BLOCK_X,
-            0, TILES_PER_SECTOR_Y / TILES_PER_BLOCK_Y,
-            0, TILES_PER_SECTOR_Z / TILES_PER_BLOCK_Z);
-        foreach (it2, range) {
-            auto pos = sector->getPos() + 8 * *it2;
-            auto block = getBlock(pos, false, true);
+    for (int x = 0; x < 128; x += 8) {
+        for (int y = 0; y < 128; y += 8) {
+            for (int z = 0; z < 32; z += 8) {
+                auto xyz = vec3i(x,y,z);
+                auto b = getBlock(xyz);
+                b.setSeen();
+                if (b.isSparse() && b.type == ETT_AIR) {
+                    Renderer::addBlob(xyz+vec3i(4,4,4));
+                }
+                RangeFromTo r(0,8,0,8,0,8);
+                foreach (it, r) {
+                    auto p = *it;
+                    auto t = getTile(xyz + p);
+                    t.setSeen();
+                    b.setTile(xyz + p, t);
+                }
+                setBlock(vec3i(x,y,z), b);
+            }
         }
     }
-    //*/
+    */
 
     floodFillVisibility(xy);
 }
@@ -33,18 +43,11 @@ World::~World(void)
 {
 }
 
-Tile World::loadTileFromDisk(const vec3i &tilePos)
-{
-    return INVALID_TILE();
-}
-
 SectorXY World::getSectorXY(vec2i xy)
 {
     SectorXY ret;
     ret.heightmap = (SectorXY::Heightmap*)malloc(sizeof *ret.heightmap);
 
-    // look at disk for xy ???
-    
     RangeFromTo range(0,128,0,128,0,1);
     foreach (it, range) {
         auto v = *it;
@@ -59,7 +62,9 @@ Sector* World::allocateSector(vec3i sectorPos)
     auto it = m_sectorXY.find(xy);
 
     if (it == m_sectorXY.end()) {
-        it = m_sectorXY.insert(std::make_pair(xy, getSectorXY(xy))).first;
+        auto inserted = m_sectorXY.insert(std::make_pair(xy, getSectorXY(xy)));
+        it = inserted.first;
+        assert (inserted.second);
     }
     
     auto z = sectorPos.Z;
@@ -87,23 +92,25 @@ Sector* World::getSector(const vec3i tilePos, bool get)
             return foundz->second;
         }
     }
-        
     return get ? allocateSector(sectorPos) : 0;
 }
 
 
-Block World::getBlock(const vec3i tilePos, bool getSector, bool get)
+Block World::getBlock(const vec3i tilePos, bool generate, bool getSector)
 {
     auto s = this->getSector(tilePos, getSector);
     if (!s){
-        //BREAKPOINT;
         return INVALID_BLOCK();
     }
 
     auto b = s->getBlock(tilePos);
-    if (!b.isValid() && get) {
-        generateBlock(tilePos);
-        b = s->getBlock(tilePos);
+    if (!b.isValid()) {
+        if (generate) {
+            generateBlock(tilePos);
+            b = s->getBlock(tilePos);
+        } else {
+            return INVALID_BLOCK();
+        }
     }
     assert (b.isValid());
     return b;
@@ -111,7 +118,7 @@ Block World::getBlock(const vec3i tilePos, bool getSector, bool get)
 
 void World::setBlock(const vec3i tilePos, Block newBlock)
 {
-    getBlock(tilePos, true);
+    getBlock(tilePos, true, true);
     getSector(tilePos)->setBlock(tilePos, newBlock);
 }
 
@@ -120,17 +127,12 @@ void World::generateBlock(const vec3i &tilePos)
     auto pSector = getSector(tilePos, true);
 
     pSector->generateBlock(tilePos, &m_worldGen);
-
-    /* DO OPTIMIZATION LIKE CHECKING IF ALL THINGS ARE AIR ETC */
-
-    /* Store to harddrive? schedule it? */
 }
 
 
 
 std::vector<Sector*> *World::lock()
 {
-    // Implement thread thingies.
     return &m_sectorList;
 }
 
@@ -147,9 +149,8 @@ void World::addUnit(Unit* u)
     m_unitCount += 1;
     getSector(u->pos)->addUnit(u);
 
-    //RangeFromTo range(-2, 3, -2, 3, -2, 3);
-//    RangeFromTo range(0, 2, 0, 2, 0, 2);
-    RangeFromTo range(0, 2, 0, 1, 0, 1);
+    RangeFromTo range(-2, 3, -2, 3, -2, 3);
+    //RangeFromTo range(0, 1, 0, 1, 0, 1);
     foreach (posit, range) {
         auto pos = u->pos;
         pos.X += TILES_PER_SECTOR_X * (*posit).X;
@@ -163,32 +164,15 @@ void World::addUnit(Unit* u)
 
 Tile World::getTile(const vec3i tilePos, bool fetch, bool createBlock, bool createSector)
 {
-    auto sector = getSector(tilePos, createSector);
-    
-    if (!sector) { return INVALID_TILE(); }
-
-    auto lookedUp = sector->getTile(tilePos);
-    if (lookedUp.isValid()) { return lookedUp; }
-
-    if (!fetch) { return INVALID_TILE(); }
-
-    auto fromDisk = loadTileFromDisk(tilePos);
-    if (fromDisk.isValid()) { return fromDisk; }
-    
-    if (!createBlock) { return INVALID_TILE(); }
-    
-    if (m_isServer) {
-        generateBlock(tilePos);
-        ASSERT(sector->getTile(tilePos).isValid());
-        return sector->getTile(tilePos);
-    } else {
-        /* Send request to sever!! */
-        BREAKPOINT;
-        printf("Implement etc\n");
-    }
-
-    BREAKPOINT;
+    return getBlock(tilePos, createBlock, createSector).getTile(tilePos);
 }
+
+void World::setTile(vec3i tilePos, const Tile newTile)
+{
+    getBlock(tilePos, true, true).setTile(tilePos, newTile);
+    notifyTileChange(tilePos);
+}
+
 
 vec3i World::getTopTilePos(const vec2i xy)
 {
@@ -212,12 +196,12 @@ void World::floodFillVisibility(const vec2i xypos)
     
     std::set<vec3i> work;
     work.insert(GetBlockWorldPosition(startPos));
-    
+    Renderer::addBlob(startPos);
     while (!work.empty()) {
         auto pos = *work.begin();
         work.erase(pos);
         
-        auto block = getBlock(pos, false, true);
+        auto block = getBlock(pos);
         if (!block.isValid() || block.isSeen()) {
             if (!block.isValid()) {
                 //printf("Block not valid: %d %d %d", pos.X, pos.Y, pos.Z);
@@ -227,7 +211,7 @@ void World::floodFillVisibility(const vec2i xypos)
         block.setSeen();
         if (block.isSparse()) {
             if (block.type == ETT_AIR) {
-                Renderer::addBlob(pos);
+                Renderer::addBlob(pos+vec3i(4,4,4));
                 work.insert(pos + vec3i(TILES_PER_BLOCK_X, 0, 0));
                 work.insert(pos - vec3i(TILES_PER_BLOCK_X, 0, 0));
                 work.insert(pos + vec3i(0, TILES_PER_BLOCK_Y, 0));
@@ -266,13 +250,14 @@ void World::floodFillVisibility(const vec2i xypos)
                     if (rel.Z == 0) {
                         work.insert(pos - vec3i(0, 0, TILES_PER_BLOCK_Z));
                     } else if (rel.Z == TILES_PER_BLOCK_Z - 1) {
+                        //Renderer::addBlob(pos);
                         work.insert(pos + vec3i(0, 0, TILES_PER_BLOCK_Z));
                     }
                 } else {
                     Neighbors neighbors(tp);
                     foreach (it, neighbors) {
                         auto neighbor = getTile(*it);
-                        if (!neighbor.isValid() || neighbor.type == ETT_AIR) {
+                        if (neighbor.isValid() && neighbor.type == ETT_AIR) {
                             t.setSeen();
                             break;
                         }
@@ -285,11 +270,6 @@ void World::floodFillVisibility(const vec2i xypos)
     }
 }
 
-void World::setTile(vec3i tilePos, const Tile newTile)
-{
-    getSector(tilePos, true)->setTile(tilePos, newTile);
-    notifyTileChange(tilePos);
-}
 
 
 

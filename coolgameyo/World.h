@@ -40,7 +40,7 @@ private:
    SectorXY getSectorXY(vec2i xy);
    Sector* allocateSector(vec3i sectorPos);
    Sector* getSector(const vec3i sectorPos, bool get=true);
-   Block getBlock(const vec3i tilePos, bool getSector=true, bool get=true);
+   Block getBlock(const vec3i tilePos, bool generate=true, bool getSector=false);
    void setBlock(const vec3i tilePos, Block newBlock);
 
 public:

@@ -155,15 +155,15 @@ void Block::setTile(const vec3i tilePosition, const Tile newTile)
     assert(m_tiles); //Derp a herp; When we fail and try to set a tile in an air block, start thinkging and implementing.
 
     /* Remove this sometime? */
-    vec3i relativeTilePosition = GetBlockRelativeTileIndex(tilePosition);
+    vec3i rel= GetBlockRelativeTileIndex(tilePosition);
 
-    bool same = m_tiles->tiles[relativeTilePosition.X][relativeTilePosition.Y][relativeTilePosition.Z] == newTile;
-    if(same){
+    bool same = m_tiles->tiles[rel.X][rel.Y][rel.Z] == newTile;
+    if (!same) {
         SetFlag(m_flags, BLOCK_DIRTY);
     }
 
 
-    m_tiles->tiles[relativeTilePosition.X][relativeTilePosition.Y][relativeTilePosition.Z] = newTile;
+    m_tiles->tiles[rel.X][rel.Y][rel.Z] = newTile;
 
     /*  Make improvement like thingy with optimizations and such */
 

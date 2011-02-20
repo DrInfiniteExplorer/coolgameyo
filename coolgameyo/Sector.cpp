@@ -49,16 +49,7 @@ void Sector::generateBlock(const vec3i tilePos, WorldGenerator *worldGen)
         if (block->type == ETT_AIR) ++c;
         //printf(" and it is air? %d (%d)\n", block->type == ETT_AIR, c);
     }
-}
-
-Tile Sector::getTile(const vec3i tilePos)
-{
-    return getBlock(tilePos).getTile(tilePos);
-}
-
-void Sector::setTile(vec3i tilePos, const Tile newTile)
-{
-    getBlock(tilePos).setTile(tilePos, newTile);
+    
 }
 
 Block Sector::getBlock(vec3i tilePos)
@@ -73,7 +64,7 @@ void Sector::setBlock(vec3i tilePos, Block newBlock)
     auto b = &m_blocks[bp.X][bp.Y][bp.Z];
 
     if (b->isValid()) { 
-        printf("Replacing block at %d %d %d\n", bp.X, bp.Y, bp.Z);
+        //printf("Replacing block at %d %d %d\n", bp.X, bp.Y, bp.Z);
         if( !Block::SameTileMemory(*b, newBlock)){
             Block::free(*b);
         }

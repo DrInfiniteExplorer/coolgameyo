@@ -44,9 +44,6 @@ public:
 
     void generateBlock(const vec3i tilePos, WorldGenerator *pWorldGen);
 
-    Tile getTile(const vec3i tilePos);
-    void setTile(vec3i tilePos, const Tile newTile);
-
     Block getBlock(vec3i tilePos);
     void setBlock(vec3i tilePos, Block newBlock);
 
