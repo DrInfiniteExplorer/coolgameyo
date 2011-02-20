@@ -33,6 +33,43 @@ namespace Util {
 }
 
 
+struct Neighbors
+{
+    vec3i pos;
+    vec3i lol[6];
+    size_t i;
+    Neighbors(vec3i me) : pos(me)
+    {
+        lol[0] = me + vec3i(0,0,1);
+        lol[1] = me - vec3i(0,0,1);
+        lol[2] = me + vec3i(0,1,0);
+        lol[3] = me - vec3i(0,1,0);
+        lol[4] = me + vec3i(1,0,0);
+        lol[5] = me - vec3i(1,0,0);
+    }
+    Neighbors(vec3i pos, vec3i* wap, size_t i) : pos(pos), i(i)
+    {
+        memcpy(lol, wap, sizeof lol);
+    }
+
+    Neighbors begin() { return Neighbors(pos, &lol[0], 0); }
+    Neighbors end()   { return Neighbors(pos, &lol[0], 6); }
+    vec3i operator * () const { return lol[i]; }
+    bool operator == (const Neighbors other) const
+    {
+        return pos == other.pos && i == other.i;
+    }
+    bool operator != (const Neighbors other) const
+    {
+        return !(*this == other);
+    }
+    Neighbors& operator ++ ()
+    {
+        i += 1;
+        return *this;
+    }
+};
+
 struct RangeFromTo
 {
     int bx,ex,by,ey,bz,ez;

@@ -21,6 +21,9 @@ class Sector
 {
 private:
 
+    vec3i    m_pos;
+    vec3i    m_sectorPos;
+
     int      m_blockCount;
     u8       m_flags;
     Block    m_blocks[SECTOR_SIZE_X][SECTOR_SIZE_Y][SECTOR_SIZE_Z];
@@ -29,8 +32,11 @@ private:
     int m_activityCount;
 
 public:
-    Sector(void);
+    Sector(vec3i pos);
     ~Sector(void);
+
+    vec3i getPos() { return m_pos; }
+    vec3i getSectorPos() { return m_sectorPos; }
 
     /* Used by rendering for example */
     Block* lockBlocks();

@@ -1,10 +1,13 @@
 #include "Sector.h"
 #include "Util.h"
 
-Sector::Sector(void)
-    : m_activityCount(0), m_blockCount(0), m_flags(0)
+Sector::Sector(vec3i sectorPos)
+    : m_activityCount(0), m_blockCount(0), m_flags(0), m_sectorPos(sectorPos)
 {
    memset(m_blocks, 0, sizeof(m_blocks));
+   m_pos = vec3i(sectorPos.X * TILES_PER_SECTOR_X,
+       sectorPos.Y * TILES_PER_SECTOR_Y,
+       sectorPos.Z * TILES_PER_SECTOR_Z);
 }
 
 
