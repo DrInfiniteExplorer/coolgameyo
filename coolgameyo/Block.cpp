@@ -107,21 +107,16 @@ Block Block::generateBlock(const vec3i tilePos, WorldGenerator *pWorldGen)
     b.m_pos = blockPos;
     bool any_non_air = false;
 
-    for(int x=0;x<BLOCK_SIZE_X;x++){
-        pos.X = blockPos.X + x;
-        for(int y=0;y<BLOCK_SIZE_Y;y++){
-            pos.Y = blockPos.Y + y;
-            for(int z=0;z<BLOCK_SIZE_Z;z++){
-                pos.Z = blockPos.Z + z;
+    RangeFromTo range(0, BLOCK_SIZE_X, 0, BLOCK_SIZE_Y, 0, BLOCK_SIZE_Z);
+    foreach (rel, range) {
+        auto RRR = *rel;
+        pos = blockPos + RRR;
 
-                Tile t = pWorldGen->getTile(pos);
-                b.m_tiles->tiles[x][y][z] = t;
+        Tile t = pWorldGen->getTile(pos);
+        b.m_tiles->tiles[RRR.X][RRR.Y][RRR.Z] = t;
                 
-                if (t.type == ETT_AIR) {
-                    any_non_air = true;
-                }
-
-            }
+        if (t.type == ETT_AIR) {
+            any_non_air = true;
         }
     }
 

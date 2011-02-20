@@ -42,8 +42,10 @@ void Sector::generateBlock(const vec3i tilePos, WorldGenerator *worldGen)
     *block = Block::generateBlock(tilePos, worldGen);
 
     static int c = 0;
-    if (block->type == ETT_AIR) ++c;
-    printf(" and it is air? %d (%d)\n", block->type == ETT_AIR, c);
+    if(block->isSparse()){
+        if (block->type == ETT_AIR) ++c;
+        printf(" and it is air? %d (%d)\n", block->type == ETT_AIR, c);
+    }
 }
 
 Tile Sector::getTile(const vec3i tilePos)
