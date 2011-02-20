@@ -79,7 +79,7 @@ Block Block::alloc()
 }
 void Block::free(Block block)
 {
-    if (block.isValid()) {
+    if (block.isValid() && !block.isSparse()) {
         Allocator::returnMem(block.m_tiles);
     }
 }
@@ -105,7 +105,9 @@ Block Block::generateBlock(const vec3i tilePos, WorldGenerator *pWorldGen)
     SetFlag(b.m_flags, BLOCK_VALID);
     SetFlag(b.m_flags, BLOCK_DIRTY);
     b.m_pos = blockPos;
-    bool any_non_air = false;
+
+    bool homogenous = true;
+    b.type = -1;
 
     RangeFromTo range(0, BLOCK_SIZE_X, 0, BLOCK_SIZE_Y, 0, BLOCK_SIZE_Z);
     foreach (rel, range) {
@@ -114,18 +116,22 @@ Block Block::generateBlock(const vec3i tilePos, WorldGenerator *pWorldGen)
 
         Tile t = pWorldGen->getTile(pos);
         b.m_tiles->tiles[RRR.X][RRR.Y][RRR.Z] = t;
+
+        if(b.type == -1){
+            b.type = t.type;
+        }
                 
-        if (t.type == ETT_AIR) {
-            any_non_air = true;
+        if (t.type != b.type) {
+            homogenous = false;
         }
     }
 
-    if (any_non_air) {
-        return b;
-    } else {
+    if(homogenous){
         free(b);
-        return AIR_BLOCK();
+        SetFlag(b.m_flags, BLOCK_VALID | BLOCK_SPARSE); //Set flag afterwards; free loooks at it and doesnt do things for sparse blocks.
     }
+
+    return b;
 }
 
 Tile Block::getTile(const vec3i tilePosition)
