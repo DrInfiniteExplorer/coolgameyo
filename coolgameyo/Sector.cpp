@@ -71,7 +71,9 @@ void Sector::setBlock(vec3i tilePos, Block newBlock)
 
     if (b->isValid()) { 
         printf("Replacing block at %d %d %d\n", bp.X, bp.Y, bp.Z);
-        //Block::free(*b);
+        if( !Block::SameTileMemory(*b, newBlock)){
+            Block::free(*b);
+        }
     }
     *b = newBlock;
 }

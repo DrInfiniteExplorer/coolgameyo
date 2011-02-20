@@ -152,7 +152,9 @@ void Block::setTile(const vec3i tilePosition, const Tile newTile)
     vec3i relativeTilePosition = GetBlockRelativeTileIndex(tilePosition);
 
     bool same = m_tiles->tiles[relativeTilePosition.X][relativeTilePosition.Y][relativeTilePosition.Z] == newTile;
-    SetFlag(m_flags, BLOCK_DIRTY, !same);
+    if(same){
+        SetFlag(m_flags, BLOCK_DIRTY);
+    }
 
 
     m_tiles->tiles[relativeTilePosition.X][relativeTilePosition.Y][relativeTilePosition.Z] = newTile;

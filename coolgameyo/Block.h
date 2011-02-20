@@ -43,6 +43,9 @@ public:
 
     static Block alloc();
     static void free(Block block);
+    static bool SameTileMemory(Block a, Block b){
+        return a.m_tiles == b.m_tiles;
+    }
 
     static Block generateBlock(const vec3i tilePos, WorldGenerator *pWorldGen);
 
