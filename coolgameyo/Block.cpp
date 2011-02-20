@@ -117,7 +117,7 @@ Block Block::generateBlock(const vec3i tilePos, WorldGenerator *pWorldGen)
                 Tile t = pWorldGen->getTile(pos);
                 b.m_tiles->tiles[x][y][z] = t;
                 
-                if(!GetFlag(t.type, ETT_AIR)){
+                if (t.type == ETT_AIR) {
                     any_non_air = true;
                 }
 
