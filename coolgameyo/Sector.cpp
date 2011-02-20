@@ -27,20 +27,23 @@ Block* Sector::lockBlocks()
 void Sector::unlockBlocks(Block *blocks)
 {
     /* Herp a derp */
-
 }
 
 
 void Sector::generateBlock(const vec3i tilePos, WorldGenerator *worldGen)
 {
     auto bp = GetSectorRelativeBlockIndex(tilePos);
-    auto block = m_blocks[bp.X][bp.Y][bp.Z];
+    auto block = &m_blocks[bp.X][bp.Y][bp.Z];
 
-    assert (!block.isValid());
+    printf("Generating block at %d %d %d", bp.X, bp.Y, bp.Z);
 
-    m_blocks[bp.X][bp.Y][bp.Z] = Block::generateBlock(tilePos, worldGen);
+    assert (!block->isValid());
 
-    /* DO OPTIMIZATION LIKE RECOGNIZE ALL AIR ETC */
+    *block = Block::generateBlock(tilePos, worldGen);
+
+    static int c = 0;
+    if (block->type == ETT_AIR) ++c;
+    printf(" and it is air? %d (%d)\n", block->type == ETT_AIR, c);
 }
 
 Tile Sector::getTile(const vec3i tilePos)
@@ -56,6 +59,7 @@ void Sector::setTile(vec3i tilePos, const Tile newTile)
 Block Sector::getBlock(vec3i tilePos)
 {
     auto bp = GetSectorRelativeBlockIndex(tilePos);
+    auto shit = tilePos;
     return m_blocks[bp.X][bp.Y][bp.Z];
 }
 void Sector::setBlock(vec3i tilePos, Block newBlock)
@@ -63,6 +67,9 @@ void Sector::setBlock(vec3i tilePos, Block newBlock)
     auto bp = GetSectorRelativeBlockIndex(tilePos);
     auto b = &m_blocks[bp.X][bp.Y][bp.Z];
 
-    if (b->isValid()) { Block::free(*b); }
+    if (b->isValid()) { 
+        printf("Replacing block at %d %d %d\n", bp.X, bp.Y, bp.Z);
+        //Block::free(*b);
+    }
     *b = newBlock;
 }

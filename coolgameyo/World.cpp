@@ -221,7 +221,7 @@ void World::floodFillVisibility(const vec2i xypos)
                 work.insert(pos - vec3i(0, TILES_PER_BLOCK_Y, 0));
                 work.insert(pos + vec3i(0, 0, TILES_PER_BLOCK_Z));
                 work.insert(pos - vec3i(0, 0, TILES_PER_BLOCK_Z));
-            }else{
+            } else {
                 BREAKPOINT;
             }
         } else {
