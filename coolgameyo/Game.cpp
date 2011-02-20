@@ -120,6 +120,8 @@ void Game::run(){
         m_pRenderer->preRender(m_pCamera);
         m_pRenderer->renderWorld();
         m_pRenderer->postRender();
+        m_pRenderer->renderBlobs();
+
 
         pDriver->endScene();
     }

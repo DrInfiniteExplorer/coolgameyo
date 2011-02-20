@@ -38,7 +38,7 @@ void Sector::generateBlock(const vec3i tilePos, WorldGenerator *worldGen)
     auto bp = GetSectorRelativeBlockIndex(tilePos);
     auto block = &m_blocks[bp.X][bp.Y][bp.Z];
 
-    printf("Generating block at %d %d %d", bp.X, bp.Y, bp.Z);
+    //printf("Generating block at %d %d %d", bp.X, bp.Y, bp.Z);
 
     assert (!block->isValid());
 
@@ -47,7 +47,7 @@ void Sector::generateBlock(const vec3i tilePos, WorldGenerator *worldGen)
     static int c = 0;
     if(block->isSparse()){
         if (block->type == ETT_AIR) ++c;
-        printf(" and it is air? %d (%d)\n", block->type == ETT_AIR, c);
+        //printf(" and it is air? %d (%d)\n", block->type == ETT_AIR, c);
     }
 }
 

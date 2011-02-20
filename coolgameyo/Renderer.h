@@ -7,6 +7,7 @@ class Block;
 class RenderStrategy;
 class Camera;
 
+#include <set>
 
 class Renderer
 {
@@ -20,6 +21,8 @@ private:
 
     void renderBlock(Block *pBlock);
 
+    static std::set<vec3i> m_blobSet;
+
 public:
     Renderer(World *pWorld, IVideoDriver *pDriver);
     ~Renderer(void);
@@ -27,5 +30,10 @@ public:
     void preRender(Camera *pCamera);
     void renderWorld();
     void postRender();
+
+    void renderBlobs();
+    static void addBlob(vec3i pos);
+
+
 };
 

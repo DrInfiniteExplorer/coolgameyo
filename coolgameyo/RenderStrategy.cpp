@@ -611,6 +611,7 @@ void RenderStrategyVBOPerBlockSharedCubes::renderBlock(Block *pBlock){
     uniform3iv(m_loc_blockPosition, 1, &blockPos.X);
     int isSeen = pBlock->isSeen() ? 1 : 0;
     uniform1i(m_loc_blockSeen, isSeen);
+    uniform1i(m_loc_blockSeen, 0);
     glDrawElements(GL_QUADS, idxCnt, GL_UNSIGNED_SHORT, 0);
 }
 

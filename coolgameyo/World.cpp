@@ -6,7 +6,6 @@
 World::World()
     : m_isServer(true), m_unitCount(0)
 {
-
     vec2i xy(8,8);
     auto u = new Unit;
     u->pos = getTopTilePos(xy);
@@ -27,7 +26,6 @@ World::World()
     //*/
 
     floodFillVisibility(xy);
-
 }
 
 
@@ -229,6 +227,7 @@ void World::floodFillVisibility(const vec2i xypos)
         block.setSeen();
         if (block.isSparse()) {
             if (block.type == ETT_AIR) {
+                Renderer::addBlob(pos);
                 work.insert(pos + vec3i(TILES_PER_BLOCK_X, 0, 0));
                 work.insert(pos - vec3i(TILES_PER_BLOCK_X, 0, 0));
                 work.insert(pos + vec3i(0, TILES_PER_BLOCK_Y, 0));

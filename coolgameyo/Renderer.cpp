@@ -111,10 +111,22 @@ void Renderer::renderBlock(Block *block){
     m_pRenderStrategy->renderBlock(block);
 }
 
+#include "Camera.h"
+
 void Renderer::preRender(Camera *pCamera){
 //    glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D_ARRAY_EXT, m_TextureAtlas);
     m_pRenderStrategy->preRender(pCamera);
+
+    matrix4 proj;
+    pCamera->getProjectionMatrix(proj);
+    matrix4 view;
+    pCamera->getViewMatrix(view);
+    glMatrixMode(GL_PROJECTION);
+
+    glLoadMatrixf(proj.pointer());
+    glMatrixMode(GL_MODELVIEW);
+    glLoadMatrixf(view.pointer());
 }
 
 void Renderer::renderWorld(){
@@ -134,11 +146,117 @@ void Renderer::renderWorld(){
         sector->unlockBlocks(blocks); //???
     }
     m_pWorld->unlock(sectors);
+
 }
 
 void Renderer::postRender(){
     m_pRenderStrategy->postRender();
 
+}
+
+
+void Renderer::addBlob(vec3i pos){
+    m_blobSet.insert(pos);
+}
+
+
+#pragma warning( push )
+#pragma warning( disable : 4244 )
+// Some code
+int sphereList = 0;
+void drawSphere(double r, int lats, int longs) {
+//*
+    if(sphereList){
+        glCallList(sphereList);
+        return;
+    }
+
+    sphereList = glGenLists(1);
+    glNewList(sphereList, GL_COMPILE);
+//*/
+    int i, j;
+    for(i = 0; i <= lats; i++) {
+        double lat0 = 3.14 * (-0.5 + (double) (i - 1) / lats);
+        double z0  = sin(lat0);
+        double zr0 =  cos(lat0);
+    
+        double lat1 = 3.14 * (-0.5 + (double) i / lats);
+        double z1 = sin(lat1);
+        double zr1 = cos(lat1);
+    
+        glBegin(GL_QUAD_STRIP);
+        for(j = 0; j <= longs; j++) {
+            double lng = 2 * 3.14 * (double) (j - 1) / longs;
+            double x = cos(lng);
+            double y = sin(lng);
+
+            glNormal3f(x * zr0, y * zr0, z0);
+            glVertex3f(x * zr0, y * zr0, z0);
+            glNormal3f(x * zr1, y * zr1, z1);
+            glVertex3f(x * zr1, y * zr1, z1);
+        }
+        glEnd();
+    }
+    glEndList();
+}
+
+
+GLvoid glDrawCube()
+{
+    glBegin(GL_QUADS);
+    // Front Face
+    glNormal3f( 0.0f, 0.0f, 0.5f);					
+    glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -1.0f,  1.0f);
+    glTexCoord2f(1.0f, 0.0f); glVertex3f( 1.0f, -1.0f,  1.0f);
+    glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f,  1.0f,  1.0f);
+    glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,  1.0f,  1.0f);
+    // Back Face
+    glNormal3f( 0.0f, 0.0f,-0.5f);					
+    glTexCoord2f(1.0f, 0.0f); glVertex3f(-1.0f, -1.0f, -1.0f);
+    glTexCoord2f(1.0f, 1.0f); glVertex3f(-1.0f,  1.0f, -1.0f);
+    glTexCoord2f(0.0f, 1.0f); glVertex3f( 1.0f,  1.0f, -1.0f);
+    glTexCoord2f(0.0f, 0.0f); glVertex3f( 1.0f, -1.0f, -1.0f);
+    // Top Face
+    glNormal3f( 0.0f, 0.5f, 0.0f);					
+    glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,  1.0f, -1.0f);
+    glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f,  1.0f,  1.0f);
+    glTexCoord2f(1.0f, 0.0f); glVertex3f( 1.0f,  1.0f,  1.0f);
+    glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f,  1.0f, -1.0f);
+    // Bottom Face
+    glNormal3f( 0.0f,-0.5f, 0.0f);					
+    glTexCoord2f(1.0f, 1.0f); glVertex3f(-1.0f, -1.0f, -1.0f);
+    glTexCoord2f(0.0f, 1.0f); glVertex3f( 1.0f, -1.0f, -1.0f);
+    glTexCoord2f(0.0f, 0.0f); glVertex3f( 1.0f, -1.0f,  1.0f);
+    glTexCoord2f(1.0f, 0.0f); glVertex3f(-1.0f, -1.0f,  1.0f);
+    // Right Face
+    glNormal3f( 0.5f, 0.0f, 0.0f);					
+    glTexCoord2f(1.0f, 0.0f); glVertex3f( 1.0f, -1.0f, -1.0f);
+    glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f,  1.0f, -1.0f);
+    glTexCoord2f(0.0f, 1.0f); glVertex3f( 1.0f,  1.0f,  1.0f);
+    glTexCoord2f(0.0f, 0.0f); glVertex3f( 1.0f, -1.0f,  1.0f);
+    // Left Face
+    glNormal3f(-0.5f, 0.0f, 0.0f);					
+    glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -1.0f, -1.0f);
+    glTexCoord2f(1.0f, 0.0f); glVertex3f(-1.0f, -1.0f,  1.0f);
+    glTexCoord2f(1.0f, 1.0f); glVertex3f(-1.0f,  1.0f,  1.0f);
+    glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,  1.0f, -1.0f);
+    glEnd();
+}
+#pragma warning( pop ) 
+
+std::set<vec3i> Renderer::m_blobSet;
+void Renderer::renderBlobs(){
+
+    foreach(iter, m_blobSet){
+        auto pos = *iter;
+        glPushMatrix();
+        glTranslatef((f32)pos.X, (f32)pos.Y, (f32)pos.Z);
+        //*
+        drawSphere(5.0, 20, 20);
+        //glDrawCube();
+        //*/
+        glPopMatrix();
+    }
 }
 
 
