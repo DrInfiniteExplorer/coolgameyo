@@ -163,17 +163,12 @@ void Renderer::addBlob(vec3i pos){
 #pragma warning( push )
 #pragma warning( disable : 4244 )
 // Some code
-int sphereList = 0;
-void drawSphere(double r, int lats, int longs) {
-//*
-    if(sphereList){
-        glCallList(sphereList);
-        return;
-    }
+int drawSphere(double r, int lats, int longs) {
 
+    int sphereList;
     sphereList = glGenLists(1);
     glNewList(sphereList, GL_COMPILE);
-//*/
+
     int i, j;
     for(i = 0; i <= lats; i++) {
         double lat0 = 3.14 * (-0.5 + (double) (i - 1) / lats);
@@ -198,11 +193,22 @@ void drawSphere(double r, int lats, int longs) {
         glEnd();
     }
     glEndList();
+    return sphereList;
 }
 
 
-GLvoid glDrawCube()
+int drawCube(float scale, bool fill = false)
 {
+    int list = glGenLists(1);
+    glNewList(list, GL_COMPILE);
+
+    glColor3f(1.0f, 0.0f, 0.0f);
+    if(!fill){
+        glDisable(GL_CULL_FACE);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    }
+    glPushMatrix();
+    glScalef(scale, scale, scale);
     glBegin(GL_QUADS);
     // Front Face
     glNormal3f( 0.0f, 0.0f, 0.5f);					
@@ -241,19 +247,29 @@ GLvoid glDrawCube()
     glTexCoord2f(1.0f, 1.0f); glVertex3f(-1.0f,  1.0f,  1.0f);
     glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,  1.0f, -1.0f);
     glEnd();
+    if(!fill){
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        glEnable(GL_CULL_FACE);
+    }
+    glPopMatrix();
+    glEndList();
+    return list;
 }
 #pragma warning( pop ) 
 
 std::set<vec3i> Renderer::m_blobSet;
+int sphereList = 0;
+int cubeList = 0;
 void Renderer::renderBlobs(){
-
+    sphereList = sphereList ? sphereList : drawSphere(5.0, 20, 20);
+    cubeList = cubeList ? cubeList : drawCube(4);
     foreach(iter, m_blobSet){
         auto pos = *iter;
         glPushMatrix();
         glTranslatef((f32)pos.X, (f32)pos.Y, (f32)pos.Z);
         //*
-        drawSphere(5.0, 20, 20);
-        //glDrawCube();
+        glCallList(sphereList);
+        glCallList(cubeList);
         //*/
         glPopMatrix();
     }

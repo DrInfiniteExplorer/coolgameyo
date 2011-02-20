@@ -107,7 +107,7 @@ Block Block::generateBlock(const vec3i tilePos, WorldGenerator *pWorldGen)
     b.m_pos = blockPos;
 
     bool homogenous = true;
-    b.type = -1;
+    b.type = 65535;
 
     RangeFromTo range(0, BLOCK_SIZE_X, 0, BLOCK_SIZE_Y, 0, BLOCK_SIZE_Z);
     foreach (rel, range) {
@@ -117,7 +117,7 @@ Block Block::generateBlock(const vec3i tilePos, WorldGenerator *pWorldGen)
         Tile t = pWorldGen->getTile(pos);
         b.m_tiles->tiles[RRR.X][RRR.Y][RRR.Z] = t;
 
-        if(b.type == -1){
+        if(b.type == 65535){
             b.type = t.type;
         }
                 
@@ -127,8 +127,10 @@ Block Block::generateBlock(const vec3i tilePos, WorldGenerator *pWorldGen)
     }
 
     if(homogenous){
+//*
         free(b);
         SetFlag(b.m_flags, BLOCK_VALID | BLOCK_SPARSE); //Set flag afterwards; free loooks at it and doesnt do things for sparse blocks.
+//*/
     }
 
     return b;

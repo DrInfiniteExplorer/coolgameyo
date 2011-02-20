@@ -210,8 +210,8 @@ void World::floodFillVisibility(const vec2i xypos)
         }
         block.setSeen();
         if (block.isSparse()) {
+            Renderer::addBlob(pos+vec3i(4, 4, 4));
             if (block.type == ETT_AIR) {
-                Renderer::addBlob(pos+vec3i(4,4,4));
                 work.insert(pos + vec3i(TILES_PER_BLOCK_X, 0, 0));
                 work.insert(pos - vec3i(TILES_PER_BLOCK_X, 0, 0));
                 work.insert(pos + vec3i(0, TILES_PER_BLOCK_Y, 0));
@@ -219,7 +219,8 @@ void World::floodFillVisibility(const vec2i xypos)
                 work.insert(pos + vec3i(0, 0, TILES_PER_BLOCK_Z));
                 work.insert(pos - vec3i(0, 0, TILES_PER_BLOCK_Z));
             } else {
-                BREAKPOINT;
+                printf("Encountered a sparse block of type id %d\n", block.type);
+                ASSERT(block.type == 1); //Only know of retardium-blocks for now.
             }
         } else {
             // map through all the tiles in the block; if any edge is air,
