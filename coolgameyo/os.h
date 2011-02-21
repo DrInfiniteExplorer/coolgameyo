@@ -13,13 +13,13 @@
 #ifdef BREAKPOINT
     static_assert(0, "ERROR BREAKPOINT ALREADY DEFINED");    
 #endif 
-#ifdef ASSERT
-    static_assert(0, "ERROR_ASSERT_ALREADY_DEFINED");
+#ifdef enforce
+    static_assert(0, "ERROR_enforce_ALREADY_DEFINED");
 #endif
 
 #ifdef WIN32
 #define BREAKPOINT _CrtDbgBreak();
-inline void ASSERT(int x)
+inline void enforce(int x)
 {
     if (!x) {
         BREAKPOINT;

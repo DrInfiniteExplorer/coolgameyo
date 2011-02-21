@@ -15,7 +15,7 @@ s32 NegDiv(const s32 a, const s32 b){
 
     static_assert((-9-7)/8 == -2, "asd");
 
-    ASSERT(b >0);
+    enforce(b >0);
 
     if (a < 0) {
         return (a-b+1)/b;
@@ -23,7 +23,7 @@ s32 NegDiv(const s32 a, const s32 b){
     return a/b;
 }
 
-/* Snaps to multiples of b. See ASSERTions. */
+/* Snaps to multiples of b. See enforceions. */
 s32 Snap(const s32 a, const s32 b){
     static_assert( (-16-7)-(-16-7)  % 8 ==  -16, "Blargh");
     static_assert( (-9-7)-(-9-7)  % 8 ==  -16, "Blargh");
@@ -37,7 +37,7 @@ s32 Snap(const s32 a, const s32 b){
     static_assert(  8- 8  % 8 ==  8, "Blargh");
     static_assert( 15- 15 % 8 ==  8, "Blargh");
 
-    ASSERT (b > 0);
+    enforce (b > 0);
 
     //return NegDiv(a,b) * b;
 
@@ -163,49 +163,49 @@ vec3i GetSectorNumber(const vec3i &tilePosition){
 namespace Util {
     void Test() {
 
-        ASSERT(NegDiv(15, 8) == 1);
-        ASSERT(NegDiv( 8, 8) == 1);
-        ASSERT(NegDiv( 7, 8) == 0);
-        ASSERT(NegDiv( 0, 8) == 0);
-        ASSERT(NegDiv(-1, 8) == -1);
-        ASSERT(NegDiv(-8, 8) == -1);
-        ASSERT(NegDiv(-9, 8) == -2);
+        enforce(NegDiv(15, 8) == 1);
+        enforce(NegDiv( 8, 8) == 1);
+        enforce(NegDiv( 7, 8) == 0);
+        enforce(NegDiv( 0, 8) == 0);
+        enforce(NegDiv(-1, 8) == -1);
+        enforce(NegDiv(-8, 8) == -1);
+        enforce(NegDiv(-9, 8) == -2);
 
         //printf("%d\n\n\n", Snap(-16,  8));
-        ASSERT(Snap(-16,  8) == -16);
-        ASSERT(Snap( -9,  8) == -16);
-        ASSERT(Snap( -8,  8) == -8);
-        ASSERT(Snap( -1,  8) == -8);
-        ASSERT(Snap(  0,  8) == 0);
-        ASSERT(Snap(  7,  8) == 0);
-        ASSERT(Snap(  8,  8) == 8);
-        ASSERT(Snap( 15,  8) == 8);
+        enforce(Snap(-16,  8) == -16);
+        enforce(Snap( -9,  8) == -16);
+        enforce(Snap( -8,  8) == -8);
+        enforce(Snap( -1,  8) == -8);
+        enforce(Snap(  0,  8) == 0);
+        enforce(Snap(  7,  8) == 0);
+        enforce(Snap(  8,  8) == 8);
+        enforce(Snap( 15,  8) == 8);
 
-        ASSERT(PosMod(-9, 8) == 7);
-        ASSERT(PosMod(-8, 8) == 0);
-        ASSERT(PosMod(-1, 8) == 7);
-        ASSERT(PosMod( 0, 8) == 0);
-        ASSERT(PosMod( 7, 8) == 7);
-        ASSERT(PosMod( 8, 8) == 0);
+        enforce(PosMod(-9, 8) == 7);
+        enforce(PosMod(-8, 8) == 0);
+        enforce(PosMod(-1, 8) == 7);
+        enforce(PosMod( 0, 8) == 0);
+        enforce(PosMod( 7, 8) == 7);
+        enforce(PosMod( 8, 8) == 0);
 
         /*  Sector number tests  */
-        ASSERT(GetSectorNumber(vec3i(-TILES_PER_SECTOR_X,   -TILES_PER_SECTOR_Y , -TILES_PER_SECTOR_Z ))    == vec3i(-1, -1, -1));
-        ASSERT(GetSectorNumber(vec3i(-1,                    -1,                 -1))                        == vec3i(-1, -1, -1));
-        ASSERT(GetSectorNumber(vec3i(0,                     0,                  0))                         == vec3i( 0,  0,  0));
-        ASSERT(GetSectorNumber(vec3i(TILES_PER_SECTOR_X-1,  TILES_PER_SECTOR_Y-1, TILES_PER_SECTOR_Z-1))    == vec3i( 0,  0,  0));
-        ASSERT(GetSectorNumber(vec3i(TILES_PER_SECTOR_X  ,  TILES_PER_SECTOR_Y  , TILES_PER_SECTOR_Z  ))    == vec3i( 1,  1,  1));
+        enforce(GetSectorNumber(vec3i(-TILES_PER_SECTOR_X,   -TILES_PER_SECTOR_Y , -TILES_PER_SECTOR_Z ))    == vec3i(-1, -1, -1));
+        enforce(GetSectorNumber(vec3i(-1,                    -1,                 -1))                        == vec3i(-1, -1, -1));
+        enforce(GetSectorNumber(vec3i(0,                     0,                  0))                         == vec3i( 0,  0,  0));
+        enforce(GetSectorNumber(vec3i(TILES_PER_SECTOR_X-1,  TILES_PER_SECTOR_Y-1, TILES_PER_SECTOR_Z-1))    == vec3i( 0,  0,  0));
+        enforce(GetSectorNumber(vec3i(TILES_PER_SECTOR_X  ,  TILES_PER_SECTOR_Y  , TILES_PER_SECTOR_Z  ))    == vec3i( 1,  1,  1));
 
         /*  tile index tests  */
-        ASSERT(GetBlockRelativeTileIndex(vec3i(-1, -1, -1)) == vec3i(BLOCK_SIZE_X-1, BLOCK_SIZE_Y-1, BLOCK_SIZE_Z-1));
-        ASSERT(GetBlockRelativeTileIndex(vec3i(TILES_PER_BLOCK_X-1,  TILES_PER_BLOCK_Y-1,  TILES_PER_BLOCK_Z-1)) == vec3i(BLOCK_SIZE_X-1, BLOCK_SIZE_Y-1, BLOCK_SIZE_Z-1));
-        ASSERT(GetBlockRelativeTileIndex(vec3i( 0,  0,  0)) == vec3i(0, 0, 0));
-        ASSERT(GetBlockRelativeTileIndex(vec3i( TILES_PER_BLOCK_X  ,  TILES_PER_BLOCK_Y  ,  TILES_PER_BLOCK_Z  )) == vec3i(0, 0, 0));
+        enforce(GetBlockRelativeTileIndex(vec3i(-1, -1, -1)) == vec3i(BLOCK_SIZE_X-1, BLOCK_SIZE_Y-1, BLOCK_SIZE_Z-1));
+        enforce(GetBlockRelativeTileIndex(vec3i(TILES_PER_BLOCK_X-1,  TILES_PER_BLOCK_Y-1,  TILES_PER_BLOCK_Z-1)) == vec3i(BLOCK_SIZE_X-1, BLOCK_SIZE_Y-1, BLOCK_SIZE_Z-1));
+        enforce(GetBlockRelativeTileIndex(vec3i( 0,  0,  0)) == vec3i(0, 0, 0));
+        enforce(GetBlockRelativeTileIndex(vec3i( TILES_PER_BLOCK_X  ,  TILES_PER_BLOCK_Y  ,  TILES_PER_BLOCK_Z  )) == vec3i(0, 0, 0));
 
 
         /*  Block world position, where block start in world, tile-counted  */
-        ASSERT(GetBlockWorldPosition(vec3i(-1, -1, -1)) == vec3i(-TILES_PER_BLOCK_X, -TILES_PER_BLOCK_Y, -TILES_PER_BLOCK_Z));
-        ASSERT(GetBlockWorldPosition(vec3i( 0,  0,  0)) == vec3i(0, 0, 0));
-        ASSERT(GetBlockWorldPosition(vec3i( TILES_PER_BLOCK_X,  TILES_PER_BLOCK_Y,  TILES_PER_BLOCK_Z)) == vec3i(TILES_PER_BLOCK_X, TILES_PER_BLOCK_Y, TILES_PER_BLOCK_Z));
+        enforce(GetBlockWorldPosition(vec3i(-1, -1, -1)) == vec3i(-TILES_PER_BLOCK_X, -TILES_PER_BLOCK_Y, -TILES_PER_BLOCK_Z));
+        enforce(GetBlockWorldPosition(vec3i( 0,  0,  0)) == vec3i(0, 0, 0));
+        enforce(GetBlockWorldPosition(vec3i( TILES_PER_BLOCK_X,  TILES_PER_BLOCK_Y,  TILES_PER_BLOCK_Z)) == vec3i(TILES_PER_BLOCK_X, TILES_PER_BLOCK_Y, TILES_PER_BLOCK_Z));
 
 
 

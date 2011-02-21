@@ -426,9 +426,9 @@ unsigned short RenderStrategyVBOPerBlock::uploadBlock(Block *pBlock){
 
     int bufferSize;
     getbufparam(GL_ARRAY_BUFFER_ARB, GL_BUFFER_SIZE_ARB, &bufferSize);
-    ASSERT(bufferSize == m_vertSize+m_texSize);
+    enforce(bufferSize == m_vertSize+m_texSize);
     getbufparam(GL_ELEMENT_ARRAY_BUFFER_ARB, GL_BUFFER_SIZE_ARB, &bufferSize);
-    ASSERT(bufferSize == m_indSize);
+    enforce(bufferSize == m_indSize);
     //printf("%d\n%d\n", dataSize, indexSize);
     static int ccc=0;
     ccc++;

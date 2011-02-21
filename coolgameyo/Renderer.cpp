@@ -25,12 +25,12 @@ Renderer::Renderer(World *pWorld, IVideoDriver *pDriver)
             height  = pImages[i]->getDimension().Height;
         }
     }
-    ASSERT(width*height != 0);
+    enforce(width*height != 0);
 
     PFNGLTEXIMAGE3DPROC glTexImage3D = (PFNGLTEXIMAGE3DPROC)wglGetProcAddress("glTexImage3D");
-    ASSERT(glTexImage3D != NULL);
+    enforce(glTexImage3D != NULL);
     PFNGLTEXSUBIMAGE3DPROC glTexSubImage3D = (PFNGLTEXSUBIMAGE3DPROC)wglGetProcAddress("glTexSubImage3D");
-    ASSERT(glTexSubImage3D != NULL);
+    enforce(glTexSubImage3D != NULL);
 
 
     glGenTextures(1, &m_TextureAtlas);
@@ -64,8 +64,8 @@ Renderer::Renderer(World *pWorld, IVideoDriver *pDriver)
     glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA8, width, height, ImgCnt, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
     for(int i=0;i<ImgCnt;i++){
         if(pImages[i]){
-            ASSERT(width == pImages[i]->getDimension().Width);
-            ASSERT(height== pImages[i]->getDimension().Height);
+            enforce(width == pImages[i]->getDimension().Width);
+            enforce(height== pImages[i]->getDimension().Height);
             GLenum format;
             ECOLOR_FORMAT fmt = pImages[i]->getColorFormat();
             if(fmt == ECF_A8R8G8B8){

@@ -161,6 +161,7 @@ void World::addUnit(Unit* u)
 }
 
 
+
 Tile World::getTile(const vec3i tilePos, bool fetch, bool createBlock, bool createSector)
 {
     return getBlock(tilePos, createBlock, createSector).getTile(tilePos);
@@ -219,7 +220,7 @@ void World::floodFillVisibility(const vec2i xypos)
                 work.insert(pos - vec3i(0, 0, TILES_PER_BLOCK_Z));
             } else {
                 printf("Encountered a sparse block of type id %d\n", block.type);
-                ASSERT(block.type == 1); //Only know of retardium-blocks for now.
+                enforce(block.type == 1); //Only know of retardium-blocks for now.
             }
         } else {
             // map through all the tiles in the block; if any edge is air,
