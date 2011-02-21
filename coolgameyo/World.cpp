@@ -158,7 +158,6 @@ void World::addUnit(Unit* u)
         pos.Z += TILES_PER_SECTOR_Z * (*posit).Z;
         getSector(pos)->incCount();
     }
-
 }
 
 
@@ -210,7 +209,7 @@ void World::floodFillVisibility(const vec2i xypos)
         }
         block.setSeen();
         if (block.isSparse()) {
-            Renderer::addBlob(pos+vec3i(4, 4, 4));
+            //Renderer::addBlob(pos+vec3i(4, 4, 4));
             if (block.type == ETT_AIR) {
                 work.insert(pos + vec3i(TILES_PER_BLOCK_X, 0, 0));
                 work.insert(pos - vec3i(TILES_PER_BLOCK_X, 0, 0));

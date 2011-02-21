@@ -101,7 +101,7 @@ void Camera::mouseMove(s16 dx, s16 dy){
 void Camera::axisMove(f32 forward, f32 right, f32 up){
     vec3f _fwd = m_targetDir;
     vec3f _up(0.0f, 0.0f, 1.0f);
-    vec3f _right = _fwd.crossProduct(_up);
+    vec3f _right = _fwd.crossProduct(_up).normalize();
     vec3f movement = _fwd*forward + _up*up + _right*right;
     m_position += convert<f64, f32>(movement);
 }
