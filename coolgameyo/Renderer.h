@@ -19,6 +19,8 @@ private:
 
     RenderStrategy  *m_pRenderStrategy;
 
+    f32              m_oglVersion;
+
     void renderBlock(Block *pBlock);
 
     static std::set<vec3i> m_blobSet;

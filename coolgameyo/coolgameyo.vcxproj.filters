@@ -122,5 +122,8 @@
     <ClCompile Include="Unit.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="gl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

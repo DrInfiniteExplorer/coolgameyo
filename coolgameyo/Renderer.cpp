@@ -13,6 +13,8 @@ Renderer::Renderer(World *pWorld, IVideoDriver *pDriver)
     m_pDriver(pDriver),
     m_pRenderStrategy(NULL)
 {
+    initGl();
+
     const u8 ImgCnt=5;
     IImage *pImages[ImgCnt];
     u32 width=0, height=0;
@@ -37,29 +39,41 @@ Renderer::Renderer(World *pWorld, IVideoDriver *pDriver)
     glBindTexture(GL_TEXTURE_2D_ARRAY, m_TextureAtlas);
 
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST); //TODO: Check GL_NEAREST_MIPMAP_NEAREST / GL_NEAREST_CLIPMAP_NEAREST_SGIX
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); //Like, why not? TODO: Think about it.
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-///////// THESE ARE ATTEMPTS TO REMOVE UGLY WHITE LINES
-//*
+
+
+
+    f32 aniso = 0; //Setting
+
     f32 max;
     glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &max);
-    printf("%f\n", max);
-    glTexParameterf(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAX_ANISOTROPY_EXT, max);
-    //glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-//*/
-/////////
+    aniso = min(aniso, max);
+    if(aniso){
+        glTexParameterf(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAX_ANISOTROPY_EXT, max);
+    }
 
-//*
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST); //TODO: Check GL_NEAREST_MIPMAP_NEAREST / GL_NEAREST_CLIPMAP_NEAREST_SGIX
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAX_LEVEL, 6); // (2^10)/(2^6) = 2^4 = 16 yeah! tiles reduced to one pixel!
-    //glHint(GL_GENERATE_MIPMAP_HINT, GL_FASTEST);
-    //IF 1.4 <= GL-VERSION < 3.0
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_GENERATE_MIPMAP, GL_TRUE);
-    //END IF 1.4 <= GL-VERSION < 3.0
-//*/
+
+    bool persp_hint = false;
+    if(persp_hint){
+        glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+    }
+
+    bool mipmap=true;
+    bool mipmap_speed_hint = false;
+    if(mipmap){
+        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST); //TODO: Check GL_NEAREST_MIPMAP_NEAREST / GL_NEAREST_CLIPMAP_NEAREST_SGIX
+        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAX_LEVEL, 6); // (2^10)/(2^6) = 2^4 = 16 yeah! tiles reduced to one pixel!
+        if(mipmap_speed_hint){
+            glHint(GL_GENERATE_MIPMAP_HINT, GL_FASTEST);
+        }
+        //IF 1.4 <= GL-VERSION < 3.0
+        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_GENERATE_MIPMAP, GL_TRUE);
+        //END IF 1.4 <= GL-VERSION < 3.0
+    }
 
     glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA8, width, height, ImgCnt, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
     for(int i=0;i<ImgCnt;i++){

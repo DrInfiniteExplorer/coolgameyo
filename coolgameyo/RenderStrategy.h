@@ -12,35 +12,6 @@ class RenderStrategy
 {
 private:
 protected:
-    PFNGLGENBUFFERSARBPROC gen;
-    PFNGLBINDBUFFERARBPROC bind;
-    PFNGLBUFFERDATAARBPROC bufferdata;
-    PFNGLBUFFERSUBDATAARBPROC buffersubdata;
-    PFNGLDELETEBUFFERSARBPROC del;
-    PFNGLGETBUFFERPARAMETERIVARBPROC getbufparam;
-
-    PFNGLCREATESHADERPROC createshader;
-    PFNGLSHADERSOURCEPROC shadersource;
-    PFNGLCOMPILESHADERPROC compileshader;
-    PFNGLGETSHADERIVPROC getshaderiv;
-    PFNGLGETSHADERINFOLOGPROC getshaderinfolog;
-
-    PFNGLCREATEPROGRAMPROC createprogram;
-    PFNGLATTACHSHADERPROC attachshader;
-    PFNGLLINKPROGRAMPROC linkprogram;
-    PFNGLUSEPROGRAMPROC useprogram;
-    PFNGLGETPROGRAMIVPROC getprogramiv;
-
-    PFNGLGETUNIFORMLOCATIONPROC getuniformlocation;
-    PFNGLUNIFORM1IPROC uniform1i;
-    PFNGLUNIFORM3IVPROC uniform3iv;
-    PFNGLUNIFORM3FVPROC uniform3fv;
-    PFNGLUNIFORMMATRIX4FVPROC uniformmatrix4fv;
-
-    PFNGLGETATTRIBLOCATIONPROC getattriblocation;
-    PFNGLVERTEXATTRIBPOINTERPROC vertexattribpointer;
-    PFNGLENABLEVERTEXATTRIBARRAYPROC enablevertexattribarray;
-    PFNGLDISABLEVERTEXATTRIBARRAYPROC disablevertexattribarray;
 
     void printShaderError(u32 shader);
     u32 compileShader(const char *filename, GLenum type);
