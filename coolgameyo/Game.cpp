@@ -9,14 +9,28 @@ Game::Game(bool isClient, bool isServer, bool isWorker)
 {
     memset(m_keyMap, 0, sizeof(m_keyMap));
 
+
     m_pWorld = new World();
 
     if(m_isClient){
-        m_pDevice = createDevice(EDT_OPENGL);
-        m_pDevice->setEventReceiver(this);
+        
+        //m_pDevice = createDevice(EDT_OPENGL, dimension2du(640, 480), 32, false, false, false);
+        SIrrlichtCreationParameters sex;
+        sex.DriverType = EDT_OPENGL;
+        sex.Bits = 32;
+        sex.ZBufferBits = 16; //Or 32? Make settingable?
+        sex.Fullscreen = false;
+        sex.Vsync = false;
+        sex.AntiAlias = sex.Fullscreen ? 8 : 0; //this is FSAA
+        sex.HighPrecisionFPU = false; //test false also.
+        sex.EventReceiver = this;
+        sex.UsePerformanceTimer = true;
+        m_pDevice = createDeviceEx(sex);
         m_pRenderer = new Renderer(m_pWorld, m_pDevice->getVideoDriver());
         m_pCamera = new Camera();
     }
+
+
 }
 
 
@@ -112,6 +126,9 @@ void Game::run(){
         }
         if(m_keyMap[KEY_SPACE]){
             m_pCamera->axisMove( 0.0f,  0.0f,  0.1f);
+        }
+        if(m_keyMap[KEY_LCONTROL]){
+            m_pCamera->axisMove( 0.0f,  0.0f, -0.1f);
         }
 
         pDriver->beginScene(true, true, SColor(255, 128, 0, 0));

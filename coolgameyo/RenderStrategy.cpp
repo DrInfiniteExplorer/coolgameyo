@@ -98,7 +98,7 @@ u32 RenderStrategy::makeProgram(const char *vert, const char *frag){
     return program;
 }
 
-void RenderStrategy::preRender(Camera *pCamera){
+void RenderStrategy::preRender(Camera *pCamera, u32 tex){
     matrix4 projection, view;
     pCamera->getProjectionMatrix(projection);
     glMatrixMode(GL_PROJECTION);
@@ -143,7 +143,7 @@ static unsigned int cubeVertexCount = sizeof(cubeVertices)/(sizeof(cubeVertices[
 
 const float pixelWidth = 1.0f/1024.0f;
 const float tileWidth = 16;
-//*
+/*
 const float Z = 0.5f * pixelWidth;
 const float O = (tileWidth-0.5f)*pixelWidth;
 const float n = (tileWidth+0.5f)*pixelWidth;
@@ -204,125 +204,6 @@ static GLubyte cubeIndices[]={
 static unsigned int cubeIndexCount = sizeof(cubeIndices)/sizeof(cubeIndices[0]);
 
 
-#pragma region RenderStrategySimple
-RenderStrategySimple::RenderStrategySimple(IVideoDriver *pDriver)
-    : RenderStrategy(pDriver)
-{
-
-}
-
-RenderStrategySimple::~RenderStrategySimple(){
-
-}
-
-void RenderStrategySimple::preRender(Camera *pCamera){
-    RenderStrategy::preRender(pCamera);
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-    glVertexPointer(3, GL_FLOAT, 0, cubeVertices);
-    glTexCoordPointer(2, GL_FLOAT, 0, cubeTextCoords);
-
-}
-void RenderStrategySimple::postRender(){
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-}
-void RenderStrategySimple::renderBlock(Block *pBlock){
-    matrix4 blockOrigin;
-    vec3i blockPos = pBlock->getPosition();
-
-    for(int x=0;x<BLOCK_SIZE_X;x++){
-    for(int y=0;y<BLOCK_SIZE_Y;y++){
-    for(int z=0;z<BLOCK_SIZE_Z;z++){
-        const Tile &t = pBlock->getTile(vec3i(x,y,z));
-        if(!t.isSeen() || t.type == ETT_AIR){
-            continue;
-        }
-        blockOrigin.setTranslation(vec3f(
-            (f32)(blockPos.X+x),
-            (f32)(blockPos.Y+y),
-            (f32)(blockPos.Z+z)
-            ));
-
-        m_pDriver->setTransform(ETS_WORLD, blockOrigin);
-        SMaterial mat;
-        m_pDriver->setMaterial(mat);
-
-        glDrawElements(GL_QUADS, sizeof(cubeIndices)/(sizeof(cubeIndices[0])), GL_UNSIGNED_BYTE, cubeIndices);
-    }
-    }
-    }
-}
-
-#pragma endregion
-
-#pragma region RenderStrategyVBO
-RenderStrategyVBO::RenderStrategyVBO(IVideoDriver *pDriver)
-    : RenderStrategy(pDriver)
-{
-    glGenBuffers(2, cubeVBO);
-
-    glBindBuffer(GL_ARRAY_BUFFER_ARB, cubeVBO[0]);
-    glBufferData(GL_ARRAY_BUFFER_ARB, sizeof(cubeVertices)+sizeof(cubeTextCoords), 0, GL_STATIC_DRAW_ARB);
-    glBufferSubData(GL_ARRAY_BUFFER_ARB, 0, sizeof(cubeVertices), cubeVertices);
-    glBufferSubData(GL_ARRAY_BUFFER_ARB, sizeof(cubeVertices), sizeof(cubeTextCoords), cubeTextCoords);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER_ARB, cubeVBO[1]);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER_ARB, sizeof(cubeIndices), cubeIndices, GL_STATIC_DRAW_ARB);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
-    
-}
-
-RenderStrategyVBO::~RenderStrategyVBO(){
-    glDeleteBuffer(2, cubeVBO);
-}
-
-
-void RenderStrategyVBO::preRender(Camera *pCamera){
-    RenderStrategy::preRender(pCamera);
-    glBindBuffer(GL_ARRAY_BUFFER_ARB, cubeVBO[0]);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER_ARB, cubeVBO[1]);
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-    glVertexPointer(3, GL_FLOAT, 0, 0);
-    glTexCoordPointer(2, GL_FLOAT, 0, (void*)sizeof(cubeVertices));
-}
-void RenderStrategyVBO::postRender(){
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-    glBindBuffer(GL_ARRAY_BUFFER_ARB, 0);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
-}
-void RenderStrategyVBO::renderBlock(Block *pBlock){
-    matrix4 blockOrigin;
-    vec3i blockPos = pBlock->getPosition();
-
-
-    for(int x=0;x<BLOCK_SIZE_X;x++){
-    for(int y=0;y<BLOCK_SIZE_Y;y++){
-    for(int z=0;z<BLOCK_SIZE_Z;z++){
-        const Tile &t = pBlock->getTile(vec3i(x,y,z));
-        if(!t.isSeen() || t.type == ETT_AIR){
-            continue;
-        }
-        blockOrigin.setTranslation(vec3f(
-            (f32)(blockPos.X+x),
-            (f32)(blockPos.Y+y),
-            (f32)(blockPos.Z+z)
-            ));
-        m_pDriver->setTransform(ETS_WORLD, blockOrigin);
-        SMaterial mat;
-        m_pDriver->setMaterial(mat);
-
-        glDrawElements(GL_QUADS, sizeof(cubeIndices)/(sizeof(cubeIndices[0])), GL_UNSIGNED_BYTE, 0);
-    }
-    }
-    }
-}
-
-#pragma endregion
-
-
 ////////////////////////////   RenderStrategyVBOPerBlock //////////////////
 #pragma region RenderStrategyVBOPerBlock
 RenderStrategyVBOPerBlock::RenderStrategyVBOPerBlock(IVideoDriver *pDriver)
@@ -340,12 +221,13 @@ RenderStrategyVBOPerBlock::~RenderStrategyVBOPerBlock(){
 }
 
 
-void RenderStrategyVBOPerBlock::preRender(Camera *pCamera){
-    RenderStrategy::preRender(pCamera);
+void RenderStrategyVBOPerBlock::preRender(Camera *pCamera, u32 tex){
+    RenderStrategy::preRender(pCamera, tex);
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 }
 void RenderStrategyVBOPerBlock::postRender(){
+
     glDisableClientState(GL_VERTEX_ARRAY);
     glDisableClientState(GL_TEXTURE_COORD_ARRAY);
     glBindBuffer(GL_ARRAY_BUFFER_ARB, 0);
@@ -382,15 +264,15 @@ unsigned short RenderStrategyVBOPerBlock::uploadBlock(Block *pBlock){
     }
     }
 
-    m_vertSize = sizeof(cubeVertices)*cnt;
     m_vertOffset = 0;
+    m_vertSize = sizeof(cubeVertices)*cnt;
+    m_texOffset = m_vertSize;
     m_texSize  = sizeof(cubeTextCoords)*cnt;
-    m_texOffset = m_vertOffset + m_vertSize;
     m_indSize  = idx*sizeof(m_pIndices[0]); //sizeof(cubeIndices)*cnt <-- not that because cubeIndices is made of unsigned chars
 
     glBufferData(GL_ARRAY_BUFFER_ARB, m_vertSize+m_texSize, 0, GL_STATIC_DRAW_ARB);
     glBufferSubData(GL_ARRAY_BUFFER_ARB, m_vertOffset, m_vertSize, m_pVertices);
-    glBufferSubData(GL_ARRAY_BUFFER_ARB, m_texOffset, m_texSize, m_pVertices);
+    glBufferSubData(GL_ARRAY_BUFFER_ARB, m_texOffset, m_texSize, m_pTexCoords);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER_ARB, m_indSize, m_pIndices, GL_STATIC_DRAW_ARB);
 
     int bufferSize;
@@ -417,7 +299,7 @@ void RenderStrategyVBOPerBlock::renderBlock(Block *pBlock){
 
     glBindBuffer(GL_ARRAY_BUFFER_ARB, vbo[0]);
     glVertexPointer(3, GL_FLOAT, 0, (void*)m_vertOffset);
-    glTexCoordPointer(3, GL_FLOAT, 0, (void*)m_texOffset);
+    glTexCoordPointer(2, GL_FLOAT, 0, (void*)m_texOffset);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER_ARB, vbo[1]);
 
     if(pBlock->isDirty()){
@@ -427,13 +309,17 @@ void RenderStrategyVBOPerBlock::renderBlock(Block *pBlock){
     matrix4 blockOrigin;
     vec3i blockPos = pBlock->getPosition();
 
-    blockOrigin.setTranslation(vec3f(
+    glPushMatrix();
+/*    blockOrigin.setTranslation(vec3f(
         (f32)(blockPos.X),
         (f32)(blockPos.Y),
         (f32)(blockPos.Z)
         ));
-    m_pDriver->setTransform(ETS_WORLD, blockOrigin);
+*/
+    glTranslatef((f32)blockPos.X, (f32)blockPos.Y, (f32)blockPos.Z);
+    //m_pDriver->setTransform(ETS_WORLD, blockOrigin);
     glDrawElements(GL_QUADS, idxCnt, GL_UNSIGNED_SHORT, 0);
+    glPopMatrix();
 }
 
 #pragma endregion
@@ -441,12 +327,14 @@ void RenderStrategyVBOPerBlock::renderBlock(Block *pBlock){
 ////////////////////////////   RenderStrategyVBOPerBlockSharedCubes //////////////////
 
 #pragma region RenderStrategyVBOPerBlockSharedCubes
-RenderStrategyVBOPerBlockSharedCubes::RenderStrategyVBOPerBlockSharedCubes(IVideoDriver *pDriver)
+RenderStrategyVBOPerBlockSharedCubes::RenderStrategyVBOPerBlockSharedCubes(IVideoDriver *pDriver, bool textureArray)
     : RenderStrategy(pDriver)
 {    
     m_fullProgram = makeProgram(
         "shaders/RS_VBO_PerBlockSharedCubes.vert",
-        "shaders/RS_VBO_PerBlockSharedCubes.frag"
+        textureArray ?
+            "shaders/RS_VBO_PerBlockSharedCubes_2dArrayTex.frag" :
+            "shaders/RS_VBO_PerBlockSharedCubes_2dTex.frag"
         );    
 
     m_loc_MVP =     glGetUniformLocation(m_fullProgram, "MVP");
@@ -503,7 +391,7 @@ RenderStrategyVBOPerBlockSharedCubes::~RenderStrategyVBOPerBlockSharedCubes(){
 }
 
 
-void RenderStrategyVBOPerBlockSharedCubes::preRender(Camera *pCamera){
+void RenderStrategyVBOPerBlockSharedCubes::preRender(Camera *pCamera, u32 tex){
     //RenderStrategy::preRender(pCamera);  <-- No U :D
     glBindBuffer(GL_ARRAY_BUFFER_ARB, m_cubesVBO);
 

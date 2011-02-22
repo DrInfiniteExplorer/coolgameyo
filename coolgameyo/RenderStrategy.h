@@ -25,35 +25,8 @@ public:
 
     virtual void renderBlock(Block *pBlock) = 0;
 
-    virtual void preRender(Camera *pCamera);
+    virtual void preRender(Camera *pCamera, u32 a);
     virtual void postRender() = 0;
-};
-
-class RenderStrategySimple : public RenderStrategy
-{
-private:
-
-public:
-    RenderStrategySimple(IVideoDriver *pDriver);
-    virtual ~RenderStrategySimple();
-
-    virtual void preRender(Camera *pCamera);
-    virtual void renderBlock(Block *pBlock);
-    virtual void postRender();
-};
-
-
-class RenderStrategyVBO : public RenderStrategy
-{
-private:
-    GLuint cubeVBO[2];
-public:
-    RenderStrategyVBO(IVideoDriver *pDriver);
-    virtual ~RenderStrategyVBO();
-
-    virtual void preRender(Camera *pCamera);
-    virtual void renderBlock(Block *pBlock);
-    virtual void postRender();
 };
 
 class RenderStrategyVBOPerBlock : public RenderStrategy
@@ -74,7 +47,7 @@ public:
     RenderStrategyVBOPerBlock(IVideoDriver *pDriver);
     virtual ~RenderStrategyVBOPerBlock();
 
-    virtual void preRender(Camera *pCamera);
+    virtual void preRender(Camera *pCamera, u32 tex);
     virtual void renderBlock(Block *pBlock);
     virtual void postRender();
 };
@@ -102,12 +75,12 @@ private:
     u32 m_loc_blockSeen;
 
 public:
-    RenderStrategyVBOPerBlockSharedCubes(IVideoDriver *pDriver);
+    RenderStrategyVBOPerBlockSharedCubes(IVideoDriver *pDriver, bool textureArray);
     virtual ~RenderStrategyVBOPerBlockSharedCubes();
 
 
 
-    virtual void preRender(Camera *pCamera);
+    virtual void preRender(Camera *pCamera, u32 tex);
     virtual void renderBlock(Block *pBlock);
     virtual void postRender();
 };

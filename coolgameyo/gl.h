@@ -35,7 +35,17 @@ extern PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer;
 extern PFNGLENABLEVERTEXATTRIBARRAYPROC glEnableVertexAttribArray;
 extern PFNGLDISABLEVERTEXATTRIBARRAYPROC glDisableVertexAttribArray;
 
+extern PFNGLTEXIMAGE3DPROC glTexImage3D;
+extern PFNGLTEXSUBIMAGE3DPROC glTexSubImage3D;
+extern PFNGLGENERATEMIPMAPPROC glGenerateMipmap;
+
+
 extern double glVersion;
 
+
 void initGl();
+
+
+void GLERROR();
+
 

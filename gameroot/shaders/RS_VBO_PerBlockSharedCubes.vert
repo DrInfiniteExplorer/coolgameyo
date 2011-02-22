@@ -16,6 +16,8 @@ out vec2 tex_texcoord;
    
 void main(){
    tex_texcoord = tileSize*tileTexIdx + in_texcoord;
+   //tex_texcoord = vec2(0.0, 0.0);
+   //tex_texcoord = in_texcoord;
    gl_Position = MVP * vec4(in_vertex+blockPos, 1.0);
 }
 

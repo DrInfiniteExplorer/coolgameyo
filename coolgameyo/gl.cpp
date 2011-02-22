@@ -1,4 +1,5 @@
 #include "gl.h"
+#include "Util.h"
 #include <stdlib.h>
 
 PFNGLGENBUFFERSARBPROC glGenBuffers;
@@ -30,6 +31,10 @@ PFNGLGETATTRIBLOCATIONPROC glGetAttribLocation;
 PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer;
 PFNGLENABLEVERTEXATTRIBARRAYPROC glEnableVertexAttribArray;
 PFNGLDISABLEVERTEXATTRIBARRAYPROC glDisableVertex;
+
+PFNGLTEXIMAGE3DPROC glTexImage3D;
+PFNGLTEXSUBIMAGE3DPROC glTexSubImage3D;
+PFNGLGENERATEMIPMAPPROC glGenerateMipmap;
 
 double glVersion;
 
@@ -65,6 +70,36 @@ void initGl(){
     glEnableVertexAttribArray = (PFNGLENABLEVERTEXATTRIBARRAYPROC)wglGetProcAddress("glEnableVertexAttribArray");
     glDisableVertex = (PFNGLDISABLEVERTEXATTRIBARRAYPROC)wglGetProcAddress("glDisableVertexAttribArray");
 
+    glTexImage3D = (PFNGLTEXIMAGE3DPROC)wglGetProcAddress("glTexImage3D");
+    glTexSubImage3D = (PFNGLTEXSUBIMAGE3DPROC)wglGetProcAddress("glTexSubImage3D");
+    glGenerateMipmap = (PFNGLGENERATEMIPMAPPROC)wglGetProcAddress("glGenerateMipmap");
+
+    enforce(glTexSubImage3D != NULL);
+
+    enforce(glTexImage3D != NULL);
+
+
     glVersion= atof((const char*)glGetString(GL_VERSION)); 
 }
 
+
+void GLERROR(){
+#ifdef _DEBUG
+    u32 err = glGetError();
+    switch(err){
+    case GL_NO_ERROR:
+        return;
+    case GL_INVALID_ENUM:
+        printf("GL ERROR: Invalid enum\n");break;
+    case GL_INVALID_VALUE:
+        printf("GL ERROR: Invalid value\n"); break;
+    case GL_INVALID_OPERATION:
+        printf("GL ERROR: Invalid operation\n"); break;
+    case GL_OUT_OF_MEMORY:
+        printf("GL ERROR: Out of memory\n"); break;
+    default:
+        printf("Got unrecognized gl error; %d\n");
+    }
+    BREAKPOINT;
+#endif
+}

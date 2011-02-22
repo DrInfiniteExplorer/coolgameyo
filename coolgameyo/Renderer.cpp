@@ -4,16 +4,43 @@
 #include "RenderStrategy.h"
 #include "gl.h"
 
-typedef void (APIENTRYP PFNGLTEXIMAGE3DPROC) (GLenum target, GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLenum format, GLenum type, const GLvoid *pixels);
-typedef void (APIENTRYP PFNGLTEXSUBIMAGE3DPROC) (GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, const GLvoid *pixels);
-
 
 Renderer::Renderer(World *pWorld, IVideoDriver *pDriver)
     : m_pWorld(pWorld),
     m_pDriver(pDriver),
     m_pRenderStrategy(NULL)
 {
+    m_2dtex = m_TextureAtlas = 0;
+
     initGl();
+
+    bool useArray = true;
+    if(useArray){
+        m_TextureAtlas = loadTextures(true);
+    }else{
+        m_2dtex = loadTextures(false);
+    }
+
+    //m_pRenderStrategy = new RenderStrategyVBOPerBlock(pDriver);   //Acceptable rates
+    m_pRenderStrategy = new RenderStrategyVBOPerBlockSharedCubes(pDriver, m_2dtex == 0);  //Acceptable rates as well, less memory footprint
+    
+    bool persp_hint = false; //Settings
+    if(persp_hint){
+        glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST); GLERROR();
+    }
+
+    glDisable(GL_LIGHTING);
+    glFrontFace(GL_CCW);
+
+}
+
+
+Renderer::~Renderer(void)
+{
+    delete m_pRenderStrategy;
+}
+
+u32 Renderer::loadTextures(bool textureArray){
 
     const u8 ImgCnt=5;
     IImage *pImages[ImgCnt];
@@ -29,53 +56,40 @@ Renderer::Renderer(World *pWorld, IVideoDriver *pDriver)
     }
     enforce(width*height != 0);
 
-    PFNGLTEXIMAGE3DPROC glTexImage3D = (PFNGLTEXIMAGE3DPROC)wglGetProcAddress("glTexImage3D");
-    enforce(glTexImage3D != NULL);
-    PFNGLTEXSUBIMAGE3DPROC glTexSubImage3D = (PFNGLTEXSUBIMAGE3DPROC)wglGetProcAddress("glTexSubImage3D");
-    enforce(glTexSubImage3D != NULL);
+    GLenum target = textureArray ? GL_TEXTURE_2D_ARRAY : GL_TEXTURE_2D;
+    u32 texture;
 
-
-    glGenTextures(1, &m_TextureAtlas);
-    glBindTexture(GL_TEXTURE_2D_ARRAY, m_TextureAtlas);
-
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); //Like, why not? TODO: Think about it.
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-
-
+    glGenTextures(1, &texture); GLERROR();
+    glBindTexture(target, texture); GLERROR();
+    glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_NEAREST); GLERROR();
+    glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_NEAREST); GLERROR();
+    glTexParameteri(target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); GLERROR(); //Like, why not? TODO: Think about it.
+    glTexParameteri(target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); GLERROR();
 
     f32 aniso = 0; //Setting
-
     f32 max;
-    glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &max);
+    glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &max); GLERROR();
     aniso = min(aniso, max);
     if(aniso){
-        glTexParameterf(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAX_ANISOTROPY_EXT, max);
+        glTexParameterf(target, GL_TEXTURE_MAX_ANISOTROPY_EXT, max); GLERROR();
     }
 
-
-    bool persp_hint = false;
-    if(persp_hint){
-        glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-    }
-
-    bool mipmap=true;
-    bool mipmap_speed_hint = false;
-    if(mipmap){
-        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST); //TODO: Check GL_NEAREST_MIPMAP_NEAREST / GL_NEAREST_CLIPMAP_NEAREST_SGIX
-        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAX_LEVEL, 6); // (2^10)/(2^6) = 2^4 = 16 yeah! tiles reduced to one pixel!
+    u32 mipmap_level=4; //Setting
+    bool mipmap_speed_hint = false; //Setting
+    if(mipmap_level){
+        glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST); GLERROR(); //TODO: Check GL_NEAREST_MIPMAP_NEAREST / GL_NEAREST_CLIPMAP_NEAREST_SGIX
+        glTexParameteri(target, GL_TEXTURE_MAX_LEVEL, mipmap_level);  GLERROR();// (2^10)/(2^6) = 2^4 = 16 yeah! tiles reduced to one pixel!
         if(mipmap_speed_hint){
-            glHint(GL_GENERATE_MIPMAP_HINT, GL_FASTEST);
+            glHint(GL_GENERATE_MIPMAP_HINT, GL_FASTEST); GLERROR();
         }
-        //IF 1.4 <= GL-VERSION < 3.0
-        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_GENERATE_MIPMAP, GL_TRUE);
-        //END IF 1.4 <= GL-VERSION < 3.0
+        if(glVersion < 3.0){
+            glTexParameteri(target, GL_GENERATE_MIPMAP, GL_TRUE); GLERROR();
+        }
     }
 
-    glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA8, width, height, ImgCnt, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    if(textureArray){
+        glTexImage3D(target, 0, GL_RGBA8, width, height, ImgCnt, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL); GLERROR();
+    }
     for(int i=0;i<ImgCnt;i++){
         if(pImages[i]){
             enforce(width == pImages[i]->getDimension().Width);
@@ -90,33 +104,25 @@ Renderer::Renderer(World *pWorld, IVideoDriver *pDriver)
                 BREAKPOINT; //Derp a herp. Maybe add support later. Maybe.
             }
             void *pData = pImages[i]->lock();
-            glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, i, width, height, 1, format, GL_UNSIGNED_BYTE, pData);
+            if(textureArray){
+                glTexSubImage3D(target, 0, 0, 0, i, width, height, 1, format, GL_UNSIGNED_BYTE, pData); GLERROR();
+            }else{
+                glTexImage2D(target, 0, GL_RGBA8, width, height, 0, format, GL_UNSIGNED_BYTE, pData); GLERROR();
+                pImages[i]->unlock();
+                pImages[i]->drop();
+                pImages[i] = NULL;
+                break; //Break after first, or only generate first?
+            }
             pImages[i]->unlock();
             pImages[i]->drop();
             pImages[i] = NULL;
         }
     }
-    //IF 3.0 <= GL-VERSION
-    //glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
-    //END IF 3.0 <= GL-VERSION
 
-
-
-    //m_pRenderStrategy = new RenderStrategySimple(pDriver);        //Veeerrry slow
-    //m_pRenderStrategy = new RenderStrategyVBO(pDriver);           //Likewise
-    //m_pRenderStrategy = new RenderStrategyVBOPerBlock(pDriver);   //Acceptable rates
-    m_pRenderStrategy = new RenderStrategyVBOPerBlockSharedCubes(pDriver);  //Acceptable rates as well
-    
-
-    glDisable(GL_LIGHTING);
-    glFrontFace(GL_CCW);
-
-}
-
-
-Renderer::~Renderer(void)
-{
-    delete m_pRenderStrategy;
+    if(mipmap_level && glVersion >= 3.0){
+        glGenerateMipmap(target); GLERROR();
+    }
+    return texture;
 }
 
 
@@ -128,10 +134,16 @@ void Renderer::renderBlock(Block *block){
 #include "Camera.h"
 
 void Renderer::preRender(Camera *pCamera){
-//    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D_ARRAY_EXT, m_TextureAtlas);
-    m_pRenderStrategy->preRender(pCamera);
 
+    if(m_2dtex){
+        glEnable(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D, m_2dtex);
+        glColor3f(1.f, 1.f, 1.f);
+        m_pRenderStrategy->preRender(pCamera, m_2dtex);
+    }else{    
+        glBindTexture(GL_TEXTURE_2D_ARRAY_EXT, m_TextureAtlas);
+        m_pRenderStrategy->preRender(pCamera, m_TextureAtlas);
+    }
     matrix4 proj;
     pCamera->getProjectionMatrix(proj);
     matrix4 view;
