@@ -150,7 +150,7 @@ void World::addUnit(Unit* u)
     getSector(u->pos)->addUnit(u);
 
     RangeFromTo range(-2, 3, -2, 3, -2, 3);
-    //RangeFromTo range(0, 1, 0, 1, 0, 1);
+    //RangeFromTo range(0, 1, 0, 2, -1, 2);
     foreach (posit, range) {
         auto pos = u->pos;
         pos.X += TILES_PER_SECTOR_X * (*posit).X;
@@ -212,6 +212,7 @@ void World::floodFillVisibility(const vec2i xypos)
         if (block.isSparse()) {
             //Renderer::addBlob(pos+vec3i(4, 4, 4));
             if (block.type == ETT_AIR) {
+                //printf("Encountered a sparse block of type id %d\n", block.type);
                 work.insert(pos + vec3i(TILES_PER_BLOCK_X, 0, 0));
                 work.insert(pos - vec3i(TILES_PER_BLOCK_X, 0, 0));
                 work.insert(pos + vec3i(0, TILES_PER_BLOCK_Y, 0));

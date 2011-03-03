@@ -159,6 +159,7 @@
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="RenderStrategy.h" />
     <ClInclude Include="PathModule.h" />
+    <ClInclude Include="Scheduler.h" />
     <ClInclude Include="Sector.h" />
     <ClInclude Include="serialization.h" />
     <ClInclude Include="Tile.h" />
@@ -179,6 +180,7 @@
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="RenderStrategy.cpp" />
     <ClCompile Include="PathModule.cpp" />
+    <ClCompile Include="Scheduler.cpp" />
     <ClCompile Include="Sector.cpp" />
     <ClCompile Include="Tile.cpp" />
     <ClCompile Include="UDPSocket.cpp" />

@@ -12,12 +12,11 @@ WorldGenerator::~WorldGenerator(void)
 
 inline float foo(float x, float y)
 {
-    return (float)(10 * sin(x / 10.0) + 100 * atan(y/100.0) - 2 * cos(y/3));
+    return (float)(4 * sin(x / 10.0) + 24 * atan(y/100.0) - 2 * cos(y/3));
 }
 
 Tile WorldGenerator::getTile(const vec3i pos)
 {
-
     static Tile air = {ETT_AIR,0,TILE_VALID,0};
     static Tile ground = {ETT_RETARDIUM,0,TILE_VALID,0};
 
@@ -27,7 +26,6 @@ Tile WorldGenerator::getTile(const vec3i pos)
 
     auto temp = foo(x,y);
 
-    //return z > 10 + 10*sin(x*0.1) ? air : ground;
     return z > temp ? air : ground;
 }
 

@@ -12,9 +12,9 @@ Game::Game(bool isClient, bool isServer, bool isWorker)
 
     m_pWorld = new World();
 
+
     if(m_isClient){
         
-        //m_pDevice = createDevice(EDT_OPENGL, dimension2du(640, 480), 32, false, false, false);
         SIrrlichtCreationParameters sex;
         sex.DriverType = EDT_OPENGL;
         sex.Bits = 32;
@@ -26,8 +26,11 @@ Game::Game(bool isClient, bool isServer, bool isWorker)
         sex.EventReceiver = this;
         sex.UsePerformanceTimer = true;
         m_pDevice = createDeviceEx(sex);
+        m_sched = new Scheduler(m_pWorld, m_pDevice->getTimer());
         m_pRenderer = new Renderer(m_pWorld, m_pDevice->getVideoDriver());
         m_pCamera = new Camera();
+    } else {
+        assert (0);
     }
 
 

@@ -2,6 +2,7 @@
 
 #include "include.h"
 #include "World.h"
+#include "Scheduler.h"
 
 class Camera;
 
@@ -13,6 +14,8 @@ private:
 
     Camera           *m_pCamera;
     Renderer         *m_pRenderer;
+
+    Scheduler        *m_sched;
 
     bool              m_isClient;
     bool              m_isServer;        //WE ARE A SERWOR!
