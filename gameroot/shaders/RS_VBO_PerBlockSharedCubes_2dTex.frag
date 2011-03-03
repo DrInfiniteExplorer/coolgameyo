@@ -11,7 +11,7 @@ out vec4 frag_color;
 void main() {
 
    if(derp == 0){
-      frag_color = texture(textureAtlas, tex_texcoord);
+      frag_color = textureb(textureAtlas, tex_texcoord);
    }else{
       frag_color = vec4(1.0, 0.0, 0.0, 0.0);
    }

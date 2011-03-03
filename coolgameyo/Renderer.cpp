@@ -75,6 +75,7 @@ u32 Renderer::loadTextures(bool textureArray){
     }
 
     u32 mipmap_level=4; //Setting
+    mipmap_level = min(mipmap_level, 4); //4 since 16->8->4->2->1 is 4 mipmap-levels.
     bool mipmap_speed_hint = false; //Setting
     if(mipmap_level){
         glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST); GLERROR(); //TODO: Check GL_NEAREST_MIPMAP_NEAREST / GL_NEAREST_CLIPMAP_NEAREST_SGIX
