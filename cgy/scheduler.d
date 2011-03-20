@@ -2,6 +2,7 @@ import core.time, core.thread;
 import std.container, std.concurrency, std.datetime;
 
 import world;
+import util;
 
 struct Task {
     bool sync;
@@ -35,7 +36,7 @@ class Scheduler {
 
     State state;
 
-    Queue!Task sync, async;
+    Queue!(Task) sync, async;
 
     World world;
 

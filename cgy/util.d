@@ -28,7 +28,7 @@ void BREAKPOINT() {
 }
 
 void* AllocateBlob(size_t size) {
-    version (windows) { //For win32 evaluatar inte sant pa win64
+    version (Windows) { //For win32 evaluatar inte sant pa win64
         auto ret = VirtualAlloc(NULL, 4096 * size, MEM_COMMIT, PAGE_READWRITE); 
         return enforce(ret, "memory allocation fail :-)");
     } else version (posix) {
@@ -39,7 +39,7 @@ void* AllocateBlob(size_t size) {
     }
 }
 void FreeBlob(void* blob) {
-    version (windows) {
+    version (Windows) {
         VirtualFree(blob, 0, MEM_RELEASE);
     } else version (posix) {
         free(blob);
