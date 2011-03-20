@@ -42,7 +42,7 @@
   <ignoreUnsupportedPragmas>0</ignoreUnsupportedPragmas>
   <otherDMD>0</otherDMD>
   <program>$(DMDInstallDir)windows\bin\dmd.exe</program>
-  <imppath />
+  <imppath>d:\D\Libs\DIrrlicht\iEngine\</imppath>
   <fileImppath />
   <outdir>$(ConfigurationName)</outdir>
   <objdir>$(OutDir)</objdir>
@@ -74,8 +74,8 @@
   <pathCv2pdb>$(VisualDInstallDir)cv2pdb\cv2pdb.exe</pathCv2pdb>
   <objfiles />
   <linkswitches />
-  <libfiles />
-  <libpaths />
+  <libfiles>gdi32.lib derelictgl.lib derelictutil.lib win32.lib advapi32.lib derelictil.lib iEngine.lib</libfiles>
+  <libpaths>d:\D\Libs\DIrrlicht\Lib</libpaths>
   <deffile />
   <resfile />
   <exefile>$(OutDir)\$(ProjectName).exe</exefile>
@@ -132,7 +132,7 @@
   <ignoreUnsupportedPragmas>0</ignoreUnsupportedPragmas>
   <otherDMD>0</otherDMD>
   <program>$(DMDInstallDir)windows\bin\dmd.exe</program>
-  <imppath />
+  <imppath>d:\D\Libs\DIrrlicht\iEngine</imppath>
   <fileImppath />
   <outdir>$(ConfigurationName)</outdir>
   <objdir>$(OutDir)</objdir>
@@ -169,7 +169,7 @@
   <deffile />
   <resfile />
   <exefile>$(OutDir)\$(ProjectName).exe</exefile>
-  <additionalOptions />
+  <additionalOptions>-I$(SOLUTIONDIR)\libraries\irrlicht\include\</additionalOptions>
   <preBuildCommand />
   <postBuildCommand />
   <debugtarget>$(TARGETPATH)</debugtarget>

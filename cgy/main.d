@@ -1,12 +1,13 @@
 module main;
 
 import std.stdio;
-import irrlicht;
+import engine.irrlicht;
 import util;
 
 int main(string[] argv)
 {
-	util.Test();
-	writeln("Hello D-World!");
+    Game game(true, true, true);
+    game.run();
+
 	return 0;
 }

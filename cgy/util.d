@@ -1,6 +1,104 @@
-import irrlicht;
+import engine.irrlicht;
+import core.stdc.stdio;
 
-alias IntVector3D vec3i;
+alias int s32;
+alias uint u32;
+alias float f32;
+alias double f64;
+
+alias vector3d!(int) vec3i;
+
+
+#pragma once
+
+#include <map>
+#include <set>
+#include <unordered_map>
+#include <unordered_set>
+#include <vector>
+#include <utility>
+
+//#include <thread>
+
+#include "os.h"
+
+#define assert(X) do { if (!(X)) BREAKPOINT; } while (0)
+
+using namespace irr;
+using namespace irr::core;
+using namespace irr::scene;
+using namespace irr::video;
+
+template <typename A, typename B>
+inline vector3d<A> convert(const vector3d<B> in){
+    return vector3d<A>(
+        (A)in.X,
+        (A)in.Y,
+        (A)in.Z);
+}
+
+typedef vector3d<f64> vec3d;
+typedef vector3df vec3f;
+typedef vector3di vec3i;
+typedef vector2di vec2i;
+
+/*
+
+Porta? Behålla alls? Hur göra templatefunc utan klass?
+
+template <typename A, typename B>
+inline void SetFlag(A &val, B flag) {
+    val |= flag;
+}
+
+template <typename A, typename B>
+inline void ClearFlag(A &val, B flag) {
+    val &= ~flag;
+}
+
+template <typename A, typename B>
+inline A GetFlag(A val, B flag) {
+    return val & flag;
+}
+
+template <typename A, typename B>
+inline void SetFlag(A &val, B flag, bool Value) {
+    if (Value) {
+        SetFlag(val, flag);
+    } else {
+        ClearFlag(val, flag);
+    }
+}
+*/
+
+void BREAKPOINT(){
+	asm{
+		int 3;
+	}
+}
+
+#ifdef WIN32
+#define TLS __declspec(thread)
+inline void* AllocateBlob(size_t size) {
+    return VirtualAlloc(NULL, 4096 * size, MEM_COMMIT, PAGE_READWRITE);
+}
+inline void FreeBlob(void* page) {
+    VirtualFree(page, 0, MEM_RELEASE);
+}
+#else
+#define TLS __thread
+inline void* AllocatePage() {
+    return valloc(4096);
+}
+inline void FreePage(void* page) {
+    vfree(page);
+}
+#endif
+
+ASDASDASDASDAsd
+
+
+
 
 struct Neighbors
 {
@@ -22,70 +120,74 @@ struct Neighbors
     {
 		pos = __pos;
 		i = __i;
-        memcpy(lol, wap, lol.sizeof);
+        lol = *wap;
     }
 
-    Neighbors begin() { return Neighbors(pos, &lol[0], 0); }
-    Neighbors end()   { return Neighbors(pos, &lol[0], 6); }
-    vec3i operator * () const { return lol[i]; }
-    bool operator == (const Neighbors other) const
-    {
-        return pos == other.pos && i == other.i;
-    }
-    bool operator != (const Neighbors other) const
-    {
-        return !(*this == other);
-    }
-    Neighbors& operator ++ ()
-    {
-        i += 1;
-        return *this;
-    }
+	vec3i front() {
+		return lol[i];
+	}
+	void popFront() {
+		i += 1;
+	}
+	bool empty() {
+		return i >= 6;
+	}
+
 };
 
 struct RangeFromTo
 {
     int bx,ex,by,ey,bz,ez;
     int x,y,z;
-    RangeFromTo(int beginX, int endX,
+    this(int beginX, int endX,
         int beginY, int endY,
         int beginZ, int endZ)
-        : bx(beginX), ex(endX), 
-        by(beginY), ey(endY), 
-        bz(beginZ), ez(endZ), 
-        x(beginX), y(beginY), z(beginZ)
-    { }
-    RangeFromTo(int beginX, int endX,
+    {
+		x = bx = beginX;
+		ex = endX;
+		y = by = beginY;
+		ey = endY;
+		z = bz = beginZ;
+		ez = endZ;
+	}
+    this(int beginX, int endX,
         int beginY, int endY,
         int beginZ, int endZ,
-        int x, int y, int z)
-        : bx(beginX), ex(endX),
-        by(beginY), ey(endY),
-        bz(beginZ), ez(endZ),
-        x(x), y(y), z(z)
-    { }
-
-    RangeFromTo begin() const { return RangeFromTo(bx,ex,by,ey,bz,ez,bx,by,bz); }
-    RangeFromTo end()   const { return RangeFromTo(bx,ex,by,ey,bz,ez,bx,by,ez); }       
-    vec3i operator * () const { return vec3i(x,y,z); }
-    bool operator != (const RangeFromTo other) const
-    {
-        return x != other.x || y != other.y || z != other.z;
-    }
-    RangeFromTo& operator ++ ()
-    {
+        int __x, int __y, int __z)
+	{
+		x = __x;
+		bx = beginX;
+		ex = endX;
+		y = __y;
+		by = beginY;
+		ey = endY;
+		z = __z;
+		bz = beginZ;
+		ez = endZ;
+	}
+	
+	vec3i front() {
+		return vec3i(x, y, z);
+	}
+	void popFront() {
         x += 1;
-        if (x < ex) return *this; 
+        if (x < ex) return; 
         x = bx;
         y += 1;
-        if (y < ey) return *this;
+        if (y < ey) return;
         y = by;
         z += 1;
-        return *this;
-    }
+	}
+	bool empty() {
+		return x == ex && y == ey && z == ez;
+	}
 };
 /* Returns a/b rounded towards -inf instead of rounded towards 0 */
-s32 NegDiv(const s32 a, const s32 b){
+s32 NegDiv(const s32 a, const s32 b)
+in{
+	assert(b >0);
+}
+body{
     static assert(15/8 == 1);
     static assert(8/8 == 1);
 
@@ -97,16 +199,18 @@ s32 NegDiv(const s32 a, const s32 b){
 
     static assert((-9-7)/8 == -2);
 
-    enforce(b >0);
-
-    if (a < 0) {
-        return (a-b+1)/b;
-    }
-    return a/b;
+	if (a < 0) {
+		return (a-b+1)/b;
+	}
+	return a/b;
 }
 
 /* Snaps to multiples of b. See enforceions. */
-s32 Snap(const s32 a, const s32 b){
+s32 Snap(const s32 a, const s32 b)
+in{
+	assert(b > 0);
+}
+body{
     static assert( (-16-7)-(-16-7)  % 8 ==  -16);
     static assert( (-9-7)-(-9-7)  % 8 ==  -16);
 
@@ -119,34 +223,12 @@ s32 Snap(const s32 a, const s32 b){
     static assert(  8- 8  % 8 ==  8);
     static assert( 15- 15 % 8 ==  8);
 
-    enforce (b > 0);
-
-    //return NegDiv(a,b) * b;
-
     if(a<0){
         auto x = a-b+1;
         return x - (x % b);
     }
     return a - a % b;
-}
-
-s32 PosMod_IF(const s32 a, const s32 b){
-    static assert( 15 % 8 == 7);
-    static assert(  8 % 8 == 0);
-
-    static assert( 7 % 8  == 7);
-    static assert( 0 % 8  == 0);
-
-    static assert(7 +((1-1)%8) == 7);
-    static assert(7 +((1-8)%8) == 0);
-
-    static assert(7 +((1-9)%8) == 7);
-    static assert(7 +((1-16)%8) == 0);
-
-    if (a<0) {
-       return b-1  +(1+a)%b;
-    }
-    return a%b;
+    //return NegDiv(a,b) * b;
 }
 
 s32 PosMod(const s32 a, const s32 b){
@@ -215,64 +297,62 @@ vec3i GetSectorNumber(const vec3i tilePosition){
 
 
 
-void Test() {
+unittest {
 
-    enforce(NegDiv(15, 8) == 1);
-    enforce(NegDiv( 8, 8) == 1);
-    enforce(NegDiv( 7, 8) == 0);
-    enforce(NegDiv( 0, 8) == 0);
-    enforce(NegDiv(-1, 8) == -1);
-    enforce(NegDiv(-8, 8) == -1);
-    enforce(NegDiv(-9, 8) == -2);
+    assert(NegDiv(15, 8) == 1);
+    assert(NegDiv( 8, 8) == 1);
+    assert(NegDiv( 7, 8) == 0);
+    assert(NegDiv( 0, 8) == 0);
+    assert(NegDiv(-1, 8) == -1);
+    assert(NegDiv(-8, 8) == -1);
+    assert(NegDiv(-9, 8) == -2);
 
     //printf("%d\n\n\n", Snap(-16,  8));
-    enforce(Snap(-16,  8) == -16);
-    enforce(Snap( -9,  8) == -16);
-    enforce(Snap( -8,  8) == -8);
-    enforce(Snap( -1,  8) == -8);
-    enforce(Snap(  0,  8) == 0);
-    enforce(Snap(  7,  8) == 0);
-    enforce(Snap(  8,  8) == 8);
-    enforce(Snap( 15,  8) == 8);
+    assert(Snap(-16,  8) == -16);
+    assert(Snap( -9,  8) == -16);
+    assert(Snap( -8,  8) == -8);
+    assert(Snap( -1,  8) == -8);
+    assert(Snap(  0,  8) == 0);
+    assert(Snap(  7,  8) == 0);
+    assert(Snap(  8,  8) == 8);
+    assert(Snap( 15,  8) == 8);
 
-    enforce(PosMod(-9, 8) == 7);
-    enforce(PosMod(-8, 8) == 0);
-    enforce(PosMod(-1, 8) == 7);
-    enforce(PosMod( 0, 8) == 0);
-    enforce(PosMod( 7, 8) == 7);
-    enforce(PosMod( 8, 8) == 0);
+    assert(PosMod(-9, 8) == 7);
+    assert(PosMod(-8, 8) == 0);
+    assert(PosMod(-1, 8) == 7);
+    assert(PosMod( 0, 8) == 0);
+    assert(PosMod( 7, 8) == 7);
+    assert(PosMod( 8, 8) == 0);
 
     /*  Sector number tests  */
-    enforce(GetSectorNumber(vec3i(-TILES_PER_SECTOR_X,   -TILES_PER_SECTOR_Y , -TILES_PER_SECTOR_Z ))    == vec3i(-1, -1, -1));
-    enforce(GetSectorNumber(vec3i(-1,                    -1,                 -1))                        == vec3i(-1, -1, -1));
-    enforce(GetSectorNumber(vec3i(0,                     0,                  0))                         == vec3i( 0,  0,  0));
-    enforce(GetSectorNumber(vec3i(TILES_PER_SECTOR_X-1,  TILES_PER_SECTOR_Y-1, TILES_PER_SECTOR_Z-1))    == vec3i( 0,  0,  0));
-    enforce(GetSectorNumber(vec3i(TILES_PER_SECTOR_X  ,  TILES_PER_SECTOR_Y  , TILES_PER_SECTOR_Z  ))    == vec3i( 1,  1,  1));
+    assert(GetSectorNumber(vec3i(-TILES_PER_SECTOR_X,   -TILES_PER_SECTOR_Y , -TILES_PER_SECTOR_Z ))    == vec3i(-1, -1, -1));
+    assert(GetSectorNumber(vec3i(-1,                    -1,                 -1))                        == vec3i(-1, -1, -1));
+    assert(GetSectorNumber(vec3i(0,                     0,                  0))                         == vec3i( 0,  0,  0));
+    assert(GetSectorNumber(vec3i(TILES_PER_SECTOR_X-1,  TILES_PER_SECTOR_Y-1, TILES_PER_SECTOR_Z-1))    == vec3i( 0,  0,  0));
+    assert(GetSectorNumber(vec3i(TILES_PER_SECTOR_X  ,  TILES_PER_SECTOR_Y  , TILES_PER_SECTOR_Z  ))    == vec3i( 1,  1,  1));
 
     /*  tile index tests  */
-    enforce(GetBlockRelativeTileIndex(vec3i(-1, -1, -1)) == vec3i(BLOCK_SIZE_X-1, BLOCK_SIZE_Y-1, BLOCK_SIZE_Z-1));
-    enforce(GetBlockRelativeTileIndex(vec3i(TILES_PER_BLOCK_X-1,  TILES_PER_BLOCK_Y-1,  TILES_PER_BLOCK_Z-1)) == vec3i(BLOCK_SIZE_X-1, BLOCK_SIZE_Y-1, BLOCK_SIZE_Z-1));
-    enforce(GetBlockRelativeTileIndex(vec3i( 0,  0,  0)) == vec3i(0, 0, 0));
-    enforce(GetBlockRelativeTileIndex(vec3i( TILES_PER_BLOCK_X  ,  TILES_PER_BLOCK_Y  ,  TILES_PER_BLOCK_Z  )) == vec3i(0, 0, 0));
+    assert(GetBlockRelativeTileIndex(vec3i(-1, -1, -1)) == vec3i(BLOCK_SIZE_X-1, BLOCK_SIZE_Y-1, BLOCK_SIZE_Z-1));
+    assert(GetBlockRelativeTileIndex(vec3i(TILES_PER_BLOCK_X-1,  TILES_PER_BLOCK_Y-1,  TILES_PER_BLOCK_Z-1)) == vec3i(BLOCK_SIZE_X-1, BLOCK_SIZE_Y-1, BLOCK_SIZE_Z-1));
+    assert(GetBlockRelativeTileIndex(vec3i( 0,  0,  0)) == vec3i(0, 0, 0));
+    assert(GetBlockRelativeTileIndex(vec3i( TILES_PER_BLOCK_X  ,  TILES_PER_BLOCK_Y  ,  TILES_PER_BLOCK_Z  )) == vec3i(0, 0, 0));
 
 
     /*  Block world position, where block start in world, tile-counted  */
-    enforce(GetBlockWorldPosition(vec3i(-1, -1, -1)) == vec3i(-TILES_PER_BLOCK_X, -TILES_PER_BLOCK_Y, -TILES_PER_BLOCK_Z));
-    enforce(GetBlockWorldPosition(vec3i( 0,  0,  0)) == vec3i(0, 0, 0));
-    enforce(GetBlockWorldPosition(vec3i( TILES_PER_BLOCK_X,  TILES_PER_BLOCK_Y,  TILES_PER_BLOCK_Z)) == vec3i(TILES_PER_BLOCK_X, TILES_PER_BLOCK_Y, TILES_PER_BLOCK_Z));
+    assert(GetBlockWorldPosition(vec3i(-1, -1, -1)) == vec3i(-TILES_PER_BLOCK_X, -TILES_PER_BLOCK_Y, -TILES_PER_BLOCK_Z));
+    assert(GetBlockWorldPosition(vec3i( 0,  0,  0)) == vec3i(0, 0, 0));
+    assert(GetBlockWorldPosition(vec3i( TILES_PER_BLOCK_X,  TILES_PER_BLOCK_Y,  TILES_PER_BLOCK_Z)) == vec3i(TILES_PER_BLOCK_X, TILES_PER_BLOCK_Y, TILES_PER_BLOCK_Z));
 
 
 
     int[5][5][5] x;
-    memset(x,0,x.sizeof);
-    RangeFromTo range(0,5,0,5,0,5);
-    foreach (it, range) {
-        auto p = *it;
+	x[] = 0;
+    auto range = RangeFromTo(0,5,0,5,0,5);
+    foreach (p; range) {
         x[p.X][p.Y][p.Z] = 1;
     }
     auto xx = &x[0][0][0];
-    for (int i = 0; i < (sizeof x/sizeof x[0]); i += 1) {
-        int j = sizeof x;
+    for (int i = 0; i < (x.sizeof /x[0].sizeof ); i += 1) {
         if (xx[i] != 1) {
             printf("Something terrible! %d\n", xx[i]);
             BREAKPOINT;
