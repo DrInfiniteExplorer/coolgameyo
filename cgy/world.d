@@ -4,7 +4,7 @@ import std.container;
 import worldgen;
 import unit;
 
-import stuff;
+import util;
 
 interface WorldListener {
     void notifySectorLoad(vec3i sectorPos);
