@@ -1,5 +1,7 @@
 import engine.irrlicht;
 import std.stdio;
+import std.c.windows.windows;
+import std.exception;
 
 import world : BlockSize = BlockSize, SectorSize = SectorSize;
 
@@ -29,7 +31,7 @@ void BREAKPOINT() {
 
 void* AllocateBlob(size_t size) {
     version (Windows) { //For win32 evaluatar inte sant pa win64
-        auto ret = VirtualAlloc(NULL, 4096 * size, MEM_COMMIT, PAGE_READWRITE); 
+        auto ret = VirtualAlloc(null, 4096 * size, MEM_COMMIT, PAGE_READWRITE); 
         return enforce(ret, "memory allocation fail :-)");
     } else version (posix) {
         void* ret;
@@ -150,7 +152,7 @@ unittest {
     assert(negDiv(-9, 8) == -2);
 }
 
-/* Snaps to multiples of b. See enforceions. */
+/* snaps to multiples of b. See enforceions. */
 int snap(const int a, const int b)
 in{
     assert(b > 0);
@@ -176,14 +178,14 @@ body{
 }
 
 unittest {
-    assert(Snap(-16,  8) == -16);
-    assert(Snap( -9,  8) == -16);
-    assert(Snap( -8,  8) == -8);
-    assert(Snap( -1,  8) == -8);
-    assert(Snap(  0,  8) == 0);
-    assert(Snap(  7,  8) == 0);
-    assert(Snap(  8,  8) == 8);
-    assert(Snap( 15,  8) == 8);
+    assert(snap(-16,  8) == -16);
+    assert(snap( -9,  8) == -16);
+    assert(snap( -8,  8) == -8);
+    assert(snap( -1,  8) == -8);
+    assert(snap(  0,  8) == 0);
+    assert(snap(  7,  8) == 0);
+    assert(snap(  8,  8) == 8);
+    assert(snap( 15,  8) == 8);
 }
 
 int posMod(const int a, const int b){
@@ -219,17 +221,17 @@ unittest {
 vec3i getBlockRelativeTileIndex(const vec3i tilePosition){
 
     return vec3i(
-        PosMod(tilePosition.X, BlockSize.x),
-        PosMod(tilePosition.Y, BlockSize.y),
-        PosMod(tilePosition.Z, BlockSize.z)
+        posMod(tilePosition.X, BlockSize.x),
+        posMod(tilePosition.Y, BlockSize.y),
+        posMod(tilePosition.Z, BlockSize.z)
         );
 }
 /*  See GetBlockRelativeTileIndex for description  */
 vec3i getSectorRelativeBlockIndex(const vec3i tilePosition){
     return vec3i(
-        PosMod(NegDiv(tilePosition.X, BlockSize.x), SectorSize.x),
-        PosMod(NegDiv(tilePosition.Y, BlockSize.y), SectorSize.y),
-        PosMod(NegDiv(tilePosition.Z, BlockSize.z), SectorSize.z)
+        posMod(negDiv(tilePosition.X, BlockSize.x), SectorSize.x),
+        posMod(negDiv(tilePosition.Y, BlockSize.y), SectorSize.y),
+        posMod(negDiv(tilePosition.Z, BlockSize.z), SectorSize.z)
       );
 }
 
@@ -242,9 +244,9 @@ vec3i getSectorRelativeBlockIndex(const vec3i tilePosition){
 /*  world tile coordinates. It is where the block starts.  */
 vec3i getBlockWorldPosition (const vec3i tilePosition){   
     return vec3i(
-        Snap(tilePosition.X, BlockSize.x),
-        Snap(tilePosition.Y, BlockSize.y),
-        Snap(tilePosition.Z, BlockSize.z)
+        snap(tilePosition.X, BlockSize.x),
+        snap(tilePosition.Y, BlockSize.y),
+        snap(tilePosition.Z, BlockSize.z)
         );
 }
 
@@ -253,9 +255,9 @@ vec3i getBlockWorldPosition (const vec3i tilePosition){
 /*  See Util::Test for usage and stuff  */
 vec3i getSectorNumber(const vec3i tilePosition){
     return vec3i(
-        Snap(tilePosition.X, SectorSize.x)/SectorSize.x,
-        Snap(tilePosition.Y, SectorSize.y)/SectorSize.y,
-        Snap(tilePosition.Z, SectorSize.z)/SectorSize.z
+        snap(tilePosition.X, SectorSize.x)/SectorSize.x,
+        snap(tilePosition.Y, SectorSize.y)/SectorSize.y,
+        snap(tilePosition.Z, SectorSize.z)/SectorSize.z
         );
 }
 
