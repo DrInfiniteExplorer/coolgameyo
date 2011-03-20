@@ -3,8 +3,6 @@ import std.container, std.concurrency, std.datetime;
 
 import world;
 
-import stuff;
-
 struct Task {
     bool sync;
     bool syncsScheduler;

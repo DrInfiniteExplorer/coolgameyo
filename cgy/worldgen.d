@@ -1,7 +1,7 @@
 import std.math, std.conv;
 
 import world;
-import stuff;
+import util;
 
 struct WorldGenParams {
     uint randomSeed;

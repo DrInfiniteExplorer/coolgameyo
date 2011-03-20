@@ -183,5 +183,12 @@
  <Folder name="cgy">
   <File path="main.d" />
   <File path="util.d" />
+  <File path="scheduler.d" />
+  <File path="unit.d" />
+  <File path="world.d" />
+  <File path="worldgen.d" />
+  <File path="game.d" />
+  <File path="camera.d" />
+  <File path="renderer.d" />
  </Folder>
 </DProject>
