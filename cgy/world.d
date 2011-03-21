@@ -7,9 +7,9 @@ import unit;
 import util;
 
 interface WorldListener {
-    void notifySectorLoad(vec3i sectorNum);
-    void notifySectorUnload(vec3i sectorNum);
-    void notifyTileChange(vec3i tilePos);
+    void notifySectorLoad(SectorNum sectorNum);
+    void notifySectorUnload(SectorNum sectorNum);
+    void notifyTileChange(TilePos tilePos);
 }
 
 
@@ -34,20 +34,20 @@ class World {
         isServer = true;
 
         // do this in main() or something? D:
-        auto xy = vec2i(8,8);
+        auto xy = tileXYPos(vec2i(8,8));
         auto u = new Unit;
-        u.pos = getTopTilePos(xy);
+        u.pos = getTopTilePos(xy).value;
         u.pos.Z += 1;
         addUnit(u);
 
         floodFillVisibility(xy);
     }
 
-    void generateBlock(BlockPos blockPos) {
+    void generateBlock(BlockNum blockNum) {
         //Was toSectorPos insted of getSectorNumber which i'm guessing it's supposed to be.
         //Discovered after fixing this that getSector takes a tilepos and internally uses
         // "toSectorPos" ie. getSectorNumber. So removing that call here.
-        getSector(blockPos.getSectorNum()).generateBlock(blockPos, worldGen); 
+        getSector(blockNum.getSectorNum()).generateBlock(blockNum, worldGen); 
     }
 
     SectorXY getSectorXY(SectorXYNum xy) {
@@ -63,8 +63,8 @@ class World {
         return ret;
     }
 
-    Sector allocateSector(SectorPos sectorNum) {
-        auto xy = vec2i(sectorPos.value.X, sectorPos.value.Y);
+    Sector allocateSector(SectorNum sectorNum) {
+        auto xy = sectorXYNum(vec2i(sectorNum.value.X, sectorNum.value.Y));
         auto z = sectorNum.value.Z;
 
         if (xy !in sectorXY) {
@@ -80,10 +80,9 @@ class World {
         return sector;
     }
 
-    Sector getSector(TilePos tilePos, bool get=true) {
-        auto sectorNum = tilePos.getSectorNum();
-        auto xy = SectorXYNum(vec2i(sectorNum.value.X, sectorNum.value.Y))
-        auto z = sectorNum.Z;
+    Sector getSector(SectorNum sectorNum, bool get=true) {
+        auto xy = SectorXYNum(vec2i(sectorNum.value.X, sectorNum.value.Y));
+        auto z = sectorNum.value.Z;
 
         if (xy in sectorXY && z in sectorXY[xy].sectors) {
             return sectorXY[xy].sectors[z];
@@ -91,22 +90,22 @@ class World {
         return get ? allocateSector(sectorNum) : null;
     }
 
-    Block getBlock(TilePos tilePos, bool generate=true, bool getSector=false) {
-        auto sector = this.getSector(tilePos, getSector);
+    Block getBlock(BlockNum blockNum, bool generate=true, bool getSector=false) {
+        auto sector = this.getSector(blockNum.getSectorNum(), getSector);
         if (sector is null) return INVALID_BLOCK;
 
-        auto block = sector.getBlock(tilePos);
+        auto block = sector.getBlock(blockNum);
         if (!block.valid) {
             if (!generate) return INVALID_BLOCK;
 
-            generateBlock(tilePos);
-            block = sector.getBlock(tilePos);
+            generateBlock(blockNum);
+            block = sector.getBlock(blockNum);
         }
         assert (block.valid);
         return block;
     }
     
-    void setBlock(TilePos tilePos, Block newBlock) {
+    void setBlock(BlockNum blockNum, Block newBlock) {
         assert (false);
     }
 
@@ -114,36 +113,39 @@ class World {
 
     void addUnit(Unit* unit) {
         unitCount += 1;
-        getSector(unit.pos).addUnit(unit);
+        getSector(unit.tilePosition.getSectorNum()).addUnit(unit);
 
         foreach (dpos; RangeFromTo(-2,3,-2,3,-2,3)) {
-            auto pos = unit.pos;
-            pos.X += SectorSize.x * dpos.X;
-            pos.Y += SectorSize.y * dpos.Y;
-            pos.Z += SectorSize.z * dpos.Z;
+            auto pos = unit.tilePosition.getSectorNum();
+            pos.value.X +=  dpos.X;
+            pos.value.Y +=  dpos.Y;
+            pos.value.Z +=  dpos.Z;
             getSector(pos).increaseActivity();
         }
     }
 
     Tile getTile(TilePos tilePos, bool createBlock=true,
                                   bool createSector=true) {
-        return getBlock(tilePos, createBlock, createSector).getTile(tilePos);
+        return getBlock(tilePos.getBlockNum(), createBlock, createSector)
+            .getTile(tilePos);
     }
     void setTile(TilePos tilePos, const Tile newTile) {
-        getBlock(tilePos).setTile(tilePos, newTile);
+        getBlock(tilePos.getBlockNum()).setTile(tilePos, newTile);
         notifyTileChange(tilePos);
     }
 
     TilePos getTopTilePos(TileXYPos xy) {
         auto x = xy.value.X, y = xy.value.Y;
-        return tilePos(x, y, (*sectorXY[xy.getSectorXYNum()].heightmap)[x][y]);
+        auto pos = vec3i(x, y, (*sectorXY[xy.getSectorXYNum()].heightmap)[x][y]);
+        return tilePos(pos);
     }
 
     void floodFillVisibility(const TileXYPos xyStart) {
-        auto startPos = getTopTilePos(xyStart) + vec3i(0,0,1);
+        auto startPos = getTopTilePos(xyStart);
+        startPos.value += vec3i(0,0,1);
 
-        RedBlackTree!BlockPos work;
-        work.insert(startPos.getBlockPos());
+        RedBlackTree!(BlockNum, q{a.value < b.value}) work;
+        work.insert(startPos.getBlockNum());
 
         while (!work.empty) {
             auto pos = work.removeAny();
@@ -157,12 +159,12 @@ class World {
 
             if (block.sparse) {
                 if (block.type == TileType.air) {
-                    work.insert(blockPos(pos.value + vec3i(1, 0, 0)));
-                    work.insert(blockPos(pos.value - vec3i(1, 0, 0)));
-                    work.insert(blockPos(pos.value + vec3i(0, 1, 0)));
-                    work.insert(blockPos(pos.value - vec3i(0, 1, 0)));
-                    work.insert(blockPos(pos.value + vec3i(0, 0, 1)));
-                    work.insert(blockPos(pos.value - vec3i(0, 0, 1)));
+                    work.insert(blockNum(pos.value + vec3i(1, 0, 0)));
+                    work.insert(blockNum(pos.value - vec3i(1, 0, 0)));
+                    work.insert(blockNum(pos.value + vec3i(0, 1, 0)));
+                    work.insert(blockNum(pos.value - vec3i(0, 1, 0)));
+                    work.insert(blockNum(pos.value + vec3i(0, 0, 1)));
+                    work.insert(blockNum(pos.value - vec3i(0, 0, 1)));
                 } else {
                     assert (0, "WAPAW PWAP WAPWPA PWA ");
                 }
@@ -171,7 +173,7 @@ class World {
             
             foreach (rel; 
                     RangeFromTo(0,BlockSize.x,0,BlockSize.y,0,BlockSize.z)) {
-                auto tp = tilePos(pos.getTilePos().value + rel);
+                auto tp = tilePos(pos.toTilePos().value + rel);
                 auto tile = block.getTile(tp);
 
                 scope (exit) block.setTile(tp, tile);
@@ -179,19 +181,19 @@ class World {
                 if (tile.type == TileType.air) {
                     tile.seen = true;
                     if (rel.X == 0) {
-                        work.insert(blockPos(pos.value - vec3i(1,0,0)));
+                        work.insert(blockNum(pos.value - vec3i(1,0,0)));
                     } else if (rel.X == BlockSize.x - 1) {
-                        work.insert(blockPos(pos.value - vec3i(1,0,0)));
+                        work.insert(blockNum(pos.value - vec3i(1,0,0)));
                     }
                     if (rel.Y == 0) {
-                        work.insert(blockPos(pos.value - vec3i(0,1,0)));
+                        work.insert(blockNum(pos.value - vec3i(0,1,0)));
                     } else if (rel.Y == BlockSize.y - 1) {
-                        work.insert(blockPos(pos.value - vec3i(0,1,0)));
+                        work.insert(blockNum(pos.value - vec3i(0,1,0)));
                     }
                     if (rel.Z == 0) {
-                        work.insert(blockPos(pos.value - vec3i(0,0,1)));
+                        work.insert(blockNum(pos.value - vec3i(0,0,1)));
                     } else if (rel.Z == BlockSize.z - 1) {
-                        work.insert(blockPos(pos.value - vec3i(0,0,1)));
+                        work.insert(blockNum(pos.value - vec3i(0,0,1)));
                     }
                 } else {
                     foreach (npos; neighbors(tp)) {
@@ -224,7 +226,7 @@ class World {
             listener.notifySectorUnload(sectorNum);
         }
     }
-    void notifyTileChange(SectorPos tilePos) {
+    void notifyTileChange(TilePos tilePos) {
         foreach (listener; listeners) {
             listener.notifyTileChange(tilePos);
         }
@@ -269,7 +271,7 @@ class Sector {
 
     this(SectorNum sectorNum_) {
         assert(0); //Jag forstar nu vad du menar med att vi bor ha typer for att itne forvirra oss.
-        pos = getSectorWorldPosition(sectorNum);
+        pos = sectorNum.toTilePos();
         sectorNum = sectorNum_;
     }
 
@@ -277,17 +279,26 @@ class Sector {
         return (&blocks[0][0][0])[0 .. BlocksPerSector.total];
     }
 
-    void generateBlock(vec3i tilePos, WorldGenerator worldGen) {
-        auto pos = getBlockWorldPosition(tilePos);
-        blocks[pos.X][pos.Y][pos.Z] = Block.generateBlock(tilePos, worldGen);
+    void generateBlock(BlockNum blockNum, WorldGenerator worldGen)
+    in{
+        assert(blockNum.getSectorNum() == sectorNum);
+        assert(blockNum.getSectorNum.toTilePos() == pos); //Good to have? In that case, add to other places like getBlock() as well.
+    }
+    body{
+        auto pos = blockNum.rel();
+        blocks[pos.X][pos.Y][pos.Z] = Block.generateBlock(blockNum, worldGen);
     }
 
-    Block getBlock(vec3i tilePos) {
-        auto pos = getBlockWorldPosition(tilePos);
+    Block getBlock(BlockNum blockNum)
+    in{
+        assert(blockNum.getSectorNum() == sectorNum);
+    }
+    body{        
+        auto pos = blockNum.rel();
         return blocks[pos.X][pos.Y][pos.Z];
     }
     void setBlock(vec3i tilePos, Block newBlock) {
-        auto pos = getBlockWorldPosition(tilePos);
+        auto pos = getBlockRelativeTileIndex(tilePos);
         blocks[pos.X][pos.Y][pos.Z] = newBlock;
     }
 
@@ -330,7 +341,7 @@ struct Block {
 
     RenderData renderData;
 
-    vec3i pos;
+    BlockNum blockNum;
 
     TileType type;
 
@@ -340,20 +351,30 @@ struct Block {
     static void free(Block block) {
         assert (0);
     }
-    static Block generateBlock(vec3i blockPos, WorldGenerator worldgen) {
+    static Block generateBlock(BlockNum blockNum, WorldGenerator worldgen) {
         assert (0);
     }
 
-    Tile getTile(vec3i pos) {
+    Tile getTile(TilePos tilePos)
+    in{
+        assert(tilePos.getBlockNum() == this.blockNum);
         assert (tiles);
+    }
+    body{
+        auto pos = tilePos.rel();
         return (*tiles)[pos.X][pos.Y][pos.Z];
     }
-    void setTile(vec3i pos, Tile tile) {
+    void setTile(TilePos pos, Tile tile)
+    in{
+        assert(pos.getBlockNum() == this.blockNum);
+    }
+    body{
+        auto p = pos.rel();
         assert (0);
     }
 
     bool isSame(const Block other) const {
-        return pos == other.pos && (sparse || tiles is other.tiles);
+        return blockNum == other.blockNum && (sparse || tiles is other.tiles);
     }
     
     int valid() const @property { return flags & BlockFlags.valid; }
@@ -374,8 +395,13 @@ struct Block {
     }
 }
 
-Block INVALID_BLOCK = Block(null, BlockFlags.none, Block.RenderData(0,[0,0]),
-        vec3i(int.min, int.min, int.min), TileType.invalid);
+Block INVALID_BLOCK = {
+    tiles :null,
+    flags : BlockFlags.none,
+    renderData : Block.RenderData(0,[0,0]),
+    blockNum : blockNum(vec3i(int.min, int.min, int.min)),
+    type : TileType.invalid
+};
 
 // TILE STUFF
 

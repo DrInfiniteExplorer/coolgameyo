@@ -38,7 +38,7 @@ class Renderer{
 	
 	void renderWorld()
 	{
-		auto vboList = vboMaker.getVBOs();
+//		auto vboList = vboMaker.getVBOs();
 		
 	}
 }

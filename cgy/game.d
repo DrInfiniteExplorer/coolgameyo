@@ -1,5 +1,6 @@
 
 import engine.irrlicht;
+
 import world;
 import camera;
 import renderer;
@@ -45,4 +46,9 @@ class Game : IEventReceiver{
 	void run(){
 		
 	}
+    
+	bool OnEvent(const SEvent event){
+        return false;
+    }
+    
 }

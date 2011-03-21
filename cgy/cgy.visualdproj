@@ -75,7 +75,7 @@
   <objfiles />
   <linkswitches />
   <libfiles>gdi32.lib derelictgl.lib derelictutil.lib win32.lib advapi32.lib derelictil.lib iEngine.lib</libfiles>
-  <libpaths>d:\D\Libs\DIrrlicht\Lib</libpaths>
+  <libpaths>d:\D\Libs\DIrrlicht\Lib;d:\D\Libs\derelict2\lib;d:\D\Libs\bindings\win32 </libpaths>
   <deffile />
   <resfile />
   <exefile>$(OutDir)\$(ProjectName).exe</exefile>
@@ -190,6 +190,7 @@
   <File path="game.d" />
   <File path="camera.d" />
   <File path="renderer.d" />
-  <File path="VBOMaker.d" />
+  <File path="vbomaker.d" />
+  <File path="pos.d" />
  </Folder>
 </DProject>

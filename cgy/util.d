@@ -1,10 +1,11 @@
-import engine.irrlicht;
-import std.stdio;
 import std.c.windows.windows;
-import std.exception;
 import std.conv;
+import std.exception;
+import std.stdio;
 
-import world : BlockSize = BlockSize, SectorSize = SectorSize, GraphRegionSize = GraphRegionSize;
+import engine.irrlicht;
+
+import world : BlockSize, SectorSize , GraphRegionSize;
 
 public import pos;
 
@@ -17,8 +18,6 @@ alias vector3d!(double) vec3d;
 //The solution people converged on was to make a one-member-struct.
 // ...
 // :)
-alias vec3i SectorNum;
-
 
 vector3d!(A) convert(A,B)(const vector3d!(B) wap){
     return vector3d!(A)( to!(A)(wap.X), to!(A)(wap.Y), to!(A)(wap.Z));
@@ -57,14 +56,15 @@ void FreeBlob(void* blob) {
     }
 }
 
-vec3i[6] neighbors(vec3i pos) {
-    vec3i[6] ret;
-    ret[0] = pos + vec3i(0,0,1);
-    ret[1] = pos - vec3i(0,0,1);
-    ret[2] = pos + vec3i(0,1,0);
-    ret[3] = pos - vec3i(0,1,0);
-    ret[4] = pos + vec3i(1,0,0);
-    ret[5] = pos - vec3i(1,0,0);
+TilePos[6] neighbors(TilePos tilePos) {
+    TilePos[6] ret;
+    ret[] = tilePos;
+    ret[0].value += vec3i(0,0,1);
+    ret[1].value -= vec3i(0,0,1);
+    ret[2].value += vec3i(0,1,0);
+    ret[3].value -= vec3i(0,1,0);
+    ret[4].value += vec3i(1,0,0);
+    ret[5].value -= vec3i(1,0,0);
     return ret;
 }
 
@@ -228,20 +228,12 @@ unittest {
 /*  withing the <bigger thing>. Return values lie in the domain */
 /*  [0, <bigger thing>_SIZE_?[  */
 vec3i getBlockRelativeTileIndex(const vec3i tilePosition){
-
-    return vec3i(
-        posMod(tilePosition.X, BlockSize.x),
-        posMod(tilePosition.Y, BlockSize.y),
-        posMod(tilePosition.Z, BlockSize.z)
-        );
+    assert(0); //moved to TilePos.tileIndex()
 }
 /*  See GetBlockRelativeTileIndex for description  */
 vec3i getSectorRelativeBlockIndex(const vec3i tilePosition){
-    return vec3i(
-        posMod(negDiv(tilePosition.X, BlockSize.x), SectorSize.x),
-        posMod(negDiv(tilePosition.Y, BlockSize.y), SectorSize.y),
-        posMod(negDiv(tilePosition.Z, BlockSize.z), SectorSize.z)
-      );
+
+    assert(0); //Moved to TilePos.blockIndex()
 }
 
 
@@ -264,11 +256,12 @@ vec3i getBlockWorldPosition (const vec3i tilePosition){
 /*  See Util::Test for usage and stuff  */
 /* Luben added type SectorNum for great win */
 SectorNum getSectorNumber(const vec3i tilePosition){
-    return SectorNum(
+    return sectorNum(
+        vec3i(
         snap(tilePosition.X, SectorSize.x)/SectorSize.x,
         snap(tilePosition.Y, SectorSize.y)/SectorSize.y,
         snap(tilePosition.Z, SectorSize.z)/SectorSize.z
-        );
+        ));
 }
 
 
@@ -276,9 +269,9 @@ SectorNum getSectorNumber(const vec3i tilePosition){
 /*  world tile coordinates. It is where the sector starts.    */
 vec3i getSectorWorldPositionFromSectorNumber(const SectorNum sectorNumber){
     return vec3i(
-                 sectorNumber.X * SectorSize.x,
-                 sectorNumber.Y * SectorSize.y,
-                 sectorNumber.Z * SectorSize.z);                 
+                 sectorNumber.value.X * SectorSize.x,
+                 sectorNumber.value.Y * SectorSize.y,
+                 sectorNumber.value.Z * SectorSize.z);                 
 }
 
 /*  Returns the position of the first tile in this sector as  */
