@@ -6,6 +6,8 @@ import std.conv;
 
 import world : BlockSize = BlockSize, SectorSize = SectorSize, GraphRegionSize = GraphRegionSize;
 
+public import pos;
+
 alias vector2d!(int)	vec2i;
 alias vector3d!(int)	vec3i;
 alias vector3d!(float)	vec3f;

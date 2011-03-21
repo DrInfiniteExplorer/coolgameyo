@@ -20,7 +20,7 @@ class World {
         Sector[int] sectors;
     }
 
-    SectorXY[vec2i] sectorXY;
+    SectorXY[SectorXYNum] sectorXY;
     Sector[] sectorList;
 
     WorldGenerator worldGen;
@@ -43,27 +43,29 @@ class World {
         floodFillVisibility(xy);
     }
 
-    void generateBlock(vec3i tilePos) {
+    void generateBlock(BlockPos blockPos) {
         //Was toSectorPos insted of getSectorNumber which i'm guessing it's supposed to be.
         //Discovered after fixing this that getSector takes a tilepos and internally uses
         // "toSectorPos" ie. getSectorNumber. So removing that call here.
-        getSector(tilePos).generateBlock(tilePos, worldGen); 
+        getSector(blockPos.getSectorNum()).generateBlock(blockPos, worldGen); 
     }
 
-    SectorXY getSectorXY(vec2i xy) {
+    SectorXY getSectorXY(SectorXYNum xy) {
         SectorXY ret;
         static assert ((*ret.heightmap).sizeof == 
                 int.sizeof * SectorSize.x * SectorSize.y);
         int[] blob = new int[](SectorSize.x * SectorSize.y);
         blob[] = 0;
         ret.heightmap = cast(typeof(ret.heightmap))(blob.ptr);
+
+        writeln("Needs some heightmap generation at ", xy);
+
         return ret;
     }
 
-    //Chaning sectorPos to sectorNum
-    Sector allocateSector(vec3i sectorNum) {
-        auto xy = vec2i(sectorNum.X, sectorNum.Y);
-        auto z = sectorNum.Z;
+    Sector allocateSector(SectorPos sectorNum) {
+        auto xy = vec2i(sectorPos.value.X, sectorPos.value.Y);
+        auto z = sectorNum.value.Z;
 
         if (xy !in sectorXY) {
             sectorXY[xy] = getSectorXY(xy);
@@ -78,9 +80,9 @@ class World {
         return sector;
     }
 
-    Sector getSector(vec3i tilePos, bool get=true) {
-        auto sectorNum = getSectorNumber(tilePos);
-        auto xy = vec2i(sectorNum.X, sectorNum.Y);
+    Sector getSector(TilePos tilePos, bool get=true) {
+        auto sectorNum = tilePos.getSectorNum();
+        auto xy = SectorXYNum(vec2i(sectorNum.value.X, sectorNum.value.Y))
         auto z = sectorNum.Z;
 
         if (xy in sectorXY && z in sectorXY[xy].sectors) {
@@ -89,7 +91,7 @@ class World {
         return get ? allocateSector(sectorNum) : null;
     }
 
-    Block getBlock(vec3i tilePos, bool generate=true, bool getSector=false) {
+    Block getBlock(TilePos tilePos, bool generate=true, bool getSector=false) {
         auto sector = this.getSector(tilePos, getSector);
         if (sector is null) return INVALID_BLOCK;
 
@@ -104,7 +106,7 @@ class World {
         return block;
     }
     
-    void setBlock(vec3i tilePos, Block newBlock) {
+    void setBlock(TilePos tilePos, Block newBlock) {
         assert (false);
     }
 
@@ -123,23 +125,25 @@ class World {
         }
     }
 
-    Tile getTile(vec3i tilePos, bool createBlock=true, bool createSector=true) {
+    Tile getTile(TilePos tilePos, bool createBlock=true,
+                                  bool createSector=true) {
         return getBlock(tilePos, createBlock, createSector).getTile(tilePos);
     }
-    void setTile(vec3i tilePos, const Tile newTile) {
+    void setTile(TilePos tilePos, const Tile newTile) {
         getBlock(tilePos).setTile(tilePos, newTile);
         notifyTileChange(tilePos);
     }
 
-    vec3i getTopTilePos(vec2i xy) {
-        return vec3i(xy.X, xy.Y, (*sectorXY[xy].heightmap)[xy.X][xy.Y]);
+    TilePos getTopTilePos(TileXYPos xy) {
+        auto x = xy.value.X, y = xy.value.Y;
+        return tilePos(x, y, (*sectorXY[xy.getSectorXYNum()].heightmap)[x][y]);
     }
 
-    void floodFillVisibility(const vec2i xyStart) {
+    void floodFillVisibility(const TileXYPos xyStart) {
         auto startPos = getTopTilePos(xyStart) + vec3i(0,0,1);
 
-        RedBlackTree!vec3i work;
-        work.insert(getBlockWorldPosition(startPos));
+        RedBlackTree!BlockPos work;
+        work.insert(startPos.getBlockPos());
 
         while (!work.empty) {
             auto pos = work.removeAny();
@@ -153,21 +157,21 @@ class World {
 
             if (block.sparse) {
                 if (block.type == TileType.air) {
-                    work.insert(pos + vec3i(BlockSize.x, 0, 0));
-                    work.insert(pos - vec3i(BlockSize.x, 0, 0));
-                    work.insert(pos + vec3i(0, BlockSize.y, 0));
-                    work.insert(pos - vec3i(0, BlockSize.y, 0));
-                    work.insert(pos + vec3i(0, 0, BlockSize.z));
-                    work.insert(pos - vec3i(0, 0, BlockSize.z));
+                    work.insert(blockPos(pos.value + vec3i(1, 0, 0)));
+                    work.insert(blockPos(pos.value - vec3i(1, 0, 0)));
+                    work.insert(blockPos(pos.value + vec3i(0, 1, 0)));
+                    work.insert(blockPos(pos.value - vec3i(0, 1, 0)));
+                    work.insert(blockPos(pos.value + vec3i(0, 0, 1)));
+                    work.insert(blockPos(pos.value - vec3i(0, 0, 1)));
                 } else {
-                    writeln("wpap wapwap pwa");
-                    assert (0);
+                    assert (0, "WAPAW PWAP WAPWPA PWA ");
                 }
                 continue;
             }
             
-            foreach (rel; RangeFromTo(0,BlockSize.x,0,BlockSize.y,0,BlockSize.z)) {
-                auto tp = rel+pos;
+            foreach (rel; 
+                    RangeFromTo(0,BlockSize.x,0,BlockSize.y,0,BlockSize.z)) {
+                auto tp = tilePos(pos.getTilePos().value + rel);
                 auto tile = block.getTile(tp);
 
                 scope (exit) block.setTile(tp, tile);
@@ -175,19 +179,19 @@ class World {
                 if (tile.type == TileType.air) {
                     tile.seen = true;
                     if (rel.X == 0) {
-                        work.insert(pos - vec3i(BlockSize.x,0,0));
+                        work.insert(blockPos(pos.value - vec3i(1,0,0)));
                     } else if (rel.X == BlockSize.x - 1) {
-                        work.insert(pos - vec3i(BlockSize.x,0,0));
+                        work.insert(blockPos(pos.value - vec3i(1,0,0)));
                     }
                     if (rel.Y == 0) {
-                        work.insert(pos - vec3i(BlockSize.y,0,0));
+                        work.insert(blockPos(pos.value - vec3i(0,1,0)));
                     } else if (rel.Y == BlockSize.y - 1) {
-                        work.insert(pos - vec3i(BlockSize.y,0,0));
+                        work.insert(blockPos(pos.value - vec3i(0,1,0)));
                     }
                     if (rel.Z == 0) {
-                        work.insert(pos - vec3i(BlockSize.z,0,0));
+                        work.insert(blockPos(pos.value - vec3i(0,0,1)));
                     } else if (rel.Z == BlockSize.z - 1) {
-                        work.insert(pos - vec3i(BlockSize.z,0,0));
+                        work.insert(blockPos(pos.value - vec3i(0,0,1)));
                     }
                 } else {
                     foreach (npos; neighbors(tp)) {
@@ -210,17 +214,17 @@ class World {
         remove(listeners, indexOf!q{a is b}(listeners, listener));
         listeners.length -= 1;
     }
-    void notifySectorLoad(vec3i sectorNum) {
+    void notifySectorLoad(SectorNum sectorNum) {
         foreach (listener; listeners) {
             listener.notifySectorLoad(sectorNum);
         }
     }
-    void notifySectorUnload(vec3i sectorNum) {
+    void notifySectorUnload(SectorNum sectorNum) {
         foreach (listener; listeners) {
             listener.notifySectorUnload(sectorNum);
         }
     }
-    void notifyTileChange(vec3i tilePos) {
+    void notifyTileChange(SectorPos tilePos) {
         foreach (listener; listeners) {
             listener.notifyTileChange(tilePos);
         }
@@ -243,7 +247,6 @@ enum SectorSize {
     total = x*y*z
 }
 
-
 //We may want to experiment with these values, or even make it a user settingable setting. Yeah.
 enum GraphRegionSize {
     x = BlockSize.x,
@@ -252,18 +255,16 @@ enum GraphRegionSize {
     total = x*y*z
 }
 
-alias RedBlackTree!(Unit*) UnitSet;
-
 class Sector {
 
-    vec3i pos;
+    TilePos pos;
     SectorNum sectorNum;
     
     int blockCount;
 
     Block[BlocksPerSector.x][BlocksPerSector.y][BlocksPerSector.z] blocks;
 
-    UnitSet units;
+    RedBlackTree!(Unit*) units;
     int activityCount;
 
     this(SectorNum sectorNum_) {

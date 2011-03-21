@@ -36,7 +36,7 @@ class Scheduler {
 
     State state;
 
-    Queue!(Task) sync, async;
+    Queue!Task sync, async;
 
     World world;
 
