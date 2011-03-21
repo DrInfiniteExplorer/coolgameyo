@@ -7,8 +7,8 @@ import unit;
 import util;
 
 interface WorldListener {
-    void notifySectorLoad(vec3i sectorPos);
-    void notifySectorUnload(vec3i sectorPos);
+    void notifySectorLoad(vec3i sectorNum);
+    void notifySectorUnload(vec3i sectorNum);
     void notifyTileChange(vec3i tilePos);
 }
 
@@ -44,7 +44,10 @@ class World {
     }
 
     void generateBlock(vec3i tilePos) {
-        getSector(toSectorPos(tilePos)).generateBlock(tilePos, worldGen);
+        //Was toSectorPos insted of getSectorNumber which i'm guessing it's supposed to be.
+        //Discovered after fixing this that getSector takes a tilepos and internally uses
+        // "toSectorPos" ie. getSectorNumber. So removing that call here.
+        getSector(tilePos).generateBlock(tilePos, worldGen); 
     }
 
     SectorXY getSectorXY(vec2i xy) {
@@ -57,16 +60,16 @@ class World {
         return ret;
     }
 
-
-    Sector allocateSector(vec3i sectorPos) {
-        auto xy = vec2i(sectorPos.X, sectorPos.Y);
-        auto z = sectorPos.Z;
+    //Chaning sectorPos to sectorNum
+    Sector allocateSector(vec3i sectorNum) {
+        auto xy = vec2i(sectorNum.X, sectorNum.Y);
+        auto z = sectorNum.Z;
 
         if (xy !in sectorXY) {
             sectorXY[xy] = getSectorXY(xy);
         }
 
-        auto sector = new Sector(sectorPos);
+        auto sector = new Sector(sectorNum);
 
         assert (z !in sectorXY[xy].sectors);
         sectorXY[xy].sectors[z] = sector;
@@ -76,14 +79,14 @@ class World {
     }
 
     Sector getSector(vec3i tilePos, bool get=true) {
-        auto sectorPos = getSectorPos(tilePos);
-        auto xy = vec2i(sectorPos.X, sectorPos.Y);
-        auto z = sectorPos.Z;
+        auto sectorNum = getSectorNumber(tilePos);
+        auto xy = vec2i(sectorNum.X, sectorNum.Y);
+        auto z = sectorNum.Z;
 
         if (xy in sectorXY && z in sectorXY[xy].sectors) {
             return sectorXY[xy].sectors[z];
         }
-        return get ? allocateSector(sectorPos) : null;
+        return get ? allocateSector(sectorNum) : null;
     }
 
     Block getBlock(vec3i tilePos, bool generate=true, bool getSector=false) {
@@ -111,7 +114,7 @@ class World {
         unitCount += 1;
         getSector(unit.pos).addUnit(unit);
 
-        foreach (dpos; Range3D(-2,3,-2,3,-2,3)) {
+        foreach (dpos; RangeFromTo(-2,3,-2,3,-2,3)) {
             auto pos = unit.pos;
             pos.X += SectorSize.x * dpos.X;
             pos.Y += SectorSize.y * dpos.Y;
@@ -163,7 +166,7 @@ class World {
                 continue;
             }
             
-            foreach (rel; Range3D(0,BlockSize.x,0,BlockSize.y,0,BlockSize.z)) {
+            foreach (rel; RangeFromTo(0,BlockSize.x,0,BlockSize.y,0,BlockSize.z)) {
                 auto tp = rel+pos;
                 auto tile = block.getTile(tp);
 
@@ -207,14 +210,14 @@ class World {
         remove(listeners, indexOf!q{a is b}(listeners, listener));
         listeners.length -= 1;
     }
-    void notifySectorLoad(vec3i sectorPos) {
+    void notifySectorLoad(vec3i sectorNum) {
         foreach (listener; listeners) {
-            listener.notifySectorLoad(sectorPos);
+            listener.notifySectorLoad(sectorNum);
         }
     }
-    void notifySectorUnload(vec3i sectorPos) {
+    void notifySectorUnload(vec3i sectorNum) {
         foreach (listener; listeners) {
-            listener.notifySectorUnload(sectorPos);
+            listener.notifySectorUnload(sectorNum);
         }
     }
     void notifyTileChange(vec3i tilePos) {
@@ -240,12 +243,21 @@ enum SectorSize {
     total = x*y*z
 }
 
+
+//We may want to experiment with these values, or even make it a user settingable setting. Yeah.
+enum GraphRegionSize {
+    x = BlockSize.x,
+    y = BlockSize.y,
+    z = BlockSize.z,
+    total = x*y*z
+}
+
 alias RedBlackTree!(Unit*) UnitSet;
 
 class Sector {
 
     vec3i pos;
-    vec3i sectorPos;
+    SectorNum sectorNum;
     
     int blockCount;
 
@@ -254,9 +266,10 @@ class Sector {
     UnitSet units;
     int activityCount;
 
-    this(vec3i sectorPos_) {
-        pos = sectorPosToTilePos(sectorPos);
-        sectorPos = sectorPos_;
+    this(SectorNum sectorNum_) {
+        assert(0); //Jag forstar nu vad du menar med att vi bor ha typer for att itne forvirra oss.
+        pos = getSectorWorldPosition(sectorNum);
+        sectorNum = sectorNum_;
     }
 
     const(Block)[] getBlocks() const {
@@ -264,16 +277,16 @@ class Sector {
     }
 
     void generateBlock(vec3i tilePos, WorldGenerator worldGen) {
-        auto pos = getBlockPos(tilePos);
+        auto pos = getBlockWorldPosition(tilePos);
         blocks[pos.X][pos.Y][pos.Z] = Block.generateBlock(tilePos, worldGen);
     }
 
     Block getBlock(vec3i tilePos) {
-        auto pos = getBlockPos(tilePos);
+        auto pos = getBlockWorldPosition(tilePos);
         return blocks[pos.X][pos.Y][pos.Z];
     }
     void setBlock(vec3i tilePos, Block newBlock) {
-        auto pos = getBlockPos(tilePos);
+        auto pos = getBlockWorldPosition(tilePos);
         blocks[pos.X][pos.Y][pos.Z] = newBlock;
     }
 

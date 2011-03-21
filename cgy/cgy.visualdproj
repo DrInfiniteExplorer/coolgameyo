@@ -190,5 +190,6 @@
   <File path="game.d" />
   <File path="camera.d" />
   <File path="renderer.d" />
+  <File path="VBOMaker.d" />
  </Folder>
 </DProject>

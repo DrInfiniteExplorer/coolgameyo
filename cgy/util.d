@@ -2,13 +2,20 @@ import engine.irrlicht;
 import std.stdio;
 import std.c.windows.windows;
 import std.exception;
+import std.conv;
 
-import world : BlockSize = BlockSize, SectorSize = SectorSize;
+import world : BlockSize = BlockSize, SectorSize = SectorSize, GraphRegionSize = GraphRegionSize;
 
 alias vector2d!(int)	vec2i;
 alias vector3d!(int)	vec3i;
 alias vector3d!(float)	vec3f;
 alias vector3d!(double) vec3d;
+
+//According to #D on freenode, there's no way that's not ridden with bugs to make explicit casting between types
+//The solution people converged on was to make a one-member-struct.
+// ...
+// :)
+alias vec3i SectorNum;
 
 
 vector3d!(A) convert(A,B)(const vector3d!(B) wap){
@@ -19,9 +26,9 @@ vector3d!(A) convert(A,B)(const vector3d!(B) wap){
 
 void setFlag(A,B)(ref A flags, B flag, bool value) {
     if (value) {
-        val |= flag;
+        flags |= flag;
     } else {
-        val &= ~flag;
+        flags &= ~flag;
     }
 }
 
@@ -253,14 +260,46 @@ vec3i getBlockWorldPosition (const vec3i tilePosition){
 /*  Returns a vector which corresponds to the sector number in the  */
 /*  world that the tile belongs to. Can be (0, 0, 0) or (1, 5, -7). */
 /*  See Util::Test for usage and stuff  */
-vec3i getSectorNumber(const vec3i tilePosition){
-    return vec3i(
+/* Luben added type SectorNum for great win */
+SectorNum getSectorNumber(const vec3i tilePosition){
+    return SectorNum(
         snap(tilePosition.X, SectorSize.x)/SectorSize.x,
         snap(tilePosition.Y, SectorSize.y)/SectorSize.y,
         snap(tilePosition.Z, SectorSize.z)/SectorSize.z
         );
 }
 
+
+/*  Returns the position of the first tile in this sector as  */
+/*  world tile coordinates. It is where the sector starts.    */
+vec3i getSectorWorldPositionFromSectorNumber(const SectorNum sectorNumber){
+    return vec3i(
+                 sectorNumber.X * SectorSize.x,
+                 sectorNumber.Y * SectorSize.y,
+                 sectorNumber.Z * SectorSize.z);                 
+}
+
+/*  Returns the position of the first tile in this sector as  */
+/*  world tile coordinates. It is where the sector starts.    */
+vec3i getSectorWorldPosition(const vec3i tilePosition)
+{
+    return vec3i(
+        snap(tilePosition.X, SectorSize.x),
+        snap(tilePosition.Y, SectorSize.y),
+        snap(tilePosition.Z, SectorSize.z));
+}
+
+aabbox3d!double getSectorAABB(const vec3i tilePosition)
+{
+    auto startPos = convert!double(getSectorWorldPosition(tilePosition));
+    vec3d endPos;
+    endPos.set(SectorSize.x, SectorSize.y, SectorSize.z);
+    endPos += startPos;
+    aabbox3d!double ret;
+    ret.addInternalPoint(startPos);
+    ret.addInternalPoint(endPos);
+    return ret;
+}
 
 
 unittest {

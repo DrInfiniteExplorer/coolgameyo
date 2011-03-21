@@ -1,11 +1,11 @@
 
 import engine.irrlicht;
-import World;
-import Camera;
-import Renderer;
-import Scheduler;
+import world;
+import camera;
+import renderer;
+import scheduler;
 
-class Game{
+class Game : IEventReceiver{
 	
 	IrrlichtDevice	device;
 	World			world;
@@ -24,7 +24,7 @@ class Game{
 		world = new World();
 		if(isClient){        
 			SIrrlichtCreationParameters sex;
-			sex.DriverType = EDT_OPENGL;
+			sex.DriverType = E_DRIVER_TYPE.EDT_OPENGL;
 			sex.Bits = 32;
 			sex.ZBufferBits = 16; //Or 32? Make settingable?
 			sex.Fullscreen = false;
@@ -32,11 +32,10 @@ class Game{
 			sex.AntiAlias = sex.Fullscreen ? 8 : 0; //this is FSAA
 			sex.HighPrecisionFPU = false; //test false also.
 			sex.EventReceiver = this;
-			sex.UsePerformanceTimer = true;
-			m_pDevice = createDeviceEx(sex);
-			m_sched = new Scheduler(m_pWorld, m_pDevice.getTimer());
-			m_pRenderer = new Renderer(m_pWorld, m_pDevice.getVideoDriver());
-			m_pCamera = new Camera();
+			device = createDeviceEx(sex);
+			scheduler = new Scheduler(world, 0);
+			renderer = new Renderer(world, device.getVideoDriver());
+			camera = new Camera();
 		}
 	}
 	~this(){		
