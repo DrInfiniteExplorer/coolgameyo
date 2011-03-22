@@ -470,7 +470,7 @@ struct Block {
                 allocmap[i] = true;
                 return &data[i];
             }
-            void returnMem(AllocationBlock* mem) {
+            void returnMem(T* mem) {
                 auto diff = mem - data.ptr;
                 if (0 <= diff && diff < dataSize) {
                     // IT IS OUR BLOB!!!!!
