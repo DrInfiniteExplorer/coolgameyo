@@ -49,7 +49,8 @@ class World {
         //Was toSectorPos insted of getSectorNumber which i'm guessing it's supposed to be.
         //Discovered after fixing this that getSector takes a tilepos and internally uses
         // "toSectorPos" ie. getSectorNumber. So removing that call here.
-        getSector(blockNum.getSectorNum()).generateBlock(blockNum, worldGen); 
+        auto sector = getSector(blockNum.getSectorNum());
+        sector.generateBlock(blockNum, worldGen); 
     }
 
     SectorXY getSectorXY(SectorXYNum xy) {
@@ -67,11 +68,7 @@ class World {
         
         auto p = xy.getTileXYPos();
         
-        int xxx=-1;
-        
         foreach(relPos ; RangeFromTo(0, SectorSize.x, 0, SectorSize.y, 0, 1)){            
-            xxx = relPos.Y;
-            writeln(relPos.X, " ", xxx, " ", relPos.Z);
             auto tmp = p.value + vec2i(relPos.X, relPos.Y);
             auto posXY = tileXYPos(tmp);
             auto z = worldGen.maxZ(posXY);
@@ -176,8 +173,10 @@ class World {
         auto startPos = getTopTilePos(xyStart);
         startPos.value += vec3i(0,0,1);
 
-        RedBlackTree!(BlockNum, q{a.value < b.value}) work;
-        work.insert(startPos.getBlockNum());
+        RedBlackTree!(BlockNum, q{a.value < b.value}) work;        
+        
+        //work.insert(startPos.getBlockNum()); //Retardedly retarded redblacktree needs to be initialized with something.
+        work = typeof(work)(startPos.getBlockNum());
 
         while (!work.empty) {
             auto pos = work.removeAny();
@@ -304,6 +303,7 @@ class Sector {
     this(SectorNum sectorNum_) {
         pos = sectorNum.toTilePos();
         sectorNum = sectorNum_;
+        units = typeof(units)(cast(Unit*[])[]); //Retarded.
     }
 
     const(Block)[] getBlocks() const {
@@ -368,22 +368,46 @@ struct Block {
 
     Tile[BlockSize.z][BlockSize.y][BlockSize.x]* tiles;
 
-    BlockFlags flags;
+    BlockFlags flags = BlockFlags.none;
 
     RenderData renderData;
 
     BlockNum blockNum;
 
     TileType type;
-
+    
     static Block alloc() {
-        assert (0);
+        assert (0, "Implement Block.alloc");
     }
     static void free(Block block) {
-        assert (0);
+        assert (0, "Implement Block.free");
     }
     static Block generateBlock(BlockNum blockNum, WorldGenerator worldgen) {
-        assert (0);
+        auto block = alloc(); //Derp derp?
+        block.valid = true;
+        block.dirty = true;
+        
+        bool homogenous = true;
+        block.type = TileType.invalid;
+        foreach(relPos ; RangeFromTo(0, BlockSize.x, 0, BlockSize.y, 0, BlockSize.z)){
+            auto TP = blockNum.toTilePos();
+            TP.value += relPos;
+            auto tile = worldgen.getTile(TP);
+            (*block.tiles)[relPos.X][relPos.Y][relPos.Z] = tile;
+            
+            if(block.type == TileType.invalid){
+                block.type = tile.type;
+            }
+            if(block.type != tile.type){
+                homogenous = false;
+            }
+        }
+        if(homogenous){
+            free(block);
+            block.valid = true;
+            block.sparse = true;
+        }
+        return block;
     }
 
     Tile getTile(TilePos tilePos)
