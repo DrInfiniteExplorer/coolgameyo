@@ -37,18 +37,18 @@ void BREAKPOINT() {
     asm { int 3; }
 }
 
-void* AllocateBlob(size_t size) {
+void[] AllocateBlob(size_t size) {
     version (Windows) { //For win32 evaluatar inte sant pa win64
         auto ret = VirtualAlloc(null, 4096 * size, MEM_COMMIT, PAGE_READWRITE); 
-        return enforce(ret, "memory allocation fail :-)");
+        return enforce(ret[0 .. size], "memory allocation fail :-)");
     } else version (posix) {
         void* ret;
         auto result = posix_memalign(&ret, 4096, 4096 * size);
         enforce (result == 0, "memory allocation fail :-)");
-        return ret;
+        return ret[0 .. size];
     }
 }
-void FreeBlob(void* blob) {
+void FreeBlob(void[] blob) {
     version (Windows) {
         VirtualFree(blob, 0, MEM_RELEASE);
     } else version (posix) {
