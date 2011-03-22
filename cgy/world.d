@@ -484,7 +484,7 @@ struct Block {
 
             static AllocationBlock* create() {
                 auto alloc = new AllocationBlock;
-                alloc.freemap = new bool[](dataSize);
+                alloc.allocmap = new bool[](dataSize);
                 alloc.data = allocateBlob(dataSize);
                 return alloc;
             }
