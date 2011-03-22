@@ -24,7 +24,7 @@ class Game : IEventReceiver{
 		isWorker = work;
 		world = new World();
 		if(isClient){        
-			SIrrlichtCreationParameters sex;
+			SIrrlichtCreationParameters sex = new SIrrlichtCreationParameters();
 			sex.DriverType = E_DRIVER_TYPE.EDT_OPENGL;
 			sex.Bits = 32;
 			sex.ZBufferBits = 16; //Or 32? Make settingable?

@@ -2,6 +2,7 @@ import std.math, std.conv;
 
 import world;
 import util;
+import pos;
 
 struct WorldGenParams {
     uint randomSeed;
@@ -14,13 +15,13 @@ private float foo(float x, float y) {
 class WorldGenerator {
     this() { }
 
-    Tile getTile(const vec3i pos) {
-        auto z = foo(to!float(pos.X), to!float(pos.Y));
-        return pos.Z > z
+    Tile getTile(const TilePos pos) {
+        auto z = foo(to!float(pos.value.X), to!float(pos.value.Y));
+        return pos.value.Z > z
             ? Tile(TileType.air, TileFlags.none, 0, 0)
             : Tile(TileType.retardium, TileFlags.none, 0, 0);
     }
-    int maxZ(const vec2i xypos) {
-        return to!int(foo(to!float(xypos.X), to!float(xypos.Y)));
+    int maxZ(const TileXYPos xypos) {
+        return to!int(foo(to!float(xypos.value.X), to!float(xypos.value.Y)));
     }
 }

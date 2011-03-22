@@ -100,7 +100,10 @@ BlockNum blockNum(vec3i value) {
 TilePos tilePos(vec3i value) {
     return TilePos(value);
 }
-
+TilePos tilePos(TileXYPos xy, int z){
+    return TilePos(vec3i(xy.value.X, xy.value.Y, z));
+}
 TileXYPos tileXYPos(vec2i v) {
     return TileXYPos(v);
 }
+

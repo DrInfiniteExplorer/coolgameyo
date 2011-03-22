@@ -1,5 +1,6 @@
 import std.algorithm, std.range, std.stdio;
 import std.container;
+import std.exception;
 
 import worldgen;
 import unit;
@@ -32,6 +33,7 @@ class World {
 
     this() {
         isServer = true;
+        worldGen = new WorldGenerator();
 
         // do this in main() or something? D:
         auto xy = tileXYPos(vec2i(8,8));
@@ -51,15 +53,38 @@ class World {
     }
 
     SectorXY getSectorXY(SectorXYNum xy) {
+        
+        if(xy in sectorXY){
+            return sectorXY[xy];
+        }
         SectorXY ret;
         static assert ((*ret.heightmap).sizeof == 
                 int.sizeof * SectorSize.x * SectorSize.y);
         int[] blob = new int[](SectorSize.x * SectorSize.y);
         blob[] = 0;
-        ret.heightmap = cast(typeof(ret.heightmap))(blob.ptr);
+        auto heightmap = cast(typeof(ret.heightmap))(blob.ptr);
+        ret.heightmap = heightmap;
+        
+        auto p = xy.getTileXYPos();
+        
+        int xxx=-1;
+        
+        foreach(relPos ; RangeFromTo(0, SectorSize.x, 0, SectorSize.y, 0, 1)){            
+            xxx = relPos.Y;
+            writeln(relPos.X, " ", xxx, " ", relPos.Z);
+            auto tmp = p.value + vec2i(relPos.X, relPos.Y);
+            auto posXY = tileXYPos(tmp);
+            auto z = worldGen.maxZ(posXY);
+            while (worldGen.getTile(tilePos(posXY, z)).type == TileType.air) {
+                z -= 1;
+            }
+            
+            (*heightmap)[relPos.X][relPos.Y] = z;            
+        }        
 
         writeln("Needs some heightmap generation at ", xy);
-
+        
+        sectorXY[xy] = ret; //Spara det vi skapar, yeah!    
         return ret;
     }
 
@@ -113,8 +138,10 @@ class World {
 
     void addUnit(Unit* unit) {
         unitCount += 1;
-        getSector(unit.tilePosition.getSectorNum()).addUnit(unit);
-
+        auto sectorNum = unit.tilePosition.getSectorNum();
+        auto sector = getSector(sectorNum);
+        sector.addUnit(unit);
+        
         foreach (dpos; RangeFromTo(-2,3,-2,3,-2,3)) {
             auto pos = unit.tilePosition.getSectorNum();
             pos.value.X +=  dpos.X;
@@ -135,9 +162,14 @@ class World {
     }
 
     TilePos getTopTilePos(TileXYPos xy) {
-        auto x = xy.value.X, y = xy.value.Y;
-        auto pos = vec3i(x, y, (*sectorXY[xy.getSectorXYNum()].heightmap)[x][y]);
-        return tilePos(pos);
+        auto x = xy.value.X;
+        auto y = xy.value.Y;
+        
+        auto sectorXY = getSectorXY(xy.getSectorXYNum());
+        
+        auto heightmapPtr = sectorXY.heightmap;
+        auto pos = vec3i(x, y, (*heightmapPtr)[x][y]);
+        return tilePos(pos);        
     }
 
     void floodFillVisibility(const TileXYPos xyStart) {
@@ -270,7 +302,6 @@ class Sector {
     int activityCount;
 
     this(SectorNum sectorNum_) {
-        assert(0); //Jag forstar nu vad du menar med att vi bor ha typer for att itne forvirra oss.
         pos = sectorNum.toTilePos();
         sectorNum = sectorNum_;
     }

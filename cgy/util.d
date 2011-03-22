@@ -74,7 +74,13 @@ struct RangeFromTo
     int x,y,z;
     this(int beginX, int endX,
             int beginY, int endY,
-            int beginZ, int endZ) {
+            int beginZ, int endZ)
+    in{
+        assert(endX>beginX);
+        assert(endY>beginY);
+        assert(endZ>beginZ);
+    }
+    body{
         x = bx = beginX;
         ex = endX;
         y = by = beginY;
@@ -110,7 +116,7 @@ struct RangeFromTo
         z += 1;
     }
     bool empty() {
-        return x == ex && y == ey && z == ez;
+        return z >= ez; //Popfront is called before empty() and this smaller criteria is more sufficient and such.
     }
 }
 unittest {
