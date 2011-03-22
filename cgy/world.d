@@ -461,7 +461,7 @@ struct Block {
             AllocationBlock* next;
 
             T* getMem() {
-                auto i = countUntil!q{!a}(allocmap);
+                auto i = allocmap.countUntil(false);
                 if (i < 0) {
                     if (next is null) next = create();
                     return next.getMem();
