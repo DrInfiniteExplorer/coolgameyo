@@ -376,39 +376,6 @@ struct Block {
 
     TileType type;
     
-    static Block alloc() {
-        assert (0, "Implement Block.alloc");
-    }
-    static void free(Block block) {
-        assert (0, "Implement Block.free");
-    }
-    static Block generateBlock(BlockNum blockNum, WorldGenerator worldgen) {
-        auto block = alloc(); //Derp derp?
-        block.valid = true;
-        block.dirty = true;
-        
-        bool homogenous = true;
-        block.type = TileType.invalid;
-        foreach(relPos ; RangeFromTo(0, BlockSize.x, 0, BlockSize.y, 0, BlockSize.z)){
-            auto TP = blockNum.toTilePos();
-            TP.value += relPos;
-            auto tile = worldgen.getTile(TP);
-            (*block.tiles)[relPos.X][relPos.Y][relPos.Z] = tile;
-            
-            if(block.type == TileType.invalid){
-                block.type = tile.type;
-            }
-            if(block.type != tile.type){
-                homogenous = false;
-            }
-        }
-        if(homogenous){
-            free(block);
-            block.valid = true;
-            block.sparse = true;
-        }
-        return block;
-    }
 
     Tile getTile(TilePos tilePos)
     in{
@@ -447,6 +414,95 @@ struct Block {
     void clean(ushort idxCnt) {
         dirty = false;
         renderData.idxCnt = idxCnt;
+    }
+
+    static Block generateBlock(BlockNum blockNum, WorldGenerator worldgen) {
+        auto block = alloc(); //Derp derp?
+        block.valid = true;
+        block.dirty = true;
+        
+        bool homogenous = true;
+        block.type = TileType.invalid;
+        foreach (relPos; RangeFromTo(0, BlockSize.x, 
+                    0, BlockSize.y, 0, BlockSize.z)) {
+            auto TP = blockNum.toTilePos();
+            TP.value += relPos;
+            auto tile = worldgen.getTile(TP);
+            (*block.tiles)[relPos.X][relPos.Y][relPos.Z] = tile;
+            
+            if (block.type == TileType.invalid) {
+                block.type = tile.type;
+            }
+            if (block.type != tile.type) {
+                homogenous = false;
+            }
+        }
+        if (homogenous) {
+            free(block);
+            block.valid = true;
+            block.sparse = true;
+        }
+        return block;
+    }
+
+
+    // allocation / freelist stuff
+
+    private static {
+        struct AllocationBlock {
+            alias Tile[BlockSize.z][BlockSize.y][BlockSize.x] T;
+            bool[] allocmap; // true = allocated, false = not
+            T[] data;
+
+            static assert (T.sizeof == 4096);
+
+            enum dataSize = 128;
+
+            AllocationBlock* next;
+
+            T* getMem() {
+                auto i = countUntil!q{!a}(allocmap);
+                if (i < 0) {
+                    if (next is null) next = create();
+                    return next.getMem();
+                }
+                assert (!allocmap[i]);
+                allocmap[i] = true;
+                return &data[i];
+            }
+            void returnMem(AllocationBlock* mem) {
+                auto diff = mem - data.ptr;
+                if (0 <= diff && diff < dataSize) {
+                    // IT IS OUR BLOB!!!!!
+                    allocmap[diff] = false;
+                } else {
+                    assert (next, "We have our buddie's blob, "~
+                            "but our buddy is dead. Gosh darned it!");
+                    next.returnMem(mem);
+                }
+            }
+
+            static AllocationBlock* create() {
+                auto alloc = new AllocationBlock;
+                alloc.freemap = new bool[](dataSize);
+                alloc.data = allocateBlob(dataSize);
+                return alloc;
+            }
+        }
+        AllocationBlock* freeblock;
+
+        Block alloc() {
+            if (freeblock is null) {
+                freeblock = AllocationBlock.create();
+            }
+
+            Block block;
+            block.tiles = freeblock.getMem();
+            return block;
+        }
+        void free(Block block) {
+            freeblock.returnMem(block.tiles);
+        }
     }
 }
 
