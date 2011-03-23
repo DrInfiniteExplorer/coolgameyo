@@ -3,6 +3,7 @@ import std.conv;
 import std.exception;
 import std.stdio;
 
+import win32.windows : SYSTEM_INFO, GetSystemInfo; //Not available in std.c.windows.windows
 import engine.irrlicht;
 
 import world : BlockSize, SectorSize , GraphRegionSize;
@@ -59,7 +60,7 @@ void freeBlob(void* blob) {
 
 unittest{
     SYSTEM_INFO si;
-    GetSystemInfo(si);
+    GetSystemInfo(&si);
     assert(si.dwPageSize == 4096);
 }
 
@@ -128,7 +129,7 @@ struct RangeFromTo
 }
 unittest {
     int[5][5][5] x;
-    x[] = 0;
+    cast(int[])(x[0][0])[] = 0;
     foreach (p; RangeFromTo(0,5,0,5,0,5)) {
         x[p.X][p.Y][p.Z] = 1;
     }
@@ -235,105 +236,7 @@ unittest {
     assert(posMod( 8, 8) == 0);
 }
 
-/*  These functions are return a vector representing the  */
-/*  index of the tile, relative to a <higher level> so that */
-/*  the returned index can safely be used to find the <thing> */
-/*  withing the <bigger thing>. Return values lie in the domain */
-/*  [0, <bigger thing>_SIZE_?[  */
-vec3i getBlockRelativeTileIndex(const vec3i tilePosition){
-    assert(0); //moved to TilePos.tileIndex()
-}
-/*  See GetBlockRelativeTileIndex for description  */
-vec3i getSectorRelativeBlockIndex(const vec3i tilePosition){
-
-    assert(0); //Moved to TilePos.blockIndex()
-}
-
-
-
-
-
-
-/*  Returns the position of the first tile in this block as  */
-/*  world tile coordinates. It is where the block starts.  */
-vec3i getBlockWorldPosition (const vec3i tilePosition){   
-    return vec3i(
-        snap(tilePosition.X, BlockSize.x),
-        snap(tilePosition.Y, BlockSize.y),
-        snap(tilePosition.Z, BlockSize.z)
-        );
-}
-
-/*  Returns a vector which corresponds to the sector number in the  */
-/*  world that the tile belongs to. Can be (0, 0, 0) or (1, 5, -7). */
-/*  See Util::Test for usage and stuff  */
-/* Luben added type SectorNum for great win */
-SectorNum getSectorNumber(const vec3i tilePosition){
-    return sectorNum(
-        vec3i(
-        snap(tilePosition.X, SectorSize.x)/SectorSize.x,
-        snap(tilePosition.Y, SectorSize.y)/SectorSize.y,
-        snap(tilePosition.Z, SectorSize.z)/SectorSize.z
-        ));
-}
-
-
-/*  Returns the position of the first tile in this sector as  */
-/*  world tile coordinates. It is where the sector starts.    */
-vec3i getSectorWorldPositionFromSectorNumber(const SectorNum sectorNumber){
-    return vec3i(
-                 sectorNumber.value.X * SectorSize.x,
-                 sectorNumber.value.Y * SectorSize.y,
-                 sectorNumber.value.Z * SectorSize.z);                 
-}
-
-/*  Returns the position of the first tile in this sector as  */
-/*  world tile coordinates. It is where the sector starts.    */
-vec3i getSectorWorldPosition(const vec3i tilePosition)
-{
-    return vec3i(
-        snap(tilePosition.X, SectorSize.x),
-        snap(tilePosition.Y, SectorSize.y),
-        snap(tilePosition.Z, SectorSize.z));
-}
-
-aabbox3d!double getSectorAABB(const vec3i tilePosition)
-{
-    auto startPos = convert!double(getSectorWorldPosition(tilePosition));
-    vec3d endPos;
-    endPos.set(SectorSize.x, SectorSize.y, SectorSize.z);
-    endPos += startPos;
-    aabbox3d!double ret;
-    ret.addInternalPoint(startPos);
-    ret.addInternalPoint(endPos);
-    return ret;
-}
-
-
-unittest {
-
-    /*  Sector number tests  */
-    assert(GetSectorNumber(vec3i(-TILES_PER_SECTOR_X,   -TILES_PER_SECTOR_Y , -TILES_PER_SECTOR_Z ))    == vec3i(-1, -1, -1));
-    assert(GetSectorNumber(vec3i(-1,                    -1,                 -1))                        == vec3i(-1, -1, -1));
-    assert(GetSectorNumber(vec3i(0,                     0,                  0))                         == vec3i( 0,  0,  0));
-    assert(GetSectorNumber(vec3i(TILES_PER_SECTOR_X-1,  TILES_PER_SECTOR_Y-1, TILES_PER_SECTOR_Z-1))    == vec3i( 0,  0,  0));
-    assert(GetSectorNumber(vec3i(TILES_PER_SECTOR_X  ,  TILES_PER_SECTOR_Y  , TILES_PER_SECTOR_Z  ))    == vec3i( 1,  1,  1));
-
-    /*  tile index tests  */
-    assert(GetBlockRelativeTileIndex(vec3i(-1, -1, -1)) == vec3i(BLOCK_SIZE_X-1, BLOCK_SIZE_Y-1, BLOCK_SIZE_Z-1));
-    assert(GetBlockRelativeTileIndex(vec3i(TILES_PER_BLOCK_X-1,  TILES_PER_BLOCK_Y-1,  TILES_PER_BLOCK_Z-1)) == vec3i(BLOCK_SIZE_X-1, BLOCK_SIZE_Y-1, BLOCK_SIZE_Z-1));
-    assert(GetBlockRelativeTileIndex(vec3i( 0,  0,  0)) == vec3i(0, 0, 0));
-    assert(GetBlockRelativeTileIndex(vec3i( TILES_PER_BLOCK_X  ,  TILES_PER_BLOCK_Y  ,  TILES_PER_BLOCK_Z  )) == vec3i(0, 0, 0));
-
-
-    /*  Block world position, where block start in world, tile-counted  */
-    assert(GetBlockWorldPosition(vec3i(-1, -1, -1)) == vec3i(-TILES_PER_BLOCK_X, -TILES_PER_BLOCK_Y, -TILES_PER_BLOCK_Z));
-    assert(GetBlockWorldPosition(vec3i( 0,  0,  0)) == vec3i(0, 0, 0));
-    assert(GetBlockWorldPosition(vec3i( TILES_PER_BLOCK_X,  TILES_PER_BLOCK_Y,  TILES_PER_BLOCK_Z)) == vec3i(TILES_PER_BLOCK_X, TILES_PER_BLOCK_Y, TILES_PER_BLOCK_Z));
-
-}
-
-
+//Removed stuff. Now lies in pos.d
 
 class Queue(T) {
     struct Node {

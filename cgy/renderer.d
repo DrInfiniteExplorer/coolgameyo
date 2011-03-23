@@ -2,6 +2,7 @@
 import engine.irrlicht;
 
 import world;
+import camera;
 import vbomaker;
 
 class Renderer{
@@ -25,10 +26,10 @@ class Renderer{
 	{
 	}
 		
-	void render()
-	{
+	void render(Camera camera)
+	{        
 		//Render world
-		renderWorld();
+		renderWorld(camera);
 		//Render dudes
 		//Render foilage and other cosmetics
 		//Render HUD/GUI
@@ -36,10 +37,14 @@ class Renderer{
 		
 	}
 	
-	void renderWorld()
+	void renderWorld(Camera camera)
 	{
 //		auto vboList = vboMaker.getVBOs();
 		
+        //Get list of vbo's
+        //Do culling
+        //Render vbo's.
+        
 	}
 }
 

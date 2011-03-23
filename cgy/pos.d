@@ -1,6 +1,8 @@
 
+import engine.irrlicht;
+
 import util;
-import world : BlockSize, BlocksPerSector, SectorSize , GraphRegionSize;
+import world : TilesPerBlock, BlockSize, BlocksPerSector, SectorSize , GraphRegionSize;
 
 struct SectorNum {
     vec3i value;
@@ -17,6 +19,12 @@ struct SectorNum {
                     value.Y * SectorSize.y,
                     value.Z * SectorSize.z));
     }
+    aabbox3d!double getAABB(){
+        auto minPos = util.convert!double(toTilePos().value);
+        auto maxPos = minPos + vec3d(SectorSize.x, SectorSize.y, SectorSize.z);
+        return aabbox3d!double(minPos, maxPos);
+    }
+    
 }
 
 struct BlockNum {
@@ -34,11 +42,27 @@ struct BlockNum {
                     value.Y * BlockSize.y,
                     value.Z * BlockSize.z));
     }
-    vec3i rel() const {
+
+    aabbox3d!double getAABB(){
+        auto minPos = util.convert!double(toTilePos().value);
+        auto maxPos = minPos + vec3d(BlockSize.x, BlockSize.y, BlockSize.z);
+        return aabbox3d!double(minPos, maxPos);
+    }
+
+    vec3i rel() const
+    out(x){
+        assert(0 <= x.X);
+        assert(0 <= x.Y);
+        assert(0 <= x.Z);
+        assert(x.X < BlocksPerSector.x);
+        assert(x.Y < BlocksPerSector.y);
+        assert(x.Z < BlocksPerSector.z);
+    }
+    body{
         return vec3i(
-            posMod(value.X, SectorSize.x),
-            posMod(value.Y, SectorSize.y),
-            posMod(value.Z, SectorSize.z)
+            posMod(value.X, BlocksPerSector.x),
+            posMod(value.Y, BlocksPerSector.y),
+            posMod(value.Z, BlocksPerSector.z)
           );        
     }    
 }
@@ -57,12 +81,18 @@ struct TilePos {
                     negDiv(value.Y, BlockSize.y),
                     negDiv(value.Z, BlockSize.z)));
     }
+    aabbox3d!double getAABB(){
+        auto minPos = util.convert!double(value);
+        auto maxPos = minPos + vec3d(1, 1, 1);
+        return aabbox3d!double(minPos, maxPos);
+    }
+    
     
     vec3i rel() const {
         return vec3i(
-            posMod(value.X, BlockSize.x),
-            posMod(value.Y, BlockSize.y),
-            posMod(value.Z, BlockSize.z)
+            posMod(value.X, TilesPerBlock.x),
+            posMod(value.Y, TilesPerBlock.y),
+            posMod(value.Z, TilesPerBlock.z)
             );
     }
 }

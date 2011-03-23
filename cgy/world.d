@@ -128,7 +128,8 @@ class World {
     }
     
     void setBlock(BlockNum blockNum, Block newBlock) {
-        assert (false);
+        auto sector = getSector(blockNum.getSectorNum());
+        sector.setBlock(blockNum, newBlock);
     }
 
     Sector[] lock() { return sectorList; }
@@ -293,17 +294,24 @@ class Sector {
     TilePos pos;
     SectorNum sectorNum;
     
+    invariant(){
+        assert(sectorNum.toTilePos() == pos);
+        assert(pos.getSectorNum() == sectorNum);
+    }
+    
     int blockCount;
 
-    Block[BlocksPerSector.x][BlocksPerSector.y][BlocksPerSector.z] blocks;
+    Block[BlocksPerSector.z][BlocksPerSector.y][BlocksPerSector.x] blocks;
+    static assert(blocks.length == BlocksPerSector.x);
+    
 
     RedBlackTree!(Unit*) units;
     int activityCount;
 
     this(SectorNum sectorNum_) {
-        pos = sectorNum.toTilePos();
         sectorNum = sectorNum_;
-        units = typeof(units)(cast(Unit*[])[]); //Retarded.
+        pos = sectorNum.toTilePos();
+        units = typeof(units)(cast(Unit*[])[]); //Retarded. RBTree-initialization.
     }
 
     const(Block)[] getBlocks() const {
@@ -312,7 +320,7 @@ class Sector {
 
     void generateBlock(BlockNum blockNum, WorldGenerator worldGen)
     in{
-        assert(blockNum.getSectorNum() == sectorNum);
+        assert(blockNum.getSectorNum() == sectorNum, "Trying to generate a block in the wrong sector!");
         assert(blockNum.getSectorNum.toTilePos() == pos); //Good to have? In that case, add to other places like getBlock() as well.
     }
     body{
@@ -328,9 +336,20 @@ class Sector {
         auto pos = blockNum.rel();
         return blocks[pos.X][pos.Y][pos.Z];
     }
-    void setBlock(vec3i tilePos, Block newBlock) {
-        auto pos = getBlockRelativeTileIndex(tilePos);
-        blocks[pos.X][pos.Y][pos.Z] = newBlock;
+    
+    void setBlock(BlockNum blockNum, Block newBlock)
+    in{
+        assert(blockNum.getSectorNum() == sectorNum, "Sector.setBlock: Trying to set a block that doesn't belong here!");
+    }
+    body{        
+        auto rel = blockNum.rel();
+        auto currentBlock = blocks[rel.X][rel.Y][rel.Z];
+        if(currentBlock.valid && !currentBlock.sparse){
+            if(currentBlock.tiles.ptr != newBlock.tiles.ptr){
+                assert(0, "We want to free this memory i think...The current, that is.");                
+            }
+        }
+        blocks[rel.X][rel.Y][rel.Z] = newBlock;
     }
 
     void addUnit(Unit* u) {
@@ -350,6 +369,8 @@ enum BlockSize {
     z = 8,
     total = x*y*z
 }
+
+alias BlockSize TilesPerBlock;
 
 enum BlockFlags : ubyte {
     none = 0,
@@ -376,13 +397,36 @@ struct Block {
 
     TileType type;
     
+    invariant()
+    {
+        bool valid = (flags & BlockFlags.valid)!=0;
+        bool sparse = (flags & BlockFlags.sparse)!=0;
+        
+        if(sparse){
+            assert(valid, "Block is marked as sparse, but doesn't have valid flag");
+            assert(tiles is null, "Block is marked as sparse, but has tiles!");
+        }
+        else if(valid){
+            assert(tiles !is null, "Block is not sparse but valid, but doesn't have any tiles!");
+        }
+        else{
+            assert(tiles is null, "Block is not valid, but has tiles!");
+        }
+    }    
 
     Tile getTile(TilePos tilePos)
     in{
         assert(tilePos.getBlockNum() == this.blockNum);
-        assert (tiles);
     }
     body{
+        assert(valid);
+        if(sparse){
+            Tile t;
+            t.type = type;
+            t.flags = TileFlags.valid;
+            t.seen = seen;
+            return t;
+        }
         auto pos = tilePos.rel();
         return (*tiles)[pos.X][pos.Y][pos.Z];
     }
@@ -391,34 +435,50 @@ struct Block {
         assert(pos.getBlockNum() == this.blockNum);
     }
     body{
+        assert(valid);
         auto p = pos.rel();
-        assert (0);
+
+        auto same = (*tiles)[p.X][p.Y][p.Z] == tile;
+        if(!same){
+            dirty = true;
+            if(sparse){ //If was sparse, populate with real tiles
+                Tile t;
+                t.type = type;
+                t.flags = TileFlags.valid;
+                t.seen = seen;
+                (*(cast(Tile[BlockSize.x*BlockSize.y*BlockSize.z]*)(tiles)))[] = t; //Fuck yeah!!!! ? :S:S:S
+                sparse = false;
+            }
+        }
+        tiles[p.X][p.Y][p.Z] = tile;
     }
 
     bool isSame(const Block other) const {
         return blockNum == other.blockNum && (sparse || tiles is other.tiles);
     }
     
-    int valid() const @property { return flags & BlockFlags.valid; }
+    bool valid() const @property { return (flags & BlockFlags.valid) != 0; }
     void valid(bool val) @property { setFlag(flags, BlockFlags.valid, val); }
 
-    int seen() const @property { return flags & BlockFlags.seen; }
+    bool seen() const @property { return (flags & BlockFlags.seen) != 0; }
     void seen(bool val) @property { setFlag(flags, BlockFlags.seen, val); }
 
-    int sparse() const @property { return flags & BlockFlags.sparse; }
+    bool sparse() const @property { return (flags & BlockFlags.sparse) != 0; }
     void sparse(bool val) @property { setFlag(flags, BlockFlags.sparse, val); }
 
-    int dirty() const @property { return flags & BlockFlags.dirty; }
+    bool dirty() const @property { return (flags & BlockFlags.dirty) != 0; }
     void dirty(bool val) @property { setFlag(flags, BlockFlags.dirty, val); }
 
     void clean(ushort idxCnt) {
         dirty = false;
         renderData.idxCnt = idxCnt;
     }
+    
 
     static Block generateBlock(BlockNum blockNum, WorldGenerator worldgen) {
         auto block = alloc(); //Derp derp?
-        block.valid = true;
+        block.blockNum = blockNum;
+        //block.valid = true; Comes valid from alloc().
         block.dirty = true;
         
         bool homogenous = true;
@@ -439,8 +499,8 @@ struct Block {
         }
         if (homogenous) {
             free(block);
-            block.valid = true;
-            block.sparse = true;
+            block.tiles = null;
+            setFlag(block.flags, BlockFlags.sparse, true);
         }
         return block;
     }
@@ -500,6 +560,8 @@ struct Block {
 
             Block block;
             block.tiles = freeblock.getMem();
+            setFlag(block.flags, BlockFlags.valid, true);
+
             return block;
         }
         void free(Block block) {
@@ -531,11 +593,11 @@ enum TileFlags : ushort {
 }
 
 struct Tile {
-    TileType type;
-    TileFlags flags;
-    ushort hp;
-    ushort textureTile;
-
+    TileType type = TileType.invalid;
+    TileFlags flags = TileFlags.none;
+    ushort hp = 0;
+    ushort textureTile = 0;
+    
     int valid() const @property { return flags & TileFlags.valid; }
     void valid(bool val) @property { setFlag(flags, TileFlags.valid, val); }
 
