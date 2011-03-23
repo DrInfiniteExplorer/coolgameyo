@@ -140,6 +140,7 @@ class World {
         auto sector = getSector(sectorNum);
         sector.addUnit(unit);
         
+        //Range +-2
         foreach (dpos; RangeFromTo(-2,3,-2,3,-2,3)) {
             auto pos = unit.tilePosition.getSectorNum();
             pos.value.X +=  dpos.X;
@@ -179,24 +180,35 @@ class World {
         //work.insert(startPos.getBlockNum()); //Retardedly retarded redblacktree needs to be initialized with something.
         work = typeof(work)(startPos.getBlockNum());
 
+        int allBlocks = 0;
+        int blockCount = 0;
+        int sparseCount = 0;
         while (!work.empty) {
-            auto pos = work.removeAny();
+            auto blockNum = work.removeAny();            
 
-            auto block = getBlock(pos);
-            if (!block.valid || block.seen) { continue; }
+            auto block = getBlock(blockNum);
+            if(block.seen) { continue; }
+            allBlocks++;
+            if (!block.valid) { continue; }
+            
+            writeln("Flooding block ", blockNum);
+            
+            blockCount++;
+            auto blockPos = blockNum.toTilePos();
 
             block.seen = true;
 
-            scope (exit) setBlock(pos, block);
+            scope (exit) setBlock(blockNum, block);
 
             if (block.sparse) {
+                sparseCount++;
                 if (block.type == TileType.air) {
-                    work.insert(blockNum(pos.value + vec3i(1, 0, 0)));
-                    work.insert(blockNum(pos.value - vec3i(1, 0, 0)));
-                    work.insert(blockNum(pos.value + vec3i(0, 1, 0)));
-                    work.insert(blockNum(pos.value - vec3i(0, 1, 0)));
-                    work.insert(blockNum(pos.value + vec3i(0, 0, 1)));
-                    work.insert(blockNum(pos.value - vec3i(0, 0, 1)));
+                    work.insert(.blockNum(blockNum.value + vec3i(1, 0, 0)));
+                    work.insert(.blockNum(blockNum.value - vec3i(1, 0, 0)));
+                    work.insert(.blockNum(blockNum.value + vec3i(0, 1, 0)));
+                    work.insert(.blockNum(blockNum.value - vec3i(0, 1, 0)));
+                    work.insert(.blockNum(blockNum.value + vec3i(0, 0, 1)));
+                    work.insert(.blockNum(blockNum.value - vec3i(0, 0, 1)));
                 } else {
                     assert (0, "WAPAW PWAP WAPWPA PWA ");
                 }
@@ -205,7 +217,7 @@ class World {
             
             foreach (rel; 
                     RangeFromTo(0,BlockSize.x,0,BlockSize.y,0,BlockSize.z)) {
-                auto tp = tilePos(pos.toTilePos().value + rel);
+                auto tp = tilePos(blockPos.value + rel);
                 auto tile = block.getTile(tp);
 
                 scope (exit) block.setTile(tp, tile);
@@ -213,19 +225,19 @@ class World {
                 if (tile.type == TileType.air) {
                     tile.seen = true;
                     if (rel.X == 0) {
-                        work.insert(blockNum(pos.value - vec3i(1,0,0)));
+                        work.insert(.blockNum(blockNum.value - vec3i(1,0,0)));
                     } else if (rel.X == BlockSize.x - 1) {
-                        work.insert(blockNum(pos.value - vec3i(1,0,0)));
+                        work.insert(.blockNum(blockNum.value + vec3i(1,0,0)));
                     }
                     if (rel.Y == 0) {
-                        work.insert(blockNum(pos.value - vec3i(0,1,0)));
+                        work.insert(.blockNum(blockNum.value - vec3i(0,1,0)));
                     } else if (rel.Y == BlockSize.y - 1) {
-                        work.insert(blockNum(pos.value - vec3i(0,1,0)));
+                        work.insert(.blockNum(blockNum.value + vec3i(0,1,0)));
                     }
                     if (rel.Z == 0) {
-                        work.insert(blockNum(pos.value - vec3i(0,0,1)));
+                        work.insert(.blockNum(blockNum.value - vec3i(0,0,1)));
                     } else if (rel.Z == BlockSize.z - 1) {
-                        work.insert(blockNum(pos.value - vec3i(0,0,1)));
+                        work.insert(.blockNum(blockNum.value + vec3i(0,0,1)));
                     }
                 } else {
                     foreach (npos; neighbors(tp)) {
@@ -238,6 +250,12 @@ class World {
                 }
             }
         }
+        writeln("allBlocks");
+        writeln(allBlocks);
+        writeln("blockCount");
+        writeln(blockCount);
+        writeln("sparseCount");
+        writeln(sparseCount);
     }
 
 
@@ -476,6 +494,7 @@ struct Block {
     
 
     static Block generateBlock(BlockNum blockNum, WorldGenerator worldgen) {
+        writeln("Generating block: ", blockNum);
         auto block = alloc(); //Derp derp?
         block.blockNum = blockNum;
         //block.valid = true; Comes valid from alloc().

@@ -76,6 +76,7 @@ class VBOMaker : WorldListener
     this(World w)
     {
         world = w;
+        world.addListener(this);
     }
     ~this()
     {
@@ -100,6 +101,7 @@ class VBOMaker : WorldListener
         foreach(region ; regions){
             if(intersects(sectorAABB, region.aabb)){
                 writeln("Unload stuff oh yeah!!");
+                writeln("Perhaps.. Should we.. Maybe.. Stora data on disk? We'll see how things turn out.");
                 //How to do stuff, et c?
             }
         }

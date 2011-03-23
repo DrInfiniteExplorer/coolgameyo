@@ -3,6 +3,7 @@ import engine.irrlicht;
 
 import util;
 import world : TilesPerBlock, BlockSize, BlocksPerSector, SectorSize , GraphRegionSize;
+import std.conv;
 
 struct SectorNum {
     vec3i value;
@@ -65,6 +66,12 @@ struct BlockNum {
             posMod(value.Z, BlocksPerSector.z)
           );        
     }    
+
+    string toString(){
+        return "x: " ~to!string(value.X)
+            ~ " y: " ~to!string(value.Y)
+            ~ " z: " ~to!string(value.Z);
+    }    
 }
 struct TilePos {
     vec3i value;
@@ -95,6 +102,13 @@ struct TilePos {
             posMod(value.Z, TilesPerBlock.z)
             );
     }
+    
+    string toString(){
+        return "x: " ~to!string(value.X)
+            ~ " y: " ~to!string(value.Y)
+            ~ " z: " ~to!string(value.Z);
+    }
+
 }
 
 struct SectorXYNum {

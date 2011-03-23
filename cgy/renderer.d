@@ -18,12 +18,13 @@ class Renderer{
 	{
 		world = w;
 		driver = d;
-		
+		vboMaker = new VBOMaker(w);
 		
 		
 	}
 	~this()
 	{
+        delete vboMaker;
 	}
 		
 	void render(Camera camera)
