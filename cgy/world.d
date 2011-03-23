@@ -366,7 +366,7 @@ struct Block {
         uint[2] VBO;
     }
 
-    Tile[BlockSize.z][BlockSize.y][BlockSize.x]* tiles;
+    Tile[BlockSize.z][BlockSize.y][BlockSize.x]* tiles = null;
 
     BlockFlags flags = BlockFlags.none;
 
@@ -485,7 +485,9 @@ struct Block {
             static AllocationBlock* create() {
                 auto alloc = new AllocationBlock;
                 alloc.allocmap = new bool[](dataSize);
-                alloc.data = allocateBlob(dataSize);
+                //alloc.data = allocateBlob(dataSize);
+                alloc.data = cast(typeof(alloc.data))(allocateBlob(dataSize));
+                
                 return alloc;
             }
         }

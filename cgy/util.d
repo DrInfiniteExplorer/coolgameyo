@@ -40,7 +40,8 @@ void BREAKPOINT() {
 void[] allocateBlob(size_t size) {
     version (Windows) { //For win32 evaluatar inte sant pa win64
         auto ret = VirtualAlloc(null, 4096 * size, MEM_COMMIT, PAGE_READWRITE); 
-        return enforce(ret[0 .. size], "memory allocation fail :-)");
+        auto tmp = enforce(ret[0 .. 4096*size], "memory allocation fail :-)");
+        return tmp;
     } else version (posix) {
         void* ret;
         auto result = posix_memalign(&ret, 4096, 4096 * size);
@@ -54,6 +55,12 @@ void freeBlob(void* blob) {
     } else version (posix) {
         free(blob);
     }
+}
+
+unittest{
+    SYSTEM_INFO si;
+    GetSystemInfo(si);
+    assert(si.dwPageSize == 4096);
 }
 
 TilePos[6] neighbors(TilePos tilePos) {
