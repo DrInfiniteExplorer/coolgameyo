@@ -617,11 +617,22 @@ struct Tile {
     ushort hp = 0;
     ushort textureTile = 0;
     
-    int valid() const @property { return flags & TileFlags.valid; }
+    bool valid() const @property { return (flags & TileFlags.valid) != 0; }
     void valid(bool val) @property { setFlag(flags, TileFlags.valid, val); }
 
-    int seen() const @property { return flags & TileFlags.seen; }
+    bool seen() const @property { return (flags & TileFlags.seen) != 0; }
     void seen(bool val) @property { setFlag(flags, TileFlags.seen, val); }
+    
+    
+    bool transparent() const @property{
+        switch(type){
+            case TileType.invalid:
+            case TileType.air:
+                return true;
+            default:
+                return false;
+        }
+    }
 }
 
 enum INVALID_TILE = Tile(TileType.invalid, TileFlags.none, 0, 0);

@@ -90,6 +90,65 @@ class VBOMaker : WorldListener
         regions.length=0;
     }
     
+    struct Face{
+        vec3i[4] vertices;
+        TileType type;
+    }
+    
+    void buildGeometry(TilePos min, TilePos max)
+    in{
+        assert(min.value.X < max.value.X);
+        assert(min.value.Y < max.value.Y);
+        assert(min.value.Z < max.value.Z);
+    }
+    body{
+        //Make floor triangles
+        Tile tmp;//Do i even need this one?
+        bool onStrip;
+        Face newFace;
+        Face[] faceList;
+        for(int z = min.value.Z-1; z < max.value.Z; z++){
+            for(int y = min.value.Y; y < max.value.Y; y++){
+                onStrip = false;
+                for(int x = min.value.X; x < max.value.X; x++){
+                    auto tileLower = world.getTile(tilePos(vec3i(x,y,z)));
+                    auto tileUpper = world.getTile(tilePos(vec3i(x,y,z+1)));
+                    auto transUpper = tileUpper.transparent;
+                    auto transLower = tileLower.transparent;
+                    
+                    if(transUpper && !transLower){ //Floor tile detected!
+                        if(onStrip && tmp.type != tileLower.type){
+                            newFace.vertices[2].set(x+1, y, z+1);
+                            newFace.vertices[3].set(x+1, y+1, z+1);
+                            faceList ~= newFace;
+                            onStrip = false;
+                        }
+                        if(!onStrip){ //Start of floooor
+                            onStrip = true;
+                            tmp = tileLower;
+                            newFace.vertices[0].set(x, y+1, z+1);
+                            newFace.vertices[1].set(x, y, z+1);
+                            newFace.type = tmp.type;
+                        }else {} //if onStrip && same, continue
+                    }else if(onStrip){ //No floor :(
+                        //End current strip.
+                        newFace.vertices[2].set(x+1, y, z+1);
+                        newFace.vertices[3].set(x+1, y+1, z+1);
+                        faceList ~= newFace;
+                        onStrip = false;
+                    }                    
+                }
+                if(onStrip){ //No floor :(
+                    //End current strip.
+                    newFace.vertices[2].set(max.value.X+1, y, z+1);
+                    newFace.vertices[3].set(max.value.X+1, y+1, z+1);
+                    faceList ~= newFace;
+                    onStrip = false;            
+               }
+            }
+        }
+    }
+    
     void notifySectorLoad(SectorNum sectorNum)
     {
         assert(0, "Implement VBOMaker.notifySectorLoad");
