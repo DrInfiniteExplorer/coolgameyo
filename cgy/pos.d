@@ -25,6 +25,11 @@ struct SectorNum {
         auto maxPos = minPos + vec3d(SectorSize.x, SectorSize.y, SectorSize.z);
         return aabbox3d!double(minPos, maxPos);
     }
+    string toString(){
+        return "SectorNum x: " ~to!string(value.X)
+            ~ " y: " ~to!string(value.Y)
+            ~ " z: " ~to!string(value.Z);
+    }    
     
 }
 
@@ -68,7 +73,7 @@ struct BlockNum {
     }    
 
     string toString(){
-        return "x: " ~to!string(value.X)
+        return "BlockNum x: " ~to!string(value.X)
             ~ " y: " ~to!string(value.Y)
             ~ " z: " ~to!string(value.Z);
     }    
@@ -88,6 +93,15 @@ struct TilePos {
                     negDiv(value.Y, BlockSize.y),
                     negDiv(value.Z, BlockSize.z)));
     }
+    
+    GraphRegionNum getGraphRegionNum() const{
+        return graphRegionNum(vec3i(
+                    negDiv(value.X, GraphRegionSize.x),
+                    negDiv(value.Y, GraphRegionSize.y),
+                    negDiv(value.Z, GraphRegionSize.z),
+                    ));
+    }
+    
     aabbox3d!double getAABB(){
         auto minPos = util.convert!double(value);
         auto maxPos = minPos + vec3d(1, 1, 1);
@@ -95,7 +109,16 @@ struct TilePos {
     }
     
     
-    vec3i rel() const {
+    vec3i rel() const
+    out(x){
+        assert(x.X >= 0, "rel.X < 0!!! :(");
+        assert(x.Y >= 0, "rel.Y < 0!!! :(");
+        assert(x.Z >= 0, "rel.Z < 0!!! :(");
+        assert(x.X < TilesPerBlock.x, "rel.X > TilesPerBlock.x!!! :(");
+        assert(x.Y < TilesPerBlock.y, "rel.Y > TilesPerBlock.y!!! :(");
+        assert(x.Z < TilesPerBlock.z, "rel.Z > TilesPerBlock.z!!! :(");
+    }
+    body{
         return vec3i(
             posMod(value.X, TilesPerBlock.x),
             posMod(value.Y, TilesPerBlock.y),
@@ -104,11 +127,42 @@ struct TilePos {
     }
     
     string toString(){
-        return "x: " ~to!string(value.X)
+        return "TilePos x: " ~to!string(value.X)
             ~ " y: " ~to!string(value.Y)
             ~ " z: " ~to!string(value.Z);
     }
 
+}
+
+struct GraphRegionNum{
+    vec3i value;
+
+    TilePos max() const {
+        auto ret = min();
+        ret.value += vec3i(
+                    GraphRegionSize.x-1,
+                    GraphRegionSize.y-1,
+                    GraphRegionSize.z-1);
+        return ret;
+    }
+    TilePos min() const {
+        return tilePos(vec3i(
+                             GraphRegionSize.x * value.X,
+                             GraphRegionSize.y * value.Y,
+                             GraphRegionSize.z * value.Z
+                             ));
+    }
+    aabbox3d!double getAABB() const{
+        auto minPos = util.convert!double(value);
+        auto maxPos = minPos + vec3d(GraphRegionSize.x,GraphRegionSize.y, GraphRegionSize.z);
+        return aabbox3d!double(minPos, maxPos);
+    }
+        
+    string toString(){
+        return "GRN x: " ~to!string(value.X)
+            ~ " y: " ~to!string(value.Y)
+            ~ " z: " ~to!string(value.Z);
+    }    
 }
 
 struct SectorXYNum {
@@ -119,6 +173,10 @@ struct SectorXYNum {
                     value.X * SectorSize.x,
                     value.Y * SectorSize.y));
     }
+    string toString(){
+        return "SectorXYNum x: " ~to!string(value.X)
+            ~ " y: " ~to!string(value.Y);
+    }    
 }
 
 struct TileXYPos {
@@ -129,6 +187,11 @@ struct TileXYPos {
                     negDiv(value.X, SectorSize.x),
                     negDiv(value.Y, SectorSize.y)));
     }
+    
+    string toString(){
+        return "TileXYPos x: " ~to!string(value.X)
+            ~ " y: " ~to!string(value.Y);
+    }    
 }
 
 SectorNum sectorNum(vec3i value) {
@@ -146,6 +209,9 @@ TilePos tilePos(vec3i value) {
 }
 TilePos tilePos(TileXYPos xy, int z){
     return TilePos(vec3i(xy.value.X, xy.value.Y, z));
+}
+GraphRegionNum graphRegionNum(vec3i v){
+    return GraphRegionNum(v);
 }
 TileXYPos tileXYPos(vec2i v) {
     return TileXYPos(v);

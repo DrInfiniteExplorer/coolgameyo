@@ -35,6 +35,7 @@ class Game : IEventReceiver{
 			sex.HighPrecisionFPU = false; //test false also.
 			sex.EventReceiver = this;
 			device = createDeviceEx(sex);
+            
 			scheduler = new Scheduler(world, 0);
 			renderer = new Renderer(world, device.getVideoDriver());
 			camera = new Camera();

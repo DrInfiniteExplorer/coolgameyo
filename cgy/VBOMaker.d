@@ -1,7 +1,10 @@
 
 import std.stdio;
 import std.container;
+import std.conv;
 
+import derelict.opengl.gl;
+import derelict.opengl.glext;
 import engine.irrlicht;
 
 import world;
@@ -23,10 +26,16 @@ bool intersects(box a, box b){
 
 struct GraphicsRegion
 {
-	aabbox3d!double aabb;	
+    GraphRegionNum grNum;
 	uint VBO = 0;
-	uint indexCount = 0;
+	uint quadCount = 0;
 }
+
+struct Vertex{
+    vec3i vertex;
+    TileType type;
+};
+
 
 unittest{
     //alias aabbox3d!double box;
@@ -72,30 +81,42 @@ class VBOMaker : WorldListener
 {	
     GraphicsRegion[] regions;
     World world;
+    double minReUseRatio;
     
     this(World w)
     {
         world = w;
         world.addListener(this);
+        minReUseRatio = 0.95;
     }
     ~this()
     {
+        world.removeListener(this);
         removeAllVBOs();
+    }
+    
+    const(GraphicsRegion)[] getRegions() const{
+        return regions;
     }
     
     void removeAllVBOs(){
         foreach(region ; regions){
-            assert(0, "Remove vbo");
+            glDeleteBuffers(1, &region.VBO);
         }
         regions.length=0;
     }
-    
+        
     struct Face{
-        vec3i[4] vertices;
-        TileType type;
+        Vertex[4] quad;
+        void type(TileType t) @property {
+            foreach(ref q; quad){
+                q.type = t;
+            }
+        }
+        TileType type() const @property { return quad[0].type; }
     }
     
-    void buildGeometry(TilePos min, TilePos max)
+    void buildGeometryZ(TilePos min, TilePos max, ref Face[]faceList)
     in{
         assert(min.value.X < max.value.X);
         assert(min.value.Y < max.value.Y);
@@ -103,49 +124,204 @@ class VBOMaker : WorldListener
     }
     body{
         //Make floor triangles
-        Tile tmp;//Do i even need this one?
         bool onStrip;
         Face newFace;
-        Face[] faceList;
-        for(int z = min.value.Z-1; z < max.value.Z; z++){
-            for(int y = min.value.Y; y < max.value.Y; y++){
-                onStrip = false;
-                for(int x = min.value.X; x < max.value.X; x++){
-                    auto tileLower = world.getTile(tilePos(vec3i(x,y,z)));
-                    auto tileUpper = world.getTile(tilePos(vec3i(x,y,z+1)));
-                    auto transUpper = tileUpper.transparent;
-                    auto transLower = tileLower.transparent;
+
+        foreach(doUpper ; 0 .. 2){ //Most best piece of code ever to have been written.
+            auto ett = 1-doUpper;
+            auto noll = doUpper;
+            foreach(z ; min.value.Z-1 .. max.value.Z){
+                foreach(y ; min.value.Y .. max.value.Y){
+                    onStrip = false;
+                    foreach(x; min.value.X .. max.value.X){
+                        auto tileLower = world.getTile(tilePos(vec3i(x,y,z+noll)));
+                        auto tileUpper = world.getTile(tilePos(vec3i(x,y,z+ett)));
+                        auto transUpper = tileUpper.transparent;
+                        auto transLower = tileLower.transparent;
                     
-                    if(transUpper && !transLower){ //Floor tile detected!
-                        if(onStrip && tmp.type != tileLower.type){
-                            newFace.vertices[2].set(x+1, y, z+1);
-                            newFace.vertices[3].set(x+1, y+1, z+1);
+                        if(transUpper && !transLower){ //Floor tile detected!
+                            if(onStrip && newFace.type != tileLower.type){
+                                newFace.quad[2].vertex.set(x, y+noll, z+1);
+                                newFace.quad[3].vertex.set(x, y+ett, z+1);
+                                faceList ~= newFace;
+                                onStrip = false;
+                            }
+                            if(!onStrip){ //Start of floooor
+                                onStrip = true;
+                                newFace.quad[0].vertex.set(x, y+ett, z+1);
+                                newFace.quad[1].vertex.set(x, y+noll, z+1);
+                                newFace.type = tileLower.type;
+                            }else {} //if onStrip && same, continue
+                        }else if(onStrip){ //No floor :(
+                            //End current strip.
+                            newFace.quad[2].vertex.set(x, y+noll, z+1);
+                            newFace.quad[3].vertex.set(x, y+ett, z+1);
                             faceList ~= newFace;
                             onStrip = false;
-                        }
-                        if(!onStrip){ //Start of floooor
-                            onStrip = true;
-                            tmp = tileLower;
-                            newFace.vertices[0].set(x, y+1, z+1);
-                            newFace.vertices[1].set(x, y, z+1);
-                            newFace.type = tmp.type;
-                        }else {} //if onStrip && same, continue
-                    }else if(onStrip){ //No floor :(
+                        }                    
+                    }
+                    if(onStrip){ //No floor :(
                         //End current strip.
-                        newFace.vertices[2].set(x+1, y, z+1);
-                        newFace.vertices[3].set(x+1, y+1, z+1);
+                        newFace.quad[2].vertex.set(max.value.X+1, y+noll, z+1);
+                        newFace.quad[3].vertex.set(max.value.X+1, y+ett, z+1);
                         faceList ~= newFace;
-                        onStrip = false;
-                    }                    
+                        onStrip = false;            
+                   }
                 }
-                if(onStrip){ //No floor :(
-                    //End current strip.
-                    newFace.vertices[2].set(max.value.X+1, y, z+1);
-                    newFace.vertices[3].set(max.value.X+1, y+1, z+1);
-                    faceList ~= newFace;
-                    onStrip = false;            
-               }
             }
+        }
+    }
+    void buildGeometryY(TilePos min, TilePos max, ref Face[]faceList)
+    in{
+        assert(min.value.X < max.value.X);
+        assert(min.value.Y < max.value.Y);
+        assert(min.value.Z < max.value.Z);
+    }
+    body{
+        //Make floor triangles
+        bool onStrip;
+        Face newFace;
+
+        foreach(doUpper ; 0 .. 2){ //Most best piece of code ever to have been written.
+            auto ett = 1-doUpper;
+            auto noll = doUpper;
+            foreach(y ; min.value.Y-1 .. max.value.Y){
+                foreach(z ; min.value.Z .. max.value.Z){
+                    onStrip = false;
+                    foreach(x; min.value.X .. max.value.X){
+                        auto tileLower = world.getTile(tilePos(vec3i(x,y+noll,z)));
+                        auto tileUpper = world.getTile(tilePos(vec3i(x,y+ett,z)));
+                        auto transUpper = tileUpper.transparent;
+                        auto transLower = tileLower.transparent;
+                    
+                        if(transUpper && !transLower){ //Floor tile detected!
+                            if(onStrip && newFace.type != tileLower.type){
+                                newFace.quad[2].vertex.set(x, y+1, z+ett);
+                                newFace.quad[3].vertex.set(x, y+1, z+noll);
+                                faceList ~= newFace;
+                                onStrip = false;
+                            }
+                            if(!onStrip){ //Start of floooor
+                                onStrip = true;
+                                newFace.quad[0].vertex.set(x, y+1, z+noll);
+                                newFace.quad[1].vertex.set(x, y+1, z+ett);
+                                newFace.type = tileLower.type;
+                            }else {} //if onStrip && same, continue
+                        }else if(onStrip){ //No floor :(
+                            //End current strip.
+                            newFace.quad[2].vertex.set(x, y+1, z+ett);
+                            newFace.quad[3].vertex.set(x, y+1, z+noll);
+                            faceList ~= newFace;
+                            onStrip = false;
+                        }                    
+                    }
+                    if(onStrip){ //No floor :(
+                        //End current strip.
+                        newFace.quad[2].vertex.set(max.value.X+1, y+1, z+ett);
+                        newFace.quad[3].vertex.set(max.value.X+1, y+1, z+noll);
+                        faceList ~= newFace;
+                        onStrip = false;            
+                   }
+                }
+            }
+        }
+    }
+
+    void buildGeometryX(TilePos min, TilePos max, ref Face[]faceList)
+    in{
+        assert(min.value.X < max.value.X);
+        assert(min.value.Y < max.value.Y);
+        assert(min.value.Z < max.value.Z);
+    }
+    body{
+        //Make floor triangles
+        bool onStrip;
+        Face newFace;
+
+        foreach(doUpper ; 0 .. 2){ //Most best piece of code ever to have been written.
+            auto ett = 1-doUpper;
+            auto noll = doUpper;
+            foreach(x ; min.value.X-1 .. max.value.X){
+                foreach(z ; min.value.Z .. max.value.Z){
+                    onStrip = false;
+                    foreach(y; min.value.Y .. max.value.Y){
+                        auto tileLower = world.getTile(tilePos(vec3i(x+noll,y,z)));
+                        auto tileUpper = world.getTile(tilePos(vec3i(x+ett,y,z)));
+                        auto transUpper = tileUpper.transparent;
+                        auto transLower = tileLower.transparent;
+                    
+                        if(transUpper && !transLower){ //Floor tile detected!
+                            if(onStrip && newFace.type != tileLower.type){
+                                newFace.quad[2].vertex.set(x+1, y, z+noll);
+                                newFace.quad[3].vertex.set(x+1, y, z+ett);
+                                faceList ~= newFace;
+                                onStrip = false;
+                            }
+                            if(!onStrip){ //Start of floooor
+                                onStrip = true;
+                                newFace.quad[0].vertex.set(x+1, y, z+ett);
+                                newFace.quad[1].vertex.set(x+1, y, z+noll);
+                                newFace.type = tileLower.type;
+                            }else {} //if onStrip && same, continue
+                        }else if(onStrip){ //No floor :(
+                            //End current strip.
+                            newFace.quad[2].vertex.set(x+1, y, z+noll);
+                            newFace.quad[3].vertex.set(x+1, y, z+ett);
+                            faceList ~= newFace;
+                            onStrip = false;
+                        }                    
+                    }
+                    if(onStrip){ //No floor :(
+                        //End current strip.
+                        newFace.quad[2].vertex.set(x+1, max.value.Y+1, z+noll);
+                        newFace.quad[3].vertex.set(x+1, max.value.Y+1, z+ett);
+                        faceList ~= newFace;
+                        onStrip = false;            
+                   }
+                }
+            }
+        }
+    }    
+    
+    GraphicsRegion buildVBO(GraphicsRegion region, Face[] faces){
+        auto primitiveCount = faces.length;
+        auto geometrySize = primitiveCount * faces[].sizeof;
+        region.quadCount = primitiveCount;
+        if(region.VBO){
+            //See if VBO is reusable.
+            int bufferSize;
+            glBindBuffer(GL_ARRAY_BUFFER, region.VBO);
+            glGetBufferParameteriv(GL_ARRAY_BUFFER_ARB, GL_BUFFER_SIZE_ARB, &bufferSize);
+            
+            double ratio = to!double(geometrySize)/to!double(bufferSize);
+            if(minReUseRatio <= ratio && ratio <= 1){
+                glBufferSubData(GL_ARRAY_BUFFER, 0, geometrySize, faces.ptr);
+                return region;
+            }else{
+                //Delete old vbo
+                glBindBuffer(GL_ARRAY_BUFFER, 0);
+                glDeleteBuffers(1, &region.VBO);
+                region.VBO = 0; //For all it's worth. Will create new one just below. :P
+            }
+        }
+        glGenBuffers(1, &region.VBO);
+        glBindBuffer(GL_ARRAY_BUFFER, region.VBO);
+        glBufferData(GL_ARRAY_BUFFER, geometrySize, faces.ptr, GL_STATIC_DRAW);
+        assert(0, "Upload data");
+        
+        return region;
+    }
+    
+    void buildGraphicsRegion(GraphicsRegion[] regions){
+        foreach(i ; 0..regions.length){
+            auto region = regions[i];
+            Face[] faces;
+            auto min = region.grNum.min();
+            auto max = region.grNum.max();
+            buildGeometryX(min, max, faces);
+            buildGeometryY(min, max, faces);
+            buildGeometryZ(min, max, faces);
+            regions[i] = buildVBO(region, faces);
         }
     }
     
@@ -158,7 +334,7 @@ class VBOMaker : WorldListener
         auto sectorAABB = sectorNum.getAABB();
         
         foreach(region ; regions){
-            if(intersects(sectorAABB, region.aabb)){
+            if(intersects(sectorAABB, region.grNum.getAABB())){
                 writeln("Unload stuff oh yeah!!");
                 writeln("Perhaps.. Should we.. Maybe.. Stora data on disk? We'll see how things turn out.");
                 //How to do stuff, et c?
@@ -170,7 +346,7 @@ class VBOMaker : WorldListener
         auto tileAABB = tilePos.getAABB();
         int cnt=0;
         foreach(region ; regions){
-            if(intersects(region.aabb, tileAABB)){
+            if(intersects(region.grNum.getAABB(), tileAABB)){
                 writeln("Update this region!!");
                 cnt ++;
             }

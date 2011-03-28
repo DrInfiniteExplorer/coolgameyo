@@ -152,8 +152,11 @@ class World {
 
     Tile getTile(TilePos tilePos, bool createBlock=true,
                                   bool createSector=true) {
-        return getBlock(tilePos.getBlockNum(), createBlock, createSector)
-            .getTile(tilePos);
+        auto block = getBlock(tilePos.getBlockNum(), createBlock, createSector);
+        if(!block.valid){
+            return INVALID_TILE;
+        }
+        return block.getTile(tilePos);
     }
     void setTile(TilePos tilePos, const Tile newTile) {
         getBlock(tilePos.getBlockNum()).setTile(tilePos, newTile);
@@ -191,9 +194,10 @@ class World {
             allBlocks++;
             if (!block.valid) { continue; }
             
-            writeln("Flooding block ", blockNum);
+            //writeln("\tFlooding block ", blockNum);
             
             blockCount++;
+            //writeln("blockCount:", blockCount);
             auto blockPos = blockNum.toTilePos();
 
             block.seen = true;
@@ -210,7 +214,12 @@ class World {
                     work.insert(.blockNum(blockNum.value + vec3i(0, 0, 1)));
                     work.insert(.blockNum(blockNum.value - vec3i(0, 0, 1)));
                 } else {
-                    assert (0, "WAPAW PWAP WAPWPA PWA ");
+                    switch(block.type){
+                        case TileType.retardium:
+                            break;
+                        default:
+                            assert (0, "Sparse block of unknown type encountered");
+                    }
                 }
                 continue;
             }
@@ -241,7 +250,7 @@ class World {
                     }
                 } else {
                     foreach (npos; neighbors(tp)) {
-                        auto neighbor = getTile(npos);
+                        auto neighbor = getTile(npos, true, false);
                         if (neighbor.valid && neighbor.type == TileType.air) {
                             tile.seen = true;
                             break;
@@ -263,9 +272,11 @@ class World {
         listeners ~= listener;
     }
     void removeListener(WorldListener listener) {
-        remove(listeners, indexOf!q{a is b}(listeners, listener));
+        remove(listeners, countUntil!q{a is b}(listeners, listener));
         listeners.length -= 1;
     }
+    
+    //To be called... WHEEEEN?
     void notifySectorLoad(SectorNum sectorNum) {
         foreach (listener; listeners) {
             listener.notifySectorLoad(sectorNum);
@@ -468,7 +479,7 @@ struct Block {
                 sparse = false;
             }
         }
-        tiles[p.X][p.Y][p.Z] = tile;
+        (*tiles)[p.X][p.Y][p.Z] = tile;
     }
 
     bool isSame(const Block other) const {
@@ -494,7 +505,7 @@ struct Block {
     
 
     static Block generateBlock(BlockNum blockNum, WorldGenerator worldgen) {
-        writeln("Generating block: ", blockNum);
+        //writeln("Generating block: ", blockNum);
         auto block = alloc(); //Derp derp?
         block.blockNum = blockNum;
         //block.valid = true; Comes valid from alloc().

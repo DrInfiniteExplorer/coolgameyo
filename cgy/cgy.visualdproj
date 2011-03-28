@@ -174,7 +174,7 @@
   <postBuildCommand />
   <debugtarget>$(TARGETPATH)</debugtarget>
   <debugarguments />
-  <debugworkingdir />
+  <debugworkingdir>$(SOLUTIONDIR)\gameroot\</debugworkingdir>
   <debugattach>0</debugattach>
   <debugremote />
   <debugEngine>0</debugEngine>

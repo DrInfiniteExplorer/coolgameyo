@@ -15,20 +15,29 @@ class Camera{
 		targetDir.set(0, 1, 0); //Look into scene
 	}
 	
-	void getProjectionMatrix(out matrix4 proj){
+	matrix4 getProjectionMatrix(){
 		const float FOV_Radians = degToRad(90.f);
 		const float aspect = 4.0f/3.0f;
 		const float _near = 0.5f;
 		const float _far = 1000.0f;
+        matrix4 proj;
 		proj.buildProjectionMatrixPerspectiveFovRH(FOV_Radians, aspect, _near, _far);		
+        return proj;
 	}
 	
-	void getViewMatrix(out matrix4 view){
+	matrix4 getViewMatrix(){
 		//TODO: Rework this. At laaarge distances from origin, floats will not do;
 		//Will have to do remove the integer part of the position from the variable passed here,
 		//and move blocks with that amount before sending them to ogl.
+        matrix4 view;
 		view.buildCameraLookAtMatrixRH(convert!float(position), convert!float(position)+targetDir, vec3f(0.0f, 0.0f, 1.0f)); 
+        return view;
 	}
+    
+    //Implement yaaargh
+    bool inFrustum(T)(T t){
+        return true;
+    }
 	
 	vec3d getPosition(){
 		return position;
