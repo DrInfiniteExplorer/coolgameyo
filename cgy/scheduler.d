@@ -7,7 +7,7 @@ import util;
 struct Task {
     bool sync;
     bool syncsScheduler;
-    void delegate() run;
+    void delegate(const World) run;
 }
 
 private Task sleepyTask(long hnsecs) {
@@ -22,7 +22,7 @@ private void workerFun(shared Scheduler ssched) {
     while (true) {
         // try to receive message?
         auto task = sched.getTask();
-        task.run();
+        task.run(sched.world);
     }
 }
 
@@ -31,21 +31,23 @@ private long time() {
 }
 
 class Scheduler {
-    enum State { sync, forcedAsync, async }
+    enum State { update, sync, forcedAsync, async }
     enum ASYNC_COUNT = 23;
 
-    State state;
+    World world;
+    Module[] modules;
 
     Queue!Task sync, async;
 
-    World world;
+    State state;
+
+    Tid[] workers;
 
     long asyncLeft;
 
     long syncTime;
     long nextSync() @property const { return syncTime + 1000/30; }
 
-    Tid[] workers;
 
     private Task popAsync() {
         synchronized {
@@ -69,6 +71,13 @@ class Scheduler {
     Task getTask() {
         synchronized {
             switch (state) {
+                case State.update:
+                    world.update();
+                    foreach (mod; modules) {
+                        mod.update(world);
+                    }
+                    state = state.sync;
+                    // fallin through...~~~~
                 case State.sync:
                     auto t = sync.removeAny();
                     if (t.syncsScheduler) {
@@ -76,6 +85,7 @@ class Scheduler {
                         asyncLeft = ASYNC_COUNT;
                     }
                     return t;
+
                 case State.forcedAsync:
                     asyncLeft -= 1;
                     if (asyncLeft == 0) {
@@ -83,7 +93,7 @@ class Scheduler {
                     } // fallin through..~~~
                 case State.async:
                     if (time() > nextSync) {
-                        state = State.sync;
+                        state = State.update;
                         syncTime = time();
                     }
                     return popAsync();

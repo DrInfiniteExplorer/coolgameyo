@@ -129,26 +129,62 @@ class World {
 
     Sector[] lock() { return sectorList; }
 
+    void moveUnit(Unit* unit, UnitPos newPos) {
+        auto before = unit.pos.getTilePos();
+        auto after = newPos.getTilePos();
+
+        auto secDiff = after.getSectorNum - before.getSectorNum;
+
+        if (secDiff.value == vec3i(0,0,0)) return;
+
+        assert (secDiff.getLengthSQ() <= 3);
+
+        Direction dir;
+
+        if (secDiff.X < 0) dir |= Direction.west;
+        else if (secDiff.X > 0) dir |= Direction.east;
+
+        if (secDiff.Y < 0) dir |= Direction.south;
+        else if (secDiff.Y > 0) dir |= Direction.north;
+
+        if (secDiff.Z < 0) dir |= Direction.down;
+        else if (secDiff.Z > 0) dir |= Direction.up;
+
+        assert (0);
+
+        // Make sure to increase activity in the good sectors and decrese4 int
+        // the blahbl ah old ones we leaft blah ;;;
+    }
+
     void addUnit(Unit* unit) {
         unitCount += 1;
         auto sectorNum = unit.tilePosition.getSectorNum();
         auto sector = getSector(sectorNum);
         sector.addUnit(unit);
-        
+
         //Range +-2
-        
+
         auto range = RangeFromTo(-2,3,-2,3,-2,3);
         //debug
         {
             range = RangeFromTo(0,1,0,1,0,1); //Make it faster in debyyyyg!!
         }
-                
+
         foreach (dpos; range) {
             auto pos = unit.tilePosition.getSectorNum();
-            pos.value.X +=  dpos.X;
-            pos.value.Y +=  dpos.Y;
-            pos.value.Z +=  dpos.Z;
-            getSector(pos).increaseActivity();
+            pos.value.X += dpos.X;
+            pos.value.Y += dpos.Y;
+            pos.value.Z += dpos.Z;
+            auto sector = getSector(pos);
+            sector.increaseActivity();
+            if (sector.activityCount == 1) {
+                if (unit.pos.getSectorNum() == sectorNum) {
+                    floodFillVisibility(sector, unit.pos);
+                } else {
+                    floodFillVisibility(sector, Direction.all); // Derp?
+                }
+                notifySectorLoad(sector.sectorNum);
+            }
         }
     }
 
@@ -186,8 +222,8 @@ class World {
     /* Still, how to properly do floodfill in caves et c? */
     void calculateInterestingRegion(){
         auto box = aabbox3d!(int)(int.max, int.max, int.max, int.min, int.min, int.min);
-        foreach(sector ; sectorList){
-            foreach(unit; sector.units){
+        foreach (sector; sectorList) {
+            foreach (unit; sector.units) {
                 box.addInternalPoint(unit.pos);
             }
         }
@@ -198,10 +234,10 @@ class World {
         sectorNumMin.value -= paddingSize;
 
         SectorNum[] newSectors;
-        foreach(pos; RangeFromTo(sectorNumMin.value, sectorNumMax.value+vec3i(1,1,1))){
+        foreach (pos; RangeFromTo(sectorNumMin.value, sectorNumMax.value+vec3i(1,1,1))) {
             auto secNum = sectorNum(pos);
             auto sector = getSector(secNum, false);
-            if(sector is null){
+            if (sector is null) {
                 sector = getSector(secNum);
                 newSectors ~= secNum;
             }
@@ -217,15 +253,75 @@ class World {
         
     }
 
+    private alias RedBlackTree!(BlockNum, q{a.value < b.value}) WorkSet;
+
     void floodFillVisibility(const TileXYPos xyStart) {
         auto startPos = getTopTilePos(xyStart);
         startPos.value += vec3i(0,0,1);
+        floodFillVisibility(startPos);
+    }
 
-        RedBlackTree!(BlockNum, q{a.value < b.value}) work;        
+    void floodFillVisibility(SectorNum sectorNum, Direction dir) {
+        BlockNum[] wtf;
+        auto work = WorkSet(wtf);
+
+        if (dir & Direction.north) {
+            auto range = RangeFromTo(0, BlocksPerSector.x,
+                    0, 1,
+                    0, BlocksPerSector.z);
+            foreach (rel; range) {
+                work.insert(BlockNum(sectorNum.toBlockNum().value + rel));
+            }
+        }
+        if (dir & Direction.south) {
+            auto range = RangeFromTo(0, BlocksPerSector.x,
+                    BlocksPerSector.y - 1, BlocksPerSector.y,
+                    0, BlocksPerSector.z);
+            foreach (rel; range) {
+                work.insert(BlockNum(sectorNum.toBlockNum().value + rel));
+            }
+        }
+        if (dir & Direction.west) {
+            auto range = RangeFromTo(0, 1,
+                    0, BlocksPerSector.y,
+                    0, BlocksPerSector.z);
+            foreach (rel; range) {
+                work.insert(BlockNum(sectorNum.toBlockNum().value + rel));
+            }
+        }
+        if (dir & Direction.east) {
+            auto range = RangeFromTo(BlocksPerSector.x-1, BlocksPerSector.x,
+                    0, BlocksPerSector.y,
+                    0, BlocksPerSector.z);
+            foreach (rel; range) {
+                work.insert(BlockNum(sectorNum.toBlockNum().value + rel));
+            }
+        }
+        if (dir & Direction.up) {
+            auto range = RangeFromTo(0, BlocksPerSector.x,
+                    0, BlocksPerSector.y,
+                    0, 1);
+            foreach (rel; range) {
+                work.insert(BlockNum(sectorNum.toBlockNum().value + rel));
+            }
+        }
+        if (dir & Direction.down) {
+            auto range = RangeFromTo(0, BlocksPerSector.x,
+                    0, BlocksPerSector.y,
+                    BlocksPerSector.z - 1, BlocksPerSector.z);
+            foreach (rel; range) {
+                work.insert(BlockNum(sectorNum.toBlockNum().value + rel));
+            }
+        }
+        floodFillVisibilityImpl(work);
+    }
+
+    void floodFillVisibility(const TilePos startPos) {
+        floodFillVisibilityImpl(WorkSet(startPos.getBlockNum()));
+    }
+
+    private void floodFillVisibilityImpl(WorkSet work) {
         
-        //work.insert(startPos.getBlockNum()); //Retardedly retarded redblacktree needs to be initialized with something.
-        work = typeof(work)(startPos.getBlockNum());
-
         int allBlocks = 0;
         int blockCount = 0;
         int sparseCount = 0;
@@ -366,7 +462,7 @@ class Sector {
     TilePos pos;
     SectorNum sectorNum;
     
-    invariant(){
+    invariant() {
         assert(sectorNum.toTilePos() == pos);
         assert(pos.getSectorNum() == sectorNum);
     }
