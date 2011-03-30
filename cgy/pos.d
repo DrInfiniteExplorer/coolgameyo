@@ -102,6 +102,10 @@ struct TilePos {
                     ));
     }
     
+    TileXYPos toTileXYPos() const{
+        return tileXYPos(vec2i(value.X, value.Y));
+    }
+    
     aabbox3d!double getAABB(){
         auto minPos = util.convert!double(value);
         auto maxPos = minPos + vec3d(1, 1, 1);
@@ -192,6 +196,11 @@ struct TileXYPos {
         return "TileXYPos x: " ~to!string(value.X)
             ~ " y: " ~to!string(value.Y);
     }    
+    
+    vec2i sectorRel() const{
+        return vec2i(posMod(value.X, SectorSize.x),
+                     posMod(value.Y, SectorSize.y));
+    }
 }
 
 SectorNum sectorNum(vec3i value) {

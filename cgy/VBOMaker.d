@@ -2,6 +2,7 @@
 import std.stdio;
 import std.container;
 import std.conv;
+import std.algorithm;
 
 import derelict.opengl.gl;
 import derelict.opengl.glext;
@@ -15,6 +16,15 @@ private alias aabbox3d!double box;
 //This is different from box.intersectsWithBox in that the upper ranges are strictly smaller than, making adjancent boxes not intersect.
 //(I hope)
 bool intersects(box a, box b){
+    auto minx = max(a.MinEdge.X, b.MinEdge.X);
+    auto miny = max(a.MinEdge.Y, b.MinEdge.Y);
+    auto minz = max(a.MinEdge.Z, b.MinEdge.Z);
+    auto maxx = min(a.MaxEdge.X, b.MaxEdge.X);
+    auto maxy = min(a.MaxEdge.Y, b.MaxEdge.Y);
+    auto maxz = min(a.MaxEdge.Z, b.MaxEdge.Z);
+    
+    return minx < maxx && miny<maxy && minz<maxz;
+    
     if(a.MinEdge<b.MinEdge){
         box c = a;
         a = b;
@@ -55,8 +65,9 @@ unittest{
         d.MinEdge += util.convert!double(p);
         d.MaxEdge += util.convert!double(p);
         bool bbb = p == vec3i(0,0,0);
-        assert(intersects(c, d) == bbb, "This should've been "~bbb);
-        assert(intersects(d, c) == bbb, "This should've been "~bbb);
+        writeln(p.X, p.Y, p.Z);
+        assert(intersects(c, d) == bbb, "This should've been " ~ bbb);
+        assert(intersects(d, c) == bbb, "This should've been " ~ bbb);
     }
     
     //We dont want boxes that are lining up to intersect with each other...
@@ -79,7 +90,7 @@ unittest{
 
 class VBOMaker : WorldListener
 {    
-    GraphicsRegion[] regions;
+    GraphicsRegion[GraphRegionNum] regions;
     World world;
     double minReUseRatio;
     
@@ -89,13 +100,8 @@ class VBOMaker : WorldListener
         world.addListener(this);
         minReUseRatio = 0.95;
     }
-    ~this()
-    {
-        world.removeListener(this);
-        removeAllVBOs();
-    }
-    
-    const(GraphicsRegion)[] getRegions() const{
+
+    const(GraphicsRegion)[GraphRegionNum] getRegions() const{
         return regions;
     }
     
@@ -103,7 +109,7 @@ class VBOMaker : WorldListener
         foreach(region ; regions){
             glDeleteBuffers(1, &region.VBO);
         }
-        regions.length=0;
+        regions = null;
     }
         
     struct Face{
@@ -134,8 +140,8 @@ class VBOMaker : WorldListener
                 foreach(y ; min.value.Y .. max.value.Y){
                     onStrip = false;
                     foreach(x; min.value.X .. max.value.X){
-                        auto tileLower = world.getTile(tilePos(vec3i(x,y,z+noll)));
-                        auto tileUpper = world.getTile(tilePos(vec3i(x,y,z+ett)));
+                        auto tileLower = world.getTile(tilePos(vec3i(x,y,z+noll)), false, false);
+                        auto tileUpper = world.getTile(tilePos(vec3i(x,y,z+ett)), false, false);
                         auto transUpper = tileUpper.transparent;
                         auto transLower = tileLower.transparent;
                     
@@ -189,8 +195,8 @@ class VBOMaker : WorldListener
                 foreach(z ; min.value.Z .. max.value.Z){
                     onStrip = false;
                     foreach(x; min.value.X .. max.value.X){
-                        auto tileLower = world.getTile(tilePos(vec3i(x,y+noll,z)));
-                        auto tileUpper = world.getTile(tilePos(vec3i(x,y+ett,z)));
+                        auto tileLower = world.getTile(tilePos(vec3i(x,y+noll,z)), false, false);
+                        auto tileUpper = world.getTile(tilePos(vec3i(x,y+ett,z)), false, false);
                         auto transUpper = tileUpper.transparent;
                         auto transLower = tileLower.transparent;
                     
@@ -245,8 +251,8 @@ class VBOMaker : WorldListener
                 foreach(z ; min.value.Z .. max.value.Z){
                     onStrip = false;
                     foreach(y; min.value.Y .. max.value.Y){
-                        auto tileLower = world.getTile(tilePos(vec3i(x+noll,y,z)));
-                        auto tileUpper = world.getTile(tilePos(vec3i(x+ett,y,z)));
+                        auto tileLower = world.getTile(tilePos(vec3i(x+noll,y,z)), false, false);
+                        auto tileUpper = world.getTile(tilePos(vec3i(x+ett,y,z)), false, false);
                         auto transUpper = tileUpper.transparent;
                         auto transLower = tileLower.transparent;
                     
@@ -327,7 +333,22 @@ class VBOMaker : WorldListener
     
     void notifySectorLoad(SectorNum sectorNum)
     {
-        assert(0, "Implement VBOMaker.notifySectorLoad");
+        auto grNumMin = sectorNum.toTilePos().getGraphRegionNum();
+        sectorNum.value += vec3i(1,1,1);
+        auto tmp = sectorNum.toTilePos();
+        tmp.value -= vec3i(1,1,1);
+        auto grNumMax = tmp.getGraphRegionNum();
+        sectorNum.value -= vec3i(1,1,1);
+        
+        foreach(pos ; RangeFromTo(grNumMin.value, grNumMax.value)) {
+            auto grNum = graphRegionNum(pos);
+            if (grNum in regions) {
+                assert(0, "UPDATE");
+            } else {
+                assert(0, "CREATE!");
+            }
+        }
+
     }
     void notifySectorUnload(SectorNum sectorNum)
     {

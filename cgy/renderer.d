@@ -1,6 +1,7 @@
 import std.file;
 import std.stdio;
 import std.conv;
+import std.string;
 
 import derelict.opengl.gl;
 import derelict.opengl.glext;
@@ -33,7 +34,7 @@ class ShaderProgram{
         link();
     }
     
-    ~this(){
+    void destroy(){
         if(vert){
             glDeleteShader(vert);
         }
@@ -61,14 +62,16 @@ class ShaderProgram{
     }
     
     void compileFile(uint shader, string filename){
-        auto content = read(filename);
-        char* ptr = cast(char*)content.ptr;
-        char** ptrptr = &ptr;;
+        auto content = readText(filename);
+        const char* ptr = std.string.toStringz(content);
+        const char** ptrptr = &ptr;
         glShaderSource(shader, 1, ptrptr, null);
         glCompileShader(shader);
         int p;
         glGetShaderiv(shader, GL_COMPILE_STATUS, &p);
         if(p != GL_TRUE){
+            writeln(content);
+            writeln(*ptrptr);
             auto error = printShaderError(shader);
             assert(0, "Shader compilation failed: " ~ filename ~"\n" ~error);
         }
@@ -144,11 +147,6 @@ class Renderer{
         uniformOffsetLoc = shader.getUniformLocation("offset");
         uniformViewProjection = shader.getUniformLocation("VP");
 		
-	}
-	~this()
-	{
-        delete shader;
-        delete vboMaker;
 	}
 		
 	void render(Camera camera)

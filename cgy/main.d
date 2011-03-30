@@ -50,6 +50,8 @@ int myWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int
 {
     Game game = new Game(true, true, true);
     game.run();
+    //delete game;
+    
     return 0;
 }
 

@@ -76,10 +76,17 @@ TilePos[6] neighbors(TilePos tilePos) {
     return ret;
 }
 
+
 struct RangeFromTo
 {
     int bx,ex,by,ey,bz,ez;
     int x,y,z;
+    this(vec3i min, vec3i max){
+        this(min.X, max.X,
+             min.Y, max.Y,
+             min.Z, max.Z);             
+    }
+
     this(int beginX, int endX,
             int beginY, int endY,
             int beginZ, int endZ)

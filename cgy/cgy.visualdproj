@@ -79,7 +79,7 @@
   <deffile />
   <resfile />
   <exefile>$(OutDir)\$(ProjectName).exe</exefile>
-  <additionalOptions />
+  <additionalOptions>-L/SUBSYSTEM:CONSOLE:4.0</additionalOptions>
   <preBuildCommand />
   <postBuildCommand />
   <debugtarget>$(TARGETPATH)</debugtarget>
@@ -169,7 +169,7 @@
   <deffile />
   <resfile />
   <exefile>$(OutDir)\$(ProjectName).exe</exefile>
-  <additionalOptions>-I$(SOLUTIONDIR)\libraries\irrlicht\include\</additionalOptions>
+  <additionalOptions>-L/SUBSYSTEM:CONSOLE:4.0 -I$(SOLUTIONDIR)\libraries\irrlicht\include\</additionalOptions>
   <preBuildCommand />
   <postBuildCommand />
   <debugtarget>$(TARGETPATH)</debugtarget>

@@ -2,6 +2,8 @@ import std.algorithm, std.range, std.stdio;
 import std.container;
 import std.exception;
 
+import engine.irrlicht;
+
 import worldgen;
 import unit;
 
@@ -34,15 +36,6 @@ class World {
     this() {
         isServer = true;
         worldGen = new WorldGenerator();
-
-        // do this in main() or something? D:
-        auto xy = tileXYPos(vec2i(8,8));
-        auto u = new Unit;
-        u.pos = getTopTilePos(xy).value;
-        u.pos.Z += 1;
-        addUnit(u);
-
-        floodFillVisibility(xy);
     }
 
     void generateBlock(BlockNum blockNum) {
@@ -90,10 +83,12 @@ class World {
         auto z = sectorNum.value.Z;
 
         if (xy !in sectorXY) {
-            sectorXY[xy] = getSectorXY(xy);
+            auto ret = getSectorXY(xy);;
+            sectorXY[xy] = ret;
         }
 
         auto sector = new Sector(sectorNum);
+        assert(sector !is null, "derp!");
 
         assert (z !in sectorXY[xy].sectors);
         sectorXY[xy].sectors[z] = sector;
@@ -141,7 +136,14 @@ class World {
         sector.addUnit(unit);
         
         //Range +-2
-        foreach (dpos; RangeFromTo(-2,3,-2,3,-2,3)) {
+        
+        auto range = RangeFromTo(-2,3,-2,3,-2,3);
+        //debug
+        {
+            range = RangeFromTo(0,1,0,1,0,1); //Make it faster in debyyyyg!!
+        }
+                
+        foreach (dpos; range) {
             auto pos = unit.tilePosition.getSectorNum();
             pos.value.X +=  dpos.X;
             pos.value.Y +=  dpos.Y;
@@ -164,14 +166,55 @@ class World {
     }
 
     TilePos getTopTilePos(TileXYPos xy) {
-        auto x = xy.value.X;
-        auto y = xy.value.Y;
-        
-        auto sectorXY = getSectorXY(xy.getSectorXYNum());
+        auto rel = xy.sectorRel();
+        auto x = rel.X;
+        auto y = rel.Y;
+
+        auto t = xy.getSectorXYNum();
+        auto sectorXY = getSectorXY(t);
         
         auto heightmapPtr = sectorXY.heightmap;
+        assert(heightmapPtr !is null, "heightmapPtr == null! :(");
         auto pos = vec3i(x, y, (*heightmapPtr)[x][y]);
         return tilePos(pos);        
+    }
+    
+    /* Only used when like, spawning first units? */
+    /* After that, when a unit moves, it is checked if the unit is interesting, */
+    /* and if it moves outside of (interestingMin, interesingMax)+-padding (which are sectornums) */
+    /*  */
+    /* Still, how to properly do floodfill in caves et c? */
+    void calculateInterestingRegion(){
+        auto box = aabbox3d!(int)(int.max, int.max, int.max, int.min, int.min, int.min);
+        foreach(sector ; sectorList){
+            foreach(unit; sector.units){
+                box.addInternalPoint(unit.pos);
+            }
+        }
+        auto paddingSize = vec3i(0, 0, 0);
+        auto sectorNumMax = tilePos(box.MaxEdge).getSectorNum();
+        auto sectorNumMin = tilePos(box.MinEdge).getSectorNum();
+        sectorNumMax.value += paddingSize;
+        sectorNumMin.value -= paddingSize;
+
+        SectorNum[] newSectors;
+        foreach(pos; RangeFromTo(sectorNumMin.value, sectorNumMax.value+vec3i(1,1,1))){
+            auto secNum = sectorNum(pos);
+            auto sector = getSector(secNum, false);
+            if(sector is null){
+                sector = getSector(secNum);
+                newSectors ~= secNum;
+            }
+        }
+        
+        foreach(sectorNum; newSectors){
+            auto xy = sectorNum.toTilePos().toTileXYPos();
+            floodFillVisibility(xy);
+        }
+        foreach(sectorNum; newSectors){
+            notifySectorLoad(sectorNum);
+        }
+        
     }
 
     void floodFillVisibility(const TileXYPos xyStart) {
