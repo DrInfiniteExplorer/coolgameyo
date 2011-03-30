@@ -27,8 +27,8 @@ bool intersects(box a, box b){
 struct GraphicsRegion
 {
     GraphRegionNum grNum;
-	uint VBO = 0;
-	uint quadCount = 0;
+    uint VBO = 0;
+    uint quadCount = 0;
 }
 
 struct Vertex{
@@ -78,7 +78,7 @@ unittest{
 }
 
 class VBOMaker : WorldListener
-{	
+{    
     GraphicsRegion[] regions;
     World world;
     double minReUseRatio;
