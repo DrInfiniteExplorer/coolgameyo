@@ -6,6 +6,8 @@ import worldgen;
 import unit;
 import camera;
 import util;
+import pos;
+
 
 interface WorldListener {
     void notifySectorLoad(SectorNum sectorNum);
@@ -125,7 +127,12 @@ class World {
         sector.setBlock(blockNum, newBlock);
     }
 
-    Sector[] lock() { return sectorList; }
+    //Sector[] lock() { return sectorList; } used by anithing?
+    
+    
+    void update(){
+        
+    }
     
     Unit*[] getVisibleUnits(Camera camera){
         Unit*[] units;
@@ -144,25 +151,25 @@ class World {
     }
     
     void moveUnit(Unit* unit, UnitPos newPos) {
-        auto before = unit.pos.getTilePos();
-        auto after = newPos.getTilePos();
+        auto before = unit.pos.tilePos();
+        auto after = newPos.tilePos();
 
-        auto secDiff = after.getSectorNum - before.getSectorNum;
+        auto secDiff = sectorNum(after.getSectorNum().value - before.getSectorNum().value);
 
         if (secDiff.value == vec3i(0,0,0)) return;
 
-        assert (secDiff.getLengthSQ() <= 3);
+        assert (secDiff.value.getLengthSQ() <= 3);
 
         Direction dir;
 
-        if (secDiff.X < 0) dir |= Direction.west;
-        else if (secDiff.X > 0) dir |= Direction.east;
+        if (secDiff.value.X < 0) dir |= Direction.west;
+        else if (secDiff.value.X > 0) dir |= Direction.east;
 
-        if (secDiff.Y < 0) dir |= Direction.south;
-        else if (secDiff.Y > 0) dir |= Direction.north;
+        if (secDiff.value.Y < 0) dir |= Direction.south;
+        else if (secDiff.value.Y > 0) dir |= Direction.north;
 
-        if (secDiff.Z < 0) dir |= Direction.down;
-        else if (secDiff.Z > 0) dir |= Direction.up;
+        if (secDiff.value.Z < 0) dir |= Direction.down;
+        else if (secDiff.value.Z > 0) dir |= Direction.up;
 
         assert (0);
 
@@ -172,9 +179,11 @@ class World {
 
     void addUnit(Unit* unit) {
         unitCount += 1;
-        auto sectorNum = unit.tilePosition.getSectorNum();
-        auto sector = getSector(sectorNum);
-        sector.addUnit(unit);
+        auto sectorNum = unit.pos.tilePos.getSectorNum();
+        { //Scope to prevent shadowing of variable name sector. todo: plol can think of other name for variables? (his codeee)
+            auto sector = getSector(sectorNum);
+            sector.addUnit(unit);
+        }
 
         //Range +-2
 
@@ -185,17 +194,18 @@ class World {
         }
 
         foreach (dpos; range) {
-            auto pos = unit.tilePosition.getSectorNum();
+            auto pos = unit.pos.tilePos.getSectorNum();
             pos.value.X += dpos.X;
             pos.value.Y += dpos.Y;
             pos.value.Z += dpos.Z;
             auto sector = getSector(pos);
             sector.increaseActivity();
             if (sector.activityCount == 1) {
-                if (unit.pos.getSectorNum() == sectorNum) {
-                    floodFillVisibility(sector, unit.pos);
+                if (unit.pos.tilePos.getSectorNum() == sectorNum) {
+                    floodFillVisibility(/*sector, ??? */unit.pos.tilePos);
                 } else {
-                    floodFillVisibility(sector, Direction.all); // Derp?
+                    assert(0, "implement stuff below");
+                    //floodFillVisibility(/* sector, ??? */Direction.all); // Derp?
                 }
                 notifySectorLoad(sector.sectorNum);
             }

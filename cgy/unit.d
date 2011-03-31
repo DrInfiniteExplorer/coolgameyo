@@ -11,7 +11,5 @@ struct Unit {
     UnitType type;
 
     UnitPos pos;
-
-    TilePos tilePosition() @property { return pos.getTilePos(); }
 }
 

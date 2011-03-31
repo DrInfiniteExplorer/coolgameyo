@@ -54,8 +54,6 @@ int myWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int
     Game game = new Game(true, true, true);
     game.run();
     //delete game;
-
-    ExitProcess(0); //PREVENT GARBAGE COLLECTION AND FUKKEN ANOYING EXCEPTIONNSNSNSS!!!
     
     return 0;
 }

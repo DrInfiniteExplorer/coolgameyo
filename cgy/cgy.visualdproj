@@ -42,7 +42,7 @@
   <ignoreUnsupportedPragmas>0</ignoreUnsupportedPragmas>
   <otherDMD>0</otherDMD>
   <program>$(DMDInstallDir)windows\bin\dmd.exe</program>
-  <imppath>d:\D\Libs\DIrrlicht\iEngine\</imppath>
+  <imppath />
   <fileImppath />
   <outdir>$(ConfigurationName)</outdir>
   <objdir>$(OutDir)</objdir>
@@ -74,7 +74,7 @@
   <pathCv2pdb>$(VisualDInstallDir)cv2pdb\cv2pdb.exe</pathCv2pdb>
   <objfiles />
   <linkswitches />
-  <libfiles>gdi32.lib derelictgl.lib derelictutil.lib win32.lib advapi32.lib derelictil.lib iEngine.lib</libfiles>
+  <libfiles>gdi32.lib win32.lib advapi32.lib derelictil.lib derelictgl.lib derelictutil.lib derelictsdl.lib</libfiles>
   <libpaths>d:\D\Libs\DIrrlicht\Lib;d:\D\Libs\derelict2\lib;d:\D\Libs\bindings\win32 </libpaths>
   <deffile />
   <resfile />
@@ -164,7 +164,7 @@
   <pathCv2pdb>$(VisualDInstallDir)cv2pdb\cv2pdb.exe</pathCv2pdb>
   <objfiles />
   <linkswitches />
-  <libfiles>gdi32.lib derelictgl.lib derelictutil.lib win32.lib advapi32.lib derelictil.lib iEngine.lib</libfiles>
+  <libfiles>gdi32.lib win32.lib advapi32.lib derelictil.lib derelictgl.lib derelictutil.lib derelictsdl.lib</libfiles>
   <libpaths>d:\D\Libs\DIrrlicht\Lib;d:\D\Libs\derelict2\lib;d:\D\Libs\bindings\win32 </libpaths>
   <deffile />
   <resfile />
@@ -181,6 +181,18 @@
   <filesToClean>*.obj;*.cmd;*.build;*.json;*.dep</filesToClean>
  </Config>
  <Folder name="cgy">
+  <Folder name="stolen">
+   <File path="stolen\aabbox3d.d" />
+   <File path="stolen\all.d" />
+   <File path="stolen\line2d.d" />
+   <File path="stolen\line3d.d" />
+   <File path="stolen\matrix4.d" />
+   <File path="stolen\plane3d.d" />
+   <File path="stolen\vector2d.d" />
+   <File path="stolen\vector3d.d" />
+   <File path="stolen\math.d" />
+   <File path="stolen\quaternion.d" />
+  </Folder>
   <File path="main.d" />
   <File path="util.d" />
   <File path="scheduler.d" />
@@ -192,5 +204,6 @@
   <File path="renderer.d" />
   <File path="vbomaker.d" />
   <File path="pos.d" />
+  <File path="modules.d" />
  </Folder>
 </DProject>

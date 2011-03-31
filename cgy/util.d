@@ -6,24 +6,17 @@ import std.stdio;
 import win32.windows : SYSTEM_INFO, GetSystemInfo; //Not available in std.c.windows.windows
 
 import world : BlockSize, SectorSize , GraphRegionSize;
-
-public import pos;
+import pos;
+import stolen.all;
 
 alias vector2d!(int)	vec2i;
 alias vector3d!(int)	vec3i;
 alias vector3d!(float)	vec3f;
 alias vector3d!(double) vec3d;
 
-//According to #D on freenode, there's no way that's not ridden with bugs to make explicit casting between types
-//The solution people converged on was to make a one-member-struct.
-// ...
-// :)
-
 vector3d!(A) convert(A,B)(const vector3d!(B) wap){
     return vector3d!A(to!A(wap.X), to!A(wap.Y), to!A(wap.Z));
 }
-
-
 
 void setFlag(A,B)(ref A flags, B flag, bool value) {
     if (value) {
@@ -275,5 +268,14 @@ class Queue(T) {
     }
 }
 
+enum Direction{
+    north = 1<<0,
+    south = 1<<1,
+    west  = 1<<2,
+    east  = 1<<3,
+    up    = 1<<4,
+    down  = 1<<5,
+    all   = north | up | west | down | south | east,
+}
 
 

@@ -1,4 +1,5 @@
 
+import stolen.aabbox3d;
 import util;
 import world : TilesPerBlock, BlockSize, BlocksPerSector, SectorSize , GraphRegionSize;
 import std.conv;
@@ -7,8 +8,8 @@ import std.conv;
 
 struct UnitPos {
     vec3d value;
-
-    TilePos getTilePos() {
+    
+    TilePos tilePos() @property {
         return TilePos(convert!int(value));
     }
 }
@@ -108,6 +109,13 @@ struct TilePos {
                     negDiv(value.Y, GraphRegionSize.y),
                     negDiv(value.Z, GraphRegionSize.z),
                     ));
+    }
+    
+    UnitPos toUnitPos() const{
+        return UnitPos(vec3d(value.X + 0.5,
+                             value.Y + 0.5,
+                             value.Z + 0.5));
+                             
     }
     
     TileXYPos toTileXYPos() const{

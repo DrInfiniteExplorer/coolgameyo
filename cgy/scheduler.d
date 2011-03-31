@@ -12,8 +12,12 @@ struct Task {
     void delegate(const World) run;
 }
 
+
 private Task sleepyTask(long hnsecs) {
-    return Task(false, false, { Thread.sleep(dur!"hnsecs"(hnsecs)); });
+    void asd(const World){
+        Thread.sleep(dur!"hnsecs"(hnsecs));
+    }
+    return Task(false, false, &asd);
 }
 
 

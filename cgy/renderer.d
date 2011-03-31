@@ -5,9 +5,9 @@ import std.string;
 
 import derelict.opengl.gl;
 import derelict.opengl.glext;
-
 import win32.windows;
 
+import stolen.all;
 import util;
 import unit;
 import world;
@@ -131,7 +131,6 @@ auto asd = Vertex.type.offsetof;
 
 class Renderer{
 	World world;	
-	IVideoDriver driver;
     VBOMaker vboMaker;
 		
 	uint texture2D;
@@ -141,10 +140,9 @@ class Renderer{
     
 	float oglVersion;
 		
-	this(World w, IVideoDriver d)
+	this(World w)
 	{
 		world = w;
-		driver = d;
 		vboMaker = new VBOMaker(w);
 
         glFrontFace(GL_CCW);
@@ -202,7 +200,7 @@ class Renderer{
     
     void renderDude(Unit* unit){
         auto M = matrix4();
-        M.setTranslation(util.convert!float(unit.pos));        
+        M.setTranslation(util.convert!float(unit.pos.value));        
         //auto v = vec3f(0, 0, sin(GetTickCount()/1000.0));
         //M.setTranslation(v);
         dudeShader.setUniform(dudeShader.b, M);

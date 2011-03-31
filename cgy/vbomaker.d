@@ -9,6 +9,8 @@ import derelict.opengl.glext;
 
 import world;
 import util;
+import pos;
+import stolen.aabbox3d;
 
 private alias aabbox3d!double box;
 
