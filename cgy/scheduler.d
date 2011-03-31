@@ -72,11 +72,14 @@ class Scheduler {
         synchronized {
             switch (state) {
                 case State.update:
+
                     world.update();
                     foreach (mod; modules) {
                         mod.update(world);
                     }
+
                     state = state.sync;
+
                     // fallin through...~~~~
                 case State.sync:
                     auto t = sync.removeAny();

@@ -5,6 +5,16 @@ import util;
 import world : TilesPerBlock, BlockSize, BlocksPerSector, SectorSize , GraphRegionSize;
 import std.conv;
 
+
+
+struct UnitPos {
+    vec3d value;
+
+    TilePos getTilePos() {
+        return TilePos(convert!int(value));
+    }
+}
+
 struct SectorNum {
     vec3i value;
 
@@ -25,7 +35,7 @@ struct SectorNum {
         auto maxPos = minPos + vec3d(SectorSize.x, SectorSize.y, SectorSize.z);
         return aabbox3d!double(minPos, maxPos);
     }
-    string toString(){
+    string toString() {
         return "SectorNum x: " ~to!string(value.X)
             ~ " y: " ~to!string(value.Y)
             ~ " z: " ~to!string(value.Z);

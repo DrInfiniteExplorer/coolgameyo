@@ -248,7 +248,10 @@ class World {
                     0, 1,
                     0, BlocksPerSector.z);
             foreach (rel; range) {
-                work.insert(BlockNum(sectorNum.toBlockNum().value + rel));
+                auto abs = sectorNum.toBlockNum().value + rel;
+                if (getBlock(BlockNum(abs + vec3i(0, -1, 0))).seen) {
+                    work.insert(BlockNum(abs));
+                }
             }
         }
         if (dir & Direction.south) {
@@ -256,7 +259,10 @@ class World {
                     BlocksPerSector.y - 1, BlocksPerSector.y,
                     0, BlocksPerSector.z);
             foreach (rel; range) {
-                work.insert(BlockNum(sectorNum.toBlockNum().value + rel));
+                auto abs = sectorNum.toBlockNum().value + rel;
+                if (getBlock(BlockNum(abs + vec3i(0, 1, 0))).seen) {
+                    work.insert(BlockNum(abs));
+                }
             }
         }
         if (dir & Direction.west) {
@@ -264,7 +270,10 @@ class World {
                     0, BlocksPerSector.y,
                     0, BlocksPerSector.z);
             foreach (rel; range) {
-                work.insert(BlockNum(sectorNum.toBlockNum().value + rel));
+                auto abs = sectorNum.toBlockNum().value + rel;
+                if (getBlock(BlockNum(abs + vec3i(-1, 0, 0))).seen) {
+                    work.insert(BlockNum(abs));
+                }
             }
         }
         if (dir & Direction.east) {
@@ -272,7 +281,10 @@ class World {
                     0, BlocksPerSector.y,
                     0, BlocksPerSector.z);
             foreach (rel; range) {
-                work.insert(BlockNum(sectorNum.toBlockNum().value + rel));
+                auto abs = sectorNum.toBlockNum().value + rel;
+                if (getBlock(BlockNum(abs + vec3i(1, 0, 0))).seen) {
+                    work.insert(BlockNum(abs));
+                }
             }
         }
         if (dir & Direction.up) {
@@ -280,7 +292,10 @@ class World {
                     0, BlocksPerSector.y,
                     0, 1);
             foreach (rel; range) {
-                work.insert(BlockNum(sectorNum.toBlockNum().value + rel));
+                auto abs = sectorNum.toBlockNum().value + rel;
+                if (getBlock(BlockNum(abs + vec3i(0, 0, -1))).seen) {
+                    work.insert(BlockNum(abs));
+                }
             }
         }
         if (dir & Direction.down) {
@@ -288,7 +303,10 @@ class World {
                     0, BlocksPerSector.y,
                     BlocksPerSector.z - 1, BlocksPerSector.z);
             foreach (rel; range) {
-                work.insert(BlockNum(sectorNum.toBlockNum().value + rel));
+                auto abs = sectorNum.toBlockNum().value + rel;
+                if (getBlock(BlockNum(abs + vec3i(0, 0, 1))).seen) {
+                    work.insert(BlockNum(abs));
+                }
             }
         }
         floodFillVisibilityImpl(work);

@@ -2,9 +2,16 @@
 import util;
 import pos;
 
+final class UnitType {
+    string name;
+    int x;
+}
+
 struct Unit {
-    vec3i pos;
-    
-    TilePos tilePosition() @property { return tilePos(pos); }
+    UnitType type;
+
+    UnitPos pos;
+
+    TilePos tilePosition() @property { return pos.getTilePos(); }
 }
 
