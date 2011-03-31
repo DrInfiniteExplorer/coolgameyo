@@ -42,7 +42,7 @@ struct GraphicsRegion
 }
 
 struct Vertex{
-    vec3i vertex;
+    vec3f vertex;
     TileType type;
 };
 
@@ -168,8 +168,8 @@ class VBOMaker : WorldListener
                     }
                     if(onStrip){ //No floor :(
                         //End current strip.
-                        newFace.quad[2].vertex.set(max.value.X+1, y+noll, z+1);
-                        newFace.quad[3].vertex.set(max.value.X+1, y+ett, z+1);
+                        newFace.quad[2].vertex.set(max.value.X, y+noll, z+1);
+                        newFace.quad[3].vertex.set(max.value.X, y+ett, z+1);
                         faceList ~= newFace;
                         onStrip = false;            
                    }
@@ -223,8 +223,8 @@ class VBOMaker : WorldListener
                     }
                     if(onStrip){ //No floor :(
                         //End current strip.
-                        newFace.quad[2].vertex.set(max.value.X+1, y+1, z+ett);
-                        newFace.quad[3].vertex.set(max.value.X+1, y+1, z+noll);
+                        newFace.quad[2].vertex.set(max.value.X, y+1, z+ett);
+                        newFace.quad[3].vertex.set(max.value.X, y+1, z+noll);
                         faceList ~= newFace;
                         onStrip = false;            
                    }
@@ -279,8 +279,8 @@ class VBOMaker : WorldListener
                     }
                     if(onStrip){ //No floor :(
                         //End current strip.
-                        newFace.quad[2].vertex.set(x+1, max.value.Y+1, z+noll);
-                        newFace.quad[3].vertex.set(x+1, max.value.Y+1, z+ett);
+                        newFace.quad[2].vertex.set(x+1, max.value.Y, z+noll);
+                        newFace.quad[3].vertex.set(x+1, max.value.Y, z+ett);
                         faceList ~= newFace;
                         onStrip = false;            
                    }
@@ -289,9 +289,9 @@ class VBOMaker : WorldListener
         }
     }    
     
-    GraphicsRegion buildVBO(GraphicsRegion region, Face[] faces){
+    void buildVBO(ref GraphicsRegion region, Face[] faces){
         auto primitiveCount = faces.length;
-        auto geometrySize = primitiveCount * faces[].sizeof;
+        auto geometrySize = primitiveCount * Face.sizeof;
         region.quadCount = primitiveCount;
         if(region.VBO){
             //See if VBO is reusable.
@@ -302,7 +302,7 @@ class VBOMaker : WorldListener
             double ratio = to!double(geometrySize)/to!double(bufferSize);
             if(minReUseRatio <= ratio && ratio <= 1){
                 glBufferSubData(GL_ARRAY_BUFFER, 0, geometrySize, faces.ptr);
-                return region;
+                return;
             }else{
                 //Delete old vbo
                 glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -310,25 +310,23 @@ class VBOMaker : WorldListener
                 region.VBO = 0; //For all it's worth. Will create new one just below. :P
             }
         }
-        glGenBuffers(1, &region.VBO);
-        glBindBuffer(GL_ARRAY_BUFFER, region.VBO);
-        glBufferData(GL_ARRAY_BUFFER, geometrySize, faces.ptr, GL_STATIC_DRAW);
-        assert(0, "Upload data");
-        
-        return region;
+        if(geometrySize > 0){
+            glGenBuffers(1, &region.VBO);
+            glBindBuffer(GL_ARRAY_BUFFER, region.VBO);
+            glBufferData(GL_ARRAY_BUFFER, geometrySize, faces.ptr, GL_STATIC_DRAW);        
+        }
     }
     
-    void buildGraphicsRegion(GraphicsRegion[] regions){
-        foreach(i ; 0..regions.length){
-            auto region = regions[i];
-            Face[] faces;
-            auto min = region.grNum.min();
-            auto max = region.grNum.max();
-            buildGeometryX(min, max, faces);
-            buildGeometryY(min, max, faces);
-            buildGeometryZ(min, max, faces);
-            regions[i] = buildVBO(region, faces);
-        }
+    void buildGraphicsRegion(ref GraphicsRegion region){
+        Face[] faces;
+        auto min = region.grNum.min();
+        auto max = region.grNum.max();
+        buildGeometryX(min, max, faces);
+        buildGeometryY(min, max, faces);
+        //Floor
+        buildGeometryZ(min, max, faces);
+        
+        buildVBO(region, faces);
     }
     
     void notifySectorLoad(SectorNum sectorNum)
@@ -338,17 +336,20 @@ class VBOMaker : WorldListener
         auto tmp = sectorNum.toTilePos();
         tmp.value -= vec3i(1,1,1);
         auto grNumMax = tmp.getGraphRegionNum();
+        grNumMax.value += vec3i(1,1,1);
         sectorNum.value -= vec3i(1,1,1);
         
         foreach(pos ; RangeFromTo(grNumMin.value, grNumMax.value)) {
             auto grNum = graphRegionNum(pos);
             if (grNum in regions) {
-                assert(0, "UPDATE");
+                buildGraphicsRegion(regions[grNum]);
             } else {
-                assert(0, "CREATE!");
+                auto ny = GraphicsRegion();
+                ny.grNum = grNum;
+                buildGraphicsRegion(ny);
+                regions[grNum] = ny;
             }
         }
-
     }
     void notifySectorUnload(SectorNum sectorNum)
     {

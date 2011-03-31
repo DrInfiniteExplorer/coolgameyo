@@ -45,13 +45,21 @@ class Game : IEventReceiver{
 			camera = new Camera();
 		}
         
-        auto xy = tileXYPos(vec2i(8,8));
+        auto xy = tileXYPos(vec2i(0,0));
         auto u = new Unit;
         u.pos = world.getTopTilePos(xy).value;
         u.pos.Z += 1;
         world.addUnit(u);
-        
-        world.calculateInterestingRegion();        
+
+        auto uu = new Unit;        
+        auto xyy = tileXYPos(vec2i(128,128));
+        uu.pos = world.getTopTilePos(xyy).value;
+        uu.pos.Z += 1;
+        world.addUnit(uu);
+        world.floodFillVisibility(xy);
+        foreach(sector; world.sectorList){
+            world.notifySectorLoad(sector.sectorNum);
+        }
 	}
 	
 	
@@ -72,10 +80,10 @@ class Game : IEventReceiver{
                 camera.axisMove( 0.0, 0.1, 0.0);
             }
             if(keyMap[EKEY_CODE.KEY_SPACE]){
-                camera.axisMove( 0.1, 0.0, 0.1);
+                camera.axisMove( 0.0, 0.0, 0.1);
             }
             if(keyMap[EKEY_CODE.KEY_LCONTROL]){
-                camera.axisMove( 0.1, 0.0, 0.1);
+                camera.axisMove( 0.0, 0.0,-0.1);
             }
             driver.beginScene(true, true, SColor(0, 160, 0, 128));
             renderer.render(camera);
@@ -101,8 +109,7 @@ class Game : IEventReceiver{
             writeln(dx, " ", dy);
             if(dx!=0 || dy!=0){
                 device.getCursorControl().setPosition(ScreenCenterX, ScreenCenterY);                
-                //device.getCursorControl().setPosition(0.f, 0.f);                
-                //device.getCursorControl().setPosition(0, 0);                
+                
                 camera.mouseMove( dx,  dy);
             }
         }

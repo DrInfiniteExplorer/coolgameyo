@@ -3,7 +3,10 @@ module main;
 import core.runtime;
 import std.c.windows.windows;
 import std.stdio;
+
 //import engine.irrlicht;
+
+import win32.windows : ExitProcess;
 
 import game;
 import util;
@@ -51,6 +54,8 @@ int myWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int
     Game game = new Game(true, true, true);
     game.run();
     //delete game;
+
+    ExitProcess(0); //PREVENT GARBAGE COLLECTION AND FUKKEN ANOYING EXCEPTIONNSNSNSS!!!
     
     return 0;
 }

@@ -6,7 +6,7 @@ import engine.irrlicht;
 
 import worldgen;
 import unit;
-
+import camera;
 import util;
 
 interface WorldListener {
@@ -128,7 +128,23 @@ class World {
     }
 
     Sector[] lock() { return sectorList; }
+    
+    Unit*[] getVisibleUnits(Camera camera){
+        Unit*[] units;
+        foreach(sector; sectorList){
+            foreach(unit; sector.units){
+                if(camera.inFrustum(unit)){
+                    units ~= unit;
+                }
+            }
+        }
+        return units;
+    }
 
+    void moveUnit(Unit* unit) {
+        assert(0, "Implement");
+    }
+    
     void moveUnit(Unit* unit, UnitPos newPos) {
         auto before = unit.pos.getTilePos();
         auto after = newPos.getTilePos();
@@ -186,6 +202,7 @@ class World {
                 notifySectorLoad(sector.sectorNum);
             }
         }
+        
     }
 
     Tile getTile(TilePos tilePos, bool createBlock=true,
@@ -211,48 +228,9 @@ class World {
         
         auto heightmapPtr = sectorXY.heightmap;
         assert(heightmapPtr !is null, "heightmapPtr == null! :(");
-        auto pos = vec3i(x, y, (*heightmapPtr)[x][y]);
+        auto pos = vec3i(xy.value.X, xy.value.Y, (*heightmapPtr)[x][y]);
         return tilePos(pos);        
     }
-    
-    /* Only used when like, spawning first units? */
-    /* After that, when a unit moves, it is checked if the unit is interesting, */
-    /* and if it moves outside of (interestingMin, interesingMax)+-padding (which are sectornums) */
-    /*  */
-    /* Still, how to properly do floodfill in caves et c? */
-    void calculateInterestingRegion(){
-        auto box = aabbox3d!(int)(int.max, int.max, int.max, int.min, int.min, int.min);
-        foreach (sector; sectorList) {
-            foreach (unit; sector.units) {
-                box.addInternalPoint(unit.pos);
-            }
-        }
-        auto paddingSize = vec3i(0, 0, 0);
-        auto sectorNumMax = tilePos(box.MaxEdge).getSectorNum();
-        auto sectorNumMin = tilePos(box.MinEdge).getSectorNum();
-        sectorNumMax.value += paddingSize;
-        sectorNumMin.value -= paddingSize;
-
-        SectorNum[] newSectors;
-        foreach (pos; RangeFromTo(sectorNumMin.value, sectorNumMax.value+vec3i(1,1,1))) {
-            auto secNum = sectorNum(pos);
-            auto sector = getSector(secNum, false);
-            if (sector is null) {
-                sector = getSector(secNum);
-                newSectors ~= secNum;
-            }
-        }
-        
-        foreach(sectorNum; newSectors){
-            auto xy = sectorNum.toTilePos().toTileXYPos();
-            floodFillVisibility(xy);
-        }
-        foreach(sectorNum; newSectors){
-            notifySectorLoad(sectorNum);
-        }
-        
-    }
-
     private alias RedBlackTree!(BlockNum, q{a.value < b.value}) WorkSet;
 
     void floodFillVisibility(const TileXYPos xyStart) {
@@ -461,12 +439,6 @@ class Sector {
 
     TilePos pos;
     SectorNum sectorNum;
-    
-    invariant() {
-        assert(sectorNum.toTilePos() == pos);
-        assert(pos.getSectorNum() == sectorNum);
-    }
-    
     int blockCount;
 
     Block[BlocksPerSector.z][BlocksPerSector.y][BlocksPerSector.x] blocks;
@@ -475,6 +447,12 @@ class Sector {
 
     RedBlackTree!(Unit*) units;
     int activityCount;
+
+    invariant(){
+        assert(sectorNum.toTilePos() == pos);
+        assert(pos.getSectorNum() == sectorNum);
+        assert(activityCount >= 0);
+    }
 
     this(SectorNum sectorNum_) {
         sectorNum = sectorNum_;
@@ -524,7 +502,10 @@ class Sector {
         units.insert(u);
     }
     void increaseActivity() {
+        bool wasLoaded = activityCount==0;
         activityCount += 1;
+        if( wasLoaded ){
+        }
     }
 }
 

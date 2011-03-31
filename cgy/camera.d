@@ -11,7 +11,7 @@ class Camera{
 	vec3f targetDir;
 	
 	this(){
-		position.set(0,0,0);
+		position.set(0,-1,0);
 		targetDir.set(0, 1, 0); //Look into scene
 	}
 	

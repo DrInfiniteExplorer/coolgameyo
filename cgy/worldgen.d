@@ -9,8 +9,9 @@ struct WorldGenParams {
 }
 
 private float foo(float x, float y) {
-//    return 4*sin(x/10) + 24*atan(y/50) - 2*cos(y/3);
-    return 0;
+//    return 4*sin(x/10.0) + 24*atan(y/50.0) - 2*cos(y/3.0);
+//    return 4*sin(x/10.f) - 2*cos(y/13.f);
+    return 4*sin(x/10.0) + 24*atan(y/50.0);
 }
 
 class WorldGenerator {
