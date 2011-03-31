@@ -1,8 +1,6 @@
 import std.stdio;
 import std.conv;
 
-import engine.irrlicht;
-
 import world;
 import camera;
 import renderer;

@@ -4,6 +4,8 @@ import std.container, std.concurrency, std.datetime;
 import world;
 import util;
 
+import modules;
+
 struct Task {
     bool sync;
     bool syncsScheduler;

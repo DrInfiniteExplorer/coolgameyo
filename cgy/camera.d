@@ -1,8 +1,6 @@
 
 import std.algorithm;
 
-import engine.irrlicht;
-
 import util;
 alias util.convert convert;
 

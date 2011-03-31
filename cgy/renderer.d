@@ -5,7 +5,6 @@ import std.string;
 
 import derelict.opengl.gl;
 import derelict.opengl.glext;
-import engine.irrlicht;
 
 import win32.windows;
 

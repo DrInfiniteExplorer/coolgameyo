@@ -4,7 +4,6 @@ import std.exception;
 import std.stdio;
 
 import win32.windows : SYSTEM_INFO, GetSystemInfo; //Not available in std.c.windows.windows
-import engine.irrlicht;
 
 import world : BlockSize, SectorSize , GraphRegionSize;
 

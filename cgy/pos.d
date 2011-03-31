@@ -1,6 +1,4 @@
 
-import engine.irrlicht;
-
 import util;
 import world : TilesPerBlock, BlockSize, BlocksPerSector, SectorSize , GraphRegionSize;
 import std.conv;

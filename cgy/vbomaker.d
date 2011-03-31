@@ -6,7 +6,6 @@ import std.algorithm;
 
 import derelict.opengl.gl;
 import derelict.opengl.glext;
-import engine.irrlicht;
 
 import world;
 import util;

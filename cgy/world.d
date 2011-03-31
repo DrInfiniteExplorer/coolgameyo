@@ -2,8 +2,6 @@ import std.algorithm, std.range, std.stdio;
 import std.container;
 import std.exception;
 
-import engine.irrlicht;
-
 import worldgen;
 import unit;
 import camera;
