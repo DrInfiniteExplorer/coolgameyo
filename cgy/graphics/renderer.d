@@ -5,6 +5,7 @@ import std.string;
 
 import derelict.opengl.gl;
 import derelict.opengl.glext;
+import win32.windows;
 
 import stolen.all;
 import util;
@@ -37,15 +38,9 @@ class ShaderProgram{
     }
     
     void destroy(){
-        if(vert){
-            glDeleteShader(vert);
-        }
-        if(frag){
-            glDeleteShader(frag);
-        }
-        if(program){
-            glDeleteProgram(program);
-        }
+        if(vert){ glDeleteShader(vert); }
+        if(frag){ glDeleteShader(frag); }
+        if(program){ glDeleteProgram(program); }
     }
         
     string printShaderError(uint shader){
@@ -146,7 +141,7 @@ class Renderer{
         glFrontFace(GL_CCW);
         DerelictGL.loadClassicVersions(GLVersion.GL21);
         
-        //wglSwapIntervalEXT(0); //Disable vsync yeaaaah
+        wglSwapIntervalEXT(0); //Disable vsync yeaaaah
 		
         world = w;
 		vboMaker = new VBOMaker(w);

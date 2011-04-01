@@ -193,17 +193,19 @@
    <File path="stolen\math.d" />
    <File path="stolen\quaternion.d" />
   </Folder>
+  <File path="game.d" />
   <File path="main.d" />
-  <File path="util.d" />
+  <File path="modules.d" />
+  <File path="pos.d" />
   <File path="scheduler.d" />
   <File path="unit.d" />
+  <File path="util.d" />
   <File path="world.d" />
   <File path="worldgen.d" />
-  <File path="game.d" />
-  <File path="camera.d" />
-  <File path="renderer.d" />
-  <File path="vbomaker.d" />
-  <File path="pos.d" />
-  <File path="modules.d" />
+  <Folder name="graphics">
+   <File path="graphics\camera.d" />
+   <File path="graphics\renderer.d" />
+   <File path="graphics\vbomaker.d" />
+  </Folder>
  </Folder>
 </DProject>

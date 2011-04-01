@@ -64,10 +64,8 @@ class Game{
             SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS,  0);
             SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES,  2);
 
-            surface = enforce(SDL_SetVideoMode(width, height, 32,
-                        SDL_HWSURFACE | SDL_GL_DOUBLEBUFFER 
-                        | SDL_OPENGL | SDL_ASYNCBLIT),
-                    "Could not set sdl video mode (" ~ SDLError() ~ ")");
+            surface = enforce(SDL_SetVideoMode(width, height, 32, SDL_HWSURFACE | SDL_GL_DOUBLEBUFFER | SDL_OPENGL),
+                              "Could not set sdl video mode (" ~ SDLError() ~ ")");
  
             scheduler = new Scheduler(world, 0);
             renderer = new Renderer(world);

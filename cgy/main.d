@@ -8,6 +8,8 @@ import util;
 
 
 version (Windows) {
+import std.c.windows.windows;
+    
     extern (Windows) int WinMain(HINSTANCE hInstance, 
             HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
         int result;

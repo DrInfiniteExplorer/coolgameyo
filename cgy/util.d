@@ -6,6 +6,11 @@ import world : BlockSize, SectorSize , GraphRegionSize;
 import pos;
 import stolen.all;
 
+version(Windows){
+    import std.c.windows.windows;
+    import win32.windows : SYSTEM_INFO, GetSystemInfo; //Not available in std.c.windows.windows
+}
+
 version (Posix) {
     import core.sys.posix.stdlib: posix_memalign;
     import std.c.stdlib;
