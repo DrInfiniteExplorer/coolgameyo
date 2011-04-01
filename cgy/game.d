@@ -4,7 +4,6 @@ import std.exception;
 
 import derelict.sdl.sdl;
 import derelict.opengl.gl;
-import win32.windows;
 
 import world;
 import camera;
@@ -14,14 +13,16 @@ import pos;
 import util;
 import unit;
 
+string SDLError() { return to!string(SDL_GetError()); }
+
 class Game{
-	
-	World			world;
+    
+    World            world;
 
 
-	bool			isClient;
-	bool			isServer;
-	bool			isWorker;
+    bool            isClient;
+    bool            isServer;
+    bool            isWorker;
 
     ushort          width = 800;
     ushort          height = 600;
@@ -29,31 +30,32 @@ class Game{
     ushort          middleY;
 
     SDL_Surface*    surface;
-	Camera			camera;
-	Renderer		renderer;
-	Scheduler		scheduler;
+    Camera            camera;
+    Renderer        renderer;
+    Scheduler        scheduler;
     bool[SDLK_LAST]       keyMap;
-	
-	this(bool serv, bool clie, bool work){
-		isServer = serv;
-		isClient = clie;
-		isWorker = work;
-		world = new World();
-		if(isClient){   
-            
+    
+    this(bool serv, bool clie, bool work){
+        isServer = serv;
+        isClient = clie;
+        isWorker = work;
+        world = new World();
+        if(isClient){
+
             DerelictSDL.load();
             DerelictGL.load();
-            
+
             middleX = width/2;
             middleY = height/2;
-            
-            assert(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_NOPARACHUTE) == 0, "SDL creation faileeed!");
-            
+
+            enforce(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_NOPARACHUTE) == 0,
+                    SDLError());
+
             SDL_GL_SetAttribute(SDL_GL_RED_SIZE,        8);
             SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE,      8);
             SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,       8);
             SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE,      8);
-            
+
             SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,      32);
             SDL_GL_SetAttribute(SDL_GL_BUFFER_SIZE,     32);
             SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER,      1);
@@ -61,15 +63,17 @@ class Game{
             //Antialiasing. now off-turned.
             SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS,  0);
             SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES,  2);
-            
-            surface = enforce(SDL_SetVideoMode(width, height, 32, SDL_HWSURFACE | SDL_GL_DOUBLEBUFFER | SDL_OPENGL | SDL_ASYNCBLIT),
-                              "Could not set sdl video mode (create window, gl context etc)");
+
+            surface = enforce(SDL_SetVideoMode(width, height, 32,
+                        SDL_HWSURFACE | SDL_GL_DOUBLEBUFFER 
+                        | SDL_OPENGL | SDL_ASYNCBLIT),
+                    "Could not set sdl video mode (" ~ SDLError() ~ ")");
  
-			scheduler = new Scheduler(world, 0);
-			renderer = new Renderer(world);
-			camera = new Camera();
-		}
-        
+            scheduler = new Scheduler(world, 0);
+            renderer = new Renderer(world);
+            camera = new Camera();
+        }
+
         auto xy = tileXYPos(vec2i(0,0));
         auto u = new Unit;
         u.pos = world.getTopTilePos(xy).toUnitPos();
@@ -85,10 +89,10 @@ class Game{
         foreach(sector; world.sectorList){
             world.notifySectorLoad(sector.sectorNum);
         }
-	}
-	
-	
-	void run(){
+    }
+    
+    
+    void run(){
         //driver.beginScene(true, true, SColor(0, 160, 0, 128));
         auto exit = false;
         SDL_Event event;
@@ -118,12 +122,13 @@ class Game{
             SDL_GL_SwapBuffers();
             
         }
-	}
+    }
     
     int startTime = 0;
     int count = 0;
     void updateFPS(){        
-        auto now = GetTickCount();
+        auto now = 1; //GetTickCount();
+        writeln("DERPTI DERP FPS");
         auto delta = now-startTime;
         count++;
         if(delta > 1000){

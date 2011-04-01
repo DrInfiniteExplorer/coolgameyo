@@ -1,13 +1,16 @@
-import std.c.windows.windows;
 import std.conv;
 import std.exception;
 import std.stdio;
 
-import win32.windows : SYSTEM_INFO, GetSystemInfo; //Not available in std.c.windows.windows
-
 import world : BlockSize, SectorSize , GraphRegionSize;
 import pos;
 import stolen.all;
+
+version (Posix) {
+    import core.sys.posix.stdlib: posix_memalign;
+    import std.c.stdlib;
+}
+
 
 alias vector2d!(int)	vec2i;
 alias vector2d!(float)	vec2f;
@@ -37,18 +40,22 @@ void[] allocateBlob(size_t size) {
         auto ret = VirtualAlloc(null, 4096 * size, MEM_COMMIT, PAGE_READWRITE); 
         auto tmp = enforce(ret[0 .. 4096*size], "memory allocation fail :-)");
         return tmp;
-    } else version (posix) {
+    } else version (Posix) {
         void* ret;
         auto result = posix_memalign(&ret, 4096, 4096 * size);
         enforce (result == 0, "memory allocation fail :-)");
         return ret[0 .. size];
+    } else {
+        static assert (0, "version?");
     }
 }
 void freeBlob(void* blob) {
     version (Windows) {
         VirtualFree(blob, 0, MEM_RELEASE);
-    } else version (posix) {
+    } else version (Posix) {
         free(blob);
+    } else {
+        static assert (0);
     }
 }
 
