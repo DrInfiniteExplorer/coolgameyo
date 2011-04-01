@@ -44,6 +44,7 @@ struct GraphicsRegion
 
 struct Vertex{
     vec3f vertex;
+    vec2f texcoord;
     TileType type;
 };
 
@@ -123,6 +124,7 @@ class VBOMaker : WorldListener
         TileType type() const @property { return quad[0].type; }
     }
     
+    //Floor/Roof-tiles.
     void buildGeometryZ(TilePos min, TilePos max, ref Face[]faceList)
     in{
         assert(min.value.X < max.value.X);
@@ -150,6 +152,8 @@ class VBOMaker : WorldListener
                             if(onStrip && newFace.type != tileLower.type){
                                 newFace.quad[2].vertex.set(x, y+noll, z+1);
                                 newFace.quad[3].vertex.set(x, y+ett, z+1);
+                                newFace.quad[2].texcoord.set(1, 1);
+                                newFace.quad[3].texcoord.set(1, 1);
                                 faceList ~= newFace;
                                 onStrip = false;
                             }
@@ -157,12 +161,16 @@ class VBOMaker : WorldListener
                                 onStrip = true;
                                 newFace.quad[0].vertex.set(x, y+ett, z+1);
                                 newFace.quad[1].vertex.set(x, y+noll, z+1);
+                                newFace.quad[0].texcoord.set(0, 0);
+                                newFace.quad[1].texcoord.set(1, 0);
                                 newFace.type = tileLower.type;
                             }else {} //if onStrip && same, continue
                         }else if(onStrip){ //No floor :(
                             //End current strip.
                             newFace.quad[2].vertex.set(x, y+noll, z+1);
                             newFace.quad[3].vertex.set(x, y+ett, z+1);
+                            newFace.quad[2].texcoord.set(1, 1);
+                            newFace.quad[3].texcoord.set(1, 1);
                             faceList ~= newFace;
                             onStrip = false;
                         }                    
@@ -171,6 +179,8 @@ class VBOMaker : WorldListener
                         //End current strip.
                         newFace.quad[2].vertex.set(max.value.X, y+noll, z+1);
                         newFace.quad[3].vertex.set(max.value.X, y+ett, z+1);
+                        newFace.quad[2].texcoord.set(1, 1);
+                        newFace.quad[3].texcoord.set(1, 1);
                         faceList ~= newFace;
                         onStrip = false;            
                    }

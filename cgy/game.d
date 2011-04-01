@@ -23,11 +23,16 @@ class Game{
 	bool			isServer;
 	bool			isWorker;
 
+    ushort          width = 800;
+    ushort          height = 600;
+    ushort          middleX;
+    ushort          middleY;
+
     SDL_Surface*    surface;
 	Camera			camera;
 	Renderer		renderer;
 	Scheduler		scheduler;
-	bool			keyMap[256];	
+    bool[SDLK_LAST]       keyMap;
 	
 	this(bool serv, bool clie, bool work){
 		isServer = serv;
@@ -35,8 +40,13 @@ class Game{
 		isWorker = work;
 		world = new World();
 		if(isClient){   
+            
             DerelictSDL.load();
             DerelictGL.load();
+            
+            middleX = width/2;
+            middleY = height/2;
+            
             assert(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_NOPARACHUTE) == 0, "SDL creation faileeed!");
             
             SDL_GL_SetAttribute(SDL_GL_RED_SIZE,        8);
@@ -52,7 +62,7 @@ class Game{
             SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS,  0);
             SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES,  2);
             
-            surface = enforce(SDL_SetVideoMode(800, 600, 32, SDL_HWSURFACE | SDL_GL_DOUBLEBUFFER | SDL_OPENGL),
+            surface = enforce(SDL_SetVideoMode(width, height, 32, SDL_HWSURFACE | SDL_GL_DOUBLEBUFFER | SDL_OPENGL | SDL_ASYNCBLIT),
                               "Could not set sdl video mode (create window, gl context etc)");
  
 			scheduler = new Scheduler(world, 0);
@@ -67,11 +77,11 @@ class Game{
         world.addUnit(u);
 
         auto uu = new Unit;        
-        auto xyy = tileXYPos(vec2i(128,128));
+        auto xyy = tileXYPos(vec2i(127,127));
         uu.pos = world.getTopTilePos(xyy).toUnitPos();
         uu.pos.value.Z += 1;
         world.addUnit(uu);
-        world.floodFillVisibility(xy);
+        //world.floodFillVisibility(xy);
         foreach(sector; world.sectorList){
             world.notifySectorLoad(sector.sectorNum);
         }
@@ -84,16 +94,81 @@ class Game{
         SDL_Event event;
         while(!exit){
             while(SDL_PollEvent(&event)) {
-                if(event.type == SDL_QUIT){
-                    exit = true;
+                switch(event.type){
+                    case SDL_QUIT:
+                        exit = true; break;
+                    case SDL_KEYDOWN:
+                    case SDL_KEYUP:
+                        onKey(event.key);
+                        break;
+                    case SDL_MOUSEMOTION:
+                        mouseMove(event.motion);
+                        break;
+                    case SDL_MOUSEBUTTONDOWN:
+                    case SDL_MOUSEBUTTONUP:
+                        break;
+                    default:
                 }
             }
+            
+            updateCamera(); //Or doInterface() or controlDwarf or ()()()()();
+            
             renderer.render(camera);
+            updateFPS();
             SDL_GL_SwapBuffers();
-            writeln(GetTickCount());
+            
         }
-        //driver.endScene();
 	}
+    
+    int startTime = 0;
+    int count = 0;
+    void updateFPS(){        
+        auto now = GetTickCount();
+        auto delta = now-startTime;
+        count++;
+        if(delta > 1000){
+            writeln(count);
+            startTime =now;
+            count = 0;
+        }
         
-    //camera.mouseMove( dx,  dy);    
+    }
+    
+    void updateCamera(){
+        if(keyMap[SDLK_a]){
+            camera.axisMove(-0.1, 0.0, 0.0);
+        }
+        if(keyMap[SDLK_d]){
+            camera.axisMove( 0.1, 0.0, 0.0);
+        }
+        if(keyMap[SDLK_w]){
+            camera.axisMove( 0.0, 0.1, 0.0);
+        }
+        if(keyMap[SDLK_s]){
+            camera.axisMove( 0.0,-0.1, 0.0);
+        }
+        if(keyMap[SDLK_SPACE]){
+            camera.axisMove( 0.0, 0.0, 0.1);
+        }
+        if(keyMap[SDLK_LCTRL]){
+            camera.axisMove( 0.0, 0.0,-0.1);
+        }
+    }
+    
+    void onKey(SDL_KeyboardEvent event){
+        auto key = event.keysym.sym;
+        auto down = event.type == SDL_KEYDOWN;
+        keyMap[key] = down;
+    }
+    
+    void mouseMove(SDL_MouseMotionEvent mouse){
+        auto x = mouse.x;
+        auto y = mouse.y;
+        if(x != middleX || y != middleY){
+            SDL_WarpMouse(middleX, middleY);
+            camera.mouseMove( mouse.xrel,  mouse.yrel);    
+        }
+    }
+        
+    //
 }

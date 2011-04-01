@@ -10,6 +10,8 @@ import pos;
 import stolen.all;
 
 alias vector2d!(int)	vec2i;
+alias vector2d!(float)	vec2f;
+
 alias vector3d!(int)	vec3i;
 alias vector3d!(float)	vec3f;
 alias vector3d!(double) vec3d;

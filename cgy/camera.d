@@ -72,7 +72,7 @@ class Camera{
 		targetDir.normalize();
 	}
 
-	void axisMove(double forward, double right, double up){
+	void axisMove(double right, double forward, double up){
 		vec3d _fwd = convert!double(targetDir);
         vec3d _up = vec3d(0.0, 0.0, 1.0);        
 		vec3d _right = _fwd.crossProduct(_up).normalize();

@@ -127,7 +127,8 @@ class ShaderProgram{
 }
 
 
-auto asd = Vertex.type.offsetof;
+auto grTexCoordOffset = Vertex.texcoord.offsetof;
+auto grTypeOffset = Vertex.type.offsetof;
 
 class Renderer{
 	World world;	
@@ -142,15 +143,20 @@ class Renderer{
 		
 	this(World w)
 	{
-		world = w;
-		vboMaker = new VBOMaker(w);
-
+        DerelictGL.loadExtensions();
         glFrontFace(GL_CCW);
         DerelictGL.loadClassicVersions(GLVersion.GL21);
+        
+        wglSwapIntervalEXT(0); //Disable vsync yeaaaah
+		
+        world = w;
+		vboMaker = new VBOMaker(w);
+
 
 		worldShader = new ShaderProgram("shaders/renderGR.vert", "shaders/renderGR.frag");
         worldShader.bindAttribLocation(0, "position");
-        worldShader.bindAttribLocation(1, "type");
+        worldShader.bindAttribLocation(1, "texcoord");
+        worldShader.bindAttribLocation(2, "type");
         worldShader.link();
         worldShader.a = /*uniformOffsetLoc*/ worldShader.getUniformLocation("offset");
         worldShader.b = /*uniformViewProjection*/ worldShader.getUniformLocation("VP");
@@ -224,6 +230,9 @@ class Renderer{
         
 	void render(Camera camera)
 	{   
+        
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        
         static if( true ){
             /* WIRE FRA ME!!! */
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -244,14 +253,14 @@ class Renderer{
         worldShader.setUniform(worldShader.a, pos);
 
         glBindBuffer(GL_ARRAY_BUFFER, region.VBO);
-        //auto posLoc = glGetAttribLocation(..., "position");
-        glVertexAttribPointer(/*Position stream*/ 0, 3, GL_FLOAT, GL_FALSE, Vertex.sizeof, null /* offset in vbo */);
-        glEnableVertexAttribArray(/*Position stream*/ 0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, Vertex.sizeof, null /* offset in vbo */);
+        glEnableVertexAttribArray(0);
 
-        glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE,
-                              Vertex.sizeof,
-                              cast(void*)asd /* offset in vbo */);
-        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, Vertex.sizeof, cast(void*)grTexCoordOffset);
+        glEnableVertexAttribArray(2);
+
+        glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, Vertex.sizeof, cast(void*)grTypeOffset);
+        glEnableVertexAttribArray(2);
         
         glDrawArrays(GL_QUADS, 0, region.quadCount*4);
     }
