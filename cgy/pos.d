@@ -1,7 +1,8 @@
 
 import stolen.aabbox3d;
 import util;
-import world : TilesPerBlock, BlockSize, BlocksPerSector, SectorSize , GraphRegionSize;
+import worldparts.sector;
+import worldparts.block;
 import std.conv;
 
 

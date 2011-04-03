@@ -2,7 +2,9 @@ import std.conv;
 import std.exception;
 import std.stdio;
 
-import world : BlockSize, SectorSize , GraphRegionSize;
+//import world : BlockSize, SectorSize , GraphRegionSize;
+import worldparts.sector;
+import worldparts.block;
 import pos;
 import stolen.all;
 
