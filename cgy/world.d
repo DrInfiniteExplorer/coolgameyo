@@ -65,7 +65,7 @@ class World {
             auto tmp = p.value + vec2i(relPos.X, relPos.Y);
             auto posXY = tileXYPos(tmp);
             auto z = worldGen.maxZ(posXY);
-            while (worldGen.getTile(tilePos(posXY, z)).type == TileType.air) {
+            while (worldGen.getTile(tilePos(posXY, z)).type == TileTypeAir) {
                 z -= 1;
             }
             
@@ -349,7 +349,9 @@ class World {
 
             if (block.sparse) {
                 sparseCount++;
-                if (block.type == TileType.air) {
+                assert(0, "Implement lookup in world if the tiletype is transparent. Or save it with the block. Hmm.");
+                
+                if (block.sparseTileTransparent) {
                     work.insert(.blockNum(blockNum.value + vec3i(1, 0, 0)));
                     work.insert(.blockNum(blockNum.value - vec3i(1, 0, 0)));
                     work.insert(.blockNum(blockNum.value + vec3i(0, 1, 0)));
@@ -357,12 +359,7 @@ class World {
                     work.insert(.blockNum(blockNum.value + vec3i(0, 0, 1)));
                     work.insert(.blockNum(blockNum.value - vec3i(0, 0, 1)));
                 } else {
-                    switch(block.type){
-                        case TileType.retardium:
-                            break;
-                        default:
-                            assert (0, "Sparse block of unknown type encountered");
-                    }
+                    assert(0, "Make the above if check for world.tileTypes[id].see_trough_able; if the if fails, continue");
                 }
                 continue;
             }
@@ -374,7 +371,7 @@ class World {
 
                 scope (exit) block.setTile(tp, tile);
 
-                if (tile.type == TileType.air) {
+                if (tile.transparent) {
                     tile.seen = true;
                     if (rel.X == 0) {
                         work.insert(.blockNum(blockNum.value - vec3i(1,0,0)));
@@ -394,7 +391,7 @@ class World {
                 } else {
                     foreach (npos; neighbors(tp)) {
                         auto neighbor = getTile(npos, true, false);
-                        if (neighbor.valid && neighbor.type == TileType.air) {
+                        if (neighbor.valid && neighbor.transparent) {
                             tile.seen = true;
                             break;
                         }
@@ -548,11 +545,12 @@ enum BlockSize {
 alias BlockSize TilesPerBlock;
 
 enum BlockFlags : ubyte {
-    none = 0,
-    seen = 1 << 0,
-    sparse = 1 << 1,
-    dirty = 1 << 6,
-    valid = 1 << 7,
+    none                = 0,
+    seen                = 1 << 0,
+    sparse              = 1 << 1,
+    sparse_transparent  = 1 << 2,
+    dirty               = 1 << 6,
+    valid               = 1 << 7,
 }
 
 struct Block {
@@ -570,7 +568,9 @@ struct Block {
 
     BlockNum blockNum;
 
-    TileType type;
+    ushort sparseTileType;
+    bool sparseTileTransparent() @property { return 0!=(flags & BlockFlags.sparse_transparent); }
+    void sparseTileTransparent(bool flag) @property { setFlag(flags, BlockFlags.sparse_transparent, flag); }
     
     invariant()
     {
@@ -597,9 +597,10 @@ struct Block {
         assert(valid);
         if(sparse){
             Tile t;
-            t.type = type;
+            t.type = sparseTileType;
             t.flags = TileFlags.valid;
             t.seen = seen;
+            t.transparent = sparseTileTransparent;
             return t;
         }
         auto pos = tilePos.rel();
@@ -618,9 +619,10 @@ struct Block {
             dirty = true;
             if(sparse){ //If was sparse, populate with real tiles
                 Tile t;
-                t.type = type;
+                t.type = sparseTileType;
                 t.flags = TileFlags.valid;
                 t.seen = seen;
+                t.transparent = sparseTileTransparent;
                 (*(cast(Tile[BlockSize.x*BlockSize.y*BlockSize.z]*)(tiles)))[] = t; //Fuck yeah!!!! ? :S:S:S
                 sparse = false;
             }
@@ -658,7 +660,7 @@ struct Block {
         block.dirty = true;
         
         bool homogenous = true;
-        block.type = TileType.invalid;
+        block.sparseTileType = TileTypeInvalid;
         foreach (relPos; RangeFromTo(0, BlockSize.x, 
                     0, BlockSize.y, 0, BlockSize.z)) {
             auto TP = blockNum.toTilePos();
@@ -666,10 +668,11 @@ struct Block {
             auto tile = worldgen.getTile(TP);
             (*block.tiles)[relPos.X][relPos.Y][relPos.Z] = tile;
             
-            if (block.type == TileType.invalid) {
-                block.type = tile.type;
+            if (block.sparseTileType == TileTypeInvalid) {
+                block.sparseTileType = tile.type;
+                block.sparseTileTransparent = tile.transparent; //Copy transparency-property from first tile.
             }
-            if (block.type != tile.type) {
+            if (block.sparseTileType != tile.type) {
                 homogenous = false;
             }
         }
@@ -751,25 +754,49 @@ Block INVALID_BLOCK = {
     flags : BlockFlags.none,
     renderData : Block.RenderData(0,[0,0]),
     blockNum : blockNum(vec3i(int.min, int.min, int.min)),
-    type : TileType.invalid
+    sparseTileType : TileTypeInvalid
 };
 
 // TILE STUFF
 
-enum TileType : ushort {
-    invalid,
-    air,
-    retardium
+struct TileGraphSource{
+    string path;
+    vec2i offset;
 }
 
+struct TileDefinition{    
+    TileGraphSource top;
+    TileGraphSource sides;
+    TileGraphSource bottom;
+    
+    string tileName;
+    vec3i tint;
+    vec3i materialTint;
+}
+
+struct TileType{
+    int graphTileId;
+    int materialId;
+    
+    //Hmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm
+    vec3i tint;
+    vec3i materialTint;
+    
+    int strenth;
+}
+
+const ushort TileTypeInvalid    = 0;
+const ushort TileTypeAir        = 1;
+
 enum TileFlags : ushort {
-    none = 0,
-    seen = 1 << 0,
-    valid = 1 << 7,
+    none        = 0,
+    seen        = 1 << 0,
+    transparent = 1<<2,
+    valid       = 1 << 7,
 }
 
 struct Tile {
-    TileType type = TileType.invalid;
+    ushort type = TileTypeInvalid;
     TileFlags flags = TileFlags.none;
     ushort hp = 0;
     ushort textureTile = 0;
@@ -779,18 +806,10 @@ struct Tile {
 
     bool seen() const @property { return (flags & TileFlags.seen) != 0; }
     void seen(bool val) @property { setFlag(flags, TileFlags.seen, val); }
-    
-    
-    bool transparent() const @property{
-        switch(type){
-            case TileType.invalid:
-            case TileType.air:
-                return true;
-            default:
-                return false;
-        }
-    }
+
+    bool transparent() const @property { return (flags & TileFlags.transparent) != 0; }
+    void transparent(bool val) @property { setFlag(flags, TileFlags.transparent, val); }
 }
 
-enum INVALID_TILE = Tile(TileType.invalid, TileFlags.none, 0, 0);
+enum INVALID_TILE = Tile(TileTypeInvalid, TileFlags.none, 0, 0);
 

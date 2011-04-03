@@ -48,6 +48,7 @@ import std.c.windows.windows;
 }
 
 void actualMain() {
+    
     auto game = new Game(true, true, true);
     game.run();
 }

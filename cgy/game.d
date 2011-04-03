@@ -4,10 +4,12 @@ import std.exception;
 
 import derelict.sdl.sdl;
 import derelict.opengl.gl;
+import derelict.devil.il;
 
 import world;
 import camera;
-import renderer;
+import graphics.renderer;
+import graphics.texture;
 import scheduler;
 import pos;
 import util;
@@ -29,10 +31,11 @@ class Game{
     ushort          middleX;
     ushort          middleY;
 
-    SDL_Surface*    surface;
+    SDL_Surface*      surface;
     Camera            camera;
-    Renderer        renderer;
-    Scheduler        scheduler;
+    Renderer          renderer;
+    Scheduler         scheduler;
+    TileTextureAtlas  atlas;
     bool[SDLK_LAST]       keyMap;
     
     this(bool serv, bool clie, bool work){
@@ -40,10 +43,12 @@ class Game{
         isClient = clie;
         isWorker = work;
         world = new World();
-        if(isClient){
+        scheduler = new Scheduler(world, 0);
 
+        if(isClient){
             DerelictSDL.load();
             DerelictGL.load();
+            DerelictIL.load();
 
             middleX = width/2;
             middleY = height/2;
@@ -67,10 +72,13 @@ class Game{
             surface = enforce(SDL_SetVideoMode(width, height, 32, SDL_HWSURFACE | SDL_GL_DOUBLEBUFFER | SDL_OPENGL),
                               "Could not set sdl video mode (" ~ SDLError() ~ ")");
  
-            scheduler = new Scheduler(world, 0);
             renderer = new Renderer(world);
+            atlas = new TileTextureAtlas();
+            renderer.atlas = atlas;
             camera = new Camera();
+            
         }
+        parseGameData();
 
         auto xy = tileXYPos(vec2i(0,0));
         auto u = new Unit;
@@ -86,6 +94,13 @@ class Game{
         //world.floodFillVisibility(xy);
         foreach(sector; world.sectorList){
             world.notifySectorLoad(sector.sectorNum);
+        }
+    }
+    
+    void parseGameData(){
+        
+        if(isClient){
+            assert(0, "implement tileGraphId'ifying");
         }
     }
     

@@ -20,8 +20,8 @@ class WorldGenerator {
     Tile getTile(const TilePos pos) {
         auto z = foo(to!float(pos.value.X), to!float(pos.value.Y));
         return pos.value.Z > z
-            ? Tile(TileType.air, TileFlags.none, 0, 0)
-            : Tile(TileType.retardium, TileFlags.none, 0, 0);
+            ? Tile( TileTypeAir, TileFlags.transparent, 0, 0)
+            : Tile(/* TileType.retardium */2, TileFlags.none, 0, 0);
     }
     int maxZ(const TileXYPos xypos) {
         return to!int(foo(to!float(xypos.value.X), to!float(xypos.value.Y)));

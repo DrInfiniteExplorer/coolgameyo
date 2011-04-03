@@ -45,7 +45,7 @@ struct GraphicsRegion
 struct Vertex{
     vec3f vertex;
     vec2f texcoord;
-    TileType type;
+    ushort type;
 };
 
 
@@ -116,12 +116,12 @@ class VBOMaker : WorldListener
         
     struct Face{
         Vertex[4] quad;
-        void type(TileType t) @property {
+        void type(ushort t) @property {
             foreach(ref q; quad){
                 q.type = t;
             }
         }
-        TileType type() const @property { return quad[0].type; }
+        ushort type() const @property { return quad[0].type; }
     }
     
     //Floor/Roof-tiles.
