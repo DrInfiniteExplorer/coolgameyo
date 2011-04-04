@@ -6,6 +6,10 @@ import derelict.sdl.sdl;
 import derelict.opengl.gl;
 import derelict.devil.il;
 
+version(Windows){
+    import std.c.windows.windows;
+}
+
 import world;
 import camera;
 import graphics.renderer;
@@ -49,6 +53,7 @@ class Game{
             DerelictSDL.load();
             DerelictGL.load();
             DerelictIL.load();
+            ilInit();
 
             middleX = width/2;
             middleY = height/2;
@@ -99,8 +104,27 @@ class Game{
     
     void parseGameData(){
         
+        
+        TileType invalid;
+        invalid.transparent = false; //TODO: Make rendersetting.
+
+        TileType air;
+        air.transparent = true;
+        air.tileName = "air";
+        
+        TileType mud;
         if(isClient){
-            assert(0, "implement tileGraphId'ifying");
+            mud.sideTexId     = atlas.addTile("textures/001.png", vec2i(0, 0), vec3i(255, 255, 255));
+            mud.topTexId      = atlas.addTile("textures/001.png", vec2i(0, 16), vec3i(255, 255, 255));
+            mud.bottomTexId   = atlas.addTile("textures/001.png", vec2i(0, 32), vec3i(255, 255, 255));
+        }
+        mud.materialId = 0;
+        mud.strength = 10;
+        mud.transparent = false;
+        world.tileTypes ~= [invalid, air, mud];
+        
+        if(isClient){
+            atlas.upload();
         }
     }
     
@@ -126,22 +150,33 @@ class Game{
                         break;
                     default:
                 }
+                //Because SDL is ANAL and intercepts alt+f4....
+                version(Windows){
+                    if(event.key.keysym.sym == SDLK_F4 && (event.key.keysym.mod ==
+                        KMOD_LALT || event.key.keysym.mod == KMOD_RALT) ){
+                        exit=true;
+                    }
+                }
             }
             
             updateCamera(); //Or doInterface() or controlDwarf or ()()()()();
             
             renderer.render(camera);
             updateFPS();
-            SDL_GL_SwapBuffers();
-            
+            SDL_GL_SwapBuffers();            
         }
     }
     
     int startTime = 0;
     int count = 0;
     void updateFPS(){        
-        auto now = 1; //GetTickCount();
-        writeln("DERPTI DERP FPS");
+        version(Windows){
+            auto now = GetTickCount();
+        }
+        version(Posix){
+            auto now = 1;
+        }
+        //writeln("DERPTI DERP FPS");
         auto delta = now-startTime;
         count++;
         if(delta > 1000){

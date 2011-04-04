@@ -56,7 +56,16 @@ struct Image{
         assert(a == 32, "darp");
     }
     
-    void tint(vec3i _color) {
+    void tint(vec3i _color)
+    in{
+        assert(_color.X>=0 && _color.X <=255, "Bad color sent to Image.tint");
+        assert(_color.Y>=0 && _color.Y <=255, "Bad color sent to Image.tint");
+        assert(_color.Z>=0 && _color.Z <=255, "Bad color sent to Image.tint");
+    }
+    body{
+        if(_color == vec3i(255, 255, 255)){
+            return;
+        }
         auto color = util.convert!float(_color) * (1.0/255.0);
         for(int i=0; i < imgData.length; i+=4){
             imgData[i+0] *= color.X;
@@ -74,7 +83,7 @@ class TileTextureAtlas{
     int maxTileCount;
 
     ubyte[] atlasData;
-    int[Tuple!(string, vec2i, vec3i)] tileMap;
+    ushort[Tuple!(string, vec2i, vec3i)] tileMap;
 
     vec3i tileIndexFromNumber(int num){
         auto layer = num / tilesPerLayer;
@@ -108,18 +117,28 @@ class TileTextureAtlas{
     void genTex(){
         assert(texId == 0, "texId != 0");
         glGenTextures(1, &texId);
+        glError();
+        enforce(texId != 0, "Error generating ogl texture name!");
         glBindTexture(GL_TEXTURE_2D_ARRAY, texId);
+        glError();
         glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glError();
         glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
+        glError();
         glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glError();
         glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glError();
         glTexParameterf(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAX_ANISOTROPY_EXT, renderSettings.anisotropy);
+        glError();
         int bitsPerAxis = to!int(log2(renderSettings.maxTextureSize)); //ex 1024 -> 10
         int bitsPerTile = to!int(log2(renderSettings.pixelsPerTile)); //ex 16 -> 4
         int maxMipMapLevel = bitsPerAxis-bitsPerTile; //ex 6
         glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAX_LEVEL, maxMipMapLevel);        
+        glError();
         if(renderSettings.glVersion < 3.0){
             glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_GENERATE_MIPMAP, GL_TRUE);
+            glError();
         }
     }
     
@@ -131,22 +150,30 @@ class TileTextureAtlas{
         int layerCount = (tileCount / tilesPerLayer) + tileCount%tilesPerLayer==0 ? 0 : 1;
         genTex();
         auto size = renderSettings.maxTextureSize;
+
+        uint bytesPerLayer = layerCount*(size^^2)*4;
+        uint now = atlasData.length;
+        uint d = now % bytesPerLayer;
+        uint padCount = d == 0 ? 0 : bytesPerLayer - d;
+        atlasData.length += padCount;
+
         glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA8, size, size, layerCount, 0, GL_RGBA, GL_UNSIGNED_BYTE, atlasData.ptr);
+        glError();
         atlasData.length=0;
         tileMap = null;
-        assert(0, "check for errors");
     }
         
-    int addTile(string filename, vec2i offset, vec3i tint) {
-        int tileCount = tileMap.length;
+    ushort addTile(string filename, vec2i offset, vec3i tint) {
+        ushort tileCount = to!ushort(tileMap.length);
         assert(tileCount < maxTileCount, "Implement code to reallocate etc, or recode caller to reserve properly!!");
+        enforce(tileCount < 100000, "Might want to think about reworking the auto-generated tileIndexFromNumber to account for float precision?");
         
         auto index = tuple(filename, offset, tint);
-        int* valuePtr = (index in tileMap);
+        ushort* valuePtr = (index in tileMap);
         if(valuePtr){
             return *valuePtr;
         }
-
+        
         vec2i tileSize = vec2i(1, 1)*renderSettings.pixelsPerTile;
         Image img = Image(filename, offset, tileSize);
         img.tint(tint);
@@ -154,7 +181,14 @@ class TileTextureAtlas{
         
         //glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, offsetX, offsetY, layer, tileSize.X, tileSize.Y, 1, GL_RGBA, GL_UNSIGNED_BYTE, img.imgData.ptr);        
 
-        return tileMap[index] = tileCount++;
+        return tileMap[index] = tileCount;
+    }
+    
+    void use(int textureUnit = 0){
+        glActiveTexture(GL_TEXTURE0 + textureUnit);
+        glError();
+        glBindTexture(GL_TEXTURE_2D_ARRAY, texId);
+        glError();
     }
 }
 

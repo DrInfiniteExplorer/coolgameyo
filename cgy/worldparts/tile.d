@@ -4,14 +4,14 @@ module worldparts.tile;
 import util;
 
 struct TileType{
-    int graphTileId;
-    int materialId;
-    
-    //Hmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm
-    vec3i tint;
-    vec3i materialTint;
-    
-    int strenth;
+    ushort topTexId = 0;
+    ushort sideTexId = 0;
+    ushort bottomTexId = 0;
+    ushort materialId = 0;
+    int strength = 0;
+    bool transparent = false;
+    string tileName = "invalid";
+    /* Derp derp derp */
 }
 
 const ushort TileTypeInvalid    = 0;
@@ -20,7 +20,7 @@ const ushort TileTypeAir        = 1;
 enum TileFlags : ushort {
     none        = 0,
     seen        = 1 << 0,
-    transparent = 1<<2,
+    transparent = 1 << 2,
     valid       = 1 << 7,
 }
 
@@ -28,8 +28,8 @@ struct Tile {
     ushort type = TileTypeInvalid;
     TileFlags flags = TileFlags.none;
     ushort hp = 0;
-    ushort textureTile = 0;
-    
+    ushort derp;
+        
     bool valid() const @property { return (flags & TileFlags.valid) != 0; }
     void valid(bool val) @property { setFlag(flags, TileFlags.valid, val); }
 
@@ -40,5 +40,5 @@ struct Tile {
     void transparent(bool val) @property { setFlag(flags, TileFlags.transparent, val); }
 }
 
-enum INVALID_TILE = Tile(TileTypeInvalid, TileFlags.none, 0, 0);
+enum INVALID_TILE = Tile(TileTypeInvalid, TileFlags.none, 0);
 

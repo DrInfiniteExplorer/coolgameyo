@@ -35,6 +35,8 @@ class World {
     int unitCount;
     
     WorldListener[] listeners;
+    
+    TileType[] tileTypes;
 
     this() {
         isServer = true;
@@ -352,8 +354,6 @@ class World {
 
             if (block.sparse) {
                 sparseCount++;
-                assert(0, "Implement lookup in world if the tiletype is transparent. Or save it with the block. Hmm.");
-                
                 if (block.sparseTileTransparent) {
                     work.insert(.blockNum(blockNum.value + vec3i(1, 0, 0)));
                     work.insert(.blockNum(blockNum.value - vec3i(1, 0, 0)));
@@ -361,8 +361,6 @@ class World {
                     work.insert(.blockNum(blockNum.value - vec3i(0, 1, 0)));
                     work.insert(.blockNum(blockNum.value + vec3i(0, 0, 1)));
                     work.insert(.blockNum(blockNum.value - vec3i(0, 0, 1)));
-                } else {
-                    assert(0, "Make the above if check for world.tileTypes[id].see_trough_able; if the if fails, continue");
                 }
                 continue;
             }

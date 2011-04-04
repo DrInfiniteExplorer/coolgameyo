@@ -67,7 +67,6 @@ unittest{
         d.MinEdge += util.convert!double(p);
         d.MaxEdge += util.convert!double(p);
         bool bbb = p == vec3i(0,0,0);
-        writeln(p.X, p.Y, p.Z);
         assert(intersects(c, d) == bbb, "This should've been " ~ bbb);
         assert(intersects(d, c) == bbb, "This should've been " ~ bbb);
     }
@@ -135,11 +134,16 @@ class VBOMaker : WorldListener
         //Make floor triangles
         bool onStrip;
         Face newFace;
+        
+        ushort texId(const(Tile) t){
+            return world.tileTypes[t.type].topTexId;
+        }
 
         foreach(doUpper ; 0 .. 2){ //Most best piece of code ever to have been written.
             auto ett = 1-doUpper;
             auto noll = doUpper;
             foreach(z ; min.value.Z-1 .. max.value.Z){
+                auto relZ = z - min.value.Z-1;
                 foreach(y ; min.value.Y .. max.value.Y){
                     onStrip = false;
                     foreach(x; min.value.X .. max.value.X){
@@ -149,7 +153,7 @@ class VBOMaker : WorldListener
                         auto transLower = tileLower.transparent;
                     
                         if(transUpper && !transLower){ //Floor tile detected!
-                            if(onStrip && newFace.type != tileLower.type){
+                            if(onStrip && newFace.type != texId(tileLower)){
                                 newFace.quad[2].vertex.set(x, y+noll, z+1);
                                 newFace.quad[3].vertex.set(x, y+ett, z+1);
                                 newFace.quad[2].texcoord.set(1, 1);
