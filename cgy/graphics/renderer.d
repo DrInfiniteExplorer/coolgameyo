@@ -6,10 +6,11 @@ import std.conv;
 import std.stdio;
 import std.string;
 import std.format;
+import std.algorithm;
 
 import derelict.opengl.gl;
 import derelict.opengl.glext;
-import win32.windows;
+//import win32.windows;
 
 import graphics.shader;
 import graphics.texture;
