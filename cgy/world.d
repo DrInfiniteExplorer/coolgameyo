@@ -4,7 +4,7 @@ import std.exception;
 
 import worldgen;
 import unit;
-import camera;
+import graphics.camera;
 import util;
 import pos;
 

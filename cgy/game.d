@@ -10,10 +10,11 @@ version(Windows){
     import std.c.windows.windows;
 }
 
-import world;
-import camera;
+import graphics.camera;
 import graphics.renderer;
 import graphics.texture;
+
+import world;
 import scheduler;
 import pos;
 import util;

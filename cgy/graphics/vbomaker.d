@@ -1,3 +1,4 @@
+module graphics.vbomaker;
 
 import std.stdio;
 import std.container;

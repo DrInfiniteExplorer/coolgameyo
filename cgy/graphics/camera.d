@@ -1,3 +1,4 @@
+module graphics.camera;
 
 import std.algorithm;
 

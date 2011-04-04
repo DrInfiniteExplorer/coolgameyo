@@ -10,16 +10,17 @@ import std.algorithm;
 
 import derelict.opengl.gl;
 import derelict.opengl.glext;
-//import win32.windows;
 
 import graphics.shader;
 import graphics.texture;
+import graphics.camera;
+import graphics.vbomaker;
+
 import stolen.all;
+
 import util;
 import unit;
 import world;
-import camera;
-import vbomaker;
 
 struct RenderSettings{
     //Some opengl-implementation-dependant constants, gathered on renderer creation
@@ -131,7 +132,11 @@ class Renderer{
         renderSettings.anisotropy = max(1.0f, min(renderSettings.anisotropy, maxAni));
         
         //Uh 1 or 2 if vsync enable......?
-        wglSwapIntervalEXT(renderSettings.disableVSync ? 0 : 1);
+        version (Windows) {
+            wglSwapIntervalEXT(renderSettings.disableVSync ? 0 : 1);
+        } else {
+            writeln("Cannot poke with vsync unless wgl blerp");
+        }
         glError();
         
         glClearColor(1.0, 0.7, 0.4, 0.0);
