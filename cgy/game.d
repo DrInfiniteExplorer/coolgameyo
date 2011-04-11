@@ -21,7 +21,7 @@ import unit;
 string SDLError() { return to!string(SDL_GetError()); }
 
 class Game{
-    
+
     World            world;
 
 
@@ -40,7 +40,7 @@ class Game{
     Scheduler         scheduler;
     TileTextureAtlas  atlas;
     bool[SDLK_LAST]       keyMap;
-    
+
     this(bool serv, bool clie, bool work){
         isServer = serv;
         isClient = clie;
@@ -71,12 +71,12 @@ class Game{
 
             surface = enforce(SDL_SetVideoMode(width, height, 32, SDL_HWSURFACE | SDL_GL_DOUBLEBUFFER | SDL_OPENGL),
                               "Could not set sdl video mode (" ~ SDLError() ~ ")");
- 
+
             renderer = new Renderer(world);
             atlas = new TileTextureAtlas();
             renderer.atlas = atlas;
             camera = new Camera();
-            
+
         }
         parseGameData();
 
@@ -86,30 +86,32 @@ class Game{
         u.pos.value.Z += 1;
         world.addUnit(u);
 
-        auto uu = new Unit;        
+        auto uu = new Unit;
         auto xyy = tileXYPos(vec2i(127,127));
         uu.pos = world.getTopTilePos(xyy).toUnitPos();
         uu.pos.value.Z += 1;
         world.addUnit(uu);
         //world.floodFillVisibility(xy);
+        /*
         foreach(sector; world.sectorList){
             world.notifySectorLoad(sector.sectorNum);
         }
+        */
     }
-    
+
     void parseGameData(){
-        
-        
+
+
         TileType invalid;
         invalid.transparent = false; //TODO: Make rendersetting.
 
         TileType air;
         air.transparent = true;
         air.tileName = "air";
-        
+
         TileType mud;
         if(isClient){
-            
+
             invalid.sideTexId = atlas.addTile("textures/001.png", vec2i(16, 0), vec3i(255, 255, 255));
             invalid.topTexId = invalid.bottomTexId = invalid.sideTexId;
 
@@ -121,13 +123,13 @@ class Game{
         mud.strength = 10;
         mud.transparent = false;
         world.tileTypes ~= [invalid, air, mud];
-        
+
         if(isClient){
             atlas.upload();
         }
     }
-    
-    
+
+
     void run(){
         //driver.beginScene(true, true, SColor(0, 160, 0, 128));
         auto exit = false;
@@ -157,21 +159,21 @@ class Game{
                     }
                 }
             }
-            
+
             updateCamera(); //Or doInterface() or controlDwarf or ()()()()();
-            
+
             //camera.setPosition(vec3d(0, -2, 2));
             //camera.setTarget(vec3d(0, 0, 0));
-            
+
             renderer.render(camera);
             updateFPS();
-            SDL_GL_SwapBuffers();            
+            SDL_GL_SwapBuffers();
         }
     }
-    
+
     int startTime = 0;
     int count = 0;
-    void updateFPS(){        
+    void updateFPS(){
         version(Windows){
             auto now = GetTickCount();
         }
@@ -186,9 +188,9 @@ class Game{
             startTime =now;
             count = 0;
         }
-        
+
     }
-    
+
     void updateCamera(){
         if(keyMap[SDLK_a]){
             camera.axisMove(-0.1, 0.0, 0.0);
@@ -209,21 +211,24 @@ class Game{
             camera.axisMove( 0.0, 0.0,-0.1);
         }
     }
-    
+
     void onKey(SDL_KeyboardEvent event){
         auto key = event.keysym.sym;
         auto down = event.type == SDL_KEYDOWN;
         keyMap[key] = down;
+        if(key == SDLK_F1 && down){
+            renderSettings.renderWireframe ^= 1;
+        }
     }
-    
+
     void mouseMove(SDL_MouseMotionEvent mouse){
         auto x = mouse.x;
         auto y = mouse.y;
         if(x != middleX || y != middleY){
             SDL_WarpMouse(middleX, middleY);
-            camera.mouseMove( mouse.xrel,  mouse.yrel);    
+            camera.mouseMove( mouse.xrel,  mouse.yrel);
         }
     }
-        
+
     //
 }

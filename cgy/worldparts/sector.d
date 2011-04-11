@@ -23,10 +23,13 @@ enum SectorSize {
 }
 
 //We may want to experiment with these values, or even make it a user settingable setting. Yeah.
+// blocksize * 2 gives ~30 ms per block and a total of ~3500-3700 per sector
+// blocksize * 4 gives ~500 ms per block and a total of ~3500 per sector
+// blocksize * 2 seems more do-want-able since its faster when updating, yeah.
 enum GraphRegionSize {
-    x = BlockSize.x,
-    y = BlockSize.y,
-    z = BlockSize.z,
+    x = BlockSize.x*2,
+    y = BlockSize.y*2,
+    z = BlockSize.z*2,
     total = x*y*z
 }
 
@@ -38,7 +41,7 @@ class Sector {
 
     Block[BlocksPerSector.z][BlocksPerSector.y][BlocksPerSector.x] blocks;
     static assert(blocks.length == BlocksPerSector.x);
-    
+
 
     RedBlackTree!(Unit*) units;
     int activityCount;
@@ -73,21 +76,21 @@ class Sector {
     in{
         assert(blockNum.getSectorNum() == sectorNum);
     }
-    body{        
+    body{
         auto pos = blockNum.rel();
         return blocks[pos.X][pos.Y][pos.Z];
     }
-    
+
     void setBlock(BlockNum blockNum, Block newBlock)
     in{
         assert(blockNum.getSectorNum() == sectorNum, "Sector.setBlock: Trying to set a block that doesn't belong here!");
     }
-    body{        
+    body{
         auto rel = blockNum.rel();
         auto currentBlock = blocks[rel.X][rel.Y][rel.Z];
         if(currentBlock.valid && !currentBlock.sparse){
             if(currentBlock.tiles.ptr != newBlock.tiles.ptr){
-                assert(0, "We want to free this memory i think...The current, that is.");                
+                assert(0, "We want to free this memory i think...The current, that is.");
             }
         }
         blocks[rel.X][rel.Y][rel.Z] = newBlock;

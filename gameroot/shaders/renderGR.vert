@@ -3,7 +3,7 @@
 uniform mat4 VP;
 uniform ivec3 offset; 
 
-in ivec3 position;
+in vec3 position;
 in vec2 texcoord;
 in uint type;
 
@@ -17,7 +17,7 @@ void main(){
 
 
 
-   gl_Position = VP * vec4(position+offset, 1.0);
+   gl_Position = VP * vec4(position+vec3(offset), 1.0);
 }
 
 

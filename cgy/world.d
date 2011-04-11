@@ -1,12 +1,14 @@
 import std.algorithm, std.range, std.stdio;
 import std.container;
 import std.exception;
+version(Windows) import std.c.windows.windows;
 
 import graphics.camera;
 import worldgen;
 import unit;
 import util;
 import pos;
+
 
 public import worldparts.sector;
 public import worldparts.block;
@@ -33,9 +35,9 @@ class World {
     bool isServer;
 
     int unitCount;
-    
+
     WorldListener[] listeners;
-    
+
     TileType[] tileTypes;
 
     this() {
@@ -48,38 +50,38 @@ class World {
         //Discovered after fixing this that getSector takes a tilepos and internally uses
         // "toSectorPos" ie. getSectorNumber. So removing that call here.
         auto sector = getSector(blockNum.getSectorNum());
-        sector.generateBlock(blockNum, worldGen); 
+        sector.generateBlock(blockNum, worldGen);
     }
 
     SectorXY getSectorXY(SectorXYNum xy) {
-        
+
         if(xy in sectorXY){
             return sectorXY[xy];
         }
         SectorXY ret;
-        static assert ((*ret.heightmap).sizeof == 
+        static assert ((*ret.heightmap).sizeof ==
                 int.sizeof * SectorSize.x * SectorSize.y);
         int[] blob = new int[](SectorSize.x * SectorSize.y);
         blob[] = 0;
         auto heightmap = cast(typeof(ret.heightmap))(blob.ptr);
         ret.heightmap = heightmap;
-        
+
         auto p = xy.getTileXYPos();
-        
-        foreach(relPos ; RangeFromTo(0, SectorSize.x, 0, SectorSize.y, 0, 1)){            
+
+        foreach(relPos ; RangeFromTo(0, SectorSize.x, 0, SectorSize.y, 0, 1)){
             auto tmp = p.value + vec2i(relPos.X, relPos.Y);
             auto posXY = tileXYPos(tmp);
             auto z = worldGen.maxZ(posXY);
             while (worldGen.getTile(tilePos(posXY, z)).type == TileTypeAir) {
                 z -= 1;
             }
-            
-            (*heightmap)[relPos.X][relPos.Y] = z;            
-        }        
+
+            (*heightmap)[relPos.X][relPos.Y] = z;
+        }
 
         writeln("Needs some heightmap generation at ", xy);
-        
-        sectorXY[xy] = ret; //Spara det vi skapar, yeah!    
+
+        sectorXY[xy] = ret; //Spara det vi skapar, yeah!
         return ret;
     }
 
@@ -126,19 +128,19 @@ class World {
         assert (block.valid);
         return block;
     }
-    
+
     void setBlock(BlockNum blockNum, Block newBlock) {
         auto sector = getSector(blockNum.getSectorNum());
         sector.setBlock(blockNum, newBlock);
     }
 
     //Sector[] lock() { return sectorList; } used by anithing?
-    
-    
+
+
     void update(){
-        
+
     }
-    
+
     Unit*[] getVisibleUnits(Camera camera){
         Unit*[] units;
         foreach(sector; sectorList){
@@ -154,7 +156,7 @@ class World {
     void moveUnit(Unit* unit) {
         assert(0, "Implement");
     }
-    
+
     void moveUnit(Unit* unit, UnitPos newPos) {
         auto before = unit.pos.tilePos();
         auto after = newPos.tilePos();
@@ -215,7 +217,7 @@ class World {
                 notifySectorLoad(sector.sectorNum);
             }
         }
-        
+
     }
 
     Tile getTile(TilePos tilePos, bool createBlock=true,
@@ -238,11 +240,11 @@ class World {
 
         auto t = xy.getSectorXYNum();
         auto sectorXY = getSectorXY(t);
-        
+
         auto heightmapPtr = sectorXY.heightmap;
         assert(heightmapPtr !is null, "heightmapPtr == null! :(");
         auto pos = vec3i(xy.value.X, xy.value.Y, (*heightmapPtr)[x][y]);
-        return tilePos(pos);        
+        return tilePos(pos);
     }
     private alias RedBlackTree!(BlockNum, q{a.value < b.value}) WorkSet;
 
@@ -330,20 +332,20 @@ class World {
     }
 
     private void floodFillVisibilityImpl(WorkSet work) {
-        
+        version(Windows) auto start = GetTickCount();
         int allBlocks = 0;
         int blockCount = 0;
         int sparseCount = 0;
         while (!work.empty) {
-            auto blockNum = work.removeAny();            
+            auto blockNum = work.removeAny();
 
             auto block = getBlock(blockNum);
             if(block.seen) { continue; }
             allBlocks++;
             if (!block.valid) { continue; }
-            
+
             //writeln("\tFlooding block ", blockNum);
-            
+
             blockCount++;
             //writeln("blockCount:", blockCount);
             auto blockPos = blockNum.toTilePos();
@@ -364,15 +366,15 @@ class World {
                 }
                 continue;
             }
-            
-            foreach (rel; 
+
+            foreach (rel;
                     RangeFromTo(0,BlockSize.x,0,BlockSize.y,0,BlockSize.z)) {
                 auto tp = tilePos(blockPos.value + rel);
                 auto tile = block.getTile(tp);
 
                 scope (exit) block.setTile(tp, tile);
 
-                if (tile.transparent) {
+                if (tile.transparent || tile.halfstep) {
                     tile.seen = true;
                     if (rel.X == 0) {
                         work.insert(.blockNum(blockNum.value - vec3i(1,0,0)));
@@ -384,7 +386,7 @@ class World {
                     } else if (rel.Y == BlockSize.y - 1) {
                         work.insert(.blockNum(blockNum.value + vec3i(0,1,0)));
                     }
-                    if (rel.Z == 0) {
+                    if (rel.Z == 0 && !tile.halfstep) { //halfsteps only propagate visibility up and to sides
                         work.insert(.blockNum(blockNum.value - vec3i(0,0,1)));
                     } else if (rel.Z == BlockSize.z - 1) {
                         work.insert(.blockNum(blockNum.value + vec3i(0,0,1)));
@@ -393,6 +395,11 @@ class World {
                     foreach (npos; neighbors(tp)) {
                         auto neighbor = getTile(npos, true, false);
                         if (neighbor.valid && neighbor.transparent) {
+                            tile.seen = true;
+                            break;
+                        }
+                        auto dz = npos.value.Z - tp.value.Z;    //Propagate visibility alll but down for halfsteps.
+                        if(neighbor.valid && neighbor.halfstep && dz >= 0){
                             tile.seen = true;
                             break;
                         }
@@ -406,6 +413,8 @@ class World {
         writeln(blockCount);
         writeln("sparseCount");
         writeln(sparseCount);
+
+        version(Windows) writeln("Floodfill took ", GetTickCount() - start, " ms to complete");
     }
 
 
@@ -416,7 +425,7 @@ class World {
         remove(listeners, countUntil!q{a is b}(listeners, listener));
         listeners.length -= 1;
     }
-    
+
     //To be called... WHEEEEN?
     void notifySectorLoad(SectorNum sectorNum) {
         foreach (listener; listeners) {
