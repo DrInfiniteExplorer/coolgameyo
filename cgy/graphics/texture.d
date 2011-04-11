@@ -7,6 +7,7 @@ import std.string;
 import std.math;
 import std.typecons;
 import std.exception;
+import std.stdio;
 
 import derelict.devil.il;
 import derelict.opengl.gl;
@@ -14,6 +15,29 @@ import derelict.opengl.glext;
 
 import graphics.renderer;
 import util;
+
+
+void ilError(string file = __FILE__, int line = __LINE__){
+    debug{
+        uint err = ilGetError();
+        string str;
+        switch(err){
+        case IL_NO_ERROR:
+            return;
+        case IL_INVALID_ENUM:
+            str = "IL ERROR: Invalid enum"; break;
+        case IL_INVALID_VALUE:
+            str = "IL ERROR: Invalid value"; break;
+        case IL_OUT_OF_MEMORY:
+            str = "IL ERROR: Out of memory"; break;
+        default:
+            str = "Got unrecognized il error; "~ to!string(err);
+            break;
+        }
+        auto derp = file ~ to!string(line) ~ "\n" ~str;
+        assert(0, derp);
+    }
+}
 
 struct Image{
     string filename;
@@ -29,22 +53,62 @@ struct Image{
 
         uint ilImgID;
 		ilGenImages(1, &ilImgID);
+        ilError();
         scope(exit) ilDeleteImages(1, &ilImgID);
 		ilBindImage(ilImgID);
-		
+        ilError();		
 		ilEnable(IL_ORIGIN_SET);
+        ilError();
 		ilSetInteger(IL_ORIGIN_MODE, IL_ORIGIN_UPPER_LEFT);
+        ilError();
         
         auto cString = toStringz(filename);
 		if (ilLoad(IL_TYPE_UNKNOWN, cString) == IL_FALSE)
 		{
 			assert(0, "error loading image " ~filename);
 		}
+        ilError();
         
         imgWidth = min(ilGetInteger(IL_IMAGE_WIDTH)- offset.X, size.X);
         imgHeight = min(ilGetInteger(IL_IMAGE_HEIGHT)- offset.Y, size.Y);
         imgData.length = 4*imgWidth*imgHeight;
-        ilCopyPixels( offset.X, offset.Y, 0, imgWidth, imgHeight, 1, IL_BGRA, IL_UNSIGNED_BYTE, imgData.ptr);        
+        ilCopyPixels( offset.X, offset.Y, 0, imgWidth, imgHeight, 1, IL_RGBA, IL_UNSIGNED_BYTE, imgData.ptr);        
+        ilError();
+    }
+    
+    this(ubyte *data, uint width, uint height){
+        imgData.length = 4*width*height;
+        imgData[] = data[0..imgData.length];
+        imgWidth = width;
+        imgHeight = height;
+    }
+    
+    void save(string filename){
+        uint img;
+        ilGenImages(1, &img);
+        ilError();
+        scope(exit) ilDeleteImages(1, &img);
+        ilBindImage(img);
+        ilError();
+        ilEnable(IL_ORIGIN_SET);
+        ilError();
+        ilSetInteger(IL_ORIGIN_MODE, IL_ORIGIN_UPPER_LEFT);
+        ilError();
+/*
+        int i=0;
+        foreach(ref c ; imgData){
+            i+=10;
+            c = cast(char)(i);
+        }
+*/
+        ilTexImage(imgWidth, imgHeight, 1, 4, IL_RGBA, IL_UNSIGNED_BYTE, imgData.ptr);
+        //ilSetPixels( 0, 0, 0, imgWidth, imgHeight, 1, IL_BGRA, IL_UNSIGNED_BYTE, imgData.ptr);        
+        ilError();
+        const char* ptr = toStringz(filename);
+        ilEnable(IL_FILE_OVERWRITE);
+        ilError();
+        ilSave(IL_BMP, ptr);
+        ilError();        
     }
     
     unittest{
@@ -101,6 +165,14 @@ class TileTextureAtlas{
         tilesPerAxis = renderSettings.maxTextureSize / renderSettings.pixelsPerTile;
         tilesPerLayer = tilesPerAxis^^2;
         maxTileCount = tilesPerLayer * renderSettings.maxTextureLayers;
+        debug{
+            writeln(tilesPerAxis, "x", tilesPerAxis,"=", tilesPerLayer, " tiles per layer");
+            writeln(renderSettings.maxTextureLayers, " layers at most");
+            auto bytes = (renderSettings.maxTextureSize^^2)*4;
+            writeln(bytes, " bytes per layer");
+            writeln(bytes/1024, " kilobytes per layer");
+            writeln(bytes/(1024^^2), " megabytes per layer");
+        }
     }
 
     debug{
@@ -133,7 +205,7 @@ class TileTextureAtlas{
         glError();
         int bitsPerAxis = to!int(log2(renderSettings.maxTextureSize)); //ex 1024 -> 10
         int bitsPerTile = to!int(log2(renderSettings.pixelsPerTile)); //ex 16 -> 4
-        int maxMipMapLevel = bitsPerAxis-bitsPerTile; //ex 6
+        int maxMipMapLevel = /*bitsPerAxis-*/bitsPerTile; //ex 6
         glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAX_LEVEL, maxMipMapLevel);        
         glError();
         if(renderSettings.glVersion < 3.0){
@@ -153,14 +225,43 @@ class TileTextureAtlas{
 
         uint bytesPerLayer = layerCount*(size^^2)*4;
         uint now = atlasData.length;
-        uint d = now % bytesPerLayer;
-        uint padCount = d == 0 ? 0 : bytesPerLayer - d;
-        atlasData.length += padCount;
+        version(none){
+            uint d = now % bytesPerLayer;
+            uint padCount = d == 0 ? 0 : bytesPerLayer - d;
+        
+            char[] asd;
+            asd.length = padCount;
+            asd[] = 255;
+        
+            //atlasData.length += padCount;
+            atlasData ~= asd;
+        
+            Image img = Image(atlasData.ptr, size, size);
+            img.save("derp.bmp");
+        }
 
-        glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA8, size, size, layerCount, 0, GL_RGBA, GL_UNSIGNED_BYTE, atlasData.ptr);
+        glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA8, size, size, layerCount, 0, GL_RGBA, GL_UNSIGNED_BYTE, null);
         glError();
+        
+        vec2i tileSize = vec2i(1,1)*renderSettings.pixelsPerTile;
+        ubyte* dataPtr = atlasData.ptr;
+        foreach(uint num ; 0 .. tileMap.length){
+            auto index = tileIndexFromNumber(num);
+            auto offsetX = tileSize.X * index.X;
+            auto offsetY = tileSize.Y * index.Y;
+            auto layer = index.Z;
+            glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, offsetX, offsetY, layer, tileSize.X, tileSize.Y, 1, GL_RGBA, GL_UNSIGNED_BYTE, dataPtr);
+            dataPtr += 4*tileSize.X*tileSize.Y;
+        }
+        
         atlasData.length=0;
         tileMap = null;
+
+        if(renderSettings.glVersion >= 3.0){
+            debug writeln("Generating mipmaps manually for tile atlas...");
+            glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
+            glError();
+        }        
     }
         
     ushort addTile(string filename, vec2i offset, vec3i tint) {
@@ -185,6 +286,7 @@ class TileTextureAtlas{
     }
     
     void use(int textureUnit = 0){
+        enforce(texId != 0, "No texture set/uploaded/made! Sad sad sadness is overpowering!");
         glActiveTexture(GL_TEXTURE0 + textureUnit);
         glError();
         glBindTexture(GL_TEXTURE_2D_ARRAY, texId);

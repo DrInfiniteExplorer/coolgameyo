@@ -11,6 +11,7 @@ import std.algorithm;
 import derelict.opengl.gl;
 import derelict.opengl.glext;
 
+import graphics.camera;
 import graphics.shader;
 import graphics.texture;
 import graphics.camera;
@@ -43,7 +44,7 @@ RenderSettings renderSettings;
 auto grTexCoordOffset = Vertex.texcoord.offsetof;
 auto grTypeOffset = Vertex.type.offsetof;
 
-void glError(){
+void glError(string file = __FILE__, int line = __LINE__){
     debug{
         uint err = glGetError();
         string str;
@@ -62,7 +63,8 @@ void glError(){
             str = "Got unrecognized gl error; "~ to!string(err);
             break;
         }
-        assert(0, str);
+        auto derp = file ~ to!string(line) ~ "\n" ~str;
+        assert(0, derp);
     }
 }
 
@@ -87,12 +89,12 @@ class Renderer{
         auto format =   "#version 150 core\n"
                         "const float pixelWidth = 1.0/%f;\n"
                         "const vec2 tileSize = vec2(%f, %f) * pixelWidth;\n"
-                        "ivec3 tileIndexFromNumber(in int num){\n"
-                        "   ivec3 ret;\n"
+                        "uvec3 tileIndexFromNumber(in uint num){\n"
+                        "   uvec3 ret;\n"
                         "   float n = float(num);\n"
-                        "   ret.x = int(mod(n, %f));\n"
-                        "   ret.y = int(mod(n / %f, %f));\n"
-                        "   ret.z = int(n / %f);\n"
+                        "   ret.x = uint(mod(n, %f));\n"
+                        "   ret.y = uint(mod(n / %f, %f));\n"
+                        "   ret.z = uint(n / %f);\n"
                         "   return ret;\n"
                         "}\n";
         auto a = to!float(renderSettings.pixelsPerTile);
@@ -111,7 +113,8 @@ class Renderer{
         glError();
         glFrontFace(GL_CCW);
         glError();
-        DerelictGL.loadClassicVersions(GLVersion.GL21);
+        DerelictGL.loadClassicVersions(GLVersion.GL30);
+        DerelictGL.loadModernVersions(GLVersion.GL30);
         glError();
         
         string derp = to!string(glGetString(GL_VERSION));
@@ -121,9 +124,14 @@ class Renderer{
         
         //TODO: POTENTIAL BUG EEAPASASALPDsAPSLDPLASDsPLQWPRMtopmkg>jfekofsaplPSLFPsLSDF
         renderSettings.glVersion=major + 0.1*minor;
+        writeln("OGL version ", renderSettings.glVersion);
         
         glGetIntegerv(GL_MAX_TEXTURE_SIZE, &renderSettings.maxTextureSize);
         glError();
+        if(renderSettings.maxTextureSize > 32){
+            debug writeln("MaxTextureSize(", renderSettings.maxTextureSize, ") to big; clamping to 1024");
+            renderSettings.maxTextureSize = 32;
+        }
         glGetIntegerv(GL_MAX_ARRAY_TEXTURE_LAYERS, &renderSettings.maxTextureLayers);
         glError();
         float maxAni;
@@ -141,6 +149,12 @@ class Renderer{
         
         glClearColor(1.0, 0.7, 0.4, 0.0);
         glError();
+        
+        glEnable(GL_DEPTH_TEST);
+        glError();
+        glEnable(GL_CULL_FACE);
+        glError();
+        glDepthFunc(GL_LEQUAL);
         
         buildConstantsString();
 
@@ -263,18 +277,18 @@ class Renderer{
         
     void renderGraphicsRegion(const GraphicsRegion region){
         //TODO: Do the pos-camerapos before converting to float, etc
-        auto pos = util.convert!float(region.grNum.min().value);
-        //worldShader.setUniform(worldShader.a, pos);
+        auto pos = region.grNum.min().value;
+        worldShader.setUniform(worldShader.a, pos);
 
         glBindBuffer(GL_ARRAY_BUFFER, region.VBO);
         glError();
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, Vertex.sizeof, null /* offset in vbo */);
+        glVertexAttribIPointer(0, 3, GL_INT, Vertex.sizeof, null /* offset in vbo */);
         glError();
 
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, Vertex.sizeof, cast(void*)grTexCoordOffset);
         glError();
 
-        glVertexAttribPointer(2, 1, GL_UNSIGNED_SHORT, GL_FALSE, Vertex.sizeof, cast(void*)grTypeOffset);
+        glVertexAttribIPointer(2, 1, GL_UNSIGNED_INT, Vertex.sizeof, cast(void*)grTypeOffset);
         glError();
         
         glDrawArrays(GL_QUADS, 0, region.quadCount*4);

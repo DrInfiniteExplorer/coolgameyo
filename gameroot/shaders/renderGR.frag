@@ -5,21 +5,16 @@
 uniform sampler2DArray atlas;
 
 in vec2 tex_texcoord;
-flat in int texId;
+flat in uint texId;
 
 out vec4 frag_color;
 void main() {
-   ivec3 index = tileIndexFromNumber(texId);
-   //vec3 texcoord = vec3(index.xy * tileSize + mod(tex_texcoord, 1), index.z);
-   vec3 texcoord = vec3(tex_texcoord.xy, 0.0);
+   uvec3 index = tileIndexFromNumber(texId);
+   vec3 texcoord = vec3((index.xy + mod(tex_texcoord, 1)) * tileSize, index.z);
 
+   //May want to use textureOffset as it can take the index.xy*tileSize as a separate parameter?
+   //No, since we'd have to do two mults then.
    vec4 color = texture(atlas, texcoord);
-   if(texId == 2){
-      frag_color = vec4(1.0, 0.0, 0.0, 0.0);
-   }else{
-      frag_color = color;
-   }
-   
    frag_color = color;
 } 
 

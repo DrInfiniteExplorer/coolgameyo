@@ -44,9 +44,9 @@ struct GraphicsRegion
 }
 
 struct Vertex{
-    vec3f vertex;
+    vec3i vertex;
     vec2f texcoord;
-    ushort type;
+    uint type;
 };
 
 
@@ -116,12 +116,12 @@ class VBOMaker : WorldListener
         
     struct Face{
         Vertex[4] quad;
-        void type(ushort t) @property {
+        void type(uint t) @property {
             foreach(ref q; quad){
                 q.type = t;
             }
         }
-        ushort type() const @property { return quad[0].type; }
+        uint type() const @property { return quad[0].type; }
     }
     
     //Floor/Roof-tiles.
@@ -137,7 +137,7 @@ class VBOMaker : WorldListener
         Face newFace;
         
         ushort texId(const(Tile) t){
-            return world.tileTypes[t.type].topTexId;
+            return world.tileTypes[t.type].bottomTexId; //TEST! top didnt seem to work so testing...
         }
 
         foreach(doUpper ; 0 .. 2){ //Most best piece of code ever to have been written.
@@ -157,8 +157,8 @@ class VBOMaker : WorldListener
                             if(onStrip && newFace.type != texId(tileLower)){
                                 newFace.quad[2].vertex.set(x, y+noll, z+1);
                                 newFace.quad[3].vertex.set(x, y+ett, z+1);
-                                newFace.quad[2].texcoord.set(1, 1);
-                                newFace.quad[3].texcoord.set(1, 1);
+                                newFace.quad[2].texcoord.set(x, 1);
+                                newFace.quad[3].texcoord.set(x, 0);
                                 faceList ~= newFace;
                                 onStrip = false;
                             }
@@ -166,16 +166,16 @@ class VBOMaker : WorldListener
                                 onStrip = true;
                                 newFace.quad[0].vertex.set(x, y+ett, z+1);
                                 newFace.quad[1].vertex.set(x, y+noll, z+1);
-                                newFace.quad[0].texcoord.set(0, 0);
-                                newFace.quad[1].texcoord.set(1, 0);
-                                newFace.type = tileLower.type;
+                                newFace.quad[0].texcoord.set(x, 0);
+                                newFace.quad[1].texcoord.set(x, 1);
+                                newFace.type = texId(tileLower);
                             }else {} //if onStrip && same, continue
                         }else if(onStrip){ //No floor :(
                             //End current strip.
                             newFace.quad[2].vertex.set(x, y+noll, z+1);
                             newFace.quad[3].vertex.set(x, y+ett, z+1);
-                            newFace.quad[2].texcoord.set(1, 1);
-                            newFace.quad[3].texcoord.set(1, 1);
+                            newFace.quad[2].texcoord.set(x, 1);
+                            newFace.quad[3].texcoord.set(x, 0);
                             faceList ~= newFace;
                             onStrip = false;
                         }                    
@@ -184,8 +184,8 @@ class VBOMaker : WorldListener
                         //End current strip.
                         newFace.quad[2].vertex.set(max.value.X, y+noll, z+1);
                         newFace.quad[3].vertex.set(max.value.X, y+ett, z+1);
-                        newFace.quad[2].texcoord.set(1, 1);
-                        newFace.quad[3].texcoord.set(1, 1);
+                        newFace.quad[2].texcoord.set(max.value.X, 1);
+                        newFace.quad[3].texcoord.set(max.value.X, 0);
                         faceList ~= newFace;
                         onStrip = false;            
                    }
@@ -341,6 +341,12 @@ class VBOMaker : WorldListener
         buildGeometryY(min, max, faces);
         //Floor
         buildGeometryZ(min, max, faces);
+        
+        foreach(ref face ; faces) {
+            foreach(ref vert ; face.quad) {
+                vert.vertex -= min.value;
+            }
+        }
         
         buildVBO(region, faces);
     }

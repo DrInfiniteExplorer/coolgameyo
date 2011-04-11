@@ -2,13 +2,11 @@ import std.stdio;
 import std.conv;
 import std.exception;
 
-import derelict.sdl.sdl;
-import derelict.opengl.gl;
-import derelict.devil.il;
-
 version(Windows){
     import std.c.windows.windows;
 }
+
+import derelict.sdl.sdl;
 
 import graphics.camera;
 import graphics.renderer;
@@ -51,10 +49,6 @@ class Game{
         scheduler = new Scheduler(world, 0);
 
         if(isClient){
-            DerelictSDL.load();
-            DerelictGL.load();
-            DerelictIL.load();
-            ilInit();
 
             middleX = width/2;
             middleY = height/2;
@@ -115,6 +109,10 @@ class Game{
         
         TileType mud;
         if(isClient){
+            
+            invalid.sideTexId = atlas.addTile("textures/001.png", vec2i(16, 0), vec3i(255, 255, 255));
+            invalid.topTexId = invalid.bottomTexId = invalid.sideTexId;
+
             mud.sideTexId     = atlas.addTile("textures/001.png", vec2i(0, 0), vec3i(255, 255, 255));
             mud.topTexId      = atlas.addTile("textures/001.png", vec2i(0, 16), vec3i(255, 255, 255));
             mud.bottomTexId   = atlas.addTile("textures/001.png", vec2i(0, 32), vec3i(255, 255, 255));
@@ -161,6 +159,9 @@ class Game{
             }
             
             updateCamera(); //Or doInterface() or controlDwarf or ()()()()();
+            
+            //camera.setPosition(vec3d(0, -2, 2));
+            //camera.setTarget(vec3d(0, 0, 0));
             
             renderer.render(camera);
             updateFPS();

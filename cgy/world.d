@@ -2,9 +2,9 @@ import std.algorithm, std.range, std.stdio;
 import std.container;
 import std.exception;
 
+import graphics.camera;
 import worldgen;
 import unit;
-import graphics.camera;
 import util;
 import pos;
 

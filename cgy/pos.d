@@ -6,6 +6,22 @@ import worldparts.block;
 import std.conv;
 
 
+mixin template ToStringMethod3D() {
+    string toString() {
+        return typeof(this).stringof ~
+            " (" ~ to!string(value.X)
+            ~ ", " ~ to!string(value.Y)
+            ~ ", " ~ to!string(value.Z) ~ ")";
+    }
+}
+
+mixin template ToStringMethod2D() {
+    string toString(){
+        return typeof(this).stringof ~
+            " (" ~ to!string(value.X)
+            ~ ", " ~ to!string(value.Y) ~ ")";
+    }    
+}
 
 struct UnitPos {
     vec3d value;
@@ -13,6 +29,8 @@ struct UnitPos {
     TilePos tilePos() @property {
         return TilePos(convert!int(value));
     }
+    
+    mixin ToStringMethod3D;
 }
 
 struct SectorNum {
@@ -35,12 +53,8 @@ struct SectorNum {
         auto maxPos = minPos + vec3d(SectorSize.x, SectorSize.y, SectorSize.z);
         return aabbox3d!double(minPos, maxPos);
     }
-    string toString() {
-        return "SectorNum x: " ~to!string(value.X)
-            ~ " y: " ~to!string(value.Y)
-            ~ " z: " ~to!string(value.Z);
-    }    
-    
+
+    mixin ToStringMethod3D;    
 }
 
 struct BlockNum {
@@ -82,11 +96,8 @@ struct BlockNum {
           );        
     }    
 
-    string toString(){
-        return "BlockNum x: " ~to!string(value.X)
-            ~ " y: " ~to!string(value.Y)
-            ~ " z: " ~to!string(value.Z);
-    }    
+    mixin ToStringMethod3D;    
+    
 }
 struct TilePos {
     vec3i value;
@@ -146,13 +157,8 @@ struct TilePos {
             posMod(value.Z, TilesPerBlock.z)
             );
     }
-    
-    string toString(){
-        return "TilePos x: " ~to!string(value.X)
-            ~ " y: " ~to!string(value.Y)
-            ~ " z: " ~to!string(value.Z);
-    }
 
+    mixin ToStringMethod3D;        
 }
 
 struct GraphRegionNum{
@@ -178,12 +184,8 @@ struct GraphRegionNum{
         auto maxPos = minPos + vec3d(GraphRegionSize.x,GraphRegionSize.y, GraphRegionSize.z);
         return aabbox3d!double(minPos, maxPos);
     }
-        
-    string toString(){
-        return "GRN x: " ~to!string(value.X)
-            ~ " y: " ~to!string(value.Y)
-            ~ " z: " ~to!string(value.Z);
-    }    
+
+    mixin ToStringMethod3D;    
 }
 
 struct SectorXYNum {
@@ -194,10 +196,7 @@ struct SectorXYNum {
                     value.X * SectorSize.x,
                     value.Y * SectorSize.y));
     }
-    string toString(){
-        return "SectorXYNum x: " ~to!string(value.X)
-            ~ " y: " ~to!string(value.Y);
-    }    
+    mixin ToStringMethod2D;
 }
 
 struct TileXYPos {
@@ -209,15 +208,11 @@ struct TileXYPos {
                     negDiv(value.Y, SectorSize.y)));
     }
     
-    string toString(){
-        return "TileXYPos x: " ~to!string(value.X)
-            ~ " y: " ~to!string(value.Y);
-    }    
-    
     vec2i sectorRel() const{
         return vec2i(posMod(value.X, SectorSize.x),
                      posMod(value.Y, SectorSize.y));
     }
+    mixin ToStringMethod2D;
 }
 
 SectorNum sectorNum(vec3i value) {

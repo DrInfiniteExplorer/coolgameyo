@@ -3,9 +3,13 @@ module main;
 import core.runtime;
 import std.stdio;
 
+import derelict.sdl.sdl;
+import derelict.opengl.gl;
+import derelict.devil.il;
+
 import game;
 import util;
-
+import pos;
 
 version (Windows) {
 import std.c.windows.windows;
@@ -49,7 +53,26 @@ import std.c.windows.windows;
 
 void actualMain() {
     
-    auto game = new Game(true, true, true);
+    
+    auto a = tilePos(vec3i(1,2,3));
+    writeln(a);
+    
+    bool client = true;
+    if(client){
+        DerelictSDL.load();
+        DerelictGL.load();
+        DerelictIL.load();
+        ilInit();
+    }
+    
+    auto game = new Game(true, client, true);
     game.run();
+    
+    if(client){
+        SDL_Quit();
+        DerelictIL.unload();
+        DerelictGL.unload();
+        DerelictSDL.unload();
+    }
 }
 

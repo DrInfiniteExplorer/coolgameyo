@@ -200,6 +200,11 @@
    <File path="graphics\texture.d" />
    <File path="graphics\shader.d" />
   </Folder>
+  <Folder name="worldparts">
+   <File path="worldparts\block.d" />
+   <File path="worldparts\sector.d" />
+   <File path="worldparts\tile.d" />
+  </Folder>
   <File path="game.d" />
   <File path="main.d" />
   <File path="modules.d" />
@@ -209,10 +214,5 @@
   <File path="util.d" />
   <File path="world.d" />
   <File path="worldgen.d" />
-  <Folder name="worldparts">
-   <File path="worldparts\block.d" />
-   <File path="worldparts\sector.d" />
-   <File path="worldparts\tile.d" />
-  </Folder>
  </Folder>
 </DProject>
