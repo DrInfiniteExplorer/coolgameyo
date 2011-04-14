@@ -1,5 +1,5 @@
 import core.thread;
-:
+
 import std.stdio;
 import std.conv;
 import std.exception;
@@ -56,10 +56,6 @@ class Game{
         world = new World(tilesys);
 
         if (isClient) {
-            DerelictSDL.load();
-            DerelictGL.load();
-            DerelictIL.load();
-            ilInit();
 
             middleX = width/2;
             middleY = height/2;

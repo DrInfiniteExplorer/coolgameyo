@@ -141,8 +141,8 @@ class VBOMaker : WorldListener
 
         ushort texId(const(Tile) t, bool upper){
             return upper ?
-                world.tileTypes[t.type].textures.top :
-                world.tileTypes[t.type].textures.bottom;
+                world.tileSystem.byID(t.type).textures.top :
+                world.tileSystem.byID(t.type).textures.bottom;
         }
 
         foreach(doUpper ; 0 .. 2){ //Most best piece of code ever to have been written.
@@ -230,7 +230,7 @@ class VBOMaker : WorldListener
         bool onHalf;
         Face newFace;
         ushort texId(const(Tile) t){
-            return world.tileTypes[t.type].sideTexId;
+            return world.tileSystem.byID(t.type).textures.side;
         }
 
         foreach(doUpper ; 0 .. 2){ //Most best piece of code ever to have been written.
@@ -315,7 +315,7 @@ class VBOMaker : WorldListener
         bool onHalf;
         Face newFace;
         ushort texId(const(Tile) t){
-            return world.tileTypes[t.type].sideTexId;
+            return world.tileSystem.byID(t.type).textures.side;
         }
 
         foreach(doUpper ; 0 .. 2){ //Most best piece of code ever to have been written.
