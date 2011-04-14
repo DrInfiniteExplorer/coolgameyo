@@ -1,5 +1,6 @@
 import core.time, core.thread;
 import std.container, std.concurrency, std.datetime;
+import std.stdio, std.conv;
 
 import world;
 import util;
@@ -12,9 +13,22 @@ struct Task {
     void delegate(const World) run;
 }
 
+Task asyncTask(void delegate (const World) run) {
+    return Task(false, false, run);
+}
+Task asyncTask(void delegate () run) {
+    return Task(false, false, (const World){ run(); });
+}
+Task syncTask(void delegate (const World) run) {
+    return Task(true, false, run);
+}
+Task syncTask(void delegate () run) {
+    return Task(true, false, (const World){ run(); });
+}
 
 private Task sleepyTask(long hnsecs) {
     void asd(const World){
+        writeln("worker sleeping ", hnsecs, " hnsecs");
         Thread.sleep(dur!"hnsecs"(hnsecs));
     }
     return Task(false, false, &asd);
@@ -52,13 +66,16 @@ class Scheduler {
     long asyncLeft;
 
     long syncTime;
-    long nextSync() @property const { return syncTime + 1000/30; }
+    long nextSync() @property const { 
+        return syncTime + (dur!"seconds"(1) / 30).total!"hnsecs"; // total???
+    }
 
 
     private Task popAsync() {
         synchronized {
             if (async.empty) {
-                return sleepyTask(time() - syncTime);
+                state = State.async;
+                return sleepyTask(nextSync - time());
             }
             return async.removeAny();
         }
@@ -69,16 +86,25 @@ class Scheduler {
         sync = new Queue!Task;
         async = new Queue!Task;
 
+        sync.insert(Task(true, true, null));
+
         foreach (x; 0 .. workerCount) {
             workers ~= spawn(&workerFun, cast(shared)this);
         }
+        state = State.update;
+
+        syncTime = time();
     }
 
     Task getTask() {
         synchronized {
+            //writeln("scheduler state: ", to!string(state));
             switch (state) {
                 case State.update:
 
+                    writeln("updating!");
+
+                    syncTime = time();
                     world.update();
                     foreach (mod; modules) {
                         mod.update(world);
@@ -92,6 +118,8 @@ class Scheduler {
                     if (t.syncsScheduler) {
                         state = State.forcedAsync;
                         asyncLeft = ASYNC_COUNT;
+                        sync.insert(Task(true,true,null));
+                        return getTask();
                     }
                     return t;
 
@@ -99,11 +127,12 @@ class Scheduler {
                     asyncLeft -= 1;
                     if (asyncLeft == 0) {
                         state = State.async;
-                    } // fallin through..~~~
+                    }
+                    return popAsync();
                 case State.async:
                     if (time() > nextSync) {
                         state = State.update;
-                        syncTime = time();
+                        return getTask();
                     }
                     return popAsync();
             }

@@ -4,6 +4,8 @@ import std.exception;
 version(Windows) import std.c.windows.windows;
 
 import graphics.camera;
+
+import tilesystem;
 import worldgen;
 import unit;
 import util;
@@ -23,7 +25,7 @@ interface WorldListener {
 
 class World {
 
-    struct SectorXY {
+    static struct SectorXY {
         int[SectorSize.x][SectorSize.y]* heightmap;
         Sector[int] sectors;
     }
@@ -37,12 +39,13 @@ class World {
     int unitCount;
 
     WorldListener[] listeners;
+    
+    TileSystem tileSystem;
 
-    TileType[] tileTypes;
-
-    this() {
+    this(TileSystem tilesys) {
         isServer = true;
-        worldGen = new WorldGenerator();
+        tileSystem = tilesys;
+        worldGen = new WorldGenerator(tilesys);
     }
 
     void generateBlock(BlockNum blockNum) {
@@ -72,7 +75,8 @@ class World {
             auto tmp = p.value + vec2i(relPos.X, relPos.Y);
             auto posXY = tileXYPos(tmp);
             auto z = worldGen.maxZ(posXY);
-            while (worldGen.getTile(tilePos(posXY, z)).type == TileTypeAir) {
+            auto tileTypeAir = tileSystem.idByName("air");
+            while (worldGen.getTile(tilePos(posXY, z)).type is tileTypeAir) {
                 z -= 1;
             }
 
@@ -152,6 +156,45 @@ class World {
         }
         return units;
     }
+
+    Sector[] getSectors() {
+        return sectorList;
+    }
+
+    static struct UnitRange {
+        Sector[] sectors;
+        typeof(Sector.init.units[]) currentUnitRange;
+
+        Unit* front() @property {
+            return currentUnitRange.front;
+        }
+        void popFront() {
+            currentUnitRange.popFront();
+            prop();
+        }
+        void prop() {
+            while (currentUnitRange.empty) {
+                sectors.popFront();
+                if (sectors.empty) break;
+                currentUnitRange = sectors.front.units[];
+            }
+        }
+
+        bool empty() @property {
+            return sectors.empty;
+        }
+    }
+
+    UnitRange getUnits() {
+        UnitRange ret;
+        ret.sectors = getSectors();
+        if (!ret.sectors.empty) {
+            ret.currentUnitRange = ret.sectors.front.units[];
+        }
+        ret.prop();
+        return ret;
+    }
+    
 
     void moveUnit(Unit* unit) {
         assert(0, "Implement");

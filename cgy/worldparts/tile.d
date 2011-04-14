@@ -3,19 +3,20 @@ module worldparts.tile;
 
 import util;
 
-struct TileType{
-    ushort topTexId = 0;
-    ushort sideTexId = 0;
-    ushort bottomTexId = 0;
-    ushort materialId = 0;
-    int strength = 0;
-    bool transparent = false;
-    string tileName = "invalid";
-    /* Derp derp derp */
+static struct TileTextureID {
+    ushort top, side, bottom;
 }
 
-const ushort TileTypeInvalid    = 0;
-const ushort TileTypeAir        = 1;
+class TileType {
+    TileTextureID textures;
+
+    ushort id;
+
+    bool transparent = false;
+    string name = "invalid";
+
+    this() {}
+}
 
 enum TileFlags : ushort {
     none        = 0,
@@ -26,7 +27,7 @@ enum TileFlags : ushort {
 }
 
 struct Tile {
-    ushort type = TileTypeInvalid;
+    ushort type;
     TileFlags flags = TileFlags.none;
     ushort hp = 0;
     ushort derp;
@@ -44,5 +45,5 @@ struct Tile {
     void halfstep(bool val) @property { setFlag(flags, TileFlags.halfstep, val); }
 }
 
-enum INVALID_TILE = Tile(TileTypeInvalid, TileFlags.none, 0);
+enum INVALID_TILE = Tile(0, TileFlags.none, 0, 0);
 

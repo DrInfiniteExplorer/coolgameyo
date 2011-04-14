@@ -52,21 +52,21 @@ struct Image{
         filename = _filename;
 
         uint ilImgID;
-    ilGenImages(1, &ilImgID);
+        ilGenImages(1, &ilImgID);
         ilError();
         scope(exit) ilDeleteImages(1, &ilImgID);
-    ilBindImage(ilImgID);
+        ilBindImage(ilImgID);
         ilError();
-    ilEnable(IL_ORIGIN_SET);
+        ilEnable(IL_ORIGIN_SET);
         ilError();
-    ilSetInteger(IL_ORIGIN_MODE, IL_ORIGIN_UPPER_LEFT);
+        ilSetInteger(IL_ORIGIN_MODE, IL_ORIGIN_UPPER_LEFT);
         ilError();
 
         auto cString = toStringz(filename);
-    if (ilLoad(IL_TYPE_UNKNOWN, cString) == IL_FALSE)
-    {
-      assert(0, "error loading image " ~filename);
-    }
+        if (ilLoad(IL_TYPE_UNKNOWN, cString) == IL_FALSE)
+        {
+            assert(0, "error loading image " ~filename);
+        }
         ilError();
 
         imgWidth = min(ilGetInteger(IL_IMAGE_WIDTH)- offset.X, size.X);
@@ -263,8 +263,10 @@ class TileTextureAtlas{
             glError();
         }
     }
+        
+    ushort addTile(string filename, vec2i offset=vec2i(0,0), 
+            vec3i tint=vec3i(255,255,255)) {
 
-    ushort addTile(string filename, vec2i offset, vec3i tint) {
         ushort tileCount = to!ushort(tileMap.length);
         assert(tileCount < maxTileCount, "Implement code to reallocate etc, or recode caller to reserve properly!!");
         enforce(tileCount < 100000, "Might want to think about reworking the auto-generated tileIndexFromNumber to account for float precision?");

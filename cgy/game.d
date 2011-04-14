@@ -1,6 +1,10 @@
+import core.thread;
+:
 import std.stdio;
 import std.conv;
 import std.exception;
+import std.concurrency;
+import std.datetime;
 
 version(Windows){
     import std.c.windows.windows;
@@ -12,6 +16,7 @@ import graphics.camera;
 import graphics.renderer;
 import graphics.texture;
 
+import tilesystem;
 import world;
 import scheduler;
 import pos;
@@ -21,8 +26,8 @@ import unit;
 string SDLError() { return to!string(SDL_GetError()); }
 
 class Game{
-
-    World            world;
+    
+    World           world;
 
 
     bool            isClient;
@@ -45,10 +50,16 @@ class Game{
         isServer = serv;
         isClient = clie;
         isWorker = work;
-        world = new World();
-        scheduler = new Scheduler(world, 0);
 
-        if(isClient){
+        auto tilesys = parseGameData();
+
+        world = new World(tilesys);
+
+        if (isClient) {
+            DerelictSDL.load();
+            DerelictGL.load();
+            DerelictIL.load();
+            ilInit();
 
             middleX = width/2;
             middleY = height/2;
@@ -77,8 +88,8 @@ class Game{
             renderer.atlas = atlas;
             camera = new Camera();
 
+            atlas.upload();
         }
-        parseGameData();
 
         auto xy = tileXYPos(vec2i(0,0));
         auto u = new Unit;
@@ -98,45 +109,59 @@ class Game{
         }
         */
     }
-
-    void parseGameData(){
-
-
-        TileType invalid;
-        invalid.transparent = false; //TODO: Make rendersetting.
-
-        TileType air;
-        air.transparent = true;
-        air.tileName = "air";
-
-        TileType mud;
-        if(isClient){
-
-            invalid.sideTexId = atlas.addTile("textures/001.png", vec2i(16, 0), vec3i(255, 255, 255));
-            invalid.topTexId = invalid.bottomTexId = invalid.sideTexId;
-
-            mud.sideTexId     = atlas.addTile("textures/001.png", vec2i(0, 0), vec3i(255, 255, 255));
-            mud.topTexId      = atlas.addTile("textures/001.png", vec2i(0, 16), vec3i(255, 255, 255));
-            mud.bottomTexId   = atlas.addTile("textures/001.png", vec2i(0, 32), vec3i(255, 255, 255));
+    
+    TileSystem parseGameData() {
+        auto sys = new TileSystem;
+        
+        TileType mud = new TileType;
+        if (isClient) {
+            enum f = "textures/001.png";
+            mud.textures.side   = atlas.addTile(f);
+            mud.textures.top    = atlas.addTile(f, vec2i(0, 16));
+            mud.textures.bottom = atlas.addTile(f, vec2i(0, 32));
         }
-        mud.materialId = 0;
-        mud.strength = 10;
         mud.transparent = false;
-        world.tileTypes ~= [invalid, air, mud];
+        mud.name = "mud";
 
-        if(isClient){
-            atlas.upload();
+        sys.add(mud);
+        
+        return sys;
+    }
+
+    void start() {
+        assert (isWorker, "otherwise wont work lol (maybe)");
+        scheduler = new Scheduler(world, 1);
+
+        if (isClient) {
+            if (isServer) {
+                spawn(function(shared Game g) {
+                        (cast(Game)g).runServer();
+                        }, cast(shared)this);
+            } else {
+                assert (false, "wherp!");
+            }
+
+            runClient();
+        } else {
+            runServer();
         }
     }
 
-
-    void run(){
-        //driver.beginScene(true, true, SColor(0, 160, 0, 128));
+    void runServer() {
+        // set up network interface...? D:
+        while (true) {
+            writeln("blerp");
+            Thread.sleep(dur!"seconds"(1));
+        }
+    }
+    
+    void runClient() {
+        assert (isClient);
         auto exit = false;
         SDL_Event event;
-        while(!exit){
-            while(SDL_PollEvent(&event)) {
-                switch(event.type){
+        while (!exit) {
+            while (SDL_PollEvent(&event)) {
+                switch (event.type) {
                     case SDL_QUIT:
                         exit = true; break;
                     case SDL_KEYDOWN:
@@ -151,10 +176,11 @@ class Game{
                         break;
                     default:
                 }
-                //Because SDL is ANAL and intercepts alt+f4....
-                version(Windows){
-                    if(event.key.keysym.sym == SDLK_F4 && (event.key.keysym.mod ==
-                        KMOD_LALT || event.key.keysym.mod == KMOD_RALT) ){
+
+                version (Windows) {
+                    if (event.key.keysym.sym == SDLK_F4
+                            && (event.key.keysym.mod == KMOD_LALT 
+                                || event.key.keysym.mod == KMOD_RALT)) {
                         exit=true;
                     }
                 }
@@ -192,24 +218,12 @@ class Game{
     }
 
     void updateCamera(){
-        if(keyMap[SDLK_a]){
-            camera.axisMove(-0.1, 0.0, 0.0);
-        }
-        if(keyMap[SDLK_d]){
-            camera.axisMove( 0.1, 0.0, 0.0);
-        }
-        if(keyMap[SDLK_w]){
-            camera.axisMove( 0.0, 0.1, 0.0);
-        }
-        if(keyMap[SDLK_s]){
-            camera.axisMove( 0.0,-0.1, 0.0);
-        }
-        if(keyMap[SDLK_SPACE]){
-            camera.axisMove( 0.0, 0.0, 0.1);
-        }
-        if(keyMap[SDLK_LCTRL]){
-            camera.axisMove( 0.0, 0.0,-0.1);
-        }
+        if(keyMap[SDLK_a]){ camera.axisMove(-0.1, 0.0, 0.0); }
+        if(keyMap[SDLK_d]){ camera.axisMove( 0.1, 0.0, 0.0); }
+        if(keyMap[SDLK_w]){ camera.axisMove( 0.0, 0.1, 0.0); }
+        if(keyMap[SDLK_s]){ camera.axisMove( 0.0,-0.1, 0.0); }
+        if(keyMap[SDLK_SPACE]){ camera.axisMove( 0.0, 0.0, 0.1); }
+        if(keyMap[SDLK_LCTRL]){ camera.axisMove( 0.0, 0.0,-0.1); }
     }
 
     void onKey(SDL_KeyboardEvent event){
@@ -229,6 +243,4 @@ class Game{
             camera.mouseMove( mouse.xrel,  mouse.yrel);
         }
     }
-
-    //
 }

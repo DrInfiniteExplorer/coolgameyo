@@ -52,27 +52,29 @@ import std.c.windows.windows;
 }
 
 void actualMain() {
-    
-    
     auto a = tilePos(vec3i(1,2,3));
     writeln(a);
     
-    bool client = true;
-    if(client){
+    version (Windows) {
+        bool client = true;
+    } else {
+        // plols laptop cant handle the CLIENT STUFF WHOOOOAAhhhh....!!
+        bool client = false;
+    }
+    if (client) {
         DerelictSDL.load();
         DerelictGL.load();
         DerelictIL.load();
         ilInit();
     }
-    
-    auto game = new Game(true, client, true);
-    game.run();
-    
-    if(client){
+    scope (exit) if (client) {
         SDL_Quit();
         DerelictIL.unload();
         DerelictGL.unload();
         DerelictSDL.unload();
     }
+    
+    auto game = new Game(true, client, true);
+    game.start();
 }
 

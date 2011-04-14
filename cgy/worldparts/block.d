@@ -2,6 +2,7 @@
 module worldparts.block;
 
 import std.algorithm;
+import std.stdio;
 
 import worldparts.tile;
 import pos;
@@ -47,17 +48,15 @@ struct Block {
     
     invariant()
     {
-        bool valid = (flags & BlockFlags.valid)!=0;
-        bool sparse = (flags & BlockFlags.sparse)!=0;
-        
-        if(sparse){
+        auto valid = flags & BlockFlags.valid;
+        auto sparse = flags & BlockFlags.sparse;
+
+        if (sparse) {
             assert(valid, "Block is marked as sparse, but doesn't have valid flag");
             assert(tiles is null, "Block is marked as sparse, but has tiles!");
-        }
-        else if(valid){
+        } else if (valid) {
             assert(tiles !is null, "Block is not sparse but valid, but doesn't have any tiles!");
-        }
-        else{
+        } else {
             assert(tiles is null, "Block is not valid, but has tiles!");
         }
     }    
@@ -127,13 +126,13 @@ struct Block {
 
     static Block generateBlock(BlockNum blockNum, WorldGenerator worldgen) {
         //writeln("Generating block: ", blockNum);
-        auto block = alloc(); //Derp derp?
+        auto block = alloc();
         block.blockNum = blockNum;
-        //block.valid = true; Comes valid from alloc().
         block.dirty = true;
         
         bool homogenous = true;
-        block.sparseTileType = TileTypeInvalid;
+        bool first = true;
+
         foreach (relPos; RangeFromTo(0, BlockSize.x, 
                     0, BlockSize.y, 0, BlockSize.z)) {
             auto TP = blockNum.toTilePos();
@@ -141,7 +140,8 @@ struct Block {
             auto tile = worldgen.getTile(TP);
             (*block.tiles)[relPos.X][relPos.Y][relPos.Z] = tile;
             
-            if (block.sparseTileType == TileTypeInvalid) {
+            if (first) {
+                first = false;
                 block.sparseTileType = tile.type;
                 block.sparseTileTransparent = tile.transparent; //Copy transparency-property from first tile.
             }
@@ -197,9 +197,9 @@ struct Block {
             static AllocationBlock* create() {
                 auto alloc = new AllocationBlock;
                 alloc.allocmap = new bool[](dataSize);
-                //alloc.data = allocateBlob(dataSize);
-                alloc.data = cast(typeof(alloc.data))(allocateBlob(dataSize));
-                
+                auto blob = allocateBlob(dataSize);
+                (cast(ubyte[])blob)[] = 0;
+                alloc.data = cast(T[])blob;
                 return alloc;
             }
         }
@@ -214,6 +214,8 @@ struct Block {
             block.tiles = freeblock.getMem();
             setFlag(block.flags, BlockFlags.valid, true);
 
+            assert (block.valid);
+
             return block;
         }
         void free(Block block) {
@@ -223,11 +225,10 @@ struct Block {
 }
 
 Block INVALID_BLOCK = {
-    tiles :null,
+    tiles : null,
     flags : BlockFlags.none,
     renderData : Block.RenderData(0,[0,0]),
     blockNum : blockNum(vec3i(int.min, int.min, int.min)),
-    sparseTileType : TileTypeInvalid
 };
 
 

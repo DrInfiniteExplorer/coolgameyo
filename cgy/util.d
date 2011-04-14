@@ -51,7 +51,7 @@ void[] allocateBlob(size_t size) {
         void* ret;
         auto result = posix_memalign(&ret, 4096, 4096 * size);
         enforce (result == 0, "memory allocation fail :-)");
-        return ret[0 .. size];
+        return ret[0 .. 4096 * size];
     } else {
         static assert (0, "version?");
     }

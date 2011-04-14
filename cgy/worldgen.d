@@ -1,5 +1,6 @@
 import std.math, std.conv;
 
+import tilesystem;
 import world;
 import util;
 import pos;
@@ -15,22 +16,29 @@ private float foo(float x, float y) {
 }
 
 class WorldGenerator {
-    this() { }
+    TileSystem sys;
+
+    ushort air;
+    ushort mud;
+
+    this(TileSystem tileSystem) {
+        sys = tileSystem;
+        air = sys.idByName("air");
+        mud = sys.idByName("mud");
+    }
 
     Tile getTile(const TilePos pos) {
         auto top = foo(to!float(pos.value.X), to!float(pos.value.Y));
         auto Z = pos.value.Z;
         auto d = top - Z;
-        //+
+
         Tile ret;
-        if(0 < d && d < 0.5){
-            ret = Tile(/* TileType.retardium */2, TileFlags.halfstep, 0, 0);
-        }
-        else if(0 <= d){
-             return Tile(/* TileType.retardium */2, TileFlags.valid, 0, 0);
-        }
-        else{
-            ret = Tile( TileTypeAir, TileFlags.transparent, 0, 0);
+        if (0 < d && d < 0.5) {
+            ret = Tile(mud, TileFlags.halfstep, 0, 0);
+        } else if (0 <= d) {
+            ret = Tile(mud, TileFlags.none, 0, 0);
+        } else {
+            ret = Tile(air, TileFlags.transparent, 0, 0);
         }
         ret.valid = true;
 

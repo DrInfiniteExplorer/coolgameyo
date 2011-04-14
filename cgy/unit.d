@@ -1,4 +1,4 @@
-
+import modules;
 import util;
 import pos;
 
@@ -11,5 +11,9 @@ struct Unit {
     UnitType type;
 
     UnitPos pos;
+
+    void tick(PathModule blerp) {
+            assert (false);
+    }
 }
 

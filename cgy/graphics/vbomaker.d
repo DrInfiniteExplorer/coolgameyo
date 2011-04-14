@@ -141,8 +141,8 @@ class VBOMaker : WorldListener
 
         ushort texId(const(Tile) t, bool upper){
             return upper ?
-                world.tileTypes[t.type].topTexId :
-                world.tileTypes[t.type].bottomTexId;
+                world.tileTypes[t.type].textures.top :
+                world.tileTypes[t.type].textures.bottom;
         }
 
         foreach(doUpper ; 0 .. 2){ //Most best piece of code ever to have been written.
