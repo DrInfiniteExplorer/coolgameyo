@@ -1,3 +1,4 @@
+
 import std.math, std.conv;
 
 import tilesystem;
@@ -48,3 +49,4 @@ class WorldGenerator {
         return to!int(foo(to!float(xypos.value.X), to!float(xypos.value.Y)));
     }
 }
+

@@ -13,8 +13,8 @@ import pos;
 
 version (Windows) {
 import std.c.windows.windows;
-    
-    extern (Windows) int WinMain(HINSTANCE hInstance, 
+
+    extern (Windows) int WinMain(HINSTANCE hInstance,
             HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
         int result;
 
@@ -33,7 +33,7 @@ import std.c.windows.windows;
         }
         catch (Throwable o) // catch any uncaught exceptions
         {
-            MessageBoxA(null, cast(char *)o.toString(), 
+            MessageBoxA(null, cast(char *)o.toString(),
                     "Error", MB_OK | MB_ICONEXCLAMATION);
             result = 0; // failed
         }
@@ -54,7 +54,7 @@ import std.c.windows.windows;
 void actualMain() {
     auto a = tilePos(vec3i(1,2,3));
     writeln(a);
-    
+
     version (Windows) {
         bool client = true;
     } else {
@@ -75,7 +75,7 @@ void actualMain() {
         DerelictGL.unload();
         DerelictSDL.unload();
     }
-    
+
     writeln("Creating game");
     auto game = new Game(true, client, true);
     writeln("Starting game");

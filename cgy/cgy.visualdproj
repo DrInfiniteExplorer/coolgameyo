@@ -214,5 +214,6 @@
   <File path="util.d" />
   <File path="world.d" />
   <File path="worldgen.d" />
+  <File path="tilesystem.d" />
  </Folder>
 </DProject>

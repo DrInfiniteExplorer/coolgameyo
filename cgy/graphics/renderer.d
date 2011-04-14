@@ -6,7 +6,6 @@ import std.conv;
 import std.stdio;
 import std.string;
 import std.format;
-import std.algorithm;
 
 import derelict.opengl.gl;
 import derelict.opengl.glext;
@@ -70,19 +69,19 @@ void glError(string file = __FILE__, int line = __LINE__){
 }
 
 class Renderer{
-  World world;
+    World world;
     VBOMaker vboMaker;
 
     TileTextureAtlas atlas;
 
-  uint texture2D;
-  uint textureAtlas;
+    uint texture2D;
+    uint textureAtlas;
     ShaderProgram worldShader;
     ShaderProgram dudeShader;
 
     string constantsString;
 
-  float oglVersion;
+    float oglVersion;
 
 
     void buildConstantsString(){
@@ -104,64 +103,19 @@ class Renderer{
         constantsString = writer.data;
     }
 
-  this(World w)
-  {
+
+
+
+    this(World w)
+    {
         world = w;
-    vboMaker = new VBOMaker(w);
-
-        //Move rest into initGraphics() or somesuch?
-        DerelictGL.loadExtensions();
-        glError();
-        glFrontFace(GL_CCW);
-        glError();
-        DerelictGL.loadClassicVersions(GLVersion.GL30);
-        DerelictGL.loadModernVersions(GLVersion.GL30);
-        glError();
-
-        string derp = to!string(glGetString(GL_VERSION));
-        auto a = split(derp, ".");
-        auto major = to!int(a[0]);
-        auto minor = to!int(a[1]);
-
-        //TODO: POTENTIAL BUG EEAPASASALPDsAPSLDPLASDsPLQWPRMtopmkg>jfekofsaplPSLFPsLSDF
-        renderSettings.glVersion=major + 0.1*minor;
-        writeln("OGL version ", renderSettings.glVersion);
-
-        glGetIntegerv(GL_MAX_TEXTURE_SIZE, &renderSettings.maxTextureSize);
-        glError();
-        if(renderSettings.maxTextureSize > 512){
-            debug writeln("MaxTextureSize(", renderSettings.maxTextureSize, ") to big; clamping to 512");
-            renderSettings.maxTextureSize = 512;
-        }
-        glGetIntegerv(GL_MAX_ARRAY_TEXTURE_LAYERS, &renderSettings.maxTextureLayers);
-        glError();
-        float maxAni;
-        glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAni);
-        glError();
-        renderSettings.anisotropy = max(1.0f, min(renderSettings.anisotropy, maxAni));
-
-        //Uh 1 or 2 if vsync enable......?
-        version (Windows) {
-            wglSwapIntervalEXT(renderSettings.disableVSync ? 0 : 1);
-        } else {
-            writeln("Cannot poke with vsync unless wgl blerp");
-        }
-        glError();
-
-        glClearColor(1.0, 0.7, 0.4, 0.0);
-        glError();
-
-        glEnable(GL_DEPTH_TEST);
-        glError();
-        glEnable(GL_CULL_FACE);
-        glError();
-        glDepthFunc(GL_LEQUAL);
+        vboMaker = new VBOMaker(w);
 
         buildConstantsString();
 
         //Would be kewl if with templates and compile-time one could specify uniform names / attrib slot names
         //that with help of shaders where made into member variables / compile-time-lookup(attrib slot names)
-    worldShader = new ShaderProgram(constantsString, "shaders/renderGR.vert", "shaders/renderGR.frag");
+        worldShader = new ShaderProgram(constantsString, "shaders/renderGR.vert", "shaders/renderGR.frag");
         worldShader.bindAttribLocation(0, "position");
         worldShader.bindAttribLocation(1, "texcoord");
         worldShader.bindAttribLocation(2, "type");
@@ -266,14 +220,13 @@ class Renderer{
             glEnable(GL_CULL_FACE);
             glError();
         }
-    //Render world
-    renderWorld(camera);
-    //Render dudes
+        //Render world
+        renderWorld(camera);
+        //Render dudes
         renderDudes(camera);
-    //Render foilage and other cosmetics
-    //Render HUD/GUI
-    //Render some stuff deliberately offscreen, just to be awesome.
-
+        //Render foilage and other cosmetics
+        //Render HUD/GUI
+        //Render some stuff deliberately offscreen, just to be awesome.
   }
 
     void renderGraphicsRegion(const GraphicsRegion region){
@@ -308,8 +261,7 @@ class Renderer{
         atlas.use();
         auto transform = camera.getProjectionMatrix() * camera.getViewMatrix();
         worldShader.setUniform(worldShader.b, transform);
-//    auto vboList = vboMaker.getVBOs();
-    auto regions = vboMaker.getRegions();
+        auto regions = vboMaker.getRegions();
         foreach(region ; regions){
             if(region.VBO && camera.inFrustum(region.grNum.getAABB())){
                 renderGraphicsRegion(region);

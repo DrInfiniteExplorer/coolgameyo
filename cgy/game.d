@@ -1,16 +1,20 @@
 import core.thread;
 
-import std.stdio;
+import std.algorithm;
+import std.array;
+import std.concurrency;
 import std.conv;
 import std.exception;
-import std.concurrency;
 import std.datetime;
+import std.stdio;
 
 version(Windows){
     import std.c.windows.windows;
 }
 
 import derelict.sdl.sdl;
+import derelict.opengl.gl;
+import derelict.opengl.glext;
 
 import graphics.camera;
 import graphics.renderer;
@@ -25,8 +29,57 @@ import unit;
 
 string SDLError() { return to!string(SDL_GetError()); }
 
+void initOpenGL(){
+    DerelictGL.loadExtensions();
+    glError();
+    glFrontFace(GL_CCW);
+    glError();
+    DerelictGL.loadClassicVersions(GLVersion.GL30);
+    DerelictGL.loadModernVersions(GLVersion.GL30);
+    glError();
+
+    string derp = to!string(glGetString(GL_VERSION));
+    auto a = split(derp, ".");
+    auto major = to!int(a[0]);
+    auto minor = to!int(a[1]);
+
+    //TODO: POTENTIAL BUG EEAPASASALPDsAPSLDPLASDsPLQWPRMtopmkg>jfekofsaplPSLFPsLSDF
+    renderSettings.glVersion=major + 0.1*minor;
+    writeln("OGL version ", renderSettings.glVersion);
+
+    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &renderSettings.maxTextureSize);
+    glError();
+    if(renderSettings.maxTextureSize > 512){
+        debug writeln("MaxTextureSize(", renderSettings.maxTextureSize, ") to big; clamping to 512");
+        renderSettings.maxTextureSize = 512;
+    }
+    glGetIntegerv(GL_MAX_ARRAY_TEXTURE_LAYERS, &renderSettings.maxTextureLayers);
+    glError();
+    float maxAni;
+    glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAni);
+    glError();
+    renderSettings.anisotropy = max(1.0f, min(renderSettings.anisotropy, maxAni));
+
+    //Uh 1 or 2 if vsync enable......?
+    version (Windows) {
+        wglSwapIntervalEXT(renderSettings.disableVSync ? 0 : 1);
+    } else {
+        writeln("Cannot poke with vsync unless wgl blerp");
+    }
+    glError();
+
+    glClearColor(1.0, 0.7, 0.4, 0.0);
+    glError();
+
+    glEnable(GL_DEPTH_TEST);
+    glError();
+    glEnable(GL_CULL_FACE);
+    glError();
+    glDepthFunc(GL_LEQUAL);
+}
+
 class Game{
-    
+
     World           world;
 
 
@@ -44,17 +97,13 @@ class Game{
     Renderer          renderer;
     Scheduler         scheduler;
     TileTextureAtlas  atlas;
-    bool[SDLK_LAST]       keyMap;
+    bool[SDLK_LAST]   keyMap;
 
     this(bool serv, bool clie, bool work) {
         isServer = serv;
         isClient = clie;
         isWorker = work;
 
-        if (isClient) atlas = new TileTextureAtlas; // HACK
-        auto tilesys = parseGameData();
-
-        world = new World(tilesys);
 
         if (isClient) {
             writeln("Initializing client stuff");
@@ -81,7 +130,14 @@ class Game{
 
             surface = enforce(SDL_SetVideoMode(width, height, 32, SDL_HWSURFACE | SDL_GL_DOUBLEBUFFER | SDL_OPENGL),
                               "Could not set sdl video mode (" ~ SDLError() ~ ")");
+            initOpenGL();
+            atlas = new TileTextureAtlas; // HACK
+        }
 
+        auto tilesys = parseGameData();
+        world = new World(tilesys);
+
+        if (isClient) {
             renderer = new Renderer(world);
             renderer.atlas = atlas;
             camera = new Camera();
@@ -108,10 +164,10 @@ class Game{
         }
         */
     }
-    
+
     TileSystem parseGameData() {
         auto sys = new TileSystem;
-        
+
         TileType mud = new TileType;
         if (isClient) {
             enum f = "textures/001.png";
@@ -123,7 +179,7 @@ class Game{
         mud.name = "mud";
 
         sys.add(mud);
-        
+
         return sys;
     }
 
@@ -153,7 +209,7 @@ class Game{
             Thread.sleep(dur!"seconds"(1));
         }
     }
-    
+
     void runClient() {
         assert (isClient);
         auto exit = false;
@@ -178,7 +234,7 @@ class Game{
 
                 version (Windows) {
                     if (event.key.keysym.sym == SDLK_F4
-                            && (event.key.keysym.mod == KMOD_LALT 
+                            && (event.key.keysym.mod == KMOD_LALT
                                 || event.key.keysym.mod == KMOD_RALT)) {
                         exit=true;
                     }
