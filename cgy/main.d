@@ -62,6 +62,8 @@ void actualMain() {
         bool client = false;
     }
     if (client) {
+        writeln("Loading libraries...");
+        scope (success) writeln("... done");
         DerelictSDL.load();
         DerelictGL.load();
         DerelictIL.load();
@@ -74,7 +76,9 @@ void actualMain() {
         DerelictSDL.unload();
     }
     
+    writeln("Creating game");
     auto game = new Game(true, client, true);
+    writeln("Starting game");
     game.start();
 }
 

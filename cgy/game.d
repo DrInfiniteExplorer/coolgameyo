@@ -46,16 +46,19 @@ class Game{
     TileTextureAtlas  atlas;
     bool[SDLK_LAST]       keyMap;
 
-    this(bool serv, bool clie, bool work){
+    this(bool serv, bool clie, bool work) {
         isServer = serv;
         isClient = clie;
         isWorker = work;
 
+        if (isClient) atlas = new TileTextureAtlas; // HACK
         auto tilesys = parseGameData();
 
         world = new World(tilesys);
 
         if (isClient) {
+            writeln("Initializing client stuff");
+            scope (success) writeln("Done with client stuff");
 
             middleX = width/2;
             middleY = height/2;
@@ -80,11 +83,11 @@ class Game{
                               "Could not set sdl video mode (" ~ SDLError() ~ ")");
 
             renderer = new Renderer(world);
-            atlas = new TileTextureAtlas();
             renderer.atlas = atlas;
             camera = new Camera();
 
             atlas.upload();
+
         }
 
         auto xy = tileXYPos(vec2i(0,0));
