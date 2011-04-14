@@ -34,6 +34,11 @@ private Task sleepyTask(long hnsecs) {
     return Task(false, false, &asd);
 }
 
+private Task syncTask() {
+    return Task(true, true, null);
+}
+
+
 
 // THIS WILL PROBABLY NEED SOME FLESHING OUT...!!!
 private void workerFun(shared Scheduler ssched) {
@@ -66,7 +71,7 @@ class Scheduler {
     long asyncLeft;
 
     long syncTime;
-    long nextSync() @property const { 
+    long nextSync() @property const {
         return syncTime + (dur!"seconds"(1) / 30).total!"hnsecs"; // total???
     }
 
@@ -86,7 +91,7 @@ class Scheduler {
         sync = new Queue!Task;
         async = new Queue!Task;
 
-        sync.insert(Task(true, true, null));
+        sync.insert(syncTask());
 
         foreach (x; 0 .. workerCount) {
             workers ~= spawn(&workerFun, cast(shared)this);
@@ -115,13 +120,13 @@ class Scheduler {
                     // fallin through...~~~~
                 case State.sync:
                     auto t = sync.removeAny();
-                    if (t.syncsScheduler) {
-                        state = State.forcedAsync;
-                        asyncLeft = ASYNC_COUNT;
-                        sync.insert(Task(true,true,null));
-                        return getTask();
-                    }
-                    return t;
+
+                    if (!t.syncsScheduler) return t;
+
+                    state = State.forcedAsync;
+                    asyncLeft = ASYNC_COUNT;
+                    sync.insert(syncTask());
+                    return getTask();
 
                 case State.forcedAsync:
                     asyncLeft -= 1;
@@ -129,6 +134,7 @@ class Scheduler {
                         state = State.async;
                     }
                     return popAsync();
+
                 case State.async:
                     if (time() > nextSync) {
                         state = State.update;
