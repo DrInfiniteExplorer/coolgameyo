@@ -22,15 +22,19 @@ class WorldGenerator {
         auto Z = pos.value.Z;
         auto d = top - Z;
         //+
+        Tile ret;
         if(0 < d && d < 0.5){
-            return Tile(/* TileType.retardium */2, TileFlags.halfstep, 0, 0);
+            ret = Tile(/* TileType.retardium */2, TileFlags.halfstep, 0, 0);
         }
-        // +/
-        if(0 <= d){
-             return Tile(/* TileType.retardium */2, TileFlags.none, 0, 0);
+        else if(0 <= d){
+             return Tile(/* TileType.retardium */2, TileFlags.valid, 0, 0);
         }
+        else{
+            ret = Tile( TileTypeAir, TileFlags.transparent, 0, 0);
+        }
+        ret.valid = true;
 
-        return Tile( TileTypeAir, TileFlags.transparent, 0, 0);
+        return ret;
     }
     int maxZ(const TileXYPos xypos) {
         return to!int(foo(to!float(xypos.value.X), to!float(xypos.value.Y)));

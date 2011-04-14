@@ -9,6 +9,7 @@ version(Windows) import std.c.windows.windows;
 import derelict.opengl.gl;
 import derelict.opengl.glext;
 
+import graphics.renderer;
 import world;
 import util;
 import pos;
@@ -159,6 +160,8 @@ class VBOMaker : WorldListener
                         auto transUpper = tileUpper.transparent;
                         auto transLower = tileLower.transparent;
 
+                        auto bothValid = (tileUpper.valid && tileLower.valid) || renderSettings.renderInvalidTiles;
+
                         //If doing upper surface; if lower tile is half-surface
                         auto halfLower = doUpper == 0 && tileLower.halfstep;
                         auto halfSame = halfLower == onHalf;
@@ -172,7 +175,7 @@ class VBOMaker : WorldListener
                         // green glass on red glass on water; ought to render the intersecting surfaces, sortof?
                         // NO! transparent things are handled on their own, elsewhere, not defined where yet.
 
-                        if(transUpper && !transLower){ //Floor tile detected!
+                        if(bothValid && transUpper && !transLower){ //Floor tile detected!
                             if(onStrip &&
                                (newFace.type != texId(tileLower, doUpper==0) ||
                                !halfSame)){
@@ -246,6 +249,8 @@ class VBOMaker : WorldListener
                         auto transUpper = tileUpper.transparent || tileUpper.halfstep;
                         auto transLower = tileLower.transparent;
 
+                        auto bothValid = (tileUpper.valid && tileLower.valid) || renderSettings.renderInvalidTiles;
+
                         bool halfLower = tileLower.halfstep;
                         bool halfSame = onHalf == halfLower;
 
@@ -254,7 +259,7 @@ class VBOMaker : WorldListener
                         halfEtt = to!float(ett) * (halfLower ? 0.5 : 1.0);
                         halfNoll = to!float(noll) * (halfLower ? 0.5 : 1.0);
 
-                        if(transUpper && !transLower && !(tileUpper.halfstep && tileLower.halfstep)){ //Floor tile detected!
+                        if(bothValid && transUpper && !transLower && !(tileUpper.halfstep && tileLower.halfstep)){ //Floor tile detected!
                             if(onStrip &&
                                (newFace.type != texId(tileLower) ||
                                 !halfSame)){
@@ -329,6 +334,8 @@ class VBOMaker : WorldListener
                         auto transUpper = tileUpper.transparent || tileUpper.halfstep;
                         auto transLower = tileLower.transparent;
 
+                        auto bothValid = (tileUpper.valid && tileLower.valid) || renderSettings.renderInvalidTiles;
+
                         bool halfLower = tileLower.halfstep;
                         bool halfSame = onHalf == halfLower;
 
@@ -337,7 +344,7 @@ class VBOMaker : WorldListener
                         halfEtt = to!float(ett) * (halfLower ? 0.5 : 1.0);
                         halfNoll = to!float(noll) * (halfLower ? 0.5 : 1.0);
 
-                        if(transUpper && !transLower && !(tileUpper.halfstep && tileLower.halfstep)){ //Floor tile detected!
+                        if(bothValid && transUpper && !transLower && !(tileUpper.halfstep && tileLower.halfstep)){ //Floor tile detected!
                             if(onStrip &&
                                (newFace.type != texId(tileLower) ||
                                 !halfSame)){

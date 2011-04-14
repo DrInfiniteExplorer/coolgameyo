@@ -34,6 +34,7 @@ struct RenderSettings{
     bool useMipMap = true;
     float anisotropy = 0; //set to max of this(uservalue) and implementation limit sometime
     bool renderWireframe;
+    bool renderInvalidTiles;
     /* Derp derp derp */
 
     int pixelsPerTile = 16;

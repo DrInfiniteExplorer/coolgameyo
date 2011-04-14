@@ -7,7 +7,7 @@ in vec3 position;
 in vec2 texcoord;
 in uint type;
 
-out vec2 tex_texcoord;
+smooth out vec2 tex_texcoord;
 flat out uint texId;
    
 void main(){
