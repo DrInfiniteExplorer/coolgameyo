@@ -43,6 +43,7 @@ private Task syncTask() {
 // THIS WILL PROBABLY NEED SOME FLESHING OUT...!!!
 private void workerFun(shared Scheduler ssched) {
     auto sched = cast(Scheduler)ssched; // fuck the type system!
+    setThreadName("Fun-worker thread");
 
     while (true) {
         // try to receive message?

@@ -1,5 +1,7 @@
 module graphics.vbomaker;
 
+import core.sync.mutex;
+
 import std.algorithm;
 import std.container;
 import std.conv;
@@ -47,6 +49,7 @@ struct GraphicsRegion
     GraphRegionNum grNum;
     uint VBO = 0;
     uint quadCount = 0;
+    Face[] faces;
 }
 
 struct Vertex{
@@ -54,6 +57,17 @@ struct Vertex{
     vec2f texcoord;
     uint type;
 };
+
+struct Face{
+    Vertex[4] quad;
+    void type(uint t) @property {
+        foreach(ref q; quad){
+            q.type = t;
+        }
+    }
+    uint type() const @property { return quad[0].type; }
+}
+
 
 
 unittest{
@@ -98,8 +112,10 @@ unittest{
 
 class VBOMaker : WorldListener
 {
-    GraphRegionNum[] regionsToUpdate;
-    GraphicsRegion[GraphRegionNum] regions;
+    GraphRegionNum[] regionsToUpdate; //Only used in taskFunc and where we populate it, mutually exclusive locations.
+    GraphicsRegion[GraphRegionNum] regions; //Accessed from getRegions and from taskFunc, could collide.
+    GraphRegionNum[] dirtyRegions; //Can be updated by worker thread; Is read&cleared in render thread.
+
     World world;
     Scheduler scheduler;
     Camera camera;
@@ -114,7 +130,11 @@ class VBOMaker : WorldListener
         minReUseRatio = 0.95;
     }
 
-    const(GraphicsRegion)[GraphRegionNum] getRegions() const{
+    const(GraphicsRegion)[GraphRegionNum] getRegions(){
+        foreach(num; dirtyRegions){
+            buildVBO(regions[num]);
+        }
+        dirtyRegions.length = 0;
         return regions;
     }
 
@@ -123,16 +143,6 @@ class VBOMaker : WorldListener
             glDeleteBuffers(1, &region.VBO);
         }
         regions = null;
-    }
-
-    struct Face{
-        Vertex[4] quad;
-        void type(uint t) @property {
-            foreach(ref q; quad){
-                q.type = t;
-            }
-        }
-        uint type() const @property { return quad[0].type; }
     }
 
     //Floor/Roof-tiles.
@@ -397,10 +407,12 @@ class VBOMaker : WorldListener
         }
     }
 
-    void buildVBO(ref GraphicsRegion region, Face[] faces){
-        auto primitiveCount = faces.length;
+    void buildVBO(ref GraphicsRegion region){
+        auto primitiveCount = region.faces.length;
         auto geometrySize = primitiveCount * Face.sizeof;
         region.quadCount = primitiveCount;
+
+        scope(exit) region.faces.length = 0;
         if(region.VBO){
             //See if VBO is reusable.
             int bufferSize;
@@ -409,7 +421,7 @@ class VBOMaker : WorldListener
 
             double ratio = to!double(geometrySize)/to!double(bufferSize);
             if(minReUseRatio <= ratio && ratio <= 1){
-                glBufferSubData(GL_ARRAY_BUFFER, 0, geometrySize, faces.ptr);
+                glBufferSubData(GL_ARRAY_BUFFER, 0, geometrySize, region.faces.ptr);
                 return;
             }else{
                 //Delete old vbo
@@ -421,27 +433,30 @@ class VBOMaker : WorldListener
         if(geometrySize > 0){
             glGenBuffers(1, &region.VBO);
             glBindBuffer(GL_ARRAY_BUFFER, region.VBO);
-            glBufferData(GL_ARRAY_BUFFER, geometrySize, faces.ptr, GL_STATIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER, geometrySize, region.faces.ptr, GL_STATIC_DRAW);
         }
     }
 
     void buildGraphicsRegion(ref GraphicsRegion region){
         version(Windows) auto start = GetTickCount();
-        Face[] faces;
+        //Face[] faces;
         auto min = region.grNum.min();
         auto max = region.grNum.max();
-        buildGeometryX(min, max, faces);
-        buildGeometryY(min, max, faces);
+        buildGeometryX(min, max, region.faces);
+        buildGeometryY(min, max, region.faces);
         //Floor
-        buildGeometryZ(min, max, faces);
+        buildGeometryZ(min, max, region.faces);
 
-        foreach(ref face ; faces) {
+        foreach(ref face ; region.faces) {
             foreach(ref vert ; face.quad) {
                 vert.vertex -= util.convert!float(min.value);
             }
         }
+
+        dirtyRegions ~= region.grNum;
+
         version(Windows) auto d1 = GetTickCount() - start;
-        buildVBO(region, faces);
+        //buildVBO(region);
         version(Windows) auto d2 = GetTickCount() - start - d1;
 
         version(Windows) writeln("It took ", d1, " ms to build the geometry and ", d2, " ms to build the vbo (total of ", d1+d2, " ms)");
@@ -469,9 +484,8 @@ class VBOMaker : WorldListener
         auto num = regionsToUpdate[$-1];
         regionsToUpdate.length -= 1;
 
-        auto grPtr = num in regions;
-        if(grPtr) {
-            buildGraphicsRegion(*grPtr);
+        if(num in regions) {
+            buildGraphicsRegion(regions[num]);
         } else{
             auto ny = GraphicsRegion();
             ny.grNum = num;

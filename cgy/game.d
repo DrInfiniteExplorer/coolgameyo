@@ -138,7 +138,7 @@ class Game{
         auto tilesys = parseGameData();
         world = new World(tilesys);
         assert (isWorker, "otherwise wont work lol (maybe)");
-        scheduler = new Scheduler(world, 0);
+        scheduler = new Scheduler(world, 1);
 
         if (isClient) {
             camera = new Camera();
@@ -192,6 +192,7 @@ class Game{
         if (isClient) {
             if (isServer) {
                 spawn(function(shared Game g) {
+                        setThreadName("Server thread");
                         (cast(Game)g).runServer();
                         }, cast(shared)this);
             } else {
@@ -218,8 +219,8 @@ class Game{
         SDL_Event event;
         while (!exit) {
 
-            auto task = scheduler.getTask();
-            task.run(world);
+            //auto task = scheduler.getTask();
+            //task.run(world);
 
 
             while (SDL_PollEvent(&event)) {

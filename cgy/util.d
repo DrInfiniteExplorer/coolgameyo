@@ -1,6 +1,7 @@
 import std.conv;
 import std.exception;
 import std.stdio;
+import std.string;
 
 //import world : BlockSize, SectorSize , GraphRegionSize;
 import worldparts.sector;
@@ -10,7 +11,7 @@ import stolen.all;
 
 version(Windows){
     import std.c.windows.windows;
-    import win32.windows : SYSTEM_INFO, GetSystemInfo; //Not available in std.c.windows.windows
+    import win32.windows : SYSTEM_INFO, GetSystemInfo, RaiseException; //Not available in std.c.windows.windows
 }
 
 version (Posix) {
@@ -19,11 +20,11 @@ version (Posix) {
 }
 
 
-alias vector2d!(int)	vec2i;
-alias vector2d!(float)	vec2f;
+alias vector2d!(int)  vec2i;
+alias vector2d!(float)  vec2f;
 
-alias vector3d!(int)	vec3i;
-alias vector3d!(float)	vec3f;
+alias vector3d!(int)  vec3i;
+alias vector3d!(float)  vec3f;
 alias vector3d!(double) vec3d;
 
 vector3d!(A) convert(A,B)(const vector3d!(B) wap){
@@ -44,7 +45,7 @@ void BREAKPOINT() {
 
 void[] allocateBlob(size_t size) {
     version (Windows) { //For win32 evaluatar inte sant pa win64
-        auto ret = VirtualAlloc(null, 4096 * size, MEM_COMMIT, PAGE_READWRITE); 
+        auto ret = VirtualAlloc(null, 4096 * size, MEM_COMMIT, PAGE_READWRITE);
         auto tmp = enforce(ret[0 .. 4096*size], "memory allocation fail :-)");
         return tmp;
     } else version (Posix) {
@@ -92,7 +93,7 @@ struct RangeFromTo
     this(vec3i min, vec3i max){
         this(min.X, max.X,
              min.Y, max.Y,
-             min.Z, max.Z);             
+             min.Z, max.Z);
     }
 
     this(int beginX, int endX,
@@ -131,7 +132,7 @@ struct RangeFromTo
     }
     void popFront() {
         x += 1;
-        if (x < ex) return; 
+        if (x < ex) return;
         x = bx;
         y += 1;
         if (y < ey) return;
@@ -273,7 +274,7 @@ class Queue(T) {
     T removeAny() {
         enforce(!empty);
         T ret = first.value;
-        
+
         first = first.next;
         if (first is null) last = null;
 
@@ -294,4 +295,44 @@ enum Direction{
     all   = north | up | west | down | south | east,
 }
 
+
+
+
+void setThreadName(string threadName) {
+    version(Windows){
+        //
+        // Usage: SetThreadName (-1, "MainThread");
+        //
+        //#include <windows.h>
+        uint MS_VC_EXCEPTION=0x406D1388;
+
+        struct THREADNAME_INFO{
+            align(8):
+           uint dwType; // Must be 0x1000.
+           char* szName; // Pointer to name (in user addr space).
+           uint dwThreadID; // Thread ID (-1=caller thread).
+           uint dwFlags; // Reserved for future use, must be zero.
+        };
+
+        //const char* name = toStringz(threadName);
+        char* name = cast(char*)(threadName ~ "\0").ptr;
+
+        THREADNAME_INFO info;
+        info.dwType = 0x1000;
+        info.szName = to!(char*)(name);
+        info.dwThreadID = GetCurrentThreadId();
+        info.dwFlags = 0;
+
+        uint* ptr = cast(uint*)&info;
+
+        try//__try
+        {
+            RaiseException( MS_VC_EXCEPTION, 0u, info.sizeof/ptr.sizeof, ptr );
+        }
+        catch(Throwable o) //__except(EXCEPTION_EXECUTE_HANDLER)
+        {
+            writeln("asdasdasd");
+        }
+    }
+}
 
