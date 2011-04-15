@@ -20,16 +20,16 @@ mixin template ToStringMethod2D() {
         return typeof(this).stringof ~
             " (" ~ to!string(value.X)
             ~ ", " ~ to!string(value.Y) ~ ")";
-    }    
+    }
 }
 
 struct UnitPos {
     vec3d value;
-    
+
     TilePos tilePos() @property {
         return TilePos(convert!int(value));
     }
-    
+
     mixin ToStringMethod3D;
 }
 
@@ -54,7 +54,7 @@ struct SectorNum {
         return aabbox3d!double(minPos, maxPos);
     }
 
-    mixin ToStringMethod3D;    
+    mixin ToStringMethod3D;
 }
 
 struct BlockNum {
@@ -93,11 +93,11 @@ struct BlockNum {
             posMod(value.X, BlocksPerSector.x),
             posMod(value.Y, BlocksPerSector.y),
             posMod(value.Z, BlocksPerSector.z)
-          );        
-    }    
+          );
+    }
 
-    mixin ToStringMethod3D;    
-    
+    mixin ToStringMethod3D;
+
 }
 struct TilePos {
     vec3i value;
@@ -114,7 +114,7 @@ struct TilePos {
                     negDiv(value.Y, BlockSize.y),
                     negDiv(value.Z, BlockSize.z)));
     }
-    
+
     GraphRegionNum getGraphRegionNum() const{
         return graphRegionNum(vec3i(
                     negDiv(value.X, GraphRegionSize.x),
@@ -122,25 +122,25 @@ struct TilePos {
                     negDiv(value.Z, GraphRegionSize.z),
                     ));
     }
-    
+
     UnitPos toUnitPos() const{
         return UnitPos(vec3d(value.X + 0.5,
                              value.Y + 0.5,
                              value.Z + 0.5));
-                             
+
     }
-    
+
     TileXYPos toTileXYPos() const{
         return tileXYPos(vec2i(value.X, value.Y));
     }
-    
+
     aabbox3d!double getAABB(){
         auto minPos = util.convert!double(value);
         auto maxPos = minPos + vec3d(1, 1, 1);
         return aabbox3d!double(minPos, maxPos);
     }
-    
-    
+
+
     vec3i rel() const
     out(x){
         assert(x.X >= 0, "rel.X < 0!!! :(");
@@ -158,7 +158,7 @@ struct TilePos {
             );
     }
 
-    mixin ToStringMethod3D;        
+    mixin ToStringMethod3D;
 }
 
 struct GraphRegionNum{
@@ -179,13 +179,14 @@ struct GraphRegionNum{
                              GraphRegionSize.z * value.Z
                              ));
     }
+    alias min toTilePos;
     aabbox3d!double getAABB() const{
         auto minPos = util.convert!double(value);
         auto maxPos = minPos + vec3d(GraphRegionSize.x,GraphRegionSize.y, GraphRegionSize.z);
         return aabbox3d!double(minPos, maxPos);
     }
 
-    mixin ToStringMethod3D;    
+    mixin ToStringMethod3D;
 }
 
 struct SectorXYNum {
@@ -207,7 +208,7 @@ struct TileXYPos {
                     negDiv(value.X, SectorSize.x),
                     negDiv(value.Y, SectorSize.y)));
     }
-    
+
     vec2i sectorRel() const{
         return vec2i(posMod(value.X, SectorSize.x),
                      posMod(value.Y, SectorSize.y));

@@ -30,14 +30,6 @@ import unit;
 string SDLError() { return to!string(SDL_GetError()); }
 
 void initOpenGL(){
-    DerelictGL.loadExtensions();
-    glError();
-    glFrontFace(GL_CCW);
-    glError();
-    DerelictGL.loadClassicVersions(GLVersion.GL30);
-    DerelictGL.loadModernVersions(GLVersion.GL30);
-    glError();
-
     string derp = to!string(glGetString(GL_VERSION));
     auto a = split(derp, ".");
     auto major = to!int(a[0]);
@@ -46,6 +38,15 @@ void initOpenGL(){
     //TODO: POTENTIAL BUG EEAPASASALPDsAPSLDPLASDsPLQWPRMtopmkg>jfekofsaplPSLFPsLSDF
     renderSettings.glVersion=major + 0.1*minor;
     writeln("OGL version ", renderSettings.glVersion);
+
+    DerelictGL.loadExtensions();
+    glError();
+    glFrontFace(GL_CCW);
+    glError();
+    DerelictGL.loadClassicVersions(GLVersion.GL30);
+    glError();
+    DerelictGL.loadModernVersions(GLVersion.GL30);
+    glError();
 
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &renderSettings.maxTextureSize);
     glError();
@@ -104,7 +105,6 @@ class Game{
         isClient = clie;
         isWorker = work;
 
-
         if (isClient) {
             writeln("Initializing client stuff");
             scope (success) writeln("Done with client stuff");
@@ -125,8 +125,9 @@ class Game{
             SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER,      1);
 
             //Antialiasing. now off-turned.
+            //Apparently this AA only works on edges and not on surfaces, so turned off for now.
             SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS,  0);
-            SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES,  2);
+            SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES,  16);
 
             surface = enforce(SDL_SetVideoMode(width, height, 32, SDL_HWSURFACE | SDL_GL_DOUBLEBUFFER | SDL_OPENGL),
                               "Could not set sdl video mode (" ~ SDLError() ~ ")");
@@ -136,11 +137,13 @@ class Game{
 
         auto tilesys = parseGameData();
         world = new World(tilesys);
+        assert (isWorker, "otherwise wont work lol (maybe)");
+        scheduler = new Scheduler(world, 0);
 
         if (isClient) {
-            renderer = new Renderer(world);
-            renderer.atlas = atlas;
             camera = new Camera();
+            renderer = new Renderer(world, scheduler, camera);
+            renderer.atlas = atlas;
 
             atlas.upload();
 
@@ -168,9 +171,11 @@ class Game{
     TileSystem parseGameData() {
         auto sys = new TileSystem;
 
+        enum f = "textures/001.png";
+        if(isClient) atlas.addTile(f, vec2i(16, 0)); //Makes uninitialized tiles show the notiles-tile.
+
         TileType mud = new TileType;
         if (isClient) {
-            enum f = "textures/001.png";
             mud.textures.side   = atlas.addTile(f);
             mud.textures.top    = atlas.addTile(f, vec2i(0, 16));
             mud.textures.bottom = atlas.addTile(f, vec2i(0, 32));
@@ -184,9 +189,6 @@ class Game{
     }
 
     void start() {
-        assert (isWorker, "otherwise wont work lol (maybe)");
-        scheduler = new Scheduler(world, 1);
-
         if (isClient) {
             if (isServer) {
                 spawn(function(shared Game g) {
@@ -215,6 +217,11 @@ class Game{
         auto exit = false;
         SDL_Event event;
         while (!exit) {
+
+            auto task = scheduler.getTask();
+            task.run(world);
+
+
             while (SDL_PollEvent(&event)) {
                 switch (event.type) {
                     case SDL_QUIT:
@@ -241,12 +248,12 @@ class Game{
                 }
             }
 
-            updateCamera(); //Or doInterface() or controlDwarf or ()()()()();
+            //updateCamera(); //Or doInterface() or controlDwarf or ()()()()();
 
-            //camera.setPosition(vec3d(0, -2, 2));
-            //camera.setTarget(vec3d(0, 0, 0));
+            camera.setPosition(vec3d(-2, -2, 20));
+            camera.setTarget(vec3d(0, 0, 20));
 
-            renderer.render(camera);
+            renderer.render();
             updateFPS();
             SDL_GL_SwapBuffers();
         }
@@ -285,9 +292,7 @@ class Game{
         auto key = event.keysym.sym;
         auto down = event.type == SDL_KEYDOWN;
         keyMap[key] = down;
-        if(key == SDLK_F1 && down){
-            renderSettings.renderWireframe ^= 1;
-        }
+        if(key == SDLK_F1 && down) renderSettings.renderWireframe ^= 1;
     }
 
     void mouseMove(SDL_MouseMotionEvent mouse){

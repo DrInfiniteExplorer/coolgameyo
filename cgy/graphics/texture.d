@@ -263,8 +263,8 @@ class TileTextureAtlas{
             glError();
         }
     }
-        
-    ushort addTile(string filename, vec2i offset=vec2i(0,0), 
+
+    ushort addTile(string filename, vec2i offset=vec2i(0,0),
             vec3i tint=vec3i(255,255,255)) {
 
         ushort tileCount = to!ushort(tileMap.length);

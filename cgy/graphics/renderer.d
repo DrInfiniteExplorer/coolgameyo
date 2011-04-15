@@ -21,6 +21,7 @@ import stolen.all;
 import util;
 import unit;
 import world;
+import scheduler;
 
 struct RenderSettings{
     //Some opengl-implementation-dependant constants, gathered on renderer creation
@@ -33,7 +34,7 @@ struct RenderSettings{
     bool useMipMap = true;
     float anisotropy = 0; //set to max of this(uservalue) and implementation limit sometime
     bool renderWireframe;
-    bool renderInvalidTiles;
+    bool renderInvalidTiles = true;
     /* Derp derp derp */
 
     int pixelsPerTile = 16;
@@ -70,7 +71,9 @@ void glError(string file = __FILE__, int line = __LINE__){
 
 class Renderer{
     World world;
+    Scheduler scheduler;
     VBOMaker vboMaker;
+    Camera camera;
 
     TileTextureAtlas atlas;
 
@@ -106,10 +109,12 @@ class Renderer{
 
 
 
-    this(World w)
+    this(World w, Scheduler s, Camera c)
     {
         world = w;
-        vboMaker = new VBOMaker(w);
+        scheduler = s;
+        camera = c;
+        vboMaker = new VBOMaker(w, s, c);
 
         buildConstantsString();
 
@@ -202,7 +207,7 @@ class Renderer{
         glError();
     }
 
-  void render(Camera camera)
+  void render()
   {
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

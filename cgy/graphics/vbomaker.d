@@ -1,16 +1,20 @@
 module graphics.vbomaker;
 
-import std.stdio;
+import std.algorithm;
 import std.container;
 import std.conv;
-import std.algorithm;
+import std.math;
+import std.stdio;
 version(Windows) import std.c.windows.windows;
 
 import derelict.opengl.gl;
 import derelict.opengl.glext;
 
+
 import graphics.renderer;
+import graphics.camera;
 import world;
+import scheduler;
 import util;
 import pos;
 import stolen.aabbox3d;
@@ -94,13 +98,18 @@ unittest{
 
 class VBOMaker : WorldListener
 {
+    GraphRegionNum[] regionsToUpdate;
     GraphicsRegion[GraphRegionNum] regions;
     World world;
+    Scheduler scheduler;
+    Camera camera;
     double minReUseRatio;
 
-    this(World w)
+    this(World w, Scheduler s, Camera c)
     {
         world = w;
+        scheduler = s;
+        camera = c;
         world.addListener(this);
         minReUseRatio = 0.95;
     }
@@ -439,9 +448,45 @@ class VBOMaker : WorldListener
 
     }
 
+    void taskFunc() {
+        assert(regionsToUpdate.length > 0, "Error in VBOMaker.taskFunc; Got nothing to do!!");
+
+        double computeValue(GraphRegionNum num) {
+            const auto graphRegionAcross = sqrt(to!double(  GraphRegionSize.x*GraphRegionSize.x +
+                                                            GraphRegionSize.y*GraphRegionSize.y +
+                                                            GraphRegionSize.z*GraphRegionSize.z));
+            auto camDir = util.convert!double(camera.getTargetDir());
+            auto camPos = camera.getPosition() - camDir * graphRegionAcross;
+            vec3d toBlock = util.convert!double(num.toTilePos().value) - camPos;
+            double distSQ = toBlock.getLengthSQ();
+            if(camDir.dotProduct(toBlock) < 0) {
+                distSQ = -distSQ;
+            }
+            return distSQ;
+        }
+
+        schwartzSort!(computeValue, "a>b")(regionsToUpdate);
+        auto num = regionsToUpdate[$-1];
+        regionsToUpdate.length -= 1;
+
+        auto grPtr = num in regions;
+        if(grPtr) {
+            buildGraphicsRegion(*grPtr);
+        } else{
+            auto ny = GraphicsRegion();
+            ny.grNum = num;
+            buildGraphicsRegion(ny);
+            regions[num] = ny;
+        }
+
+        if(regionsToUpdate.length != 0){
+            scheduler.push(asyncTask(&taskFunc));
+        }
+    }
+
     void notifySectorLoad(SectorNum sectorNum)
     {
-        version(Windows) auto start = GetTickCount();
+        //version(Windows) auto start = GetTickCount();
         auto grNumMin = sectorNum.toTilePos().getGraphRegionNum();
         sectorNum.value += vec3i(1,1,1);
         auto tmp = sectorNum.toTilePos();
@@ -450,6 +495,16 @@ class VBOMaker : WorldListener
         grNumMax.value += vec3i(1,1,1);
         sectorNum.value -= vec3i(1,1,1);
 
+        //ASSUMES THAT WE ARE IN THE UPDATE PHASE, OTHERWISE THIS MAY INTRODUCE PROBLEMS AND SUCH. :)
+        /*
+        if(regionsToUpdate.length == 0){
+            scheduler.push(asyncTask(&taskFunc));
+        }
+        foreach(pos ; RangeFromTo(grNumMin.value, grNumMax.value)) {
+            auto grNum = graphRegionNum(pos);
+            regionsToUpdate ~= grNum;
+        }
+        */
         foreach(pos ; RangeFromTo(grNumMin.value, grNumMax.value)) {
             auto grNum = graphRegionNum(pos);
             if (grNum in regions) {
@@ -461,7 +516,8 @@ class VBOMaker : WorldListener
                 regions[grNum] = ny;
             }
         }
-        version(Windows) writeln("It took ", GetTickCount() - start, " ms to geometricize a region");
+        // */
+        //version(Windows) writeln("It took ", GetTickCount() - start, " ms to geometricize a region");
     }
     void notifySectorUnload(SectorNum sectorNum)
     {
@@ -483,6 +539,7 @@ class VBOMaker : WorldListener
             if(intersects(region.grNum.getAABB(), tileAABB)){
                 writeln("Update this region!!");
                 cnt ++;
+                asm{ int 3; }
             }
         }
         assert(cnt == 1, cnt == 0 ?

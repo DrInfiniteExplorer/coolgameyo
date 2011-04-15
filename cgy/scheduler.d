@@ -28,7 +28,7 @@ Task syncTask(void delegate () run) {
 
 private Task sleepyTask(long hnsecs) {
     void asd(const World){
-        writeln("worker sleeping ", hnsecs, " hnsecs");
+        //writeln("worker sleeping ", hnsecs, " hnsecs");
         Thread.sleep(dur!"hnsecs"(hnsecs));
     }
     return Task(false, false, &asd);
@@ -107,7 +107,7 @@ class Scheduler {
             switch (state) {
                 case State.update:
 
-                    writeln("updating!");
+                    //writeln("updating!");
 
                     syncTime = time();
                     world.update();
