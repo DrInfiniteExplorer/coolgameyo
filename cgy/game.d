@@ -99,6 +99,7 @@ class Game{
     Scheduler         scheduler;
     TileTextureAtlas  atlas;
     bool[SDLK_LAST]   keyMap;
+    bool              useCamera;
 
     this(bool serv, bool clie, bool work) {
         isServer = serv;
@@ -146,6 +147,9 @@ class Game{
             renderer.atlas = atlas;
 
             atlas.upload();
+            camera.setPosition(vec3d(-2, -2, 20));
+            camera.setTarget(vec3d(0, 0, 20));
+
 
         }
 
@@ -250,10 +254,8 @@ class Game{
                 }
             }
 
-            //updateCamera(); //Or doInterface() or controlDwarf or ()()()()();
-
-            camera.setPosition(vec3d(-2, -2, 20));
-            camera.setTarget(vec3d(0, 0, 20));
+            if(useCamera)
+                updateCamera(); //Or doInterface() or controlDwarf or ()()()()();
 
             renderer.render();
             updateFPS();
@@ -295,6 +297,7 @@ class Game{
         auto down = event.type == SDL_KEYDOWN;
         keyMap[key] = down;
         if(key == SDLK_F1 && down) renderSettings.renderWireframe ^= 1;
+        if(key == SDLK_F2 && down) useCamera ^= 1;
     }
 
     void mouseMove(SDL_MouseMotionEvent mouse){
@@ -302,7 +305,8 @@ class Game{
         auto y = mouse.y;
         if(x != middleX || y != middleY){
             SDL_WarpMouse(middleX, middleY);
-            camera.mouseMove( mouse.xrel,  mouse.yrel);
+            if(useCamera)
+                camera.mouseMove( mouse.xrel,  mouse.yrel);
         }
     }
 }
