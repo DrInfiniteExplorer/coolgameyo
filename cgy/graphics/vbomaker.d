@@ -496,7 +496,7 @@ class VBOMaker : WorldListener
         sectorNum.value -= vec3i(1,1,1);
 
         //ASSUMES THAT WE ARE IN THE UPDATE PHASE, OTHERWISE THIS MAY INTRODUCE PROBLEMS AND SUCH. :)
-        /*
+        //*
         if(regionsToUpdate.length == 0){
             scheduler.push(asyncTask(&taskFunc));
         }
@@ -504,7 +504,7 @@ class VBOMaker : WorldListener
             auto grNum = graphRegionNum(pos);
             regionsToUpdate ~= grNum;
         }
-        */
+        /*/
         foreach(pos ; RangeFromTo(grNumMin.value, grNumMax.value)) {
             auto grNum = graphRegionNum(pos);
             if (grNum in regions) {
