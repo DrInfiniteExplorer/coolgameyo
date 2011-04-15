@@ -264,6 +264,7 @@ class VBOMaker : WorldListener
         foreach(doUpper ; 0 .. 2){ //Most best piece of code ever to have been written.
             auto ett = 1-doUpper;
             auto noll = doUpper;
+            auto neg = noll ? 1 : -1;
             foreach(y ; min.value.Y-1 .. max.value.Y){
                 foreach(z ; min.value.Z .. max.value.Z){
                     onStrip = false;
@@ -293,8 +294,8 @@ class VBOMaker : WorldListener
                                 !halfSame)){
                                 newFace.quad[2].vertex.set(x, y+1, z+prevHalfEtt);
                                 newFace.quad[3].vertex.set(x, y+1, z+prevHalfNoll);
-                                newFace.quad[2].texcoord.set(x, noll);
-                                newFace.quad[3].texcoord.set(x, ett);
+                                newFace.quad[2].texcoord.set(x*neg, noll);
+                                newFace.quad[3].texcoord.set(x*neg, ett);
                                 faceList ~= newFace;
                                 onStrip = false;
                             }
@@ -303,16 +304,16 @@ class VBOMaker : WorldListener
                                 onHalf = halfLower;
                                 newFace.quad[0].vertex.set(x, y+1, z+halfNoll);
                                 newFace.quad[1].vertex.set(x, y+1, z+halfEtt);
-                                newFace.quad[0].texcoord.set(x, ett);
-                                newFace.quad[1].texcoord.set(x, noll);
+                                newFace.quad[0].texcoord.set(x*neg, ett);
+                                newFace.quad[1].texcoord.set(x*neg, noll);
                                 newFace.type = texId(tileLower);
                             }else {} //if onStrip && same, continue
                         }else if(onStrip){ //No floor :(
                             //End current strip.
                             newFace.quad[2].vertex.set(x, y+1, z+prevHalfEtt);
                             newFace.quad[3].vertex.set(x, y+1, z+prevHalfNoll);
-                            newFace.quad[2].texcoord.set(x, noll);
-                            newFace.quad[3].texcoord.set(x, ett);
+                            newFace.quad[2].texcoord.set(x*neg, noll);
+                            newFace.quad[3].texcoord.set(x*neg, ett);
                             faceList ~= newFace;
                             onStrip = false;
                         }
@@ -321,8 +322,8 @@ class VBOMaker : WorldListener
                         //End current strip.
                         newFace.quad[2].vertex.set(max.value.X, y+1, z+halfEtt);
                         newFace.quad[3].vertex.set(max.value.X, y+1, z+halfNoll);
-                        newFace.quad[2].texcoord.set(max.value.X, noll);
-                        newFace.quad[3].texcoord.set(max.value.X, ett);
+                        newFace.quad[2].texcoord.set(max.value.X*neg, noll);
+                        newFace.quad[3].texcoord.set(max.value.X*neg, ett);
                         faceList ~= newFace;
                         onStrip = false;
                    }
@@ -349,6 +350,7 @@ class VBOMaker : WorldListener
         foreach(doUpper ; 0 .. 2){ //Most best piece of code ever to have been written.
             auto ett = 1-doUpper;
             auto noll = doUpper;
+            auto neg = ett ? 1 : -1;
             foreach(x ; min.value.X-1 .. max.value.X){
                 foreach(z ; min.value.Z .. max.value.Z){
                     onStrip = false;
@@ -378,8 +380,8 @@ class VBOMaker : WorldListener
                                 !halfSame)){
                                 newFace.quad[2].vertex.set(x+1, y, z+prevHalfNoll);
                                 newFace.quad[3].vertex.set(x+1, y, z+prevHalfEtt);
-                                newFace.quad[2].texcoord.set(y, ett);
-                                newFace.quad[3].texcoord.set(y, noll);
+                                newFace.quad[2].texcoord.set(y*neg, ett);
+                                newFace.quad[3].texcoord.set(y*neg, noll);
                                 faceList ~= newFace;
                                 onStrip = false;
                             }
@@ -388,16 +390,16 @@ class VBOMaker : WorldListener
                                 onHalf = halfLower;
                                 newFace.quad[0].vertex.set(x+1, y, z+halfEtt);
                                 newFace.quad[1].vertex.set(x+1, y, z+halfNoll);
-                                newFace.quad[0].texcoord.set(y, noll);
-                                newFace.quad[1].texcoord.set(y, ett);
+                                newFace.quad[0].texcoord.set(y*neg, noll);
+                                newFace.quad[1].texcoord.set(y*neg, ett);
                                 newFace.type = texId(tileLower);
                             }else {} //if onStrip && same, continue
                         }else if(onStrip){ //No floor :(
                             //End current strip.
                             newFace.quad[2].vertex.set(x+1, y, z+prevHalfNoll);
                             newFace.quad[3].vertex.set(x+1, y, z+prevHalfEtt);
-                            newFace.quad[2].texcoord.set(y, ett);
-                            newFace.quad[3].texcoord.set(y, noll);
+                            newFace.quad[2].texcoord.set(y*neg, ett);
+                            newFace.quad[3].texcoord.set(y*neg, noll);
                             faceList ~= newFace;
                             onStrip = false;
                         }
@@ -406,8 +408,8 @@ class VBOMaker : WorldListener
                         //End current strip.
                         newFace.quad[2].vertex.set(x+1, max.value.Y, z+halfNoll);
                         newFace.quad[3].vertex.set(x+1, max.value.Y, z+halfEtt);
-                        newFace.quad[2].texcoord.set(max.value.Y, ett);
-                        newFace.quad[3].texcoord.set(max.value.Y, noll);
+                        newFace.quad[2].texcoord.set(max.value.Y*neg, ett);
+                        newFace.quad[3].texcoord.set(max.value.Y*neg, noll);
                         faceList ~= newFace;
                         onStrip = false;
                    }
