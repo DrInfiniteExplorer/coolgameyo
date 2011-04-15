@@ -219,6 +219,7 @@ class Game{
         SDL_Event event;
         while (!exit) {
 
+            //writeln("mainloop!");
             //auto task = scheduler.getTask();
             //task.run(world);
 

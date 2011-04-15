@@ -130,6 +130,8 @@ class VBOMaker : WorldListener
         camera = c;
         world.addListener(this);
         minReUseRatio = 0.95;
+        regionMutex = new Mutex;
+        dirtyMutex = new Mutex;
     }
 
     const(GraphicsRegion)[GraphRegionNum] getRegions(){
