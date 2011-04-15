@@ -30,7 +30,7 @@ struct RenderSettings{
     double glVersion;
 
     //Just user settings.
-    bool disableVSync = false;
+    bool disableVSync = true;
     bool useMipMap = true;
     float anisotropy = 0; //set to max of this(uservalue) and implementation limit sometime
     bool renderWireframe;

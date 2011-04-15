@@ -115,6 +115,8 @@ class VBOMaker : WorldListener
     GraphRegionNum[] regionsToUpdate; //Only used in taskFunc and where we populate it, mutually exclusive locations.
     GraphicsRegion[GraphRegionNum] regions; //Accessed from getRegions and from taskFunc, could collide.
     GraphRegionNum[] dirtyRegions; //Can be updated by worker thread; Is read&cleared in render thread.
+    Mutex dirtyMutex;
+    Mutex regionMutex;
 
     World world;
     Scheduler scheduler;
@@ -131,10 +133,15 @@ class VBOMaker : WorldListener
     }
 
     const(GraphicsRegion)[GraphRegionNum] getRegions(){
+        dirtyMutex.lock();
+        scope(exit) dirtyMutex.unlock();
         foreach(num; dirtyRegions){
+            regionMutex.lock();
+            scope(exit) regionMutex.unlock();
             buildVBO(regions[num]);
         }
         dirtyRegions.length = 0;
+
         return regions;
     }
 
@@ -437,7 +444,7 @@ class VBOMaker : WorldListener
         }
     }
 
-    void buildGraphicsRegion(ref GraphicsRegion region){
+    void buildGraphicsRegion(GraphicsRegion region){
         version(Windows) auto start = GetTickCount();
         //Face[] faces;
         auto min = region.grNum.min();
@@ -453,7 +460,13 @@ class VBOMaker : WorldListener
             }
         }
 
+        dirtyMutex.lock();
         dirtyRegions ~= region.grNum;
+        dirtyMutex.unlock();
+
+        regionMutex.lock();
+        regions[region.grNum] = region;
+        regionMutex.unlock();
 
         version(Windows) auto d1 = GetTickCount() - start;
         //buildVBO(region);
@@ -484,14 +497,16 @@ class VBOMaker : WorldListener
         auto num = regionsToUpdate[$-1];
         regionsToUpdate.length -= 1;
 
-        if(num in regions) {
-            buildGraphicsRegion(regions[num]);
-        } else{
-            auto ny = GraphicsRegion();
-            ny.grNum = num;
-            buildGraphicsRegion(ny);
-            regions[num] = ny;
+        GraphicsRegion reg;
+        reg.grNum = num;
+        {
+            regionMutex.lock();
+            scope(exit) regionMutex.unlock();
+            if(num in regions) {
+                reg = regions[num];
+            }
         }
+        buildGraphicsRegion(reg);
 
         if(regionsToUpdate.length != 0){
             scheduler.push(asyncTask(&taskFunc));
@@ -536,12 +551,15 @@ class VBOMaker : WorldListener
     void notifySectorUnload(SectorNum sectorNum)
     {
         auto sectorAABB = sectorNum.getAABB();
-
-        foreach(region ; regions){
-            if(intersects(sectorAABB, region.grNum.getAABB())){
-                writeln("Unload stuff oh yeah!!");
-                writeln("Perhaps.. Should we.. Maybe.. Stora data on disk? We'll see how things turn out.");
-                //How to do stuff, et c?
+        {
+            regionMutex.lock();
+            scope(exit) regionMutex.unlock();
+            foreach(region ; regions){
+                if(intersects(sectorAABB, region.grNum.getAABB())){
+                    writeln("Unload stuff oh yeah!!");
+                    writeln("Perhaps.. Should we.. Maybe.. Stora data on disk? We'll see how things turn out.");
+                    //How to do stuff, et c?
+                }
             }
         }
     }
@@ -549,11 +567,15 @@ class VBOMaker : WorldListener
     {
         auto tileAABB = tilePos.getAABB();
         int cnt=0;
-        foreach(region ; regions){
-            if(intersects(region.grNum.getAABB(), tileAABB)){
-                writeln("Update this region!!");
-                cnt ++;
-                asm{ int 3; }
+        {
+            regionMutex.lock();
+            scope(exit) regionMutex.unlock();
+            foreach(region ; regions){
+                if(intersects(region.grNum.getAABB(), tileAABB)){
+                    writeln("Update this region!!");
+                    cnt ++;
+                    asm{ int 3; }
+                }
             }
         }
         assert(cnt == 1, cnt == 0 ?
