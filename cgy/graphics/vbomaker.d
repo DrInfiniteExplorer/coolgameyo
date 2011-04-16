@@ -492,7 +492,7 @@ class VBOMaker : WorldListener
             vec3d toBlock = util.convert!double(num.toTilePos().value) - camPos;
             double distSQ = toBlock.getLengthSQ();
             if(camDir.dotProduct(toBlock) < 0) {
-                distSQ = -distSQ;
+                distSQ +=1000; //Stuff behind our backs are considered as important as stuff a kilometer ahead of us. ? :)
             }
             return distSQ;
         }

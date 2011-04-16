@@ -39,7 +39,7 @@ class World {
     int unitCount;
 
     WorldListener[] listeners;
-    
+
     TileSystem tileSystem;
 
     this(TileSystem tilesys) {
@@ -194,7 +194,7 @@ class World {
         ret.prop();
         return ret;
     }
-    
+
 
     void moveUnit(Unit* unit) {
         assert(0, "Implement");
@@ -238,7 +238,7 @@ class World {
         //Range +-2
 
         auto range = RangeFromTo(-2,3,-2,3,-2,3);
-        //debug
+        debug
         {
             range = RangeFromTo(0,1,0,1,0,1); //Make it faster in debyyyyg!!
         }
