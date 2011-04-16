@@ -12,8 +12,10 @@ struct Unit {
 
     UnitPos pos;
 
-    void tick(PathModule blerp) {
-            assert (false);
+    bool panics;
+
+    void tick(bool interrupted, PathModule blerp) {
+        assert (false);
     }
 }
 

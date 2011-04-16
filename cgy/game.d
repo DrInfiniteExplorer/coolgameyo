@@ -252,6 +252,7 @@ class Game{
                         exit=true;
                     }
                 }
+                if (event.key.keysym.sym == SDLK_ESCAPE) exit = true;
             }
 
             if(useCamera)

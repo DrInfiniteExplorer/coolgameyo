@@ -26,10 +26,10 @@ Task syncTask(void delegate () run) {
     return Task(true, false, (const World){ run(); });
 }
 
-private Task sleepyTask(long hnsecs) {
+private Task sleepyTask(long usecs) {
     void asd(const World){
-        //writeln("worker sleeping ", hnsecs, " hnsecs");
-        Thread.sleep(dur!"hnsecs"(hnsecs));
+        //writeln("worker sleeping ", usecs, " usecs");
+        Thread.sleep(dur!"usecs"(usecs));
     }
     return Task(false, false, &asd);
 }
@@ -53,7 +53,7 @@ private void workerFun(shared Scheduler ssched) {
 }
 
 private long time() {
-    return TickDuration.currSystemTick().hnsecs;
+    return TickDuration.currSystemTick().usecs;
 }
 
 class Scheduler {
@@ -73,7 +73,7 @@ class Scheduler {
 
     long syncTime;
     long nextSync() @property const {
-        return syncTime + (dur!"seconds"(1) / 30).total!"hnsecs"; // total???
+        return syncTime + (dur!"seconds"(1) / 30).total!"usecs"; // total???
     }
 
 
@@ -156,4 +156,3 @@ class Scheduler {
         }
     }
 }
-

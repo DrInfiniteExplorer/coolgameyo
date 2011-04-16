@@ -1,6 +1,7 @@
 import world;
 import scheduler;
 import pos;
+import unit;
 
 abstract class Module {
     Scheduler scheduler; // design this away please
@@ -31,7 +32,6 @@ class PathModule : Module {
 
     PathID findPath(TilePos from, TilePos to) {
         assert (0);
-
         return PathID(nextIDNum++);
     }
     bool pollPath(PathID id, out Path path) {
@@ -43,7 +43,7 @@ class PathModule : Module {
     }
     
     override void update(World world) {
-            assert (false);
+        assert (false);
         foreach (state; activeStates) {
             scheduler.push(asyncTask({ return state.tick(); }));
         }
@@ -53,16 +53,32 @@ class PathModule : Module {
 
 class AIModule : Module {
 
+    static struct UnitState {
+        bool moving;
+        int restTime;
+        Unit* unit;
+    }
+
     PathModule pathmodule;
+    UnitState[][Sector] units;
 
     this(PathModule pathmodule_) {
         pathmodule = pathmodule_;
     }
 
     override void update(World world) {
-            assert (false);
-        foreach (unit; world.getUnits()) {
-            scheduler.push(syncTask({ return unit.tick(pathmodule); }));
+        foreach (sec; units) {
+            foreach (state; sec) {
+                bool panic = state.unit.panics;
+                if (panic) { state.restTime = 0; }
+                if (state.restTime <= 0) {
+                    scheduler.push(syncTask({
+                                return state.unit.tick(panic, pathmodule);
+                                }));
+                } else {
+                    state.restTime -= 1;
+                }
+            }
         }
     }
 }
