@@ -238,11 +238,12 @@ class World {
         //Range +-2
 
         auto range = RangeFromTo(-2,3,-2,3,-2,3);
+/*
         debug
         {
             range = RangeFromTo(0,1,0,1,0,1); //Make it faster in debyyyyg!!
         }
-
+// */
         foreach (dpos; range) {
             auto pos = unit.pos.tilePos.getSectorNum();
             pos.value.X += dpos.X;
@@ -257,8 +258,15 @@ class World {
                     assert(0, "implement stuff below");
                     //floodFillVisibility(/* sector, ??? */Direction.all); // Derp?
                 }
-                notifySectorLoad(sector.sectorNum);
             }
+        }
+        foreach (dpos; range) { //We want to build geometry etc only after all relevant data has been loaded.
+            auto pos = unit.pos.tilePos.getSectorNum();
+            pos.value.X += dpos.X;
+            pos.value.Y += dpos.Y;
+            pos.value.Z += dpos.Z;
+            auto sector = getSector(pos);
+            notifySectorLoad(sector.sectorNum);
         }
 
     }

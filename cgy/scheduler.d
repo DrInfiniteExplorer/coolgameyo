@@ -1,6 +1,7 @@
 import core.time, core.thread;
 import std.container, std.concurrency, std.datetime;
 import std.stdio, std.conv;
+version(Windows) import std.c.windows.windows;
 
 import world;
 import util;
@@ -42,13 +43,24 @@ private Task syncTask() {
 
 // THIS WILL PROBABLY NEED SOME FLESHING OUT...!!!
 private void workerFun(shared Scheduler ssched) {
-    auto sched = cast(Scheduler)ssched; // fuck the type system!
-    setThreadName("Fun-worker thread");
+    try
+    {
+        auto sched = cast(Scheduler)ssched; // fuck the type system!
+        setThreadName("Fun-worker thread");
 
-    while (true) {
-        // try to receive message?
-        auto task = sched.getTask();
-        task.run(sched.world);
+        while (true) {
+            // try to receive message?
+            auto task = sched.getTask();
+            task.run(sched.world);
+        }
+    }
+    catch (Throwable o) // catch any uncaught exceptions
+    {
+        writeln("Thread exception!\n", o.toString());
+        version(Windows) {
+            MessageBoxA(null, cast(char *)o.toString(),
+                    "Error", MB_OK | MB_ICONEXCLAMATION);
+        }
     }
 }
 

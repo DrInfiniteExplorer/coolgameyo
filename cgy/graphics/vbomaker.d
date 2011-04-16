@@ -3,6 +3,7 @@ module graphics.vbomaker;
 import core.sync.mutex;
 
 import std.algorithm;
+import std.array;
 import std.container;
 import std.conv;
 import std.math;
@@ -117,6 +118,7 @@ class VBOMaker : WorldListener
     GraphRegionNum[] dirtyRegions; //Can be updated by worker thread; Is read&cleared in render thread.
     Mutex dirtyMutex;
     Mutex regionMutex;
+    Mutex updateMutex;
 
     World world;
     Scheduler scheduler;
@@ -132,17 +134,20 @@ class VBOMaker : WorldListener
         minReUseRatio = 0.95;
         regionMutex = new Mutex;
         dirtyMutex = new Mutex;
+        updateMutex = new Mutex;
     }
 
     const(GraphicsRegion)[GraphRegionNum] getRegions(){
-        dirtyMutex.lock();
-        scope(exit) dirtyMutex.unlock();
-        foreach(num; dirtyRegions){
-            regionMutex.lock();
-            scope(exit) regionMutex.unlock();
-            buildVBO(regions[num]);
+        {
+            dirtyMutex.lock();
+            scope(exit) dirtyMutex.unlock();
+            foreach(num; dirtyRegions){
+                regionMutex.lock();
+                scope(exit) regionMutex.unlock();
+                buildVBO(regions[num]);
+            }
+            dirtyRegions.length = 0;
         }
-        dirtyRegions.length = 0;
 
         return regions;
     }
@@ -172,6 +177,46 @@ class VBOMaker : WorldListener
                 world.tileSystem.byID(t.type).textures.top :
                 world.tileSystem.byID(t.type).textures.bottom;
         }
+        /*
+        auto minBlockNum = min.getBlockNum();
+        BlockNum maxBlockNum = max.getBlockNum();
+        maxBlockNum.value += vec3i(1,1,1);
+        Block[BlockNum] blocks;
+        bool[BlockNum]  unseenBlocks;
+        int seenCount;
+        foreach(rel ; RangeFromTo(minBlockNum.value, maxBlockNum.value)) {
+            auto num = blockNum(rel);
+            auto block = world.getBlock(num, false, false);
+            if(!block.seen){
+                unseenBlocks[num] = true;
+            } else {
+                seenCount += 1;
+            }
+            blocks[num] = block;
+        }
+        if(seenCount == 0) {
+            return;
+        }
+
+        Tile getTile(TilePos pos) {
+            auto blockNum = pos.getBlockNum();
+            auto blockPtr = blockNum in blocks;
+            if(!blockPtr) {
+                return world.getTile(pos, false, false);
+            }
+            if(!blockPtr.valid) return INVALID_TILE;
+            auto rel = pos.rel();
+            if(blockNum in unseenBlocks) {
+                if(!(rel.X == 0 || rel.X == BlockSize.x-1 ||
+                     rel.Y == 0 || rel.Y == BlockSize.y-1 ||
+                     rel.Z == 0 || rel.Z == BlockSize.z-1 )) {
+                    return INVALID_TILE;
+                }
+            }
+
+            return blockPtr.getTile(pos);
+        }
+        */
 
         foreach(doUpper ; 0 .. 2){ //Most best piece of code ever to have been written.
             auto ett = 1-doUpper;
@@ -183,8 +228,11 @@ class VBOMaker : WorldListener
                     float halfEtt;
                     float prevHalfEtt;
                     foreach(x; min.value.X .. max.value.X){
+
                         auto tileLower = world.getTile(tilePos(vec3i(x,y,z+noll)), false, false);
                         auto tileUpper = world.getTile(tilePos(vec3i(x,y,z+ett)), false, false);
+                        //auto tileLower = getTile(tilePos(vec3i(x, y, z+noll)));
+                        //auto tileUpper = getTile(tilePos(vec3i(x, y, z+ett)));
                         auto transUpper = tileUpper.transparent;
                         auto transLower = tileLower.transparent;
 
@@ -241,7 +289,7 @@ class VBOMaker : WorldListener
                         newFace.quad[3].texcoord.set(max.value.X, 0);
                         faceList ~= newFace;
                         onStrip = false;
-                   }
+                    }
                 }
             }
         }
@@ -273,6 +321,7 @@ class VBOMaker : WorldListener
                     float halfNoll;
                     float prevHalfNoll;
                     foreach(x; min.value.X .. max.value.X){
+
                         auto tileLower = world.getTile(tilePos(vec3i(x,y+noll,z)), false, false);
                         auto tileUpper = world.getTile(tilePos(vec3i(x,y+ett,z)), false, false);
                         auto transUpper = tileUpper.transparent || tileUpper.halfstep;
@@ -326,7 +375,7 @@ class VBOMaker : WorldListener
                         newFace.quad[3].texcoord.set(max.value.X*neg, ett);
                         faceList ~= newFace;
                         onStrip = false;
-                   }
+                    }
                 }
             }
         }
@@ -353,6 +402,7 @@ class VBOMaker : WorldListener
             auto neg = ett ? 1 : -1;
             foreach(x ; min.value.X-1 .. max.value.X){
                 foreach(z ; min.value.Z .. max.value.Z){
+
                     onStrip = false;
                     float halfEtt;
                     float prevHalfEtt;
@@ -413,6 +463,7 @@ class VBOMaker : WorldListener
                         faceList ~= newFace;
                         onStrip = false;
                    }
+
                 }
             }
         }
@@ -464,42 +515,56 @@ class VBOMaker : WorldListener
             }
         }
 
-        dirtyMutex.lock();
-        dirtyRegions ~= region.grNum;
-        dirtyMutex.unlock();
+        {
+            dirtyMutex.lock();
+            scope(exit) dirtyMutex.unlock();
+            dirtyRegions ~= region.grNum;
+        }
 
-        regionMutex.lock();
-        regions[region.grNum] = region;
-        regionMutex.unlock();
+        {
+            regionMutex.lock();
+            scope(exit) regionMutex.unlock();
+            regions[region.grNum] = region;
+        }
 
-        version(Windows) auto d1 = GetTickCount() - start;
-        //buildVBO(region);
-        version(Windows) auto d2 = GetTickCount() - start - d1;
-
-        version(Windows) writeln("It took ", d1, " ms to build the geometry and ", d2, " ms to build the vbo (total of ", d1+d2, " ms)");
-
+        version(Windows) {
+            auto d1 = GetTickCount() - start;
+            writeln("It took ", d1, " ms to build the geometry");
+            writeln(region.grNum);
+            //Sleep(250);
+        }
     }
 
     void taskFunc() {
-        assert(regionsToUpdate.length > 0, "Error in VBOMaker.taskFunc; Got nothing to do!!");
+        GraphRegionNum num;
+        {
+            updateMutex.lock();
+            scope(exit) updateMutex.unlock();
+            assert(regionsToUpdate.length > 0, "Error in VBOMaker.taskFunc; Got nothing to do!!");
 
-        double computeValue(GraphRegionNum num) {
-            const auto graphRegionAcross = sqrt(to!double(  GraphRegionSize.x*GraphRegionSize.x +
-                                                            GraphRegionSize.y*GraphRegionSize.y +
-                                                            GraphRegionSize.z*GraphRegionSize.z));
-            auto camDir = util.convert!double(camera.getTargetDir());
-            auto camPos = camera.getPosition() - camDir * graphRegionAcross;
-            vec3d toBlock = util.convert!double(num.toTilePos().value) - camPos;
-            double distSQ = toBlock.getLengthSQ();
-            if(camDir.dotProduct(toBlock) < 0) {
-                distSQ +=1000; //Stuff behind our backs are considered as important as stuff a kilometer ahead of us. ? :)
+            double computeValue(GraphRegionNum num) {
+                const auto graphRegionAcross = sqrt(to!double(  GraphRegionSize.x*GraphRegionSize.x +
+                                                                GraphRegionSize.y*GraphRegionSize.y +
+                                                                GraphRegionSize.z*GraphRegionSize.z));
+                auto camDir = util.convert!double(camera.getTargetDir());
+                auto camPos = camera.getPosition() - camDir * graphRegionAcross;
+                vec3d toBlock = util.convert!double(num.toTilePos().value) - camPos;
+                double distSQ = toBlock.getLengthSQ();
+                if(camDir.dotProduct(toBlock) < 0) {
+                    distSQ +=1000; //Stuff behind our backs are considered as important as stuff a kilometer ahead of us. ? :)
+                }
+                return distSQ;
             }
-            return distSQ;
-        }
 
-        schwartzSort!(computeValue, "a>b")(regionsToUpdate);
-        auto num = regionsToUpdate[$-1];
-        regionsToUpdate.length -= 1;
+            schwartzSort!(computeValue, "a>b")(regionsToUpdate);
+            regionsToUpdate = array(uniq(regionsToUpdate));
+            num = regionsToUpdate[$-1];
+            regionsToUpdate.length -= 1;
+            if(regionsToUpdate.length != 0){
+                scheduler.push(asyncTask(&taskFunc));
+                writeln("Only ", regionsToUpdate.length, " regions left!");
+            }
+        }
 
         GraphicsRegion reg;
         reg.grNum = num;
@@ -512,9 +577,24 @@ class VBOMaker : WorldListener
         }
         buildGraphicsRegion(reg);
 
-        if(regionsToUpdate.length != 0){
-            scheduler.push(asyncTask(&taskFunc));
+    }
+
+    bool hasContent(GraphRegionNum grNum) {
+        auto minBlockNum = grNum.min.getBlockNum();
+        BlockNum maxBlockNum = grNum.max.getBlockNum();
+        maxBlockNum.value += vec3i(1,1,1);
+        int seenCount;
+        foreach(rel ; RangeFromTo(minBlockNum.value, maxBlockNum.value)) {
+            auto num = blockNum(rel);
+            auto block = world.getBlock(num, false, false);
+            if(block.seen){
+                seenCount++;
+                if(block.sparse && block.sparseTileTransparent) {
+                    seenCount--;
+                }
+            }
         }
+        return seenCount != 0;
     }
 
     void notifySectorLoad(SectorNum sectorNum)
@@ -530,27 +610,21 @@ class VBOMaker : WorldListener
 
         //ASSUMES THAT WE ARE IN THE UPDATE PHASE, OTHERWISE THIS MAY INTRODUCE PROBLEMS AND SUCH. :)
         //*
-        if(regionsToUpdate.length == 0){
-            scheduler.push(asyncTask(&taskFunc));
-        }
+        GraphRegionNum[] newRegions;
         foreach(pos ; RangeFromTo(grNumMin.value, grNumMax.value)) {
             auto grNum = graphRegionNum(pos);
-            regionsToUpdate ~= grNum;
-        }
-        /*/
-        foreach(pos ; RangeFromTo(grNumMin.value, grNumMax.value)) {
-            auto grNum = graphRegionNum(pos);
-            if (grNum in regions) {
-                buildGraphicsRegion(regions[grNum]);
-            } else {
-                auto ny = GraphicsRegion();
-                ny.grNum = grNum;
-                buildGraphicsRegion(ny);
-                regions[grNum] = ny;
+            if(hasContent(grNum)){
+                newRegions ~= grNum;
             }
         }
-        // */
-        //version(Windows) writeln("It took ", GetTickCount() - start, " ms to geometricize a region");
+        if(newRegions.length != 0){
+            updateMutex.lock();
+            scope(exit) updateMutex.unlock();
+            if(regionsToUpdate.length == 0){
+                scheduler.push(asyncTask(&taskFunc));
+            }
+            regionsToUpdate ~= newRegions;
+        }
     }
     void notifySectorUnload(SectorNum sectorNum)
     {
