@@ -14,7 +14,14 @@ struct Unit {
 
     bool panics;
 
-    void tick(bool interrupted, PathModule blerp) {
+    void tick(int ticksLeft, PathModule blerp) {
+        if (ticksLeft > 0) { // Was interrupted!!!!!!!
+            assert (0);
+        } else if (ticksLeft < 0) { // Back from some movement or shit
+            assert (1 == 3);
+        }
+            
+
         assert (false);
     }
 }

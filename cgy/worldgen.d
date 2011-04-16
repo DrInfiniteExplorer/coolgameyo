@@ -19,13 +19,14 @@ private float foo(float x, float y) {
 class WorldGenerator {
     TileSystem sys;
 
-    ushort air;
-    ushort mud;
+    ushort air, mud, rock, water;
 
     this(TileSystem tileSystem) {
         sys = tileSystem;
         air = sys.idByName("air");
         mud = sys.idByName("mud");
+        rock = sys.idByName("rock");
+        water = sys.idByName("water");
     }
 
     Tile getTile(const TilePos pos) {
@@ -34,12 +35,17 @@ class WorldGenerator {
         auto d = top - Z;
 
         Tile ret;
+
+        auto groundType = Z > 11 ? mud : rock;
+        auto airType = Z > 5 ? air : water;
+        auto transparent = airType == air ?
+            TileFlags.transparent : TileFlags.none;
         if (0 < d && d < 0.5) {
-            ret = Tile(mud, TileFlags.halfstep, 0, 0);
+            ret = Tile(groundType, TileFlags.halfstep, 0, 0);
         } else if (0 <= d) {
-            ret = Tile(mud, TileFlags.none, 0, 0);
+            ret = Tile(groundType, TileFlags.none, 0, 0);
         } else {
-            ret = Tile(air, TileFlags.transparent, 0, 0);
+            ret = Tile(airType, transparent, 0, 0);
         }
         ret.valid = true;
 

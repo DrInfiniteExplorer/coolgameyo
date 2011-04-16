@@ -187,7 +187,33 @@ class Game{
         mud.transparent = false;
         mud.name = "mud";
 
+        TileType rock = new TileType;
+        if (isClient) {
+            rock.textures.side   = atlas.addTile(f, 
+                    vec2i(0, 0), vec3i(100,100,100));
+            rock.textures.top    = atlas.addTile(f,
+                    vec2i(0, 16), vec3i(100,100,100));
+            rock.textures.bottom = atlas.addTile(f,
+                    vec2i(0, 32), vec3i(100,100,100));
+        }
+        rock.transparent = false;
+        rock.name = "rock";
+
+        TileType water = new TileType;
+        if (isClient) {
+            water.textures.side   = atlas.addTile(f, 
+                    vec2i(0, 0), vec3i(0,0,255));
+            water.textures.top    = atlas.addTile(f,
+                    vec2i(0, 16), vec3i(0,0,255));
+            water.textures.bottom = atlas.addTile(f,
+                    vec2i(0, 32), vec3i(0,0,255));
+        }
+        water.transparent = false;
+        water.name = "water";
+
         sys.add(mud);
+        sys.add(rock);
+        sys.add(water);
 
         return sys;
     }
