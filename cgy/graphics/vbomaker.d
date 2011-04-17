@@ -231,10 +231,13 @@ class VBOMaker : WorldListener
 
                         auto tileLower = world.getTile(tilePos(vec3i(x,y,z+noll)), false, false);
                         auto tileUpper = world.getTile(tilePos(vec3i(x,y,z+ett)), false, false);
-                        //auto tileLower = getTile(tilePos(vec3i(x, y, z+noll)));
-                        //auto tileUpper = getTile(tilePos(vec3i(x, y, z+ett)));
                         auto transUpper = tileUpper.transparent;
                         auto transLower = tileLower.transparent;
+                        if(ett == 1) {
+                            transUpper |= tileLower.halfstep;
+                        } else {
+                            transUpper |= tileUpper.halfstep;
+                        }
 
                         auto bothValid = (tileUpper.valid && tileLower.valid) || renderSettings.renderInvalidTiles;
 
@@ -243,13 +246,6 @@ class VBOMaker : WorldListener
                         auto halfSame = halfLower == onHalf;
                         prevHalfEtt = halfEtt;
                         halfEtt = halfLower ? 0.5 : 1.0;
-
-                        //halfEtt = 1;
-                        //prevHalfEtt = 1;
-
-                        // TODO: Take into account the possibility of
-                        // green glass on red glass on water; ought to render the intersecting surfaces, sortof?
-                        // NO! transparent things are handled on their own, elsewhere, not defined where yet.
 
                         if(bothValid && transUpper && !transLower){ //Floor tile detected!
                             if(onStrip &&
@@ -309,12 +305,12 @@ class VBOMaker : WorldListener
             return world.tileSystem.byID(t.type).textures.side;
         }
 
-        foreach(doUpper ; 0 .. 2){ //Most best piece of code ever to have been written.
+        foreach(doUpper ; 0 .. 2) { //Most best piece of code ever to have been written.
             auto ett = 1-doUpper;
             auto noll = doUpper;
             auto neg = noll ? 1 : -1;
-            foreach(y ; min.value.Y-1 .. max.value.Y){
-                foreach(z ; min.value.Z .. max.value.Z){
+            foreach(y ; min.value.Y-1 .. max.value.Y) {
+                foreach(z ; min.value.Z .. max.value.Z) {
                     onStrip = false;
                     float halfEtt;
                     float prevHalfEtt;
