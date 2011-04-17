@@ -246,14 +246,17 @@ class World {
 // */
         foreach (dpos; range) {
             auto pos = unit.pos.tilePos.getSectorNum();
-            pos.value.X += dpos.X;
-            pos.value.Y += dpos.Y;
-            pos.value.Z += dpos.Z;
+            getSector(pos + dpos).increaseActivity();
+        }
+        foreach (dpos; range) {
+            auto pos = unit.pos.tilePos.getSectorNum();
+            pos.value += dpos;
             auto sector = getSector(pos);
-            sector.increaseActivity();
             if (sector.activityCount == 1) {
                 if (unit.pos.tilePos.getSectorNum() == sectorNum) {
+                    writeln("wherp");
                     floodFillVisibility(/*sector, ??? */unit.pos.tilePos);
+                    writeln("zerp");
                 } else {
                     assert(0, "implement stuff below");
                     //floodFillVisibility(/* sector, ??? */Direction.all); // Derp?
@@ -395,7 +398,7 @@ class World {
             allBlocks++;
             if (!block.valid) { continue; }
 
-            //writeln("\tFlooding block ", blockNum);
+            writeln("\tFlooding block ", blockNum);
 
             blockCount++;
             //writeln("blockCount:", blockCount);
