@@ -189,7 +189,7 @@ class Game{
 
         TileType rock = new TileType;
         if (isClient) {
-            rock.textures.side   = atlas.addTile(f, 
+            rock.textures.side   = atlas.addTile(f,
                     vec2i(0, 0), vec3i(100,100,100));
             rock.textures.top    = atlas.addTile(f,
                     vec2i(0, 16), vec3i(100,100,100));
@@ -201,7 +201,7 @@ class Game{
 
         TileType water = new TileType;
         if (isClient) {
-            water.textures.side   = atlas.addTile(f, 
+            water.textures.side   = atlas.addTile(f,
                     vec2i(0, 0), vec3i(0,0,255));
             water.textures.top    = atlas.addTile(f,
                     vec2i(0, 16), vec3i(0,0,255));
@@ -327,13 +327,18 @@ class Game{
         if(key == SDLK_F2 && down) useCamera ^= 1;
     }
 
+    bool oldUseCamera;
     void mouseMove(SDL_MouseMotionEvent mouse){
         auto x = mouse.x;
         auto y = mouse.y;
         if(x != middleX || y != middleY){
-            SDL_WarpMouse(middleX, middleY);
-            if(useCamera)
-                camera.mouseMove( mouse.xrel,  mouse.yrel);
+            if(useCamera) {
+                SDL_WarpMouse(middleX, middleY);
+                if(oldUseCamera) {
+                    camera.mouseMove( mouse.xrel,  mouse.yrel);
+                }
+            }
         }
+        oldUseCamera = useCamera;
     }
 }
