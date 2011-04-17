@@ -246,7 +246,7 @@ class World {
 // */
         foreach (dpos; range) {
             auto pos = unit.pos.tilePos.getSectorNum();
-            getSector(pos + dpos).increaseActivity();
+            getSector(SectorNum(pos.value + dpos)).increaseActivity();
         }
         foreach (dpos; range) {
             auto pos = unit.pos.tilePos.getSectorNum();
