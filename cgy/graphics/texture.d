@@ -78,7 +78,8 @@ struct Image{
 
     this(ubyte *data, uint width, uint height){
         imgData.length = 4*width*height;
-        imgData[] = data[0..imgData.length];
+        if(data !is null)
+            imgData[] = data[0..imgData.length];        
         imgWidth = width;
         imgHeight = height;
     }
@@ -195,7 +196,7 @@ class TileTextureAtlas{
         glError();
         glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glError();
-        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
         glError();
         glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glError();
@@ -212,6 +213,22 @@ class TileTextureAtlas{
             glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_GENERATE_MIPMAP, GL_TRUE);
             glError();
         }
+    }
+
+    void setMinFilter(bool mipLevelInterpolate, bool textureInterpolate){
+        assert(texId != 0, "setMinFilter: texId == 0");
+        glBindTexture(GL_TEXTURE_2D_ARRAY, texId);
+        glError();
+
+        auto filter = mipLevelInterpolate ?
+                        (textureInterpolate ?
+                            GL_LINEAR_MIPMAP_LINEAR :
+                            GL_NEAREST_MIPMAP_LINEAR) :
+                        (textureInterpolate ?
+                            GL_LINEAR_MIPMAP_NEAREST :
+                            GL_NEAREST_MIPMAP_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, filter);
+        glError();
     }
 
     //Upload if can

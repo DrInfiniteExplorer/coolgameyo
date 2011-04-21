@@ -319,12 +319,32 @@ class Game{
         if(keyMap[SDLK_LCTRL]){ camera.axisMove( 0.0, 0.0,-0.1); }
     }
 
+    void stepMipMap() {
+        int cnt =   (renderSettings.textureInterpolate ? 1 : 0) +
+                    (renderSettings.mipLevelInterpolate ? 2 : 0);
+        cnt = (cnt+1)%4;
+        renderSettings.textureInterpolate = (cnt%2 != 0);
+        renderSettings.mipLevelInterpolate = (cnt > 1);
+        atlas.setMinFilter(renderSettings.mipLevelInterpolate, renderSettings.textureInterpolate);
+        switch(cnt){
+            case 0:
+                writeln("GL_NEAREST_MIPMAP_NEAREST"); break;
+            case 1:
+                writeln("GL_LINEAR_MIPMAP_NEAREST"); break;
+            case 2:
+                writeln("GL_NEAREST_MIPMAP_LINEAR"); break;
+            case 3:
+                writeln("GL_LINEAR_MIPMAP_LINEAR"); break;
+        }
+    }
+
     void onKey(SDL_KeyboardEvent event){
         auto key = event.keysym.sym;
         auto down = event.type == SDL_KEYDOWN;
         keyMap[key] = down;
         if(key == SDLK_F1 && down) renderSettings.renderWireframe ^= 1;
         if(key == SDLK_F2 && down) useCamera ^= 1;
+        if(key == SDLK_F3 && down) stepMipMap();
     }
 
     bool oldUseCamera;

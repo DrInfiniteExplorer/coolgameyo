@@ -31,7 +31,8 @@ struct RenderSettings{
 
     //Just user settings.
     bool disableVSync;
-    bool useMipMap = true;
+    bool mipLevelInterpolate; //Interpolate between mip-levels or not?
+    bool textureInterpolate;  // pick nearest pixel or interpolate?
     float anisotropy = 0; //set to max of this(uservalue) and implementation limit sometime
     bool renderWireframe;
     bool renderInvalidTiles = true;

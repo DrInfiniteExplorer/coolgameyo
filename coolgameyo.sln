@@ -3,6 +3,8 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{002A2DE9-8BB6-484D-9802-7E4AD4084715}") = "cgy", "cgy\cgy.visualdproj", "{55638A27-6DF6-44F8-B149-F17FC0086579}"
 EndProject
+Project("{002A2DE9-8BB6-484D-9802-7E4AD4084715}") = "fontTool", "fontTool\fontTool.visualdproj", "{9F39B25A-9EF6-47AA-A614-B697A91F0412}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -42,6 +44,27 @@ Global
 		{55638A27-6DF6-44F8-B149-F17FC0086579}.Static lib - Release|Win32.ActiveCfg = Release|Win32
 		{55638A27-6DF6-44F8-B149-F17FC0086579}.Static lib - Release|Win32.Build.0 = Release|Win32
 		{55638A27-6DF6-44F8-B149-F17FC0086579}.Static lib - Release|x64.ActiveCfg = Release|Win32
+		{9F39B25A-9EF6-47AA-A614-B697A91F0412}.Debug|Win32.ActiveCfg = Debug|Win32
+		{9F39B25A-9EF6-47AA-A614-B697A91F0412}.Debug|Win32.Build.0 = Debug|Win32
+		{9F39B25A-9EF6-47AA-A614-B697A91F0412}.Debug|x64.ActiveCfg = Debug|Win32
+		{9F39B25A-9EF6-47AA-A614-B697A91F0412}.Release - Fast FPU|Win32.ActiveCfg = Release|Win32
+		{9F39B25A-9EF6-47AA-A614-B697A91F0412}.Release - Fast FPU|Win32.Build.0 = Release|Win32
+		{9F39B25A-9EF6-47AA-A614-B697A91F0412}.Release - Fast FPU|x64.ActiveCfg = Release|Win32
+		{9F39B25A-9EF6-47AA-A614-B697A91F0412}.Release|Win32.ActiveCfg = Release|Win32
+		{9F39B25A-9EF6-47AA-A614-B697A91F0412}.Release|Win32.Build.0 = Release|Win32
+		{9F39B25A-9EF6-47AA-A614-B697A91F0412}.Release|x64.ActiveCfg = Release|Win32
+		{9F39B25A-9EF6-47AA-A614-B697A91F0412}.SDL-Debug|Win32.ActiveCfg = Debug|Win32
+		{9F39B25A-9EF6-47AA-A614-B697A91F0412}.SDL-Debug|Win32.Build.0 = Debug|Win32
+		{9F39B25A-9EF6-47AA-A614-B697A91F0412}.SDL-Debug|x64.ActiveCfg = Debug|Win32
+		{9F39B25A-9EF6-47AA-A614-B697A91F0412}.Static lib - Debug|Win32.ActiveCfg = Debug|Win32
+		{9F39B25A-9EF6-47AA-A614-B697A91F0412}.Static lib - Debug|Win32.Build.0 = Debug|Win32
+		{9F39B25A-9EF6-47AA-A614-B697A91F0412}.Static lib - Debug|x64.ActiveCfg = Debug|Win32
+		{9F39B25A-9EF6-47AA-A614-B697A91F0412}.Static lib - Release - Fast FPU|Win32.ActiveCfg = Release|Win32
+		{9F39B25A-9EF6-47AA-A614-B697A91F0412}.Static lib - Release - Fast FPU|Win32.Build.0 = Release|Win32
+		{9F39B25A-9EF6-47AA-A614-B697A91F0412}.Static lib - Release - Fast FPU|x64.ActiveCfg = Release|Win32
+		{9F39B25A-9EF6-47AA-A614-B697A91F0412}.Static lib - Release|Win32.ActiveCfg = Release|Win32
+		{9F39B25A-9EF6-47AA-A614-B697A91F0412}.Static lib - Release|Win32.Build.0 = Release|Win32
+		{9F39B25A-9EF6-47AA-A614-B697A91F0412}.Static lib - Release|x64.ActiveCfg = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

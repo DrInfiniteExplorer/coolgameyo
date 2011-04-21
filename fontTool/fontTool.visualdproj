@@ -1,5 +1,5 @@
 <DProject>
- <ProjectGuid>{55638A27-6DF6-44F8-B149-F17FC0086579}</ProjectGuid>
+ <ProjectGuid>{9F39B25A-9EF6-47AA-A614-B697A91F0412}</ProjectGuid>
  <Config name="Debug">
   <obj>0</obj>
   <link>0</link>
@@ -29,7 +29,7 @@
   <useArrayBounds>0</useArrayBounds>
   <noboundscheck>0</noboundscheck>
   <useSwitchError>0</useSwitchError>
-  <useUnitTests>1</useUnitTests>
+  <useUnitTests>0</useUnitTests>
   <useInline>0</useInline>
   <release>0</release>
   <preservePaths>0</preservePaths>
@@ -74,8 +74,8 @@
   <pathCv2pdb>$(VisualDInstallDir)cv2pdb\cv2pdb.exe</pathCv2pdb>
   <objfiles />
   <linkswitches />
-  <libfiles>gdi32.lib win32.lib advapi32.lib derelictil.lib derelictgl.lib derelictutil.lib derelictsdl.lib</libfiles>
-  <libpaths>d:\D\Libs\DIrrlicht\Lib;d:\D\Libs\derelict2\lib;d:\D\Libs\bindings\win32 </libpaths>
+  <libfiles>derelictil.lib derelictutil.lib ole32.lib kernel32.lib user32.lib comctl32.lib comdlg32.lib gdi32.lib</libfiles>
+  <libpaths>d:\D\Libs\bindings\win32;d:\D\Libs\derelict2\lib;</libpaths>
   <deffile />
   <resfile />
   <exefile>$(OutDir)\$(ProjectName).exe</exefile>
@@ -84,7 +84,7 @@
   <postBuildCommand />
   <debugtarget>$(TARGETPATH)</debugtarget>
   <debugarguments />
-  <debugworkingdir>$(SOLUTIONDIR)\gameroot\</debugworkingdir>
+  <debugworkingdir />
   <debugattach>0</debugattach>
   <debugremote />
   <debugEngine>0</debugEngine>
@@ -101,8 +101,8 @@
   <quiet>0</quiet>
   <verbose>0</verbose>
   <vtls>0</vtls>
-  <symdebug>2</symdebug>
-  <optimize>1</optimize>
+  <symdebug>0</symdebug>
+  <optimize>0</optimize>
   <cpu>0</cpu>
   <isX86_64>0</isX86_64>
   <isLinux>0</isLinux>
@@ -117,11 +117,11 @@
   <useIn>0</useIn>
   <useOut>0</useOut>
   <useArrayBounds>0</useArrayBounds>
-  <noboundscheck>1</noboundscheck>
+  <noboundscheck>0</noboundscheck>
   <useSwitchError>0</useSwitchError>
   <useUnitTests>0</useUnitTests>
   <useInline>0</useInline>
-  <release>0</release>
+  <release>1</release>
   <preservePaths>0</preservePaths>
   <warnings>0</warnings>
   <infowarnings>0</infowarnings>
@@ -132,7 +132,7 @@
   <ignoreUnsupportedPragmas>0</ignoreUnsupportedPragmas>
   <otherDMD>0</otherDMD>
   <program>$(DMDInstallDir)windows\bin\dmd.exe</program>
-  <imppath>d:\D\Libs\DIrrlicht\iEngine</imppath>
+  <imppath />
   <fileImppath />
   <outdir>$(ConfigurationName)</outdir>
   <objdir>$(OutDir)</objdir>
@@ -160,67 +160,27 @@
   <moduleDepsFile />
   <run>0</run>
   <runargs />
-  <runCv2pdb>1</runCv2pdb>
+  <runCv2pdb>0</runCv2pdb>
   <pathCv2pdb>$(VisualDInstallDir)cv2pdb\cv2pdb.exe</pathCv2pdb>
   <objfiles />
   <linkswitches />
-  <libfiles>gdi32.lib win32.lib advapi32.lib derelictil.lib derelictgl.lib derelictutil.lib derelictsdl.lib</libfiles>
-  <libpaths>d:\D\Libs\DIrrlicht\Lib;d:\D\Libs\derelict2\lib;d:\D\Libs\bindings\win32 </libpaths>
+  <libfiles>derelictil.lib derelictutil.lib ole32.lib kernel32.lib user32.lib comctl32.lib comdlg32.lib gdi32.lib</libfiles>
+  <libpaths>d:\D\Libs\bindings\win32;d:\D\Libs\derelict2\lib;</libpaths>
   <deffile />
   <resfile />
   <exefile>$(OutDir)\$(ProjectName).exe</exefile>
-  <additionalOptions>-L/SUBSYSTEM:CONSOLE:4.0 -I$(SOLUTIONDIR)\libraries\irrlicht\include\</additionalOptions>
+  <additionalOptions>-L/SUBSYSTEM:CONSOLE:4.0</additionalOptions>
   <preBuildCommand />
   <postBuildCommand />
   <debugtarget>$(TARGETPATH)</debugtarget>
   <debugarguments />
-  <debugworkingdir>$(SOLUTIONDIR)\gameroot\</debugworkingdir>
+  <debugworkingdir>$(PROJECTDIR)</debugworkingdir>
   <debugattach>0</debugattach>
   <debugremote />
   <debugEngine>0</debugEngine>
   <filesToClean>*.obj;*.cmd;*.build;*.json;*.dep</filesToClean>
  </Config>
- <Folder name="cgy">
-  <Folder name="stolen">
-   <File path="stolen\aabbox3d.d" />
-   <File path="stolen\all.d" />
-   <File path="stolen\line2d.d" />
-   <File path="stolen\line3d.d" />
-   <File path="stolen\matrix4.d" />
-   <File path="stolen\plane3d.d" />
-   <File path="stolen\vector2d.d" />
-   <File path="stolen\vector3d.d" />
-   <File path="stolen\math.d" />
-   <File path="stolen\quaternion.d" />
-  </Folder>
-  <Folder name="graphics">
-   <File path="graphics\camera.d" />
-   <File path="graphics\renderer.d" />
-   <File path="graphics\vbomaker.d" />
-   <File path="graphics\texture.d" />
-   <File path="graphics\shader.d" />
-   <File path="graphics\font.d" />
-  </Folder>
-  <Folder name="worldparts">
-   <File path="worldparts\block.d" />
-   <File path="worldparts\sector.d" />
-   <File path="worldparts\tile.d" />
-  </Folder>
-  <Folder name="shaders">
-   <File path="..\gameroot\shaders\renderDude.frag" />
-   <File path="..\gameroot\shaders\renderDude.vert" />
-   <File path="..\gameroot\shaders\renderGR.frag" />
-   <File path="..\gameroot\shaders\renderGR.vert" />
-  </Folder>
-  <File path="game.d" />
-  <File path="main.d" />
-  <File path="modules.d" />
-  <File path="pos.d" />
-  <File path="scheduler.d" />
-  <File path="unit.d" />
-  <File path="util.d" />
-  <File path="world.d" />
-  <File path="worldgen.d" />
-  <File path="tilesystem.d" />
+ <Folder name="fontTool">
+  <File path="winmain.d" />
  </Folder>
 </DProject>

@@ -290,6 +290,10 @@ class VBOMaker : WorldListener
             }
         }
     }
+
+
+    //Dont generate half-sized "back-sides", behind half-tiles; if we have a halftile, it'd break a quad for us.
+    //That'd make us cry.
     void buildGeometryY(TilePos min, TilePos max, ref Face[]faceList)
     in{
         assert(min.value.X < max.value.X);
@@ -511,16 +515,16 @@ class VBOMaker : WorldListener
             }
         }
 
-        {
-            dirtyMutex.lock();
-            scope(exit) dirtyMutex.unlock();
-            dirtyRegions ~= region.grNum;
-        }
-
+        //Ordering the other way around caused race condition where the render-thread tried to build num X before it's data had been set.
         {
             regionMutex.lock();
             scope(exit) regionMutex.unlock();
             regions[region.grNum] = region;
+        }
+        {
+            dirtyMutex.lock();
+            scope(exit) dirtyMutex.unlock();
+            dirtyRegions ~= region.grNum;
         }
 
         version(Windows) {
