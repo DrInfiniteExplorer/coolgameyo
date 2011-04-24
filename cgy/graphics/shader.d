@@ -5,21 +5,19 @@ import std.conv;
 import std.file;
 import std.stdio;
 
-import derelict.opengl.gl;
-import derelict.opengl.glext;
-
+import graphics.ogl;
 import graphics.renderer;
 import stolen.all;
 import util;
 
 class ShaderProgram{
-    
+
     uint program=0;
     uint vert=0;
     uint frag=0;
-    
+
     uint a,b,c,d,e,f,g,h,i,j; //Shorthands for variables wohooohohohohohoohwowowowo
-    
+
     this(){
         vert = glCreateShader(GL_VERTEX_SHADER);
         glGetError();
@@ -29,30 +27,30 @@ class ShaderProgram{
         glError();
         glAttachShader(program, vert);
         glError();
-        glAttachShader(program, frag);                
+        glAttachShader(program, frag);
         glError();
     }
-    
+
     this(string constants, string vertex, string fragment){
         this();
         compileFile(vert, vertex, constants);
         compileFile(frag, fragment, constants);
         link();
     }
-    
+
     this(string vertex, string fragment){
         this();
         this.vertex = vertex;
         this.fragment = fragment;
         link();
     }
-    
+
     void destroy(){
         if(vert){ glDeleteShader(vert); }
         if(frag){ glDeleteShader(frag); }
         if(program){ glDeleteProgram(program); }
     }
-        
+
     string printShaderError(uint shader){
         int len, len2;
         glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &len);
@@ -65,7 +63,7 @@ class ShaderProgram{
             glError();
             writeln("!!! %s", arr);
             return to!string(arr);
-        } 
+        }
         return "";
     }
 
@@ -81,10 +79,10 @@ class ShaderProgram{
             glError();
             writeln("!!! %s", arr);
             return to!string(arr);
-        } 
+        }
         return "";
     }
-    
+
     void compileFile(uint shader, string filename, string constants = ""){
         auto content = readText(filename);
         const char* ptr = std.string.toStringz(constants ~ content);
@@ -103,19 +101,19 @@ class ShaderProgram{
             assert(0, "Shader compilation failed: " ~ filename ~"\n" ~error);
         }
     }
-    
+
     void vertex(string filename) @property{
         compileFile(vert, filename);
     }
     void fragment(string filename) @property{
         compileFile(frag, filename);
     }
-        
+
     void bindAttribLocation(uint location, string name){
         glBindAttribLocation(program, location, name.ptr);
         glError();
     }
-    
+
     void link(){
         glLinkProgram(program);
         glError();
@@ -127,20 +125,20 @@ class ShaderProgram{
             assert(0, "Linking failed!");
         }
     }
-    
+
     //There is also bindAttribLocation (Which must be followed by a link())
     uint getAttribLocation(string name){
         return glGetAttribLocation(program, name.ptr);
         glError();
     }
-    
+
     int getUniformLocation(string name){
         auto ret = glGetUniformLocation(program, name.ptr);
         glError();
         assert(ret != -1, "Could not get uniform: " ~ name);
         return ret;
     }
-    
+
     void setUniform(uint location, int i){
         glUniform1i(location, i);
         glError();
@@ -154,13 +152,21 @@ class ShaderProgram{
         glUniform3fv(location, 1, &vec.X);
         glError();
     }
+    void setUniform(uint location, vec2i vec){
+        glUniform2iv(location, 1, &vec.X);
+        glError();
+    }
+    void setUniform(uint location, vec2f vec){
+        glUniform2fv(location, 1, &vec.X);
+        glError();
+    }
 
     void setUniform(uint location, matrix4 mat){
         glUniformMatrix4fv(location, 1, false, mat.pointer());
         glError();
     }
 
-    
+
     void use(bool set=true){
         glUseProgram(set?program:0);
         glError();

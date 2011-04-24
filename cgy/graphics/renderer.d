@@ -7,9 +7,7 @@ import std.stdio;
 import std.string;
 import std.format;
 
-import derelict.opengl.gl;
-import derelict.opengl.glext;
-
+import graphics.ogl;
 import graphics.camera;
 import graphics.shader;
 import graphics.texture;
@@ -39,36 +37,15 @@ struct RenderSettings{
     /* Derp derp derp */
 
     int pixelsPerTile = 16;
+
+    int windowWidth = 800;
+    int windowHeight = 600;
 }
 
 RenderSettings renderSettings;
 
 auto grTexCoordOffset = Vertex.texcoord.offsetof;
 auto grTypeOffset = Vertex.type.offsetof;
-
-void glError(string file = __FILE__, int line = __LINE__){
-    debug{
-        uint err = glGetError();
-        string str;
-        switch(err){
-        case GL_NO_ERROR:
-            return;
-        case GL_INVALID_ENUM:
-            str = "GL ERROR: Invalid enum"; break;
-        case GL_INVALID_VALUE:
-            str = "GL ERROR: Invalid value"; break;
-        case GL_INVALID_OPERATION:
-            str = "GL ERROR: Invalid operation"; break;
-        case GL_OUT_OF_MEMORY:
-            str = "GL ERROR: Out of memory"; break;
-        default:
-            str = "Got unrecognized gl error; "~ to!string(err);
-            break;
-        }
-        auto derp = file ~ to!string(line) ~ "\n" ~str;
-        assert(0, derp);
-    }
-}
 
 class Renderer{
     World world;
@@ -126,8 +103,8 @@ class Renderer{
         worldShader.bindAttribLocation(1, "texcoord");
         worldShader.bindAttribLocation(2, "type");
         worldShader.link();
-        worldShader.a = /*uniformOffsetLoc*/ worldShader.getUniformLocation("offset");
-        worldShader.b = /*uniformViewProjection*/ worldShader.getUniformLocation("VP");
+        worldShader.a = worldShader.getUniformLocation("offset");
+        worldShader.b = worldShader.getUniformLocation("VP");
         worldShader.c = worldShader.getUniformLocation("atlas");
         worldShader.use();
         worldShader.setUniform(worldShader.c, 0); //Texture atlas will always reside in texture unit 0 yeaaaah
@@ -233,6 +210,11 @@ class Renderer{
         //Render foilage and other cosmetics
         //Render HUD/GUI
         //Render some stuff deliberately offscreen, just to be awesome.
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        glError();
+        glEnable(GL_CULL_FACE);
+        glError();
+
   }
 
     void renderGraphicsRegion(const GraphicsRegion region){

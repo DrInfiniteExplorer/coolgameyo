@@ -30,6 +30,9 @@ alias vector3d!(double) vec3d;
 vector3d!(A) convert(A,B)(const vector3d!(B) wap){
     return vector3d!A(to!A(wap.X), to!A(wap.Y), to!A(wap.Z));
 }
+vector2d!(A) convert(A,B)(const vector2d!(B) wap){
+    return vector2d!A(to!A(wap.X), to!A(wap.Y));
+}
 
 void setFlag(A,B)(ref A flags, B flag, bool value) {
     if (value) {

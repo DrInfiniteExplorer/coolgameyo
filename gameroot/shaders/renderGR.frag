@@ -17,6 +17,7 @@ void main() {
    //May want to use textureOffset as it can take the index.xy*tileSize as a separate parameter?
    //No, since we'd have to do two mults then.
    vec4 color = textureGrad(atlas, texcoord, gradX, gradY);
+
    frag_color = color;
 }
 

@@ -13,9 +13,9 @@ version(Windows){
 }
 
 import derelict.sdl.sdl;
-import derelict.opengl.gl;
-import derelict.opengl.glext;
 
+import graphics.ogl;
+import graphics.font;
 import graphics.camera;
 import graphics.renderer;
 import graphics.texture;
@@ -29,56 +29,6 @@ import unit;
 
 string SDLError() { return to!string(SDL_GetError()); }
 
-void initOpenGL(){
-    string derp = to!string(glGetString(GL_VERSION));
-    auto a = split(derp, ".");
-    auto major = to!int(a[0]);
-    auto minor = to!int(a[1]);
-
-    //TODO: POTENTIAL BUG EEAPASASALPDsAPSLDPLASDsPLQWPRMtopmkg>jfekofsaplPSLFPsLSDF
-    renderSettings.glVersion=major + 0.1*minor;
-    writeln("OGL version ", renderSettings.glVersion);
-
-    DerelictGL.loadExtensions();
-    glError();
-    glFrontFace(GL_CCW);
-    glError();
-    DerelictGL.loadClassicVersions(GLVersion.GL30);
-    glError();
-    DerelictGL.loadModernVersions(GLVersion.GL30);
-    glError();
-
-    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &renderSettings.maxTextureSize);
-    glError();
-    if(renderSettings.maxTextureSize > 512){
-        debug writeln("MaxTextureSize(", renderSettings.maxTextureSize, ") to big; clamping to 512");
-        renderSettings.maxTextureSize = 512;
-    }
-    glGetIntegerv(GL_MAX_ARRAY_TEXTURE_LAYERS, &renderSettings.maxTextureLayers);
-    glError();
-    float maxAni;
-    glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAni);
-    glError();
-    renderSettings.anisotropy = max(1.0f, min(renderSettings.anisotropy, maxAni));
-
-    //Uh 1 or 2 if vsync enable......?
-    version (Windows) {
-        wglSwapIntervalEXT(renderSettings.disableVSync ? 0 : 1);
-    } else {
-        writeln("Cannot poke with vsync unless wgl blerp");
-    }
-    glError();
-
-    glClearColor(1.0, 0.7, 0.4, 0.0);
-    glError();
-
-    glEnable(GL_DEPTH_TEST);
-    glError();
-    glEnable(GL_CULL_FACE);
-    glError();
-    glDepthFunc(GL_LEQUAL);
-}
-
 class Game{
 
     World           world;
@@ -88,8 +38,6 @@ class Game{
     bool            isServer;
     bool            isWorker;
 
-    ushort          width = 800;
-    ushort          height = 600;
     ushort          middleX;
     ushort          middleY;
 
@@ -98,8 +46,11 @@ class Game{
     Renderer          renderer;
     Scheduler         scheduler;
     TileTextureAtlas  atlas;
+    Font              font;
     bool[SDLK_LAST]   keyMap;
     bool              useCamera;
+
+    StringTexture     f1, f2, f3, fps;
 
     this(bool serv, bool clie, bool work) {
         isServer = serv;
@@ -110,8 +61,8 @@ class Game{
             writeln("Initializing client stuff");
             scope (success) writeln("Done with client stuff");
 
-            middleX = width/2;
-            middleY = height/2;
+            middleX = cast(ushort)renderSettings.windowWidth/2;
+            middleY = cast(ushort)renderSettings.windowHeight/2;
 
             enforce(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_NOPARACHUTE) == 0,
                     SDLError());
@@ -130,7 +81,8 @@ class Game{
             SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS,  0);
             SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES,  16);
 
-            surface = enforce(SDL_SetVideoMode(width, height, 32, SDL_HWSURFACE | SDL_GL_DOUBLEBUFFER | SDL_OPENGL),
+            surface = enforce(SDL_SetVideoMode(renderSettings.windowWidth, renderSettings.windowHeight,
+                                               32, SDL_HWSURFACE | SDL_GL_DOUBLEBUFFER | SDL_OPENGL),
                               "Could not set sdl video mode (" ~ SDLError() ~ ")");
             initOpenGL();
             atlas = new TileTextureAtlas; // HACK
@@ -173,6 +125,20 @@ class Game{
     }
 
     TileSystem parseGameData() {
+        font = new Font("fonts/courier");
+        f1 = new StringTexture(font);
+        f2 = new StringTexture(font);
+        f3 = new StringTexture(font);
+        fps = new StringTexture(font);
+        f1.setPositionI(vec2i(0, 0));
+        f2.setPositionI(vec2i(0, 1));
+        f3.setPositionI(vec2i(0, 2));
+        fps.setPositionI(vec2i(0, 3));
+        f1.setText("polygon fill:" ~ (renderSettings.renderWireframe? "Wireframe":"Fill"));
+        f2.setText(useCamera ? "Camera active" : "Camera locked");
+        f3.setText("Mipmapppinngggg!! (press f3 to togggeleee");
+        fps.setText("No fps calculted yet");
+
         auto sys = new TileSystem;
 
         enum f = "textures/001.png";
@@ -286,6 +252,10 @@ class Game{
 
             renderer.render();
             updateFPS();
+            f1.render();
+            f2.render();
+            f3.render();
+            fps.render();
             SDL_GL_SwapBuffers();
         }
     }
@@ -304,6 +274,8 @@ class Game{
         count++;
         if(delta > 1000){
             writeln(count);
+            string str = to!string(count);
+            fps.setText("FPS: " ~str);
             startTime =now;
             count = 0;
         }
@@ -326,25 +298,36 @@ class Game{
         renderSettings.textureInterpolate = (cnt%2 != 0);
         renderSettings.mipLevelInterpolate = (cnt > 1);
         atlas.setMinFilter(renderSettings.mipLevelInterpolate, renderSettings.textureInterpolate);
+        string tmp;
         switch(cnt){
             case 0:
-                writeln("GL_NEAREST_MIPMAP_NEAREST"); break;
+                tmp = "GL_NEAREST_MIPMAP_NEAREST"; break;
             case 1:
-                writeln("GL_LINEAR_MIPMAP_NEAREST"); break;
+                tmp = ("GL_LINEAR_MIPMAP_NEAREST"); break;
             case 2:
-                writeln("GL_NEAREST_MIPMAP_LINEAR"); break;
+                tmp = ("GL_NEAREST_MIPMAP_LINEAR"); break;
             case 3:
-                writeln("GL_LINEAR_MIPMAP_LINEAR"); break;
+                tmp = ("GL_LINEAR_MIPMAP_LINEAR"); break;
         }
+        writeln(tmp);
+
+        f3.setText(tmp);
     }
 
     void onKey(SDL_KeyboardEvent event){
         auto key = event.keysym.sym;
         auto down = event.type == SDL_KEYDOWN;
         keyMap[key] = down;
-        if(key == SDLK_F1 && down) renderSettings.renderWireframe ^= 1;
-        if(key == SDLK_F2 && down) useCamera ^= 1;
+        if(key == SDLK_F1 && down){
+            renderSettings.renderWireframe ^= 1;
+            f1.setText("polygon fill:" ~ (renderSettings.renderWireframe? "Wireframe":"Fill"));
+        }
+        if(key == SDLK_F2 && down) {
+            useCamera ^= 1;
+            f2.setText(useCamera ? "Camera active" : "Camera locked");
+        }
         if(key == SDLK_F3 && down) stepMipMap();
+
     }
 
     bool oldUseCamera;

@@ -6,6 +6,7 @@ import core.runtime;
 //import std.c.windows.windows;
 import std.conv;
 import std.exception;
+import std.file;
 import std.json;
 import std.stdio;
 import std.string;
@@ -50,7 +51,8 @@ int myWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int
     ilInit();
 //    DerelictILUT.load();
 
-    string outFontName = "test1";
+    string outFontName = "courier";
+    string outFormat = ".tif";
     string fontName = "Courier";
     bool bold = false;
     bool italic = false;
@@ -85,7 +87,7 @@ int myWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int
     HFONT oldFont = SelectObject(memDC, font);
     SetTextAlign(memDC, TA_LEFT | TA_TOP | TA_NOUPDATECP);
 
-    int glyphCount = glyphStart-glyphEnd+1;
+    int glyphCount = glyphEnd-glyphStart+1;
     writeln("glyphCount: ", glyphCount);
 
     //Determine max width, height of all characters in range.
@@ -161,15 +163,16 @@ int myWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int
     root["antiAliased"] = JSON(aa);
     root["bold"] = JSON(bold);
     root["italic"] = JSON(italic);
-    root["textureFile"] = JSON(outFontName);
+    root["textureFile"] = JSON(outFontName ~ outFormat);
     root["textureWidth"] = JSON(textureWidth);
     root["textureHeight"] = JSON(textureHeight);
     root["textureSlices"] = JSON(textureSlices);
 
     auto jsonRoot = JSON(root);
+    auto jsonString = toJSON(&jsonRoot);
+    writeln(jsonString);
 
-    writeln(toJSON(&jsonRoot));
-
+    std.file.write(outFontName ~ ".json", jsonString);
 
 
 
@@ -207,7 +210,8 @@ int myWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int
         int r = pPixel[0];
         int g = pPixel[1];
         int b = pPixel[2];
-        pPixel[3] = cast(ubyte)min(255, (r+g+b)/3);
+        pPixel[3] = 255;
+        pPixel[3] -= cast(ubyte)min(255, (r+g+b)/3);
         pPixel += 4;
     }
 
@@ -238,7 +242,7 @@ int myWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int
         ilError();
         ilTexImage(textureWidth, textureHeight, 1, 4, IL_RGBA, IL_UNSIGNED_BYTE, data.ptr);
         ilError();
-        string filename = outFontName ~ ".tga";
+        string filename = outFontName ~ outFormat;
         const char* ptr = toStringz(filename);
         ilEnable(IL_FILE_OVERWRITE);
         ilError();

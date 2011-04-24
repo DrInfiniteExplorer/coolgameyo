@@ -10,9 +10,8 @@ import std.exception;
 import std.stdio;
 
 import derelict.devil.il;
-import derelict.opengl.gl;
-import derelict.opengl.glext;
 
+import graphics.ogl;
 import graphics.renderer;
 import util;
 
@@ -79,9 +78,67 @@ struct Image{
     this(ubyte *data, uint width, uint height){
         imgData.length = 4*width*height;
         if(data !is null)
-            imgData[] = data[0..imgData.length];        
+            imgData[] = data[0..imgData.length];
         imgWidth = width;
         imgHeight = height;
+    }
+
+    //Copies a rectangle of data from img to this
+    void blit(uint toX, uint toY, Image img, uint fromX, uint fromY, uint width, uint height) {
+        enforce(0 <= toX && toX < imgWidth, "bad Image.blit.toX");
+        enforce(0 <= toY && toY < imgHeight, "bad Image.blit.toY");
+        enforce(0 <= fromX && fromX < img.imgWidth, "bad Image.blit.fromX");
+        enforce(0 <= fromY && fromY < img.imgHeight, "bad Image.blit.fromY");
+        enforce(0 < width && width <= imgWidth && width <= img.imgWidth, "bad Image.blit.width");
+        enforce(0 < height && height <= imgHeight && height <= img.imgHeight, "bad Image.blit.height");
+        ubyte* toPtr = imgData.ptr;
+        toPtr += 4*toX;
+        ubyte* frPtr = img.imgData.ptr;
+        frPtr += 4*fromX;
+        foreach(y ; 0 .. height){
+            foreach(x ; 0 .. width){
+                toPtr[4*x+0] = frPtr[4*x+0];
+                toPtr[4*x+1] = frPtr[4*x+1];
+                toPtr[4*x+2] = frPtr[4*x+2];
+                toPtr[4*x+3] = frPtr[4*x+3];
+            }
+            toPtr += 4*imgWidth;
+            frPtr += 4*img.imgWidth;
+        }
+    }
+
+    uint toGLTex(uint tex){
+        int width, height;
+        debug scope(exit){
+            auto tmp = Image(null, imgWidth, imgHeight);
+            glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, tmp.imgData.ptr);
+            glError();
+            tmp.save("derp.png");
+        }
+        if(tex) {
+            glBindTexture(GL_TEXTURE_2D, tex);
+            glError();
+            glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_WIDTH, &width);
+            glError();
+            glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_HEIGHT, &height);
+            glError();
+            if(width == imgWidth && height == imgHeight){
+                glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, imgWidth, imgHeight, GL_RGBA, GL_UNSIGNED_BYTE, imgData.ptr);
+                glError();
+                return tex;
+            }
+        }
+        if(tex) glDeleteTextures(1, &tex);
+        glGenTextures(1, &tex);
+        glBindTexture(GL_TEXTURE_2D, tex);
+        glError();
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glError();
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glError();
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, imgWidth, imgHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, imgData.ptr);
+        glError();
+        return tex;
     }
 
     void save(string filename){
@@ -110,15 +167,6 @@ struct Image{
         ilError();
         ilSave(IL_BMP, ptr);
         ilError();
-    }
-
-    unittest{
-        char a = 128;
-        a *= 0.5;
-        assert(a == 64, "derp");
-        a = 128;
-        a *= 0.25;
-        assert(a == 32, "darp");
     }
 
     void tint(vec3i _color)
@@ -275,7 +323,7 @@ class TileTextureAtlas{
         tileMap = null;
 
         if(renderSettings.glVersion >= 3.0){
-            debug writeln("Generating mipmaps manually for tile atlas...");
+            debug writeln("Generating mipmaps 'manually' for tile atlas...");
             glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
             glError();
         }

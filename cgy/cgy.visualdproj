@@ -169,7 +169,7 @@
   <deffile />
   <resfile />
   <exefile>$(OutDir)\$(ProjectName).exe</exefile>
-  <additionalOptions>-L/SUBSYSTEM:CONSOLE:4.0 -I$(SOLUTIONDIR)\libraries\irrlicht\include\</additionalOptions>
+  <additionalOptions>-L/SUBSYSTEM:CONSOLE:4.0</additionalOptions>
   <preBuildCommand />
   <postBuildCommand />
   <debugtarget>$(TARGETPATH)</debugtarget>
@@ -200,6 +200,7 @@
    <File path="graphics\texture.d" />
    <File path="graphics\shader.d" />
    <File path="graphics\font.d" />
+   <File path="graphics\ogl.d" />
   </Folder>
   <Folder name="worldparts">
    <File path="worldparts\block.d" />
@@ -211,6 +212,8 @@
    <File path="..\gameroot\shaders\renderDude.vert" />
    <File path="..\gameroot\shaders\renderGR.frag" />
    <File path="..\gameroot\shaders\renderGR.vert" />
+   <File path="..\gameroot\shaders\fontShader.frag" />
+   <File path="..\gameroot\shaders\fontShader.vert" />
   </Folder>
   <File path="game.d" />
   <File path="main.d" />
