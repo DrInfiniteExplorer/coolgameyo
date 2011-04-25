@@ -137,21 +137,6 @@ class VBOMaker : WorldListener
         updateMutex = new Mutex;
     }
 
-    const(GraphicsRegion)[GraphRegionNum] getRegions(){
-        {
-            dirtyMutex.lock();
-            scope(exit) dirtyMutex.unlock();
-            foreach(num; dirtyRegions){
-                regionMutex.lock();
-                scope(exit) regionMutex.unlock();
-                buildVBO(regions[num]);
-            }
-            dirtyRegions.length = 0;
-        }
-
-        return regions;
-    }
-
     void removeAllVBOs(){
         foreach(region ; regions){
             glDeleteBuffers(1, &region.VBO);
@@ -469,6 +454,21 @@ class VBOMaker : WorldListener
         }
     }
 
+    const(GraphicsRegion)[GraphRegionNum] getRegions(){
+        {
+            dirtyMutex.lock();
+            scope(exit) dirtyMutex.unlock();
+            foreach(num; dirtyRegions){
+                regionMutex.lock();
+                scope(exit) regionMutex.unlock();
+                buildVBO(regions[num]);
+            }
+            dirtyRegions.length = 0;
+        }
+
+        return regions;
+    }
+
     void buildVBO(ref GraphicsRegion region){
         auto primitiveCount = region.faces.length;
         auto geometrySize = primitiveCount * Face.sizeof;
@@ -536,6 +536,7 @@ class VBOMaker : WorldListener
     }
 
     void taskFunc() {
+        writeln("taskFunc");
         GraphRegionNum num;
         {
             updateMutex.lock();
@@ -621,6 +622,7 @@ class VBOMaker : WorldListener
             updateMutex.lock();
             scope(exit) updateMutex.unlock();
             if(regionsToUpdate.length == 0){
+                writeln("Starting taskFunc-task like so");
                 scheduler.push(asyncTask(&taskFunc));
             }
             regionsToUpdate ~= newRegions;

@@ -238,7 +238,7 @@ class World {
         //Range +-2
 
         auto range = RangeFromTo(-2,3,-2,3,-2,3);
-//*
+/*
         debug {
             range = RangeFromTo(0,1,0,1,0,1); //Make it faster in debyyyyg!!
         }
