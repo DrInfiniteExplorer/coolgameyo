@@ -240,7 +240,7 @@ class World {
         RangeFromTo range;
         range = RangeFromTo(-2,3,-2,3,-2,3);
 //        range = RangeFromTo(-1,2,-1,2,-1,2); //Make it faster in debyyyyg!!
-//        range = RangeFromTo(0,1,0,1,0,1); //Make it faster in debyyyyg!!
+        range = RangeFromTo(0,1,0,1,0,1); //Make it faster in debyyyyg!!
 /*
         debug {
             range = RangeFromTo(0,1,0,1,0,1); //Make it faster in debyyyyg!!
@@ -265,7 +265,8 @@ class World {
                 }
             }
         }
-        //MAKE FIX, NOT ONE FOR EVERY DERP DERP!!
+        //MAKE FIX, NOT ONE LOAD FOR EVERY UNIT!!
+        //Keep small array/map of which are just-now-loaded?
         foreach (dpos; range) { //We want to build geometry etc only after all relevant data has been loaded.
             auto pos = unit.pos.tilePos.getSectorNum();
             pos.value.X += dpos.X;

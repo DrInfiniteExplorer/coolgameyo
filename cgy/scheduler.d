@@ -1,7 +1,12 @@
-import core.time, core.thread;
-import std.container, std.concurrency, std.datetime;
-import std.stdio, std.conv;
+import core.time;
+import core.thread;
+
 import std.exception;
+import std.concurrency;
+import std.conv;
+import std.container;
+import std.datetime;
+import std.stdio;
 import std.string;
 
 version(Windows) import std.c.windows.windows;
@@ -68,10 +73,6 @@ private void workerFun(shared Scheduler ssched) {
     }
 }
 
-private long time() {
-    return TickDuration.currSystemTick().usecs;
-}
-
 class Scheduler {
     enum State { update, sync, forcedAsync, async }
     enum ASYNC_COUNT = 23;
@@ -97,7 +98,7 @@ class Scheduler {
         synchronized(this) {
             if (async.empty) {
                 state = State.async;
-                auto usecs = nextSync - time();
+                auto usecs = nextSync - utime();
                 if(usecs > 0){
                     return sleepyTask(usecs);
                 }
@@ -119,7 +120,13 @@ class Scheduler {
         }
         state = State.update;
 
-        syncTime = time();
+        syncTime = utime();
+    }
+
+    void registerModule(Module mod) {
+        synchronized(this){
+            modules ~= mod;
+        }
     }
 
     Task getTask() {
@@ -130,11 +137,12 @@ class Scheduler {
 
                     //writeln("updating!");
 
-                    syncTime = time();
+                    syncTime = utime();
                     world.update();
                     foreach (mod; modules) {
                         mod.update(world);
                     }
+                    insertFrameTime();
 
                     state = state.sync;
 
@@ -157,7 +165,7 @@ class Scheduler {
                     return popAsync();
 
                 case State.async:
-                    if (time() > nextSync) {
+                    if (utime() > nextSync) {
                         state = State.update;
                         return getTask();
                     }
@@ -175,4 +183,23 @@ class Scheduler {
             }
         }
     }
+
+    enum Frames = 3;
+    long[Frames] frameTimes;
+    long lastTime;
+    ulong frameAvg;
+    int frameId;
+    void insertFrameTime(){
+        long now = utime();
+        long delta = now - lastTime;
+        lastTime = now;
+        frameTimes[frameId] = delta;
+        frameId = (frameId+1)%Frames;
+        frameAvg = 0;
+        foreach(time ; frameTimes) {
+            frameAvg += time;
+        }
+        frameAvg /= Frames;
+    }
+
 }

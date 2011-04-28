@@ -20,6 +20,7 @@ import util;
 import unit;
 import world;
 import scheduler;
+import modules;
 
 struct RenderSettings{
     //Some opengl-implementation-dependant constants, gathered on renderer creation
@@ -47,7 +48,7 @@ RenderSettings renderSettings;
 auto grTexCoordOffset = Vertex.texcoord.offsetof;
 auto grTypeOffset = Vertex.type.offsetof;
 
-class Renderer{
+class Renderer : Module {
     World world;
     Scheduler scheduler;
     VBOMaker vboMaker;
@@ -93,6 +94,8 @@ class Renderer{
         scheduler = s;
         camera = c;
         vboMaker = new VBOMaker(w, s, c);
+
+        scheduler.registerModule(this);
 
         buildConstantsString();
 
@@ -155,9 +158,11 @@ class Renderer{
         glError();
     }
 
-    void renderDude(Unit* unit){
+    void renderDude(Unit* unit, float tickTimeSoFar){
         auto M = matrix4();
-        M.setTranslation(util.convert!float(unit.pos.value));
+        vec3d unitPos = unit.pos.value;
+        unitPos += tickTimeSoFar * unit.movementPerTick;
+        M.setTranslation(util.convert!float(unitPos));
         //auto v = vec3f(0, 0, sin(GetTickCount()/1000.0));
         //M.setTranslation(v);
         dudeShader.setUniform(dudeShader.b, M);
@@ -171,7 +176,7 @@ class Renderer{
         glError();
     }
 
-    void renderDudes(Camera camera) {
+    void renderDudes(Camera camera, float tickTimeSoFar) {
         auto vp = camera.getProjectionMatrix() * camera.getViewMatrix();
         dudeShader.use();
         dudeShader.setUniform(dudeShader.a, vp);
@@ -179,14 +184,50 @@ class Renderer{
         glError();
         auto dudes = world.getVisibleUnits(camera);
         foreach(dude ; dudes) {
-            renderDude(dude);
+            renderDude(dude, tickTimeSoFar);
         }
         glDisableVertexAttribArray(0);
         glError();
     }
 
-  void render()
-  {
+
+    //Copied from scheduler.d
+    //Consider making this a mixin functionality, sortof.
+    enum Frames = 3;
+    long[Frames] frameTimes;
+    long lastTime;
+    ulong frameAvg;
+    int frameId;
+    void insertFrameTime(){
+        long now = utime();
+        long delta = now - lastTime;
+        lastTime = now;
+        frameTimes[frameId] = delta;
+        frameId = (frameId+1)%Frames;
+        frameAvg = 0;
+        foreach(time ; frameTimes) {
+            frameAvg += time;
+        }
+        frameAvg /= Frames;
+    }
+
+    int frameCnt;
+    float soFar = 0;
+    void update(World world) {
+        frameCnt = 0;
+        soFar = 0;
+    }
+
+
+    void render()
+    {
+        long avgTickTime = scheduler.frameAvg;
+        float ratio = 0.0f;
+        if(avgTickTime > frameAvg){
+            ratio = to!float(frameAvg) / to!float(avgTickTime);
+        }
+
+        soFar += ratio;
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glError();
@@ -206,7 +247,7 @@ class Renderer{
         //Render world
         renderWorld(camera);
         //Render dudes
-        renderDudes(camera);
+        renderDudes(camera, soFar);
         //Render foilage and other cosmetics
         //Render HUD/GUI
         //Render some stuff deliberately offscreen, just to be awesome.
@@ -214,6 +255,8 @@ class Renderer{
         glError();
         glEnable(GL_CULL_FACE);
         glError();
+
+        insertFrameTime();
 
   }
 

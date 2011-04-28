@@ -1,3 +1,5 @@
+import core.time;
+
 import std.conv;
 import std.exception;
 import std.stdio;
@@ -19,6 +21,9 @@ version (Posix) {
     import std.c.stdlib;
 }
 
+long utime() {
+    return TickDuration.currSystemTick().usecs;
+}
 
 alias vector2d!(int)  vec2i;
 alias vector2d!(float)  vec2f;

@@ -50,7 +50,7 @@ class Game{
     bool[SDLK_LAST]   keyMap;
     bool              useCamera;
 
-    StringTexture     f1, f2, f3, fps;
+    StringTexture     f1, f2, f3, fps, tickTime, renderTime;
 
     this(bool serv, bool clie, bool work) {
         isServer = serv;
@@ -105,7 +105,7 @@ class Game{
 
         }
 
-        auto xy = tileXYPos(vec2i(0,0));
+        auto xy = tileXYPos(vec2i(10,10));
         auto u = new Unit;
         u.pos = world.getTopTilePos(xy).toUnitPos();
         u.pos.value.Z += 1;
@@ -116,6 +116,10 @@ class Game{
         uu.pos = world.getTopTilePos(xyy).toUnitPos();
         uu.pos.value.Z += 1;
         world.addUnit(uu);
+
+
+        u.destination = uu.pos.value;
+        u.ticksUntilArrived = 30 * 60; // 60 seconds
         //world.floodFillVisibility(xy);
         /*
         foreach(sector; world.sectorList){
@@ -130,10 +134,16 @@ class Game{
         f2 = new StringTexture(font);
         f3 = new StringTexture(font);
         fps = new StringTexture(font);
+        tickTime = new StringTexture(font);
+        renderTime = new StringTexture(font);
+
         f1.setPositionI(vec2i(0, 0));
         f2.setPositionI(vec2i(0, 1));
         f3.setPositionI(vec2i(0, 2));
         fps.setPositionI(vec2i(0, 3));
+        tickTime.setPositionI(vec2i(30, 0));
+        renderTime.setPositionI(vec2i(30, 1));
+
         f1.setText("polygon fill:" ~ (renderSettings.renderWireframe? "Wireframe":"Fill"));
         f2.setText(useCamera ? "Camera active" : "Camera locked");
         f3.setText("Mipmapppinngggg!! (press f3 to togggeleee");
@@ -204,7 +214,7 @@ class Game{
     void runServer() {
         // set up network interface...? D:
         while (true) {
-            writeln("blerp");
+            writeln("Server loop!");
             Thread.sleep(dur!"seconds"(1));
         }
     }
@@ -251,34 +261,27 @@ class Game{
                 updateCamera(); //Or doInterface() or controlDwarf or ()()()()();
 
             renderer.render();
-            updateFPS();
+            updateGui();
             f1.render();
             f2.render();
             f3.render();
             fps.render();
+            renderTime.render();
+            tickTime.render();
             SDL_GL_SwapBuffers();
         }
     }
 
-    int startTime = 0;
-    int count = 0;
-    void updateFPS(){
-        version(Windows){
-            auto now = GetTickCount();
-        }
-        version(Posix){
-            auto now = 1;
-        }
-        //writeln("DERPTI DERP FPS");
-        auto delta = now-startTime;
-        count++;
-        if(delta > 1000){
-            writeln(count);
-            string str = to!string(count);
-            fps.setText("FPS: " ~str);
-            startTime =now;
-            count = 0;
-        }
+    void updateGui(){
+        string str = to!string(1_000_000 / renderer.frameAvg);
+        fps.setText("FPS: " ~str);
+
+
+        str = to!string(renderer.frameAvg / 1000);
+        renderTime.setText("Frame time: " ~ str);
+
+        str = to!string(scheduler.frameAvg / 1000);
+        tickTime.setText("tick time: " ~ str);
 
     }
 
