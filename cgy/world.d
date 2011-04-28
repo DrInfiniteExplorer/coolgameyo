@@ -49,9 +49,6 @@ class World {
     }
 
     void generateBlock(BlockNum blockNum) {
-        //Was toSectorPos insted of getSectorNumber which i'm guessing it's supposed to be.
-        //Discovered after fixing this that getSector takes a tilepos and internally uses
-        // "toSectorPos" ie. getSectorNumber. So removing that call here.
         auto sector = getSector(blockNum.getSectorNum());
         sector.generateBlock(blockNum, worldGen);
     }
@@ -133,13 +130,10 @@ class World {
         return block;
     }
 
-    void setBlock(BlockNum blockNum, Block newBlock) {
+    private void setBlock(BlockNum blockNum, Block newBlock) {
         auto sector = getSector(blockNum.getSectorNum());
         sector.setBlock(blockNum, newBlock);
     }
-
-    //Sector[] lock() { return sectorList; } used by anithing?
-
 
     void update(){
 
@@ -148,6 +142,7 @@ class World {
     Unit*[] getVisibleUnits(Camera camera){
         Unit*[] units;
         foreach(sector; sectorList){
+            //Make inFrustum for sectors too.
             foreach(unit; sector.units){
                 if(camera.inFrustum(unit)){
                     units ~= unit;
@@ -157,7 +152,7 @@ class World {
         return units;
     }
 
-    Sector[] getSectors() {
+    private Sector[] getSectors() {
         return sectorList;
     }
 
@@ -185,6 +180,7 @@ class World {
         }
     }
 
+    // Returns a range with all the units in the world
     UnitRange getUnits() {
         UnitRange ret;
         ret.sectors = getSectors();
@@ -208,7 +204,7 @@ class World {
 
         if (secDiff.value == vec3i(0,0,0)) return;
 
-        assert (secDiff.value.getLengthSQ() <= 3);
+        enforce(secDiff.value.getLengthSQ() <= 3, "Unit moving faster than we can possibly handle!!");
 
         Direction dir;
 
@@ -221,7 +217,7 @@ class World {
         if (secDiff.value.Z < 0) dir |= Direction.down;
         else if (secDiff.value.Z > 0) dir |= Direction.up;
 
-        assert (0);
+        enforce(0, "Implement floodfilling duh!");
 
         // Make sure to increase activity in the good sectors and decrese4 int
         // the blahbl ah old ones we leaft blah ;;;
@@ -286,7 +282,9 @@ class World {
         }
         return block.getTile(tilePos);
     }
-    void setTile(TilePos tilePos, const Tile newTile) {
+
+    private void setTile(TilePos tilePos, const Tile newTile) {
+        enforce(0, "Called from where?");
         getBlock(tilePos.getBlockNum()).setTile(tilePos, newTile);
         notifyTileChange(tilePos);
     }

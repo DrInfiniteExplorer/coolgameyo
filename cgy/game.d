@@ -50,7 +50,7 @@ class Game{
     bool[SDLK_LAST]   keyMap;
     bool              useCamera;
 
-    StringTexture     f1, f2, f3, fps, tickTime, renderTime;
+    StringTexture     f1, f2, f3, f4, fps, tickTime, renderTime;
 
     this(bool serv, bool clie, bool work) {
         isServer = serv;
@@ -133,6 +133,7 @@ class Game{
         f1 = new StringTexture(font);
         f2 = new StringTexture(font);
         f3 = new StringTexture(font);
+        f4 = new StringTexture(font);
         fps = new StringTexture(font);
         tickTime = new StringTexture(font);
         renderTime = new StringTexture(font);
@@ -140,13 +141,15 @@ class Game{
         f1.setPositionI(vec2i(0, 0));
         f2.setPositionI(vec2i(0, 1));
         f3.setPositionI(vec2i(0, 2));
-        fps.setPositionI(vec2i(0, 3));
+        f4.setPositionI(vec2i(0, 3));
+        fps.setPositionI(vec2i(0, 4));
         tickTime.setPositionI(vec2i(30, 0));
         renderTime.setPositionI(vec2i(30, 1));
 
         f1.setText("polygon fill:" ~ (renderSettings.renderWireframe? "Wireframe":"Fill"));
         f2.setText(useCamera ? "Camera active" : "Camera locked");
         f3.setText("Mipmapppinngggg!! (press f3 to togggeleee");
+        f4.setText("VSync:" ~ (renderSettings.disableVSync? "Disabled" : "Enabled"));
         fps.setText("No fps calculted yet");
 
         auto sys = new TileSystem;
@@ -265,6 +268,7 @@ class Game{
             f1.render();
             f2.render();
             f3.render();
+            f4.render();
             fps.render();
             renderTime.render();
             tickTime.render();
@@ -330,6 +334,15 @@ class Game{
             f2.setText(useCamera ? "Camera active" : "Camera locked");
         }
         if(key == SDLK_F3 && down) stepMipMap();
+        if(key == SDLK_F4 && down) {
+            renderSettings.disableVSync ^= 1;
+            version (Windows) {
+                wglSwapIntervalEXT(renderSettings.disableVSync ? 0 : 1);
+            } else {
+                writeln("Cannot poke with vsync unless wgl blerp");
+            }
+            f4.setText("VSync:" ~ (renderSettings.disableVSync? "Disabled" : "Enabled"));
+        }
 
     }
 
