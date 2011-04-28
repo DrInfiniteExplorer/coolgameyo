@@ -454,6 +454,8 @@ class VBOMaker : WorldListener
         }
     }
 
+
+
     const(GraphicsRegion)[GraphRegionNum] getRegions(){
         {
             dirtyMutex.lock();
@@ -561,11 +563,19 @@ class VBOMaker : WorldListener
             regionsToUpdate = array(uniq(regionsToUpdate));
             num = regionsToUpdate[$-1];
             regionsToUpdate.length -= 1;
+
             if(regionsToUpdate.length != 0){
+                //TODO: May cause bugs and crashes when we get more than 1 non-render-thread, mm...
                 scheduler.push(asyncTask(&taskFunc));
                 writeln("Only ", regionsToUpdate.length, " regions left!");
             }
         }
+        /*
+        auto rel = num.value;
+        if(rel == vec3i(-1, -1, 0)){
+            asm {int 3;}
+        }
+        */
 
         GraphicsRegion reg;
         reg.grNum = num;
@@ -574,6 +584,9 @@ class VBOMaker : WorldListener
             scope(exit) regionMutex.unlock();
             if(num in regions) {
                 reg = regions[num];
+                if(reg.faces.length > 0){ //If was duplicate and/or quickly reinserted, but not yet rendered, do not blargh the blargh again
+                    return;
+                }
             }
         }
         buildGraphicsRegion(reg);
@@ -581,11 +594,21 @@ class VBOMaker : WorldListener
     }
 
     bool hasContent(GraphRegionNum grNum) {
+
+        /*
+        if(grNum.value == vec3i(-1,-1, 0)){
+            asm{
+                int 3;
+            }
+        }
+        */
+
         auto minBlockNum = grNum.min.getBlockNum();
         BlockNum maxBlockNum = grNum.max.getBlockNum();
         maxBlockNum.value += vec3i(1,1,1);
         int seenCount;
         foreach(rel ; RangeFromTo(minBlockNum.value, maxBlockNum.value)) {
+
             auto num = blockNum(rel);
             auto block = world.getBlock(num, false, false);
             if(block.seen){
