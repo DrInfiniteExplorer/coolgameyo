@@ -19,25 +19,29 @@ import modules;
 struct Task {
     bool sync;
     bool syncsScheduler;
-    void delegate(const World) run;
+    void delegate(const World, ref CHANGE[]) run;
 }
 
 Task asyncTask(void delegate (const World) run) {
-    return Task(false, false, run);
+    return Task(false, false, (const World w, ref CHANGE[] r){run(w);});
 }
 Task asyncTask(void delegate () run) {
-    return Task(false, false, (const World){ run(); });
+    return Task(false, false, (const World, ref CHANGE[]){ run(); });
 }
-Task syncTask(void delegate (const World) run) {
+
+Task syncTask(void delegate (const World, ref CHANGE[]) run) {
     return Task(true, false, run);
 }
+Task syncTask(void delegate (const World) run) {
+    return Task(true, false, (const World w, ref CHANGE[]){ run(w);});
+}
 Task syncTask(void delegate () run) {
-    return Task(true, false, (const World){ run(); });
+    return Task(true, false, (const World, ref CHANGE[]){ run(); });
 }
 
 private Task sleepyTask(long usecs) {
     enforce(usecs > 0 && usecs <= 1000000*15, "sleepyTask called with bad usec count:" ~to!string(usecs)); //Valid time and not more than 15 secs
-    void asd(const World){
+    void asd(const World, ref CHANGE[] c){
         //writeln("worker sleeping ", usecs, " usecs");
         Thread.sleep(dur!"usecs"(usecs));
     }
@@ -49,6 +53,7 @@ private Task syncTask() {
 }
 
 
+enum TICKS_PER_SECOND = 15;
 
 // THIS WILL PROBABLY NEED SOME FLESHING OUT...!!!
 private void workerFun(shared Scheduler ssched) {
@@ -59,8 +64,12 @@ private void workerFun(shared Scheduler ssched) {
 
         while (true) {
             // try to receive message?
+            CHANGE[] changes;
             auto task = sched.getTask();
-            task.run(sched.world);
+            task.run(sched.world, changes);
+            if(changes.length > 0){
+                sched.addChanges(changes);
+            }
         }
     }
     catch (Throwable o) // catch any uncaught exceptions
@@ -79,6 +88,7 @@ class Scheduler {
 
     World world;
     Module[] modules;
+    CHANGE[] changelist;
 
     Queue!Task sync, async;
 
@@ -90,7 +100,7 @@ class Scheduler {
 
     long syncTime;
     long nextSync() @property const {
-        return syncTime + (dur!"seconds"(1) / 30).total!"usecs"; // total???
+        return syncTime + (dur!"seconds"(1) / TICKS_PER_SECOND).total!"usecs"; // total???
     }
 
 
@@ -129,6 +139,12 @@ class Scheduler {
         }
     }
 
+    void addChanges(CHANGE[] changes){
+        synchronized(this){
+            changelist ~= changes;
+        }
+    }
+
     Task getTask() {
         synchronized(this) {
             //writeln("scheduler state: ", to!string(state));
@@ -138,9 +154,10 @@ class Scheduler {
                     //writeln("updating!");
 
                     syncTime = utime();
-                    world.update();
+                    world.update(changelist);
+                    changelist.length = 0;
                     foreach (mod; modules) {
-                        mod.update(world);
+                        mod.update(world, this);
                     }
                     insertFrameTime();
 
@@ -183,6 +200,7 @@ class Scheduler {
             }
         }
     }
+
 
     enum Frames = 3;
     long[Frames] frameTimes;

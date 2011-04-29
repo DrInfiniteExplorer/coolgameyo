@@ -23,6 +23,7 @@ import graphics.texture;
 import tilesystem;
 import world;
 import scheduler;
+import modules;
 import pos;
 import util;
 import unit;
@@ -93,6 +94,11 @@ class Game{
         assert (isWorker, "otherwise wont work lol (maybe)");
         scheduler = new Scheduler(world, 1);
 
+        auto pathModule = new PathModule;
+        auto aiModule = new AIModule(pathModule);
+        scheduler.registerModule(pathModule);
+        scheduler.registerModule(aiModule);
+
         if (isClient) {
             camera = new Camera();
             renderer = new Renderer(world, scheduler, camera);
@@ -101,8 +107,6 @@ class Game{
             atlas.upload();
             camera.setPosition(vec3d(-2, -2, 20));
             camera.setTarget(vec3d(0, 0, 20));
-
-
         }
 
         auto xy = tileXYPos(vec2i(10,10));
@@ -117,15 +121,8 @@ class Game{
         uu.pos.value.Z += 1;
         world.addUnit(uu);
 
+        u.ai = new MoveToAI(uu, 1.0/15.0);
 
-        u.destination = uu.pos.value;
-        u.ticksUntilArrived = 30 * 60; // 60 seconds
-        //world.floodFillVisibility(xy);
-        /*
-        foreach(sector; world.sectorList){
-            world.notifySectorLoad(sector.sectorNum);
-        }
-        */
     }
 
     TileSystem parseGameData() {

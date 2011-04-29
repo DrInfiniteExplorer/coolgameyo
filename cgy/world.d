@@ -135,10 +135,6 @@ class World {
         sector.setBlock(blockNum, newBlock);
     }
 
-    void update(){
-
-    }
-
     Unit*[] getVisibleUnits(Camera camera){
         Unit*[] units;
         foreach(sector; sectorList){
@@ -168,6 +164,7 @@ class World {
             prop();
         }
         void prop() {
+            if(sectors.empty) return;
             while (currentUnitRange.empty) {
                 sectors.popFront();
                 if (sectors.empty) break;
@@ -176,7 +173,7 @@ class World {
         }
 
         bool empty() @property {
-            return sectors.empty;
+            return sectors.empty && currentUnitRange.empty;
         }
     }
 
@@ -191,14 +188,42 @@ class World {
         return ret;
     }
 
+    void update(CHANGE[] changelist){
+        foreach(change ; changelist) {
+            change.apply(this);
+        }
+
+        //MOVE UNITS
+        //TODO: Make list of only-moving units, so as to not process every unit?
+        //Maybe?
+        // :)
+        foreach(unit ; getUnits()) {
+            if(unit.ticksToArrive == 0) continue;
+            auto vel = unit.destination - unit.pos.value;
+            vel *= 1.0/unit.ticksToArrive;
+            unit.velocity = vel;
+            unit.ticksToArrive -= 1;
+            if(unit.ticksToArrive == 0){
+                unit.velocity.set(0, 0, 0);
+            }
+            moveUnit(unit, UnitPos(unit.pos.value + vel));
+        }
+    }
+
+    void moveUnit(Unit* unit, vec3d destination, uint ticksToArrive){
+        unit.destination = destination;
+        unit.ticksToArrive = ticksToArrive;
+    }
 
     void moveUnit(Unit* unit) {
         assert(0, "Implement");
     }
 
-    void moveUnit(Unit* unit, UnitPos newPos) {
+    private void moveUnit(Unit* unit, UnitPos newPos) {
         auto before = unit.pos.tilePos();
         auto after = newPos.tilePos();
+
+        unit.pos = newPos;
 
         auto secDiff = sectorNum(after.getSectorNum().value - before.getSectorNum().value);
 
@@ -499,3 +524,10 @@ class World {
         }
     }
 }
+
+
+abstract class CHANGE{
+    void apply(World world);
+}
+
+

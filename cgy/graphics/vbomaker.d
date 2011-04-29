@@ -590,7 +590,6 @@ class VBOMaker : WorldListener
             }
         }
         buildGraphicsRegion(reg);
-
     }
 
     bool hasContent(GraphRegionNum grNum) {

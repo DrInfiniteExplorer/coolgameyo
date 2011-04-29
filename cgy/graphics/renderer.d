@@ -161,7 +161,8 @@ class Renderer : Module {
     void renderDude(Unit* unit, float tickTimeSoFar){
         auto M = matrix4();
         vec3d unitPos = unit.pos.value;
-        unitPos += tickTimeSoFar * unit.movementPerTick;
+        unitPos += tickTimeSoFar * unit.velocity;
+        //writeln("Vel: ", unit.velocity.getLength());
         M.setTranslation(util.convert!float(unitPos));
         //auto v = vec3f(0, 0, sin(GetTickCount()/1000.0));
         //M.setTranslation(v);
@@ -213,7 +214,7 @@ class Renderer : Module {
 
     int frameCnt;
     float soFar = 0;
-    void update(World world) {
+    void update(World world, Scheduler sched) {
         frameCnt = 0;
         soFar = 0;
     }
@@ -225,9 +226,11 @@ class Renderer : Module {
         float ratio = 0.0f;
         if(avgTickTime > frameAvg){
             ratio = to!float(frameAvg) / to!float(avgTickTime);
+            //writeln("Ratio ", ratio);
         }
 
         soFar += ratio;
+        //writeln("So far ", soFar);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glError();

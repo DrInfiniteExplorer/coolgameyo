@@ -2,10 +2,12 @@
 module unit;
 
 import std.conv;
+import std.math;
 
 import modules;
 import util;
 import pos;
+import world;
 
 final class UnitType {
     string name;
@@ -13,19 +15,17 @@ final class UnitType {
 }
 
 struct Unit {
+    UnitAI ai;
     UnitType type;
-
     UnitPos pos;
     vec3d destination;
-    int ticksUntilArrived;
-
+    vec3d velocity;
+    uint ticksToArrive;
     bool panics;
 
-    vec3d movementPerTick() const @property {
-        if(ticksUntilArrived < 1) { return vec3d(0.0, 0.0, 0.0); }
-        return (destination - pos.value) / to!double(ticksUntilArrived);
-    }
 
+
+    //This function serve any purpose?
     void tick(int ticksLeft, PathModule blerp) {
         if (ticksLeft > 0) { // Was interrupted!!!!!!!
             assert (0);
@@ -38,3 +38,50 @@ struct Unit {
     }
 }
 
+class UnitMovementChange : CHANGE {
+    Unit* unit;
+    //Will arrive at destination in frames frames (1 frame -> arrived by next frame)
+    vec3d destination;
+    uint ticksToArrive;
+    this(Unit *u, vec3d dest, uint ticks){
+        unit = u;
+        destination = dest;
+        ticksToArrive = ticks;
+    }
+
+    void apply(World world) {
+        world.moveUnit(unit, destination, ticksToArrive);
+    }
+}
+
+abstract class UnitAI {
+    void tick(Unit *unit, ref CHANGE[] changes);
+}
+
+class MoveToAI : UnitAI {
+    Unit *target;
+    float speed;
+    void delegate(Unit*) done;
+    bool removeOnArrive;
+    this(Unit* targetUnit, float speed, void delegate(Unit*) done = null, bool removeOnArrive=true){
+        target = targetUnit;
+        this.speed = speed;
+        this.done = done;
+        this.removeOnArrive = removeOnArrive;
+    }
+
+    void tick(Unit *unit, ref CHANGE[] changes) {
+        if(unit.destination != target.pos.value){
+            auto dist = (target.pos.value - unit.pos.value).getLength();
+            int ticks = to!int(ceil(dist / speed));
+            changes ~= new UnitMovementChange(unit, target.pos.value, ticks);
+        }
+        if(unit.pos == target.pos){
+            if(done){
+                done(unit);
+            } else if(removeOnArrive){
+                unit.ai = null;
+            }
+        }
+    }
+}

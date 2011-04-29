@@ -1,4 +1,8 @@
+
+module modules;
+
 import std.stdio;
+import std.exception;
 
 import world;
 import scheduler;
@@ -6,9 +10,10 @@ import pos;
 import unit;
 
 abstract class Module {
-    Scheduler scheduler; // design this away please
-    
-    void update(World world);
+    void update(World world, Scheduler scheduler){
+        //Possible cause if called: Change in function signature.
+        enforce(0, "SHOULD NOT BE CALLED, EVER! :(");
+    }
 }
 
 struct PathID {
@@ -43,9 +48,9 @@ class PathModule : Module {
         finishedPaths.remove(id);
         return true;
     }
-    
-    override void update(World world) {
-        assert (false);
+
+    void update(World world, Scheduler scheduler) {
+        //assert (false);
         foreach (state; activeStates) {
             scheduler.push(asyncTask({ return state.tick(); }));
         }
@@ -64,19 +69,35 @@ class AIModule : Module, WorldListener {
 
     UnitState[Unit*] states;
 
-
     this(PathModule pathmodule_) {
         pathmodule = pathmodule_;
     }
 
-    private void pushUnitTick(Unit* unit, ref UnitState state) {
-        scheduler.push(syncTask({
-                    //state.restTime = unit.tick(state.restTime, pathmodule);
-                    }));
-    }
+    void update(World world, Scheduler scheduler) {
+        void pushUnitTick(Unit* unit, ref UnitState state) {
+            scheduler.push(syncTask({
+                        //state.restTime = unit.tick(state.restTime, pathmodule);
+                        }));
+        }
 
-    override void update(World world) {
-        Unit*[] movers;
+        foreach(unit ; world.getUnits()) {
+            //writeln("U ", unit);
+            if(unit.ai){
+                Unit* ptr = unit;
+                //writeln(unit);
+                //writeln(unit.ai);
+                scheduler.push(syncTask(
+                    (const World w, ref CHANGE[] changes){
+                        auto ai = ptr.ai;
+                        //writeln(ptr);
+                        //writeln(ai);
+                        ai.tick(ptr, changes);
+                    }
+                ));
+            }
+        }
+
+        Unit*[] movers = null;
         foreach (_unit, ref state; states) {
             auto unit = cast(Unit*)_unit; // BRUTAL HACK
             if (unit.panics) {
@@ -93,13 +114,15 @@ class AIModule : Module, WorldListener {
             }
         }
 
-        scheduler.push(syncTask((const World world) {
-                        foreach (mover; movers) {
-                            writeln("Herpi derpi movie unitie");
-                            // world.lagMoveUnit(mover, 
-                            //    mover.pos + mover.direction * mover.speed); ???
-                        }
-                    }));
+        if(movers !is null) {
+            scheduler.push(syncTask((const World world) {
+                            foreach (mover; movers) {
+                                writeln("Herpi derpi movie unitie");
+                                // world.lagMoveUnit(mover,
+                                //    mover.pos + mover.direction * mover.speed); ???
+                            }
+                        }));
+        }
     }
 
     override void notifySectorLoad(SectorNum) { }
