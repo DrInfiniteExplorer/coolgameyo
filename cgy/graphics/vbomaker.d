@@ -36,13 +36,6 @@ bool intersects(box a, box b){
 
     return minx < maxx && miny<maxy && minz<maxz;
 
-    if(a.MinEdge<b.MinEdge){
-        box c = a;
-        a = b;
-        b = c;
-    }
-    return (a.MinEdge.X < b.MaxEdge.X && a.MinEdge.Y < b.MaxEdge.Y && a.MinEdge.Z < b.MaxEdge.Z &&
-        a.MaxEdge.X >= b.MinEdge.X && a.MaxEdge.Y >= b.MinEdge.Y && a.MaxEdge.Z >= b.MinEdge.Z);
 }
 
 struct GraphicsRegion

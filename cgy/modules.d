@@ -38,7 +38,7 @@ class PathModule : Module {
     PathFindState[] activeStates;
 
     PathID findPath(TilePos from, TilePos to) {
-        assert (0);
+        enforce(0, "dix");
         return PathID(nextIDNum++);
     }
     bool pollPath(PathID id, out Path path) {
@@ -49,7 +49,7 @@ class PathModule : Module {
         return true;
     }
 
-    void update(World world, Scheduler scheduler) {
+    override void update(World world, Scheduler scheduler) {
         //assert (false);
         foreach (state; activeStates) {
             scheduler.push(asyncTask({ return state.tick(); }));
@@ -73,7 +73,7 @@ class AIModule : Module, WorldListener {
         pathmodule = pathmodule_;
     }
 
-    void update(World world, Scheduler scheduler) {
+    override void update(World world, Scheduler scheduler) {
         void pushUnitTick(Unit* unit, ref UnitState state) {
             scheduler.push(syncTask({
                         //state.restTime = unit.tick(state.restTime, pathmodule);
@@ -83,15 +83,15 @@ class AIModule : Module, WorldListener {
         foreach(unit ; world.getUnits()) {
             //writeln("U ", unit);
             if(unit.ai){
-                Unit* ptr = unit;
+                Unit* scoped = unit;
                 //writeln(unit);
                 //writeln(unit.ai);
                 scheduler.push(syncTask(
                     (const World w, ref CHANGE[] changes){
-                        auto ai = ptr.ai;
+                        auto ai = scoped.ai;
                         //writeln(ptr);
                         //writeln(ai);
-                        ai.tick(ptr, changes);
+                        ai.tick(scoped, changes);
                     }
                 ));
             }

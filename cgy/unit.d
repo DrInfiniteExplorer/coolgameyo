@@ -2,6 +2,7 @@
 module unit;
 
 import std.conv;
+import std.exception;
 import std.math;
 
 import modules;
@@ -14,13 +15,31 @@ final class UnitType {
     int x;
 }
 
+interface UnitAI {
+    void tick(Unit* unit, ref CHANGE[] changes);
+}
+
+
 struct Unit {
+
+    const bool opEquals(ref const(Unit) u){
+        enforce(0, "Implement Unit.opEquals or find where it's called and make not called!");
+        asm {int 3;} //Apparently this needs to be implemented, or Unit.ai causes a lot of misery
+        //No real understanding of this problem has been produced. You can try commenting this out
+        //if you'd like. AFAIK we never ever want to compare units anyway though. Maybe we do. In
+        //that case we'll have to implement this or fix the problem somehow.
+        return type == u.type;
+    }
+
     UnitAI ai;
     UnitType type;
     UnitPos pos;
+    float rotation = 0; //radians
+
     vec3d destination;
-    vec3d velocity;
     uint ticksToArrive;
+    vec3d velocity;
+
     bool panics;
 
 
@@ -43,7 +62,7 @@ class UnitMovementChange : CHANGE {
     //Will arrive at destination in frames frames (1 frame -> arrived by next frame)
     vec3d destination;
     uint ticksToArrive;
-    this(Unit *u, vec3d dest, uint ticks){
+    this(Unit* u, vec3d dest, uint ticks){
         unit = u;
         destination = dest;
         ticksToArrive = ticks;
@@ -54,12 +73,9 @@ class UnitMovementChange : CHANGE {
     }
 }
 
-abstract class UnitAI {
-    void tick(Unit *unit, ref CHANGE[] changes);
-}
-
 class MoveToAI : UnitAI {
-    Unit *target;
+
+    Unit* target;
     float speed;
     void delegate(Unit*) done;
     bool removeOnArrive;
@@ -70,7 +86,7 @@ class MoveToAI : UnitAI {
         this.removeOnArrive = removeOnArrive;
     }
 
-    void tick(Unit *unit, ref CHANGE[] changes) {
+    override void tick(Unit* unit, ref CHANGE[] changes) {
         if(unit.destination != target.pos.value){
             auto dist = (target.pos.value - unit.pos.value).getLength();
             int ticks = to!int(ceil(dist / speed));
@@ -84,4 +100,5 @@ class MoveToAI : UnitAI {
             }
         }
     }
+
 }

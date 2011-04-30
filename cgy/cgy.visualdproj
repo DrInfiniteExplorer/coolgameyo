@@ -169,7 +169,7 @@
   <deffile />
   <resfile />
   <exefile>$(OutDir)\$(ProjectName).exe</exefile>
-  <additionalOptions>-L/SUBSYSTEM:CONSOLE:4.0</additionalOptions>
+  <additionalOptions>-L/SUBSYSTEM:CONSOLE:4.0 -wi</additionalOptions>
   <preBuildCommand />
   <postBuildCommand />
   <debugtarget>$(TARGETPATH)</debugtarget>

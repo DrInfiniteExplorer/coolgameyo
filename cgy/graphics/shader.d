@@ -128,8 +128,9 @@ class ShaderProgram{
 
     //There is also bindAttribLocation (Which must be followed by a link())
     uint getAttribLocation(string name){
-        return glGetAttribLocation(program, name.ptr);
+        uint ret = glGetAttribLocation(program, name.ptr);
         glError();
+        return ret;
     }
 
     int getUniformLocation(string name){

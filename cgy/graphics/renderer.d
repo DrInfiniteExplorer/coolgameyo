@@ -214,7 +214,7 @@ class Renderer : Module {
 
     int frameCnt;
     float soFar = 0;
-    void update(World world, Scheduler sched) {
+    override void update(World world, Scheduler sched) {
         frameCnt = 0;
         soFar = 0;
     }

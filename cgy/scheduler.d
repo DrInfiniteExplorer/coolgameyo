@@ -149,6 +149,7 @@ class Scheduler {
         synchronized(this) {
             //writeln("scheduler state: ", to!string(state));
             switch (state) {
+                default:
                 case State.update:
 
                     //writeln("updating!");

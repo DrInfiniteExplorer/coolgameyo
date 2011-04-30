@@ -6,6 +6,7 @@ import std.concurrency;
 import std.conv;
 import std.exception;
 import std.datetime;
+import std.math;
 import std.stdio;
 
 version(Windows){
@@ -51,7 +52,12 @@ class Game{
     bool[SDLK_LAST]   keyMap;
     bool              useCamera;
 
+    FPSControlAI   possesAI;
+
     StringTexture     f1, f2, f3, f4, fps, tickTime, renderTime;
+    StringTexture     unitInfo;
+
+    bool possesedActive;
 
     this(bool serv, bool clie, bool work) {
         isServer = serv;
@@ -123,6 +129,9 @@ class Game{
 
         u.ai = new MoveToAI(uu, 1.0/15.0);
 
+        possesAI = new FPSControlAI();
+        possesAI.setUnit(uu);
+
     }
 
     TileSystem parseGameData() {
@@ -134,6 +143,7 @@ class Game{
         fps = new StringTexture(font);
         tickTime = new StringTexture(font);
         renderTime = new StringTexture(font);
+        unitInfo = new StringTexture(font);
 
         f1.setPositionI(vec2i(0, 0));
         f2.setPositionI(vec2i(0, 1));
@@ -142,6 +152,7 @@ class Game{
         fps.setPositionI(vec2i(0, 4));
         tickTime.setPositionI(vec2i(30, 0));
         renderTime.setPositionI(vec2i(30, 1));
+        unitInfo.setPositionI(vec2i(0, 5));
 
         f1.setText("polygon fill:" ~ (renderSettings.renderWireframe? "Wireframe":"Fill"));
         f2.setText(useCamera ? "Camera active" : "Camera locked");
@@ -259,6 +270,9 @@ class Game{
 
             if(useCamera)
                 updateCamera(); //Or doInterface() or controlDwarf or ()()()()();
+            if(possesedActive){
+                updatePossesed();
+            }
 
             renderer.render();
             updateGui();
@@ -269,6 +283,7 @@ class Game{
             fps.render();
             renderTime.render();
             tickTime.render();
+            unitInfo.render();
             SDL_GL_SwapBuffers();
         }
     }
@@ -295,6 +310,21 @@ class Game{
         if(keyMap[SDLK_LCTRL]){ camera.axisMove( 0.0, 0.0,-0.1); }
     }
 
+    void updatePossesed(){
+        if(keyMap[SDLK_a]){ possesAI.move(-0.1, 0.0, 0.0); }
+        if(keyMap[SDLK_d]){ possesAI.move( 0.1, 0.0, 0.0); }
+        if(keyMap[SDLK_w]){ possesAI.move( 0.0, 0.1, 0.0); }
+        if(keyMap[SDLK_s]){ possesAI.move( 0.0,-0.1, 0.0); }
+
+        auto pos = possesAI.getUnitPos();
+        auto dir = camera.getTargetDir();
+        pos -= util.convert!double(dir);
+        camera.setPosition(pos);
+        auto rad = atan2(dir.Y, dir.X);
+        possesAI.setRotation(rad);
+
+    }
+
     void stepMipMap() {
         int cnt =   (renderSettings.textureInterpolate ? 1 : 0) +
                     (renderSettings.mipLevelInterpolate ? 2 : 0);
@@ -304,6 +334,7 @@ class Game{
         atlas.setMinFilter(renderSettings.mipLevelInterpolate, renderSettings.textureInterpolate);
         string tmp;
         switch(cnt){
+            default:
             case 0:
                 tmp = "GL_NEAREST_MIPMAP_NEAREST"; break;
             case 1:
@@ -340,6 +371,7 @@ class Game{
             }
             f4.setText("VSync:" ~ (renderSettings.disableVSync? "Disabled" : "Enabled"));
         }
+        if(key == SDLK_F5 && down) possesedActive ^= 1;
 
     }
 
@@ -358,3 +390,56 @@ class Game{
         oldUseCamera = useCamera;
     }
 }
+
+
+class FPSControlAI : UnitAI, CHANGE {
+    Unit* unit;
+
+    void setUnit(Unit* unit){
+        unit.ai = this;
+        this.unit = unit;
+        //Save old ai?
+        //Send data to clients that this unit is possessed!!!!
+        // :)
+    }
+
+    //Make sure that it is sent over network, and such!! (like comment below)
+    void move(float right, float fwd, float up) {
+        immutable vec3d origo = vec3d(0, 0, 0);
+        //auto dir = vec3d(right, fwd, up);
+        auto dir = vec3d(fwd, -right, up);
+        dir.rotateXYBy(unit.rotation, origo);
+        unit.pos.value += dir;
+    }
+
+    void setRotation(float rot){
+        enforce(unit !is null, "FPSControlAI's unit is null!!");
+        unit.rotation = rot;
+    }
+
+    vec3d getUnitPos(){
+        enforce(unit !is null, "FPSControlAI's unit is null!!");
+        return unit.pos.value;
+    }
+
+    //This is now mostly used to make a 'real' commit of the movement.
+    //Moving the unit would like, break things, kinda, otherwise, and such.
+    //How/what to do when networked? Other clients will want to know where it is positioned.
+    //Probably send information like "Unit X is player-controlled" to set NetworkControlledAI
+    //which'll work kina like this one, i suppose.
+    override void tick(Unit* unit, ref CHANGE[] changes){
+        enforce(unit == this.unit, "Derp! FPSControlAI.unit != unit-parameter in this.tick!");
+        changes ~= this;
+    }
+    void apply(World world) {
+        world.moveUnit(unit, unit.pos.value, 1);
+        //TODO: Make rotate of units as well? :):):)
+    }
+
+}
+
+
+
+
+
+

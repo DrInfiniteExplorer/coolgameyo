@@ -526,7 +526,7 @@ class World {
 }
 
 
-abstract class CHANGE{
+interface CHANGE{
     void apply(World world);
 }
 
