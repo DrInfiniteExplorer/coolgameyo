@@ -291,6 +291,23 @@ class Queue(T) {
     bool empty() @property const {
         return first is null;
     }
+
+
+    static struct Range {
+        Node* node;
+
+        T front() @property {
+            return node.value;
+        }
+        void popFront() {
+            node = node.next;
+        }
+        bool empty() @property {
+            return node is null;
+        }
+    }
+
+    Range opSlice() { return Range(first); }
 }
 
 enum Direction{

@@ -8,6 +8,7 @@ import std.container;
 import std.datetime;
 import std.stdio;
 import std.string;
+import std.range;
 
 version(Windows) import std.c.windows.windows;
 
@@ -86,6 +87,9 @@ class Scheduler {
     enum State { update, sync, forcedAsync, async }
     enum ASYNC_COUNT = 23;
 
+    bool shouldSave;
+    bool exiting;
+
     World world;
     Module[] modules;
     CHANGE[] changelist;
@@ -145,6 +149,12 @@ class Scheduler {
         }
     }
 
+    void serialize() {
+        foreach (task; chain(sync[], async[])) {
+            //task.writeTo(output);
+        }
+    }
+
     Task getTask() {
         synchronized(this) {
             //writeln("scheduler state: ", to!string(state));
@@ -161,6 +171,11 @@ class Scheduler {
                         mod.update(world, this);
                     }
                     insertFrameTime();
+
+                    if (shouldSave) {
+                        world.serialize();
+                        serialize();
+                    }
 
                     state = state.sync;
 

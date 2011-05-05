@@ -48,6 +48,20 @@ class World {
         worldGen = new WorldGenerator(tilesys);
     }
 
+    void serialize() {
+        assert (0);
+        foreach (xy, sectorxy; sectorXY) {
+            // write xy markers
+            
+            // write heightmap
+            foreach (z, sectors; sectorxy.sectors) {
+                // write sectors
+                
+            }
+        }
+    }
+            
+
     void generateBlock(BlockNum blockNum) {
         auto sector = getSector(blockNum.getSectorNum());
         sector.generateBlock(blockNum, worldGen);

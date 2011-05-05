@@ -1,7 +1,9 @@
 module main;
 
 import core.runtime;
+import core.thread;
 import std.stdio;
+import std.string : toStringz;
 
 import derelict.sdl.sdl;
 import derelict.opengl.gl;
@@ -33,8 +35,13 @@ import std.c.windows.windows;
         }
         catch (Throwable o) // catch any uncaught exceptions
         {
-            MessageBoxA(null, cast(char *)o.toString(),
-                    "Error", MB_OK | MB_ICONEXCLAMATION);
+            version (NoMessageBox) {
+                write(o, "\n\nderp: ");
+                readln();
+            } else {
+                MessageBoxA(null, o.toString().toStringz(),
+                        "Error", MB_OK | MB_ICONEXCLAMATION);
+            }
             result = 0; // failed
         }
         return result;
