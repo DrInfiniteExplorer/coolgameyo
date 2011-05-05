@@ -13,7 +13,7 @@ import stolen.plane3d;
 
 // bugzilla 2962
 //This must be in the first file which is passed to the compiler. in visuald, it seems that it is the topmost file in the project tree.
-static if(__traits(compiles,parse!(real, string))){}
+//static if(__traits(compiles,parse!(real, string))){}
 
 
 //! Axis aligned bounding box in 3d dimensional space.

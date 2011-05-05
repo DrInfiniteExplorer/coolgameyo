@@ -82,18 +82,20 @@ class AIModule : Module, WorldListener {
 
         foreach(unit ; world.getUnits()) {
             //writeln("U ", unit);
-            if(unit.ai){
-                Unit* scoped = unit;
-                //writeln(unit);
-                //writeln(unit.ai);
-                scheduler.push(syncTask(
-                    (const World w, ref CHANGE[] changes){
-                        auto ai = scoped.ai;
-                        //writeln(ptr);
-                        //writeln(ai);
-                        ai.tick(scoped, changes);
-                    }
-                ));
+            if (unit.ai) {
+                ((Unit* u) { // for new scope D: D: D:
+                    auto scoped = u;
+                    //writeln(unit);
+                    //writeln(unit.ai);
+                    scheduler.push(syncTask(
+                        (const World w, ref CHANGE[] changes){
+                            auto ai = scoped.ai;
+                            //writeln(ptr);
+                            //writeln(cast(void*)ai);
+                            ai.tick(scoped, changes);
+                        }
+                    ));
+                }) (unit);
             }
         }
 

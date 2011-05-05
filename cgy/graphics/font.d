@@ -6,7 +6,7 @@ import std.algorithm;
 import std.conv;
 import std.exception;
 import std.file;
-import std.json;
+//import std.json;
 import std.stdio;
 import std.string;
 
@@ -186,45 +186,45 @@ class Font {
         if(-1 != lastIdx){
             path = fontFile[0 .. lastIdx+1];
         }
-        auto content = readText(fontFile ~ ".json");
-        auto root = parseJSON(content);
-        enforce(root.type == JSON_TYPE.OBJECT);
-        auto map = root.object;
-        long getLong(string key) {
-            auto pVal = key in map;
-            enforce(pVal && pVal.type == JSON_TYPE.INTEGER);
-            return pVal.integer;
-        }
-        int getInt(string key){
-            return cast(int) getLong(key);
-        }
-        string getString(string key) {
-            auto pVal = key in map;
-            enforce(pVal && pVal.type == JSON_TYPE.STRING);
-            return pVal.str;
-        }
-        bool getBool(string key) {
-            auto pVal = key in map;
-            enforce(pVal && (pVal.type == JSON_TYPE.FALSE ||pVal.type == JSON_TYPE.TRUE));
-            return pVal.type == JSON_TYPE.TRUE;
-        }
-        glyphStart = getInt("glyphStart");
-        textureFile = getString("textureFile");
+        //auto content = readText(fontFile ~ ".json");
+        //auto root = parseJSON(content);
+        //enforce(root.type == JSON_TYPE.OBJECT);
+        //auto map = root.object;
+        //long getLong(string key) {
+        //    auto pVal = key in map;
+        //    enforce(pVal && pVal.type == JSON_TYPE.INTEGER);
+        //    return pVal.integer;
+        //}
+        //int getInt(string key){
+        //    return cast(int) getLong(key);
+        //}
+        //string getString(string key) {
+        //    auto pVal = key in map;
+        //    enforce(pVal && pVal.type == JSON_TYPE.STRING);
+        //    return pVal.str;
+        //}
+        //bool getBool(string key) {
+        //    auto pVal = key in map;
+        //    enforce(pVal && (pVal.type == JSON_TYPE.FALSE ||pVal.type == JSON_TYPE.TRUE));
+        //    return pVal.type == JSON_TYPE.TRUE;
+        //}
+        glyphStart = 0;//getInt("glyphStart");
+        textureFile = "courier.tif";//getString("textureFile");
 
-        bold = getBool("bold");
-        italic = getBool("italic");
-        antiAliased = getBool("antiAliased");
+        bold = false;//getBool("bold");
+        italic = false;//getBool("italic");
+        antiAliased = true;//getBool("antiAliased");
         //fontHeight = 18;
-        glyphStart = getInt("glyphStart");;
-        glyphEnd = getInt("glyphEnd");
-        textureWidth  = getInt("textureWidth");
-        textureHeight = getInt("textureHeight");
+        glyphStart = 0;//getInt("glyphStart");;
+        glyphEnd = 255;//getInt("glyphEnd");
+        textureWidth  = 512;//getInt("textureWidth");
+        textureHeight = 512;//getInt("textureHeight");
 
-        glyphWidth = getInt("glyphWidth");
-        glyphHeight = getInt("glyphHeight");
-        glyphsPerRow = getInt("glyphsPerRow");
-        glyphsPerCollumn = getInt("glyphsPerCollumn");
-        textureSlices = getInt("textureSlices");
+        glyphWidth = 9;//getInt("glyphWidth");
+        glyphHeight = 16;//getInt("glyphHeight");
+        glyphsPerRow = 56;//getInt("glyphsPerRow");
+        glyphsPerCollumn = 32;//getInt("glyphsPerCollumn");
+        textureSlices = 1;//getInt("textureSlices");
 
         auto img = Image(path ~ textureFile);
         texId = img.toGLTex(0);
