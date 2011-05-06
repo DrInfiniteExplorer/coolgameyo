@@ -26,7 +26,7 @@ mixin template ToStringMethod2D() {
 struct UnitPos {
     vec3d value;
 
-    TilePos tilePos() @property {
+    TilePos tilePos() const @property {
         return TilePos(convert!int(value));
     }
 
@@ -134,9 +134,9 @@ struct TilePos {
         return tileXYPos(vec2i(value.X, value.Y));
     }
 
-    aabbox3d!double getAABB(){
+    aabbox3d!double getAABB(bool halfTile = false){
         auto minPos = util.convert!double(value);
-        auto maxPos = minPos + vec3d(1, 1, 1);
+        auto maxPos = minPos + (halfTile ? vec3d(1.0, 1.0, 0.5) : vec3d(1.0, 1.0, 1.0));
         return aabbox3d!double(minPos, maxPos);
     }
 

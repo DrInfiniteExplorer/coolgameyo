@@ -118,18 +118,18 @@ class Game{
         auto xy = tileXYPos(vec2i(10,10));
         auto u = new Unit;
         u.pos = world.getTopTilePos(xy).toUnitPos();
-        u.pos.value.Z += 1;
+        //u.pos.value.Z += 1;
         world.addUnit(u);
 
         auto uu = new Unit;
         auto xyy = tileXYPos(vec2i(127,127));
         uu.pos = world.getTopTilePos(xyy).toUnitPos();
-        uu.pos.value.Z += 1;
+        //uu.pos.value.Z += 1;
         world.addUnit(uu);
 
         u.ai = new MoveToAI(uu, 1.0/15.0);
 
-        possesAI = new FPSControlAI();
+        possesAI = new FPSControlAI(world);
         possesAI.setUnit(uu);
 
     }
@@ -394,22 +394,80 @@ class Game{
 
 class FPSControlAI : UnitAI, CHANGE {
     Unit* unit;
+    vec3d velocity;
+    bool onGround;
+    World world;
+
+    this(World w){
+        world = w;
+    }
 
     void setUnit(Unit* unit){
         unit.ai = this;
         this.unit = unit;
+        velocity.set(0, 0, 0);
+        onGround=false;
         //Save old ai?
         //Send data to clients that this unit is possessed!!!!
         // :)
     }
 
+
+
+    void collideMove(vec3d dir, int level=0){
+        if(dir == vec3d(0, 0, 0)){ return; }
+        if(level > 5){
+            writeln("Penix");
+            enforce(0, "DIX!");
+            return;
+        }
+        auto aabb = unit.aabb();
+
+        auto min = unit.pos.tilePos; min.value -= vec3i(1, 1, 1);
+        auto max = min; max.value += vec3i(3, 3, 4);
+        foreach(rel ; RangeFromTo(min.value, max.value)) {
+            auto tp = TilePos(rel);
+            auto tile = world.getTile(tp);
+            auto tileBox = tp.getAABB(tile.halfstep);
+            float time;
+            vec3d normal;
+            if(!tile.transparent && aabb.intersectsWithBox(tileBox, dir, time, normal)){
+                //IF CAN STEP STEP
+                //ELSE Slideee!! :):):)
+
+                if(time != time){
+                    writeln("time is wierd blag blahb blabb");
+                }
+
+                // move forward first
+                auto newPos = unit.pos.value + dir * time;
+                dir = (1-time) * dir;
+                if(normal.getLengthSQ() != 1){
+                    writeln("Dix pix snicks " ~ to!string(normal.getLengthSQ()));
+                }
+                auto normPart = normal.dotProduct(dir) * normal;
+                auto tangPart = dir - normPart;
+                if(!(tangPart.getLengthSQ() < dir.getLengthSQ())){
+                    writeln("DIXIER DIXES DIX DERP");
+                }
+                unit.pos.value = newPos;
+                collideMove(tangPart, level+1);
+                return;
+            }
+        }
+        unit.pos.value += dir;
+    }
+
     //Make sure that it is sent over network, and such!! (like comment below)
     void move(float right, float fwd, float up) {
-        immutable vec3d origo = vec3d(0, 0, 0);
+        immutable origo = vec3d(0, 0, 0);
         //auto dir = vec3d(right, fwd, up);
+        up -= 0.05;
         auto dir = vec3d(fwd, -right, up);
         dir.rotateXYBy(unit.rotation, origo);
-        unit.pos.value += dir;
+        collideMove(dir);
+        //unit.pos.value += dir;
+
     }
 
     void setRotation(float rot){

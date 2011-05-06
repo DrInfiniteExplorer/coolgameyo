@@ -5,6 +5,7 @@ import std.conv;
 import std.exception;
 import std.math;
 
+import stolen.aabbox3d;
 import modules;
 import util;
 import pos;
@@ -42,7 +43,14 @@ struct Unit {
 
     bool panics;
 
+    float unitWidth = 1.f;
+    float unitHeight = 2.f;
 
+    aabbox3d!(double) aabb() const @property {
+        auto minPos = pos.value  - vec3d(unitWidth * 0.5, unitWidth*0.5, 0);
+        auto maxPos = minPos + vec3d(unitWidth, unitWidth, unitHeight);
+        return aabbox3d!double(minPos, maxPos);
+    }
 
     //This function serve any purpose?
     void tick(int ticksLeft, PathModule blerp) {
@@ -87,18 +95,17 @@ class MoveToAI : UnitAI {
     }
 
     override void tick(Unit* unit, ref CHANGE[] changes) {
-        if(unit.destination != target.pos.value){
+        if (unit.destination != target.pos.value) {
             auto dist = (target.pos.value - unit.pos.value).getLength();
             int ticks = to!int(ceil(dist / speed));
             changes ~= new UnitMovementChange(unit, target.pos.value, ticks);
         }
-        if(unit.pos == target.pos){
-            if(done){
+        if (unit.pos == target.pos) {
+            if (done) {
                 done(unit);
-            } else if(removeOnArrive){
+            } else if (removeOnArrive) {
                 unit.ai = null;
             }
         }
     }
-
 }

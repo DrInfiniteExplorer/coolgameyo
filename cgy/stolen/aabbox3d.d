@@ -4,6 +4,7 @@
 
 module stolen.aabbox3d;
 
+import std.algorithm;
 import std.math;
 import std.conv;
 
@@ -237,6 +238,52 @@ struct aabbox3d(T)
     return (MinEdge.X <= other.MaxEdge.X && MinEdge.Y <= other.MaxEdge.Y && MinEdge.Z <= other.MaxEdge.Z &&
       MaxEdge.X >= other.MinEdge.X && MaxEdge.Y >= other.MinEdge.Y && MaxEdge.Z >= other.MinEdge.Z);
   }
+
+    //Derp luben makes fix yeah
+    //Returns true if intersects, and then the time when it intersected. Returns false if does not intersect.
+    bool intersectsWithBox(const aabbox3d!(T) other, vector3d!(T) dir, out float time, out vector3d!(T) normal) const
+    {
+        float epsilon = 10*float.min;
+        float interpolate(float a, float b, float t){
+            return a * t + b * (t-1); //numerically stable, yeah!
+        }
+
+        float start = 0.f;
+        float stop = 1.f;
+        bool intersects(float dir, float min, float max, float omin, float omax, vector3d!(T) side){
+            if(abs(dir) < epsilon){
+                if( (max <= omin) || (min >= omax) ){
+                    return false; //No intersection, thus none at all!
+                }
+                return true; //Intersects, allways.
+            };
+            float startTime= (omin - max) / dir;
+            float stopTime = (omax - min) / dir;
+            if(startTime > stopTime) swap(startTime, stopTime);
+            if(startTime >= start){
+                start = startTime;
+                time = start;
+                normal = side;
+            }
+            if(stopTime < stop){
+                stop = stopTime;
+            }
+            if(start > stop){
+                return false;
+            }
+            return true;
+        }
+        return  intersects(dir.X, MinEdge.X, MaxEdge.X, other.MinEdge.X, other.MaxEdge.X, vector3d!(T)(-sgn(dir.X), 0, 0)) &&
+                intersects(dir.Y, MinEdge.Y, MaxEdge.Y, other.MinEdge.Y, other.MaxEdge.Y, vector3d!(T)(0, -sgn(dir.Y), 0)) &&
+                intersects(dir.Z, MinEdge.Z, MaxEdge.Z, other.MinEdge.Z, other.MaxEdge.Z, vector3d!(T)(0, 0, -sgn(dir.Z))) &&
+                start != stop; //If start == stop then intersection-space is like small, very small, infinitely small?
+
+    }
+
+    void scale(vector3d!(T) scale){
+        MinEdge *= scale;
+        MaxEdge *= scale;
+    }
 
   //! Tests if the box intersects with a line
   /** \param line: Line to test intersection with.
