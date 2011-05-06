@@ -421,39 +421,43 @@ class FPSControlAI : UnitAI, CHANGE {
             enforce(0, "DIX!");
             return;
         }
-        auto aabb = unit.aabb();
+        auto aabb = unit.aabb;
 
         auto min = unit.pos.tilePos; min.value -= vec3i(1, 1, 1);
         auto max = min; max.value += vec3i(3, 3, 4);
-        foreach(rel ; RangeFromTo(min.value, max.value)) {
+
+        foreach (rel; RangeFromTo(min.value, max.value)) {
             auto tp = TilePos(rel);
             auto tile = world.getTile(tp);
             auto tileBox = tp.getAABB(tile.halfstep);
             float time;
             vec3d normal;
-            if(!tile.transparent && aabb.intersectsWithBox(tileBox, dir, time, normal)){
-                //IF CAN STEP STEP
-                //ELSE Slideee!! :):):)
-
-                if(time != time){
-                    writeln("time is wierd blag blahb blabb");
-                }
-
-                // move forward first
-                auto newPos = unit.pos.value + dir * time;
-                dir = (1-time) * dir;
-                if(normal.getLengthSQ() != 1){
-                    writeln("Dix pix snicks " ~ to!string(normal.getLengthSQ()));
-                }
-                auto normPart = normal.dotProduct(dir) * normal;
-                auto tangPart = dir - normPart;
-                if(!(tangPart.getLengthSQ() < dir.getLengthSQ())){
-                    writeln("DIXIER DIXES DIX DERP");
-                }
-                unit.pos.value = newPos;
-                collideMove(tangPart, level+1);
-                return;
+            if (tile.transparent
+                    || !aabb.intersectsWithBox(tileBox, dir, time, normal)) {
+                continue;
             }
+            // We have collided with some box
+            //IF CAN STEP STEP
+            //ELSE Slideee!! :):):)
+
+            if(time != time){
+                writeln("time is wierd blag blahb blabb");
+            }
+
+            // move forward first
+            auto newPos = unit.pos.value + dir * time;
+            dir = (1-time) * dir;
+
+            assert (normal.getLengthSQ == 1);
+
+            auto normPart = normal.dotProduct(dir) * normal;
+            auto tangPart = dir - normPart;
+
+            assert (tangPart.getLengthSQ() < dir.getLengthSQ());
+
+            unit.pos.value = newPos;
+            collideMove(tangPart, level+1);
+            return;
         }
         unit.pos.value += dir;
     }
