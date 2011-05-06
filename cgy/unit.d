@@ -45,9 +45,13 @@ struct Unit {
 
     float unitWidth = 1.f;
     float unitHeight = 2.f;
+    float stepHeight = 0.5f;
 
-    aabbox3d!(double) aabb() const @property {
-        auto minPos = pos.value  - vec3d(unitWidth * 0.5, unitWidth*0.5, 0);
+    aabbox3d!(double) aabb(const(vec3d)* v = null) const @property {
+        if(v is null){
+            v = &pos.value;
+        }
+        auto minPos = (*v)  - vec3d(unitWidth * 0.5, unitWidth*0.5, 0);
         auto maxPos = minPos + vec3d(unitWidth, unitWidth, unitHeight);
         return aabbox3d!double(minPos, maxPos);
     }

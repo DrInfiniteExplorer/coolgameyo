@@ -318,7 +318,7 @@ class Game{
 
         auto pos = possesAI.getUnitPos();
         auto dir = camera.getTargetDir();
-        pos -= util.convert!double(dir);
+        pos -= util.convert!double(dir) * 7.5;
         camera.setPosition(pos);
         auto rad = atan2(dir.Y, dir.X);
         possesAI.setRotation(rad);
@@ -414,52 +414,88 @@ class FPSControlAI : UnitAI, CHANGE {
 
 
 
-    void collideMove(vec3d dir, int level=0){
-        if(dir == vec3d(0, 0, 0)){ return; }
+    vec3d collideMove(vec3d pos, vec3d dir, int level=0){
+        if(dir == vec3d(0, 0, 0)){ return pos; }
         if(level > 5){
             writeln("Penix");
             enforce(0, "DIX!");
-            return;
+            return pos;
         }
-        auto aabb = unit.aabb;
 
-        auto min = unit.pos.tilePos; min.value -= vec3i(1, 1, 1);
+        auto min = UnitPos(pos).tilePos; min.value -= vec3i(1, 1, 1);
         auto max = min; max.value += vec3i(3, 3, 4);
 
-        foreach (rel; RangeFromTo(min.value, max.value)) {
-            auto tp = TilePos(rel);
-            auto tile = world.getTile(tp);
-            auto tileBox = tp.getAABB(tile.halfstep);
-            float time;
-            vec3d normal;
-            if (tile.transparent
-                    || !aabb.intersectsWithBox(tileBox, dir, time, normal)) {
-                continue;
+        bool checkCollision(vec3d pos, vec3d dir, out float minTime, out vec3d minNormal){
+            bool didCollide = false;
+            minTime = float.max;
+            auto aabb = unit.aabb(&pos);
+            foreach (rel; RangeFromTo(min.value, max.value)) {
+                auto tp = TilePos(rel);
+                auto tile = world.getTile(tp);
+                auto tileBox = tp.getAABB(tile.halfstep);
+                float time;
+                vec3d normal;
+                if (tile.transparent
+                        || !aabb.intersectsWithBox(tileBox, dir, time, normal)) {
+                    continue;
+                }
+                if(time != time){
+                    minTime = float.nan;
+                    writeln("Unit is inside of something. Solve this, like, loop upwards until not collides anylonger. or something.");
+                    return true;
+                }
+                if(time < minTime){
+                    minTime = time;
+                    minNormal = normal;
+                }
+                didCollide = true;
             }
-            // We have collided with some box
-            //IF CAN STEP STEP
-            //ELSE Slideee!! :):):)
-
-            if(time != time){
-                writeln("time is wierd blag blahb blabb");
-            }
-
-            // move forward first
-            auto newPos = unit.pos.value + dir * time;
-            dir = (1-time) * dir;
-
-            assert (normal.getLengthSQ == 1);
-
-            auto normPart = normal.dotProduct(dir) * normal;
-            auto tangPart = dir - normPart;
-
-            assert (tangPart.getLengthSQ() < dir.getLengthSQ());
-
-            unit.pos.value = newPos;
-            collideMove(tangPart, level+1);
-            return;
+            return didCollide;
         }
-        unit.pos.value += dir;
+
+        float time = float.max;
+        vec3d normal;
+
+
+        if(!checkCollision(pos, dir, time, normal)){
+            return pos + dir;
+        }
+        if(time != time){
+            enforce(0, "Implement, like move dude upwards until on top, something?");
+        }
+        // We have collided with some box
+        //IF CAN STEP STEP
+        if(normal.Z == 0){
+            auto stepStart = pos + vec3d(0, 0, unit.stepHeight);
+            float stepTime;
+            auto stepDir = dir * vec3d(1, 1, 0);
+            vec3d stepNormal;
+            bool stepCollided = checkCollision(stepStart, dir, stepTime, stepNormal);
+            if(!stepCollided){
+                return stepStart + dir;
+            }
+            if(stepTime < time){
+                time = stepTime;
+                pos = stepStart;
+                normal = stepNormal;
+            }
+        }
+        //ELSE Slideee!! :):):)
+
+        // move forward first
+        auto newPos = pos + dir * time;
+        dir = (1-time) * dir;
+
+        assert (normal.getLengthSQ == 1);
+
+        auto normPart = normal.dotProduct(dir) * normal;
+        auto tangPart = dir - normPart;
+
+        if(tangPart.getLengthSQ() >= dir.getLengthSQ()){
+            writeln("asd");
+        }
+
+        return collideMove(newPos, tangPart, level+1);
     }
 
     //Make sure that it is sent over network, and such!! (like comment below)
@@ -469,7 +505,7 @@ class FPSControlAI : UnitAI, CHANGE {
         up -= 0.05;
         auto dir = vec3d(fwd, -right, up);
         dir.rotateXYBy(unit.rotation, origo);
-        collideMove(dir);
+        unit.pos.value = collideMove(unit.pos.value, dir);
         //unit.pos.value += dir;
 
     }
