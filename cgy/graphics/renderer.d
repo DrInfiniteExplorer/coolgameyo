@@ -34,7 +34,7 @@ struct RenderSettings{
     bool textureInterpolate;  // pick nearest pixel or interpolate?
     float anisotropy = 0; //set to max of this(uservalue) and implementation limit sometime
     bool renderWireframe;
-    bool renderInvalidTiles = true;
+    bool renderInvalidTiles = false;
     /* Derp derp derp */
 
     int pixelsPerTile = 16;

@@ -52,15 +52,15 @@ class World {
         assert (0);
         foreach (xy, sectorxy; sectorXY) {
             // write xy markers
-            
+
             // write heightmap
             foreach (z, sectors; sectorxy.sectors) {
                 // write sectors
-                
+
             }
         }
     }
-            
+
 
     void generateBlock(BlockNum blockNum) {
         auto sector = getSector(blockNum.getSectorNum());
@@ -275,7 +275,7 @@ class World {
         RangeFromTo range;
         range = RangeFromTo(-2,3,-2,3,-2,3);
 //        range = RangeFromTo(-1,2,-1,2,-1,2); //Make it faster in debyyyyg!!
-        range = RangeFromTo(0,1,0,1,0,1); //Make it faster in debyyyyg!!
+//        range = RangeFromTo(0,1,0,1,0,1); //Make it faster in debyyyyg!!
 /*
         debug {
             range = RangeFromTo(0,1,0,1,0,1); //Make it faster in debyyyyg!!

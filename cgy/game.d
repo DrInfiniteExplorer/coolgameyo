@@ -50,14 +50,15 @@ class Game{
     TileTextureAtlas  atlas;
     Font              font;
     bool[SDLK_LAST]   keyMap;
-    bool              useCamera;
+    bool              useCamera = true;
 
     FPSControlAI   possesAI;
 
     StringTexture     f1, f2, f3, f4, fps, tickTime, renderTime;
     StringTexture     unitInfo;
 
-    bool possesedActive;
+    bool possesedActive = true;
+    bool _3rdPerson = false;
 
     this(bool serv, bool clie, bool work) {
         isServer = serv;
@@ -127,7 +128,8 @@ class Game{
         //uu.pos.value.Z += 1;
         world.addUnit(uu);
 
-        u.ai = new MoveToAI(uu, 1.0/15.0);
+        // Commented out for presentation; Dont want stuff crashing :p
+        //u.ai = new MoveToAI(uu, 1.0/15.0);
 
         possesAI = new FPSControlAI(world);
         possesAI.setUnit(uu);
@@ -176,12 +178,13 @@ class Game{
 
         TileType rock = new TileType;
         if (isClient) {
+            int x = 200;
             rock.textures.side   = atlas.addTile(f,
-                    vec2i(0, 0), vec3i(100,100,100));
+                    vec2i(0, 0), vec3i(x,x,x));
             rock.textures.top    = atlas.addTile(f,
-                    vec2i(0, 16), vec3i(100,100,100));
+                    vec2i(0, 16), vec3i(x,x,x));
             rock.textures.bottom = atlas.addTile(f,
-                    vec2i(0, 32), vec3i(100,100,100));
+                    vec2i(0, 32), vec3i(x,x,x));
         }
         rock.transparent = false;
         rock.name = "rock";
@@ -310,19 +313,36 @@ class Game{
         if(keyMap[SDLK_LCTRL]){ camera.axisMove( 0.0, 0.0,-0.1); }
     }
 
+    long then = 0;
     void updatePossesed(){
-        if(keyMap[SDLK_a]){ possesAI.move(-0.1, 0.0, 0.0); }
-        if(keyMap[SDLK_d]){ possesAI.move( 0.1, 0.0, 0.0); }
-        if(keyMap[SDLK_w]){ possesAI.move( 0.0, 0.1, 0.0); }
-        if(keyMap[SDLK_s]){ possesAI.move( 0.0,-0.1, 0.0); }
+
+        long now = utime();
+        float deltaT = (now-then) / 100_000.f;
+        then = now;
+
+        double right = 0;
+        double fwd = 0;
+        if(keyMap[SDLK_a]){ right-=0.2; }
+        if(keyMap[SDLK_d]){ right+=0.2; }
+        if(keyMap[SDLK_w]){ fwd+=0.2; }
+        if(keyMap[SDLK_s]){ fwd-=0.2; }
+        if(keyMap[SDLK_SPACE]){
+            if(possesAI.onGround){
+                possesAI.fallSpeed = 0.55f;
+            }
+        }
+        possesAI.move(right, fwd, 0.f, deltaT);
 
         auto pos = possesAI.getUnitPos();
         auto dir = camera.getTargetDir();
-        pos -= util.convert!double(dir) * 7.5;
+        if(_3rdPerson) {
+            pos -= util.convert!double(dir) * 7.5;
+        } else {
+            pos += vec3d(0, 0, 1.5);
+        }
         camera.setPosition(pos);
         auto rad = atan2(dir.Y, dir.X);
         possesAI.setRotation(rad);
-
     }
 
     void stepMipMap() {
@@ -372,6 +392,8 @@ class Game{
             f4.setText("VSync:" ~ (renderSettings.disableVSync? "Disabled" : "Enabled"));
         }
         if(key == SDLK_F5 && down) possesedActive ^= 1;
+        if(key == SDLK_F6 && down) _3rdPerson ^= 1;
+
 
     }
 
@@ -394,7 +416,8 @@ class Game{
 
 class FPSControlAI : UnitAI, CHANGE {
     Unit* unit;
-    vec3d velocity;
+    //vec3d velocity;
+    float fallSpeed;
     bool onGround;
     World world;
 
@@ -405,7 +428,7 @@ class FPSControlAI : UnitAI, CHANGE {
     void setUnit(Unit* unit){
         unit.ai = this;
         this.unit = unit;
-        velocity.set(0, 0, 0);
+        fallSpeed = 0.f;
         onGround=false;
         //Save old ai?
         //Send data to clients that this unit is possessed!!!!
@@ -461,7 +484,16 @@ class FPSControlAI : UnitAI, CHANGE {
             return pos + dir;
         }
         if(time != time){
-            enforce(0, "Implement, like move dude upwards until on top, something?");
+            //enforce(0, "Implement, like move dude upwards until on top, something?");
+            //return pos;
+            vec3d _pos = pos;
+            vec3d _dir = vec3d(0.0, 0.0, 0.0);
+            while(true){
+                if(!checkCollision(_pos, _dir, time, normal)){
+                    return _pos;
+                }
+                _pos.Z += 1.f;
+            }
         }
         // We have collided with some box
         //IF CAN STEP STEP
@@ -479,6 +511,8 @@ class FPSControlAI : UnitAI, CHANGE {
                 pos = stepStart;
                 normal = stepNormal;
             }
+        } else{
+            onGround = true;
         }
         //ELSE Slideee!! :):):)
 
@@ -499,15 +533,17 @@ class FPSControlAI : UnitAI, CHANGE {
     }
 
     //Make sure that it is sent over network, and such!! (like comment below)
-    void move(float right, float fwd, float up) {
+    void move(float right, float fwd, float up, float deltaT) {
         immutable origo = vec3d(0, 0, 0);
-        //auto dir = vec3d(right, fwd, up);
-        up -= 0.05;
-        auto dir = vec3d(fwd, -right, up);
+
+        onGround = false;
+        fallSpeed -= 0.15f * deltaT;
+        auto dir = vec3d(fwd, -right, up + fallSpeed) * deltaT;
         dir.rotateXYBy(unit.rotation, origo);
         unit.pos.value = collideMove(unit.pos.value, dir);
-        //unit.pos.value += dir;
-
+        if(onGround){
+            fallSpeed = 0.f;
+        }
     }
 
     void setRotation(float rot){
