@@ -18,6 +18,8 @@ import graphics.texture;
 import graphics.shader;
 import util;
 
+static import json;
+
 struct FontVertex{
     vec2f vertPos;
     vec2f texCoord;
@@ -152,22 +154,28 @@ class StringTexture {
 
 class Font {
 
-    string fontName;
-    int fontSize;
 
-    int glyphStart;
-    int glyphEnd;
-    int glyphWidth;
-    int glyphHeight;
-    int glyphsPerRow;
-    int glyphsPerCollumn;
-    bool antiAliased;
-    bool bold;
-    bool italic;
-    string textureFile;
-    int textureWidth;
-    int textureHeight;
-    int textureSlices;
+    static struct ConfigData {
+        string fontName;
+        int fontSize;
+
+        int glyphStart;
+        int glyphEnd;
+        int glyphWidth;
+        int glyphHeight;
+        int glyphsPerRow;
+        int glyphsPerCollumn;
+        bool antiAliased;
+        bool bold;
+        bool italic;
+        string textureFile;
+        int textureWidth;
+        int textureHeight;
+        int textureSlices;
+    }
+
+    ConfigData conf;
+    alias conf this;
 
     uint texId;
 
@@ -186,70 +194,34 @@ class Font {
         if(-1 != lastIdx){
             path = fontFile[0 .. lastIdx+1];
         }
-        //auto content = readText(fontFile ~ ".json");
-        //auto root = parseJSON(content);
-        //enforce(root.type == JSON_TYPE.OBJECT);
-        //auto map = root.object;
-        //long getLong(string key) {
-        //    auto pVal = key in map;
-        //    enforce(pVal && pVal.type == JSON_TYPE.INTEGER);
-        //    return pVal.integer;
-        //}
-        //int getInt(string key){
-        //    return cast(int) getLong(key);
-        //}
-        //string getString(string key) {
-        //    auto pVal = key in map;
-        //    enforce(pVal && pVal.type == JSON_TYPE.STRING);
-        //    return pVal.str;
-        //}
-        //bool getBool(string key) {
-        //    auto pVal = key in map;
-        //    enforce(pVal && (pVal.type == JSON_TYPE.FALSE ||pVal.type == JSON_TYPE.TRUE));
-        //    return pVal.type == JSON_TYPE.TRUE;
-        //}
-        glyphStart = 0;//getInt("glyphStart");
-        textureFile = "courier.tif";//getString("textureFile");
+        auto content = readText(fontFile ~ ".json");
 
-        bold = false;//getBool("bold");
-        italic = false;//getBool("italic");
-        antiAliased = true;//getBool("antiAliased");
-        //fontHeight = 18;
-        glyphStart = 0;//getInt("glyphStart");;
-        glyphEnd = 255;//getInt("glyphEnd");
-        textureWidth  = 512;//getInt("textureWidth");
-        textureHeight = 512;//getInt("textureHeight");
+        json.update(&conf, content);
 
-        glyphWidth = 9;//getInt("glyphWidth");
-        glyphHeight = 16;//getInt("glyphHeight");
-        glyphsPerRow = 56;//getInt("glyphsPerRow");
-        glyphsPerCollumn = 32;//getInt("glyphsPerCollumn");
-        textureSlices = 1;//getInt("textureSlices");
-
-        auto img = Image(path ~ textureFile);
+        auto img = Image(path ~ conf.textureFile);
         texId = img.toGLTex(0);
     }
 
     vec2i lookup(char ch)
     in{
-        assert(glyphStart <= ch && ch <= glyphEnd, "parameter ch not in valid range!");
+        assert(conf.glyphStart <= ch && ch <= conf.glyphEnd, "parameter ch not in valid range!");
     }
     body{
-        int x = ch % glyphsPerRow;
-        int y = ch / glyphsPerRow;
+        int x = ch % conf.glyphsPerRow;
+        int y = ch / conf.glyphsPerRow;
         return vec2i(x,y);
     }
 
     FontVertex[4] getQuad(char ch, vec2i offset = vec2i(0, 0))
     in{
-        assert(glyphStart <= ch && ch <= glyphEnd, "parameter ch not in valid range!");
+        assert(conf.glyphStart <= ch && ch <= conf.glyphEnd, "parameter ch not in valid range!");
     }
     body{
         FontVertex[4] ret;
-        ret[0].vertPos.set(0,  0);
-        ret[1].vertPos.set(0, -glyphHeight);
-        ret[2].vertPos.set(glyphWidth, -glyphHeight);
-        ret[3].vertPos.set(glyphWidth,  0);
+        ret[0].vertPos.set(0, 0);
+        ret[1].vertPos.set(0, -conf.glyphHeight);
+        ret[2].vertPos.set(conf.glyphWidth, -conf.glyphHeight);
+        ret[3].vertPos.set(conf.glyphWidth,  0);
 
         /*ret[0].vertPos.set(0,  0);
         ret[1].vertPos.set(1,  0);
@@ -257,14 +229,16 @@ class Font {
         ret[3].vertPos.set(0, 1);*/
 
         ret[0].texCoord.set(0, 0);
-        ret[1].texCoord.set(0, glyphHeight);
-        ret[2].texCoord.set(glyphWidth, glyphHeight);
-        ret[3].texCoord.set(glyphWidth, 0);
+        ret[1].texCoord.set(0, conf.glyphHeight);
+        ret[2].texCoord.set(conf.glyphWidth, conf.glyphHeight);
+        ret[3].texCoord.set(conf.glyphWidth, 0);
 
-        auto where = util.convert!float(lookup(ch)) * vec2f(glyphWidth, glyphHeight);
-        auto invSize = vec2f(1.0/textureWidth, 1.0/textureHeight);
+        auto where = util.convert!float(lookup(ch)) *
+            vec2f(conf.glyphWidth, conf.glyphHeight);
+        auto invSize = vec2f(1.0/conf.textureWidth, 1.0/conf.textureHeight);
 
-        auto vertOffset = util.convert!float(offset) * vec2f(glyphWidth, -glyphHeight);
+        auto vertOffset = util.convert!float(offset) *
+            vec2f(conf.glyphWidth, -conf.glyphHeight);
         foreach(ref vert ; ret){
             vert.vertPos += vertOffset;
             vert.texCoord = (vert.texCoord + where)*invSize;
@@ -273,7 +247,7 @@ class Font {
     }
 
     vec2i glyphSize() const @property {
-        return vec2i(glyphWidth, glyphHeight);
+        return vec2i(conf.glyphWidth, conf.glyphHeight);
     }
 
 

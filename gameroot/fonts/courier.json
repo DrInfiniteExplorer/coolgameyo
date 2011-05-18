@@ -1,1 +1,17 @@
-"HARD CODED IN :(" {"fontSize":18,"glyphsPerRow":56,"glyphsPerCollumn":32,"italic":false,"textureSlices":1,"antiAliased":true,"bold":false,"fontName":"Courier","glyphStart":0,"glyphWidth":9,"textureHeight":512,"glyphEnd":255,"glyphHeight":16,"textureFile":"courier.tif","textureWidth":512}
+{
+    "fontSize":18,
+    "glyphsPerRow":56,
+    "glyphsPerCollumn":32,
+    "italic":false,
+    "textureSlices":1,
+    "antiAliased":true,
+    "bold":false,
+    "fontName":"Courier",
+    "glyphStart":0,
+    "glyphWidth":9,
+    "textureHeight":512,
+    "glyphEnd":255,
+    "glyphHeight":16,
+    "textureFile":"courier.tif",
+    "textureWidth":512
+}
