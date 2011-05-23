@@ -24,7 +24,7 @@ private float foo(float x, float y) {
 class WorldGenerator {
     TileSystem sys;
 
-    float randMap[512][512];
+    uint randMap[512][512];
 
     ushort air, mud, rock, water;
 
@@ -38,12 +38,11 @@ class WorldGenerator {
         gen.seed(880128);
         foreach(x ; 0 .. 512){
             foreach(y ; 0 .. 512){
-                randMap[x][y] = uniform(0.f, 1.f, gen);
+                randMap[x][y] = uniform(0, uint.max, gen);
             }
         }
 
-        //Debugtest stuff
-        version(alle){
+        version(all){
             ubyte[] imgData;
             imgData.length = 4*512*512;
             foreach(x ; 0 .. 512){
@@ -58,9 +57,11 @@ class WorldGenerator {
                 }
             }
             auto img = Image(imgData.ptr, 512u, 512u);
-            img.save("height.png");
-            system("start height.png");
-            exit(0);
+            img.save("heightmap.png");
+            version(all){
+                system("start heightmap.png");
+                exit(0);
+            }
         }
     }
 
@@ -69,14 +70,10 @@ class WorldGenerator {
         y *= freq;
         int loX = to!int(floor(x));
         int loY = to!int(floor(y));
-//        if(loX < 0) { loX--;}
-//        if(loY < 0) { loY--;}
         float get(int x, int y){
-            //x = to!int(to!float(x) * freq);
-            //y = to!int(to!float(y) * freq);
             x = posMod(x, 512);
             y = posMod(y, 512);
-            return randMap[x][y];
+            return to!float(to!double(randMap[x][y]) / to!double(uint.max));
         }
         float dX = x - to!float(loX);
         float dY = y - to!float(loY);
@@ -87,14 +84,8 @@ class WorldGenerator {
             return w + t*(w + t*(s + t*q));
         }
         float coserpolate(float e, float r, float t){
-            assert(0 <= t);
-            assert(t <= 1);
             float tmp = (1.f-cos(t*PI))/2.f;
-            assert(0 <= tmp);
-            assert(tmp <= 1);
-            //return r*t + (1-t)*e;
             return r*tmp + (1-tmp)*e;
-            //return tmp;
         }
 
         float tx1 = coserpolate(get(loX, loY), get(loX+1, loY), dX);

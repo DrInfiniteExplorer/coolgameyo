@@ -177,7 +177,9 @@ class Renderer : Module {
         glDrawArrays(GL_QUADS, 0, 4*6*2 /*2 cubes */);
         glError();
 
-        {
+
+        const bool RenderDudeAABB = false;
+        static if(RenderDudeAABB == true){
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             glError();
             glDisable(GL_CULL_FACE);
@@ -185,33 +187,13 @@ class Renderer : Module {
 
             //dudeShader.use(false);
             glBindBuffer(GL_ARRAY_BUFFER, 0);
-            version(none){
-                auto unitSize = vec3f(unit.unitWidth, unit.unitWidth, unit.unitHeight);
-                auto bbox = makeCube(
-                    unitSize,
-                    vec3f(0, 0, unit.unitHeight * 0.5));
-
-                glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, vec3f.sizeof, bbox.ptr);
-                glError();
-                M = matrix4();
-                M.setTranslation(util.convert!float(unitPos));
-                //auto v = vec3f(0, 0, sin(GetTickCount()/1000.0));
-                //M.setTranslation(v);
-                dudeShader.setUniform(dudeShader.b, M);
-                dudeShader.setUniform(dudeShader.c, vec3f(0.8, 0.0, 0));
-                glDrawArrays(GL_QUADS, 0, 4*6 /*1 cubes */);
-                glError();
-            }
             auto bb = unit.aabb;
             vec3d[8] edges;
             bb.getEdges(edges);
 
             glVertexAttribPointer(0, 3, GL_DOUBLE, GL_FALSE, vec3d.sizeof, edges.ptr);
             glError();
-            M = matrix4();
-            //M.setTranslation(util.convert!float(unitPos));
-            //auto v = vec3f(0, 0, sin(GetTickCount()/1000.0));
-            //M.setTranslation(v);
+            M = matrix4(); //AABB is in world coordinates
             dudeShader.setUniform(dudeShader.b, M);
             dudeShader.setUniform(dudeShader.c, vec3f(0.8, 0.0, 0));
             ubyte[] indices = [0, 1, 0, 4, 0, 2, 2, 6, 2, 3, 5, 1, 5, 4, 6, 2, 6, 4, 6, 7, 7, 5, 7, 3];
