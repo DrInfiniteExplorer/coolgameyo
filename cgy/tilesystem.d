@@ -4,6 +4,21 @@ import std.conv;
 
 import worldparts.tile;
 
+static struct TileTextureID {
+    ushort top, side, bottom;
+}
+
+class TileType {
+    TileTextureID textures;
+
+    ushort id;
+
+    bool transparent = false;
+    string name = "invalid";
+
+    this() {}
+}
+
 
 class TileSystem {
     TileType[] types;
@@ -46,4 +61,6 @@ class TileSystem {
         return t.id;
     }
 }
+
+
 
