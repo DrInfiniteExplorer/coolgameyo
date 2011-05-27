@@ -6,7 +6,6 @@ import std.algorithm;
 import std.conv;
 import std.exception;
 import std.file;
-//import std.json;
 import std.stdio;
 import std.string;
 
@@ -25,6 +24,10 @@ struct FontVertex{
     vec2f texCoord;
 };
 
+struct FontQuad {
+    FontVertex[4] v;
+}
+
 uint FontVert_texCoord_offset = FontVertex.texCoord.offsetof;
 
 class FontShader {
@@ -37,30 +40,32 @@ class FontShader {
     }
 
     ShaderProgram program;
-    int vertAttribLocation;
-    int texAttribLocation;
-    int posUniformLocation;
-    int texUniformLocation;
     private this(){
         program = new ShaderProgram("shaders/fontShader.vert", "shaders/fontShader.frag");
-        vertAttribLocation = program.getAttribLocation("position");
-        texAttribLocation = program.getAttribLocation("texcoord");
-        posUniformLocation = program.getUniformLocation("offset");
-        texUniformLocation = program.getUniformLocation("tex");
-        auto a = program.getUniformLocation("viewportInv");
+        //vertAttribLocation = program.getAttribLocation("position");
+        //texAttribLocation = program.getAttribLocation("texcoord");
+        program.bindAttribLocation(0, "position");
+        program.bindAttribLocation(1, "texcoord");
+        program.link();
+        program.a = program.getUniformLocation("offset");
+        program.b = program.getUniformLocation("tex");
+        program.c = program.getUniformLocation("viewportInv");
+        
         program.use();
-        program.setUniform(texUniformLocation, 1); //Font will always reside in texture unit 1 yeaaaah!
-        program.setUniform(a, vec2f(1.0/renderSettings.windowWidth, 1.0/renderSettings.windowHeight));
+        program.setUniform(program.b, 1); //Font will always reside in texture unit 1 yeaaaah!
+        program.setUniform(program.c,
+            vec2f(1.0/renderSettings.windowWidth, 1.0/renderSettings.windowHeight)
+        );
     }
 
     ~this(){
-        enforce(posUniformLocation == -1, "FontShader.destroy not called!");
+        enforce(program.a == -1, "FontShader.destroy not called!");
     }
 
     void destroy() {
         program.use(false);
         program.destroy();
-        posUniformLocation = -1;
+        program.a = -1;
         fs = null;
     }
 
@@ -71,23 +76,23 @@ class FontShader {
         glDepthMask(0);
         program.use();
         offset.Y = renderSettings.windowHeight - offset.Y;
-        program.setUniform(posUniformLocation, offset);
-        glEnableVertexAttribArray(vertAttribLocation);
+        program.setUniform(program.a, offset);        
+        glEnableVertexAttribArray(0);
         glError();
-        glEnableVertexAttribArray(texAttribLocation);
+        glEnableVertexAttribArray(1);
         glError();
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
         glError();
-        glVertexAttribPointer(vertAttribLocation, 2, GL_FLOAT, GL_FALSE, FontVertex.sizeof, null /* offset in vbo */);
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, FontVertex.sizeof, null /* offset in vbo */);
         glError();
-        glVertexAttribPointer(texAttribLocation, 2, GL_FLOAT, GL_FALSE, FontVertex.sizeof, cast(void*)FontVert_texCoord_offset/* offset in vbo */);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, FontVertex.sizeof, cast(void*)FontVert_texCoord_offset/* offset in vbo */);
         glError();
         glDrawArrays(GL_QUADS, 0, 4*charCount);
         glError();
 
-        glDisableVertexAttribArray(texAttribLocation);
+        glDisableVertexAttribArray(0);
         glError();
-        glDisableVertexAttribArray(vertAttribLocation);
+        glDisableVertexAttribArray(1);
         glError();
         program.use(false);
         glDepthMask(1);
@@ -101,8 +106,10 @@ class StringTexture {
     Font font;
     uint texId;
     uint vbo;
-    uint charCount;
     vec2i position;
+
+    FontQuad[] vertices;
+    string currentText;
 
     this(Font font) {
         this.font = font;
@@ -112,26 +119,45 @@ class StringTexture {
     ~this() {
         enforce(vbo == 0);
     }
-
-    void setText(string text) {
+    
+    void resize(uint length){
+        vertices.length = length;
         if(vbo){
             destroy();
         }
-
-        FontVertex[] vertices;
-//        int cnt = 0;
-        foreach(cnt, ch ; text) {
-            vertices ~= font.getQuad(ch, vec2i(cnt, 0));
-            //cnt++;
-        }
-        charCount = text.length;
-
         glGenBuffers(1, &vbo);
         glError();
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
         glError();
-        auto size = FontVertex.sizeof * vertices.length;
-        glBufferData(GL_ARRAY_BUFFER, size, vertices.ptr, GL_STATIC_DRAW);
+        auto size = FontQuad.sizeof * length;
+        glBufferData(GL_ARRAY_BUFFER, size, null, GL_STATIC_DRAW);
+        glError();
+    }
+
+    void setText(string text) {
+        if(text == currentText){
+            return;
+        }
+        auto len = text.length;
+        bool resized = false;
+        if(len > vertices.length){
+            resize(len+3);
+            resized = true;
+        }
+        if(len*2 < vertices.length){
+            resize(len);
+            resized = true;
+        }        
+        foreach(cnt, ch ; text) {
+            vertices[cnt] = font.getQuad(ch, vec2i(cnt, 0));
+        }
+        if(!resized){
+            glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glError();
+        }
+        currentText = text;
+        auto size = FontQuad.sizeof * len;
+        glBufferSubData(GL_ARRAY_BUFFER, 0, size, vertices.ptr);
         glError();
     }
 
@@ -143,17 +169,17 @@ class StringTexture {
         glError();
         glBindTexture(GL_TEXTURE_2D, texId);
         glError();
-        FontShader().render(util.convert!float(position), vbo, charCount);
+        FontShader().render(util.convert!float(position), vbo, currentText.length);
     }
 
     void destroy() {
         glDeleteBuffers(1, &vbo);
+        glError();
         vbo = 0;
     }
 };
 
 class Font {
-
 
     static struct ConfigData {
         string fontName;
@@ -186,7 +212,7 @@ class Font {
     this(string fontFile)
     in{
         auto lower = tolower(fontFile);
-        assert( !endsWith(lower, ".xml") && !endsWith(lower, ".png"), "Specify font files without ending!");
+        assert( !endsWith(lower, ".json") && !endsWith(lower, ".png"), "Specify font files without ending!");
     }
     body{
         auto lastIdx = max(lastIndexOf(fontFile, "/"), lastIndexOf(fontFile, "\\"));
@@ -212,26 +238,26 @@ class Font {
         return vec2i(x,y);
     }
 
-    FontVertex[4] getQuad(char ch, vec2i offset = vec2i(0, 0))
+    FontQuad getQuad(char ch, vec2i offset = vec2i(0, 0))
     in{
         assert(conf.glyphStart <= ch && ch <= conf.glyphEnd, "parameter ch not in valid range!");
     }
     body{
-        FontVertex[4] ret;
-        ret[0].vertPos.set(0, 0);
-        ret[1].vertPos.set(0, -conf.glyphHeight);
-        ret[2].vertPos.set(conf.glyphWidth, -conf.glyphHeight);
-        ret[3].vertPos.set(conf.glyphWidth,  0);
+        FontQuad quad;
+        quad.v[0].vertPos.set(0, 0);
+        quad.v[1].vertPos.set(0, -conf.glyphHeight);
+        quad.v[2].vertPos.set(conf.glyphWidth, -conf.glyphHeight);
+        quad.v[3].vertPos.set(conf.glyphWidth,  0);
 
         /*ret[0].vertPos.set(0,  0);
         ret[1].vertPos.set(1,  0);
         ret[2].vertPos.set(1, 1);
         ret[3].vertPos.set(0, 1);*/
 
-        ret[0].texCoord.set(0, 0);
-        ret[1].texCoord.set(0, conf.glyphHeight);
-        ret[2].texCoord.set(conf.glyphWidth, conf.glyphHeight);
-        ret[3].texCoord.set(conf.glyphWidth, 0);
+        quad.v[0].texCoord.set(0, 0);
+        quad.v[1].texCoord.set(0, conf.glyphHeight);
+        quad.v[2].texCoord.set(conf.glyphWidth, conf.glyphHeight);
+        quad.v[3].texCoord.set(conf.glyphWidth, 0);
 
         auto where = util.convert!float(lookup(ch)) *
             vec2f(conf.glyphWidth, conf.glyphHeight);
@@ -239,18 +265,16 @@ class Font {
 
         auto vertOffset = util.convert!float(offset) *
             vec2f(conf.glyphWidth, -conf.glyphHeight);
-        foreach(ref vert ; ret){
+        foreach(ref vert ; quad.v){
             vert.vertPos += vertOffset;
             vert.texCoord = (vert.texCoord + where)*invSize;
         }
-        return ret;
+        return quad;
     }
 
     vec2i glyphSize() const @property {
         return vec2i(conf.glyphWidth, conf.glyphHeight);
     }
-
-
 
     void destroy() {
         throw new Exception("Implement font.destroy!");
