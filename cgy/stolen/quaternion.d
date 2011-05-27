@@ -55,7 +55,7 @@ public:
 		{
 			const float scale = sqrt(diag) * 2.0f; // get scale from diagonal
 
-			// TODO: speed this up
+			// TO_DO: speed this up
 			X = ( m.at(2,1) - m.at(1,2)) / scale;
 			Y = ( m.at(0,2) - m.at(2,0)) / scale;
 			Z = ( m.at(1,0) - m.at(0,1)) / scale;
@@ -69,7 +69,7 @@ public:
 				// find scale according to 1st element, and double it
 				const float scale = sqrt( 1.0f + m.at(0,0) - m.at(1,1) - m.at(2,2)) * 2.0f;
 
-				// TODO: speed this up
+				// TO_DO: speed this up
 				X = 0.25f * scale;
 				Y = (m.at(0,1) + m.at(1,0)) / scale;
 				Z = (m.at(2,0) + m.at(0,2)) / scale;
@@ -81,7 +81,7 @@ public:
 				// find scale according to 2nd element, and double it
 				const float scale = sqrt( 1.0f + m.at(1,1) - m.at(0,0) - m.at(2,2)) * 2.0f;
 
-				// TODO: speed this up
+				// TO_DO: speed this up
 				X = (m.at(0,1) + m.at(1,0) ) / scale;
 				Y = 0.25f * scale;
 				Z = (m.at(1,2) + m.at(2,1) ) / scale;
@@ -93,7 +93,7 @@ public:
 				// find scale according to 3rd element, and double it
 				const float scale = sqrt( 1.0f + m.at(2,2) - m.at(0,0) - m.at(1,1)) * 2.0f;
 
-				// TODO: speed this up
+				// TO_DO: speed this up
 				X = (m.at(0,2) + m.at(2,0)) / scale;
 				Y = (m.at(1,2) + m.at(2,1)) / scale;
 				Z = 0.25f * scale;

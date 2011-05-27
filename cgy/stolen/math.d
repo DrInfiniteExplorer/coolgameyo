@@ -183,7 +183,7 @@ int s32_clamp (int value, int low, int high)
 	return s32_min(s32_max(value,low), high);
 }
 
-// integer log2 of a float ieee 754. TODO: non ieee floating point
+// integer log2 of a float ieee 754. TO_DO: non ieee floating point
 static int s32_log2_f32( float f)
 {
 	uint x = IR ( f );
