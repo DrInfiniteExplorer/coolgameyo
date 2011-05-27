@@ -99,7 +99,8 @@ class Game{
         auto tilesys = parseGameData();
         world = new World(tilesys);
         assert (isWorker, "otherwise wont work lol (maybe)");
-        scheduler = new Scheduler(world, 3);
+        //TODO: Make fix so that stuff doesn't lag when using non-1 value for num o threads.
+        scheduler = new Scheduler(world, 1);
 
         auto pathModule = new PathModule;
         auto aiModule = new AIModule(pathModule);

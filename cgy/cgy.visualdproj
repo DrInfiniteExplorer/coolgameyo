@@ -225,5 +225,6 @@
   <File path="world.d" />
   <File path="worldgen.d" />
   <File path="tilesystem.d" />
+  <File path="json.d" />
  </Folder>
 </DProject>
