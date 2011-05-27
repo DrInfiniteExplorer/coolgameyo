@@ -3,27 +3,16 @@ module worldparts.tile;
 
 import util;
 
-static struct TileTextureID {
-    ushort top, side, bottom;
-}
+//TODO: Remove transparent property from TileFlags / Tiles. See comment for transparent-flag.
+//TODO: Make things private?
 
-class TileType {
-    TileTextureID textures;
-
-    ushort id;
-
-    bool transparent = false;
-    string name = "invalid";
-
-    this() {}
-}
 
 enum TileFlags : ushort {
     none        = 0,
     seen        = 1 << 0,
-    transparent = 1 << 2,
+    transparent = 1 << 2, //TO REMOVE: There are no tile types which are transparent except for air!! :P
     halfstep    = 1 << 3,
-    valid       = 1 << 7,
+    valid       = 1 << 15,
 }
 
 struct Tile {

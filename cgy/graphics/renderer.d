@@ -22,6 +22,7 @@ import world;
 import scheduler;
 import modules;
 
+//TODO: Make RenderSettings configurable / loadable, maybe move to some settings.d or something?
 struct RenderSettings{
     //Some opengl-implementation-dependant constants, gathered on renderer creation
     int maxTextureLayers;
@@ -45,6 +46,7 @@ struct RenderSettings{
 
 RenderSettings renderSettings;
 
+//TODO: Make fix this, or make testcase and report it if not done already.
 auto grTexCoordOffset = Vertex.texcoord.offsetof;
 auto grTypeOffset = Vertex.type.offsetof;
 
@@ -56,15 +58,11 @@ class Renderer : Module {
 
     TileTextureAtlas atlas;
 
-    uint texture2D;
     uint textureAtlas;
     ShaderProgram worldShader;
     ShaderProgram dudeShader;
 
     string constantsString;
-
-    float oglVersion;
-
 
     void buildConstantsString(){
         auto writer = appender!string();
@@ -162,11 +160,8 @@ class Renderer : Module {
         auto M = matrix4();
         vec3d unitPos = unit.pos.value;
         unitPos += tickTimeSoFar * unit.velocity;
-        //writeln("Vel: ", unit.velocity.getLength());
         M.setTranslation(util.convert!float(unitPos));
         M.setRotationRadians(vec3f(0, 0, unit.rotation));
-        //auto v = vec3f(0, 0, sin(GetTickCount()/1000.0));
-        //M.setTranslation(v);
         dudeShader.setUniform(dudeShader.b, M);
         dudeShader.setUniform(dudeShader.c, vec3f(0, 0.7, 0));
         glBindBuffer(GL_ARRAY_BUFFER, dudeVBO);

@@ -1,7 +1,8 @@
 import std.algorithm, std.range, std.stdio;
 import std.container;
 import std.exception;
-version(Windows) import std.c.windows.windows;
+
+version(Windows) import std.c.windows.windows; //TODO: Find out what we use this for here. Leave info in comment here.
 
 import graphics.camera;
 
@@ -22,7 +23,6 @@ interface WorldListener {
     void notifyTileChange(TilePos tilePos);
 }
 
-
 class World {
 
     static struct SectorXY {
@@ -34,9 +34,9 @@ class World {
     Sector[] sectorList;
 
     WorldGenerator worldGen;
-    bool isServer;
+    bool isServer;  //TODO: How, exactly, does the world function differently if it actually is a server? Find out!
 
-    int unitCount;
+    int unitCount;  //TODO: Is used?
 
     WorldListener[] listeners;
 
@@ -48,8 +48,8 @@ class World {
         worldGen = new WorldGenerator(tilesys);
     }
 
-    void serialize() {
-        assert (0);
+    void serialize() {  //TODO: Implement serialization
+        enforce(0);
         foreach (xy, sectorxy; sectorXY) {
             // write xy markers
 
@@ -67,6 +67,7 @@ class World {
         sector.generateBlock(blockNum, worldGen);
     }
 
+    //TODO: Somehow ensure that we're only called from allocateSector
     SectorXY getSectorXY(SectorXYNum xy) {
 
         if(xy in sectorXY){
@@ -75,9 +76,10 @@ class World {
         SectorXY ret;
         static assert ((*ret.heightmap).sizeof ==
                 int.sizeof * SectorSize.x * SectorSize.y);
+
         int[] blob = new int[](SectorSize.x * SectorSize.y);
         blob[] = 0;
-        auto heightmap = cast(typeof(ret.heightmap))(blob.ptr);
+        auto heightmap = cast(typeof(ret.heightmap))(blob.ptr); //TODO: Validate this code
         ret.heightmap = heightmap;
 
         auto p = xy.getTileXYPos();
@@ -86,15 +88,18 @@ class World {
             auto tmp = p.value + vec2i(relPos.X, relPos.Y);
             auto posXY = tileXYPos(tmp);
             auto z = worldGen.maxZ(posXY);
-            auto tileTypeAir = tileSystem.idByName("air");
+            auto tileTypeAir = tileSystem.idByName("air"); //TODO: Move out of loop
+            //TODO: Also consider the case where we might actually want to move upwards?
             while (worldGen.getTile(tilePos(posXY, z)).type is tileTypeAir) {
                 z -= 1;
             }
 
-            (*heightmap)[relPos.X][relPos.Y] = z;
+            (*heightmap)[relPos.X][relPos.Y] = z; //TODO: Is there really no way to make this look better,
+                                                    // so one does not need to dereference heightmap?
+                                                    // As it is now it invites bugs if one forgets to dereference.
         }
 
-        writeln("Needs some heightmap generation at ", xy);
+        writeln("Needs some heightmap generation at ", xy); //Already done :p
 
         sectorXY[xy] = ret; //Spara det vi skapar, yeah!
         return ret;
@@ -105,7 +110,7 @@ class World {
         auto z = sectorNum.value.Z;
 
         if (xy !in sectorXY) {
-            auto ret = getSectorXY(xy);;
+            auto ret = getSectorXY(xy);
             sectorXY[xy] = ret;
         }
 
@@ -123,11 +128,13 @@ class World {
         auto xy = SectorXYNum(vec2i(sectorNum.value.X, sectorNum.value.Y));
         auto z = sectorNum.value.Z;
 
+        //TODO: only lookip xy in sectorXY once, likewise for z and so....
         if (xy in sectorXY && z in sectorXY[xy].sectors) {
             return sectorXY[xy].sectors[z];
         }
         return get ? allocateSector(sectorNum) : null;
     }
+
 
     Block getBlock(BlockNum blockNum, bool generate=true, bool getSector=false) {
         auto sector = this.getSector(blockNum.getSectorNum(), getSector);
@@ -137,7 +144,7 @@ class World {
         if (!block.valid) {
             if (!generate) return INVALID_BLOCK;
 
-            generateBlock(blockNum);
+            generateBlock(blockNum); //TODO: Any reason not to use sector.generateBlock ?
             block = sector.getBlock(blockNum);
         }
         assert (block.valid);
@@ -149,6 +156,8 @@ class World {
         sector.setBlock(blockNum, newBlock);
     }
 
+    //TODO: Add code to cull sectors
+    //TODO: Make better interface than appending to a dynamic list?
     Unit*[] getVisibleUnits(Camera camera){
         Unit*[] units;
         foreach(sector; sectorList){
@@ -202,6 +211,7 @@ class World {
         return ret;
     }
 
+    //TODO: Rework ChangeList-functionality
     void update(CHANGE[] changelist){
         foreach(change ; changelist) {
             change.apply(this);
@@ -211,6 +221,7 @@ class World {
         //TODO: Make list of only-moving units, so as to not process every unit?
         //Maybe?
         // :)
+        //TODO: Consider AI-notification of arrival ?
         foreach(unit ; getUnits()) {
             if(unit.ticksToArrive == 0) continue;
             auto vel = unit.destination - unit.pos.value;
@@ -224,13 +235,14 @@ class World {
         }
     }
 
+    //TODO: Figure out which moveUnit-functions are called and from where
     void moveUnit(Unit* unit, vec3d destination, uint ticksToArrive){
         unit.destination = destination;
         unit.ticksToArrive = ticksToArrive;
     }
 
     void moveUnit(Unit* unit) {
-        assert(0, "Implement");
+        enforce(0, "Implement");
     }
 
     private void moveUnit(Unit* unit, UnitPos newPos) {
@@ -262,6 +274,7 @@ class World {
         // the blahbl ah old ones we leaft blah ;;;
     }
 
+    //TODO: Implement removeUnit?
     void addUnit(Unit* unit) {
         unitCount += 1;
         auto sectorNum = unit.pos.tilePos.getSectorNum();
@@ -275,12 +288,9 @@ class World {
         RangeFromTo range;
         range = RangeFromTo(-2,3,-2,3,-2,3);
 //        range = RangeFromTo(-1,2,-1,2,-1,2); //Make it faster in debyyyyg!!
-//        range = RangeFromTo(0,1,0,1,0,1); //Make it faster in debyyyyg!!
-/*
-        debug {
-            range = RangeFromTo(0,1,0,1,0,1); //Make it faster in debyyyyg!!
-        }
-// */
+        range = RangeFromTo(0,1,0,1,0,1); //Make it faster in debyyyyg!!
+
+        //TODO: Consider moving functionality to moveUnit, and calling that from here?
         foreach (dpos; range) {
             auto pos = unit.pos.tilePos.getSectorNum();
             getSector(SectorNum(pos.value + dpos)).increaseActivity();
@@ -300,6 +310,9 @@ class World {
                 }
             }
         }
+
+        //TODO: We need to turn floodfilling into a timeslicing, taskable thing, and only notify of sector load after floodfill is done.
+
         //MAKE FIX, NOT ONE LOAD FOR EVERY UNIT!!
         //Keep small array/map of which are just-now-loaded?
         foreach (dpos; range) { //We want to build geometry etc only after all relevant data has been loaded.
@@ -312,6 +325,7 @@ class World {
         }
 
     }
+
 
     Tile getTile(TilePos tilePos, bool createBlock=true,
                                   bool createSector=true) {
@@ -343,6 +357,7 @@ class World {
     }
     private alias RedBlackTree!(BlockNum, q{a.value < b.value}) WorkSet;
 
+    //TODO: Consider the case where we want to start floodfilling inside a cave?
     void floodFillVisibility(const TileXYPos xyStart) {
         auto startPos = getTopTilePos(xyStart);
         startPos.value += vec3i(0,0,1);
@@ -351,7 +366,7 @@ class World {
 
     void floodFillVisibility(SectorNum sectorNum, Direction dir) {
         BlockNum[] wtf;
-        auto work = WorkSet(wtf);
+        auto work = new WorkSet; //(wtf); //TODO: Initialize properly with new DMD&phobos-version.
 
         if (dir & Direction.north) {
             auto range = RangeFromTo(0, BlocksPerSector.x,
@@ -423,9 +438,11 @@ class World {
     }
 
     void floodFillVisibility(const TilePos startPos) {
-        floodFillVisibilityImpl(WorkSet(startPos.getBlockNum()));
+        floodFillVisibilityImpl(new WorkSet(startPos.getBlockNum()));
     }
 
+    //TODO: Turn into timeslicing task
+    //TODO: Make it keep track of sectors, in order to make sector-load-notifications.
     private void floodFillVisibilityImpl(WorkSet work) {
         version(Windows) auto start = GetTickCount();
         int allBlocks = 0;

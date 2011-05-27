@@ -42,7 +42,7 @@ class WorldGenerator {
             }
         }
 
-        version(all){
+        version(saveHeightmap){
             ubyte[] imgData;
             imgData.length = 4*512*512;
             foreach(x ; 0 .. 512){
@@ -58,7 +58,7 @@ class WorldGenerator {
             }
             auto img = Image(imgData.ptr, 512u, 512u);
             img.save("heightmap.png");
-            version(all){
+            version(onlySaveHeightmap){
                 system("start heightmap.png");
                 exit(0);
             }

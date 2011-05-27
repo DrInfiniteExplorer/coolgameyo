@@ -1,4 +1,10 @@
 
+//TODO: Remove block-sparse-transparency.
+//TODO: make komment for function isSame
+//TODO: Move code for block-allocator elsewhere
+//TODO: Make things private?
+
+
 module worldparts.block;
 
 import std.algorithm;
@@ -22,30 +28,24 @@ enum BlockFlags : ubyte {
     none                = 0,
     seen                = 1 << 0,
     sparse              = 1 << 1,
-    sparse_transparent  = 1 << 2,
+    sparse_transparent  = 1 << 2,   //Is only used to store information about tile-transparency for sparse blocks.
+                                    //Can therefore be removed since tile-transparency is no longer supported.
     dirty               = 1 << 6,
     valid               = 1 << 7,
 }
 
 struct Block {
 
-    struct RenderData {
-        ushort idxCnt;
-        uint[2] VBO;
-    }
-
     Tile[BlockSize.z][BlockSize.y][BlockSize.x]* tiles = null;
 
     BlockFlags flags = BlockFlags.none;
-
-    RenderData renderData;
 
     BlockNum blockNum;
 
     ushort sparseTileType;
     bool sparseTileTransparent() @property { return 0!=(flags & BlockFlags.sparse_transparent); }
     void sparseTileTransparent(bool flag) @property { setFlag(flags, BlockFlags.sparse_transparent, flag); }
-    
+
     invariant()
     {
         auto valid = flags & BlockFlags.valid;
@@ -59,7 +59,7 @@ struct Block {
         } else {
             assert(tiles is null, "Block is not valid, but has tiles!");
         }
-    }    
+    }
 
     Tile getTile(TilePos tilePos)
     in{
@@ -103,9 +103,10 @@ struct Block {
     }
 
     bool isSame(const Block other) const {
+        //TODO: Need comment detailing the logic behind this.
         return blockNum == other.blockNum && (sparse || tiles is other.tiles);
     }
-    
+
     bool valid() const @property { return (flags & BlockFlags.valid) != 0; }
     void valid(bool val) @property { setFlag(flags, BlockFlags.valid, val); }
 
@@ -118,28 +119,22 @@ struct Block {
     bool dirty() const @property { return (flags & BlockFlags.dirty) != 0; }
     void dirty(bool val) @property { setFlag(flags, BlockFlags.dirty, val); }
 
-    void clean(ushort idxCnt) {
-        dirty = false;
-        renderData.idxCnt = idxCnt;
-    }
-    
-
     static Block generateBlock(BlockNum blockNum, WorldGenerator worldgen) {
         //writeln("Generating block: ", blockNum);
         auto block = alloc();
         block.blockNum = blockNum;
         block.dirty = true;
-        
+
         bool homogenous = true;
         bool first = true;
 
-        foreach (relPos; RangeFromTo(0, BlockSize.x, 
+        foreach (relPos; RangeFromTo(0, BlockSize.x,
                     0, BlockSize.y, 0, BlockSize.z)) {
             auto TP = blockNum.toTilePos();
             TP.value += relPos;
             auto tile = worldgen.getTile(TP);
             (*block.tiles)[relPos.X][relPos.Y][relPos.Z] = tile;
-            
+
             if (first) {
                 first = false;
                 block.sparseTileType = tile.type;
@@ -227,7 +222,6 @@ struct Block {
 Block INVALID_BLOCK = {
     tiles : null,
     flags : BlockFlags.none,
-    renderData : Block.RenderData(0,[0,0]),
     blockNum : blockNum(vec3i(int.min, int.min, int.min)),
 };
 

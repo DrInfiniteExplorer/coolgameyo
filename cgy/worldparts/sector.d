@@ -1,7 +1,11 @@
+//TODO: Lots of stuff
+//TODO: make members private etc
+
 
 module worldparts.sector;
 
 import std.container;
+import std.exception;
 
 import worldparts.block;
 import worldgen;
@@ -22,6 +26,7 @@ enum SectorSize {
     total = x*y*z
 }
 
+//TODO: UPDATE THESE MEASUREMENT VALUES
 //We may want to experiment with these values, or even make it a user settingable setting. Yeah.
 // blocksize * 2 gives ~30 ms per block and a total of ~3500-3700 per sector
 // blocksize * 4 gives ~500 ms per block and a total of ~3500 per sector
@@ -42,7 +47,6 @@ class Sector {
     Block[BlocksPerSector.z][BlocksPerSector.y][BlocksPerSector.x] blocks;
     static assert(blocks.length == BlocksPerSector.x);
 
-
     RedBlackTree!(Unit*) units;
     int activityCount;
 
@@ -55,13 +59,17 @@ class Sector {
     this(SectorNum sectorNum_) {
         sectorNum = sectorNum_;
         pos = sectorNum.toTilePos();
-        units = typeof(units)(cast(Unit*[])[]); //Retarded. RBTree-initialization.
+        //TODO: Use new version of DMD & phobos, initialize normally.
+        units = new typeof(units);//typeof(units)(cast(Unit*[])[]); //Retarded. RBTree-initialization.
     }
 
+    //TODO: Validate this code
     const(Block)[] getBlocks() const {
         return (&blocks[0][0][0])[0 .. BlocksPerSector.total];
     }
 
+    //TODO: What about if there already was a block there?
+    //   potential solution; use setBlock ?
     void generateBlock(BlockNum blockNum, WorldGenerator worldGen)
     in{
         assert(blockNum.getSectorNum() == sectorNum, "Trying to generate a block in the wrong sector!");
@@ -88,17 +96,22 @@ class Sector {
     body{
         auto rel = blockNum.rel();
         auto currentBlock = blocks[rel.X][rel.Y][rel.Z];
+        //TODO: Make comment detailing the logic behind this
+        //TODO: make use of block.isSame ?
         if(currentBlock.valid && !currentBlock.sparse){
             if(currentBlock.tiles.ptr != newBlock.tiles.ptr){
-                assert(0, "We want to free this memory i think...The current, that is.");
+                enforce(0, "We want to free this memory i think...The current, that is.");
             }
         }
         blocks[rel.X][rel.Y][rel.Z] = newBlock;
     }
 
+    //TODO: Add more unit-interfacing etc.
     void addUnit(Unit* u) {
         units.insert(u);
     }
+
+    //TODO: Is this function used? If so, implement counterpart, else remove
     void increaseActivity() {
         bool wasLoaded = activityCount==0;
         activityCount += 1;
