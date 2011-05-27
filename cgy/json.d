@@ -225,6 +225,9 @@ static:
             case Tag.true_: i.popFront(); return Value(true);
             case Tag.false_: i.popFront(); return Value(false);
             case Tag.null_: i.popFront(); return Value.nullValue();
+            default:
+                enforce(0, "json.d parseValue got to default case, error!");
+                return Value(false);
         }
     }
 
