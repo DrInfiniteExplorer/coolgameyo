@@ -17,6 +17,8 @@ import graphics.texture;
 import graphics.shader;
 import util;
 
+import settings;
+
 static import json;
 
 struct FontVertex{

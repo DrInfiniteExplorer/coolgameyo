@@ -20,31 +20,8 @@ import util;
 import unit;
 import world;
 import scheduler;
+import settings;
 import modules;
-
-//TODO: Make RenderSettings configurable / loadable, maybe move to some settings.d or something?
-struct RenderSettings{
-    //Some opengl-implementation-dependant constants, gathered on renderer creation
-    int maxTextureLayers;
-    int maxTextureSize;
-    double glVersion;
-
-    //Just user settings.
-    bool disableVSync;
-    bool mipLevelInterpolate; //Interpolate between mip-levels or not?
-    bool textureInterpolate;  // pick nearest pixel or interpolate?
-    float anisotropy = 0; //set to max of this(uservalue) and implementation limit sometime
-    bool renderWireframe;
-    bool renderInvalidTiles = false;
-    /* Derp derp derp */
-
-    int pixelsPerTile = 16;
-
-    int windowWidth = 800;
-    int windowHeight = 600;
-}
-
-RenderSettings renderSettings;
 
 //TODO: Make fix this, or make testcase and report it if not done already.
 auto grTexCoordOffset = Vertex.texcoord.offsetof;

@@ -29,6 +29,8 @@ import pos;
 import util;
 import unit;
 
+import settings;
+
 string SDLError() { return to!string(SDL_GetError()); }
 
 class Game{

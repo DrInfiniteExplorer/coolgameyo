@@ -22,6 +22,8 @@ import util;
 import pos;
 import stolen.aabbox3d;
 
+import settings;
+
 private alias aabbox3d!double box;
 
 //This is different from box.intersectsWithBox in that the upper ranges are strictly smaller than, making adjancent boxes not intersect.

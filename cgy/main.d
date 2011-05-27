@@ -12,6 +12,7 @@ import derelict.devil.il;
 import game;
 import util;
 import pos;
+import settings;
 
 version (Windows) {
 import std.c.windows.windows;
@@ -60,9 +61,10 @@ import std.c.windows.windows;
 
 void actualMain() {
     setThreadName("Main thread");
-    auto a = tilePos(vec3i(1,2,3));
-    writeln(a);
-
+    
+    loadSettings();
+    saveSettings();
+    
     version (Windows) {
         bool client = true;
     } else {

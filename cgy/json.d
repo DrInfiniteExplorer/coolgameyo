@@ -41,7 +41,8 @@ struct Value {
     string str() @property const {
         if (type == Type.string) return str_;
         if (type == Type.null_) return null;
-        assert (0);
+        enforce(0, "Not a string or null");
+        return "";
     }
     real num() @property const {
         enforce (type == Type.number);

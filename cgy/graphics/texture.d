@@ -16,6 +16,8 @@ import graphics.renderer;
 import util;
 
 
+import settings;
+
 void ilError(string file = __FILE__, int line = __LINE__){
     debug{
         uint err = ilGetError();
