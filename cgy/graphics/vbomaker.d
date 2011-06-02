@@ -45,16 +45,16 @@ struct GraphicsRegion
     GraphRegionNum grNum;
     uint VBO = 0;
     uint quadCount = 0;
-    Face[] faces;
+    GRFace[] faces;
 }
 
-struct Vertex{
+struct GRVertex{
     vec3f vertex;
     vec3f texcoord;
 };
 
-struct Face{
-    Vertex[4] quad;
+struct GRFace{
+    GRVertex[4] quad;
 }
 
 
@@ -133,7 +133,7 @@ class VBOMaker : WorldListener
     }
 
     //Floor/Roof-tiles.
-    void buildGeometryZ(TilePos min, TilePos max, ref Face[]faceList)
+    void buildGeometryZ(TilePos min, TilePos max, ref GRFace[]faceList)
     in{
         assert(min.value.X < max.value.X);
         assert(min.value.Y < max.value.Y);
@@ -141,9 +141,9 @@ class VBOMaker : WorldListener
     }
     body{
         //Make floor triangles
-        Face newFace;
+        GRFace newFace;
 
-        void fixTex(ref Face f, const(Tile) t, bool upper){
+        void fixTex(ref GRFace f, const(Tile) t, bool upper){
             auto p = upper ?
                 world.tileSystem.byID(t.type).textures.top :
                 world.tileSystem.byID(t.type).textures.bottom;
@@ -203,7 +203,7 @@ class VBOMaker : WorldListener
 
     //Dont generate half-sized "back-sides", behind half-tiles; if we have a halftile, it'd break a quad for us.
     //That'd make us cry.
-    void buildGeometryY(TilePos min, TilePos max, ref Face[]faceList)
+    void buildGeometryY(TilePos min, TilePos max, ref GRFace[]faceList)
     in{
         assert(min.value.X < max.value.X);
         assert(min.value.Y < max.value.Y);
@@ -213,8 +213,8 @@ class VBOMaker : WorldListener
         //Make floor triangles
         bool onStrip;
         bool onHalf;
-        Face newFace;
-        void fixTex(ref Face f, const(Tile) t){
+        GRFace newFace;
+        void fixTex(ref GRFace f, const(Tile) t){
             vec3f tileTexSize = settings.getTileCoordSize();
             vec3f tileTexCoord = settings.getTileCoords(world.tileSystem.byID(t.type).textures.side);
             foreach(ref vert ; f.quad){
@@ -265,7 +265,7 @@ class VBOMaker : WorldListener
         }
     }
 
-    void buildGeometryX(TilePos min, TilePos max, ref Face[]faceList)
+    void buildGeometryX(TilePos min, TilePos max, ref GRFace[]faceList)
     in{
         assert(min.value.X < max.value.X);
         assert(min.value.Y < max.value.Y);
@@ -273,8 +273,8 @@ class VBOMaker : WorldListener
     }
     body{
         //Make floor triangles
-        Face newFace;
-        void fixTex(ref Face f, const(Tile) t){
+        GRFace newFace;
+        void fixTex(ref GRFace f, const(Tile) t){
             vec3f tileTexSize = settings.getTileCoordSize();
             vec3f tileTexCoord = settings.getTileCoords(world.tileSystem.byID(t.type).textures.side);
             foreach(ref vert ; f.quad){
@@ -343,7 +343,7 @@ class VBOMaker : WorldListener
 
     void buildVBO(ref GraphicsRegion region){
         auto primitiveCount = region.faces.length;
-        auto geometrySize = primitiveCount * Face.sizeof;
+        auto geometrySize = primitiveCount * GRFace.sizeof;
         region.quadCount = primitiveCount;
 
         scope(exit) region.faces.length = 0;

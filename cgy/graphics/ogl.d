@@ -91,3 +91,21 @@ void glError(string file = __FILE__, int line = __LINE__){
     }
 }
 
+static bool oldValue = false;
+bool setWireframe(bool wireframe) {
+    bool ret = oldValue;
+    oldValue = wireframe;
+    if(wireframe){
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        glError();
+        glDisable(GL_CULL_FACE);
+        glError();
+    }else{
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        glError();
+        glEnable(GL_CULL_FACE);
+        glError();
+    }
+    return oldValue;
+}
+

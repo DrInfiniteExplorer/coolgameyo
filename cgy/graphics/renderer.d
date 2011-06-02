@@ -3,42 +3,43 @@ module graphics.renderer;
 
 import std.array;
 import std.conv;
+import std.format;
 import std.stdio;
 import std.string;
-import std.format;
-
-import graphics.ogl;
-import graphics.camera;
-import graphics.shader;
-import graphics.texture;
-import graphics.camera;
-import graphics.vbomaker;
 
 import stolen.all;
 
-import util;
-import unit;
+import graphics.camera;
+import graphics.misc;
+import graphics.ogl;
+import graphics.shader;
+import graphics.texture;
+import graphics.vbomaker;
+
+import modules;
 import world;
 import scheduler;
 import settings;
-import modules;
+import unit;
+import util;
 
 //TODO: Make fix this, or make testcase and report it if not done already.
-auto grTexCoordOffset = Vertex.texcoord.offsetof;
+auto grTexCoordOffset = GRVertex.texcoord.offsetof;
 
 class Renderer : Module {
+    //TODO: Leave comment on what these members are use for in this class
     World world;
     Scheduler scheduler;
     VBOMaker vboMaker;
     Camera camera;
 
     TileTextureAtlas atlas;
+    
+    alias ShaderProgram!("offset", "VP", "atlas") WorldShaderProgram;
+    alias ShaderProgram!("VP", "M", "color") DudeShaderProgram;
 
-    ShaderProgram worldShader;
-    ShaderProgram dudeShader;
-
-
-
+    WorldShaderProgram worldShader;
+    DudeShaderProgram dudeShader;
 
     this(World w, Scheduler s, Camera c)
     {
@@ -51,49 +52,28 @@ class Renderer : Module {
 
         //Would be kewl if with templates and compile-time one could specify uniform names / attrib slot names
         //that with help of shaders where made into member variables / compile-time-lookup(attrib slot names)
-        worldShader = new ShaderProgram("shaders/renderGR.vert", "shaders/renderGR.frag");
+        worldShader = new WorldShaderProgram("shaders/renderGR.vert", "shaders/renderGR.frag");
         worldShader.bindAttribLocation(0, "position");
         worldShader.bindAttribLocation(1, "texcoord");
         worldShader.link();
-        worldShader.a = worldShader.getUniformLocation("offset");
-        worldShader.b = worldShader.getUniformLocation("VP");
-        worldShader.c = worldShader.getUniformLocation("atlas");
+        worldShader.offset = worldShader.getUniformLocation("offset");
+        worldShader.VP = worldShader.getUniformLocation("VP");
+        worldShader.atlas = worldShader.getUniformLocation("atlas");
         worldShader.use();
-        worldShader.setUniform(worldShader.c, 0); //Texture atlas will always reside in texture unit 0 yeaaaah
+        worldShader.setUniform(worldShader.atlas, 0); //Texture atlas will always reside in texture unit 0 yeaaaah
 
-        dudeShader = new ShaderProgram("shaders/renderDude.vert", "shaders/renderDude.frag");
+        dudeShader = new DudeShaderProgram("shaders/renderDude.vert", "shaders/renderDude.frag");
         dudeShader.bindAttribLocation(0, "position");
         dudeShader.link();
-        dudeShader.a = dudeShader.getUniformLocation("VP");
-        dudeShader.b = dudeShader.getUniformLocation("M");
-        dudeShader.c = dudeShader.getUniformLocation("color");
+        dudeShader.VP = dudeShader.getUniformLocation("VP");
+        dudeShader.M = dudeShader.getUniformLocation("M");
+        dudeShader.color = dudeShader.getUniformLocation("color");
 
         createDudeModel();
 
   }
 
-
-    vec3f[] makeCube(vec3f size=vec3f(1, 1, 1), vec3f offset=vec3f(0, 0, 0)){
-        alias vec3f v;
-        float a = 0.5;
-        vec3f ret[] = [
-            v(-a, -a, -a), v(a, -a, -a), v(a, -a, a), v(-a, -a, a), //front face (y=-a)
-            v(a, -a, -a), v(a, a, -a), v(a, a, a), v(a, -a, a), //right face (x=a)
-            v(a, a, -a), v(-a, a, -a), v(-a, a, a), v(a, a, a), //back face(y=a)
-            v(-a, a, -a), v(-a, -a, -a), v(-a, -a, a), v(-a, a, a), //left face(x=-a)
-            v(-a, -a, a), v(a, -a, a), v(a, a, a), v(-a, a, a), //top face (z = a)
-            v(-a, a, -a), v(a, a, -a), v(a, -a, -a), v(-a, -a, -a) //bottom face (z=-a)
-        ];
-        foreach(i; 0..ret.length){
-            auto vert = ret[i];
-            vert *= size;
-            vert += offset;
-            ret[i] = vert;
-        }
-        return ret;
-    }
-
-
+    //TODO: Eventually implement models, etc
     uint dudeVBO;
     void createDudeModel(){
         vec3f[] vertices;
@@ -109,12 +89,12 @@ class Renderer : Module {
 
     void renderDude(Unit* unit, float tickTimeSoFar){
         auto M = matrix4();
-        vec3d unitPos = unit.pos.value;
+        vec3d unitPos = unit.pos.value; //TODO: Subtract the camera position from the unit before rendering
         unitPos += tickTimeSoFar * unit.velocity;
         M.setTranslation(util.convert!float(unitPos));
         M.setRotationRadians(vec3f(0, 0, unit.rotation));
-        dudeShader.setUniform(dudeShader.b, M);
-        dudeShader.setUniform(dudeShader.c, vec3f(0, 0.7, 0));
+        dudeShader.setUniform(dudeShader.M, M);
+        dudeShader.setUniform(dudeShader.color, vec3f(0, 0.7, 0)); //Color :p
         glBindBuffer(GL_ARRAY_BUFFER, dudeVBO);
         glError();
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, vec3f.sizeof, null /* offset in vbo */);
@@ -124,12 +104,10 @@ class Renderer : Module {
         glError();
 
 
+        //TODO: Move to own function, make own shader or abstractify a "simpleshader"-thing to use.
         const bool RenderDudeAABB = false;
         static if(RenderDudeAABB == true){
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-            glError();
-            glDisable(GL_CULL_FACE);
-            glError();
+            bool oldWireframe = setWireframe(true);
 
             //dudeShader.use(false);
             glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -142,26 +120,23 @@ class Renderer : Module {
             M = matrix4(); //AABB is in world coordinates
             dudeShader.setUniform(dudeShader.b, M);
             dudeShader.setUniform(dudeShader.c, vec3f(0.8, 0.0, 0));
-            ubyte[] indices = [0, 1, 0, 4, 0, 2, 2, 6, 2, 3, 5, 1, 5, 4, 6, 2, 6, 4, 6, 7, 7, 5, 7, 3];
+            immutable ubyte[] indices = [0, 1, 0, 4, 0, 2, 2, 6, 2, 3, 5, 1, 5, 4, 6, 2, 6, 4, 6, 7, 7, 5, 7, 3];
             glDrawElements(GL_LINES, indices.length, GL_UNSIGNED_BYTE, indices.ptr);
             glError();
             //dudeShader.use();
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-            glError();
-            glEnable(GL_CULL_FACE);
-            glError();
+            setWireframe(oldWireframe);
         }
     }
-
 
     // D MINECRAFT MAP VIEWER CLONE INSPIRATION ETC
     // https://github.com/Wallbraker/Charged-Miners
     // wiki is down so arbitrary place is best for future reference and documentation.
 
     void renderDudes(Camera camera, float tickTimeSoFar) {
+        //TODO: Remove camera position from dudes!! Matrix to set = proj*viewRotation
         auto vp = camera.getProjectionMatrix() * camera.getViewMatrix();
         dudeShader.use();
-        dudeShader.setUniform(dudeShader.a, vp);
+        dudeShader.setUniform(dudeShader.VP, vp);
         glEnableVertexAttribArray(0);
         glError();
         auto dudes = world.getVisibleUnits(camera);
@@ -175,6 +150,8 @@ class Renderer : Module {
 
     //Copied from scheduler.d
     //Consider making this a mixin functionality, sortof.
+    //TODO: Think about this functionality. What is it used for? Where is it used? What do we use it for?
+    // Is there any place we can put this code to make it usable from other places too?
     enum Frames = 3;
     long[Frames] frameTimes;
     long lastTime;
@@ -193,10 +170,8 @@ class Renderer : Module {
         frameAvg /= Frames;
     }
 
-    int frameCnt;
     float soFar = 0;
     override void update(World world, Scheduler sched) {
-        frameCnt = 0;
         soFar = 0;
     }
 
@@ -207,38 +182,21 @@ class Renderer : Module {
         float ratio = 0.0f;
         if(avgTickTime > frameAvg){
             ratio = to!float(frameAvg) / to!float(avgTickTime);
-            //writeln("Ratio ", ratio);
         }
 
         soFar += ratio;
-        //writeln("So far ", soFar);
 
+        //TODO: Decide if to move clearing of buffer to outside of renderer, or is render responsible for
+        // _ALL_ rendering?
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glError();
 
-        if(renderSettings.renderWireframe){
-            /* WIRE FRA ME!!! */
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-            glError();
-            glDisable(GL_CULL_FACE);
-            glError();
-        }else{
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-            glError();
-            glEnable(GL_CULL_FACE);
-            glError();
-        }
+        //TODO: Make function setWireframe(bool yes) that does this.
         //Render world
+        setWireframe(renderSettings.renderWireframe);
         renderWorld(camera);
-        //Render dudes
         renderDudes(camera, soFar);
-        //Render foilage and other cosmetics
-        //Render HUD/GUI
-        //Render some stuff deliberately offscreen, just to be awesome.
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        glError();
-        glEnable(GL_CULL_FACE);
-        glError();
+        setWireframe(false);
 
         insertFrameTime();
 
@@ -247,14 +205,14 @@ class Renderer : Module {
     void renderGraphicsRegion(const GraphicsRegion region){
         //TODO: Do the pos-camerapos before converting to float, etc
         auto pos = region.grNum.min().value;
-        worldShader.setUniform(worldShader.a, pos);
+        worldShader.setUniform(worldShader.offset, pos);
 
         glBindBuffer(GL_ARRAY_BUFFER, region.VBO);
         glError();
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, Vertex.sizeof, null /* offset in vbo */);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, GRVertex.sizeof, null /* offset in vbo */);
         glError();
 
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, Vertex.sizeof, cast(void*)grTexCoordOffset);
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, GRVertex.sizeof, cast(void*)grTexCoordOffset);
         glError();
 
         glDrawArrays(GL_QUADS, 0, region.quadCount*4);
@@ -270,7 +228,7 @@ class Renderer : Module {
         glError();
         atlas.use();
         auto transform = camera.getProjectionMatrix() * camera.getViewMatrix();
-        worldShader.setUniform(worldShader.b, transform);
+        worldShader.setUniform(worldShader.VP, transform);
         auto regions = vboMaker.getRegions();
         foreach(region ; regions){
             if(region.VBO && camera.inFrustum(region.grNum.getAABB())){

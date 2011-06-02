@@ -10,13 +10,22 @@ import graphics.renderer;
 import stolen.all;
 import util;
 
-class ShaderProgram{
+string makeUints(T...)() {
+    string ret;
+    foreach(s ; T) {
+        ret ~= "uint " ~ s ~ ";";       
+    }
+    return ret;
+}
+
+class ShaderProgram(T...){
+    mixin(makeUints!T());
 
     uint program=0;
     uint vert=0;
     uint frag=0;
 
-    uint a,b,c,d,e,f,g,h,i,j; //Shorthands for variables wohooohohohohohoohwowowowo
+    //uint a,b,c,d,e,f,g,h,i,j; //Shorthands for variables wohooohohohohohoohwowowowo
 
     this(){
         vert = glCreateShader(GL_VERTEX_SHADER);

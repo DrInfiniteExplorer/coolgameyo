@@ -41,33 +41,35 @@ class FontShader {
         return fs;
     }
 
-    ShaderProgram program;
+    
+    alias ShaderProgram!("position", "texcoord", "offset", "tex", "viewportInv") FontShaderProgram;
+    FontShaderProgram program;
     private this(){
-        program = new ShaderProgram("shaders/fontShader.vert", "shaders/fontShader.frag");
+        program = new FontShaderProgram("shaders/fontShader.vert", "shaders/fontShader.frag");
         //vertAttribLocation = program.getAttribLocation("position");
         //texAttribLocation = program.getAttribLocation("texcoord");
         program.bindAttribLocation(0, "position");
         program.bindAttribLocation(1, "texcoord");
         program.link();
-        program.a = program.getUniformLocation("offset");
-        program.b = program.getUniformLocation("tex");
-        program.c = program.getUniformLocation("viewportInv");
+        program.offset = program.getUniformLocation("offset");
+        program.tex = program.getUniformLocation("tex");
+        program.viewportInv = program.getUniformLocation("viewportInv");
         
         program.use();
-        program.setUniform(program.b, 1); //Font will always reside in texture unit 1 yeaaaah!
-        program.setUniform(program.c,
+        program.setUniform(program.tex, 1); //Font will always reside in texture unit 1 yeaaaah!
+        program.setUniform(program.viewportInv,
             vec2f(1.0/renderSettings.windowWidth, 1.0/renderSettings.windowHeight)
         );
     }
 
     ~this(){
-        enforce(program.a == -1, "FontShader.destroy not called!");
+        enforce(program.offset == -1, "FontShader.destroy not called!");
     }
 
     void destroy() {
         program.use(false);
         program.destroy();
-        program.a = -1;
+        program.offset = -1;
         fs = null;
     }
 
@@ -78,7 +80,7 @@ class FontShader {
         glDepthMask(0);
         program.use();
         offset.Y = renderSettings.windowHeight - offset.Y;
-        program.setUniform(program.a, offset);        
+        program.setUniform(program.offset, offset);        
         glEnableVertexAttribArray(0);
         glError();
         glEnableVertexAttribArray(1);
