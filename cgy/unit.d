@@ -5,10 +5,11 @@ import std.conv;
 import std.exception;
 import std.math;
 
-import stolen.aabbox3d;
+import changelist;
 import modules;
-import util;
 import pos;
+import stolen.aabbox3d;
+import util;
 import world;
 
 final class UnitType {
@@ -17,7 +18,7 @@ final class UnitType {
 }
 
 interface UnitAI {
-    void tick(Unit* unit, ref CHANGE[] changes);
+    void tick(Unit* unit, ChangeList changeList);
 }
 
 
@@ -29,7 +30,7 @@ struct Unit {
         //No real understanding of this problem has been produced. You can try commenting this out
         //if you'd like. AFAIK we never ever want to compare units anyway though. Maybe we do. In
         //that case we'll have to implement this or fix the problem somehow.
-        return type == u.type;
+        return type is u.type;
     }
 
     UnitAI ai;
@@ -47,6 +48,9 @@ struct Unit {
     float unitHeight = 2.f;
     float stepHeight = 0.5f;
 
+    //Returns the bounding box of the unit, in world space.
+    //If no parameter is passed, the units position is used as base,
+    //otherwise the passed position is padded with the unit-size.
     aabbox3d!(double) aabb(const(vec3d)* v = null) const @property {
         if(v is null){
             v = &pos.value;
@@ -58,30 +62,14 @@ struct Unit {
 
     //This function serve any purpose?
     void tick(int ticksLeft, PathModule blerp) {
+        enforce(0, "This function is used");
         if (ticksLeft > 0) { // Was interrupted!!!!!!!
             assert (0);
         } else if (ticksLeft < 0) { // Back from some movement or shit
             assert (1 == 3);
         }
 
-
-        assert (false);
-    }
-}
-
-class UnitMovementChange : CHANGE {
-    Unit* unit;
-    //Will arrive at destination in frames frames (1 frame -> arrived by next frame)
-    vec3d destination;
-    uint ticksToArrive;
-    this(Unit* u, vec3d dest, uint ticks){
-        unit = u;
-        destination = dest;
-        ticksToArrive = ticks;
-    }
-
-    void apply(World world) {
-        world.moveUnit(unit, destination, ticksToArrive);
+        enforce(0);
     }
 }
 
@@ -98,14 +86,14 @@ class MoveToAI : UnitAI {
         this.removeOnArrive = removeOnArrive;
     }
 
-    override void tick(Unit* unit, ref CHANGE[] changes) {
+    override void tick(Unit* unit, ChangeList changeList) {
         if (unit.destination != target.pos.value) {
             auto dist = (target.pos.value - unit.pos.value).getLength();
             int ticks = to!int(ceil(dist / speed));
-            changes ~= new UnitMovementChange(unit, target.pos.value, ticks);
+            changeList.addMovement(unit, target.pos.value, ticks);
         }
         if (unit.pos == target.pos) {
-            if (done) {
+            if (done !is null) {
                 done(unit);
             } else if (removeOnArrive) {
                 unit.ai = null;

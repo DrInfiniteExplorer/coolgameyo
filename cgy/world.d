@@ -211,11 +211,8 @@ class World {
         return ret;
     }
 
-    //TODO: Rework ChangeList-functionality
-    void update(CHANGE[] changelist){
-        foreach(change ; changelist) {
-            change.apply(this);
-        }
+    void update(){
+        //Changelist-functionality moved to scheduler, before world.update is called.
 
         //MOVE UNITS
         //TODO: Make list of only-moving units, so as to not process every unit?
@@ -235,15 +232,14 @@ class World {
         }
     }
 
-    //TODO: Figure out which moveUnit-functions are called and from where
-    void moveUnit(Unit* unit, vec3d destination, uint ticksToArrive){
+    // ONLY CALLED FROM CHANGELIST (And some CustomChange-implementations )
+    void unsafeMoveUnit(Unit* unit, vec3d destination, uint ticksToArrive){
         unit.destination = destination;
         unit.ticksToArrive = ticksToArrive;
+        //Maybe add to list of moving units? Maybe all units are moving?
+        //Consider this later. Related to comment in world.update
     }
 
-    void moveUnit(Unit* unit) {
-        enforce(0, "Implement");
-    }
 
     private void moveUnit(Unit* unit, UnitPos newPos) {
         auto before = unit.pos.tilePos();
@@ -252,6 +248,9 @@ class World {
         unit.pos = newPos;
 
         auto secDiff = sectorNum(after.getSectorNum().value - before.getSectorNum().value);
+        writeln(before, after);
+        writeln(after.getSectorNum(), before.getSectorNum());
+        writeln(secDiff);
 
         if (secDiff.value == vec3i(0,0,0)) return;
 
@@ -557,8 +556,5 @@ class World {
 }
 
 
-interface CHANGE{
-    void apply(World world);
-}
 
 

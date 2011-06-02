@@ -6,23 +6,23 @@ import std.algorithm;
 import std.array;
 import std.container;
 import std.conv;
+import std.exception;
 import std.math;
 import std.stdio;
-version(Windows) import std.c.windows.windows;
+version(Windows) import std.c.windows.windows; //TODO: What uses this?
 
 import derelict.opengl.gl;
 import derelict.opengl.glext;
 
 
-import graphics.renderer;
 import graphics.camera;
-import world;
-import scheduler;
-import util;
+import graphics.renderer;
 import pos;
-import stolen.aabbox3d;
-
+import scheduler;
 import settings;
+import stolen.aabbox3d;
+import util;
+import world;
 
 private alias aabbox3d!double box;
 
@@ -50,18 +50,11 @@ struct GraphicsRegion
 
 struct Vertex{
     vec3f vertex;
-    vec2f texcoord;
-    uint type;
+    vec3f texcoord;
 };
 
 struct Face{
     Vertex[4] quad;
-    void type(uint t) @property {
-        foreach(ref q; quad){
-            q.type = t;
-        }
-    }
-    uint type() const @property { return quad[0].type; }
 }
 
 
@@ -148,65 +141,27 @@ class VBOMaker : WorldListener
     }
     body{
         //Make floor triangles
-        bool onStrip;
-        bool onHalf;
         Face newFace;
 
-        ushort texId(const(Tile) t, bool upper){
-            return upper ?
+        void fixTex(ref Face f, const(Tile) t, bool upper){
+            auto p = upper ?
                 world.tileSystem.byID(t.type).textures.top :
                 world.tileSystem.byID(t.type).textures.bottom;
-        }
-        /*
-        auto minBlockNum = min.getBlockNum();
-        BlockNum maxBlockNum = max.getBlockNum();
-        maxBlockNum.value += vec3i(1,1,1);
-        Block[BlockNum] blocks;
-        bool[BlockNum]  unseenBlocks;
-        int seenCount;
-        foreach(rel ; RangeFromTo(minBlockNum.value, maxBlockNum.value)) {
-            auto num = blockNum(rel);
-            auto block = world.getBlock(num, false, false);
-            if(!block.seen){
-                unseenBlocks[num] = true;
-            } else {
-                seenCount += 1;
+            
+            vec3f tileTexSize = settings.getTileCoordSize();
+            vec3f tileTexCoord = settings.getTileCoords(p);
+            foreach(ref vert ; f.quad){
+                vert.texcoord = vert.texcoord * tileTexSize + tileTexCoord;
             }
-            blocks[num] = block;
         }
-        if(seenCount == 0) {
-            return;
-        }
-
-        Tile getTile(TilePos pos) {
-            auto blockNum = pos.getBlockNum();
-            auto blockPtr = blockNum in blocks;
-            if(!blockPtr) {
-                return world.getTile(pos, false, false);
-            }
-            if(!blockPtr.valid) return INVALID_TILE;
-            auto rel = pos.rel();
-            if(blockNum in unseenBlocks) {
-                if(!(rel.X == 0 || rel.X == BlockSize.x-1 ||
-                     rel.Y == 0 || rel.Y == BlockSize.y-1 ||
-                     rel.Z == 0 || rel.Z == BlockSize.z-1 )) {
-                    return INVALID_TILE;
-                }
-            }
-
-            return blockPtr.getTile(pos);
-        }
-        */
-
+        
+        
         foreach(doUpper ; 0 .. 2){ //Most best piece of code ever to have been written.
             auto ett = 1-doUpper;
             auto noll = doUpper;
             foreach(z ; min.value.Z-1 .. max.value.Z){
                 foreach(y ; min.value.Y .. max.value.Y){
-                    onStrip = false;
-                    onHalf = false;
                     float halfEtt;
-                    float prevHalfEtt;
                     foreach(x; min.value.X .. max.value.X){
 
                         auto tileLower = world.getTile(tilePos(vec3i(x,y,z+noll)), false, false);
@@ -223,48 +178,22 @@ class VBOMaker : WorldListener
 
                         //If doing upper surface; if lower tile is half-surface
                         auto halfLower = doUpper == 0 && tileLower.halfstep;
-                        auto halfSame = halfLower == onHalf;
-                        prevHalfEtt = halfEtt;
                         halfEtt = halfLower ? 0.5 : 1.0;
 
                         if(bothValid && transUpper && !transLower){ //Floor tile detected!
-                            if(onStrip &&
-                               (newFace.type != texId(tileLower, doUpper==0) ||
-                               !halfSame)){
-                                newFace.quad[2].vertex.set(x, y+noll, z+prevHalfEtt);
-                                newFace.quad[3].vertex.set(x, y+ett, z+prevHalfEtt);
-                                newFace.quad[2].texcoord.set(x, 1);
-                                newFace.quad[3].texcoord.set(x, 0);
-                                faceList ~= newFace;
-                                onStrip = false;
-                            }
-                            if(!onStrip){ //Start of floooor
-                                onStrip = true;
-                                onHalf = halfLower;
-                                newFace.quad[0].vertex.set(x, y+ett, z+halfEtt);
-                                newFace.quad[1].vertex.set(x, y+noll, z+halfEtt);
-                                newFace.quad[0].texcoord.set(x, 0);
-                                newFace.quad[1].texcoord.set(x, 1);
-                                newFace.type = texId(tileLower, doUpper == 0);
-                            }else {} //if onStrip && same, continue
-                        }else if(onStrip){ //No floor :(
-                            //End current strip.
-                            newFace.quad[2].vertex.set(x, y+noll, z+prevHalfEtt);
-                            newFace.quad[3].vertex.set(x, y+ett, z+prevHalfEtt);
-                            newFace.quad[2].texcoord.set(x, 1);
-                            newFace.quad[3].texcoord.set(x, 0);
+                            newFace.quad[0].vertex.set(x, y+ett, z+halfEtt);
+                            newFace.quad[1].vertex.set(x, y+noll, z+halfEtt);
+                            newFace.quad[2].vertex.set(x+1, y+noll, z+halfEtt);
+                            newFace.quad[3].vertex.set(x+1, y+ett, z+halfEtt);
+                            newFace.quad[0].texcoord.set(0, 0, 0);
+                            newFace.quad[1].texcoord.set(0, 1, 0);
+                            newFace.quad[2].texcoord.set(1, 1, 0);
+                            newFace.quad[3].texcoord.set(1, 0, 0);
+                            //enforce(0, "Calculate texture coordinates 'offline'");
+                            //newFace.type = texId(tileLower, doUpper == 0);
+                            fixTex(newFace, tileLower, doUpper == 0);
                             faceList ~= newFace;
-                            onStrip = false;
                         }
-                    }
-                    if(onStrip){ //No floor :(
-                        //End current strip.
-                        newFace.quad[2].vertex.set(max.value.X, y+noll, z+halfEtt);
-                        newFace.quad[3].vertex.set(max.value.X, y+ett, z+halfEtt);
-                        newFace.quad[2].texcoord.set(max.value.X, 1);
-                        newFace.quad[3].texcoord.set(max.value.X, 0);
-                        faceList ~= newFace;
-                        onStrip = false;
                     }
                 }
             }
@@ -285,8 +214,12 @@ class VBOMaker : WorldListener
         bool onStrip;
         bool onHalf;
         Face newFace;
-        ushort texId(const(Tile) t){
-            return world.tileSystem.byID(t.type).textures.side;
+        void fixTex(ref Face f, const(Tile) t){
+            vec3f tileTexSize = settings.getTileCoordSize();
+            vec3f tileTexCoord = settings.getTileCoords(world.tileSystem.byID(t.type).textures.side);
+            foreach(ref vert ; f.quad){
+                vert.texcoord = vert.texcoord * tileTexSize + tileTexCoord;
+            }
         }
 
         foreach(doUpper ; 0 .. 2) { //Most best piece of code ever to have been written.
@@ -297,9 +230,7 @@ class VBOMaker : WorldListener
                 foreach(z ; min.value.Z .. max.value.Z) {
                     onStrip = false;
                     float halfEtt;
-                    float prevHalfEtt;
                     float halfNoll;
-                    float prevHalfNoll;
                     foreach(x; min.value.X .. max.value.X){
 
                         auto tileLower = world.getTile(tilePos(vec3i(x,y+noll,z)), false, false);
@@ -310,51 +241,24 @@ class VBOMaker : WorldListener
                         auto bothValid = (tileUpper.valid && tileLower.valid) || renderSettings.renderInvalidTiles;
 
                         bool halfLower = tileLower.halfstep;
-                        bool halfSame = onHalf == halfLower;
 
-                        prevHalfEtt = halfEtt;
-                        prevHalfNoll = halfNoll;
                         halfEtt = to!float(ett) * (halfLower ? 0.5 : 1.0);
                         halfNoll = to!float(noll) * (halfLower ? 0.5 : 1.0);
 
                         if(bothValid && transUpper && !transLower && !(tileUpper.halfstep && tileLower.halfstep)){ //Floor tile detected!
-                            if(onStrip &&
-                               (newFace.type != texId(tileLower) ||
-                                !halfSame)){
-                                newFace.quad[2].vertex.set(x, y+1, z+prevHalfEtt);
-                                newFace.quad[3].vertex.set(x, y+1, z+prevHalfNoll);
-                                newFace.quad[2].texcoord.set(x*neg, noll);
-                                newFace.quad[3].texcoord.set(x*neg, ett);
-                                faceList ~= newFace;
-                                onStrip = false;
-                            }
-                            if(!onStrip){ //Start of floooor
-                                onStrip = true;
-                                onHalf = halfLower;
-                                newFace.quad[0].vertex.set(x, y+1, z+halfNoll);
-                                newFace.quad[1].vertex.set(x, y+1, z+halfEtt);
-                                newFace.quad[0].texcoord.set(x*neg, ett);
-                                newFace.quad[1].texcoord.set(x*neg, noll);
-                                newFace.type = texId(tileLower);
-                            }else {} //if onStrip && same, continue
-                        }else if(onStrip){ //No floor :(
-                            //End current strip.
-                            newFace.quad[2].vertex.set(x, y+1, z+prevHalfEtt);
-                            newFace.quad[3].vertex.set(x, y+1, z+prevHalfNoll);
-                            newFace.quad[2].texcoord.set(x*neg, noll);
-                            newFace.quad[3].texcoord.set(x*neg, ett);
+                            newFace.quad[0].vertex.set(x, y+1, z+halfNoll);
+                            newFace.quad[1].vertex.set(x, y+1, z+halfEtt);
+                            newFace.quad[2].vertex.set(x+1, y+1, z+halfEtt);
+                            newFace.quad[3].vertex.set(x+1, y+1, z+halfNoll);
+                            newFace.quad[0].texcoord.set(0, ett, 0);
+                            newFace.quad[1].texcoord.set(0, noll, 0);
+                            newFace.quad[2].texcoord.set(1, noll, 0);
+                            newFace.quad[3].texcoord.set(1, ett, 0);
+                            //enforce(0, "Calculate texture coordinates 'offline'");
+                            //newFace.type = texId(tileLower);
+                            fixTex(newFace, tileLower);
                             faceList ~= newFace;
-                            onStrip = false;
                         }
-                    }
-                    if(onStrip){ //No floor :(
-                        //End current strip.
-                        newFace.quad[2].vertex.set(max.value.X, y+1, z+halfEtt);
-                        newFace.quad[3].vertex.set(max.value.X, y+1, z+halfNoll);
-                        newFace.quad[2].texcoord.set(max.value.X*neg, noll);
-                        newFace.quad[3].texcoord.set(max.value.X*neg, ett);
-                        faceList ~= newFace;
-                        onStrip = false;
                     }
                 }
             }
@@ -369,11 +273,13 @@ class VBOMaker : WorldListener
     }
     body{
         //Make floor triangles
-        bool onStrip;
-        bool onHalf;
         Face newFace;
-        ushort texId(const(Tile) t){
-            return world.tileSystem.byID(t.type).textures.side;
+        void fixTex(ref Face f, const(Tile) t){
+            vec3f tileTexSize = settings.getTileCoordSize();
+            vec3f tileTexCoord = settings.getTileCoords(world.tileSystem.byID(t.type).textures.side);
+            foreach(ref vert ; f.quad){
+                vert.texcoord = vert.texcoord * tileTexSize + tileTexCoord;
+            }
         }
 
         foreach(doUpper ; 0 .. 2){ //Most best piece of code ever to have been written.
@@ -383,11 +289,8 @@ class VBOMaker : WorldListener
             foreach(x ; min.value.X-1 .. max.value.X){
                 foreach(z ; min.value.Z .. max.value.Z){
 
-                    onStrip = false;
                     float halfEtt;
-                    float prevHalfEtt;
                     float halfNoll;
-                    float prevHalfNoll;
                     foreach(y; min.value.Y .. max.value.Y){
                         auto tileLower = world.getTile(tilePos(vec3i(x+noll,y,z)), false, false);
                         auto tileUpper = world.getTile(tilePos(vec3i(x+ett,y,z)), false, false);
@@ -397,53 +300,25 @@ class VBOMaker : WorldListener
                         auto bothValid = (tileUpper.valid && tileLower.valid) || renderSettings.renderInvalidTiles;
 
                         bool halfLower = tileLower.halfstep;
-                        bool halfSame = onHalf == halfLower;
 
-                        prevHalfEtt = halfEtt;
-                        prevHalfNoll = halfNoll;
                         halfEtt = to!float(ett) * (halfLower ? 0.5 : 1.0);
                         halfNoll = to!float(noll) * (halfLower ? 0.5 : 1.0);
 
                         if(bothValid && transUpper && !transLower && !(tileUpper.halfstep && tileLower.halfstep)){ //Floor tile detected!
-                            if(onStrip &&
-                               (newFace.type != texId(tileLower) ||
-                                !halfSame)){
-                                newFace.quad[2].vertex.set(x+1, y, z+prevHalfNoll);
-                                newFace.quad[3].vertex.set(x+1, y, z+prevHalfEtt);
-                                newFace.quad[2].texcoord.set(y*neg, ett);
-                                newFace.quad[3].texcoord.set(y*neg, noll);
-                                faceList ~= newFace;
-                                onStrip = false;
-                            }
-                            if(!onStrip){ //Start of floooor
-                                onStrip = true;
-                                onHalf = halfLower;
-                                newFace.quad[0].vertex.set(x+1, y, z+halfEtt);
-                                newFace.quad[1].vertex.set(x+1, y, z+halfNoll);
-                                newFace.quad[0].texcoord.set(y*neg, noll);
-                                newFace.quad[1].texcoord.set(y*neg, ett);
-                                newFace.type = texId(tileLower);
-                            }else {} //if onStrip && same, continue
-                        }else if(onStrip){ //No floor :(
-                            //End current strip.
-                            newFace.quad[2].vertex.set(x+1, y, z+prevHalfNoll);
-                            newFace.quad[3].vertex.set(x+1, y, z+prevHalfEtt);
-                            newFace.quad[2].texcoord.set(y*neg, ett);
-                            newFace.quad[3].texcoord.set(y*neg, noll);
+                            newFace.quad[0].vertex.set(x+1, y, z+halfEtt);
+                            newFace.quad[1].vertex.set(x+1, y, z+halfNoll);
+                            newFace.quad[2].vertex.set(x+1, y+1, z+halfNoll);
+                            newFace.quad[3].vertex.set(x+1, y+1, z+halfEtt);
+                            newFace.quad[0].texcoord.set(0, noll, 0);
+                            newFace.quad[1].texcoord.set(0, ett, 0);
+                            newFace.quad[2].texcoord.set(1, ett, 0);
+                            newFace.quad[3].texcoord.set(1, noll, 0);
+                            //enforce(0, "Calculate texture coordinates 'offline'");
+                            fixTex(newFace, tileLower);
+                            //newFace.type = texId(tileLower);
                             faceList ~= newFace;
-                            onStrip = false;
                         }
                     }
-                    if(onStrip){ //No floor :(
-                        //End current strip.
-                        newFace.quad[2].vertex.set(x+1, max.value.Y, z+halfNoll);
-                        newFace.quad[3].vertex.set(x+1, max.value.Y, z+halfEtt);
-                        newFace.quad[2].texcoord.set(max.value.Y*neg, ett);
-                        newFace.quad[3].texcoord.set(max.value.Y*neg, noll);
-                        faceList ~= newFace;
-                        onStrip = false;
-                   }
-
                 }
             }
         }

@@ -32,13 +32,16 @@ void initOpenGL(){
     DerelictGL.loadModernVersions(GLVersion.GL30);
     glError();
 
-    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &renderSettings.maxTextureSize);
+    int temp;
+    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &temp);
     glError();
+    renderSettings.maxTextureSize = temp;
     if(renderSettings.maxTextureSize > 512){
         debug writeln("MaxTextureSize(", renderSettings.maxTextureSize, ") to big; clamping to 512");
         renderSettings.maxTextureSize = 512;
     }
-    glGetIntegerv(GL_MAX_ARRAY_TEXTURE_LAYERS, &renderSettings.maxTextureLayers);
+    glGetIntegerv(GL_MAX_ARRAY_TEXTURE_LAYERS, &temp);
+    renderSettings.maxTextureLayers = temp;
     glError();
     float maxAni;
     glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAni);

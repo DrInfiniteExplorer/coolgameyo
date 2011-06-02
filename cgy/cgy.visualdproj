@@ -227,5 +227,6 @@
   <File path="tilesystem.d" />
   <File path="json.d" />
   <File path="settings.d" />
+  <File path="changelist.d" />
  </Folder>
 </DProject>

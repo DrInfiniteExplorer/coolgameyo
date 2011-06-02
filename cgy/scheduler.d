@@ -12,37 +12,38 @@ import std.range;
 
 version(Windows) import std.c.windows.windows;
 
-import world;
+import changelist;
 import util;
+import world;
 
 import modules;
 
 struct Task {
     bool sync;
     bool syncsScheduler;
-    void delegate(const World, ref CHANGE[]) run;
+    void delegate(const World, ChangeList changeList) run;
 }
 
 Task asyncTask(void delegate (const World) run) {
-    return Task(false, false, (const World w, ref CHANGE[] r){run(w);});
+    return Task(false, false, (const World w, ChangeList changeList){run(w);});
 }
 Task asyncTask(void delegate () run) {
-    return Task(false, false, (const World, ref CHANGE[]){ run(); });
+    return Task(false, false, (const World, ChangeList changeList){ run(); });
 }
 
-Task syncTask(void delegate (const World, ref CHANGE[]) run) {
+Task syncTask(void delegate (const World, ChangeList changeList) run) {
     return Task(true, false, run);
 }
 Task syncTask(void delegate (const World) run) {
-    return Task(true, false, (const World w, ref CHANGE[]){ run(w);});
+    return Task(true, false, (const World w, ChangeList changeList){ run(w);});
 }
 Task syncTask(void delegate () run) {
-    return Task(true, false, (const World, ref CHANGE[]){ run(); });
+    return Task(true, false, (const World, ChangeList changeList){ run(); });
 }
 
 private Task sleepyTask(long usecs) {
     enforce(usecs > 0 && usecs <= 1000000*15, "sleepyTask called with bad usec count:" ~to!string(usecs)); //Valid time and not more than 15 secs
-    void asd(const World, ref CHANGE[] c){
+    void asd(const World, ChangeList changeList){
         //writeln("worker sleeping ", usecs, " usecs");
         Thread.sleep(dur!"usecs"(usecs));
     }
@@ -63,14 +64,11 @@ private void workerFun(shared Scheduler ssched) {
         auto sched = cast(Scheduler)ssched; // fuck the type system!
         setThreadName("Fun-worker thread");
 
+        ChangeList changeList = new ChangeList;
         while (true) {
             // try to receive message?
-            CHANGE[] changes;
-            auto task = sched.getTask();
-            task.run(sched.world, changes);
-            if(changes.length > 0){
-                sched.addChanges(changes);
-            }
+            auto task = sched.getTask(changeList); //If scheduler syncs, this list is applied to the world.
+            task.run(sched.world, changeList); //Fill changelist!!
         }
     }
     catch (Throwable o) // catch any uncaught exceptions
@@ -92,7 +90,7 @@ class Scheduler {
 
     World world;
     Module[] modules;
-    CHANGE[] changelist;
+    ChangeList changeList;
 
     Queue!Task sync, async;
 
@@ -108,7 +106,8 @@ class Scheduler {
     }
 
 
-    private Task popAsync() {
+    //Parameter: see getTask
+    private Task popAsync(ChangeList changeList) {
         synchronized(this) {
             if (async.empty) {
                 state = State.async;
@@ -116,7 +115,7 @@ class Scheduler {
                 if(usecs > 0){
                     return sleepyTask(usecs);
                 }
-                return getTask();
+                return getTask(changeList);
             }
             return async.removeAny();
         }
@@ -143,11 +142,6 @@ class Scheduler {
         }
     }
 
-    void addChanges(CHANGE[] changes){
-        synchronized(this){
-            changelist ~= changes;
-        }
-    }
 
     void serialize() {
         foreach (task; chain(sync[], async[])) {
@@ -155,7 +149,8 @@ class Scheduler {
         }
     }
 
-    Task getTask() {
+    //If we synchronize threads, changelist is used and stuff. Otherwise it is ignored.
+    Task getTask(ChangeList changeList) {
         synchronized(this) {
             //writeln("scheduler state: ", to!string(state));
             switch (state) {
@@ -163,10 +158,12 @@ class Scheduler {
                 case State.update:
 
                     //writeln("updating!");
+                    //TODO: Make threads wait and synchronize with each other before this phase!
+                    //Important! :)
 
                     syncTime = utime();
-                    world.update(changelist);
-                    changelist.length = 0;
+                    changeList.apply(world);
+                    world.update();
                     foreach (mod; modules) {
                         mod.update(world, this);
                     }
@@ -188,21 +185,21 @@ class Scheduler {
                     state = State.forcedAsync;
                     asyncLeft = ASYNC_COUNT;
                     sync.insert(syncTask());
-                    return getTask();
+                    return getTask(changeList);
 
                 case State.forcedAsync:
                     asyncLeft -= 1;
                     if (asyncLeft == 0) {
                         state = State.async;
                     }
-                    return popAsync();
+                    return popAsync(changeList);
 
                 case State.async:
                     if (utime() > nextSync) {
                         state = State.update;
-                        return getTask();
+                        return getTask(changeList);
                     }
-                    return popAsync();
+                    return popAsync(changeList);
             }
         }
     }

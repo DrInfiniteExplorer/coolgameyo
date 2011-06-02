@@ -21,13 +21,14 @@ import graphics.camera;
 import graphics.renderer;
 import graphics.texture;
 
-import tilesystem;
-import world;
-import scheduler;
+import changelist;
 import modules;
 import pos;
+import scheduler;
+import tilesystem;
 import util;
 import unit;
+import world;
 
 import settings;
 
@@ -417,12 +418,13 @@ class Game{
 }
 
 
-class FPSControlAI : UnitAI, CHANGE {
+class FPSControlAI : UnitAI, CustomChange {
     Unit* unit;
     //vec3d velocity;
     float fallSpeed;
     bool onGround;
     World world;
+    UnitPos oldPosition;
 
     this(World w){
         world = w;
@@ -433,6 +435,7 @@ class FPSControlAI : UnitAI, CHANGE {
         this.unit = unit;
         fallSpeed = 0.f;
         onGround=false;
+        oldPosition = unit.pos;
         //Save old ai?
         //Send data to clients that this unit is possessed!!!!
         // :)
@@ -564,12 +567,17 @@ class FPSControlAI : UnitAI, CHANGE {
     //How/what to do when networked? Other clients will want to know where it is positioned.
     //Probably send information like "Unit X is player-controlled" to set NetworkControlledAI
     //which'll work kina like this one, i suppose.
-    override void tick(Unit* unit, ref CHANGE[] changes){
+    override void tick(Unit* unit, ChangeList changeList){
         enforce(unit == this.unit, "Derp! FPSControlAI.unit != unit-parameter in this.tick!");
-        changes ~= this;
+        changeList.addCustomChange(this);
     }
+    
+    //Hax used: oldPosition, to make the world produce a delta-pos-value and load sectors
     void apply(World world) {
-        world.moveUnit(unit, unit.pos.value, 1);
+        auto pos = unit.pos;
+        unit.pos = oldPosition;
+        oldPosition = pos;
+        world.unsafeMoveUnit(unit, pos.value, 1);
         //TODO: Make rotate of units as well? :):):)
     }
 

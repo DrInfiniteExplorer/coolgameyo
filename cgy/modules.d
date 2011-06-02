@@ -4,10 +4,11 @@ module modules;
 import std.stdio;
 import std.exception;
 
-import world;
-import scheduler;
+import changelist;
 import pos;
+import scheduler;
 import unit;
+import world;
 
 abstract class Module {
     void update(World world, Scheduler scheduler){
@@ -88,11 +89,11 @@ class AIModule : Module, WorldListener {
                     //writeln(unit);
                     //writeln(unit.ai);
                     scheduler.push(syncTask(
-                        (const World w, ref CHANGE[] changes){
+                        (const World w, ChangeList changeList){
                             auto ai = scoped.ai;
                             //writeln(ptr);
                             //writeln(cast(void*)ai);
-                            ai.tick(scoped, changes);
+                            ai.tick(scoped, changeList);
                         }
                     ));
                 }) (unit);

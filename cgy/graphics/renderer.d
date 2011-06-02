@@ -25,7 +25,6 @@ import modules;
 
 //TODO: Make fix this, or make testcase and report it if not done already.
 auto grTexCoordOffset = Vertex.texcoord.offsetof;
-auto grTypeOffset = Vertex.type.offsetof;
 
 class Renderer : Module {
     World world;
@@ -35,30 +34,8 @@ class Renderer : Module {
 
     TileTextureAtlas atlas;
 
-    uint textureAtlas;
     ShaderProgram worldShader;
     ShaderProgram dudeShader;
-
-    string constantsString;
-
-    void buildConstantsString(){
-        auto writer = appender!string();
-        auto format =   "#version 150 core\n"
-                        "const float pixelWidth = 1.0/%f;\n"
-                        "const vec2 tileSize = vec2(%f, %f) * pixelWidth;\n"
-                        "uvec3 tileIndexFromNumber(in uint num){\n"
-                        "   uvec3 ret;\n"
-                        "   float n = float(num);\n"
-                        "   ret.x = uint(mod(n, %f));\n"
-                        "   ret.y = uint(mod(n / %f, %f));\n"
-                        "   ret.z = uint(n / %f);\n"
-                        "   return ret;\n"
-                        "}\n";
-        auto a = to!float(renderSettings.pixelsPerTile);
-        auto b = to!float(renderSettings.maxTextureSize / renderSettings.pixelsPerTile);
-        formattedWrite(writer, format, to!float(renderSettings.maxTextureSize), a, a, b, b, b, b*b);
-        constantsString = writer.data;
-    }
 
 
 
@@ -72,14 +49,11 @@ class Renderer : Module {
 
         scheduler.registerModule(this);
 
-        buildConstantsString();
-
         //Would be kewl if with templates and compile-time one could specify uniform names / attrib slot names
         //that with help of shaders where made into member variables / compile-time-lookup(attrib slot names)
-        worldShader = new ShaderProgram(constantsString, "shaders/renderGR.vert", "shaders/renderGR.frag");
+        worldShader = new ShaderProgram("shaders/renderGR.vert", "shaders/renderGR.frag");
         worldShader.bindAttribLocation(0, "position");
         worldShader.bindAttribLocation(1, "texcoord");
-        worldShader.bindAttribLocation(2, "type");
         worldShader.link();
         worldShader.a = worldShader.getUniformLocation("offset");
         worldShader.b = worldShader.getUniformLocation("VP");
@@ -280,10 +254,7 @@ class Renderer : Module {
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, Vertex.sizeof, null /* offset in vbo */);
         glError();
 
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, Vertex.sizeof, cast(void*)grTexCoordOffset);
-        glError();
-
-        glVertexAttribIPointer(2, 1, GL_UNSIGNED_INT, Vertex.sizeof, cast(void*)grTypeOffset);
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, Vertex.sizeof, cast(void*)grTexCoordOffset);
         glError();
 
         glDrawArrays(GL_QUADS, 0, region.quadCount*4);
@@ -296,8 +267,6 @@ class Renderer : Module {
         glEnableVertexAttribArray(0);
         glError();
         glEnableVertexAttribArray(1);
-        glError();
-        glEnableVertexAttribArray(2);
         glError();
         atlas.use();
         auto transform = camera.getProjectionMatrix() * camera.getViewMatrix();
@@ -314,8 +283,6 @@ class Renderer : Module {
         glDisableVertexAttribArray(0);
         glError();
         glDisableVertexAttribArray(1);
-        glError();
-        glDisableVertexAttribArray(2);
         glError();
         worldShader.use(false);
   }
