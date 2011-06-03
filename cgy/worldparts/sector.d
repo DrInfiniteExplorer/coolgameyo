@@ -59,8 +59,7 @@ class Sector {
     this(SectorNum sectorNum_) {
         sectorNum = sectorNum_;
         pos = sectorNum.toTilePos();
-        //TODO: Use new version of DMD & phobos, initialize normally.
-        units = new typeof(units);//typeof(units)(cast(Unit*[])[]); //Retarded. RBTree-initialization.
+        units = new typeof(units);
     }
 
     //TODO: Validate this code
@@ -111,12 +110,7 @@ class Sector {
         units.insert(u);
     }
 
-    //TODO: Is this function used? If so, implement counterpart, else remove
-    void increaseActivity() {
-        bool wasLoaded = activityCount==0;
-        activityCount += 1;
-        if( wasLoaded ){
-        }
-    }
+    void increaseActivity() { activityCount += 1; }
+    void decreaseActivity() { activityCount -= 1; }
 }
 

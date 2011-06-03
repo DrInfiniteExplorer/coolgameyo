@@ -2,8 +2,6 @@ import std.algorithm, std.range, std.stdio;
 import std.container;
 import std.exception;
 
-version(Windows) import std.c.windows.windows; //TODO: Find out what we use this for here. Leave info in comment here.
-
 import graphics.camera;
 
 import tilesystem;
@@ -25,8 +23,20 @@ interface WorldListener {
 
 class World {
 
+    static final class Heightmap {
+        int[SectorSize.y][SectorSize.x] heightmap;
+
+        void opIndexAssign(int val, size_t x, size_t y) {
+            heightmap[x][y] = val;
+        }
+        ref int opIndex(size_t x, size_t y) {
+            return heightmap[x][y];
+        }
+        this() {};
+    }
+
     static struct SectorXY {
-        int[SectorSize.x][SectorSize.y]* heightmap;
+        Heightmap heightmap;
         Sector[int] sectors;
     }
 
@@ -74,29 +84,23 @@ class World {
             return sectorXY[xy];
         }
         SectorXY ret;
-        static assert ((*ret.heightmap).sizeof ==
-                int.sizeof * SectorSize.x * SectorSize.y);
-
-        int[] blob = new int[](SectorSize.x * SectorSize.y);
-        blob[] = 0;
-        auto heightmap = cast(typeof(ret.heightmap))(blob.ptr); //TODO: Validate this code
-        ret.heightmap = heightmap;
+        ret.heightmap = new Heightmap;
 
         auto p = xy.getTileXYPos();
 
+        auto tileTypeAir = tileSystem.idByName("air");
         foreach(relPos ; RangeFromTo(0, SectorSize.x, 0, SectorSize.y, 0, 1)){
             auto tmp = p.value + vec2i(relPos.X, relPos.Y);
             auto posXY = tileXYPos(tmp);
             auto z = worldGen.maxZ(posXY);
-            auto tileTypeAir = tileSystem.idByName("air"); //TODO: Move out of loop
-            //TODO: Also consider the case where we might actually want to move upwards?
+            //TODO: Also consider the case where we 
+            //      might actually want to move upwards?
+            //            ...what?
             while (worldGen.getTile(tilePos(posXY, z)).type is tileTypeAir) {
                 z -= 1;
             }
 
-            (*heightmap)[relPos.X][relPos.Y] = z; //TODO: Is there really no way to make this look better,
-                                                    // so one does not need to dereference heightmap?
-                                                    // As it is now it invites bugs if one forgets to dereference.
+            ret.heightmap[relPos.X, relPos.Y] = z;
         }
 
         writeln("Needs some heightmap generation at ", xy); //Already done :p
@@ -128,7 +132,6 @@ class World {
         auto xy = SectorXYNum(vec2i(sectorNum.value.X, sectorNum.value.Y));
         auto z = sectorNum.value.Z;
 
-        //TODO: only lookip xy in sectorXY once, likewise for z and so....
         if (xy in sectorXY && z in sectorXY[xy].sectors) {
             return sectorXY[xy].sectors[z];
         }
@@ -144,7 +147,7 @@ class World {
         if (!block.valid) {
             if (!generate) return INVALID_BLOCK;
 
-            generateBlock(blockNum); //TODO: Any reason not to use sector.generateBlock ?
+            generateBlock(blockNum);
             block = sector.getBlock(blockNum);
         }
         assert (block.valid);
@@ -156,16 +159,16 @@ class World {
         sector.setBlock(blockNum, newBlock);
     }
 
+    // I'd rather not have this in world //plol
     //TODO: Add code to cull sectors
     //TODO: Make better interface than appending to a dynamic list?
     Unit*[] getVisibleUnits(Camera camera){
+        // this should be array(filter!(camera.inFrustum)(getUnits()));
+        // but that doesn't seem to work :(
         Unit*[] units;
-        foreach(sector; sectorList){
-            //Make inFrustum for sectors too.
-            foreach(unit; sector.units){
-                if(camera.inFrustum(unit)){
-                    units ~= unit;
-                }
+        foreach(unit; getUnits()){
+            if(camera.inFrustum(unit)){
+                units ~= unit;
             }
         }
         return units;
@@ -212,7 +215,6 @@ class World {
     }
 
     void update(){
-        //Changelist-functionality moved to scheduler, before world.update is called.
 
         //MOVE UNITS
         //TODO: Make list of only-moving units, so as to not process every unit?
@@ -277,10 +279,8 @@ class World {
     void addUnit(Unit* unit) {
         unitCount += 1;
         auto sectorNum = unit.pos.tilePos.getSectorNum();
-        { //Scope to prevent shadowing of variable name sector. todo: plol can think of other name for variables? (his codeee)
-            auto sector = getSector(sectorNum);
-            sector.addUnit(unit);
-        }
+
+        getSector(sectorNum).addUnit(unit);
 
         //Range +-2
 
@@ -349,14 +349,13 @@ class World {
         auto t = xy.getSectorXYNum();
         auto sectorXY = getSectorXY(t);
 
-        auto heightmapPtr = sectorXY.heightmap;
-        assert(heightmapPtr !is null, "heightmapPtr == null! :(");
-        auto pos = vec3i(xy.value.X, xy.value.Y, (*heightmapPtr)[x][y]);
+        auto heightmap = sectorXY.heightmap;
+        assert(heightmap !is null, "heightmap == null! :(");
+        auto pos = vec3i(xy.value.X, xy.value.Y, heightmap[x, y]);
         return tilePos(pos);
     }
     private alias RedBlackTree!(BlockNum, q{a.value < b.value}) WorkSet;
 
-    //TODO: Consider the case where we want to start floodfilling inside a cave?
     void floodFillVisibility(const TileXYPos xyStart) {
         auto startPos = getTopTilePos(xyStart);
         startPos.value += vec3i(0,0,1);
@@ -364,8 +363,7 @@ class World {
     }
 
     void floodFillVisibility(SectorNum sectorNum, Direction dir) {
-        BlockNum[] wtf;
-        auto work = new WorkSet; //(wtf); //TODO: Initialize properly with new DMD&phobos-version.
+        auto work = new WorkSet;
 
         if (dir & Direction.north) {
             auto range = RangeFromTo(0, BlocksPerSector.x,
@@ -443,7 +441,9 @@ class World {
     //TODO: Turn into timeslicing task
     //TODO: Make it keep track of sectors, in order to make sector-load-notifications.
     private void floodFillVisibilityImpl(WorkSet work) {
-        version(Windows) auto start = GetTickCount();
+        StopWatch sw;
+        sw.start();
+
         int allBlocks = 0;
         int blockCount = 0;
         int sparseCount = 0;
@@ -525,7 +525,8 @@ class World {
         writeln("sparseCount");
         writeln(sparseCount);
 
-        version(Windows) writeln("Floodfill took ", GetTickCount() - start, " ms to complete");
+        writeln("Floodfill took ", sw.peek().msecs, " ms to complete");
+        assert (0);
     }
 
 

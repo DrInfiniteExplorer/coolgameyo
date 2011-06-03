@@ -4,6 +4,9 @@ import std.conv;
 import std.exception;
 import std.stdio;
 import std.string;
+import std.range;
+
+public import std.datetime;
 
 //import world : BlockSize, SectorSize , GraphRegionSize;
 import worldparts.sector;
@@ -52,7 +55,7 @@ void BREAKPOINT() {
 }
 
 void[] allocateBlob(size_t size) {
-    version (Windows) { //For win32 evaluatar inte sant pa win64
+    version (Windows) {
         auto ret = VirtualAlloc(null, 4096 * size, MEM_COMMIT, PAGE_READWRITE);
         auto tmp = enforce(ret[0 .. 4096*size], "memory allocation fail :-)");
         return tmp;
@@ -148,7 +151,7 @@ struct RangeFromTo
         z += 1;
     }
     bool empty() {
-        return z >= ez; //Popfront is called before empty() and this smaller criteria is more sufficient and such.
+        return z >= ez;
     }
 }
 unittest {
