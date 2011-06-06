@@ -18,8 +18,8 @@ import util;
 
 import settings;
 
-void ilError(string file = __FILE__, int line = __LINE__){
-    debug{
+void ilError(string file = __FILE__, int line = __LINE__) {
+    debug {
         uint err = ilGetError();
         string str;
         switch(err){
@@ -40,16 +40,16 @@ void ilError(string file = __FILE__, int line = __LINE__){
     }
 }
 
-struct Image{
+struct Image {
     string filename;
     int imgWidth;
     int imgHeight;
     ubyte[] imgData;
 
-    this(string filename){
+    this(string filename) {
         this(filename, vec2i(0, 0), vec2i(int.max, int.max));
     }
-    this(string _filename, vec2i offset, vec2i size){
+    this(string _filename, vec2i offset, vec2i size) {
         filename = _filename;
 
         uint ilImgID;
@@ -64,8 +64,7 @@ struct Image{
         ilError();
 
         auto cString = toStringz(filename);
-        if (ilLoad(IL_TYPE_UNKNOWN, cString) == IL_FALSE)
-        {
+        if (ilLoad(IL_TYPE_UNKNOWN, cString) == IL_FALSE) {
             assert(0, "error loading image " ~filename);
         }
         ilError();
@@ -77,7 +76,7 @@ struct Image{
         ilError();
     }
 
-    this(ubyte *data, uint width, uint height){
+    this(ubyte *data, uint width, uint height) {
         imgData.length = 4*width*height;
         if(data !is null)
             imgData[] = data[0..imgData.length];

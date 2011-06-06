@@ -78,7 +78,7 @@ void freeBlob(void* blob) {
     }
 }
 
-unittest{
+unittest {
     SYSTEM_INFO si;
     GetSystemInfo(&si);
     assert(si.dwPageSize == 4096);

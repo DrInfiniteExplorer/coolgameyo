@@ -59,8 +59,7 @@ enum TICKS_PER_SECOND = 15;
 
 // THIS WILL PROBABLY NEED SOME FLESHING OUT...!!!
 private void workerFun(shared Scheduler ssched) {
-    try
-    {
+    try {
         auto sched = cast(Scheduler)ssched; // fuck the type system!
         setThreadName("Fun-worker thread");
 
@@ -70,9 +69,7 @@ private void workerFun(shared Scheduler ssched) {
             auto task = sched.getTask(changeList); //If scheduler syncs, this list is applied to the world.
             task.run(sched.world, changeList); //Fill changelist!!
         }
-    }
-    catch (Throwable o) // catch any uncaught exceptions
-    {
+    } catch (Throwable o) {
         writeln("Thread exception!\n", o.toString());
         version(Windows) {
             MessageBoxA(null, cast(char *)toStringz(o.toString()),

@@ -5,13 +5,8 @@ import std.array;
 import std.concurrency;
 import std.conv;
 import std.exception;
-import std.datetime;
 import std.math;
 import std.stdio;
-
-version(Windows){
-    import std.c.windows.windows;
-}
 
 import derelict.sdl.sdl;
 
@@ -141,30 +136,32 @@ class Game{
     }
 
     TileSystem parseGameData() {
-        font = new Font("fonts/courier");
-        f1 = new StringTexture(font);
-        f2 = new StringTexture(font);
-        f3 = new StringTexture(font);
-        f4 = new StringTexture(font);
-        fps = new StringTexture(font);
-        tickTime = new StringTexture(font);
-        renderTime = new StringTexture(font);
-        unitInfo = new StringTexture(font);
+        if (isClient) {
+            font = new Font("fonts/courier");
+            f1 = new StringTexture(font);
+            f2 = new StringTexture(font);
+            f3 = new StringTexture(font);
+            f4 = new StringTexture(font);
+            fps = new StringTexture(font);
+            tickTime = new StringTexture(font);
+            renderTime = new StringTexture(font);
+            unitInfo = new StringTexture(font);
 
-        f1.setPositionI(vec2i(0, 0));
-        f2.setPositionI(vec2i(0, 1));
-        f3.setPositionI(vec2i(0, 2));
-        f4.setPositionI(vec2i(0, 3));
-        fps.setPositionI(vec2i(0, 4));
-        tickTime.setPositionI(vec2i(30, 0));
-        renderTime.setPositionI(vec2i(30, 1));
-        unitInfo.setPositionI(vec2i(0, 5));
+            f1.setPositionI(vec2i(0, 0));
+            f2.setPositionI(vec2i(0, 1));
+            f3.setPositionI(vec2i(0, 2));
+            f4.setPositionI(vec2i(0, 3));
+            fps.setPositionI(vec2i(0, 4));
+            tickTime.setPositionI(vec2i(30, 0));
+            renderTime.setPositionI(vec2i(30, 1));
+            unitInfo.setPositionI(vec2i(0, 5));
 
-        f1.setText("polygon fill:" ~ (renderSettings.renderWireframe? "Wireframe":"Fill"));
-        f2.setText(useCamera ? "Camera active" : "Camera locked");
-        f3.setText("Mipmapppinngggg!! (press f3 to togggeleee");
-        f4.setText("VSync:" ~ (renderSettings.disableVSync? "Disabled" : "Enabled"));
-        fps.setText("No fps calculted yet");
+            f1.setText("polygon fill:" ~ (renderSettings.renderWireframe? "Wireframe":"Fill"));
+            f2.setText(useCamera ? "Camera active" : "Camera locked");
+            f3.setText("Mipmapppinngggg!! (press f3 to togggeleee");
+            f4.setText("VSync:" ~ (renderSettings.disableVSync? "Disabled" : "Enabled"));
+            fps.setText("No fps calculted yet");
+        }
 
         auto sys = new TileSystem;
 
@@ -275,9 +272,10 @@ class Game{
                 if (event.key.keysym.sym == SDLK_ESCAPE) exit = true;
             }
 
-            if(useCamera)
-                updateCamera(); //Or doInterface() or controlDwarf or ()()()()();
-            if(possesedActive){
+            if (useCamera) {
+                updateCamera();
+            }
+            if (possesedActive) {
                 updatePossesed();
             }
 
@@ -295,7 +293,7 @@ class Game{
         }
     }
 
-    void updateGui(){
+    void updateGui() {
         string str = to!string(1_000_000 / renderer.frameAvg);
         fps.setText("FPS: " ~str);
 
@@ -308,7 +306,7 @@ class Game{
 
     }
 
-    void updateCamera(){
+    void updateCamera() {
         if(keyMap[SDLK_a]){ camera.axisMove(-0.1, 0.0, 0.0); }
         if(keyMap[SDLK_d]){ camera.axisMove( 0.1, 0.0, 0.0); }
         if(keyMap[SDLK_w]){ camera.axisMove( 0.0, 0.1, 0.0); }
@@ -318,7 +316,7 @@ class Game{
     }
 
     long then = 0;
-    void updatePossesed(){
+    void updatePossesed() { 
 
         long now = utime();
         float deltaT = (now-then) / 100_000.f;
@@ -426,7 +424,7 @@ class FPSControlAI : UnitAI, CustomChange {
     World world;
     UnitPos oldPosition;
 
-    this(World w){
+    this(World w) {
         world = w;
     }
 
@@ -444,8 +442,8 @@ class FPSControlAI : UnitAI, CustomChange {
 
 
     vec3d collideMove(vec3d pos, vec3d dir, int level=0){
-        if(dir == vec3d(0, 0, 0)){ return pos; }
-        if(level > 5){
+        if (dir == vec3d(0, 0, 0)) { return pos; }
+        if (level > 5) {
             writeln("Penix");
             enforce(0, "DIX!");
             return pos;
@@ -468,12 +466,12 @@ class FPSControlAI : UnitAI, CustomChange {
                         || !aabb.intersectsWithBox(tileBox, dir, time, normal)) {
                     continue;
                 }
-                if(time != time){
+                if (isNaN(time)) {
                     minTime = float.nan;
                     writeln("Unit is inside of something. Solve this, like, loop upwards until not collides anylonger. or something.");
                     return true;
                 }
-                if(time < minTime){
+                if (time < minTime) {
                     minTime = time;
                     minNormal = normal;
                 }
@@ -486,33 +484,31 @@ class FPSControlAI : UnitAI, CustomChange {
         vec3d normal;
 
 
-        if(!checkCollision(pos, dir, time, normal)){
+        if (!checkCollision(pos, dir, time, normal)) {
             return pos + dir;
         }
-        if(time != time){
+        if (isNaN(time)) {
             //enforce(0, "Implement, like move dude upwards until on top, something?");
             //return pos;
-            vec3d _pos = pos;
-            vec3d _dir = vec3d(0.0, 0.0, 0.0);
-            while(true){
-                if(!checkCollision(_pos, _dir, time, normal)){
-                    return _pos;
-                }
-                _pos.Z += 1.f;
+            vec3d _pos = pos + vec3d(0, 0, 1);
+            // vec3d _dir = vec3d(0.0, 0.0, 0.0);
+            while (!checkCollision(_pos, dir, time, normal)) {
+                _pos.Z += 1;
             }
+            return _pos;
         }
         // We have collided with some box
         //IF CAN STEP STEP
-        if(normal.Z == 0){
+        if (normal.Z == 0) {
             auto stepStart = pos + vec3d(0, 0, unit.stepHeight);
             float stepTime;
             auto stepDir = dir * vec3d(1, 1, 0);
             vec3d stepNormal;
             bool stepCollided = checkCollision(stepStart, dir, stepTime, stepNormal);
-            if(!stepCollided){
+            if (!stepCollided) {
                 return stepStart + dir;
             }
-            if(stepTime < time){
+            if (stepTime < time) {
                 time = stepTime;
                 pos = stepStart;
                 normal = stepNormal;
@@ -531,9 +527,7 @@ class FPSControlAI : UnitAI, CustomChange {
         auto normPart = normal.dotProduct(dir) * normal;
         auto tangPart = dir - normPart;
 
-        if(tangPart.getLengthSQ() >= dir.getLengthSQ()){
-            writeln("asd");
-        }
+        assert (tangPart.getLengthSQ() < dir.getLengthSQ());
 
         return collideMove(newPos, tangPart, level+1);
     }
@@ -568,7 +562,7 @@ class FPSControlAI : UnitAI, CustomChange {
     //Probably send information like "Unit X is player-controlled" to set NetworkControlledAI
     //which'll work kina like this one, i suppose.
     override void tick(Unit* unit, ChangeList changeList){
-        enforce(unit == this.unit, "Derp! FPSControlAI.unit != unit-parameter in this.tick!");
+        assert (unit == this.unit, "Derp! FPSControlAI.unit != unit-parameter in this.tick!");
         changeList.addCustomChange(this);
     }
     
