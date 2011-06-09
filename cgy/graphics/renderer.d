@@ -3,6 +3,7 @@ module graphics.renderer;
 
 import std.array;
 import std.conv;
+import std.exception;
 import std.format;
 import std.stdio;
 import std.string;
@@ -236,7 +237,7 @@ class Renderer : Module {
             }
         }
         //Get list of vbo's
-        //Do culling
+        //Do culling    
         //Render vbo's.
         glDisableVertexAttribArray(0);
         glError();

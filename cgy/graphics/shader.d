@@ -18,14 +18,12 @@ string makeUints(T...)() {
     return ret;
 }
 
-class ShaderProgram(T...){
+final class ShaderProgram(T...){
     mixin(makeUints!T());
 
     uint program=0;
     uint vert=0;
     uint frag=0;
-
-    //uint a,b,c,d,e,f,g,h,i,j; //Shorthands for variables wohooohohohohohoohwowowowo
 
     this(){
         vert = glCreateShader(GL_VERTEX_SHADER);

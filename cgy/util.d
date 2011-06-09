@@ -50,8 +50,10 @@ void setFlag(A,B)(ref A flags, B flag, bool value) {
     }
 }
 
-void BREAKPOINT() {
-    asm { int 3; }
+void BREAKPOINT(uint doBreak=1) {
+    if(doBreak) {
+        asm { int 3; }
+    }
 }
 
 void[] allocateBlob(size_t size) {
