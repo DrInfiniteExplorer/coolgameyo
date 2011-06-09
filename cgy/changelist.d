@@ -39,7 +39,6 @@ private struct ChangeArray(T) {
         //     ts = new T[](ts.length/2 - 1); // drop reference to old array
         // }
         _length = 0;
-        ts.assumeSafeAppend();
     }
 
     T[] active() @property { return ts[0 .. _length]; }
