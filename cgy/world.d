@@ -1,6 +1,7 @@
 import std.algorithm, std.range, std.stdio;
 import std.container;
 import std.exception;
+import std.typecons;
 
 import graphics.camera;
 
@@ -21,19 +22,20 @@ interface WorldListener {
     void notifyTileChange(TilePos tilePos);
 }
 
-class World {
 
-    static final class Heightmap {
-        int[SectorSize.y][SectorSize.x] heightmap;
+final class Heightmap {
+    int[SectorSize.y][SectorSize.x] heightmap;
 
-        void opIndexAssign(int val, size_t x, size_t y) {
-            heightmap[x][y] = val;
-        }
-        ref int opIndex(size_t x, size_t y) {
-            return heightmap[x][y];
-        }
-        this() {};
+    void opIndexAssign(int val, size_t x, size_t y) {
+        heightmap[x][y] = val;
     }
+    ref int opIndex(size_t x, size_t y) {
+        return heightmap[x][y];
+    }
+    this() {};
+}
+
+class World {
 
     static struct SectorXY {
         Heightmap heightmap;
@@ -52,10 +54,16 @@ class World {
 
     TileSystem tileSystem;
 
+    private alias RedBlackTree!(BlockNum, q{a.value < b.value}) WorkSet;
+    WorkSet toFloodFill;
+    SectorNum[] floodingSectors;
+
     this(TileSystem tilesys) {
         isServer = true;
         tileSystem = tilesys;
         worldGen = new WorldGenerator(tilesys);
+
+        toFloodFill = new WorkSet;
     }
 
     void serialize() {  //TODO: Implement serialization
@@ -91,12 +99,14 @@ class World {
         auto tileTypeAir = tileSystem.idByName("air");
         foreach(relPos ; RangeFromTo(0, SectorSize.x, 0, SectorSize.y, 0, 1)){
             auto tmp = p.value + vec2i(relPos.X, relPos.Y);
-            auto posXY = tileXYPos(tmp);
+            auto posXY = TileXYPos(tmp);
             auto z = worldGen.maxZ(posXY);
             //TODO: Also consider the case where we 
             //      might actually want to move upwards?
             //            ...what?
-            while (worldGen.getTile(tilePos(posXY, z)).type is tileTypeAir) {
+            while (worldGen.getTile(TilePos(vec3i(
+                                posXY.value.X, posXY.value.Y, z))).type
+                    is tileTypeAir) {
                 z -= 1;
             }
 
@@ -110,7 +120,7 @@ class World {
     }
 
     Sector allocateSector(SectorNum sectorNum) {
-        auto xy = sectorXYNum(vec2i(sectorNum.value.X, sectorNum.value.Y));
+        auto xy = SectorXYNum(vec2i(sectorNum.value.X, sectorNum.value.Y));
         auto z = sectorNum.value.Z;
 
         if (xy !in sectorXY) {
@@ -216,6 +226,8 @@ class World {
 
     void update(){
 
+        floodFillSome();
+
         //MOVE UNITS
         //TODO: Make list of only-moving units, so as to not process every unit?
         //Maybe?
@@ -244,87 +256,21 @@ class World {
 
 
     private void moveUnit(Unit* unit, UnitPos newPos) {
-        auto before = unit.pos.tilePos();
-        auto after = newPos.tilePos();
+
+        moveActivity(unit.pos, newPos);
 
         unit.pos = newPos;
-
-        auto secDiff = sectorNum(after.getSectorNum().value - before.getSectorNum().value);
-        writeln(before, after);
-        writeln(after.getSectorNum(), before.getSectorNum());
-        writeln(secDiff);
-
-        if (secDiff.value == vec3i(0,0,0)) return;
-
-        enforce(secDiff.value.getLengthSQ() <= 3, "Unit moving faster than we can possibly handle!!");
-
-        Direction dir;
-
-        if (secDiff.value.X < 0) dir |= Direction.west;
-        else if (secDiff.value.X > 0) dir |= Direction.east;
-
-        if (secDiff.value.Y < 0) dir |= Direction.south;
-        else if (secDiff.value.Y > 0) dir |= Direction.north;
-
-        if (secDiff.value.Z < 0) dir |= Direction.down;
-        else if (secDiff.value.Z > 0) dir |= Direction.up;
-
-        enforce(0, "Implement floodfilling duh!");
-
-        // Make sure to increase activity in the good sectors and decrese4 int
-        // the blahbl ah old ones we leaft blah ;;;
     }
 
     //TODO: Implement removeUnit?
     void addUnit(Unit* unit) {
         unitCount += 1;
-        auto sectorNum = unit.pos.tilePos.getSectorNum();
+        auto sectorNum = unit.pos.getSectorNum();
 
         getSector(sectorNum).addUnit(unit);
 
-        //Range +-2
-
-        RangeFromTo range;
-        range = RangeFromTo(-2,3,-2,3,-2,3);
-//        range = RangeFromTo(-1,2,-1,2,-1,2); //Make it faster in debyyyyg!!
-        range = RangeFromTo(0,1,0,1,0,1); //Make it faster in debyyyyg!!
-
-        //TODO: Consider moving functionality to moveUnit, and calling that from here?
-        foreach (dpos; range) {
-            auto pos = unit.pos.tilePos.getSectorNum();
-            getSector(SectorNum(pos.value + dpos)).increaseActivity();
-        }
-        foreach (dpos; range) {
-            auto pos = unit.pos.tilePos.getSectorNum();
-            pos.value += dpos;
-            auto sector = getSector(pos);
-            if (sector.activityCount == 1) {
-                if (unit.pos.tilePos.getSectorNum() == sectorNum) {
-                    writeln("wherp");
-                    floodFillVisibility(/*sector, ??? */unit.pos.tilePos);
-                    writeln("zerp");
-                } else {
-                    assert(0, "implement stuff below");
-                    //floodFillVisibility(/* sector, ??? */Direction.all); // Derp?
-                }
-            }
-        }
-
-        //TODO: We need to turn floodfilling into a timeslicing, taskable thing, and only notify of sector load after floodfill is done.
-
-        //MAKE FIX, NOT ONE LOAD FOR EVERY UNIT!!
-        //Keep small array/map of which are just-now-loaded?
-        foreach (dpos; range) { //We want to build geometry etc only after all relevant data has been loaded.
-            auto pos = unit.pos.tilePos.getSectorNum();
-            pos.value.X += dpos.X;
-            pos.value.Y += dpos.Y;
-            pos.value.Z += dpos.Z;
-            auto sector = getSector(pos);
-            notifySectorLoad(sector.sectorNum);
-        }
-
+        increaseActivity(unit.pos);
     }
-
 
     Tile getTile(TilePos tilePos, bool createBlock=true,
                                   bool createSector=true) {
@@ -352,103 +298,20 @@ class World {
         auto heightmap = sectorXY.heightmap;
         assert(heightmap !is null, "heightmap == null! :(");
         auto pos = vec3i(xy.value.X, xy.value.Y, heightmap[x, y]);
-        return tilePos(pos);
-    }
-    private alias RedBlackTree!(BlockNum, q{a.value < b.value}) WorkSet;
-
-    void floodFillVisibility(const TileXYPos xyStart) {
-        auto startPos = getTopTilePos(xyStart);
-        startPos.value += vec3i(0,0,1);
-        floodFillVisibility(startPos);
-    }
-
-    void floodFillVisibility(SectorNum sectorNum, Direction dir) {
-        auto work = new WorkSet;
-
-        if (dir & Direction.north) {
-            auto range = RangeFromTo(0, BlocksPerSector.x,
-                    0, 1,
-                    0, BlocksPerSector.z);
-            foreach (rel; range) {
-                auto abs = sectorNum.toBlockNum().value + rel;
-                if (getBlock(BlockNum(abs + vec3i(0, -1, 0))).seen) {
-                    work.insert(BlockNum(abs));
-                }
-            }
-        }
-        if (dir & Direction.south) {
-            auto range = RangeFromTo(0, BlocksPerSector.x,
-                    BlocksPerSector.y - 1, BlocksPerSector.y,
-                    0, BlocksPerSector.z);
-            foreach (rel; range) {
-                auto abs = sectorNum.toBlockNum().value + rel;
-                if (getBlock(BlockNum(abs + vec3i(0, 1, 0))).seen) {
-                    work.insert(BlockNum(abs));
-                }
-            }
-        }
-        if (dir & Direction.west) {
-            auto range = RangeFromTo(0, 1,
-                    0, BlocksPerSector.y,
-                    0, BlocksPerSector.z);
-            foreach (rel; range) {
-                auto abs = sectorNum.toBlockNum().value + rel;
-                if (getBlock(BlockNum(abs + vec3i(-1, 0, 0))).seen) {
-                    work.insert(BlockNum(abs));
-                }
-            }
-        }
-        if (dir & Direction.east) {
-            auto range = RangeFromTo(BlocksPerSector.x-1, BlocksPerSector.x,
-                    0, BlocksPerSector.y,
-                    0, BlocksPerSector.z);
-            foreach (rel; range) {
-                auto abs = sectorNum.toBlockNum().value + rel;
-                if (getBlock(BlockNum(abs + vec3i(1, 0, 0))).seen) {
-                    work.insert(BlockNum(abs));
-                }
-            }
-        }
-        if (dir & Direction.up) {
-            auto range = RangeFromTo(0, BlocksPerSector.x,
-                    0, BlocksPerSector.y,
-                    0, 1);
-            foreach (rel; range) {
-                auto abs = sectorNum.toBlockNum().value + rel;
-                if (getBlock(BlockNum(abs + vec3i(0, 0, -1))).seen) {
-                    work.insert(BlockNum(abs));
-                }
-            }
-        }
-        if (dir & Direction.down) {
-            auto range = RangeFromTo(0, BlocksPerSector.x,
-                    0, BlocksPerSector.y,
-                    BlocksPerSector.z - 1, BlocksPerSector.z);
-            foreach (rel; range) {
-                auto abs = sectorNum.toBlockNum().value + rel;
-                if (getBlock(BlockNum(abs + vec3i(0, 0, 1))).seen) {
-                    work.insert(BlockNum(abs));
-                }
-            }
-        }
-        floodFillVisibilityImpl(work);
-    }
-
-    void floodFillVisibility(const TilePos startPos) {
-        floodFillVisibilityImpl(new WorkSet(startPos.getBlockNum()));
+        return TilePos(pos);
     }
 
     //TODO: Turn into timeslicing task
     //TODO: Make it keep track of sectors, in order to make sector-load-notifications.
-    private void floodFillVisibilityImpl(WorkSet work) {
-        StopWatch sw;
-        sw.start();
+    private void floodFillSome(int max=10) {// 10 lol
+        auto sw = StopWatch(AutoStart.yes);
 
         int allBlocks = 0;
         int blockCount = 0;
         int sparseCount = 0;
-        while (!work.empty) {
-            auto blockNum = work.removeAny();
+        int i = 0;
+        while (i < max && !toFloodFill.empty) {
+            auto blockNum = toFloodFill.removeAny();
 
             auto block = getBlock(blockNum);
             if(block.seen) { continue; }
@@ -468,19 +331,19 @@ class World {
             if (block.sparse) {
                 sparseCount++;
                 if (block.sparseTileTransparent) {
-                    work.insert(.blockNum(blockNum.value + vec3i(1, 0, 0)));
-                    work.insert(.blockNum(blockNum.value - vec3i(1, 0, 0)));
-                    work.insert(.blockNum(blockNum.value + vec3i(0, 1, 0)));
-                    work.insert(.blockNum(blockNum.value - vec3i(0, 1, 0)));
-                    work.insert(.blockNum(blockNum.value + vec3i(0, 0, 1)));
-                    work.insert(.blockNum(blockNum.value - vec3i(0, 0, 1)));
+                    toFloodFill.insert(BlockNum(blockNum.value + vec3i(1,0,0)));
+                    toFloodFill.insert(BlockNum(blockNum.value - vec3i(1,0,0)));
+                    toFloodFill.insert(BlockNum(blockNum.value + vec3i(0,1,0)));
+                    toFloodFill.insert(BlockNum(blockNum.value - vec3i(0,1,0)));
+                    toFloodFill.insert(BlockNum(blockNum.value + vec3i(0,0,1)));
+                    toFloodFill.insert(BlockNum(blockNum.value - vec3i(0,0,1)));
                 }
                 continue;
             }
 
             foreach (rel;
                     RangeFromTo(0,BlockSize.x,0,BlockSize.y,0,BlockSize.z)) {
-                auto tp = tilePos(blockPos.value + rel);
+                auto tp = TilePos(blockPos.value + rel);
                 auto tile = block.getTile(tp);
 
                 scope (exit) block.setTile(tp, tile);
@@ -488,19 +351,25 @@ class World {
                 if (tile.transparent || tile.halfstep) {
                     tile.seen = true;
                     if (rel.X == 0) {
-                        work.insert(.blockNum(blockNum.value - vec3i(1,0,0)));
+                        toFloodFill.insert(
+                                BlockNum(blockNum.value - vec3i(1,0,0)));
                     } else if (rel.X == BlockSize.x - 1) {
-                        work.insert(.blockNum(blockNum.value + vec3i(1,0,0)));
+                        toFloodFill.insert(
+                                BlockNum(blockNum.value + vec3i(1,0,0)));
                     }
                     if (rel.Y == 0) {
-                        work.insert(.blockNum(blockNum.value - vec3i(0,1,0)));
+                        toFloodFill.insert(
+                                BlockNum(blockNum.value - vec3i(0,1,0)));
                     } else if (rel.Y == BlockSize.y - 1) {
-                        work.insert(.blockNum(blockNum.value + vec3i(0,1,0)));
+                        toFloodFill.insert(
+                                BlockNum(blockNum.value + vec3i(0,1,0)));
                     }
                     if (rel.Z == 0 && !tile.halfstep) { //halfsteps only propagate visibility up and to sides
-                        work.insert(.blockNum(blockNum.value - vec3i(0,0,1)));
+                        toFloodFill.insert(
+                                BlockNum(blockNum.value - vec3i(0,0,1)));
                     } else if (rel.Z == BlockSize.z - 1) {
-                        work.insert(.blockNum(blockNum.value + vec3i(0,0,1)));
+                        toFloodFill.insert(
+                                BlockNum(blockNum.value + vec3i(0,0,1)));
                     }
                 } else {
                     foreach (npos; neighbors(tp)) {
@@ -518,6 +387,13 @@ class World {
                 }
             }
         }
+        if (toFloodFill.empty) {
+            foreach (sectorNum; floodingSectors) {
+                notifySectorLoad(sectorNum);
+            }
+            floodingSectors.length = 0;
+            floodingSectors.assumeSafeAppend(); // yeaaaaahhhh~~~
+        }
         writeln("allBlocks");
         writeln(allBlocks);
         writeln("blockCount");
@@ -526,7 +402,6 @@ class World {
         writeln(sparseCount);
 
         writeln("Floodfill took ", sw.peek().msecs, " ms to complete");
-        assert (0);
     }
 
 
@@ -538,7 +413,6 @@ class World {
         listeners.length -= 1;
     }
 
-    //To be called... WHEEEEN?
     void notifySectorLoad(SectorNum sectorNum) {
         foreach (listener; listeners) {
             listener.notifySectorLoad(sectorNum);
@@ -554,8 +428,125 @@ class World {
             listener.notifyTileChange(tilePos);
         }
     }
+
+
+    mixin ActivityHandlerMethods;
 }
 
 
+
+
+enum activitySize = vec3i(3,3,3);
+
+private mixin template ActivityHandlerMethods() {
+
+    void increaseActivity(UnitPos activityLoc) {
+        auto sectorNum = activityLoc.getSectorNum();
+        auto sector = getSector(sectorNum);
+
+        if (sector.activityCount == 0) {
+            addFloodFillPos(activityLoc);
+        }
+        
+        foreach (p; activityRange(sectorNum)) {
+            getSector(p).increaseActivity();
+        }
+
+        foreach (p; activityRange(sectorNum)) {
+            if (getSector(p).activityCount == 1) {
+                foreach (n; neighbors(p)) {
+                    auto s = getSector(n, false);
+
+                    if (s && s.activityCount > 1) {
+                        addFloodFillWall(p, n);
+                    }
+                }
+            }
+        }
+    }
+    void moveActivity(
+            UnitPos from, UnitPos to) {
+
+        foreach (p; activityRange(from.getSectorNum())) {
+            getSector(p).decreaseActivity();
+        }
+
+        foreach (p; activityRange(to.getSectorNum())) {
+            getSector(p).increaseActivity();
+        }
+
+        foreach (p; activityRange(to.getSectorNum())) {
+            if (getSector(p).activityCount == 1) {
+                foreach (n; neighbors(p)) {
+                    auto s = getSector(n, false);
+
+                    if (s && s.activityCount > 1) {
+                        addFloodFillWall(p, n);
+                    }
+                }
+            }
+        }
+    }
+
+    void decreaseActivity(UnitPos activityLoc) {
+        assert (0);
+    }
+
+
+    void addFloodFillPos(TilePos pos) {
+        toFloodFill.insert(pos.getBlockNum());
+    }
+    void addFloodFillWall(SectorNum inactive, SectorNum active) {
+        foreach (inact, act; getWallBetween(inactive, active)) {
+            if (getBlock(act).seen) {
+                toFloodFill.insert(inact);
+            }
+        }
+    }
+}
+
+auto activityRange(SectorNum base) {
+    return map!SectorNum(RangeFromTo(
+            base.value - activitySize/2,
+            base.value + activitySize/2 + vec3i(1,1,1)));
+}
+
+struct WallBetweenSectors {
+    SectorNum inactive, active;
+
+
+    int opApply(scope int delegate(ref BlockNum inact, ref BlockNum act) y) {
+        auto delta = inactive.value - active.value;
+        assert (delta.getLength() == 1);
+
+        auto bb = active.toBlockNum.value;
+
+        auto start = vec3i(
+                delta.X == 0 ? 0
+                : (delta.X == 1 ? BlocksPerSector.x - 1 : 0),
+                delta.Y == 0 ? 0
+                : (delta.Y == 1 ? BlocksPerSector.y - 1 : 0),
+                delta.Z == 0 ? 0
+                : (delta.Z == 1 ? BlocksPerSector.z - 1 : 0));
+        auto end = vec3i( 
+                delta.X == 0 ? BlocksPerSector.x
+                : (delta.X == 1 ? BlocksPerSector.x : 1),
+                delta.Y == 0 ? BlocksPerSector.y
+                : (delta.Y == 1 ? BlocksPerSector.y : 1),
+                delta.Z == 0 ? BlocksPerSector.z
+                : (delta.Z == 1 ? BlocksPerSector.z : 1));
+        auto wall = map!BlockNum(RangeFromTo(bb+start, bb+end));
+
+        foreach (bn; wall) {
+            if (y(BlockNum(bn.value+delta), bn)) return 1;
+        }
+
+        return 0;
+    }
+}
+
+WallBetweenSectors getWallBetween(SectorNum inactive, SectorNum active) {
+    return WallBetweenSectors(inactive, active);
+}
 
 

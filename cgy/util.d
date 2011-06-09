@@ -84,9 +84,9 @@ unittest {
     assert(si.dwPageSize == 4096);
 }
 
-TilePos[6] neighbors(TilePos tilePos) {
-    TilePos[6] ret;
-    ret[] = tilePos;
+T[6] neighbors(T)(T t) {
+    T[6] ret;
+    ret[] = t;
     ret[0].value += vec3i(0,0,1);
     ret[1].value -= vec3i(0,0,1);
     ret[2].value += vec3i(0,1,0);
@@ -97,8 +97,7 @@ TilePos[6] neighbors(TilePos tilePos) {
 }
 
 
-struct RangeFromTo
-{
+struct RangeFromTo {
     int bx,ex,by,ey,bz,ez;
     int x,y,z;
     this(vec3i min, vec3i max){
@@ -138,7 +137,7 @@ struct RangeFromTo
         ez = endZ;
     }
 
-    vec3i front() {
+    vec3i front() const {
         return vec3i(x, y, z);
     }
     void popFront() {
@@ -150,7 +149,7 @@ struct RangeFromTo
         y = by;
         z += 1;
     }
-    bool empty() {
+    bool empty() const {
         return z >= ez;
     }
 }

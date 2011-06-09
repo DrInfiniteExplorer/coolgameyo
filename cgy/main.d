@@ -59,7 +59,9 @@ import std.c.windows.windows;
     }
 }
 
+import world;
 void actualMain() {
+
     setThreadName("Main thread");
     
     loadSettings();

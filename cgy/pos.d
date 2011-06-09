@@ -29,6 +29,7 @@ struct UnitPos {
     TilePos tilePos() const @property {
         return TilePos(convert!int(value));
     }
+    alias tilePos this;
 
     mixin ToStringMethod3D;
 }
@@ -37,13 +38,13 @@ struct SectorNum {
     vec3i value;
 
     BlockNum toBlockNum() const {
-        return blockNum(vec3i(
+        return BlockNum(vec3i(
                     value.X * BlocksPerSector.x,
                     value.Y * BlocksPerSector.y,
                     value.Z * BlocksPerSector.z));
     }
     TilePos toTilePos() const {
-        return tilePos(vec3i(
+        return TilePos(vec3i(
                     value.X * SectorSize.x,
                     value.Y * SectorSize.y,
                     value.Z * SectorSize.z));
@@ -61,13 +62,13 @@ struct BlockNum {
     vec3i value;
 
     SectorNum getSectorNum() const {
-        return sectorNum(vec3i(
+        return SectorNum(vec3i(
                     negDiv(value.X, BlocksPerSector.x),
                     negDiv(value.Y, BlocksPerSector.y),
                     negDiv(value.Z, BlocksPerSector.z)));
     }
     TilePos toTilePos() const {
-        return tilePos(vec3i(
+        return TilePos(vec3i(
                     value.X * BlockSize.x,
                     value.Y * BlockSize.y,
                     value.Z * BlockSize.z));
@@ -103,20 +104,20 @@ struct TilePos {
     vec3i value;
 
     SectorNum getSectorNum() const {
-        return sectorNum(vec3i(
+        return SectorNum(vec3i(
                     negDiv(value.X, SectorSize.x),
                     negDiv(value.Y, SectorSize.y),
                     negDiv(value.Z, SectorSize.z)));
     }
     BlockNum getBlockNum() const {
-        return blockNum(vec3i(
+        return BlockNum(vec3i(
                     negDiv(value.X, BlockSize.x),
                     negDiv(value.Y, BlockSize.y),
                     negDiv(value.Z, BlockSize.z)));
     }
 
     GraphRegionNum getGraphRegionNum() const{
-        return graphRegionNum(vec3i(
+        return GraphRegionNum(vec3i(
                     negDiv(value.X, GraphRegionSize.x),
                     negDiv(value.Y, GraphRegionSize.y),
                     negDiv(value.Z, GraphRegionSize.z),
@@ -131,7 +132,7 @@ struct TilePos {
     }
 
     TileXYPos toTileXYPos() const{
-        return tileXYPos(vec2i(value.X, value.Y));
+        return TileXYPos(vec2i(value.X, value.Y));
     }
 
     aabbox3d!double getAABB(bool halfTile = false){
@@ -173,7 +174,7 @@ struct GraphRegionNum{
         return ret;
     }
     TilePos min() const {
-        return tilePos(vec3i(
+        return TilePos(vec3i(
                              GraphRegionSize.x * value.X,
                              GraphRegionSize.y * value.Y,
                              GraphRegionSize.z * value.Z
@@ -215,27 +216,3 @@ struct TileXYPos {
     }
     mixin ToStringMethod2D;
 }
-
-SectorNum sectorNum(vec3i value) {
-    return SectorNum(value);
-}
-SectorXYNum sectorXYNum(vec2i v) {
-    return SectorXYNum(v);
-}
-
-BlockNum blockNum(vec3i value) {
-    return BlockNum(value);
-}
-TilePos tilePos(vec3i value) {
-    return TilePos(value);
-}
-TilePos tilePos(TileXYPos xy, int z){
-    return TilePos(vec3i(xy.value.X, xy.value.Y, z));
-}
-GraphRegionNum graphRegionNum(vec3i v){
-    return GraphRegionNum(v);
-}
-TileXYPos tileXYPos(vec2i v) {
-    return TileXYPos(v);
-}
-

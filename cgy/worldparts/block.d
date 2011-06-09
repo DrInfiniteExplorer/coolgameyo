@@ -222,7 +222,7 @@ struct Block {
 Block INVALID_BLOCK = {
     tiles : null,
     flags : BlockFlags.none,
-    blockNum : blockNum(vec3i(int.min, int.min, int.min)),
+    blockNum : BlockNum(vec3i(int.min, int.min, int.min)),
 };
 
 

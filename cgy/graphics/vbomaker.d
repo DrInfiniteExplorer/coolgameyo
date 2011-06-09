@@ -164,8 +164,8 @@ class VBOMaker : WorldListener
                     float halfEtt;
                     foreach(x; min.value.X .. max.value.X){
 
-                        auto tileLower = world.getTile(tilePos(vec3i(x,y,z+noll)), false, false);
-                        auto tileUpper = world.getTile(tilePos(vec3i(x,y,z+ett)), false, false);
+                        auto tileLower = world.getTile(TilePos(vec3i(x,y,z+noll)), false, false);
+                        auto tileUpper = world.getTile(TilePos(vec3i(x,y,z+ett)), false, false);
                         auto transUpper = tileUpper.transparent;
                         auto transLower = tileLower.transparent;
                         if(ett == 1) {
@@ -233,8 +233,8 @@ class VBOMaker : WorldListener
                     float halfNoll;
                     foreach(x; min.value.X .. max.value.X){
 
-                        auto tileLower = world.getTile(tilePos(vec3i(x,y+noll,z)), false, false);
-                        auto tileUpper = world.getTile(tilePos(vec3i(x,y+ett,z)), false, false);
+                        auto tileLower = world.getTile(TilePos(vec3i(x,y+noll,z)), false, false);
+                        auto tileUpper = world.getTile(TilePos(vec3i(x,y+ett,z)), false, false);
                         auto transUpper = tileUpper.transparent || tileUpper.halfstep;
                         auto transLower = tileLower.transparent;
 
@@ -292,8 +292,8 @@ class VBOMaker : WorldListener
                     float halfEtt;
                     float halfNoll;
                     foreach(y; min.value.Y .. max.value.Y){
-                        auto tileLower = world.getTile(tilePos(vec3i(x+noll,y,z)), false, false);
-                        auto tileUpper = world.getTile(tilePos(vec3i(x+ett,y,z)), false, false);
+                        auto tileLower = world.getTile(TilePos(vec3i(x+noll,y,z)), false, false);
+                        auto tileUpper = world.getTile(TilePos(vec3i(x+ett,y,z)), false, false);
                         auto transUpper = tileUpper.transparent || tileUpper.halfstep;
                         auto transLower = tileLower.transparent;
 
@@ -478,7 +478,7 @@ class VBOMaker : WorldListener
         int seenCount;
         foreach(rel ; RangeFromTo(minBlockNum.value, maxBlockNum.value)) {
 
-            auto num = blockNum(rel);
+            auto num = BlockNum(rel);
             auto block = world.getBlock(num, false, false);
             if(block.seen){
                 seenCount++;
@@ -505,7 +505,7 @@ class VBOMaker : WorldListener
         //*
         GraphRegionNum[] newRegions;
         foreach(pos ; RangeFromTo(grNumMin.value, grNumMax.value)) {
-            auto grNum = graphRegionNum(pos);
+            auto grNum = GraphRegionNum(pos);
             if(hasContent(grNum)){
                 newRegions ~= grNum;
             }

@@ -115,14 +115,14 @@ class Game{
             camera.setTarget(vec3d(0, 0, 20));
         }
 
-        auto xy = tileXYPos(vec2i(10,10));
+        auto xy = TileXYPos(vec2i(10,10));
         auto u = new Unit;
         u.pos = world.getTopTilePos(xy).toUnitPos();
         //u.pos.value.Z += 1;
         world.addUnit(u);
 
         auto uu = new Unit;
-        auto xyy = tileXYPos(vec2i(127,127));
+        auto xyy = TileXYPos(vec2i(127,127));
         uu.pos = world.getTopTilePos(xyy).toUnitPos();
         //uu.pos.value.Z += 1;
         world.addUnit(uu);
