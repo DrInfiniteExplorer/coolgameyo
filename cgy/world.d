@@ -392,7 +392,7 @@ class World {
                 notifySectorLoad(sectorNum);
             }
             floodingSectors.length = 0;
-            floodingSectors.assumeSafeAppend(); // yeaaaaahhhh~~~
+            //floodingSectors.assumeSafeAppend(); // yeaaaaahhhh~~~
         }
         //writeln("allBlocks");
         //writeln(allBlocks);
@@ -469,25 +469,10 @@ private mixin template ActivityHandlerMethods() {
     void moveActivity(
             UnitPos from, UnitPos to) {
 
+        increaseActivity(to);
+
         foreach (p; activityRange(from.getSectorNum())) {
             getSector(p).decreaseActivity();
-        }
-
-        foreach (p; activityRange(to.getSectorNum())) {
-            getSector(p).increaseActivity();
-        }
-
-        foreach (p; activityRange(to.getSectorNum())) {
-            if (getSector(p).activityCount == 1) {
-                foreach (n; neighbors(p)) {
-                    floodingSectors ~= p;
-                    auto s = getSector(n, false);
-
-                    if (s && s.activityCount > 1) {
-                        addFloodFillWall(p, n);
-                    }
-                }
-            }
         }
     }
 

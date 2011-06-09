@@ -400,15 +400,15 @@ class VBOMaker : WorldListener
         }
 
         version(Windows) {
-            auto d1 = GetTickCount() - start;
-            writeln("It took ", d1, " ms to build the geometry");
-            writeln(region.grNum);
+            //auto d1 = GetTickCount() - start;
+            //writeln("It took ", d1, " ms to build the geometry");
+            //writeln(region.grNum);
             //Sleep(250);
         }
     }
 
     void taskFunc() {
-        writeln("taskFunc");
+        //writeln("taskFunc");
         GraphRegionNum num;
         {
             updateMutex.lock();
@@ -514,7 +514,7 @@ class VBOMaker : WorldListener
             updateMutex.lock();
             scope(exit) updateMutex.unlock();
             if(regionsToUpdate.length == 0){
-                writeln("Starting taskFunc-task like so");
+                //writeln("Starting taskFunc-task like so");
                 scheduler.push(asyncTask(&taskFunc));
             }
             regionsToUpdate ~= newRegions;
