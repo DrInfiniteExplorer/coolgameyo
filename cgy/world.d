@@ -303,7 +303,7 @@ class World {
 
     //TODO: Turn into timeslicing task
     //TODO: Make it keep track of sectors, in order to make sector-load-notifications.
-    private void floodFillSome(int max=10) {// 10 lol
+    void floodFillSome(int max=1000) {// 10 lol
         auto sw = StopWatch(AutoStart.yes);
 
         int allBlocks = 0;

@@ -127,6 +127,7 @@ class Game{
         //uu.pos.value.Z += 1;
         world.addUnit(uu);
 
+        world.floodFillSome(1_000_000);
         // Commented out for presentation; Dont want stuff crashing :p
         //u.ai = new MoveToAI(uu, 1.0/15.0);
 
@@ -563,14 +564,6 @@ class FPSControlAI : UnitAI, CustomChange {
     //which'll work kina like this one, i suppose.
     override void tick(Unit* unit, ChangeList changeList){
         assert (unit == this.unit, "Derp! FPSControlAI.unit != unit-parameter in this.tick!");
-        changeList.addCustomChange(this);
-        changeList.addCustomChange(this);
-        changeList.addCustomChange(this);
-        changeList.addCustomChange(this);
-        changeList.addCustomChange(this);
-        changeList.addCustomChange(this);
-        changeList.addCustomChange(this);
-        changeList.addCustomChange(this);
         changeList.addCustomChange(this);
     }
     

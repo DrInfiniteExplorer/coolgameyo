@@ -89,10 +89,10 @@ class Sector {
     }
 
     void setBlock(BlockNum blockNum, Block newBlock)
-    in{
+    in {
         assert(blockNum.getSectorNum() == sectorNum, "Sector.setBlock: Trying to set a block that doesn't belong here!");
     }
-    body{
+    body {
         auto rel = blockNum.rel();
         auto currentBlock = blocks[rel.X][rel.Y][rel.Z];
         //TODO: Make comment detailing the logic behind this

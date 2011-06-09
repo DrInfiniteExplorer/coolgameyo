@@ -27,7 +27,7 @@ private struct ChangeArray(T) {
     void insert(T t) {
         if (_length >= ts.length) {
             write("resizing ", typeid(this), " from ", ts.length);
-            ts.length = (ts.length + 1) * 2 - 1; // n^2-1 ---> (n+1)^2-1
+            ts.length = (ts.length + 1) * 2 - 1; // 2^n-1 ---> 2^(n+1)-1
             writeln(" to ", ts.length);
             assert (ts.length == ts.capacity);
         }
@@ -39,6 +39,7 @@ private struct ChangeArray(T) {
         //     ts = new T[](ts.length/2 - 1); // drop reference to old array
         // }
         _length = 0;
+        ts.assumeSafeAppend();
     }
 
     T[] active() @property { return ts[0 .. _length]; }
@@ -58,7 +59,7 @@ final class ChangeList {
     void addMovement(Unit *unit, vec3d destination, uint ticksToArrive) {
         moveChanges.insert(MoveChange(unit, destination, ticksToArrive));
     }
-    void applyMovement(World world){
+    void applyMovement(World world) {
         foreach(moveChange; moveChanges[]) {
             world.unsafeMoveUnit(moveChange.unit,
                     moveChange.destination, moveChange.ticksToArrive);
