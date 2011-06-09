@@ -56,6 +56,10 @@ void BREAKPOINT(uint doBreak=1) {
     }
 }
 
+void ASSERT(uint dontBreak){
+    BREAKPOINT(!dontBreak);
+}
+
 void[] allocateBlob(size_t size) {
     version (Windows) {
         auto ret = VirtualAlloc(null, 4096 * size, MEM_COMMIT, PAGE_READWRITE);

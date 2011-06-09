@@ -5,7 +5,7 @@
 module stolen.vector3d;
 
 import std.exception;
-
+import std.traits;
 import stolen.math;
 
 //! 3d vector template class with lots of operators and methods.
@@ -48,10 +48,27 @@ public:
   vector3d!(T) opMul(const T v) { return vector3d!(T)(X * v, Y * v, Z * v); }
   vector3d!(T) opMulAssign(const T v) { X*=v; Y*=v; Z*=v; return this; }
 
+
+    
+  
   vector3d!(T) opDiv(const vector3d!(T) other) const { return vector3d!(T)(X / other.X, Y / other.Y, Z / other.Z); }
   vector3d!(T) opDivAssign(const vector3d!(T) other) { X/=other.X; Y/=other.Y; Z/=other.Z; return this; }
-  vector3d!(T) opDiv(const T v) const { T i=cast(T)1.0/v; return vector3d!(T)(X * i, Y * i, Z * i); }
-  vector3d!(T) opDivAssign(const T v) { T i=cast(T)1.0/v; X*=i; Y*=i; Z*=i; return this; }
+
+  vector3d!(T) opDiv(const T v) const {
+      static if (isIntegral!T) {
+        return vector3d!(T)(X / v, Y / v, Z / v);
+      } else {
+          T i=cast(T)1.0/v; return vector3d!(T)(X * i, Y * i, Z * i);
+      }
+  }
+
+  vector3d!(T) opDivAssign(const T v) {
+      static if (isIntegral!T) {
+          X/=v; Y/=v; Z/=v; return this;
+      } else {
+          T i=cast(T)1.0/v; X*=i; Y*=i; Z*=i; return this;
+      }
+  }
 
   //! Function multiplying a scalar and a vector component-wise.
   //vector3d!(T) opMul(const S scalar, const vector3d!(T) vector) { return vector*scalar; }

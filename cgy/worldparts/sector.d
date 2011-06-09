@@ -6,11 +6,13 @@ module worldparts.sector;
 
 import std.container;
 import std.exception;
+import std.stdio;
 
 import worldparts.block;
 import worldgen;
 import pos;
 import unit;
+import util;
 
 enum BlocksPerSector {
     x = 16,
@@ -51,9 +53,9 @@ class Sector {
     int activityCount;
 
     invariant(){
-        assert(sectorNum.toTilePos() == pos);
-        assert(pos.getSectorNum() == sectorNum);
-        assert(activityCount >= 0);
+        ASSERT(sectorNum.toTilePos() == pos);
+        ASSERT(pos.getSectorNum() == sectorNum);
+        ASSERT(activityCount >= 0);
     }
 
     this(SectorNum sectorNum_) {
@@ -99,6 +101,8 @@ class Sector {
         //TODO: make use of block.isSame ?
         if(currentBlock.valid && !currentBlock.sparse){
             if(currentBlock.tiles.ptr != newBlock.tiles.ptr){
+                writeln("Make fix this");
+                //TODO: Make fix line below!
                 //enforce(0, "We want to free this memory i think...The current, that is.");
             }
         }
