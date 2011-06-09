@@ -75,7 +75,7 @@
   <objfiles />
   <linkswitches />
   <libfiles>gdi32.lib win32.lib advapi32.lib derelictil.lib derelictgl.lib derelictutil.lib derelictsdl.lib</libfiles>
-  <libpaths>d:\D\Libs\DIrrlicht\Lib;d:\D\Libs\derelict2\lib;d:\D\Libs\bindings\win32 </libpaths>
+  <libpaths />
   <deffile />
   <resfile />
   <exefile>$(OutDir)\$(ProjectName).exe</exefile>
@@ -132,7 +132,7 @@
   <ignoreUnsupportedPragmas>0</ignoreUnsupportedPragmas>
   <otherDMD>0</otherDMD>
   <program>$(DMDInstallDir)windows\bin\dmd.exe</program>
-  <imppath>d:\D\Libs\DIrrlicht\iEngine</imppath>
+  <imppath />
   <fileImppath />
   <outdir>$(ConfigurationName)</outdir>
   <objdir>$(OutDir)</objdir>
@@ -165,7 +165,7 @@
   <objfiles />
   <linkswitches />
   <libfiles>gdi32.lib win32.lib advapi32.lib derelictil.lib derelictgl.lib derelictutil.lib derelictsdl.lib</libfiles>
-  <libpaths>d:\D\Libs\DIrrlicht\Lib;d:\D\Libs\derelict2\lib;d:\D\Libs\bindings\win32 </libpaths>
+  <libpaths />
   <deffile />
   <resfile />
   <exefile>$(OutDir)\$(ProjectName).exe</exefile>
