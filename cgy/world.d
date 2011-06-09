@@ -304,23 +304,23 @@ class World {
     //TODO: Turn into timeslicing task
     //TODO: Make it keep track of sectors, in order to make sector-load-notifications.
     void floodFillSome(int max=1000) {// 10 lol
-        auto sw = StopWatch(AutoStart.yes);
+        //auto sw = StopWatch(AutoStart.yes);
 
-        int allBlocks = 0;
-        int blockCount = 0;
-        int sparseCount = 0;
+        //int allBlocks = 0;
+        //int blockCount = 0;
+        //int sparseCount = 0;
         int i = 0;
         while (i < max && !toFloodFill.empty) {
             auto blockNum = toFloodFill.removeAny();
 
             auto block = getBlock(blockNum);
             if(block.seen) { continue; }
-            allBlocks++;
+            //allBlocks++;
             if (!block.valid) { continue; }
 
             writeln("\tFlooding block ", blockNum);
 
-            blockCount++;
+            //blockCount++;
             //writeln("blockCount:", blockCount);
             auto blockPos = blockNum.toTilePos();
 
@@ -329,7 +329,7 @@ class World {
             scope (exit) setBlock(blockNum, block);
 
             if (block.sparse) {
-                sparseCount++;
+                //sparseCount++;
                 if (block.sparseTileTransparent) {
                     toFloodFill.insert(BlockNum(blockNum.value + vec3i(1,0,0)));
                     toFloodFill.insert(BlockNum(blockNum.value - vec3i(1,0,0)));
@@ -394,14 +394,14 @@ class World {
             floodingSectors.length = 0;
             floodingSectors.assumeSafeAppend(); // yeaaaaahhhh~~~
         }
-        writeln("allBlocks");
-        writeln(allBlocks);
-        writeln("blockCount");
-        writeln(blockCount);
-        writeln("sparseCount");
-        writeln(sparseCount);
+        //writeln("allBlocks");
+        //writeln(allBlocks);
+        //writeln("blockCount");
+        //writeln(blockCount);
+        //writeln("sparseCount");
+        //writeln(sparseCount);
 
-        writeln("Floodfill took ", sw.peek().msecs, " ms to complete");
+        //writeln("Floodfill took ", sw.peek().msecs, " ms to complete");
     }
 
 

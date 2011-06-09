@@ -494,10 +494,11 @@ class FPSControlAI : UnitAI, CustomChange {
             //enforce(0, "Implement, like move dude upwards until on top, something?");
             //return pos;
             vec3d _pos = pos + vec3d(0, 0, 1);
-            // vec3d _dir = vec3d(0.0, 0.0, 0.0);
-            while (!checkCollision(_pos, dir, time, normal)) {
-                _pos.Z += 1;
-            }
+            vec3d _dir = vec3d(0.0, 0.0, 0.0);
+            //while (!checkCollision(_pos, _dir, time, normal)) {
+            //    writeln("gay gay gay ", UnitPos(_pos));
+            //    _pos.Z += 1;
+            //}
             return _pos;
         }
         // We have collided with some box
