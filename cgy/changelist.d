@@ -1,6 +1,7 @@
 
-
 module changelist;
+
+import std.stdio;
 
 import unit;
 import util;
@@ -13,6 +14,37 @@ interface CustomChange {
     void apply(World world);
 }
 
+private struct ChangeArray(T) {
+    T[] ts;
+
+    size_t _length; // messy due to not can use length in []
+    ref size_t length() @property { return _length; }
+
+    void initialize() {
+        ts.length = 1;
+        ts.length = ts.capacity;
+    }
+    void insert(T t) {
+        if (_length >= ts.length) {
+            write("resizing ", typeid(this), " from ", ts.length);
+            ts.length = (ts.length + 1) * 2 - 1; // n^2-1 ---> (n+1)^2-1
+            writeln(" to ", ts.length);
+            assert (ts.length == ts.capacity);
+        }
+        ts[_length] = t;
+        _length += 1;
+    }
+    void reset() {
+        // if (max length over last 10 ticks or whatever? < ts.length / 2) {
+        //     ts = new T[](ts.length/2 - 1); // drop reference to old array
+        // }
+        _length = 0;
+    }
+
+    T[] active() @property { return ts[0 .. _length]; }
+    T[] opSlice() { return active; }
+    alias active this;
+}
 
 final class ChangeList {
     static struct MoveChange {
@@ -20,41 +52,30 @@ final class ChangeList {
         vec3d destination;
         uint ticksToArrive;
     };
-    MoveChange[] moveChanges;
-    uint moveChangeCount;
+    ChangeArray!MoveChange moveChanges;
+    ChangeArray!CustomChange customChanges;
     
     void addMovement(Unit *unit, vec3d destination, uint ticksToArrive) {
-        moveChangeCount ++;
-        //TODO: Implement shrinking, and usage of assumeSafeAppend() when growing
-        if(moveChangeCount > moveChanges.length) {
-            moveChanges.length = moveChangeCount;
-        }
-        MoveChange item;
-        item.unit = unit;
-        item.destination = destination;
-        item.ticksToArrive = ticksToArrive;
-        moveChanges[$-1] = item;
+        moveChanges.insert(MoveChange(unit, destination, ticksToArrive));
     }
     void applyMovement(World world){
-        foreach(moveChange; moveChanges[0 .. moveChangeCount]) {
-            world.unsafeMoveUnit(moveChange.unit, moveChange.destination, moveChange.ticksToArrive);
+        foreach(moveChange; moveChanges[]) {
+            world.unsafeMoveUnit(moveChange.unit,
+                    moveChange.destination, moveChange.ticksToArrive);
         }
-        moveChangeCount = 0;
     }
     
+    this() {
+        moveChanges.initialize();
+        customChanges.initialize();
+    }
     
-    CustomChange[] customChanges;
-    uint customChangeCount;
     void addCustomChange(CustomChange change) {
-        customChangeCount ++;
-        if(customChangeCount > customChanges.length) {
-            customChanges.length = customChangeCount;
-        }
-        customChanges[$-1] = change;
+        customChanges.insert(change);
     }
     
     void applyCustomChanges(World world) {
-        foreach(change ; customChanges[0 .. customChangeCount]) {
+        foreach(change ; customChanges[]) {
             change.apply(world);
         }
     }
@@ -62,7 +83,9 @@ final class ChangeList {
     void apply(World world){
         applyMovement(world);
         applyCustomChanges(world);
+
+        moveChanges.reset();
+        customChanges.reset();
     }
-    
 }
 

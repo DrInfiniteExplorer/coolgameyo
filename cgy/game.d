@@ -564,6 +564,14 @@ class FPSControlAI : UnitAI, CustomChange {
     override void tick(Unit* unit, ChangeList changeList){
         assert (unit == this.unit, "Derp! FPSControlAI.unit != unit-parameter in this.tick!");
         changeList.addCustomChange(this);
+        changeList.addCustomChange(this);
+        changeList.addCustomChange(this);
+        changeList.addCustomChange(this);
+        changeList.addCustomChange(this);
+        changeList.addCustomChange(this);
+        changeList.addCustomChange(this);
+        changeList.addCustomChange(this);
+        changeList.addCustomChange(this);
     }
     
     //Hax used: oldPosition, to make the world produce a delta-pos-value and load sectors
