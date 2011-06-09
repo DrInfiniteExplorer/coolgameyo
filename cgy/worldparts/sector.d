@@ -99,7 +99,7 @@ class Sector {
         //TODO: make use of block.isSame ?
         if(currentBlock.valid && !currentBlock.sparse){
             if(currentBlock.tiles.ptr != newBlock.tiles.ptr){
-                enforce(0, "We want to free this memory i think...The current, that is.");
+                //enforce(0, "We want to free this memory i think...The current, that is.");
             }
         }
         blocks[rel.X][rel.Y][rel.Z] = newBlock;

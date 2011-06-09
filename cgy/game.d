@@ -98,7 +98,7 @@ class Game{
         world = new World(tilesys);
         assert (isWorker, "otherwise wont work lol (maybe)");
         //TODO: Make fix so that stuff doesn't lag when using non-1 value for num o threads.
-        scheduler = new Scheduler(world, 1);
+        scheduler = new Scheduler(world);
 
         auto pathModule = new PathModule;
         auto aiModule = new AIModule(pathModule);
@@ -134,6 +134,8 @@ class Game{
         possesAI = new FPSControlAI(world);
         possesAI.setUnit(uu);
 
+
+        scheduler.start();
     }
 
     TileSystem parseGameData() {

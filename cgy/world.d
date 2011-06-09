@@ -414,6 +414,7 @@ class World {
     }
 
     void notifySectorLoad(SectorNum sectorNum) {
+        writeln("notifying ", sectorNum);
         foreach (listener; listeners) {
             listener.notifySectorLoad(sectorNum);
         }
@@ -454,6 +455,7 @@ private mixin template ActivityHandlerMethods() {
 
         foreach (p; activityRange(sectorNum)) {
             if (getSector(p).activityCount == 1) {
+                floodingSectors ~= p;
                 foreach (n; neighbors(p)) {
                     auto s = getSector(n, false);
 
@@ -478,6 +480,7 @@ private mixin template ActivityHandlerMethods() {
         foreach (p; activityRange(to.getSectorNum())) {
             if (getSector(p).activityCount == 1) {
                 foreach (n; neighbors(p)) {
+                    floodingSectors ~= p;
                     auto s = getSector(n, false);
 
                     if (s && s.activityCount > 1) {

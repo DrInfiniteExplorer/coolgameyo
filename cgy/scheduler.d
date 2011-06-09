@@ -118,20 +118,23 @@ class Scheduler {
         }
     }
 
-    this(World world_, int workerCount) {
+    this(World world_) {
         world = world_;
         sync = new Queue!Task;
         async = new Queue!Task;
 
         sync.insert(syncTask());
 
+        state = State.update;
+    }
+
+    void start(int workerCount=1) {
         foreach (x; 0 .. workerCount) {
             workers ~= spawn(&workerFun, cast(shared)this);
         }
-        state = State.update;
-
         syncTime = utime();
     }
+
 
     void registerModule(Module mod) {
         synchronized(this){
