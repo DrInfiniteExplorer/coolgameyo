@@ -437,7 +437,7 @@ class World {
 
 
 
-enum activitySize = vec3i(3,3,3);
+auto activitySizeDividedByTwo = vec3i(1,1,1);
 
 private mixin template ActivityHandlerMethods() {
 
@@ -495,8 +495,8 @@ private mixin template ActivityHandlerMethods() {
 
 auto activityRange(SectorNum base) {
     return map!SectorNum(RangeFromTo(
-            base.value - activitySize/2,
-            base.value + activitySize/2 + vec3i(1,1,1)));
+            base.value - activitySizeDividedByTwo,
+            base.value + activitySizeDividedByTwo + vec3i(1,1,1)));
 }
 
 struct WallBetweenSectors {
