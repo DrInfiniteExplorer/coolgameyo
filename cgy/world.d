@@ -468,11 +468,20 @@ private mixin template ActivityHandlerMethods() {
     }
     void moveActivity(
             UnitPos from, UnitPos to) {
+        auto a = from.getSectorNum();
+        auto b = to.getSectorNum();
+        if (a == b) {
+            return;
+        }
 
         increaseActivity(to);
 
         foreach (p; activityRange(from.getSectorNum())) {
-            getSector(p).decreaseActivity();
+            //TODO: Make this work and stuff. Yeah!
+            //It now triggers the invariant that says that sectors need to have activity.
+            //Should be fixed with activity-linger-timer, which when ending should be handled by
+            //serializing sector to disk.
+            //getSector(p).decreaseActivity();
         }
     }
 
@@ -506,10 +515,14 @@ auto activityRange(SectorNum base) {
 struct WallBetweenSectors {
     SectorNum inactive, active;
 
+    this(SectorNum _inactive, SectorNum _active) {
+        inactive = _inactive;
+        active = _active;
+    }
 
     int opApply(scope int delegate(ref BlockNum inact, ref BlockNum act) y) {
         auto delta = inactive.value - active.value;
-        assert (delta.getLength() == 1);
+        assert (delta.getLengthSQ() == 1);
 
         auto bb = active.toBlockNum.value;
 
@@ -527,7 +540,10 @@ struct WallBetweenSectors {
                 : (delta.Y == 1 ? BlocksPerSector.y : 1),
                 delta.Z == 0 ? BlocksPerSector.z
                 : (delta.Z == 1 ? BlocksPerSector.z : 1));
-        auto wall = map!BlockNum(RangeFromTo(bb+start, bb+end));
+        BlockNum b(vec3i v) {
+            return BlockNum(v);
+        }
+        auto wall = map!(b)(RangeFromTo(bb+start, bb+end));
 
         foreach (bn; wall) {
             if (y(BlockNum(bn.value+delta), bn)) return 1;
