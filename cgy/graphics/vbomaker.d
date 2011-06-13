@@ -476,7 +476,7 @@ class VBOMaker : WorldListener
         }
         */
         
-        BREAKPOINT(grNum.value == vec3i(6, 16, 0));
+        //BREAKPOINT(grNum.value == vec3i(6, 16, 0));
 
         auto minBlockNum = grNum.min.getBlockNum();
         BlockNum maxBlockNum = grNum.max.getBlockNum();
