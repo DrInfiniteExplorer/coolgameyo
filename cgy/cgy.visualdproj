@@ -195,13 +195,14 @@
   </Folder>
   <Folder name="graphics">
    <File path="graphics\camera.d" />
-   <File path="graphics\renderer.d" />
-   <File path="graphics\vbomaker.d" />
-   <File path="graphics\texture.d" />
-   <File path="graphics\shader.d" />
+   <File path="graphics\debugging.d" />
    <File path="graphics\font.d" />
-   <File path="graphics\ogl.d" />
    <File path="graphics\misc.d" />
+   <File path="graphics\ogl.d" />
+   <File path="graphics\renderer.d" />
+   <File path="graphics\shader.d" />
+   <File path="graphics\texture.d" />
+   <File path="graphics\vbomaker.d" />
   </Folder>
   <Folder name="worldparts">
    <File path="worldparts\block.d" />
@@ -209,25 +210,27 @@
    <File path="worldparts\tile.d" />
   </Folder>
   <Folder name="shaders">
+   <File path="..\gameroot\shaders\fontShader.frag" />
+   <File path="..\gameroot\shaders\fontShader.vert" />
+   <File path="..\gameroot\shaders\lineShader.frag" />
+   <File path="..\gameroot\shaders\lineShader.vert" />
    <File path="..\gameroot\shaders\renderDude.frag" />
    <File path="..\gameroot\shaders\renderDude.vert" />
    <File path="..\gameroot\shaders\renderGR.frag" />
    <File path="..\gameroot\shaders\renderGR.vert" />
-   <File path="..\gameroot\shaders\fontShader.frag" />
-   <File path="..\gameroot\shaders\fontShader.vert" />
   </Folder>
+  <File path="changelist.d" />
   <File path="game.d" />
+  <File path="json.d" />
   <File path="main.d" />
   <File path="modules.d" />
   <File path="pos.d" />
   <File path="scheduler.d" />
+  <File path="settings.d" />
+  <File path="tilesystem.d" />
   <File path="unit.d" />
   <File path="util.d" />
   <File path="world.d" />
   <File path="worldgen.d" />
-  <File path="tilesystem.d" />
-  <File path="json.d" />
-  <File path="settings.d" />
-  <File path="changelist.d" />
  </Folder>
 </DProject>

@@ -124,6 +124,8 @@ struct Block {
         auto block = alloc();
         block.blockNum = blockNum;
         block.dirty = true;
+        
+        BREAKPOINT(blockNum.value == vec3i(13, 32, 1));
 
         bool homogenous = true;
         bool first = true;

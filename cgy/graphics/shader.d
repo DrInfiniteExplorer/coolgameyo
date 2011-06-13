@@ -151,6 +151,10 @@ final class ShaderProgram(T...){
         glUniform1i(location, i);
         glError();
     }
+    void setUniform(uint location, float f){
+        glUniform1f(location, f);
+        glError();
+    }
     //Count != 1 for arrays
     void setUniform(uint location, vec3i vec){
         glUniform3iv(location, 1, &vec.X);

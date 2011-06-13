@@ -11,6 +11,7 @@ import std.string;
 import stolen.all;
 
 import graphics.camera;
+import graphics.debugging;
 import graphics.misc;
 import graphics.ogl;
 import graphics.shader;
@@ -38,9 +39,11 @@ class Renderer : Module {
     
     alias ShaderProgram!("offset", "VP", "atlas") WorldShaderProgram;
     alias ShaderProgram!("VP", "M", "color") DudeShaderProgram;
+    alias ShaderProgram!("VP", "V", "color", "radius") LineShaderProgram;
 
     WorldShaderProgram worldShader;
     DudeShaderProgram dudeShader;
+    LineShaderProgram lineShader;
 
     this(World w, Scheduler s, Camera c)
     {
@@ -69,6 +72,13 @@ class Renderer : Module {
         dudeShader.VP = dudeShader.getUniformLocation("VP");
         dudeShader.M = dudeShader.getUniformLocation("M");
         dudeShader.color = dudeShader.getUniformLocation("color");
+        
+        lineShader = new LineShaderProgram("shaders/lineShader.vert", "shaders/lineShader.frag");
+        lineShader.bindAttribLocation(0, "position");
+        lineShader.VP = lineShader.getUniformLocation("VP");
+        lineShader.V = lineShader.getUniformLocation("V");
+        lineShader.color = lineShader.getUniformLocation("color");
+        lineShader.radius = lineShader.getUniformLocation("radius");
 
         createDudeModel();
 
@@ -87,6 +97,58 @@ class Renderer : Module {
         glBufferData(GL_ARRAY_BUFFER, vertices.length*vec3f.sizeof, vertices.ptr, GL_STATIC_DRAW);
         glError();
     }
+    
+    void renderAABB(aabbox3d!(double) bb){
+        auto v = camera.getViewMatrix();
+        auto vp = camera.getProjectionMatrix() * v;
+        lineShader.use();
+        lineShader.setUniform(lineShader.VP, vp);
+        lineShader.setUniform(lineShader.V, v);
+        glEnableVertexAttribArray(0);
+        glError();
+
+        bool oldWireframe = setWireframe(true);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        vec3d[8] edges;
+        bb.getEdges(edges);
+
+        glVertexAttribPointer(0, 3, GL_DOUBLE, GL_FALSE, vec3d.sizeof, edges.ptr);
+        glError();
+        lineShader.setUniform(lineShader.color, vec3f(0.8, 0.0, 0));
+        lineShader.setUniform(lineShader.radius, 100.f);
+        immutable ubyte[] indices = [0, 1, 0, 4, 0, 2, 2, 6, 2, 3, 5, 1, 5, 4, 6, 2, 6, 4, 6, 7, 7, 5, 7, 3];
+        glDrawElements(GL_LINES, indices.length, GL_UNSIGNED_BYTE, indices.ptr);
+        glError();
+        //dudeShader.use();
+        setWireframe(oldWireframe);
+        
+        
+        glDisableVertexAttribArray(0);
+        glError();        
+        lineShader.use(false);
+    }
+    
+    void renderDebugAABB(Camera camera){
+        auto v = camera.getViewMatrix();
+        auto vp = camera.getProjectionMatrix() * v;
+        lineShader.use();
+        lineShader.setUniform(lineShader.VP, vp);
+        lineShader.setUniform(lineShader.V, v);
+        glEnableVertexAttribArray(0);
+        glError();
+
+        bool oldWireframe = setWireframe(true);
+        renderAABBList((vec3f color, float radius){
+            lineShader.setUniform(lineShader.color, color);
+            lineShader.setUniform(lineShader.radius, radius);            
+        });
+        setWireframe(oldWireframe);
+        glDisableVertexAttribArray(0);
+        glError();        
+        lineShader.use(false);
+    }
+    
+        
 
     void renderDude(Unit* unit, float tickTimeSoFar){
         auto M = matrix4();
@@ -106,26 +168,11 @@ class Renderer : Module {
 
 
         //TODO: Move to own function, make own shader or abstractify a "simpleshader"-thing to use.
-        const bool RenderDudeAABB = false;
+        const bool RenderDudeAABB = true;
         static if(RenderDudeAABB == true){
-            bool oldWireframe = setWireframe(true);
-
-            //dudeShader.use(false);
-            glBindBuffer(GL_ARRAY_BUFFER, 0);
-            auto bb = unit.aabb;
-            vec3d[8] edges;
-            bb.getEdges(edges);
-
-            glVertexAttribPointer(0, 3, GL_DOUBLE, GL_FALSE, vec3d.sizeof, edges.ptr);
-            glError();
-            M = matrix4(); //AABB is in world coordinates
-            dudeShader.setUniform(dudeShader.b, M);
-            dudeShader.setUniform(dudeShader.c, vec3f(0.8, 0.0, 0));
-            immutable ubyte[] indices = [0, 1, 0, 4, 0, 2, 2, 6, 2, 3, 5, 1, 5, 4, 6, 2, 6, 4, 6, 7, 7, 5, 7, 3];
-            glDrawElements(GL_LINES, indices.length, GL_UNSIGNED_BYTE, indices.ptr);
-            glError();
-            //dudeShader.use();
-            setWireframe(oldWireframe);
+            dudeShader.use(false);
+            renderAABB(unit.aabb);
+            dudeShader.use();
         }
     }
 
@@ -197,6 +244,8 @@ class Renderer : Module {
         setWireframe(renderSettings.renderWireframe);
         renderWorld(camera);
         renderDudes(camera, soFar);
+        renderDebugAABB(camera);
+        
         setWireframe(false);
 
         insertFrameTime();
@@ -220,8 +269,8 @@ class Renderer : Module {
         glError();
     }
 
-  void renderWorld(Camera camera)
-  {
+    void renderWorld(Camera camera)
+    {
         worldShader.use();
         glEnableVertexAttribArray(0);
         glError();
@@ -244,6 +293,6 @@ class Renderer : Module {
         glDisableVertexAttribArray(1);
         glError();
         worldShader.use(false);
-  }
+    }
 }
 

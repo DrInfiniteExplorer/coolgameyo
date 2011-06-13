@@ -16,6 +16,7 @@ import derelict.opengl.glext;
 
 
 import graphics.camera;
+import graphics.debugging;
 import graphics.renderer;
 import pos;
 import scheduler;
@@ -368,11 +369,15 @@ class VBOMaker : WorldListener
             glGenBuffers(1, &region.VBO);
             glBindBuffer(GL_ARRAY_BUFFER, region.VBO);
             glBufferData(GL_ARRAY_BUFFER, geometrySize, region.faces.ptr, GL_STATIC_DRAW);
+        } else {
+            writeln("GOT NOTHING FROM GRAPHREGION! >:( ", region.grNum);
         }
+        //addAABB(region.grNum.getAABB());
     }
 
     void buildGraphicsRegion(GraphicsRegion region){
-        version(Windows) auto start = GetTickCount();
+        StopWatch sw;
+        sw.start();
         //Face[] faces;
         auto min = region.grNum.min();
         auto max = region.grNum.max();
@@ -399,12 +404,8 @@ class VBOMaker : WorldListener
             dirtyRegions ~= region.grNum;
         }
 
-        version(Windows) {
-            //auto d1 = GetTickCount() - start;
-            //writeln("It took ", d1, " ms to build the geometry");
-            //writeln(region.grNum);
-            //Sleep(250);
-        }
+        sw.stop();
+        writeln("It took ", sw.peek().msecs, " ms to build the geometry");
     }
 
     void taskFunc() {
@@ -429,8 +430,11 @@ class VBOMaker : WorldListener
                 return distSQ;
             }
 
+            
             schwartzSort!(computeValue, "a>b")(regionsToUpdate);
+            //writeln("before ", regionsToUpdate.length);
             regionsToUpdate = array(uniq(regionsToUpdate));
+            //writeln("after ", regionsToUpdate.length);
             num = regionsToUpdate[$-1];
             regionsToUpdate.length -= 1;
 
@@ -471,19 +475,26 @@ class VBOMaker : WorldListener
             }
         }
         */
+        
+        BREAKPOINT(grNum.value == vec3i(6, 16, 0));
 
         auto minBlockNum = grNum.min.getBlockNum();
         BlockNum maxBlockNum = grNum.max.getBlockNum();
-        maxBlockNum.value += vec3i(1,1,1);
+        //writeln(minBlockNum, " ", maxBlockNum);
         int seenCount;
         foreach(rel ; RangeFromTo(minBlockNum.value, maxBlockNum.value)) {
 
             auto num = BlockNum(rel);
             auto block = world.getBlock(num, false, false);
             if(block.seen){
+                auto a=true;
                 seenCount++;
                 if(block.sparse && block.sparseTileTransparent) {
                     seenCount--;
+                    a=false;
+                }
+                if(a){
+                    //addAABB(num.getAABB(), vec3f(0.f, 1.f, 0.f));
                 }
             }
         }
@@ -507,6 +518,7 @@ class VBOMaker : WorldListener
         foreach(pos ; RangeFromTo(grNumMin.value, grNumMax.value)) {
             auto grNum = GraphRegionNum(pos);
             if(hasContent(grNum)){
+                writeln("Has content;", grNum);
                 newRegions ~= grNum;
             }
         }

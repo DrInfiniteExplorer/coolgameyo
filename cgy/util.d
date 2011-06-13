@@ -35,6 +35,8 @@ alias vector3d!(int)  vec3i;
 alias vector3d!(float)  vec3f;
 alias vector3d!(double) vec3d;
 
+alias aabbox3d!double aabbd;
+
 vector3d!(A) convert(A,B)(const vector3d!(B) wap){
     return vector3d!A(to!A(wap.X), to!A(wap.Y), to!A(wap.Z));
 }

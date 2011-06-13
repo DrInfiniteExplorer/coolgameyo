@@ -182,8 +182,8 @@ struct GraphRegionNum{
     }
     alias min toTilePos;
     aabbox3d!double getAABB() const{
-        auto minPos = util.convert!double(value);
-        auto maxPos = minPos + vec3d(GraphRegionSize.x,GraphRegionSize.y, GraphRegionSize.z);
+        auto minPos = util.convert!double(min().value);
+        auto maxPos = util.convert!double(max().value);
         return aabbox3d!double(minPos, maxPos);
     }
 
