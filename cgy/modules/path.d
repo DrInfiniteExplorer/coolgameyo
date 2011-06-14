@@ -3,6 +3,7 @@ module modules.path;
 import std.container;
 import std.algorithm;
 import std.math;
+import std.stdio;
 
 import modules.module_;
 import scheduler;
@@ -60,13 +61,17 @@ class PathModule : Module {
         synchronized {
             removeFinished();
 
-            foreach (i, state; activeStates[0 .. min($, maxPathTicks)]) {
-                ((size_t i, PathFindState state) {
-                    scheduler.push(asyncTask({
-                                if (state.tick(world)) {
-                                    finishPath(i);
-                                }}));
-                })(i, state);
+            foreach (i, ref state; activeStates[0 .. min($, maxPathTicks)]) {
+                    scheduler.push(
+                            asyncTask(
+                                ((size_t i, PathFindState* state) {
+                                 return {
+                                     if (state.tick(world)) {
+                                         assert(state.finished);
+                                         writeln("finishing state ", i);
+                                         finishPath(i);
+                                     }};
+                                 })(i, &state)));
             }
         }
     }
@@ -112,6 +117,10 @@ static struct PathFindState {
     RedBlackTree!(TilePos, q{a.value < b.value}) closedSet;
 
     this(PathID id_, UnitPos from_, UnitPos goal_) {
+
+        openSet = new typeof(openSet);
+        closedSet = new typeof(closedSet);
+
         id = id_;
         from = from_;
         goal = goal_;

@@ -278,8 +278,6 @@ unittest {
     assert(posMod( 8, 8) == 0);
 }
 
-//Removed stuff. Now lies in pos.d
-
 class Queue(T) {
     struct Node {
         Node* next;
@@ -338,13 +336,11 @@ struct TileIterator{
     int maxIter;
     this(vec3d start, vec3d _dir, int limit = 1000) {
         maxIter = limit;
-        //tile = convert!int(start); //TODO: Works for positive numbers. Make fix for rest.
         tile.value = getTilePos(start);
         dir.X = _dir.X >= 0 ? 1 : -1;
         dir.Y = _dir.Y >= 0 ? 1 : -1;
         dir.Z = _dir.Z >= 0 ? 1 : -1;
                 
-        //_dir.normalize();
         tDelta.X = abs(1.f / _dir.X);
         tDelta.Y = abs(1.f / _dir.Y);
         tDelta.Z = abs(1.f / _dir.Z);

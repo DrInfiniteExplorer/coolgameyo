@@ -4,6 +4,7 @@ module unit;
 import std.conv;
 import std.exception;
 import std.math;
+import std.stdio;
 
 import changelist;
 import modules.path;
@@ -120,16 +121,19 @@ class PatrolAI : UnitAI {
     override void tick(Unit* unit, ChangeList changeList) {
         if (walking) {
             auto p = toa ? a : b;
+            write("going to ", toa ? "a=" : "b=", p, ", ");
             auto d = p.value.getDistanceFrom(unit.pos.value);
 
             if (d <= unit.speed) {
+                writeln("arrived!");
                 changeList.addMovement(unit, p, 1);
                 walking = false;
                 id = pathModule.findPath(unit.pos, toa ? b : a);
                 toa = !toa;
             } else {
-                auto dp = (p.value - unit.pos.value) * (d / unit.speed);
-                assert (approxEqual(dp.getLength(), unit.speed));
+                auto dp = (p.value - unit.pos.value).setLength(unit.speed);
+                writeln("from ", unit.pos,
+                        " to ", UnitPos(unit.pos.value + dp));
                 changeList.addMovement(unit, UnitPos(unit.pos.value + dp), 1);
             }
         } else {
