@@ -27,6 +27,8 @@ struct Tile {
     bool seen() const @property { return (flags & TileFlags.seen) != 0; }
     void seen(bool val) @property { setFlag(flags, TileFlags.seen, val); }
 
+    bool solid() const @property { return !transparent;}
+    void solid(bool val) @property { transparent = !val; }
     bool transparent() const @property { return (flags & TileFlags.transparent) != 0; }
     void transparent(bool val) @property { setFlag(flags, TileFlags.transparent, val); }
 

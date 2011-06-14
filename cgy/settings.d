@@ -11,11 +11,12 @@ import util;
 
 struct RenderSettings {
     static struct InnerRenderSettings {
-        //Just user settings.
+        // Just user settings.
         bool disableVSync;
-        bool mipLevelInterpolate; //Interpolate between mip-levels or not?
+        bool mipLevelInterpolate; // Interpolate between mip-levels or not?
         bool textureInterpolate;  // pick nearest pixel or interpolate?
-        float anisotropy = 0; //set to max of this(uservalue) and implementation limit sometime
+        float anisotropy = 0; // set to max of this(uservalue)
+                              // and implementation limit sometime
         bool renderWireframe;
         bool renderInvalidTiles = false;
         /* Derp derp derp */
@@ -31,9 +32,10 @@ struct RenderSettings {
         float farPlane = 1000.f;        
     }
     InnerRenderSettings serializableSettings;
-    alias serializableSettings this; //goer lookup i inner, som i detta scopet :D niice
+    alias serializableSettings this;
 
-    //Some opengl-implementation-dependant constants, gathered on renderer creation
+    // Some opengl-implementation-dependant constants,
+    // gathered on renderer creation
     int maxTextureLayers;
     int maxTextureSize;
     
@@ -74,7 +76,9 @@ void loadSettings(){
 
 void saveSettings(){
     json.Value[string] values;
+
     values["renderSettings"] = encode(renderSettings.serializableSettings);
+
     auto jsonRoot = json.Value(values);
     auto jsonString = to!string(jsonRoot);
     std.file.write("settings.json", jsonString);
