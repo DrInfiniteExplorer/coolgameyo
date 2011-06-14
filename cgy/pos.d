@@ -27,7 +27,9 @@ struct UnitPos {
     vec3d value;
 
     TilePos tilePos() const @property {
-        return TilePos(convert!int(value));
+        return TilePos(
+            getTilePos(value)
+        );
     }
     alias tilePos this;
 

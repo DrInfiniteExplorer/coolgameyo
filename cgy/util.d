@@ -44,6 +44,14 @@ vector2d!(A) convert(A,B)(const vector2d!(B) wap){
     return vector2d!A(to!A(wap.X), to!A(wap.Y));
 }
 
+vec3i getTilePos(T)(vector3d!T v){
+    return vec3i(
+        to!int(floor(v.X)),
+        to!int(floor(v.Y)),
+        to!int(floor(v.Z))
+    );
+}
+
 void setFlag(A,B)(ref A flags, B flag, bool value) {
     if (value) {
         flags |= flag;
@@ -330,7 +338,8 @@ struct TileIterator{
     int maxIter;
     this(vec3d start, vec3d _dir, int limit = 1000) {
         maxIter = limit;
-        tile = convert!int(start); //TODO: Works for positive numbers. Make fix for rest.
+        //tile = convert!int(start); //TODO: Works for positive numbers. Make fix for rest.
+        tile = getTilePos(start);
         dir.X = _dir.X >= 0 ? 1 : -1;
         dir.Y = _dir.Y >= 0 ? 1 : -1;
         dir.Z = _dir.Z >= 0 ? 1 : -1;
