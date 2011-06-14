@@ -12,6 +12,7 @@ enum TileFlags : ushort {
     seen        = 1 << 0,
     transparent = 1 << 2, //TO REMOVE: There are no tile types which are transparent except for air!! :P
     halfstep    = 1 << 3,
+    pathable    = 1 << 4,
     valid       = 1 << 15,
 }
 
@@ -27,13 +28,14 @@ struct Tile {
     bool seen() const @property { return (flags & TileFlags.seen) != 0; }
     void seen(bool val) @property { setFlag(flags, TileFlags.seen, val); }
 
-    bool solid() const @property { return !transparent;}
-    void solid(bool val) @property { transparent = !val; }
     bool transparent() const @property { return (flags & TileFlags.transparent) != 0; }
     void transparent(bool val) @property { setFlag(flags, TileFlags.transparent, val); }
 
     bool halfstep() const @property { return (flags & TileFlags.halfstep) != 0; }
     void halfstep(bool val) @property { setFlag(flags, TileFlags.halfstep, val); }
+
+    bool pathable() const @property { return (flags & TileFlags.pathable) != 0; }
+    void pathable(bool val) @property { setFlag(flags, TileFlags.pathable, val); }
 }
 
 enum INVALID_TILE = Tile(0, TileFlags.none, 0, 0);

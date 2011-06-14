@@ -236,7 +236,7 @@ class Game{
     void runServer() {
         // set up network interface...? D:
         while (true) {
-            writeln("Server loop!");
+            //writeln("Server loop!");
             Thread.sleep(dur!"seconds"(1));
         }
     }

@@ -8,6 +8,7 @@ import world;
 import util;
 import pos;
 import graphics.texture;
+import graphics.debugging;
 
 struct WorldGenParams {
     uint randomSeed;
@@ -105,10 +106,10 @@ class WorldGenerator {
         return ret*25.f;
     }
 
-    Tile getTile(const TilePos pos) {
+    Tile getTile(TilePos pos) {
         auto top = foo(to!float(pos.value.X), to!float(pos.value.Y));
         auto Z = pos.value.Z;
-        auto d = top - Z;
+        auto d = Z - top;
 
         Tile ret;
 
@@ -117,14 +118,19 @@ class WorldGenerator {
         auto transparent = airType == air ?
             TileFlags.transparent : TileFlags.none;
         
-        auto useHalfStep = true ? TileFlags.halfstep : TileFlags.none;
+        enum useHalfStep = true ? TileFlags.halfstep : TileFlags.none;
         
-        if (0 < d && d < 0.5) {
+        if (-0.5 <= d && d < 0) {
             ret = Tile(groundType, useHalfStep, 0, 0);
-        } else if (0 <= d) {
+        } else if (d < -0.5) {
             ret = Tile(groundType, TileFlags.none, 0, 0);
         } else {
+            assert (d > 0);
             ret = Tile(airType, transparent, 0, 0);
+        }
+        if (-0.5 <= d && d < 1) {
+            ret.pathable = true;
+            addAABB(pos.getAABB());
         }
         ret.valid = true;
 

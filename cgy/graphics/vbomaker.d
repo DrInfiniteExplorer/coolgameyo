@@ -405,7 +405,7 @@ class VBOMaker : WorldListener
         }
 
         sw.stop();
-        writeln("It took ", sw.peek().msecs, " ms to build the geometry");
+        //writeln("It took ", sw.peek().msecs, " ms to build the geometry");
     }
 
     void taskFunc() {
@@ -441,7 +441,7 @@ class VBOMaker : WorldListener
             if(regionsToUpdate.length != 0){
                 //TODO: May cause bugs and crashes when we get more than 1 non-render-thread, mm...
                 scheduler.push(asyncTask(&taskFunc));
-                writeln("Only ", regionsToUpdate.length, " regions left!");
+                //writeln("Only ", regionsToUpdate.length, " regions left!");
             }
         }
         /*

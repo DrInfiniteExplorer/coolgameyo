@@ -9,6 +9,9 @@ import modules.module_;
 import scheduler;
 import util;
 
+
+import graphics.debugging;
+
 struct PathID {
     ulong id;
 }
@@ -118,14 +121,15 @@ static struct PathFindState {
 
     this(PathID id_, UnitPos from_, UnitPos goal_) {
 
-        openSet = new typeof(openSet);
-        closedSet = new typeof(closedSet);
-
         id = id_;
         from = from_;
         goal = goal_;
         openSet = new typeof(openSet);
         closedSet = new typeof(closedSet);
+
+        openSet.insert(from);
+        g_score[from] = 0;
+        f_score[from] = estimateBetween(from, goal);
     }
 
     bool tick(World world) {
@@ -155,7 +159,12 @@ static struct PathFindState {
 
         closedSet.insert(x);
 
+        writeln("from = ", from);
+        writeln("x = ", x);
+
         foreach (y; availibleNeighbors(world, x)) {
+            writeln("y = ", y);
+            addAABB(y.getAABB());
             if (y in closedSet) continue;
             auto new_g = g_score[x] + costBetween(world, x, y);
             bool is_new = y !in g_score;
@@ -233,8 +242,8 @@ static struct PathFindState {
         while (from.tilePos != x) {
             p ~= UnitPos(convert!double(x.value)
                     + (world.getTile(x).halfstep 
-                        ? vec3d(0,0,0.5)
-                        : vec3d(0,0,0)));
+                        ? vec3d(0.5,0.5,0.5)
+                        : vec3d(0.5,0.5,0)));
             x = cameFrom[x];
         }
         //p ~= from;
@@ -254,9 +263,12 @@ static struct PathFindState {
             TilePos below(TilePos tp) {
                 return TilePos(tp.value - vec3i(0,0,1));
             }
-            bool solid(TilePos tp) { return world.getTile(tp).solid; }
-            bool ok(TilePos tp) { return !solid(tp); }
-            bool avail(TilePos tp) { return ok(tp) && ok(above(tp)); }
+            bool clear(TilePos tp) { return world.getTile(tp).transparent; }
+            bool pathable(TilePos tp) { return world.getTile(tp).pathable; }
+            bool solid(TilePos tp) { return !clear(tp) && !half(tp); }
+            bool avail(TilePos tp) {
+                return pathable(tp) && clear(above(tp));
+            }
             bool half(TilePos tp) { return world.getTile(tp).halfstep; }
 
 
@@ -275,7 +287,7 @@ static struct PathFindState {
                     }
                 } else {
                     ret = above(tp);
-                    return avail(above(around)) && avail(above(tp))
+                    return avail(above(around)) && clear(above(above((tp))))
                         && (!half(above(tp)) || half(around));
                 }
             }

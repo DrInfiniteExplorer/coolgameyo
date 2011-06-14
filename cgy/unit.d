@@ -5,6 +5,7 @@ import std.conv;
 import std.exception;
 import std.math;
 import std.stdio;
+import std.array;
 
 import changelist;
 import modules.path;
@@ -35,7 +36,7 @@ struct Unit {
     float rotation = 0; //radians
 
 
-    float speed;
+    float speed = 0.1;
     UnitPos destination;
     uint ticksToArrive;
     vec3d velocity;
@@ -120,16 +121,21 @@ class PatrolAI : UnitAI {
 
     override void tick(Unit* unit, ChangeList changeList) {
         if (walking) {
-            auto p = toa ? a : b;
+            auto goal = toa ? a : b;
+            auto p = path.path.back;
             write("going to ", toa ? "a=" : "b=", p, ", ");
             auto d = p.value.getDistanceFrom(unit.pos.value);
 
             if (d <= unit.speed) {
                 writeln("arrived!");
                 changeList.addMovement(unit, p, 1);
-                walking = false;
-                id = pathModule.findPath(unit.pos, toa ? b : a);
-                toa = !toa;
+                if (p == goal) {
+                    walking = false;
+                    id = pathModule.findPath(unit.pos, toa ? b : a);
+                    toa = !toa;
+                } else {
+                    path.path.popBack();
+                }
             } else {
                 auto dp = (p.value - unit.pos.value).setLength(unit.speed);
                 writeln("from ", unit.pos,
@@ -138,6 +144,7 @@ class PatrolAI : UnitAI {
             }
         } else {
             if (pathModule.pollPath(id, path)) {
+                assert (path.path.length > 0);
                 walking = true;
                 tick(unit, changeList);
             } else {

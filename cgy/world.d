@@ -484,8 +484,7 @@ private mixin template ActivityHandlerMethods() {
             }
         }
     }
-    void moveActivity(
-            UnitPos from, UnitPos to) {
+    void moveActivity(UnitPos from, UnitPos to) {
         auto a = from.getSectorNum();
         auto b = to.getSectorNum();
         if (a == b) {
