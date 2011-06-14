@@ -33,7 +33,7 @@ class PathModule : Module {
             auto s = activeStates[activeStatesIndex];
             toRemoveIndexes ~= activeStatesIndex;
 
-            assert (s.finished);
+            assert (s.finished, "s.finished");
             finishedPaths[s.id] = s.result;
         }
     }
@@ -115,6 +115,8 @@ static struct PathFindState {
         id = id_;
         from = from_;
         goal = goal_;
+        openSet = new typeof(openSet);
+        closedSet = new typeof(closedSet);
     }
 
     bool tick(World world) {

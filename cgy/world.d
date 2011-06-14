@@ -454,8 +454,8 @@ class World {
 
 
 
-auto activitySize = vec3i(3,3,3);
-//auto activitySize = vec3i(1,1,1);
+//auto activitySize = vec3i(3,3,3);
+auto activitySize = vec3i(1,1,1);
 
 private mixin template ActivityHandlerMethods() {
 

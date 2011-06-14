@@ -219,11 +219,15 @@
    <File path="..\gameroot\shaders\renderGR.frag" />
    <File path="..\gameroot\shaders\renderGR.vert" />
   </Folder>
+  <Folder name="modules">
+   <File path="modules\ai.d" />
+   <File path="modules\module_.d" />
+   <File path="modules\path.d" />
+  </Folder>
   <File path="changelist.d" />
   <File path="game.d" />
   <File path="json.d" />
   <File path="main.d" />
-  <File path="modules.d" />
   <File path="pos.d" />
   <File path="scheduler.d" />
   <File path="settings.d" />
