@@ -116,8 +116,11 @@ class WorldGenerator {
         auto airType = Z > 5 ? air : water;
         auto transparent = airType == air ?
             TileFlags.transparent : TileFlags.none;
+        
+        auto useHalfStep = true ? TileFlags.halfstep : TileFlags.none;
+        
         if (0 < d && d < 0.5) {
-            ret = Tile(groundType, TileFlags.halfstep, 0, 0);
+            ret = Tile(groundType, useHalfStep, 0, 0);
         } else if (0 <= d) {
             ret = Tile(groundType, TileFlags.none, 0, 0);
         } else {

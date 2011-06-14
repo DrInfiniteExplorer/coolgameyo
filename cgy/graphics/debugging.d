@@ -11,8 +11,7 @@ struct AABBData{
 }
 
 AABBData[int] aabbList;
-int aabbCount=0;
-
+int aabbCount=1;
 
 int addAABB(aabbd aabb, vec3f color=vec3f(1.f, 0.f, 0.f), float radius=100.f) {
     auto d = AABBData(color, radius, aabb);
@@ -20,6 +19,10 @@ int addAABB(aabbd aabb, vec3f color=vec3f(1.f, 0.f, 0.f), float radius=100.f) {
     aabbList[t] = d;
     aabbCount++;
     return t;
+}
+
+void removeAABB(int id) {
+    aabbList.remove(id);
 }
 
 void renderAABBList(void delegate (vec3f color, float radius) set){
@@ -36,6 +39,34 @@ void renderAABBList(void delegate (vec3f color, float radius) set){
 }
 
 
+struct LineData{
+    vec3d[] points;
+    vec3f color;
+    float radius;
+}
+
+LineData[int] lineList;
+int lineCount=1;
+
+int addLine(vec3d[] points, vec3f color = vec3f(0, 0, 1), float radius = 50){
+    int tmp = lineCount;
+    lineCount++;
+    lineList[tmp] = LineData(points.dup, color, radius);
+    return tmp;
+}
+
+void removeLine(int id){
+    lineList.remove(id);
+}
+
+void renderLineList(void delegate (vec3f color, float radius) set){
+    foreach(data ; lineList) {        
+        glVertexAttribPointer(0, 3, GL_DOUBLE, GL_FALSE, vec3d.sizeof, data.points.ptr);
+        glError();
+        set(data.color, data.radius);
+        glDrawArrays(GL_LINE_STRIP, 0, data.points.length);
+    }
+}
 
 
 

@@ -128,7 +128,7 @@ class Renderer : Module {
         lineShader.use(false);
     }
     
-    void renderDebugAABB(Camera camera){
+    void renderDebug(Camera camera){
         auto v = camera.getViewMatrix();
         auto vp = camera.getProjectionMatrix() * v;
         lineShader.use();
@@ -136,12 +136,15 @@ class Renderer : Module {
         lineShader.setUniform(lineShader.V, v);
         glEnableVertexAttribArray(0);
         glError();
-
-        bool oldWireframe = setWireframe(true);
-        renderAABBList((vec3f color, float radius){
+        
+        void set(vec3f color, float radius){
             lineShader.setUniform(lineShader.color, color);
             lineShader.setUniform(lineShader.radius, radius);            
-        });
+        }
+
+        bool oldWireframe = setWireframe(true);
+        renderAABBList(&set);
+        renderLineList(&set);
         setWireframe(oldWireframe);
         glDisableVertexAttribArray(0);
         glError();        
@@ -168,7 +171,7 @@ class Renderer : Module {
 
 
         //TODO: Move to own function, make own shader or abstractify a "simpleshader"-thing to use.
-        const bool RenderDudeAABB = true;
+        const bool RenderDudeAABB = false;
         static if(RenderDudeAABB == true){
             dudeShader.use(false);
             renderAABB(unit.aabb);
@@ -192,7 +195,9 @@ class Renderer : Module {
             renderDude(dude, tickTimeSoFar);
         }
         glDisableVertexAttribArray(0);
+        dudeShader.use(false);
         glError();
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
 
 
@@ -244,7 +249,7 @@ class Renderer : Module {
         setWireframe(renderSettings.renderWireframe);
         renderWorld(camera);
         renderDudes(camera, soFar);
-        renderDebugAABB(camera);
+        renderDebug(camera);
         
         setWireframe(false);
 

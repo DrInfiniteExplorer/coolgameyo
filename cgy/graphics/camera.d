@@ -1,14 +1,19 @@
 module graphics.camera;
 
 import std.algorithm;
+import std.conv;
+import std.stdio;
 
 import stolen.all;
+
+import settings;
 import util;
+
 alias util.convert convert;
 
 class Camera{
     vec3d position;
-    vec3f targetDir;
+    vec3d targetDir;
 
     this(){
         position.set(0,-1,0);
@@ -16,21 +21,44 @@ class Camera{
     }
 
     matrix4 getProjectionMatrix(){
-        const float FOV_Radians = degToRad(90.f);
-        const float aspect = 4.0f/3.0f;
-        const float _near = 0.5f;
-        const float _far = 1000.0f;
+        float FOV_Radians = degToRad(renderSettings.fieldOfView);
+        float aspect = renderSettings.aspectRatio;
+        float _near = renderSettings.nearPlane;
+        float _far = renderSettings.farPlane;
         matrix4 proj;
         proj.buildProjectionMatrixPerspectiveFovRH(FOV_Radians, aspect, _near, _far);
         return proj;
     }
+    
+    void getRayFromScreenCoords(vec2i coords, ref vec3d start, ref vec3d dir){
+        immutable vec3d _up = vec3d(0.f, 0.f, 1.f);
+        vec3d right = targetDir.crossProduct(_up).normalize();
+        vec3d up = right.crossProduct(targetDir).normalize();
+        auto dX = tan(degToRad(renderSettings.fieldOfView * 0.5f));
+        auto leftmost = right * -dX;
+        auto toRight = 2.f * dX * right;
+        auto dY =  dX / renderSettings.aspectRatio; //width / (width/height)
+        auto upper = up * dY;
+        auto toDown = -2.f * dY * up;
+        double percentX = to!double(coords.X) / to!double(renderSettings.windowWidth);
+        double percentY = to!double(coords.Y) / to!double(renderSettings.windowHeight);
+        dir = (targetDir + leftmost + percentX*toRight + upper + percentY * toDown).normalize();   
+        //dir = (targetDir + leftmost + upper).normalize();   
+        //writeln(percentX, " ", percentY);
+        start = position;
+    }
+    
 
     matrix4 getViewMatrix(){
         //TODO: Rework this. At laaarge distances from origin, floats will not do;
         //Will have to do remove the integer part of the position from the variable passed here,
         //and move blocks with that amount before sending them to ogl.
         matrix4 view;
-        view.buildCameraLookAtMatrixRH(convert!float(position), convert!float(position)+targetDir, vec3f(0.0f, 0.0f, 1.0f));
+        view.buildCameraLookAtMatrixRH(
+            convert!float(position),
+            convert!float(position+targetDir),
+            vec3f(0.0f, 0.0f, 1.0f)
+        );
         return view;
     }
 
@@ -47,12 +75,12 @@ class Camera{
     }
 
     void setTargetDir(vec3d dir){
-        targetDir = util.convert!float(dir).normalize();
+        targetDir = dir.normalize();
     }
     void setTarget(vec3d target){
-        targetDir = util.convert!float(target-position).normalize();
+        targetDir = (target-position).normalize();
     }
-    vec3f getTargetDir() const {
+    vec3d getTargetDir() const {
         return targetDir;
     }
 
@@ -65,13 +93,15 @@ class Camera{
         degX = dy;
 
         swap(targetDir.Y, targetDir.Z);
-        vec3f tmpRot = targetDir.getHorizontalAngle();
+        auto temp = convert!float(targetDir);
+        vec3f tmpRot = temp.getHorizontalAngle();
 
         tmpRot.X+=degX;
         tmpRot.Y+=degZ;
         //TODO: Fix so that tmpRot.X c [85, 0]u[275,360]
         mat.setRotationDegrees(tmpRot);
-        mat.transformVect(targetDir, vec3f(0.0f, 0.0f, 1.0f));
+        mat.transformVect(temp, vec3f(0.0f, 0.0f, 1.0f));
+        targetDir = convert!double(temp);
         swap(targetDir.Y, targetDir.Z);
         targetDir.normalize();
     }

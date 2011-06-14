@@ -24,6 +24,11 @@ struct RenderSettings {
 
         int windowWidth = 800;
         int windowHeight = 600;
+        
+        float fieldOfView = 90.f;
+        float aspectRatio = 4.f / 3.f; //Width per height
+        float nearPlane = 0.5f;
+        float farPlane = 1000.f;        
     }
     InnerRenderSettings serializableSettings;
     alias serializableSettings this; //goer lookup i inner, som i detta scopet :D niice

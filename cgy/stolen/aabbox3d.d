@@ -281,8 +281,11 @@ struct aabbox3d(T)
     }
 
     void scale(vector3d!(T) scale){
-        MinEdge *= scale;
-        MaxEdge *= scale;
+        auto center = getCenter();
+        auto extent = getExtent() * scale;
+        extent /= 2;
+        MinEdge = center - extent;
+        MaxEdge = center + extent;
     }
 
   //! Tests if the box intersects with a line

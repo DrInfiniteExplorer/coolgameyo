@@ -10,9 +10,10 @@ import std.stdio;
 
 import derelict.sdl.sdl;
 
-import graphics.ogl;
-import graphics.font;
 import graphics.camera;
+import graphics.debugging;
+import graphics.font;
+import graphics.ogl;
 import graphics.renderer;
 import graphics.texture;
 
@@ -122,10 +123,12 @@ class Game{
         world.addUnit(u);
 
         auto uu = new Unit;
-        auto xyy = TileXYPos(vec2i(127,127));
+        auto xyy = TileXYPos(vec2i(0,0));
         uu.pos = world.getTopTilePos(xyy).toUnitPos();
-        //uu.pos.value.Z += 1;
         world.addUnit(uu);
+
+        camera.setPosition(vec3d(0, 0, 0));
+        camera.setTarget(vec3d(0, 1, 0));
 
         world.floodFillSome(1_000_000);
         // Commented out for presentation; Dont want stuff crashing :p
@@ -282,6 +285,7 @@ class Game{
                 updatePossesed();
             }
 
+            rayPick();
             renderer.render();
             updateGui();
             f1.render();
@@ -398,8 +402,6 @@ class Game{
         }
         if(key == SDLK_F5 && down) possesedActive ^= 1;
         if(key == SDLK_F6 && down) _3rdPerson ^= 1;
-
-
     }
 
     bool oldUseCamera;
@@ -415,7 +417,34 @@ class Game{
             }
         }
         oldUseCamera = useCamera;
+        mousecoords.set(x, y);
     }
+    vec2i mousecoords;
+    
+    void rayPick(){
+        vec3d start, dir;
+        camera.getRayFromScreenCoords(mousecoords, start, dir);
+        Tile tile;
+        TilePos tilePos;
+        vec3i normal;
+        if(0 < world.intersectTile(start, dir, 25, tile, tilePos, normal)){
+            if(asdasdasd){
+                removeAABB(asdasdasd);
+            }
+            auto temp = TilePos(tilePos.value);
+            aabbd aabb = temp.getAABB();
+            aabb.scale(vec3d(1.025f));
+            asdasdasd = addAABB(aabb);
+        }
+        if(dsadsadsa){
+            removeLine(dsadsadsa);
+        }
+        auto pt = start + dir;
+        auto _start = start + vec3d(0, 0, 2);
+        dsadsadsa = addLine([_start, pt], vec3f(0, 0, 1));
+    }    
+    int asdasdasd;
+    int dsadsadsa;
 }
 
 

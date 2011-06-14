@@ -900,34 +900,39 @@ struct CMatrix4(T)
     //! Builds a right-handed perspective projection matrix based on a field of view
     CMatrix4!(T) buildProjectionMatrixPerspectiveFovRH(float fieldOfViewRadians, float aspectRatio, float zNear, float zFar)
     {
-      const double h = reciprocal(tan(fieldOfViewRadians*0.5));
-      assert(aspectRatio!=0.f); //divide by zero
-      const T w = h / aspectRatio;
+/*
+        const double h = reciprocal(tan(fieldOfViewRadians*0.5));
+        assert(aspectRatio!=0.f); //divide by zero
+        const T w = h / aspectRatio;
+*/        
+        const double w = reciprocal(tan(fieldOfViewRadians*0.5));
+        assert(aspectRatio!=0.f); //divide by zero
+        const T h = w * aspectRatio; // 1/w * ratio = 1/(w / ratio)) = 1/with * 1/ratio = 1/width * 1/(height/width) = 1/width * width/height yay
 
-      assert(zNear!=zFar); //divide by zero
-      M[0] = w;
-      M[1] = 0;
-      M[2] = 0;
-      M[3] = 0;
+        assert(zNear!=zFar); //divide by zero
+        M[0] = w;
+        M[1] = 0;
+        M[2] = 0;
+        M[3] = 0;
 
-      M[4] = 0;
-      M[5] = cast(T)h;
-      M[6] = 0;
-      M[7] = 0;
+        M[4] = 0;
+        M[5] = cast(T)h;
+        M[6] = 0;
+        M[7] = 0;
 
-      M[8] = 0;
-      M[9] = 0;
-      M[10] = cast(T)(zFar/(zNear-zFar)); // DirectX version
-    //    M[10] = (T)(zFar+zNear/(zNear-zFar)); // OpenGL version
-      M[11] = -1;
+        M[8] = 0;
+        M[9] = 0;
+        M[10] = cast(T)(zFar/(zNear-zFar)); // DirectX version
+        //    M[10] = (T)(zFar+zNear/(zNear-zFar)); // OpenGL version
+        M[11] = -1;
 
-      M[12] = 0;
-      M[13] = 0;
-      M[14] = cast(T)(zNear*zFar/(zNear-zFar)); // DirectX version
-    //    M[14] = (T)(2.0f*zNear*zFar/(zNear-zFar)); // OpenGL version
-      M[15] = 0;
+        M[12] = 0;
+        M[13] = 0;
+        M[14] = cast(T)(zNear*zFar/(zNear-zFar)); // DirectX version
+        //    M[14] = (T)(2.0f*zNear*zFar/(zNear-zFar)); // OpenGL version
+        M[15] = 0;
 
-      return this;
+        return this;
     }
 
     //! Builds a frustum projection matrix, (identicle to opengl.glFrustum)

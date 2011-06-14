@@ -280,6 +280,25 @@ class World {
         }
         return block.getTile(tilePos);
     }
+    
+    int intersectTile(vec3d start, vec3d dir, int tileIter, ref Tile outTile, ref TilePos outPos, ref vec3i Normal) {
+        auto tileTypeAir = tileSystem.idByName("air");        
+        TilePos oldTilePos;
+        int cnt;
+        foreach(tilepos ; TileIterator(start, dir, tileIter)) {
+            cnt++;
+            auto tilePos = TilePos(tilepos);
+            auto tile = getTile(tilePos);
+            if (tile.type != tileTypeAir) {
+                outPos = tilePos;
+                Normal = oldTilePos.value - tilepos;
+                outTile = tile;
+                return cnt;
+            }
+            oldTilePos = tilePos;
+        }
+        return 0;
+    }
 
     private void setTile(TilePos tilePos, const Tile newTile) {
         enforce(0, "Called from where?");
@@ -438,6 +457,7 @@ class World {
 
 
 auto activitySize = vec3i(3,3,3);
+//auto activitySize = vec3i(1,1,1);
 
 private mixin template ActivityHandlerMethods() {
 
