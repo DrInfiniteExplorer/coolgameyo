@@ -133,7 +133,7 @@ class Game{
 
         world.floodFillSome(1_000_000);
         // Commented out for presentation; Dont want stuff crashing :p
-        //u.ai = new MoveToAI(uu, 1.0/15.0);
+        u.ai = new PatrolAI(u, uu.pos, pathModule);
 
         possesAI = new FPSControlAI(world);
         possesAI.setUnit(uu);

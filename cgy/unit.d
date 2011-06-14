@@ -24,13 +24,8 @@ interface UnitAI {
 
 struct Unit {
 
-    const bool opEquals(ref const(Unit) u){
-        enforce(0, "Implement Unit.opEquals or find where it's called and make not called!");
-        asm {int 3;} //Apparently this needs to be implemented, or Unit.ai causes a lot of misery
-        //No real understanding of this problem has been produced. You can try commenting this out
-        //if you'd like. AFAIK we never ever want to compare units anyway though. Maybe we do. In
-        //that case we'll have to implement this or fix the problem somehow.
-        return type is u.type;
+    bool opEquals(ref const(Unit) u) const {
+        assert (0, "Implement Unit.opEquals or find where it's called and make not called!");
     }
 
     UnitAI ai;
@@ -38,7 +33,9 @@ struct Unit {
     UnitPos pos;
     float rotation = 0; //radians
 
-    vec3d destination;
+
+    float speed;
+    UnitPos destination;
     uint ticksToArrive;
     vec3d velocity;
 
@@ -87,7 +84,7 @@ class MoveToAI : UnitAI {
     }
 
     override void tick(Unit* unit, ChangeList changeList) {
-        if (unit.destination != target.pos.value) {
+        if (unit.destination != target.pos) {
             auto dist = (target.pos.value - unit.pos.value).getLength();
             int ticks = to!int(ceil(dist / speed));
             changeList.addMovement(unit, target.pos.value, ticks);
@@ -101,3 +98,48 @@ class MoveToAI : UnitAI {
         }
     }
 }
+
+
+
+class PatrolAI : UnitAI {
+
+    UnitPos a, b;
+    Path path;
+    PathModule pathModule;
+    PathID id;
+    bool toa, walking;
+
+    this(Unit* u, UnitPos p, PathModule m) {
+        a = u.pos;
+        b = p;
+        pathModule = m;
+
+        id = pathModule.findPath(u.pos, b);
+    }
+
+    override void tick(Unit* unit, ChangeList changeList) {
+        if (walking) {
+            auto p = toa ? a : b;
+            auto d = p.value.getDistanceFrom(unit.pos.value);
+
+            if (d <= unit.speed) {
+                changeList.addMovement(unit, p, 1);
+                walking = false;
+                id = pathModule.findPath(unit.pos, toa ? b : a);
+                toa = !toa;
+            } else {
+                auto dp = (p.value - unit.pos.value) * (d / unit.speed);
+                assert (approxEqual(dp.getLength(), unit.speed));
+                changeList.addMovement(unit, UnitPos(unit.pos.value + dp), 1);
+            }
+        } else {
+            if (pathModule.pollPath(id, path)) {
+                walking = true;
+                tick(unit, changeList);
+            } else {
+                // wait for path module to finish our path :(
+            }
+        }
+    }
+}
+

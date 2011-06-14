@@ -234,7 +234,7 @@ class World {
         //TODO: Consider AI-notification of arrival ?
         foreach(unit ; getUnits()) {
             if(unit.ticksToArrive == 0) continue;
-            auto vel = unit.destination - unit.pos.value;
+            auto vel = unit.destination.value - unit.pos.value;
             vel *= 1.0/unit.ticksToArrive;
             unit.velocity = vel;
             unit.ticksToArrive -= 1;
@@ -247,7 +247,7 @@ class World {
 
     // ONLY CALLED FROM CHANGELIST (And some CustomChange-implementations )
     void unsafeMoveUnit(Unit* unit, vec3d destination, uint ticksToArrive){
-        unit.destination = destination;
+        unit.destination = UnitPos(destination);
         unit.ticksToArrive = ticksToArrive;
         //Maybe add to list of moving units? Maybe all units are moving?
         //Consider this later. Related to comment in world.update
