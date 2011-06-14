@@ -81,11 +81,16 @@ void loadSettings(){
     auto content = readText("settings.json");
     
     auto rootVal = json.parse(content);
-    auto rsVal = rootVal["renderSettings"];
-	auto controlVal = rootVal["controlSettings"];
-    json.update(&renderSettings.serializableSettings, rsVal);
-	json.update(&controlSettings.serializableSettings, controlVal);
+    if("renderSettings" in rootVal){
+        auto rsVal = rootVal["renderSettings"];
+        json.update(&renderSettings.serializableSettings, rsVal);
+    }
+    if("controlSettings" in rootVal){
+	    auto controlVal = rootVal["controlSettings"];
+	    json.update(&controlSettings.serializableSettings, controlVal);
+    }
 }
+    
 
 void saveSettings(){
     json.Value[string] values;
