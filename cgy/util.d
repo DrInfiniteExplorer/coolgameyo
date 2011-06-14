@@ -330,7 +330,7 @@ class Queue(T) {
 
 struct TileIterator{
 
-    vec3i tile;
+    TilePos tile;
     vec3i dir;
     vec3d tMax;
     vec3d tDelta;
@@ -339,7 +339,7 @@ struct TileIterator{
     this(vec3d start, vec3d _dir, int limit = 1000) {
         maxIter = limit;
         //tile = convert!int(start); //TODO: Works for positive numbers. Make fix for rest.
-        tile = getTilePos(start);
+        tile.value = getTilePos(start);
         dir.X = _dir.X >= 0 ? 1 : -1;
         dir.Y = _dir.Y >= 0 ? 1 : -1;
         dir.Z = _dir.Z >= 0 ? 1 : -1;
@@ -360,28 +360,28 @@ struct TileIterator{
         tMax.Y = inter(start.Y, dir.Y, _dir.Y);
         tMax.Z = inter(start.Z, dir.Z, _dir.Z);
     }
-    vec3i front() @property {
+    TilePos front() @property {
         return tile;
     }
     void popFront() {
         if (tMax.X < tMax.Y) {
             if (tMax.X < tMax.Z) {
                 //INCREMENT X WOOO
-                tile.X += dir.X;
+                tile.value.X += dir.X;
                 tMax.X += tDelta.X;
             } else {
                 //INCREMENT Z WOOO
-                tile.Z += dir.Z;
+                tile.value.Z += dir.Z;
                 tMax.Z += tDelta.Z;                
             }
         } else {
             if (tMax.Y < tMax.Z) {
                 //INCREMENT Y WOOO
-                tile.Y += dir.Y;
+                tile.value.Y += dir.Y;
                 tMax.Y += tDelta.Y;
             } else {
                 //Increment Z WOOO
-                tile.Z += dir.Z;
+                tile.value.Z += dir.Z;
                 tMax.Z += tDelta.Z;                
             }
         }

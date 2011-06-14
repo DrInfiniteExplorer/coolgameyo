@@ -285,13 +285,12 @@ class World {
         auto tileTypeAir = tileSystem.idByName("air");        
         TilePos oldTilePos;
         int cnt;
-        foreach(tilepos ; TileIterator(start, dir, tileIter)) {
+        foreach(tilePos ; TileIterator(start, dir, tileIter)) {
             cnt++;
-            auto tilePos = TilePos(tilepos);
             auto tile = getTile(tilePos);
             if (tile.type != tileTypeAir) {
                 outPos = tilePos;
-                Normal = oldTilePos.value - tilepos;
+                Normal = oldTilePos.value - tilePos.value;
                 outTile = tile;
                 return cnt;
             }
