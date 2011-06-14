@@ -332,10 +332,10 @@ class Game{
 
         double right = 0;
         double fwd = 0;
-        if(keyMap[SDLK_a]){ right-=0.2; }
-        if(keyMap[SDLK_d]){ right+=0.2; }
-        if(keyMap[SDLK_w]){ fwd+=0.2; }
-        if(keyMap[SDLK_s]){ fwd-=0.2; }
+        if(keyMap[SDLK_a]){ right-=0.4; }
+        if(keyMap[SDLK_d]){ right+=0.4; }
+        if(keyMap[SDLK_w]){ fwd+=0.4; }
+        if(keyMap[SDLK_s]){ fwd-=0.4; }
         if(keyMap[SDLK_SPACE]){
             if(possesAI.onGround){
                 possesAI.fallSpeed = 0.55f;

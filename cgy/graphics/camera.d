@@ -89,8 +89,8 @@ class Camera{
         matrix4 mat;
         double degZ; //Degrees rotation around Z-axis(up).
         double degX; //Degrees rotation around X-axis(left->right-axis)
-        degZ = dx;
-        degX = dy;
+        degZ = dx * controlSettings.mouseSensitivity;
+        degX = dy * controlSettings.mouseSensitivity;
 
         swap(targetDir.Y, targetDir.Z);
         auto temp = convert!float(targetDir);
@@ -98,7 +98,12 @@ class Camera{
 
         tmpRot.X+=degX;
         tmpRot.Y+=degZ;
-        //TODO: Fix so that tmpRot.X c [85, 0]u[275,360]
+		if(tmpRot.X > 180){
+			tmpRot.X -= 360;
+		}
+		if (tmpRot.X >= 89.f) tmpRot.X = 89.f;
+		else if (tmpRot.X <= -89.f) tmpRot.X = -89.f;
+        
         mat.setRotationDegrees(tmpRot);
         mat.transformVect(temp, vec3f(0.0f, 0.0f, 1.0f));
         targetDir = convert!double(temp);

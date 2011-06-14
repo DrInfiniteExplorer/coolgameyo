@@ -31,9 +31,12 @@ struct RenderSettings {
         float nearPlane = 0.5f;
         float farPlane = 1000.f;        
     }
+	
     InnerRenderSettings serializableSettings;
     alias serializableSettings this;
 
+	// These settings are generated in the program, not from settings file
+	
     // Some opengl-implementation-dependant constants,
     // gathered on renderer creation
     int maxTextureLayers;
@@ -43,7 +46,16 @@ struct RenderSettings {
     
 }
 
+struct ControlSettings {
+	static struct InnerControlSettings {
+		float mouseSensitivity = 1;
+	}
+	InnerControlSettings serializableSettings;
+	alias serializableSettings this;
+}
+
 shared RenderSettings renderSettings;
+shared ControlSettings controlSettings;
 
 vec3f getTileCoords(uint tileNum){
     vec3i tmp;
@@ -70,14 +82,16 @@ void loadSettings(){
     
     auto rootVal = json.parse(content);
     auto rsVal = rootVal["renderSettings"];
+	auto controlVal = rootVal["controlSettings"];
     json.update(&renderSettings.serializableSettings, rsVal);
-    
+	json.update(&controlSettings.serializableSettings, controlVal);
 }
 
 void saveSettings(){
     json.Value[string] values;
 
     values["renderSettings"] = encode(renderSettings.serializableSettings);
+	values["controlSettings"] = encode(controlSettings.serializableSettings);
 
     auto jsonRoot = json.Value(values);
     auto jsonString = to!string(jsonRoot);
