@@ -6,7 +6,7 @@ import std.exception;
 import std.math;
 
 import changelist;
-import modules;
+import modules.path;
 import pos;
 import stolen.aabbox3d;
 import util;

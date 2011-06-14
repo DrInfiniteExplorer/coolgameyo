@@ -1,63 +1,12 @@
 
-module modules;
+module modules.ai;
 
 import std.stdio;
-import std.exception;
 
-import changelist;
-import pos;
-import scheduler;
+import modules.module_;
+import modules.path;
+
 import unit;
-import world;
-
-abstract class Module {
-    void update(World world, Scheduler scheduler){
-        //Possible cause if called: Change in function signature.
-        enforce(0, "SHOULD NOT BE CALLED, EVER! :(");
-    }
-}
-
-struct PathID {
-    ulong id;
-}
-struct Path {
-    TilePos[] derp;
-}
-
-class PathModule : Module {
-
-    static struct PathFindState {
-        void tick() {
-            assert (false);
-        }
-    }
-
-    ulong nextIDNum;
-
-    Path[PathID] finishedPaths;
-
-    PathFindState[] activeStates;
-
-    PathID findPath(TilePos from, TilePos to) {
-        enforce(0, "dix");
-        return PathID(nextIDNum++);
-    }
-    bool pollPath(PathID id, out Path path) {
-        if (id !in finishedPaths) return false;
-
-        path = finishedPaths[id];
-        finishedPaths.remove(id);
-        return true;
-    }
-
-    override void update(World world, Scheduler scheduler) {
-        //assert (false);
-        foreach (state; activeStates) {
-            scheduler.push(asyncTask({ return state.tick(); }));
-        }
-    }
-}
-
 
 class AIModule : Module, WorldListener {
 
@@ -132,6 +81,4 @@ class AIModule : Module, WorldListener {
     override void notifySectorUnload(SectorNum) { }
     override void notifyTileChange(TilePos) { }
 }
-
-
 

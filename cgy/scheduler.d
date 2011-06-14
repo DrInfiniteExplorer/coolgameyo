@@ -12,11 +12,11 @@ import std.range;
 
 version(Windows) import std.c.windows.windows;
 
-import changelist;
+public import changelist;
 import util;
 import world;
 
-import modules;
+import modules.module_;
 
 struct Task {
     bool sync;

@@ -9,9 +9,8 @@ import tilesystem;
 import worldgen;
 import unit;
 import util;
-import pos;
 
-
+public import pos;
 public import worldparts.sector;
 public import worldparts.block;
 public import worldparts.tile;

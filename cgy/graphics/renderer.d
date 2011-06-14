@@ -18,7 +18,7 @@ import graphics.shader;
 import graphics.texture;
 import graphics.vbomaker;
 
-import modules;
+import modules.module_;
 import world;
 import scheduler;
 import settings;

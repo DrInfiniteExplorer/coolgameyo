@@ -18,7 +18,8 @@ import graphics.renderer;
 import graphics.texture;
 
 import changelist;
-import modules;
+import modules.ai;
+import modules.path;
 import pos;
 import scheduler;
 import tilesystem;
