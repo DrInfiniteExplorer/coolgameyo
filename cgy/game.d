@@ -123,15 +123,30 @@ class Game{
             camera.setTarget(vec3d(0, 0, 20));
         }
 
-        auto xy = TileXYPos(vec2i(10,10));
+        UnitPos topOfTheWorld(TileXYPos xy) {
+            auto top = world.getTopTilePos(xy);
+            writeln("top: ", top);
+            auto ret = top.toUnitPos();
+            if (world.getTile(top).halfstep) {
+                ret.value.Z += 0.5;
+            } else {
+                ret.value.Z += 1;
+            }
+            writeln("ret: ", ret);
+            return ret;
+        }
+
+        auto xy = TileXYPos(vec2i(30,30));
         auto u = new Unit;
-        u.pos = world.getTopTilePos(xy).toUnitPos();
+        u.pos = topOfTheWorld(xy);
         //u.pos.value.Z += 1;
         world.addUnit(u);
+        
+        writeln("u.pos == ", u.pos);
 
         auto uu = new Unit;
-        auto xyy = TileXYPos(vec2i(0,0));
-        uu.pos = world.getTopTilePos(xyy).toUnitPos();
+        auto xyy = TileXYPos(vec2i(3,3));
+        uu.pos = topOfTheWorld(xyy);
         world.addUnit(uu);
 
         camera.setPosition(vec3d(0, 0, 0));

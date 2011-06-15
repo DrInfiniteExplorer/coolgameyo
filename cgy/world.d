@@ -112,8 +112,6 @@ class World {
             ret.heightmap[relPos.X, relPos.Y] = z;
         }
 
-        writeln("Needs some heightmap generation at ", xy); //Already done :p
-
         sectorXY[xy] = ret; //Spara det vi skapar, yeah!
         return ret;
     }
@@ -326,8 +324,6 @@ class World {
         return TilePos(pos);
     }
 
-    //TODO: Turn into timeslicing task
-    //TODO: Make it keep track of sectors, in order to make sector-load-notifications.
     void floodFillSome(int max=1000) {// 10 lol
         //auto sw = StopWatch(AutoStart.yes);
 
@@ -343,7 +339,7 @@ class World {
             //allBlocks++;
             if (!block.valid) { continue; }
 
-            writeln("\tFlooding block ", blockNum);
+            //writeln("\tFlooding block ", blockNum);
 
             //blockCount++;
             //writeln("blockCount:", blockCount);

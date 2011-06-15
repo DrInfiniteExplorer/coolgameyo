@@ -127,6 +127,8 @@ static struct PathFindState {
         id = id_;
         from = from_;
         goal = goal_;
+        
+        writeln("goal = ", goal.tilePos);
 
         closedSet = new typeof(closedSet);
         openSet = new typeof(openSet);
@@ -258,7 +260,7 @@ static struct PathFindState {
         }
     }
     double estimateBetween(TilePos a, TilePos b) {
-        enum estimateFactor = 0.7;
+        enum estimateFactor = 0.99;
         auto xx = (a.value.X - b.value.X) ^^ 2;
         auto yy = (a.value.Y - b.value.Y) ^^ 2;
         auto zz = (a.value.Z - b.value.Z) ^^ 2;
@@ -268,14 +270,20 @@ static struct PathFindState {
     void completePath(World world, TilePos x) {
         UnitPos[] p = [goal];
         while (from.tilePos != x) {
-            p ~= UnitPos(convert!double(x.value)
-                    + (world.getTile(x).halfstep 
-                        ? vec3d(0.5,0.5,0.5)
-                        : vec3d(0.5,0.5,0)));
+            p ~= x.toUnitPos();
+            if (world.getTile(x).halfstep) {
+                p[$-1].value.Z += 0.5;
+            }
             x = cameFrom[x];
         }
         //p ~= from;
         result = Path(p);
+
+
+        foreach (tp, i; boxes) {
+            removeAABB(i);
+        }
+
     }
 
     // BUG: TODO: I have no idea if this is correct code
@@ -317,6 +325,7 @@ static struct PathFindState {
 
         // this turned retarded;
         int opApply(scope int delegate(ref TilePos) y) {
+            //writeln("around = ", around);
             assert (avail(around));
 
             auto w = TilePos(around.value + vec3i(-1, 0, 0));

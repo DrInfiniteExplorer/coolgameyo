@@ -518,7 +518,7 @@ class VBOMaker : WorldListener
         foreach(pos ; RangeFromTo(grNumMin.value, grNumMax.value)) {
             auto grNum = GraphRegionNum(pos);
             if(hasContent(grNum)){
-                writeln("Has content;", grNum);
+                //writeln("Has content;", grNum);
                 newRegions ~= grNum;
             }
         }

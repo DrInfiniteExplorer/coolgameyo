@@ -36,7 +36,7 @@ struct Unit {
     float rotation = 0; //radians
 
 
-    float speed = 0.1;
+    float speed = 0.4;
     UnitPos destination;
     uint ticksToArrive;
     vec3d velocity;
