@@ -1,12 +1,14 @@
 
 module unit;
 
+import std.array;
 import std.conv;
 import std.exception;
+import std.algorithm;
 import std.math;
 import std.stdio;
-import std.array;
 
+import graphics.debugging;
 import changelist;
 import modules.path;
 import pos;
@@ -145,6 +147,14 @@ class PatrolAI : UnitAI {
         } else {
             if (pathModule.pollPath(id, path)) {
                 assert (path.path.length > 0);
+                vec3d toVec(UnitPos p){
+                    return p.value;
+                }
+                auto positions = array(map!toVec(path.path));
+                if(lineId){
+                    removeLine(lineId);
+                }
+                lineId = addLine(positions, vec3f(1, 1, 0));
                 walking = true;
                 tick(unit, changeList);
             } else {
@@ -152,5 +162,6 @@ class PatrolAI : UnitAI {
             }
         }
     }
+    int lineId;
 }
 

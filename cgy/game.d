@@ -264,6 +264,7 @@ class Game{
         }
     }
 
+    bool inputActive = true;
     void runClient() {
         assert (isClient);
         auto exit = false;
@@ -277,9 +278,24 @@ class Game{
 
             GuiEvent guiEvent;
             while (SDL_PollEvent(&event)) {
+                switch (event.type){
+                    case SDL_ACTIVEEVENT:
+                        if(event.active.state & SDL_APPINPUTFOCUS) {
+                            inputActive = event.active.gain != 0;
+                        }
+                        break;
+                    case SDL_KEYDOWN:
+                    case SDL_KEYUP:
+                    case SDL_MOUSEMOTION:
+                    case SDL_MOUSEBUTTONDOWN:
+                    case SDL_MOUSEBUTTONUP:
+                    if(!inputActive) continue;
+                    default:
+                }
                 switch (event.type) {
                     case SDL_QUIT:
                         exit = true; break;
+                        break;
                     case SDL_KEYDOWN:
                     case SDL_KEYUP:
                         guiEvent.type = GuiEventType.Keyboard;
