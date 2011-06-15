@@ -4,6 +4,7 @@ import std.container;
 import std.algorithm;
 import std.math;
 import std.stdio;
+import std.conv;
 
 import modules.module_;
 import scheduler;
@@ -116,6 +117,8 @@ static struct PathFindState {
     double[TilePos] g_score;
     double[TilePos] f_score;
 
+    int[TilePos] boxes;
+
     RedBlackTree!(TilePos, q{a.value < b.value}) openSet;
     RedBlackTree!(TilePos, q{a.value < b.value}) closedSet;
 
@@ -130,6 +133,7 @@ static struct PathFindState {
         openSet.insert(from);
         g_score[from] = 0;
         f_score[from] = estimateBetween(from, goal);
+        boxes[from] = addAABB(from.getAABB(), vec3f(1,0,0));
     }
 
     bool tick(World world) {
@@ -150,6 +154,10 @@ static struct PathFindState {
         }
 
         auto x = findSmallest();
+
+        assert (x !in closedSet);
+        assert (x in g_score);
+        assert (x in f_score);
  
         // this is retarded, cannot use goal.tilePos as rhs because it is
         // an rvalue, but using it as lhs is fine, wtf!
@@ -159,22 +167,36 @@ static struct PathFindState {
             return;
         }
 
+        openSet.removeKey(x);
+
         closedSet.insert(x);
 
+        removeAABB(boxes[x]);
+        boxes[x] = addAABB(x.getAABB(), vec3f(0,1,0));
+
+        f_score.remove(x);
+
+        assert (x !in openSet);
+        assert (x !in f_score);
+
         writeln("from = ", from);
+        writeln("goal = ", goal);
         writeln("x = ", x);
 
         foreach (y; availibleNeighbors(world, x)) {
             writeln("y = ", y);
-            addAABB(y.getAABB());
             if (y in closedSet) continue;
+
+            assert (y !in closedSet);
+
             auto new_g = g_score[x] + costBetween(world, x, y);
             bool is_new = y !in g_score;
 
             if (is_new) {
                 openSet.insert(y);
+                boxes[y] = addAABB(y.getAABB(), vec3f(1,0,0));
             }
-            if (is_new || g_score[y] > new_g) {
+            if (is_new || new_g < g_score[y]) {
                 cameFrom[y] = x;
                 g_score[y] = new_g;
                 f_score[y] = new_g + estimateBetween(y, goal);
@@ -187,13 +209,17 @@ static struct PathFindState {
         double f = double.infinity;
         
         foreach (t; openSet[]) {
+            //writeln(g_score);
+            //writeln(f_score);
+            assert (t in g_score);
+            assert (t in f_score);
+            assert (t in openSet, "WTFFFFFFFFFFFF!!!!!!!!!");
+            assert (t !in closedSet, text("DIED ON ", t));
             if (f_score[t] < f) {
                 x = t;
                 f = f_score[t];
             }
         }
-        openSet.removeKey(x);
-        f_score.remove(x);
         return x;
     }
 
@@ -265,36 +291,31 @@ static struct PathFindState {
             TilePos below(TilePos tp) {
                 return TilePos(tp.value - vec3i(0,0,1));
             }
-            bool clear(TilePos tp) { return world.getTile(tp).transparent; }
-            bool pathable(TilePos tp) { return world.getTile(tp).pathable; }
+            Tile tile(TilePos tp) { return world.getTile(tp, false, false); }
+            bool clear(TilePos tp) { return tile(tp).transparent; }
+            bool pathable(TilePos tp) { return tile(tp).pathable; }
             bool solid(TilePos tp) { return !clear(tp) && !half(tp); }
-            bool avail(TilePos tp) {
-                return pathable(tp) && clear(above(tp));
-            }
-            bool half(TilePos tp) { return world.getTile(tp).halfstep; }
+            bool avail(TilePos tp) { return pathable(tp) && clear(above(tp)); }
+            bool half(TilePos tp) { return tile(tp).halfstep; }
 
+            bool test(TilePos tp) {
+                if (!avail(tp)) return false;
 
-            bool test(TilePos tp, out TilePos ret) {
-                assert (around.value.Z == tp.value.Z);
-                assert (solid(below(around)) || half(around));
-
-                if (avail(tp)) {
-                    if (solid(below(tp)) || half(tp)) {
-                        ret = tp;
-                        return true;
-                    } else {
-                        ret = below(tp);
-                        return solid(below(below(tp)))
-                            && (!half(around) || half(below(tp)));
-                    }
+                if (tp.value.Z == around.value.Z) {
+                    return true;
+                } else if (tp.value.Z > around.value.Z) {
+                    assert (tp.value.X != around.value.X
+                            || tp.value.Y != around.value.Y);
+                    return half(around) || !half(tp);
                 } else {
-                    ret = above(tp);
-                    return avail(above(around)) && clear(above(above((tp))))
-                        && (!half(above(tp)) || half(around));
+                    assert (tp.value.X != around.value.X
+                            || tp.value.Y != around.value.Y);
+                    return half(tp) || !half(around);
                 }
             }
         }
 
+        // this turned retarded;
         int opApply(scope int delegate(ref TilePos) y) {
             assert (avail(around));
 
@@ -303,12 +324,31 @@ static struct PathFindState {
             auto n = TilePos(around.value + vec3i( 0, 1, 0));
             auto s = TilePos(around.value + vec3i( 0,-1, 0));
 
-            TilePos tp;
-            if (test(w, tp)) if (y(tp)) return 1;
-            if (test(e, tp)) if (y(tp)) return 1;
-            if (test(n, tp)) if (y(tp)) return 1;
-            if (test(s, tp)) if (y(tp)) return 1;
-            
+            if (test(w)) if (y(w)) return 1;
+            if (test(e)) if (y(e)) return 1;
+            if (test(n)) if (y(n)) return 1;
+            if (test(s)) if (y(s)) return 1;
+
+            w = above(w);
+            e = above(e);
+            n = above(n);
+            s = above(s);
+
+            if (test(w)) if (y(w)) return 1;
+            if (test(e)) if (y(e)) return 1;
+            if (test(n)) if (y(n)) return 1;
+            if (test(s)) if (y(s)) return 1;
+
+            w = below(below(w));
+            e = below(below(e));
+            n = below(below(n));
+            s = below(below(s));
+
+            if (test(w)) if (y(w)) return 1;
+            if (test(e)) if (y(e)) return 1;
+            if (test(n)) if (y(n)) return 1;
+            if (test(s)) if (y(s)) return 1;
+
             return 0;
         }
     }

@@ -43,9 +43,9 @@ struct Unit {
 
     bool panics;
 
-    float unitWidth = 1.f;
-    float unitHeight = 2.f;
-    float stepHeight = 0.5f;
+    float unitWidth = 0.7;
+    float unitHeight = 1.5;
+    float stepHeight = 0.5;
 
     //Returns the bounding box of the unit, in world space.
     //If no parameter is passed, the units position is used as base,
