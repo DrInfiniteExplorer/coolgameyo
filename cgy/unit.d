@@ -123,11 +123,11 @@ class PatrolAI : UnitAI {
         if (walking) {
             auto goal = toa ? a : b;
             auto p = path.path.back;
-            write("going to ", toa ? "a=" : "b=", p, ", ");
+            //write("going to ", toa ? "a=" : "b=", p, ", ");
             auto d = p.value.getDistanceFrom(unit.pos.value);
 
             if (d <= unit.speed) {
-                writeln("arrived!");
+                //writeln("arrived!");
                 changeList.addMovement(unit, p, 1);
                 if (p == goal) {
                     walking = false;
@@ -138,8 +138,8 @@ class PatrolAI : UnitAI {
                 }
             } else {
                 auto dp = (p.value - unit.pos.value).setLength(unit.speed);
-                writeln("from ", unit.pos,
-                        " to ", UnitPos(unit.pos.value + dp));
+                //writeln("from ", unit.pos,
+                //        " to ", UnitPos(unit.pos.value + dp));
                 changeList.addMovement(unit, UnitPos(unit.pos.value + dp), 1);
             }
         } else {

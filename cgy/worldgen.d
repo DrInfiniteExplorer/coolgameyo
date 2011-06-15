@@ -128,9 +128,9 @@ class WorldGenerator {
             assert (d > 0);
             ret = Tile(airType, transparent, 0, 0);
         }
-        if (-0.5 <= d && d < 1) {
+        if (-0.5 <= d && d < 0.5) {
             ret.pathable = true;
-            //addAABB(pos.getAABB());
+            addAABB(pos.getAABB());
         }
         ret.valid = true;
 

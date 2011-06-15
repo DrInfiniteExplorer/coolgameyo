@@ -72,7 +72,7 @@ class PathModule : Module {
                                  return {
                                      if (state.tick(world)) {
                                          assert(state.finished);
-                                         writeln("finishing state ", i);
+                                         //writeln("finishing state ", i);
                                          finishPath(i);
                                      }};
                                  })(i, &state)));
@@ -179,12 +179,12 @@ static struct PathFindState {
         assert (x !in openSet);
         assert (x !in f_score);
 
-        writeln("from = ", from);
-        writeln("goal = ", goal);
-        writeln("x = ", x);
+        //writeln("from = ", from);
+        //writeln("goal = ", goal);
+        //writeln("x = ", x);
 
         foreach (y; availibleNeighbors(world, x)) {
-            writeln("y = ", y);
+            // writeln("y = ", y);
             if (y in closedSet) continue;
 
             assert (y !in closedSet);
