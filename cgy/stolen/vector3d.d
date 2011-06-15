@@ -92,7 +92,7 @@ public:
                 return 1;
             }
             if(y==0){
-                if(x>0){
+                if(z>0){
                     return 1;
                 }
             }
