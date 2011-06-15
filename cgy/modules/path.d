@@ -124,9 +124,9 @@ static struct PathFindState {
         id = id_;
         from = from_;
         goal = goal_;
-        openSet = new typeof(openSet);
-        closedSet = new typeof(closedSet);
 
+        closedSet = new typeof(closedSet);
+        openSet = new typeof(openSet);
         openSet.insert(from);
         g_score[from] = 0;
         f_score[from] = estimateBetween(from, goal);
@@ -136,7 +136,9 @@ static struct PathFindState {
         assert (!finished);
         foreach (i; 0 .. stateTickCount) {
             tickety(world);
-            if (finished) return true;
+            if (finished) {
+                return true;
+            }
         }
         return false;
     }

@@ -17,6 +17,8 @@ import graphics.ogl;
 import graphics.renderer;
 import graphics.texture;
 
+import gui.gui;
+
 import changelist;
 import modules.ai;
 import modules.path;
@@ -52,7 +54,9 @@ class Game{
     bool[SDLK_LAST]   keyMap;
     bool              useCamera = true;
 
-    FPSControlAI   possesAI;
+    FPSControlAI      possesAI;
+    
+    GUI               gui;
 
     StringTexture     f1, f2, f3, f4, fps, tickTime, renderTime;
     StringTexture     unitInfo;
@@ -111,6 +115,8 @@ class Game{
             camera = new Camera();
             renderer = new Renderer(world, scheduler, camera);
             renderer.atlas = atlas;
+            
+            gui = new GUI();
 
             atlas.upload();
             camera.setPosition(vec3d(-2, -2, 20));
@@ -288,6 +294,7 @@ class Game{
 
             rayPick();
             renderer.render();
+            gui.render();
             updateGui();
             f1.render();
             f2.render();
@@ -433,7 +440,7 @@ class Game{
                 removeAABB(asdasdasd);
             }
             auto temp = TilePos(tilePos.value);
-            aabbd aabb = temp.getAABB();
+            aabbd aabb = temp.getAABB(tile.halfstep);
             aabb.scale(vec3d(1.025f));
             asdasdasd = addAABB(aabb);
         }
@@ -471,8 +478,6 @@ class FPSControlAI : UnitAI, CustomChange {
         //Send data to clients that this unit is possessed!!!!
         // :)
     }
-
-
 
     vec3d collideMove(vec3d pos, vec3d dir, int level=0){
         if (dir == vec3d(0, 0, 0)) { return pos; }

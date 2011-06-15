@@ -30,6 +30,7 @@ long utime() {
 
 alias vector2d!(int)  vec2i;
 alias vector2d!(float)  vec2f;
+alias vector2d!(double)  vec2d;
 
 alias vector3d!(int)  vec3i;
 alias vector3d!(float)  vec3f;

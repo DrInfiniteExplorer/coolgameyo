@@ -130,7 +130,7 @@ class WorldGenerator {
         }
         if (-0.5 <= d && d < 1) {
             ret.pathable = true;
-            addAABB(pos.getAABB());
+            //addAABB(pos.getAABB());
         }
         ret.valid = true;
 

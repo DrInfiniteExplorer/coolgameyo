@@ -5,8 +5,10 @@
 module stolen.aabbox3d;
 
 import std.algorithm;
-import std.math;
 import std.conv;
+import std.math;
+
+import std.traits;
 
 import stolen.vector3d;
 import stolen.line3d;
@@ -286,6 +288,37 @@ struct aabbox3d(T)
         extent /= 2;
         MinEdge = center - extent;
         MaxEdge = center + extent;
+    }
+    
+    bool intersectsWithLine(const vector3d!T startPos, const vector3d!T dir) {
+        static if (!isIntegral!T){
+            T start = -double.infinity;
+            T stop = double.infinity;
+        } else {
+            T start = -1000000;
+            T stop = 10000000;
+        }
+        T firstX = dir.X > 0 ? MinEdge.X : MaxEdge.X;
+        T lastX = dir.X > 0 ? MaxEdge.X : MinEdge.X;
+        T tMinX = (firstX - startPos.X) / dir.X;
+        T tMaxX = (lastX - startPos.X) / dir.X;
+        start = max(start, tMinX);
+        stop = min(stop, tMaxX);
+        if (stop < start) return false;
+        T firstY = dir.Y > 0 ? MinEdge.Y : MaxEdge.Y;
+        T lastY = dir.Y > 0 ? MaxEdge.Y : MinEdge.Y;
+        T tMinY = (firstY - startPos.Y) / dir.Y;
+        T tMaxY = (lastY - startPos.Y) / dir.Y;
+        start = max(start, tMinY);
+        stop = min(stop, tMaxY);
+        if (stop < start) return false;
+        T firstZ = dir.Z > 0 ? MinEdge.Z : MaxEdge.Z;
+        T lastZ = dir.Z > 0 ? MaxEdge.Z : MinEdge.Z;
+        T tMinZ = (firstZ - startPos.Z) / dir.Z;
+        T tMaxZ = (lastZ - startPos.Z) / dir.Z;
+        start = max(start, tMinZ);
+        stop = min(stop, tMaxZ);
+        return stop >= start;
     }
 
   //! Tests if the box intersects with a line

@@ -280,20 +280,28 @@ class World {
         return block.getTile(tilePos);
     }
     
-    int intersectTile(vec3d start, vec3d dir, int tileIter, ref Tile outTile, ref TilePos outPos, ref vec3i Normal) {
+    int intersectTile(bool considerHalftiles = true)(vec3d start, vec3d dir, int tileIter, ref Tile outTile, ref TilePos outPos, ref vec3i Normal) {
         auto tileTypeAir = tileSystem.idByName("air");        
         TilePos oldTilePos;
         int cnt;
         foreach(tilePos ; TileIterator(start, dir, tileIter)) {
             cnt++;
-            auto tile = getTile(tilePos);
+            auto tile = getTile(tilePos);            
+            scope(exit) oldTilePos = tilePos;
             if (tile.type != tileTypeAir) {
+                static if (considerHalftiles) {                    
+                    if (tile.halfstep) {
+                        auto aabb = tilePos.getAABB(true);
+                        if(!aabb.intersectsWithLine(start, dir)) {
+                            continue;
+                        }
+                    }
+                }
                 outPos = tilePos;
                 Normal = oldTilePos.value - tilePos.value;
                 outTile = tile;
                 return cnt;
             }
-            oldTilePos = tilePos;
         }
         return 0;
     }
