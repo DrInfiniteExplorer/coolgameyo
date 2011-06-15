@@ -4,8 +4,10 @@
 
 module stolen.vector3d;
 
+import std.conv;
 import std.exception;
 import std.traits;
+
 import stolen.math;
 
 //! 3d vector template class with lots of operators and methods.
@@ -412,6 +414,14 @@ public:
 
   //! Z coordinate of the vector
   T Z = 0;
+  
+
+    string toString() {
+        return typeof(this).stringof ~
+            " (" ~ to!string(X)
+            ~ ", " ~ to!string(Y)
+            ~ ", " ~ to!string(Z) ~ ")";
+    }  
 };
 
 //! partial specialization for integer vectors

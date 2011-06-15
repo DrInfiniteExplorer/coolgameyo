@@ -59,7 +59,7 @@ class Game{
     GUI               gui;
 
     StringTexture     f1, f2, f3, f4, fps, tickTime, renderTime;
-    StringTexture     unitInfo;
+    StringTexture     unitInfo, selectedInfo;
 
     bool possesedActive = true;
     bool _3rdPerson = false;
@@ -159,6 +159,7 @@ class Game{
             tickTime = new StringTexture(font);
             renderTime = new StringTexture(font);
             unitInfo = new StringTexture(font);
+            selectedInfo = new StringTexture(font);
 
             f1.setPositionI(vec2i(0, 0));
             f2.setPositionI(vec2i(0, 1));
@@ -168,6 +169,7 @@ class Game{
             tickTime.setPositionI(vec2i(30, 0));
             renderTime.setPositionI(vec2i(30, 1));
             unitInfo.setPositionI(vec2i(0, 5));
+            selectedInfo.setPositionI(vec2i(0, 6));
 
             f1.setText("polygon fill:" ~ (renderSettings.renderWireframe? "Wireframe":"Fill"));
             f2.setText(useCamera ? "Camera active" : "Camera locked");
@@ -258,19 +260,38 @@ class Game{
             //task.run(world);
 
 
+            GuiEvent guiEvent;
             while (SDL_PollEvent(&event)) {
                 switch (event.type) {
                     case SDL_QUIT:
                         exit = true; break;
                     case SDL_KEYDOWN:
                     case SDL_KEYUP:
+                        guiEvent.type = GuiEventType.Keyboard;
+                        auto kb = &guiEvent.keyboardEvent;
+                        kb.pressed = event.key.state == SDL_PRESSED;
+                        kb.repeat = 0; //TODO: Implement later?
+                        auto unicode = event.key.keysym.unicode;
+                        if (unicode & 0xFF80) {
+                        } else {
+                            kb.ch = unicode & 0x7F;
+                        }
+                        kb.SdlSym = event.key.keysym.sym;
+                        kb.SdlMod = event.key.keysym.mod;
+                        gui.onEvent(guiEvent);
                         onKey(event.key);
                         break;
                     case SDL_MOUSEMOTION:
                         mouseMove(event.motion);
+                        guiEvent.type = GuiEventType.MouseMove;
+                        auto m = &guiEvent.moveEvent;
+                        m.pos.set(to!double(event.motion.x) / to!double(renderSettings.windowWidth),
+                                  to!double(event.motion.y) / to!double(renderSettings.windowHeight));
+                        gui.onEvent(guiEvent);
                         break;
                     case SDL_MOUSEBUTTONDOWN:
                     case SDL_MOUSEBUTTONUP:
+                        
                         break;
                     default:
                 }
@@ -304,6 +325,7 @@ class Game{
             renderTime.render();
             tickTime.render();
             unitInfo.render();
+            selectedInfo.render();
             SDL_GL_SwapBuffers();
         }
     }
@@ -318,6 +340,9 @@ class Game{
 
         str = to!string(scheduler.frameAvg / 1000);
         tickTime.setText("tick time: " ~ str);
+        
+        string playerPos = "Camera position: " ~ to!string(camera.getPosition());
+        unitInfo.setText(playerPos);
 
     }
 
@@ -443,6 +468,8 @@ class Game{
             aabbd aabb = temp.getAABB(tile.halfstep);
             aabb.scale(vec3d(1.025f));
             asdasdasd = addAABB(aabb);
+            string tileString = "Tile under mouse: " ~ to!string(tilePos);
+            selectedInfo.setText(tileString);
         }
         if(dsadsadsa){
             removeLine(dsadsadsa);

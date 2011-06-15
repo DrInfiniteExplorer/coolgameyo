@@ -2,11 +2,13 @@
 
 module gui.gui;
 
+import std.algorithm;
+import std.exception;
 import std.stdio;
 
 import util;
 
-final class Rect {
+struct Rect {
     private vec2d start;
     private vec2d size;
     
@@ -33,15 +35,20 @@ final class Rect {
 enum GuiEventType {
     MouseMove,
     MouseClick,
-    Keyboard
+    Keyboard,
+    HoverOn,
+    HoverOff,
+    FocusOn,
+    FocusOff,
+    
 };
 
-final class GuiEvent{
+struct GuiEvent{
     GuiEventType type;
-    alias type this;
     union{
         struct MoveEvent {
-            double x, y;
+            vec2d pos;
+            vec2d delta;
         };
         MoveEvent moveEvent;
         struct ClickEvent{
@@ -50,19 +57,47 @@ final class GuiEvent{
         };
         ClickEvent clickEvent;
         struct KeyboardEvent{
-            byte Vk;
+            int SdlSym;
+            int SdlMod;
             bool pressed;
             int repeat;
             char ch;
-        };
+        };        
         KeyboardEvent keyboardEvent;
     };
 }
 
 class GuiElement {
-    GuiElement[] children;
+    private GuiElement[] children;
+    private GuiElement parent;
+    private Rect rect;
     
-    Rect rect;
+    void setParent(GuiElement p) {
+        if (parent) {
+            parent.removeChild(this);
+        }
+        
+        parent = p;
+        if(parent) {
+            parent.addChild(this);
+        }
+    }
+    
+    void removeChild(GuiElement e){
+        bool b(GuiElement a){
+            return a==e;
+        }
+        children = remove!(b)(children);
+        e.parent = null;
+    }
+    void addChild(GuiElement e) {
+        if (e.parent) {
+            e.setParent(this);
+        } else {
+            children ~= e;
+        }
+    }
+    
     bool isInside(vec2d pos){
         return rect.isInside(pos);
     }
@@ -116,12 +151,29 @@ class GuiElementText : public GuiElement {
 
 final class GUI : GuiElement {
     
-    
+    private GuiElement hoverElement;
     
     this() {
-        
+        rect = Rect(vec2d(0, 0), vec2d(1, 1));
     }
     
+    override bool isInside(vec2d p) {
+        return true;
+    }
+    
+    override bool onEvent(GuiEvent e) {
+        if (e.type == GuiEventType.MouseMove) {
+            auto move = e.moveEvent;
+            auto element = getElementFromPoint(move.pos);
+            if (element != this) {
+                if (hoverElement != element) {
+                    GuiEvent hoverEvent;
+                    hoverEvent.type = GuiEventType.HoverOn;
+                }
+            }
+        }
+        return false;;
+    }
         
 }
 
