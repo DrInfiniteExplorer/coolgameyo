@@ -73,14 +73,15 @@ class FontShader {
         fs = null;
     }
 
-    void render(vec2f offset, uint vbo, uint charCount){
+    void render(Rect rect, uint vbo, uint charCount){
         //glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glDisable(GL_DEPTH_TEST);
         glDepthMask(0);
         program.use();
-        offset.Y = renderSettings.windowHeight - offset.Y;
-        program.setUniform(program.offset, offset);        
+        rect.start.Y = 1.0 - rect.start.Y;
+        program.setUniform(program.offset, rect.start);        
+        //TODO: Use rest of rect for clipping?
         glEnableVertexAttribArray(0);
         glError();
         glEnableVertexAttribArray(1);
@@ -110,7 +111,6 @@ class StringTexture {
     Font font;
     uint texId;
     uint vbo;
-    vec2i position;
 
     FontQuad[] vertices;
     string currentText;
@@ -157,23 +157,29 @@ class StringTexture {
         }
         if(!resized){
             glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glError();
+            glError();
         }
         currentText = text;
         auto size = FontQuad.sizeof * len;
         glBufferSubData(GL_ARRAY_BUFFER, 0, size, vertices.ptr);
         glError();
     }
+    
+    //TODO: Make handle linebreaks in StringTexture? !!
+    // In that case, compute size when generating stuff. Yeah.
+    vec2d getSize() {
+        auto ret = convert!double(font.glyphSize()) *
+            vec2d(1.0/renderSettings.windowWidth, 1.0/renderSettings.windowHeight);
+        ret.X *= currentText.length;
+        return ret;
+    }
 
-    void setPosition(vec2i pos) { position = pos; }
-    void setPositionI(vec2i pos) { position = pos * vec2i(font.glyphSize); }
-
-    void render() {
+    void render(Rect rect) {
         glActiveTexture(GL_TEXTURE1);
         glError();
         glBindTexture(GL_TEXTURE_2D, texId);
         glError();
-        FontShader().render(util.convert!float(position), vbo, currentText.length);
+        FontShader().render(rect, vbo, currentText.length);
     }
 
     void destroy() {

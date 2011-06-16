@@ -9,6 +9,5 @@ void main() {
    vec4 color;
    color = texture2D(tex, tex_texcoord);
    frag_color = color;
-   //frag_color = vec4(1.0, color.xyz);
 }
 

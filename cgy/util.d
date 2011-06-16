@@ -53,6 +53,42 @@ vec3i getTilePos(T)(vector3d!T v){
     );
 }
 
+struct Rect {
+    vec2d start;
+    vec2d size;
+    
+    this(vec2d _start, vec2d _size){
+        start = _start;
+        size = _size;
+    }
+    
+    bool isInside(vec2d pos) {
+        return !(pos.X < start.X ||
+            pos.X > start.X+size.X ||
+            pos.Y < start.Y ||
+            pos.Y > start.Y+size.Y);
+    }
+    
+    vec2d getRelative(vec2d pos){
+        return vec2d(
+            (pos.X - start.X) / size.X,
+            (pos.Y - start.Y) / size.Y,
+        );
+    }
+    
+    Rect getSubRect(Rect subPart){
+        auto subStart = subPart.start / size;
+        auto subSize = subPart.size / size;
+        return Rect(start+subStart, subSize);
+    }
+    
+    invariant() {
+        enforce(size.X >= 0, "Width of rect negative!!");
+        enforce(size.Y >= 0, "Height of rect negative!!");
+    }
+}
+
+
 void setFlag(A,B)(ref A flags, B flag, bool value) {
     if (value) {
         flags |= flag;

@@ -172,6 +172,9 @@ final class ShaderProgram(T...){
         glUniform2fv(location, 1, &vec.X);
         glError();
     }
+    void setUniform(uint location, vec2d vec){
+        setUniform(location, convert!float(vec));
+    }
 
     void setUniform(uint location, matrix4 mat){
         glUniformMatrix4fv(location, 1, false, mat.pointer());

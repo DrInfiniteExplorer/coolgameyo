@@ -58,8 +58,10 @@ class Game{
     
     GUI               gui;
 
+    /+
     StringTexture     f1, f2, f3, f4, fps, tickTime, renderTime;
     StringTexture     unitInfo, selectedInfo;
+    +/
 
     bool possesedActive = true;
     bool _3rdPerson = false;
@@ -117,6 +119,8 @@ class Game{
             renderer.atlas = atlas;
             
             gui = new GUI();
+            auto text = new GuiElementText(gui, vec2d(0, 0), "Test");
+            
 
             atlas.upload();
             camera.setPosition(vec3d(-2, -2, 20));
@@ -165,6 +169,7 @@ class Game{
 
     TileSystem parseGameData() {
         if (isClient) {
+            /+
             font = new Font("fonts/courier");
             f1 = new StringTexture(font);
             f2 = new StringTexture(font);
@@ -191,6 +196,7 @@ class Game{
             f3.setText("Mipmapppinngggg!! (press f3 to togggeleee");
             f4.setText("VSync:" ~ (renderSettings.disableVSync? "Disabled" : "Enabled"));
             fps.setText("No fps calculted yet");
+            +/
         }
 
         auto sys = new TileSystem;
@@ -315,13 +321,20 @@ class Game{
                     case SDL_MOUSEMOTION:
                         mouseMove(event.motion);
                         guiEvent.type = GuiEventType.MouseMove;
-                        auto m = &guiEvent.moveEvent;
+                        auto m = &guiEvent.mouseMove;
                         m.pos.set(to!double(event.motion.x) / to!double(renderSettings.windowWidth),
                                   to!double(event.motion.y) / to!double(renderSettings.windowHeight));
                         gui.onEvent(guiEvent);
                         break;
                     case SDL_MOUSEBUTTONDOWN:
                     case SDL_MOUSEBUTTONUP:
+                        guiEvent.type = GuiEventType.MouseClick;
+                        auto m = &guiEvent.mouseClick;
+                        m.down = event.type == SDL_MOUSEBUTTONDOWN;
+                        m.left = event.button.button == SDL_BUTTON_LEFT; //Makes all others right. including scrollwheel, i think. :P
+                        m.pos.set(to!double(event.button.x) / to!double(renderSettings.windowWidth),
+                                  to!double(event.button.y) / to!double(renderSettings.windowHeight));
+                        gui.onEvent(guiEvent);
                         
                         break;
                     default:
@@ -348,6 +361,7 @@ class Game{
             renderer.render();
             gui.render();
             updateGui();
+            /+
             f1.render();
             f2.render();
             f3.render();
@@ -357,14 +371,15 @@ class Game{
             tickTime.render();
             unitInfo.render();
             selectedInfo.render();
+            +/
             SDL_GL_SwapBuffers();
         }
     }
 
     void updateGui() {
         string str = to!string(1_000_000 / renderer.frameAvg);
+        /+
         fps.setText("FPS: " ~str);
-
 
         str = to!string(renderer.frameAvg / 1000);
         renderTime.setText("Frame time: " ~ str);
@@ -374,6 +389,7 @@ class Game{
         
         string playerPos = "Camera position: " ~ to!string(camera.getPosition());
         unitInfo.setText(playerPos);
+        +/
 
     }
 
@@ -439,7 +455,9 @@ class Game{
         }
         writeln(tmp);
 
+        /+
         f3.setText(tmp);
+        +/
     }
 
     void onKey(SDL_KeyboardEvent event){
@@ -448,11 +466,15 @@ class Game{
         keyMap[key] = down;
         if(key == SDLK_F1 && down){
             renderSettings.renderWireframe ^= 1;
+            /+
             f1.setText("polygon fill:" ~ (renderSettings.renderWireframe? "Wireframe":"Fill"));
+            +/
         }
         if(key == SDLK_F2 && down) {
             useCamera ^= 1;
+            /+
             f2.setText(useCamera ? "Camera active" : "Camera locked");
+            +/
         }
         if(key == SDLK_F3 && down) stepMipMap();
         if(key == SDLK_F4 && down) {
@@ -462,7 +484,9 @@ class Game{
             } else {
                 writeln("Cannot poke with vsync unless wgl blerp");
             }
+            /+
             f4.setText("VSync:" ~ (renderSettings.disableVSync? "Disabled" : "Enabled"));
+            +/
         }
         if(key == SDLK_F5 && down) possesedActive ^= 1;
         if(key == SDLK_F6 && down) _3rdPerson ^= 1;
@@ -499,8 +523,10 @@ class Game{
             aabbd aabb = temp.getAABB(tile.halfstep);
             aabb.scale(vec3d(1.025f));
             asdasdasd = addAABB(aabb);
-            string tileString = "Tile under mouse: " ~ to!string(tilePos);
+            /+
+            string tileString = "Tile under mouse: " ~ to!string(tilePos);            
             selectedInfo.setText(tileString);
+            +/
         }
         if(dsadsadsa){
             removeLine(dsadsadsa);
@@ -596,7 +622,7 @@ class FPSControlAI : UnitAI, CustomChange {
         }
         // We have collided with some box
         //IF CAN STEP STEP
-        if (normal.Z == 0) {
+        if (normal.Z == 0 && fallSpeed <= 0) { //TODO: Is now a little better, but still not good.!
             auto stepStart = pos + vec3d(0, 0, unit.stepHeight);
             float stepTime;
             auto stepDir = dir * vec3d(1, 1, 0);
