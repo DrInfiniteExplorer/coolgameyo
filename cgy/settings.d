@@ -29,7 +29,7 @@ struct RenderSettings {
         float fieldOfView = 90.f;
         float aspectRatio = 4.f / 3.f; //Width per height
         float nearPlane = 0.5f;
-        float farPlane = 1000.f;        
+        float farPlane = 1000.f;
     }
 	
     InnerRenderSettings serializableSettings;
@@ -48,7 +48,8 @@ struct RenderSettings {
 
 struct ControlSettings {
 	static struct InnerControlSettings {
-		float mouseSensitivity = 1;
+		float mouseSensitivityX = 1;
+		float mouseSensitivityZ = 1;
 	}
 	InnerControlSettings serializableSettings;
 	alias serializableSettings this;
@@ -90,7 +91,7 @@ void loadSettings(){
 	    json.update(&controlSettings.serializableSettings, controlVal);
     }
 }
-    
+
 
 void saveSettings(){
     json.Value[string] values;
@@ -100,9 +101,36 @@ void saveSettings(){
 
     auto jsonRoot = json.Value(values);
     auto jsonString = to!string(jsonRoot);
+	
+	jsonString = prettyfyJSON(jsonString);
+	
     std.file.write("settings.json", jsonString);
 }
 
 
 
-
+// lat sta!
+// den som andrar detta far stryk!
+string prettyfyJSON(string text){
+	int tabs = 0;
+	text = std.array.replace(text, "," ,",\n");
+	text = std.array.replace(text, "{" ,"{\n");
+	text = std.array.replace(text, "}" ,"\n}");
+	string[] asdf = std.string.splitlines(text);
+	text = "";
+	foreach(fdsa; asdf){
+		if (indexOf(fdsa, "}") != -1){
+			tabs--;
+		}
+		for (int a = 0; a < tabs; a++){
+			std.array.insertInPlace(fdsa, 0, "  ");
+		}
+		if (indexOf(fdsa, "{") != -1){
+			tabs++;
+		}
+		text = text ~ fdsa;
+		text = text ~ "\n";
+	}
+	
+	return text;
+}
