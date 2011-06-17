@@ -56,7 +56,6 @@ class GuiElementText : public GuiElement {
             return GuiEventResponse.Reject;
         }
         return super.onEvent(e);
-        return GuiEventResponse.Ignore;
     }
 }
 

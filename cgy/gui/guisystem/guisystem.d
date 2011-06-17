@@ -234,12 +234,7 @@ final class GUI : GuiElement {
                //Got focused object? Give him input
                if (focusElement && focusElement != this) {
                    auto ret = focusElement.onEvent(e);
-                   return ret;
-                   //Lines below meaningful?
-                   if (ret != GuiEventResponse.Ignore) {
-                       return ret;
-                   }
-                   
+                   return ret;                   
                }
                //Handle other hotkeys
                //Else if non-focus-object'ish registered, send to it. (player walking etc..)

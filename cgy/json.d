@@ -294,11 +294,15 @@ void update(T)(T* t, string s) { return update!T(t, parse(s)); }
 void update(T)(T* t, Value val) {
     foreach (m; __traits(allMembers, T)) {
         alias typeof(__traits(getMember, *t, m)) M;
-        if (m !in val) continue;
-        static if (is (M == struct)) {
-            update(&__traits(getMember, *t, m), val[m]);
+        static if (isSomeFunction!(__traits(getMember, T, m))){
+            continue;
         } else {
-            __traits(getMember, *t, m) = read!M(val[m]);
+            if (m !in val) continue;
+            static if (is (M == struct)) {
+                update(&__traits(getMember, *t, m), val[m]);            
+            } else static if (__traits(compiles, read!M(val[m]))){
+                __traits(getMember, *t, m) = read!M(val[m]);
+            }
         }
     }
 }
@@ -308,8 +312,12 @@ Value encode(T)(T t) {
         return Value(t);
     } else static if (is (T == struct)) {
         Value[string] blep;
-        foreach (m; __traits(allMembers, T)) {
-            blep[m] = encode(__traits(getMember, t, m));
+        foreach (m; __traits(allMembers, T)) { 
+            static if (isSomeFunction!(__traits(getMember, T, m))) {
+                continue;
+            } else {
+                blep[m] = encode(__traits(getMember, t, m));
+            }
         }
         return Value(blep);
     } else static if (is (T U : U[])) {

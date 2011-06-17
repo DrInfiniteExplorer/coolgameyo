@@ -302,7 +302,7 @@ class Game{
                 }
                 switch (event.type) {
                     case SDL_QUIT:
-                        exit = true; break;
+                        exit = true;
                         break;
                     case SDL_KEYDOWN:
                     case SDL_KEYUP:
