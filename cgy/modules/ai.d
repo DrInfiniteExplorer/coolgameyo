@@ -12,7 +12,6 @@ class AIModule : Module, WorldListener {
 
     static struct UnitState {
         Unit* unit;
-        bool moving;
         int restTime;
     }
 
@@ -27,61 +26,25 @@ class AIModule : Module, WorldListener {
     }
 
     override void update(World world, Scheduler scheduler) {
-        void pushUnitTick(Unit* unit, ref UnitState state) {
-            scheduler.push(syncTask({
-                        //state.restTime = unit.tick(state.restTime, pathmodule);
+        void push(ref UnitState state) {
+            if (state.unit.ai is null) return;
+            if (state.restTime > 0) {
+                state.restTime -= 1;
+                return;
+            }
+            assert (state.restTime == 0);
+            scheduler.push(syncTask((const World world, ChangeList changelist) {
+                        state.restTime = state.unit.ai.tick(
+                            state.unit, changelist);
                         }));
         }
-
-        foreach(unit ; world.getUnits()) {
-            //writeln("U ", unit);
-            if (unit.ai) {
-                ((Unit* u) { // for new scope D: D: D:
-                    auto scoped = u;
-                    //writeln(unit);
-                    //writeln(unit.ai);
-                    scheduler.push(syncTask(
-                        (const World w, ChangeList changeList){
-                            auto ai = scoped.ai;
-                            //writeln(ptr);
-                            //writeln(cast(void*)ai);
-                            ai.tick(scoped, changeList);
-                        }
-                    ));
-                }) (unit);
-            }
-        }
-
-        Unit*[] movers = null;
-        foreach (_unit, ref state; states) {
-            auto unit = cast(Unit*)_unit; // BRUTAL HACK
-            if (unit.panics) {
-                pushUnitTick(unit, state);
-                continue;
-            }
-
-            if (state.moving) {
-                movers ~= unit;
-            } else {
-                if (--state.restTime == 0) {
-                    pushUnitTick(unit, state);
-                }
-            }
-        }
-
-        if (movers !is null) {
-            scheduler.push(syncTask((const World world) {
-                            foreach (mover; movers) {
-                                writeln("Herpi derpi movie unitie");
-                                // world.lagMoveUnit(mover,
-                                //    mover.pos + mover.direction * mover.speed); ???
-                            }
-                        }));
+        foreach (ref state; states) {
+            push(state);
         }
     }
 
     void addUnit(Unit* unit) {
-        states[unit] = UnitState(unit, false, 0);
+        states[unit] = UnitState(unit);
     }
     void removeUnit(Unit* unit) {
         states.remove(unit);

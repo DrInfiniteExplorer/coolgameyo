@@ -22,7 +22,7 @@ final class UnitType {
 }
 
 interface UnitAI {
-    void tick(Unit* unit, ChangeList changeList);
+    int tick(Unit* unit, ChangeList changeList);
 }
 
 
@@ -60,18 +60,6 @@ struct Unit {
         auto maxPos = minPos + vec3d(unitWidth, unitWidth, unitHeight);
         return aabbox3d!double(minPos, maxPos);
     }
-
-    //This function serve any purpose?
-    void tick(int ticksLeft, PathModule blerp) {
-        enforce(0, "This function is used");
-        if (ticksLeft > 0) { // Was interrupted!!!!!!!
-            assert (0);
-        } else if (ticksLeft < 0) { // Back from some movement or shit
-            assert (1 == 3);
-        }
-
-        enforce(0);
-    }
 }
 
 class MoveToAI : UnitAI {
@@ -87,7 +75,7 @@ class MoveToAI : UnitAI {
         this.removeOnArrive = removeOnArrive;
     }
 
-    override void tick(Unit* unit, ChangeList changeList) {
+    override int tick(Unit* unit, ChangeList changeList) {
         if (unit.destination != target.pos) {
             auto dist = (target.pos.value - unit.pos.value).getLength();
             int ticks = to!int(ceil(dist / speed));
@@ -100,6 +88,7 @@ class MoveToAI : UnitAI {
                 unit.ai = null;
             }
         }
+        return 0; // BUG: NO THOUGHT APPLIED HERE
     }
 }
 
@@ -111,6 +100,7 @@ class PatrolAI : UnitAI {
     Path path;
     PathModule pathModule;
     PathID id;
+    int lineId;
     bool toa, walking;
 
     this(Unit* u, UnitPos p, PathModule m) {
@@ -121,7 +111,7 @@ class PatrolAI : UnitAI {
         id = pathModule.findPath(u.pos, b);
     }
 
-    override void tick(Unit* unit, ChangeList changeList) {
+    override int tick(Unit* unit, ChangeList changeList) {
         if (walking) {
             auto goal = toa ? a : b;
             auto p = path.path.back;
@@ -138,30 +128,35 @@ class PatrolAI : UnitAI {
                 } else {
                     path.path.popBack();
                 }
+                return 0;
             } else {
-                auto dp = (p.value - unit.pos.value).setLength(unit.speed);
+                auto dp = p.value - unit.pos.value;
+                int ticks = to!int(floor(dp.getLength() / unit.speed));
+                dp.setLength(ticks * unit.speed);
                 //writeln("from ", unit.pos,
                 //        " to ", UnitPos(unit.pos.value + dp));
-                changeList.addMovement(unit, UnitPos(unit.pos.value + dp), 1);
+                changeList.addMovement(
+                        unit, UnitPos(unit.pos.value + dp), ticks);
+                return ticks;
             }
         } else {
             if (pathModule.pollPath(id, path)) {
                 assert (path.path.length > 0);
-                vec3d toVec(UnitPos p){
-                    return p.value;
-                }
-                auto positions = array(map!toVec(path.path));
-                if(lineId){
+                //vec3d toVec(UnitPos p){
+                //    return p.value;
+                //}            // stringy function should work here
+                auto positions = array(map!q{a.value}(path.path));
+                if (lineId) {
                     removeLine(lineId);
                 }
                 lineId = addLine(positions, vec3f(1, 1, 0));
                 walking = true;
-                tick(unit, changeList);
+                return tick(unit, changeList);
             } else {
                 // wait for path module to finish our path :(
+                return 0;
             }
         }
     }
-    int lineId;
 }
 
