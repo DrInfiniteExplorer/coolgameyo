@@ -3,7 +3,7 @@ import std.math, std.conv, std.random, std.algorithm;
 import std.c.process;
 import std.stdio;
 
-import tilesystem;
+import tiletypemanager;
 import world;
 import util;
 import pos;
@@ -23,14 +23,14 @@ private float foo(float x, float y) {
 */
 
 class WorldGenerator {
-    TileSystem sys;
+    TileTypeManager sys;
 
     uint randMap[512][512];
 
     ushort air, mud, rock, water;
 
-    this(TileSystem tileSystem) {
-        sys = tileSystem;
+    this(TileTypeManager tileTypeManager) {
+        sys = tileTypeManager;
         air = sys.idByName("air");
         mud = sys.idByName("mud");
         rock = sys.idByName("rock");

@@ -1,0 +1,28 @@
+{
+  "mud":{
+    "name":"Mud",
+    "material":"dirt",
+	"strength":10,
+	"tint_from_material":1,
+	"tint_color":{
+      "X":1,
+      "Y":0,
+      "Z":1
+    },
+	"texture_path_top":"textures/001.png",
+	"texture_path_sides":"textures/001.png",
+	"texture_path_bottom":"textures/001.png",
+	"texture_coord_top":{
+	  "X":0,
+	  "Y":0
+	}
+	"texture_coord_sides":{
+	  "X":0,
+	  "Y":16
+	}
+	"texture_coord_bottom":{
+	  "X":0,
+	  "Y":32
+	}
+  },
+}

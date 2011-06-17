@@ -146,8 +146,8 @@ class VBOMaker : WorldListener
 
         void fixTex(ref GRFace f, const(Tile) t, bool upper){
             auto p = upper ?
-                world.tileSystem.byID(t.type).textures.top :
-                world.tileSystem.byID(t.type).textures.bottom;
+                world.tileTypeManager.byID(t.type).textures.top :
+                world.tileTypeManager.byID(t.type).textures.bottom;
             
             vec3f tileTexSize = settings.getTileCoordSize();
             vec3f tileTexCoord = settings.getTileCoords(p);
@@ -217,7 +217,7 @@ class VBOMaker : WorldListener
         GRFace newFace;
         void fixTex(ref GRFace f, const(Tile) t){
             vec3f tileTexSize = settings.getTileCoordSize();
-            vec3f tileTexCoord = settings.getTileCoords(world.tileSystem.byID(t.type).textures.side);
+            vec3f tileTexCoord = settings.getTileCoords(world.tileTypeManager.byID(t.type).textures.side);
             foreach(ref vert ; f.quad){
                 vert.texcoord = vert.texcoord * tileTexSize + tileTexCoord;
             }
@@ -277,7 +277,7 @@ class VBOMaker : WorldListener
         GRFace newFace;
         void fixTex(ref GRFace f, const(Tile) t){
             vec3f tileTexSize = settings.getTileCoordSize();
-            vec3f tileTexCoord = settings.getTileCoords(world.tileSystem.byID(t.type).textures.side);
+            vec3f tileTexCoord = settings.getTileCoords(world.tileTypeManager.byID(t.type).textures.side);
             foreach(ref vert ; f.quad){
                 vert.texcoord = vert.texcoord * tileTexSize + tileTexCoord;
             }

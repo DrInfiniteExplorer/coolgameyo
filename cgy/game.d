@@ -27,7 +27,7 @@ import modules.ai;
 import modules.path;
 import pos;
 import scheduler;
-import tilesystem;
+import tiletypemanager;
 import util;
 import unit;
 import world;
@@ -105,8 +105,8 @@ class Game{
             atlas = new TileTextureAtlas; // HACK
         }
 
-        auto tilesys = parseGameData();
-        world = new World(tilesys);
+        auto tileTypeManager = parseGameData();
+        world = new World(tileTypeManager);
         assert (isWorker, "otherwise wont work lol (maybe)");
         //TODO: Make fix so that stuff doesn't lag when using non-1 value for num o threads.
         scheduler = new Scheduler(world);
@@ -174,7 +174,7 @@ class Game{
         scheduler.start();
     }
 
-    TileSystem parseGameData() {
+    TileTypeManager parseGameData() {
         if (isClient) {
             /+
             font = new Font("fonts/courier");
@@ -206,7 +206,7 @@ class Game{
             +/
         }
 
-        auto sys = new TileSystem;
+        auto sys = new TileTypeManager;
 
         enum f = "textures/001.png";
         if(isClient) atlas.addTile(f, vec2i(16, 0)); //Makes uninitialized tiles show the notiles-tile.

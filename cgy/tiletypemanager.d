@@ -10,17 +10,17 @@ static struct TileTextureID {
 
 class TileType {
     TileTextureID textures;
-
+	
     ushort id;
-
+	
     bool transparent = false;
     string name = "invalid";
-
+	
     this() {}
 }
 
 
-class TileSystem {
+class TileTypeManager {
     TileType[] types;
     ushort[string] _byName;
 

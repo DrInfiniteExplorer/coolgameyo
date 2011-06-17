@@ -5,7 +5,7 @@ import std.typecons;
 
 import graphics.camera;
 
-import tilesystem;
+import tiletypemanager;
 import worldgen;
 public import unit;
 import util;
@@ -55,15 +55,15 @@ class World {
 
     WorldListener[] listeners;
 
-    TileSystem tileSystem;
+    TileTypeManager tileTypeManager;
 
     private alias RedBlackTree!(BlockNum, q{a.value < b.value}) WorkSet;
     WorkSet toFloodFill;
     SectorNum[] floodingSectors;
 
-    this(TileSystem tilesys) {
+    this(TileTypeManager tilesys) {
         isServer = true;
-        tileSystem = tilesys;
+        tileTypeManager = tilesys;
         worldGen = new WorldGenerator(tilesys);
 
         toFloodFill = new WorkSet;
@@ -99,7 +99,7 @@ class World {
 
         auto p = xy.getTileXYPos();
 
-        auto tileTypeAir = tileSystem.idByName("air");
+        auto tileTypeAir = tileTypeManager.idByName("air");
         foreach(relPos ; RangeFromTo(0, SectorSize.x, 0, SectorSize.y, 0, 1)){
             auto tmp = p.value + vec2i(relPos.X, relPos.Y);
             auto posXY = TileXYPos(tmp);
@@ -285,7 +285,7 @@ class World {
     }
     
     int intersectTile(bool considerHalftiles = true)(vec3d start, vec3d dir, int tileIter, ref Tile outTile, ref TilePos outPos, ref vec3i Normal) {
-        auto tileTypeAir = tileSystem.idByName("air");        
+        auto tileTypeAir = tileTypeManager.idByName("air");        
         TilePos oldTilePos;
         int cnt;
         foreach(tilePos ; TileIterator(start, dir, tileIter)) {

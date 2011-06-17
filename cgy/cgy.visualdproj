@@ -334,7 +334,7 @@
   <File path="pos.d" />
   <File path="scheduler.d" />
   <File path="settings.d" />
-  <File path="tilesystem.d" />
+  <File path="tiletypemanager.d" />
   <File path="unit.d" />
   <File path="util.d" />
   <File path="world.d" />
