@@ -106,6 +106,6 @@ bool setWireframe(bool wireframe) {
         glEnable(GL_CULL_FACE);
         glError();
     }
-    return oldValue;
+    return ret;
 }
 

@@ -2,6 +2,7 @@
 module graphics.shader;
 
 import std.conv;
+import std.exception;
 import std.file;
 import std.stdio;
 
@@ -135,8 +136,9 @@ final class ShaderProgram(T...){
 
     //There is also bindAttribLocation (Which must be followed by a link())
     uint getAttribLocation(string name){
-        uint ret = glGetAttribLocation(program, name.ptr);
+        uint ret = glGetAttribLocation(program, name.ptr);        
         glError();
+        enforce(ret != -1, "Could not find attribute of name: " ~name);
         return ret;
     }
 

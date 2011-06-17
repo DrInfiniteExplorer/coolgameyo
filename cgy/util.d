@@ -61,7 +61,7 @@ struct Rect {
         start = _start;
         size = _size;
     }
-    
+        
     bool isInside(vec2d pos) {
         return !(pos.X < start.X ||
             pos.X > start.X+size.X ||
@@ -71,14 +71,14 @@ struct Rect {
     
     vec2d getRelative(vec2d pos){
         return vec2d(
-            (pos.X - start.X) / size.X,
-            (pos.Y - start.Y) / size.Y,
+            (pos.X - start.X) * size.X,
+            (pos.Y - start.Y) * size.Y,
         );
     }
     
     Rect getSubRect(Rect subPart){
-        auto subStart = subPart.start / size;
-        auto subSize = subPart.size / size;
+        auto subStart = subPart.start * size;
+        auto subSize = subPart.size * size;
         return Rect(start+subStart, subSize);
     }
     

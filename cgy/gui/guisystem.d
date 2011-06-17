@@ -1,12 +1,16 @@
 
 
-module gui.gui;
+module gui.guisystem;
 
 import std.algorithm;
+import std.conv;
 import std.exception;
 import std.stdio;
 
+import graphics._2d.rect;
 import graphics.font;
+import graphics.ogl;
+
 import util;
 
 enum GuiEventType {
@@ -55,6 +59,7 @@ class GuiElement {
     private GuiElement[] children;
     private GuiElement parent;
     private Rect rect;
+    private Rect absoluteRect;
     private Font font;
     
     this(GuiElement parent){
@@ -121,26 +126,20 @@ class GuiElement {
         }
     }
     
-    GuiEventResponse event(GuiEvent e){
+    GuiEventResponse onEvent(GuiEvent e){
         switch(e.type) {
             case GuiEventType.MouseMove: writeln("MouseMove!"); break;
-            default: writeln("other event."); break;
+            default: writeln("other event." ~ to!string(e.type)); break;
         }
         return GuiEventResponse.Ignore;
     }
     
-    GuiEventResponse onEvent(GuiEvent e){
-        auto ret = event(e);
-        if(ret != GuiEventResponse.Ignore){
-            return ret;
-        }
+    
+    void onMove() {
+        absoluteRect = getAbsoluteRect();
         foreach(child ; children) {
-            ret = child.onEvent(e);
-            if(ret != GuiEventResponse.Ignore){
-                return ret;
-            }
+            child.onMove();
         }
-        return GuiEventResponse.Ignore;
     }
 
     GuiElement getElementFromPoint(vec2d pos){
@@ -197,11 +196,11 @@ class GuiElementText : public GuiElement {
         super.render();
     }
     
-    override GuiEventResponse event(GuiEvent e) {
+    override GuiEventResponse onEvent(GuiEvent e) {
         if (e.type == GuiEventType.FocusOn) {
             return GuiEventResponse.Reject;
         }
-        return super.event(e);
+        return super.onEvent(e);
         return GuiEventResponse.Ignore;
     }
 }
@@ -209,8 +208,14 @@ class GuiElementText : public GuiElement {
 class GuiElementWindow : public GuiElement {
     private string caption;
     private bool dragable;
+    private bool dragging; //true when dragging
+    vec2d dragHold; //Hold-position of window, kinda, yeah.
     private GuiElementText captionText;
-    this(GuiElement parent, Rect r, bool dragAble, string caption) {
+    
+    Rect barRect;
+    Rect clientRect;
+    
+    this(GuiElement parent, Rect r, string caption, bool dragAble = true) {
         super(parent);
         setRect(r);
         setCaption(caption);
@@ -224,14 +229,65 @@ class GuiElementWindow : public GuiElement {
         } else {
             captionText.setText(text);            
         }
+        recalcRects();
     }
     void setDragable(bool enable) {
         dragable = enable;
     }
     
+    private void recalcRects() {
+        auto size = captionText.getRect().size;
+        absoluteRect = getAbsoluteRect();
+        barRect = absoluteRect.getSubRect(Rect(vec2d(0.0, 0.0), vec2d(1.0, 1.0)));
+        clientRect = absoluteRect.getSubRect(Rect(vec2d(0.0, 0.0), vec2d(1.0, 1.0)));
+        barRect.size.Y = size.Y;
+        clientRect.start.Y += size.Y;
+        clientRect.size.Y -= size.Y;
+    }
+    
+    override void onMove() {
+        recalcRects();
+        super.onMove();
+    }
+    
     override void render() {
         //Render background, etc, etc.
+        renderRect(absoluteRect); //Background color
+        renderRect(barRect, vec3f(1.0, 0.0, 0.0));
+        renderOutlineRect(barRect, vec3f(0.0, 1.0, 0.0));
         super.render();
+    }
+    
+    override GuiEventResponse onEvent(GuiEvent e) {
+        if (e.type == GuiEventType.MouseClick) {
+            auto m = &e.mouseClick;
+            if(m.left) {
+                if (m.down) {
+                    //barRect is in absolute coordinates already                    
+                    if(barRect.isInside(m.pos)) {
+                        dragging = true;
+                        //Calculate relative drag-hold-position.                        
+                        dragHold = rect.start - parent.getAbsoluteRect().getRelative(m.pos);
+                        return GuiEventResponse.Accept;
+                    }                    
+                } else if(dragging) {
+                    dragging = false;
+                    return GuiEventResponse.Accept;
+                }
+            }
+        }
+        if (e.type == GuiEventType.MouseMove) {
+            if (dragging) {
+                auto m = e.mouseMove;
+                auto relPos = parent.getAbsoluteRect().getRelative(m.pos);
+                rect.start = relPos + dragHold;
+                
+                //Move window
+                onMove();
+                return GuiEventResponse.Accept;
+            }
+        }
+        return super.onEvent(e);
     }
 }
 
@@ -327,6 +383,15 @@ final class GUI : GuiElement {
         }
         return GuiEventResponse.Ignore;
     }        
+    
+    
+    override void render() {
+        glDisable(GL_DEPTH_TEST);
+        glDepthMask(0);        
+        super.render();
+        glDepthMask(1);        
+        glEnable(GL_DEPTH_TEST);        
+    }
 }
 
 

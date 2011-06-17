@@ -17,7 +17,7 @@ import graphics.ogl;
 import graphics.renderer;
 import graphics.texture;
 
-import gui.gui;
+import gui.guisystem;
 
 import changelist;
 import modules.ai;
@@ -119,8 +119,8 @@ class Game{
             renderer.atlas = atlas;
             
             gui = new GUI();
-            auto text = new GuiElementText(gui, vec2d(0, 0), "Test");
-            
+            auto wnd = new GuiElementWindow(gui, Rect(vec2d(0.1, 0.1), vec2d(0.4, 0.4)), "Windoooowww~!");
+            auto text = new GuiElementText(wnd, vec2d(0.1, 0.1), "Test");            
 
             atlas.upload();
             camera.setPosition(vec3d(-2, -2, 20));
