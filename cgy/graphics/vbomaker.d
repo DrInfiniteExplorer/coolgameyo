@@ -501,7 +501,9 @@ class VBOMaker : WorldListener
         return seenCount != 0;
     }
 
-    void notifySectorLoad(SectorNum sectorNum)
+    void onAddUnit(SectorNum, Unit*) { }
+
+    void onSectorLoad(SectorNum sectorNum)
     {
         //version(Windows) auto start = GetTickCount();
         auto grNumMin = sectorNum.toTilePos().getGraphRegionNum();
@@ -532,7 +534,7 @@ class VBOMaker : WorldListener
             regionsToUpdate ~= newRegions;
         }
     }
-    void notifySectorUnload(SectorNum sectorNum)
+    void onSectorUnload(SectorNum sectorNum)
     {
         auto sectorAABB = sectorNum.getAABB();
         {
@@ -547,7 +549,7 @@ class VBOMaker : WorldListener
             }
         }
     }
-    void notifyTileChange(TilePos tilePos)
+    void onTileChange(TilePos tilePos)
     {
         auto tileAABB = tilePos.getAABB();
         int cnt=0;

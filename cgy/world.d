@@ -7,7 +7,7 @@ import graphics.camera;
 
 import tilesystem;
 import worldgen;
-import unit;
+public import unit;
 import util;
 
 public import pos;
@@ -16,9 +16,10 @@ public import worldparts.block;
 public import worldparts.tile;
 
 interface WorldListener {
-    void notifySectorLoad(SectorNum sectorNum);
-    void notifySectorUnload(SectorNum sectorNum);
-    void notifyTileChange(TilePos tilePos);
+    void onAddUnit(SectorNum sectorNum, Unit* unit);
+    void onSectorLoad(SectorNum sectorNum);
+    void onSectorUnload(SectorNum sectorNum);
+    void onTileChange(TilePos tilePos);
 }
 
 
@@ -267,6 +268,8 @@ class World {
         getSector(sectorNum).addUnit(unit);
 
         increaseActivity(unit.pos);
+
+        notifyAddUnit(sectorNum, unit);
     }
 
     Tile getTile(TilePos tilePos, bool createBlock=true,
@@ -434,20 +437,24 @@ class World {
         listeners.length -= 1;
     }
 
-    void notifySectorLoad(SectorNum sectorNum) {
-        writeln("notifying ", sectorNum);
+    void notifyAddUnit(SectorNum sectorNum, Unit* unit) {
         foreach (listener; listeners) {
-            listener.notifySectorLoad(sectorNum);
+            listener.onAddUnit(sectorNum, unit);
+        }
+    }
+    void notifySectorLoad(SectorNum sectorNum) {
+        foreach (listener; listeners) {
+            listener.onSectorLoad(sectorNum);
         }
     }
     void notifySectorUnload(SectorNum sectorNum) {
         foreach (listener; listeners) {
-            listener.notifySectorUnload(sectorNum);
+            listener.onSectorUnload(sectorNum);
         }
     }
     void notifyTileChange(TilePos tilePos) {
         foreach (listener; listeners) {
-            listener.notifyTileChange(tilePos);
+            listener.onTileChange(tilePos);
         }
     }
 

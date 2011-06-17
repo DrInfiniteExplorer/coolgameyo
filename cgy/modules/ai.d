@@ -11,16 +11,19 @@ import unit;
 class AIModule : Module, WorldListener {
 
     static struct UnitState {
+        Unit* unit;
         bool moving;
         int restTime;
     }
 
     PathModule pathmodule;
+    World world;
 
     UnitState[Unit*] states;
 
-    this(PathModule pathmodule_) {
+    this(PathModule pathmodule_, World w) {
         pathmodule = pathmodule_;
+        world = w;
     }
 
     override void update(World world, Scheduler scheduler) {
@@ -66,7 +69,7 @@ class AIModule : Module, WorldListener {
             }
         }
 
-        if(movers !is null) {
+        if (movers !is null) {
             scheduler.push(syncTask((const World world) {
                             foreach (mover; movers) {
                                 writeln("Herpi derpi movie unitie");
@@ -77,8 +80,26 @@ class AIModule : Module, WorldListener {
         }
     }
 
-    override void notifySectorLoad(SectorNum) { }
-    override void notifySectorUnload(SectorNum) { }
-    override void notifyTileChange(TilePos) { }
+    void addUnit(Unit* unit) {
+        states[unit] = UnitState(unit, false, 0);
+    }
+    void removeUnit(Unit* unit) {
+        states.remove(unit);
+    }
+
+    override void onAddUnit(SectorNum num, Unit* unit) {
+        addUnit(unit);
+    }
+    override void onSectorLoad(SectorNum num) {
+        foreach (unit; world.getSector(num).units) {
+            addUnit(unit);
+        }
+    }
+    override void onSectorUnload(SectorNum num) {
+        foreach (unit; world.getSector(num).units) {
+            removeUnit(unit);
+        }
+    }
+    override void onTileChange(TilePos) { }
 }
 

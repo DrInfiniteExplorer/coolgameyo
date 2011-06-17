@@ -66,6 +66,13 @@ class Sector {
 
     //TODO: Validate this code
     const(Block)[] getBlocks() const {
+        debug {
+            auto b = &blocks[0][0][0];
+            auto bb = b[0 .. BlocksPerSector.total];
+            assert (&bb[0] is &blocks[0][0][0]);
+            assert (&bb[$-1] is &blocks[$-1][$-1][$-1]);
+        }
+
         return (&blocks[0][0][0])[0 .. BlocksPerSector.total];
     }
 

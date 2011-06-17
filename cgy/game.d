@@ -111,7 +111,7 @@ class Game{
         scheduler = new Scheduler(world);
 
         auto pathModule = new PathModule;
-        auto aiModule = new AIModule(pathModule);
+        auto aiModule = new AIModule(pathModule, world);
         scheduler.registerModule(pathModule);
         scheduler.registerModule(aiModule);
 
