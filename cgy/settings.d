@@ -30,8 +30,6 @@ struct RenderSettings {
         float aspectRatio = 4.f / 3.f; //Width per height
         float nearPlane = 0.5f;
         float farPlane = 1000.f;
-		
-		string asdf = "hej alla glada barn!";
     }
 	
     InnerRenderSettings serializableSettings;

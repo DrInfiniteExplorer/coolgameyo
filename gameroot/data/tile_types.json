@@ -1,0 +1,41 @@
+{
+  "mud":{
+    "displayName":"Mud",
+    "material":"dirt",
+	"strength":10,
+	"tintFromMaterial":1,
+	"tintColor":{ "X":255, "Y":255, "Z":255 },
+	"texturePathTop":"textures/001.png",
+	"texturePathSides":"textures/001.png",
+	"texturePathBottom":"textures/001.png",
+	"textureCoordTop":{ "X":16, "Y":0 },
+	"textureCoordSides":{ "X":16, "Y":16 },
+	"textureCoordBottom":{ "X":16, "Y":32 }
+  },
+  "rock":{
+    "displayName":"Rock",
+    "material":"din mamma",
+	"strength":10,
+	"tintFromMaterial":1,
+	"tintColor":{ "X":200, "Y":200, "Z":200 },
+	"texturePathTop":"textures/001.png",
+	"texturePathSides":"textures/001.png",
+	"texturePathBottom":"textures/001.png",
+	"textureCoordTop":{ "X":16, "Y":0 },
+	"textureCoordSides":{ "X":16, "Y":16 },
+	"textureCoordBottom":{ "X":16, "Y":32 }
+  },
+  "water":{
+    "displayName":"Water",
+    "material":"min mamma",
+	"strength":10,
+	"tintFromMaterial":1,
+	"tintColor":{ "X":16, "Y":0, "Z":255 },
+	"texturePathTop":"textures/001.png",
+	"texturePathSides":"textures/001.png",
+	"texturePathBottom":"textures/001.png",
+	"textureCoordTop":{ "X":16, "Y":0 },
+	"textureCoordSides":{ "X":16, "Y":16 },
+	"textureCoordBottom":{ "X":16, "Y":32 }
+  },
+}

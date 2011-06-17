@@ -7,6 +7,8 @@
 //       probably more stuff
 //       the float recognising code is retarded
 
+// TODO: kommentera!
+
 module json;
 
 
@@ -22,13 +24,13 @@ struct Value {
         string str_;
         real num_;
         Value[string] pairs;
-        Value[] elements;
+        Value[] elements;   // TODO: Make getter setter range thing
         bool boolval;
     }
 
     bool opIn_r(string name) {
         enforce (type == Type.object);
-        return !!(name in pairs);
+        return !!(name in pairs); //TODO: WTF is !! ????
     }
     Value opIndex(string name) {
         enforce (type == Type.object);

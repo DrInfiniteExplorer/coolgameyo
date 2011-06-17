@@ -105,7 +105,7 @@ class Game{
             atlas = new TileTextureAtlas; // HACK
         }
 
-        auto tileTypeManager = parseGameData();
+        auto tileTypeManager = new TileTypeManager(atlas);//parseGameData();
         world = new World(tileTypeManager);
         assert (isWorker, "otherwise wont work lol (maybe)");
         //TODO: Make fix so that stuff doesn't lag when using non-1 value for num o threads.
@@ -174,7 +174,7 @@ class Game{
         scheduler.start();
     }
 
-    TileTypeManager parseGameData() {
+    void parseGameData() {
         if (isClient) {
             /+
             font = new Font("fonts/courier");
@@ -206,7 +206,7 @@ class Game{
             +/
         }
 
-        auto sys = new TileTypeManager;
+/*        auto sys = new TileTypeManager;
 
         enum f = "textures/001.png";
         if(isClient) atlas.addTile(f, vec2i(16, 0)); //Makes uninitialized tiles show the notiles-tile.
@@ -249,7 +249,7 @@ class Game{
         sys.add(rock);
         sys.add(water);
 
-        return sys;
+        return sys;*/
     }
 
     void start() {
