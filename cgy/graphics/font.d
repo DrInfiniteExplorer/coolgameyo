@@ -42,7 +42,7 @@ class FontShader {
     }
 
     
-    alias ShaderProgram!("position", "texcoord", "offset", "tex", "viewportInv") FontShaderProgram;
+    alias ShaderProgram!("position", "texcoord", "offset", "tex", "viewportInv", "color") FontShaderProgram;
     FontShaderProgram program;
     private this(){
         program = new FontShaderProgram("shaders/fontShader.vert", "shaders/fontShader.frag");
@@ -54,6 +54,7 @@ class FontShader {
         program.offset = program.getUniformLocation("offset");
         program.tex = program.getUniformLocation("tex");
         program.viewportInv = program.getUniformLocation("viewportInv");
+        program.color = program.getUniformLocation("color");
         
         program.use();
         program.setUniform(program.tex, 1); //Font will always reside in texture unit 1 yeaaaah!
@@ -73,12 +74,15 @@ class FontShader {
         fs = null;
     }
 
-    void render(Rect rect, uint vbo, uint charCount){
-        //glEnable(GL_BLEND);
+    void render(Rect rect, uint vbo, uint charCount, bool transparent, vec3f color){
+        if (transparent) {
+            glEnable(GL_BLEND);
+        }
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glDisable(GL_DEPTH_TEST);
         glDepthMask(0);
         program.use();
+        program.setUniform(program.color, color);
         rect.start.Y = 1.0 - rect.start.Y;
         program.setUniform(program.offset, rect.start);        
         //TODO: Use rest of rect for clipping?
@@ -101,8 +105,8 @@ class FontShader {
         glError();
         program.use(false);
         glDepthMask(1);
-        glDisable(GL_BLEND);
         glEnable(GL_DEPTH_TEST);
+        glDisable(GL_BLEND);
     }
 }
 
@@ -111,6 +115,8 @@ class StringTexture {
     Font font;
     uint texId;
     uint vbo;
+    bool transparent;
+    vec3f color;
 
     FontQuad[] vertices;
     string currentText;
@@ -165,6 +171,13 @@ class StringTexture {
         glError();
     }
     
+    void setTransparent(bool trans) {
+        transparent = trans;
+    }
+    void setColor(vec3f c) {
+        color = c;
+    }
+    
     //TODO: Make handle linebreaks in StringTexture? !!
     // In that case, compute size when generating stuff. Yeah.
     vec2d getSize() {
@@ -179,7 +192,7 @@ class StringTexture {
         glError();
         glBindTexture(GL_TEXTURE_2D, texId);
         glError();
-        FontShader().render(rect, vbo, currentText.length);
+        FontShader().render(rect, vbo, currentText.length, transparent, color);
     }
 
     void destroy() {

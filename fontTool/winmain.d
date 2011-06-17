@@ -127,6 +127,8 @@ int myWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int
 
     int xPos = 0;
     int yPos = 0;
+    SetTextColor(memDC, 0x00FFFFFF); //white
+    SetBkColor(memDC, 0);
     foreach( i ; glyphStart .. glyphEnd + 1) {
         const(char) c = to!(const(char))(i);
 
@@ -211,7 +213,10 @@ int myWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int
         int g = pPixel[1];
         int b = pPixel[2];
         pPixel[3] = 255;
-        pPixel[3] -= cast(ubyte)min(255, (r+g+b)/3);
+        pPixel[3] = to!ubyte((r+g+b)/3);
+        if(pPixel[3] != 0) {
+            writeln(r, " ", g, " ", b, " ", pPixel[3]);
+        }
         pPixel += 4;
     }
 

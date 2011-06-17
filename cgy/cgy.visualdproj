@@ -194,6 +194,9 @@
    <File path="stolen\quaternion.d" />
   </Folder>
   <Folder name="graphics">
+   <Folder name="_2d">
+    <File path="graphics\_2d\rect.d" />
+   </Folder>
    <File path="graphics\camera.d" />
    <File path="graphics\debugging.d" />
    <File path="graphics\font.d" />
@@ -203,9 +206,6 @@
    <File path="graphics\shader.d" />
    <File path="graphics\texture.d" />
    <File path="graphics\vbomaker.d" />
-   <Folder name="_2d">
-    <File path="graphics\_2d\rect.d" />
-   </Folder>
   </Folder>
   <Folder name="worldparts">
    <File path="worldparts\block.d" />
@@ -230,7 +230,9 @@
    <File path="modules\path.d" />
   </Folder>
   <Folder name="gui">
-   <File path="gui\guisystem.d" />
+   <Folder name="guisystem">
+    <File path="gui\guisystem\guisystem.d" />
+   </Folder>
   </Folder>
   <File path="changelist.d" />
   <File path="game.d" />

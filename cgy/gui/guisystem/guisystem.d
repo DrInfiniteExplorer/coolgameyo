@@ -1,6 +1,6 @@
 
 
-module gui.guisystem;
+module gui.guisystem.guisystem;
 
 import std.algorithm;
 import std.conv;
@@ -166,10 +166,12 @@ class GuiElement {
 
 class GuiElementText : public GuiElement {
     StringTexture text;
+    bool transparent;    
+    vec3f color;
     this(GuiElement parent) {
         super(parent);
     }
-    this(GuiElement parent, vec2d pos, string str)
+    this(GuiElement parent, vec2d pos, string str, bool _transparent = true)
     in{
         enforce(parent !is null, "Cant use this constructor without a parent!");
         enforce(parent.getFont() !is null, "Cant use this constructor if parent doesnt have a font!");
@@ -177,8 +179,9 @@ class GuiElementText : public GuiElement {
     body{        
         super(parent);
         
-        text = new StringTexture(getFont());
-        text.setText(str);
+        transparent = _transparent;
+        setText(str);
+        setTransparency(transparent);
         vec2d size = text.getSize();
         rect = Rect(pos, size);
     }
@@ -188,6 +191,14 @@ class GuiElementText : public GuiElement {
             text = new StringTexture(getFont());
         }
         text.setText(str);
+    }
+    void setTransparency(bool transp) {
+        transparent = transp;
+        text.setTransparent(transparent);
+    }
+    void setColor(vec3f c) {
+        color = c;
+        text.setColor(color);
     }
     
     override void render(){
@@ -229,6 +240,7 @@ class GuiElementWindow : public GuiElement {
         } else {
             captionText.setText(text);            
         }
+        captionText.setColor(vec3f(1.0, 1.0, 1.0));
         recalcRects();
     }
     void setDragable(bool enable) {
@@ -252,7 +264,8 @@ class GuiElementWindow : public GuiElement {
     
     override void render() {
         //Render background, etc, etc.
-        renderRect(absoluteRect); //Background color
+        renderRect(absoluteRect, vec3f(0.5, 0.5, 0.5)); //Background color
+        renderOutlineRect(clientRect, vec3f(0.0, 0.0, 1.0));
         renderRect(barRect, vec3f(1.0, 0.0, 0.0));
         renderOutlineRect(barRect, vec3f(0.0, 1.0, 0.0));
         super.render();
