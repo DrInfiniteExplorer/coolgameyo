@@ -17,7 +17,9 @@ import graphics.ogl;
 import graphics.renderer;
 import graphics.texture;
 
-import gui.guisystem;
+import gui.guisystem.guisystem;
+import gui.guisystem.window;
+import gui.guisystem.text;
 
 import changelist;
 import modules.ai;

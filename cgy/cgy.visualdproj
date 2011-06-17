@@ -232,6 +232,9 @@
   <Folder name="gui">
    <Folder name="guisystem">
     <File path="gui\guisystem\guisystem.d" />
+    <File path="gui\guisystem\window.d" />
+    <File path="gui\guisystem\text.d" />
+    <File path="gui\guisystem\button.d" />
    </Folder>
   </Folder>
   <File path="changelist.d" />
