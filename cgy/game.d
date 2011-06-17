@@ -20,6 +20,7 @@ import graphics.texture;
 import gui.guisystem.guisystem;
 import gui.guisystem.window;
 import gui.guisystem.text;
+import gui.guisystem.button;
 
 import changelist;
 import modules.ai;
@@ -122,7 +123,11 @@ class Game{
             
             gui = new GUI();
             auto wnd = new GuiElementWindow(gui, Rect(vec2d(0.1, 0.1), vec2d(0.4, 0.4)), "Windoooowww~!");
-            auto text = new GuiElementText(wnd, vec2d(0.1, 0.1), "Test");            
+            auto text = new GuiElementText(wnd, vec2d(0.1, 0.1), "Test");     
+            auto butt = new GuiElementButton(wnd, Rect(vec2d(0.1, 0.2), vec2d(0.3, 0.3)), "Press me",
+                (bool down, bool abort){
+                    text.setText("YEAAAAAAH! "~ to!string(down) ~" " ~ to!string(abort));
+                });
 
             atlas.upload();
             camera.setPosition(vec3d(-2, -2, 20));
@@ -376,6 +381,8 @@ class Game{
             +/
             SDL_GL_SwapBuffers();
         }
+        writeln("Main thread got exited? :S");
+        BREAKPOINT(!exit);
     }
 
     void updateGui() {

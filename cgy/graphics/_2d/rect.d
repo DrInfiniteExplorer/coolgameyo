@@ -6,31 +6,53 @@ import std.exception;
 import util;
 import graphics.ogl;
 import graphics.shader;
+import settings;
 
 struct RectVertex {
     vec2f pos;
     vec3f color;
 }
 
+immutable(char[]) fixRect = "
+    auto start = convert!float(r.start);
+    start.Y = 1.0 - start.Y;
+    auto size = convert!float(r.size);
+    size.Y = - size.Y;
+    auto x = vec2f(size.X, 0);
+    auto y = vec2f(0, size.Y);
+    ";
+
 struct RectQuad{
     RectVertex[4] vertices;
     
-    void renderQuad() {
-        RectShader().render(this);
+    void renderQuad(bool lines = false) {
+        RectShader().render(this, lines);
     }
     
     void setPosition(Rect r) {
-        auto start = convert!float(r.start);
-        start.Y = 1.0 - start.Y;
-        auto size = convert!float(r.size);
-        size.Y = - size.Y;
-        auto x = vec2f(size.X, 0);
-        auto y = vec2f(0, size.Y);
-    
+        mixin(fixRect);
         vertices[0].pos = start;
         vertices[1].pos = start + y;
         vertices[2].pos = start + size;
         vertices[3].pos = start + x;
+    }
+    
+    void setUL(Rect r) {
+        mixin(fixRect);
+    
+        vertices[0].pos = start;
+        vertices[1].pos = start + y;
+        vertices[2].pos = start;
+        vertices[3].pos = start + x;        
+    }
+
+    void setLR(Rect r) {
+        mixin(fixRect);
+    
+        vertices[0].pos = start + y;
+        vertices[1].pos = start + size;
+        vertices[2].pos = start + size;
+        vertices[3].pos = start + x;        
     }
     
     void setColor(vec3f c) {
@@ -66,7 +88,7 @@ class RectShader {
         rectProgram.destroy();
     }
     
-    void render(RectQuad q) {
+    void render(RectQuad q, bool lines) {
         //glEnable(GL_BLEND);
         //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         //glDisable(GL_DEPTH_TEST);
@@ -85,8 +107,13 @@ class RectShader {
         glError();
         glVertexAttribPointer(rectProgram.color, 3, GL_FLOAT, GL_FALSE, RectVertex.sizeof, cast(void*)&q.vertices[0].color.X);
         glError();
-        glDrawArrays(GL_QUADS, 0, 4);
-        glError();
+        if (lines) {
+            glDrawArrays(GL_LINES, 0, 4);
+            glError();
+        } else {
+            glDrawArrays(GL_QUADS, 0, 4);
+            glError();
+        }
 
         glDisableVertexAttribArray(rectProgram.position);
         glError();
@@ -110,5 +137,24 @@ void renderOutlineRect(Rect r, vec3f color = vec3f(1.0, 1.0, 1.0)) {
     auto old = setWireframe(true);
     renderRect(r, color);
     setWireframe(old);
+}
+
+
+void renderXXRect(Rect r, vec3f color, bool UL) {
+    RectQuad quad;
+    UL ? quad.setUL(r) : quad.setLR(r);
+    quad.setColor(color);
+    auto old = setWireframe(true);
+    quad.renderQuad(true);
+    setWireframe(old);    
+}
+
+Rect pixDiff(Rect r, vec2i startOffset, vec2i stopOffset) {
+    auto perPixel = vec2d(1.0 / renderSettings.windowWidth, 1.0 / renderSettings.windowHeight);
+    auto add = convert!double(startOffset) * perPixel;
+    return Rect(
+        r.start + add,
+        r.size + convert!double(stopOffset) * perPixel - add
+    );
 }
 

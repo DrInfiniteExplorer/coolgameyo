@@ -69,6 +69,14 @@ class GuiElement {
         }
     }
     
+    void destroy() {
+        foreach(child ; children) {
+            child.destroy();
+        }
+        setParent(null);
+        //Release resources
+    }
+    
     GuiElement getParent() {
         return parent;
     }

@@ -10,12 +10,10 @@ import util;
 
 class GuiElementText : public GuiElement {
     StringTexture text;
-    bool transparent;    
-    vec3f color;
     this(GuiElement parent) {
         super(parent);
     }
-    this(GuiElement parent, vec2d pos, string str, bool _transparent = true)
+    this(GuiElement parent, vec2d pos, string str, bool transparent = true)
     in{
         enforce(parent !is null, "Cant use this constructor without a parent!");
         enforce(parent.getFont() !is null, "Cant use this constructor if parent doesnt have a font!");
@@ -23,7 +21,6 @@ class GuiElementText : public GuiElement {
     body{        
         super(parent);
         
-        transparent = _transparent;
         setText(str);
         setTransparency(transparent);
         vec2d size = text.getSize();
@@ -37,12 +34,10 @@ class GuiElementText : public GuiElement {
         text.setText(str);
     }
     void setTransparency(bool transp) {
-        transparent = transp;
-        text.setTransparent(transparent);
+        text.setTransparent(transp);
     }
     void setColor(vec3f c) {
-        color = c;
-        text.setColor(color);
+        text.setColor(c);
     }
     
     override void render(){

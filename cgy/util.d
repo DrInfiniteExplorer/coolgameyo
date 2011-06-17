@@ -8,11 +8,11 @@ import std.range;
 
 public import std.datetime;
 
-//import world : BlockSize, SectorSize , GraphRegionSize;
+//TODO: Got order-dependant bugs here. If doing pos, stolen, worldparts, then we get bugs and bugs. sadface.
 import worldparts.sector;
 import worldparts.block;
-import pos;
 import stolen.all;
+import pos;
 
 version(Windows){
     import std.c.windows.windows;
@@ -71,21 +71,49 @@ struct Rect {
     
     vec2d getRelative(vec2d pos){
         return vec2d(
-            (pos.X - start.X) * size.X,
-            (pos.Y - start.Y) * size.Y,
+            (pos.X - start.X) / size.X,
+            (pos.Y - start.Y) / size.Y,
         );
     }
     
+    //TODO: better name required for this. See unittests below. Derp.
     Rect getSubRect(Rect subPart){
         auto subStart = subPart.start * size;
         auto subSize = subPart.size * size;
         return Rect(start+subStart, subSize);
     }
     
+    //TODO: More fitting name required. What it does: Maps for example two absolute coords into the local coords
+    // of 'this' rect. Ie. (0.5, 0.5, 0.5, 0.5).subInv(0.5, 0.5, 0.25, 0.25) -> (0, 0, 0.5, 0.5)
+    Rect getSubRectInv(Rect part){
+        auto newSize = part.size / size;
+        auto newStart = (part.start - start) / size;
+        return Rect(newStart, newSize);
+    }
+        
     invariant() {
         enforce(size.X >= 0, "Width of rect negative!!");
         enforce(size.Y >= 0, "Height of rect negative!!");
     }
+    
+    string toString() const {
+        return text(typeof(this).stringof , "(" ,start.X ," ", start.Y , ", ", size.X, " ", size.Y, ")");
+    }
+}
+
+unittest{
+    Rect a = Rect(vec2d(0, 0), vec2d(1, 1));
+    Rect b = Rect(vec2d(0.25, 0.25), vec2d(0.5, 0.5));
+    auto c = a.getSubRect(b); 
+    auto d = b.getSubRect(a);
+    auto e = b.getSubRect(b);
+    auto f = Rect(vec2d(0.375, 0.375), vec2d(0.25, 0.25));
+    assert(c == b, "a.sub(b) != b");
+    assert(d == b, "b.sub(a) != b");
+    assert(e == f, "b.sub(b) != <svar> " ~ to!string(e));
+    
+    auto g = b.getSubRectInv(e);
+    assert(g == b, "b.subInv(b.sub(b)) != b");
 }
 
 
