@@ -15,6 +15,9 @@ public import worldparts.sector;
 public import worldparts.block;
 public import worldparts.tile;
 
+
+// TODO: Refactor so these send world as first parameter,
+// and remove the world member from listeners
 interface WorldListener {
     void onAddUnit(SectorNum sectorNum, Unit* unit);
     void onSectorLoad(SectorNum sectorNum);
