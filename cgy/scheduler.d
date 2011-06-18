@@ -3,6 +3,7 @@ import core.thread;
 
 import std.algorithm;
 import std.exception;
+import std.c.stdlib;
 import std.concurrency;
 import std.conv;
 import std.container;
@@ -60,16 +61,20 @@ enum TICKS_PER_SECOND = 15;
 
 // THIS WILL PROBABLY NEED SOME FLESHING OUT...!!!
 private void workerFun(shared Scheduler ssched) {
+    bool exit;
     try {
         auto sched = cast(Scheduler)ssched; // fuck the type system!
         setThreadName("Fun-worker thread");
 
         ChangeList changeList = new ChangeList;
         Task task;
-        while (sched.getTask(task, changeList)) {
-            // try to receive message?
-            //If scheduler syncs, this list is applied to the world.
-            task.run(sched.world, changeList); //Fill changelist!!
+        while (!exit) {
+            exit = !sched.getTask(task, changeList);
+            if(!exit) {
+                // try to receive message?
+                //If scheduler syncs, this list is applied to the world.
+                task.run(sched.world, changeList); //Fill changelist!!
+            }
         }
     } catch (Throwable o) {
         writeln("Thread exception!\n", o.toString());
@@ -77,6 +82,10 @@ private void workerFun(shared Scheduler ssched) {
             MessageBoxA(null, cast(char *)toStringz(o.toString()),
                     "Error", MB_OK | MB_ICONEXCLAMATION);
         }
+    }
+    if (!exit) {
+        MessageBoxA(null, "A worker thread exited prematurely. Emergency application crash!", "And the world was on fire!", 0);
+        std.c.stdlib.exit(1);
     }
 }
 

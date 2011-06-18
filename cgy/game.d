@@ -371,7 +371,8 @@ class Game{
                         exit=true;
                     }
                 }
-                if (event.key.keysym.sym == SDLK_ESCAPE) exit = true;
+                // if (event.key.keysym.sym == SDLK_ESCAPE) exit = true;
+                //Derp, may want to use escape for other purposes now, hmmmmm!!!??
             }
 
             if (useCamera) {
