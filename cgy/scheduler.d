@@ -1,6 +1,7 @@
 import core.time;
 import core.thread;
 
+import std.algorithm;
 import std.exception;
 import std.concurrency;
 import std.conv;
@@ -64,9 +65,10 @@ private void workerFun(shared Scheduler ssched) {
         setThreadName("Fun-worker thread");
 
         ChangeList changeList = new ChangeList;
-        while (true) {
+        Task task;
+        while (sched.getTask(task, changeList)) {
             // try to receive message?
-            auto task = sched.getTask(changeList); //If scheduler syncs, this list is applied to the world.
+            //If scheduler syncs, this list is applied to the world.
             task.run(sched.world, changeList); //Fill changelist!!
         }
     } catch (Throwable o) {
@@ -102,8 +104,6 @@ class Scheduler {
         return syncTime + (dur!"seconds"(1) / TICKS_PER_SECOND).total!"usecs"; // total???
     }
 
-
-    //Parameter: see getTask
     private Task popAsync(ChangeList changeList) {
         synchronized(this) {
             if (async.empty) {
@@ -112,7 +112,9 @@ class Scheduler {
                 if(usecs > 0){
                     return sleepyTask(usecs);
                 }
-                return getTask(changeList);
+                Task t;
+                getTask(t, changeList);
+                return t;
             }
             return async.removeAny();
         }
@@ -135,10 +137,25 @@ class Scheduler {
         syncTime = utime();
     }
 
-
+    void exit() {
+        exiting = true;
+    }
+    
+    bool running() {
+        return workers.length != 0;
+    }
+    
     void registerModule(Module mod) {
         synchronized(this){
             modules ~= mod;
+        }
+    }
+    void unregisterModule(Module mod) {
+        synchronized(this){
+            bool pred(Module m) {
+                return m == mod;
+            }
+            modules = remove!(pred)(modules);
         }
     }
 
@@ -150,12 +167,25 @@ class Scheduler {
     }
 
     //If we synchronize threads, changelist is used and stuff. Otherwise it is ignored.
-    Task getTask(ChangeList changeList) {
+    bool getTask(ref Task task, ChangeList changeList) {
         synchronized(this) {
             //writeln("scheduler state: ", to!string(state));
             switch (state) {
                 default:
                 case State.update:
+                    if(exiting) {
+                        if (workers.length > 1){
+                            bool pred(Tid t){
+                                return t == thisTid();
+                            }
+                            workers = remove!(pred)(workers);
+                            return false;
+                        }
+                        //Close all but last thread here. Last threads exits a bit down, in update, after potential save.
+                    }
+                    if(workers.length > 1){
+                        //TODO: Wait for all workers here. Synchronize. Etc. :)
+                    }
 
                     //writeln("updating!");
                     //TODO: Make threads wait and synchronize with each other before this phase!
@@ -173,33 +203,44 @@ class Scheduler {
                         world.serialize();
                         serialize();
                     }
-
+                    
+                    if(exiting){
+                        workers.length = 0;
+                        return false;
+                    }
+                    
                     state = state.sync;
 
                     // fallin through...~~~~
                 case State.sync:
                     auto t = sync.removeAny();
 
-                    if (!t.syncsScheduler) return t;
+                    if (!t.syncsScheduler) {
+                        task = t;
+                        return true;
+                    }
 
                     state = State.forcedAsync;
                     asyncLeft = ASYNC_COUNT;
                     sync.insert(syncTask());
-                    return getTask(changeList);
+                    return getTask(task, changeList);
+                    
 
                 case State.forcedAsync:
                     asyncLeft -= 1;
                     if (asyncLeft == 0) {
                         state = State.async;
                     }
-                    return popAsync(changeList);
+                    task = popAsync(changeList);
+                    return true;
 
                 case State.async:
                     if (utime() > nextSync) {
                         state = State.update;
-                        return getTask(changeList);
+                        return getTask(task, changeList);
                     }
-                    return popAsync(changeList);
+                    task = popAsync(changeList);
+                    return true;
             }
         }
     }

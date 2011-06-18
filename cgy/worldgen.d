@@ -65,6 +65,10 @@ class WorldGenerator {
             }
         }
     }
+    
+    void destroy() {
+        //Nothing here yet.
+    }
 
     float get(float x, float y, float freq){
         x *= freq;

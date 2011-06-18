@@ -125,6 +125,11 @@ class VBOMaker : WorldListener
         dirtyMutex = new Mutex;
         updateMutex = new Mutex;
     }
+    
+    void destroy() {
+        world.removeListener(this);
+        removeAllVBOs();
+    }
 
     void removeAllVBOs(){
         foreach(region ; regions){

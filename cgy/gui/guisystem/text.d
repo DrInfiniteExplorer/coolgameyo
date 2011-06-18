@@ -27,6 +27,10 @@ class GuiElementText : public GuiElement {
         rect = Rect(pos, size);
     }
     
+    vec2d getSize() {
+        return text.getSize();
+    }
+    
     void setText(string str) {
         if (text is null) {
             text = new StringTexture(getFont());

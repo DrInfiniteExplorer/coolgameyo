@@ -82,7 +82,15 @@ class Renderer : Module {
 
         createDudeModel();
 
-  }
+    }
+    
+    void destroy() {
+        vboMaker.destroy();
+        scheduler.unregisterModule(this);
+        worldShader.destroy();
+        dudeShader.destroy();
+        lineShader.destroy();
+    }
 
     //TODO: Eventually implement models, etc
     uint dudeVBO;

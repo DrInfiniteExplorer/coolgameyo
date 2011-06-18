@@ -113,6 +113,7 @@ class GuiElement {
     
     void setRect(Rect r) {
         rect = r;
+        absoluteRect = getAbsoluteRect();
     }
     
     Rect getRect() {

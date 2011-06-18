@@ -90,10 +90,15 @@ struct Rect {
         auto newStart = (part.start - start) / size;
         return Rect(newStart, newSize);
     }
+    
+    Rect centerRect(Rect toCenter) {
+        auto newStart = start + (size - toCenter.size) * 0.5;
+        return Rect(newStart, toCenter.size);
+    }
         
     invariant() {
-        enforce(size.X >= 0, "Width of rect negative!!");
-        enforce(size.Y >= 0, "Height of rect negative!!");
+//        enforce(size.X >= 0, "Width of rect negative!!");
+//        enforce(size.Y >= 0, "Height of rect negative!!");
     }
     
     string toString() const {

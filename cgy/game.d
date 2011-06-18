@@ -53,7 +53,6 @@ class Game{
     Renderer          renderer;
     Scheduler         scheduler;
     TileTextureAtlas  atlas;
-    Font              font;
     bool[SDLK_LAST]   keyMap;
     bool              useCamera = true;
 
@@ -170,8 +169,22 @@ class Game{
         possesAI = new FPSControlAI(world);
         possesAI.setUnit(uu);
 
-
         scheduler.start();
+    }
+    
+    void destroy() {
+        //Wait until done.
+        scheduler.exit();
+        while(scheduler.running()){
+            writeln("Waiting for scheduler to terminate worker threads...");
+            Thread.sleep(dur!"seconds"(1));
+        }
+
+        atlas.destroy();
+        renderer.destroy();
+        world.destroy();
+
+        //TODO: destroy "surface" and how? :P        
     }
 
     void parseGameData() {
@@ -254,6 +267,8 @@ class Game{
 
     void start() {
         if (isClient) {
+/*
+        The server-part should handle stuff in scheduler, not be its own thread.            
             if (isServer) {
                 spawn(function(shared Game g) {
                         setThreadName("Server thread");
@@ -262,11 +277,13 @@ class Game{
             } else {
                 assert (false, "wherp!");
             }
-
+*/
             runClient();
         } else {
             runServer();
         }
+
+        destroy();
     }
 
     void runServer() {

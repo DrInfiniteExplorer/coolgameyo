@@ -1,9 +1,12 @@
 module main;
 
+
+import core.memory;
 import core.runtime;
 import core.thread;
 import std.stdio;
 import std.string : toStringz;
+import std.c.stdlib;
 
 import derelict.sdl.sdl;
 import derelict.opengl.gl;
@@ -23,6 +26,8 @@ import std.c.windows.windows;
 
         void exceptionHandler(Throwable e)
         {
+            MessageBoxA(null, e.toString().toStringz(),
+                    "Error1", MB_OK | MB_ICONEXCLAMATION);
             throw e;
         }
 
@@ -32,6 +37,16 @@ import std.c.windows.windows;
 
             result = myWinMain(hInstance, hPrevInstance, lpCmdLine, nCmdShow);
 
+            //These lines do nothing to remedy the problem below =/
+            GC.collect();
+            GC.collect();
+            GC.collect();
+            GC.collect();
+            GC.collect();
+            GC.collect();
+            GC.collect();
+            GC.collect();
+            exit(0); //TODO: Fix. If not here, we get bad and sad memory errors the following line :(
             Runtime.terminate(&exceptionHandler);
         }
         catch (Throwable o) // catch any uncaught exceptions
@@ -41,7 +56,7 @@ import std.c.windows.windows;
                 readln();
             } else {
                 MessageBoxA(null, o.toString().toStringz(),
-                        "Error", MB_OK | MB_ICONEXCLAMATION);
+                        "Error2", MB_OK | MB_ICONEXCLAMATION);
             }
             result = 0; // failed
         }
@@ -92,5 +107,6 @@ void actualMain() {
     auto game = new Game(true, client, true);
     writeln("Starting game");
     game.start();
+    writeln("Game now officially ended!");
 }
 

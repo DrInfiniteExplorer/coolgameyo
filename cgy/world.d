@@ -68,6 +68,10 @@ class World {
 
         toFloodFill = new WorkSet;
     }
+    
+    void destroy() {
+        worldGen.destroy();
+    }
 
     void serialize() {  //TODO: Implement serialization
         enforce(0);

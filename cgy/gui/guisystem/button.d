@@ -33,20 +33,13 @@ class GuiElementButton : public GuiElement {
             buttonText.setText(str);            
         }
         buttonText.setColor(vec3f(1.0, 1.0, 1.0));
-        recalcRects();
+        auto buttonSize = buttonText.getSize();
+        auto relativeTextSize = getAbsoluteRect().getSubRectInv(Rect(vec2d(0,0), buttonSize));
+        auto newTextRect = Rect(vec2d(0,0), vec2d(1,1)).centerRect(relativeTextSize);
+        buttonText.setRect(newTextRect);
     }
     void setColor(vec3f c) {
         buttonText.setColor(c);
-    }
-
-    
-    private void recalcRects() {
-        absoluteRect = getAbsoluteRect();
-    }
-    
-    override void onMove() {
-        recalcRects();
-        super.onMove();
     }
     
     override void render() {
