@@ -2,178 +2,17 @@
 
 module gui.guisystem.guisystem;
 
-import std.algorithm;
-import std.conv;
 import std.exception;
-import std.stdio;
 
 import graphics._2d.rect;
 import graphics.font;
 import graphics.ogl;
 
 public import util;
+public import gui.guisystem.element;
 
-enum GuiEventType {
-    MouseMove,
-    MouseClick,
-    Keyboard,
-    HoverOn,
-    HoverOff,
-    FocusOn, //If return false, focus goes to parent, which may reject as well, up to rootobject.
-    FocusOff,
-    
-};
 
-enum GuiEventResponse {
-    Accept,
-    Reject,
-    Ignore
-};
-
-struct GuiEvent{
-    GuiEventType type;
-    union{
-        struct MouseMove {
-            vec2d pos;
-            vec2d delta;
-        };
-        MouseMove mouseMove;
-        struct MouseClick{
-            bool left; //Otherwise right?
-            bool down;
-            vec2d pos;
-        };
-        MouseClick mouseClick;
-        struct KeyboardEvent{
-            int SdlSym;
-            int SdlMod;
-            bool pressed;
-            int repeat;
-            char ch;
-        };        
-        KeyboardEvent keyboardEvent;
-    };
-}
-
-class GuiElement {
-    private GuiElement[] children;
-    protected GuiElement parent;
-    protected Rect rect;
-    protected Rect absoluteRect;
-    private Font font;
-    
-    this(GuiElement parent){
-        if(parent) {
-            setParent(parent);
-            font = parent.getFont();        
-        }
-    }
-    
-    void destroy() {
-        foreach(child ; children) {
-            child.destroy();
-        }
-        setParent(null);
-        //Release resources
-    }
-    
-    GuiElement getParent() {
-        return parent;
-    }
-    
-    void setParent(GuiElement p) {
-        if (parent) {
-            parent.removeChild(this);
-        }
-        
-        if(p) {
-            p.addChild(this);
-        }
-    }
-    
-    void removeChild(GuiElement e){
-        bool b(GuiElement a){
-            return a==e;
-        }
-        children = remove!(b)(children);
-        e.parent = null;
-    }
-    void addChild(GuiElement e) {
-        if (e.parent) {
-            e.setParent(this);
-        } else {
-            e.parent = this;
-            children ~= e;
-        }
-    }
-    
-    bool isInside(vec2d pos){
-        return rect.isInside(pos);
-    }
-    
-    void setRect(Rect r) {
-        rect = r;
-        absoluteRect = getAbsoluteRect();
-    }
-    
-    Rect getRect() {
-        return rect;
-    }
-    
-    Rect getAbsoluteRect() {
-        if(parent) {
-            auto parentRect = parent.getAbsoluteRect();
-            return parentRect.getSubRect(rect);
-        }
-        return rect;
-    }
-    
-    
-    void render(){
-        foreach(child ; children) {
-            child.render();
-        }
-    }
-    
-    GuiEventResponse onEvent(GuiEvent e){
-        switch(e.type) {
-            case GuiEventType.MouseMove: writeln("MouseMove!"); break;
-            default: writeln("other event." ~ to!string(e.type)); break;
-        }
-        return GuiEventResponse.Ignore;
-    }
-    
-    
-    void onMove() {
-        absoluteRect = getAbsoluteRect();
-        foreach(child ; children) {
-            child.onMove();
-        }
-    }
-
-    GuiElement getElementFromPoint(vec2d pos){
-        if (isInside(pos)) {
-            auto relPos = rect.getRelative(pos);
-            foreach(child ; children) {
-                auto ret = child.getElementFromPoint(relPos);
-                if(ret !is null){
-                    return ret;
-                }
-            }
-            return this;
-        }
-        return null;
-    }
-    
-    void setFont(Font f) {
-        font = f;
-    }
-    Font getFont() {
-        return font;
-    }
-}
-
-final class GUI : GuiElement {
+final class GuiSystem : GuiElement{
     
     private GuiElement hoverElement;
     private GuiElement focusElement;
@@ -181,16 +20,17 @@ final class GUI : GuiElement {
     this() {
         super(null);
         setFont(new Font("fonts/courier"));
-        rect = Rect(vec2d(0, 0), vec2d(1, 1));
+        relativeRect = Rectd(vec2d(0, 0), vec2d(1, 1));
         hoverElement = this;
         focusElement = this;
+        getAbsoluteRect();
     }
     
-    override bool isInside(vec2d p) {
+    override bool isInside(vec2i p) {
         return true;
     }
     
-    void setFocus(GuiElement e) {
+    override void setFocus(GuiElement e) {
         if (e == focusElement) {
             return;
         }
@@ -210,6 +50,10 @@ final class GUI : GuiElement {
                 focusElement = focusElement.getParent();
             }
         }
+    }
+    
+    override GuiElement getFocusElement() {
+        return focusElement;
     }
     
     override GuiEventResponse onEvent(GuiEvent e) {

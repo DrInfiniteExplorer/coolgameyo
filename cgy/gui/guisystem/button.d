@@ -11,48 +11,54 @@ import graphics._2d.rect;
 
 
 class GuiElementButton : public GuiElement {
-    private string text;
-    private GuiElementText buttonText;
+    protected GuiElementText buttonText;
 
-    bool pushedDown;    
+    protected bool pushedDown;    
     alias void delegate(bool pressed, bool abort) PressCallback;
-    PressCallback pressCallback;
+    private PressCallback pressCallback;
         
-    this(GuiElement parent, Rect r, string text, PressCallback cb = null) {
+    this(GuiElement parent, Rectd relative, string text, PressCallback cb = null) {
         super(parent);
-        setRect(r);
+        setRelativeRect(relative);
         setText(text);
+        setColor(vec3f(0,0,0));
         pressCallback = cb;
+        onMove();
     }    
     
     void setText(string str) {
-        text = str;
         if (buttonText is null) {
             buttonText = new GuiElementText(this, vec2d(0, 0), str);
         } else {
             buttonText.setText(str);            
         }
         buttonText.setColor(vec3f(1.0, 1.0, 1.0));
-        auto buttonSize = buttonText.getSize();
-        auto relativeTextSize = getAbsoluteRect().getSubRectInv(Rect(vec2d(0,0), buttonSize));
-        auto newTextRect = Rect(vec2d(0,0), vec2d(1,1)).centerRect(relativeTextSize);
-        buttonText.setRect(newTextRect);
     }
+    
     void setColor(vec3f c) {
         buttonText.setColor(c);
+    }
+    
+    override void onMove() {
+        if (buttonText !is null) {
+            auto buttonSize = buttonText.getSize();
+            auto newTextRect = absoluteRect.centerRect(Recti(vec2i(0, 0), buttonSize));
+            buttonText.setAbsoluteRect(newTextRect);        
+        }
+        super.onMove();        
     }
     
     override void render() {
         //Render background, etc, etc.
         renderRect(absoluteRect, vec3f(0.75, 0.75, 0.75)); //Background color
         renderOutlineRect(absoluteRect, vec3f(0.0, 0.0, 0.0));
-        auto inner = pixDiff(absoluteRect, vec2i(1, 1), vec2i(-1, -1));
+        auto inner = absoluteRect.diff(vec2i(1, 1), vec2i(-1, -1));
         if(pushedDown) {
             renderOutlineRect(inner, vec3f(0.5, 0.5, 0.5));
         } else {
             renderXXRect(inner, vec3f(1.0, 1.0, 1.0), true);
             renderXXRect(inner, vec3f(0.25, 0.25, 0.25), false);
-            inner = pixDiff(inner, vec2i(1, 1), vec2i(-1, -1));
+            inner = inner.diff(vec2i(1, 1), vec2i(-1, -1));
             renderXXRect(inner, vec3f(0.5, 0.5, 0.5), false);
         }
         super.render();

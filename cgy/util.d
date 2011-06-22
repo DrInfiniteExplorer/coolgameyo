@@ -45,6 +45,13 @@ vector2d!(A) convert(A,B)(const vector2d!(B) wap){
     return vector2d!A(to!A(wap.X), to!A(wap.Y));
 }
 
+Rect!A convert(A,B)(const Rect!B r) {
+    return Rect!A(
+        convert!A(r.start),
+        convert!A(r.size)
+    );
+}
+
 vec3i getTilePos(T)(vector3d!T v){
     return vec3i(
         to!int(floor(v.X)),
@@ -53,24 +60,29 @@ vec3i getTilePos(T)(vector3d!T v){
     );
 }
 
-struct Rect {
-    vec2d start;
-    vec2d size;
+struct Rect(T) {
+    vector2d!T start;
+    vector2d!T size;
     
-    this(vec2d _start, vec2d _size){
+    this(vector2d!T _start, vector2d!T _size){
         start = _start;
         size = _size;
     }
+    
+    this(T sx, T sy, T w, T h) {
+        start.set(sx, sy);
+        size.set(w,h);
+    }
         
-    bool isInside(vec2d pos) {
+    bool isInside(vector2d!T pos) {
         return !(pos.X < start.X ||
             pos.X > start.X+size.X ||
             pos.Y < start.Y ||
             pos.Y > start.Y+size.Y);
     }
     
-    vec2d getRelative(vec2d pos){
-        return vec2d(
+    vector2d!T getRelative(vector2d!T pos){
+        return vector2d!T(
             (pos.X - start.X) / size.X,
             (pos.Y - start.Y) / size.Y,
         );
@@ -91,9 +103,16 @@ struct Rect {
         return Rect(newStart, newSize);
     }
     
-    Rect centerRect(Rect toCenter) {
-        auto newStart = start + (size - toCenter.size) * 0.5;
-        return Rect(newStart, toCenter.size);
+    Rect!T centerRect(Rect!T toCenter, bool centerHorizontal = true, bool centerVertical = true) {
+        auto newStart = start + (size - toCenter.size) / 2;
+        auto tmp = vector2d!T( centerHorizontal ? newStart.X : start.X,
+                          centerVertical ? newStart.Y : start.Y);
+        return Rect!T(tmp, toCenter.size);
+    }
+    
+    Rect!T diff(vector2d!T dStart, vector2d!T dSize){
+        return Rect!T(  start + dStart,
+                        size - dStart + dSize);
     }
         
     invariant() {
@@ -104,15 +123,22 @@ struct Rect {
     string toString() const {
         return text(typeof(this).stringof , "(" ,start.X ," ", start.Y , ", ", size.X, " ", size.Y, ")");
     }
+    
+    const bool opEquals(ref const(Rect!T) o) {
+        return start == o.start && size == o.size;
+    }
 }
 
+alias Rect!double Rectd;
+alias Rect!int Recti;
+
 unittest{
-    Rect a = Rect(vec2d(0, 0), vec2d(1, 1));
-    Rect b = Rect(vec2d(0.25, 0.25), vec2d(0.5, 0.5));
+    auto a = Rectd(vec2d(0, 0), vec2d(1, 1));
+    auto b = Rectd(vec2d(0.25, 0.25), vec2d(0.5, 0.5));
     auto c = a.getSubRect(b); 
     auto d = b.getSubRect(a);
     auto e = b.getSubRect(b);
-    auto f = Rect(vec2d(0.375, 0.375), vec2d(0.25, 0.25));
+    auto f = Rectd(vec2d(0.375, 0.375), vec2d(0.25, 0.25));
     assert(c == b, "a.sub(b) != b");
     assert(d == b, "b.sub(a) != b");
     assert(e == f, "b.sub(b) != <svar> " ~ to!string(e));

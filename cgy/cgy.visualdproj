@@ -325,7 +325,10 @@
     <File path="gui\guisystem\window.d" />
     <File path="gui\guisystem\text.d" />
     <File path="gui\guisystem\button.d" />
+    <File path="gui\guisystem\element.d" />
+    <File path="gui\guisystem\checkbox.d" />
    </Folder>
+   <File path="gui\mainmenu.d" />
   </Folder>
   <File path="changelist.d" />
   <File path="game.d" />

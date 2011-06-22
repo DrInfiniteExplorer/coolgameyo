@@ -13,10 +13,16 @@ struct RectVertex {
     vec3f color;
 }
 
+
 immutable(char[]) fixRect = "
-    auto start = convert!float(r.start);
+    auto screenSize = vec2f(renderSettings.windowWidth-1, renderSettings.windowHeight-1);
+//    auto start = (vec2f(0.375, 0.375) + convert!float(r.start)) / screenSize;
+    auto start = (vec2f(offset, offset) + convert!float(r.start)) / screenSize;
+//    auto start = (convert!float(r.start)) / screenSize;
+//    auto start = (convert!float(r.start));
     start.Y = 1.0 - start.Y;
-    auto size = convert!float(r.size);
+    auto size = convert!float(r.size) / screenSize;
+//    auto size = convert!float(r.size);
     size.Y = - size.Y;
     auto x = vec2f(size.X, 0);
     auto y = vec2f(0, size.Y);
@@ -25,19 +31,27 @@ immutable(char[]) fixRect = "
 struct RectQuad{
     RectVertex[4] vertices;
     
-    void renderQuad(bool lines = false) {
-        RectShader().render(this, lines);
+    void renderQuad(bool lines = false, float stripes = 0) {
+        RectShader().render(this, lines, stripes);
     }
     
-    void setPosition(Rect r) {
+    void setPosition(Recti r, float offset = 0) {
         mixin(fixRect);
         vertices[0].pos = start;
         vertices[1].pos = start + y;
         vertices[2].pos = start + size;
         vertices[3].pos = start + x;
+//        vertices[0].pos.set(-1, -1);
+//        vertices[1].pos.set(1, -1);
+//        vertices[2].pos.set(1, 1);
+//        vertices[3].pos.set(-1, 1);
+        foreach(ref v ; vertices) {
+            //v.pos += vec2f(0.25 / renderSettings.windowWidth, 0.25 / renderSettings.windowHeight);
+        }
     }
     
-    void setUL(Rect r) {
+    void setUL(Recti r) {
+        float offset = 0.5;
         mixin(fixRect);
     
         vertices[0].pos = start;
@@ -46,7 +60,8 @@ struct RectQuad{
         vertices[3].pos = start + x;        
     }
 
-    void setLR(Rect r) {
+    void setLR(Recti r) {
+        float offset = 0.5;
         mixin(fixRect);
     
         vertices[0].pos = start + y;
@@ -66,7 +81,7 @@ struct RectQuad{
 }
 
 class RectShader {
-    alias ShaderProgram!("position", "color") RectProgram;
+    alias ShaderProgram!("position", "color", "stripes") RectProgram;
     RectProgram rectProgram;
     
     static RectShader rs;
@@ -80,7 +95,8 @@ class RectShader {
     private this() {
         rectProgram = new RectProgram("shaders/rectShader.vert", "shaders/rectShader.frag");
         rectProgram.position = rectProgram.getAttribLocation("position");
-        rectProgram.color = rectProgram.getAttribLocation("in_color");        
+        rectProgram.color = rectProgram.getAttribLocation("in_color");    
+        rectProgram.stripes = rectProgram.getUniformLocation("stripes");
     }
     
     void destroy() {
@@ -88,12 +104,13 @@ class RectShader {
         rectProgram.destroy();
     }
     
-    void render(RectQuad q, bool lines) {
+    void render(RectQuad q, bool lines, float stripes) {
         //glEnable(GL_BLEND);
         //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         //glDisable(GL_DEPTH_TEST);
         //glDepthMask(0);
         rectProgram.use();
+        rectProgram.setUniform(rectProgram.stripes, stripes);
         //rect.start.Y = 1.0 - rect.start.Y;
         //program.setUniform(program.offset, rect.start);        
         //TODO: Use rest of rect for clipping?
@@ -126,22 +143,29 @@ class RectShader {
     }
 }
 
-void renderRect(Rect r, vec3f color = vec3f(1.0, 1.0, 1.0)) {
+void renderRect(Recti r, vec3f color = vec3f(1.0, 1.0, 1.0), float stripes = 0) {
     RectQuad quad;
     quad.setPosition(r);    
     quad.setColor(color);
-    quad.renderQuad();
+    quad.renderQuad(false, stripes);
 }
 
-void renderOutlineRect(Rect r, vec3f color = vec3f(1.0, 1.0, 1.0)) {
+void renderOutlineRect(Recti r, vec3f color = vec3f(1.0, 1.0, 1.0), float stripes = 0) {
     auto old = setWireframe(true);
-    renderRect(r, color);
+    r = r.diff(vec2i(0,0), vec2i(-1,-1));
+    RectQuad quad;
+    quad.setPosition(r, 0.5);    
+    quad.setColor(color);
+    quad.renderQuad(false, stripes);
     setWireframe(old);
 }
 
 
-void renderXXRect(Rect r, vec3f color, bool UL) {
+void renderXXRect(Recti r, vec3f color, bool UL) {
     RectQuad quad;
+    r = UL ?
+        r.diff(vec2i(0, 0), vec2i(0 , 0)) :
+        r.diff(vec2i(0,-1), vec2i(-1,-1));
     UL ? quad.setUL(r) : quad.setLR(r);
     quad.setColor(color);
     auto old = setWireframe(true);
@@ -149,12 +173,13 @@ void renderXXRect(Rect r, vec3f color, bool UL) {
     setWireframe(old);    
 }
 
-Rect pixDiff(Rect r, vec2i startOffset, vec2i stopOffset) {
+/*
+Rectd pixDiff(Rectd r, vec2i startOffset, vec2i stopOffset) {
     auto perPixel = vec2d(1.0 / renderSettings.windowWidth, 1.0 / renderSettings.windowHeight);
     auto add = convert!double(startOffset) * perPixel;
-    return Rect(
+    return Rectd(
         r.start + add,
         r.size + convert!double(stopOffset) * perPixel - add
     );
 }
-
+*/

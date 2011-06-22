@@ -1,3 +1,6 @@
+
+module game;
+
 import core.thread;
 
 import std.algorithm;
@@ -10,17 +13,12 @@ import std.stdio;
 
 import derelict.sdl.sdl;
 
+import graphics.ogl;
 import graphics.camera;
 import graphics.debugging;
 import graphics.font;
-import graphics.ogl;
 import graphics.renderer;
 import graphics.texture;
-
-import gui.guisystem.guisystem;
-import gui.guisystem.window;
-import gui.guisystem.text;
-import gui.guisystem.button;
 
 import changelist;
 import modules.ai;
@@ -48,7 +46,6 @@ class Game{
     ushort          middleX;
     ushort          middleY;
 
-    SDL_Surface*      surface;
     Camera            camera;
     Renderer          renderer;
     Scheduler         scheduler;
@@ -58,8 +55,6 @@ class Game{
 
     FPSControlAI      possesAI;
     
-    GUI               gui;
-
     /+
     StringTexture     f1, f2, f3, f4, fps, tickTime, renderTime;
     StringTexture     unitInfo, selectedInfo;
@@ -80,27 +75,6 @@ class Game{
             middleX = cast(ushort)renderSettings.windowWidth/2;
             middleY = cast(ushort)renderSettings.windowHeight/2;
 
-            enforce(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_NOPARACHUTE) == 0,
-                    SDLError());
-
-            SDL_GL_SetAttribute(SDL_GL_RED_SIZE,        8);
-            SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE,      8);
-            SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,       8);
-            SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE,      8);
-
-            SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,      32);
-            SDL_GL_SetAttribute(SDL_GL_BUFFER_SIZE,     32);
-            SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER,      1);
-
-            //Antialiasing. now off-turned.
-            //Apparently this AA only works on edges and not on surfaces, so turned off for now.
-            SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS,  0);
-            SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES,  16);
-
-            surface = enforce(SDL_SetVideoMode(renderSettings.windowWidth, renderSettings.windowHeight,
-                                               32, SDL_HWSURFACE | SDL_GL_DOUBLEBUFFER | SDL_OPENGL),
-                              "Could not set sdl video mode (" ~ SDLError() ~ ")");
-            initOpenGL();
             atlas = new TileTextureAtlas; // HACK
         }
 
@@ -120,14 +94,6 @@ class Game{
             renderer = new Renderer(world, scheduler, camera);
             renderer.atlas = atlas;
             
-            gui = new GUI();
-            auto wnd = new GuiElementWindow(gui, Rect(vec2d(0.1, 0.1), vec2d(0.4, 0.4)), "Windoooowww~!");
-            auto text = new GuiElementText(wnd, vec2d(0.1, 0.1), "Test");     
-            auto butt = new GuiElementButton(wnd, Rect(vec2d(0.1, 0.2), vec2d(0.3, 0.3)), "Press me",
-                (bool down, bool abort){
-                    text.setText("YEAAAAAAH! "~ to!string(down) ~" " ~ to!string(abort));
-                });
-
             atlas.upload();
             camera.setPosition(vec3d(-2, -2, 20));
             camera.setTarget(vec3d(0, 0, 20));
@@ -265,27 +231,6 @@ class Game{
         return sys;*/
     }
 
-    void start() {
-        if (isClient) {
-/*
-        The server-part should handle stuff in scheduler, not be its own thread.            
-            if (isServer) {
-                spawn(function(shared Game g) {
-                        setThreadName("Server thread");
-                        (cast(Game)g).runServer();
-                        }, cast(shared)this);
-            } else {
-                assert (false, "wherp!");
-            }
-*/
-            runClient();
-        } else {
-            runServer();
-        }
-
-        destroy();
-    }
-
     void runServer() {
         // set up network interface...? D:
         while (true) {
@@ -293,114 +238,18 @@ class Game{
             Thread.sleep(dur!"seconds"(1));
         }
     }
-
-    bool inputActive = true;
-    void runClient() {
-        assert (isClient);
-        auto exit = false;
-        SDL_Event event;
-        while (!exit) {
-
-            //writeln("mainloop!");
-            //auto task = scheduler.getTask();
-            //task.run(world);
-
-
-            GuiEvent guiEvent;
-            while (SDL_PollEvent(&event)) {
-                switch (event.type){
-                    case SDL_ACTIVEEVENT:
-                        if(event.active.state & SDL_APPINPUTFOCUS) {
-                            inputActive = event.active.gain != 0;
-                        }
-                        break;
-                    case SDL_KEYDOWN:
-                    case SDL_KEYUP:
-                    case SDL_MOUSEMOTION:
-                    case SDL_MOUSEBUTTONDOWN:
-                    case SDL_MOUSEBUTTONUP:
-                    if(!inputActive) continue;
-                    default:
-                }
-                switch (event.type) {
-                    case SDL_QUIT:
-                        exit = true;
-                        break;
-                    case SDL_KEYDOWN:
-                    case SDL_KEYUP:
-                        guiEvent.type = GuiEventType.Keyboard;
-                        auto kb = &guiEvent.keyboardEvent;
-                        kb.pressed = event.key.state == SDL_PRESSED;
-                        kb.repeat = 0; //TODO: Implement later?
-                        auto unicode = event.key.keysym.unicode;
-                        if (unicode & 0xFF80) {
-                        } else {
-                            kb.ch = unicode & 0x7F;
-                        }
-                        kb.SdlSym = event.key.keysym.sym;
-                        kb.SdlMod = event.key.keysym.mod;
-                        gui.onEvent(guiEvent);
-                        onKey(event.key);
-                        break;
-                    case SDL_MOUSEMOTION:
-                        mouseMove(event.motion);
-                        guiEvent.type = GuiEventType.MouseMove;
-                        auto m = &guiEvent.mouseMove;
-                        m.pos.set(to!double(event.motion.x) / to!double(renderSettings.windowWidth),
-                                  to!double(event.motion.y) / to!double(renderSettings.windowHeight));
-                        gui.onEvent(guiEvent);
-                        break;
-                    case SDL_MOUSEBUTTONDOWN:
-                    case SDL_MOUSEBUTTONUP:
-                        guiEvent.type = GuiEventType.MouseClick;
-                        auto m = &guiEvent.mouseClick;
-                        m.down = event.type == SDL_MOUSEBUTTONDOWN;
-                        m.left = event.button.button == SDL_BUTTON_LEFT; //Makes all others right. including scrollwheel, i think. :P
-                        m.pos.set(to!double(event.button.x) / to!double(renderSettings.windowWidth),
-                                  to!double(event.button.y) / to!double(renderSettings.windowHeight));
-                        gui.onEvent(guiEvent);
-                        
-                        break;
-                    default:
-                }
-
-                version (Windows) {
-                    if (event.key.keysym.sym == SDLK_F4
-                            && (event.key.keysym.mod == KMOD_LALT
-                                || event.key.keysym.mod == KMOD_RALT)) {
-                        exit=true;
-                    }
-                }
-                // if (event.key.keysym.sym == SDLK_ESCAPE) exit = true;
-                //Derp, may want to use escape for other purposes now, hmmmmm!!!??
-            }
-
-            if (useCamera) {
-                updateCamera();
-            }
-            if (possesedActive) {
-                updatePossesed();
-            }
-
-            rayPick();
-            renderer.render();
-            gui.render();
-            updateGui();
-            /+
-            f1.render();
-            f2.render();
-            f3.render();
-            f4.render();
-            fps.render();
-            renderTime.render();
-            tickTime.render();
-            unitInfo.render();
-            selectedInfo.render();
-            +/
-            SDL_GL_SwapBuffers();
+    
+    void render() {
+        if (useCamera) {
+            updateCamera();
         }
-        writeln("Main thread got exited? :S");
-        BREAKPOINT(!exit);
+        if (possesedActive) {
+            updatePossesed();
+        }
+
+        rayPick();
+        renderer.render();
+        updateGui();
     }
 
     void updateGui() {
@@ -507,7 +356,8 @@ class Game{
         if(key == SDLK_F4 && down) {
             renderSettings.disableVSync ^= 1;
             version (Windows) {
-                wglSwapIntervalEXT(renderSettings.disableVSync ? 0 : 1);
+                setVSync(!renderSettings.disableVSync);
+                
             } else {
                 writeln("Cannot poke with vsync unless wgl blerp");
             }

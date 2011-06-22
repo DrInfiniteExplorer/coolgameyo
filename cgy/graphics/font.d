@@ -59,7 +59,7 @@ class FontShader {
         program.use();
         program.setUniform(program.tex, 1); //Font will always reside in texture unit 1 yeaaaah!
         program.setUniform(program.viewportInv,
-            vec2f(1.0/renderSettings.windowWidth, 1.0/renderSettings.windowHeight)
+            vec2f(1.0/(renderSettings.windowWidth-0), 1.0/(renderSettings.windowHeight-0))
         );
     }
 
@@ -74,7 +74,7 @@ class FontShader {
         fs = null;
     }
 
-    void render(Rect rect, uint vbo, uint charCount, bool transparent, vec3f color){
+    void render(Recti rect, uint vbo, uint charCount, bool transparent, vec3f color){
         if (transparent) {
             glEnable(GL_BLEND);
         }
@@ -83,8 +83,7 @@ class FontShader {
         glDepthMask(0);
         program.use();
         program.setUniform(program.color, color);
-        rect.start.Y = 1.0 - rect.start.Y;
-        program.setUniform(program.offset, rect.start);        
+        program.setUniform(program.offset, rect.start);
         //TODO: Use rest of rect for clipping?
         glEnableVertexAttribArray(0);
         glError();
@@ -180,14 +179,13 @@ class StringTexture {
     
     //TODO: Make handle linebreaks in StringTexture? !!
     // In that case, compute size when generating stuff. Yeah.
-    vec2d getSize() {
-        auto ret = convert!double(font.glyphSize()) *
-            vec2d(1.0/renderSettings.windowWidth, 1.0/renderSettings.windowHeight);
+    vec2i getSize() {
+        auto ret = font.glyphSize();
         ret.X *= currentText.length;
         return ret;
     }
 
-    void render(Rect rect) {
+    void render(Recti rect) {
         glActiveTexture(GL_TEXTURE1);
         glError();
         glBindTexture(GL_TEXTURE_2D, texId);

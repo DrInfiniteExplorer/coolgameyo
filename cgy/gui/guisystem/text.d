@@ -23,11 +23,12 @@ class GuiElementText : public GuiElement {
         
         setText(str);
         setTransparency(transparent);
-        vec2d size = text.getSize();
-        rect = Rect(pos, size);
+        setRelativeRect(Rectd(pos, vec2d(0,0)));
+        absoluteRect.size = text.getSize();
+        setAbsoluteRect(absoluteRect);
     }
     
-    vec2d getSize() {
+    vec2i getSize() {
         return text.getSize();
     }
     
@@ -45,8 +46,7 @@ class GuiElementText : public GuiElement {
     }
     
     override void render(){
-        auto absRect = getAbsoluteRect();
-        text.render(absRect);
+        text.render(absoluteRect);
         super.render();
     }
     

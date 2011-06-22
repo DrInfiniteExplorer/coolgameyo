@@ -1,16 +1,25 @@
+
+
 module main;
 
 
 import core.memory;
 import core.runtime;
 import core.thread;
-import std.stdio;
-import std.string : toStringz;
+
 import std.c.stdlib;
+import std.conv;
+import std.exception;
+import std.stdio;
+import std.string;
 
 import derelict.sdl.sdl;
 import derelict.opengl.gl;
 import derelict.devil.il;
+
+import graphics.ogl;
+
+import gui.guisystem.guisystem;
 
 import game;
 import util;
@@ -37,15 +46,6 @@ import std.c.windows.windows;
 
             result = myWinMain(hInstance, hPrevInstance, lpCmdLine, nCmdShow);
 
-            //These lines do nothing to remedy the problem below =/
-            GC.collect();
-            GC.collect();
-            GC.collect();
-            GC.collect();
-            GC.collect();
-            GC.collect();
-            GC.collect();
-            GC.collect();
             exit(0); //TODO: Fix. If not here, we get bad and sad memory errors the following line :(
             Runtime.terminate(&exceptionHandler);
         }
@@ -74,13 +74,195 @@ import std.c.windows.windows;
     }
 }
 
+import gui.mainmenu;
+
+class Main {
+    GuiSystem guiSystem;
+    Game game;
+    SDL_Surface* surface;     
+    
+    MainMenu mainMenu;
+    
+    bool client, server, worker;
+    
+    this(bool c, bool s, bool w) {
+        client = c;
+        server = s;
+        worker = w;
+        setThreadName("Main thread");
+        loadSettings();
+        saveSettings();
+        
+        initLibraries();
+        
+        createWindow();
+        mainMenu = new MainMenu(guiSystem, this);
+    }
+    
+    void destroy() {        
+        game.destroy();
+        deinitLibraries();
+    }
+    
+    void createWindow() {
+        enforce(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_NOPARACHUTE) == 0,
+                SDLError());
+        
+        if (client) {
+            //Initialize opengl only if client... ?
+            //Prolly want to otherwise as well, or gui wont work :P:P:P
+            //But make less demanding settings in that case, etc.
+            SDL_GL_SetAttribute(SDL_GL_RED_SIZE,        8);
+            SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE,      8);
+            SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,       8);
+            SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE,      8);
+
+            SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,      32);
+            SDL_GL_SetAttribute(SDL_GL_BUFFER_SIZE,     32);
+            SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER,      1);
+
+            //Antialiasing. now off-turned.
+            //Apparently this AA only works on edges and not on surfaces, so turned off for now.
+            SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS,  0);
+            SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES,  16);
+        }
+
+        surface = SDL_SetVideoMode(
+            renderSettings.windowWidth,
+            renderSettings.windowHeight,
+            32,
+            SDL_HWSURFACE | SDL_GL_DOUBLEBUFFER | SDL_OPENGL
+        );
+        enforce(surface, text("Could not set sdl video mode (" , SDLError() , ")"));                            
+        initOpenGL(client);
+        
+        guiSystem = new GuiSystem;
+        
+    }
+    
+    void startGame() {
+        game = new Game(client, server, worker);
+    }
+    
+    bool inputActive = true;
+    void run() {
+        auto exit = false;
+        SDL_Event event;
+        GuiEvent guiEvent;
+        while (!exit) {
+            while (SDL_PollEvent(&event)) {
+                switch (event.type){
+                    case SDL_ACTIVEEVENT:
+                        if(event.active.state & SDL_APPINPUTFOCUS) {
+                            inputActive = event.active.gain != 0;
+                        }
+                        break;
+                    case SDL_KEYDOWN:
+                    case SDL_KEYUP:
+                    case SDL_MOUSEMOTION:
+                    case SDL_MOUSEBUTTONDOWN:
+                    case SDL_MOUSEBUTTONUP:
+                    if(!inputActive) continue;
+                    default:
+                }
+                switch (event.type) {
+                    case SDL_QUIT:
+                        exit = true;
+                        break;
+                    case SDL_KEYDOWN:
+                    case SDL_KEYUP:
+                        guiEvent.type = GuiEventType.Keyboard;
+                        auto kb = &guiEvent.keyboardEvent;
+                        kb.pressed = event.key.state == SDL_PRESSED;
+                        kb.repeat = 0; //TODO: Implement later?
+                        auto unicode = event.key.keysym.unicode;
+                        if (unicode & 0xFF80) {
+                        } else {
+                            kb.ch = unicode & 0x7F;
+                        }
+                        kb.SdlSym = event.key.keysym.sym;
+                        kb.SdlMod = event.key.keysym.mod;
+                        guiSystem.onEvent(guiEvent);
+                        //onKey(event.key);
+                        break;
+                    case SDL_MOUSEMOTION:
+                        //mouseMove(event.motion);
+                        guiEvent.type = GuiEventType.MouseMove;
+                        auto m = &guiEvent.mouseMove;
+                        m.pos.set(event.motion.x,
+                                  event.motion.y);
+                        guiSystem.onEvent(guiEvent);
+                        break;
+                    case SDL_MOUSEBUTTONDOWN:
+                    case SDL_MOUSEBUTTONUP:
+                        guiEvent.type = GuiEventType.MouseClick;
+                        auto m = &guiEvent.mouseClick;
+                        m.down = event.type == SDL_MOUSEBUTTONDOWN;
+                        m.left = event.button.button == SDL_BUTTON_LEFT; //Makes all others right. including scrollwheel, i think. :P
+                        m.pos.set(event.button.x,
+                                  event.button.y);
+                        guiSystem.onEvent(guiEvent);                        
+                        break;
+                    default:
+                }
+
+                version (Windows) {
+                    if (event.key.keysym.sym == SDLK_F4
+                            && (event.key.keysym.mod == KMOD_LALT
+                                || event.key.keysym.mod == KMOD_RALT)) {
+                        exit=true;
+                    }
+                }
+            }
+
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            glError();
+            
+            if(game) {
+                game.render();
+            }
+            guiSystem.render();
+            
+            /+
+            f1.render();
+            f2.render();
+            f3.render();
+            f4.render();
+            fps.render();
+            renderTime.render();
+            tickTime.render();
+            unitInfo.render();
+            selectedInfo.render();
+            +/
+            SDL_GL_SwapBuffers();
+        }
+        writeln("Main thread got exited? :S");
+        BREAKPOINT(!exit);        
+    }
+    
+    void initLibraries() {
+        DerelictSDL.load();
+        if (client) {
+            DerelictGL.load(); //Init opengl regardless?
+        }
+        DerelictIL.load();
+        ilInit();
+    }
+    
+    void deinitLibraries() {
+        SDL_Quit();
+        DerelictIL.unload();
+        if (client) {
+            DerelictGL.unload();
+        }
+        DerelictSDL.unload();
+    }
+}
+
 import world;
 void actualMain() {
 
-    setThreadName("Main thread");
     
-    loadSettings();
-    saveSettings();
     
     version (Windows) {
         bool client = true;
@@ -88,25 +270,16 @@ void actualMain() {
         // plols laptop cant handle the CLIENT STUFF WHOOOOAAhhhh....!!
         bool client = false;
     }
-    if (client) {
-        writeln("Loading libraries...");
-        scope (success) writeln("... done");
-        DerelictSDL.load();
-        DerelictGL.load();
-        DerelictIL.load();
-        ilInit();
+    
+    Main main = new Main(client, true, true); //Be a worker? lolololol
+    main.run();
+    main.destroy();
+    return;
+    
+    auto game = new Game(true, client, true);    
+    
+    scope (exit) {
     }
-    scope (exit) if (client) {
-        SDL_Quit();
-        DerelictIL.unload();
-        DerelictGL.unload();
-        DerelictSDL.unload();
-    }
-
-    writeln("Creating game");
-    auto game = new Game(true, client, true);
-    writeln("Starting game");
-    game.start();
-    writeln("Game now officially ended!");
+    
 }
 

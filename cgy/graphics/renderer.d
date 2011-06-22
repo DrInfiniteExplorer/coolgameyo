@@ -249,8 +249,6 @@ class Renderer : Module {
 
         //TODO: Decide if to move clearing of buffer to outside of renderer, or is render responsible for
         // _ALL_ rendering?
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glError();
 
         //TODO: Make function setWireframe(bool yes) that does this.
         //Render world

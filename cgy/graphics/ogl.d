@@ -13,7 +13,7 @@ public import derelict.opengl.glext;
 import graphics.renderer;
 import settings;
 
-void initOpenGL(){
+void initOpenGL(bool client){
     string derp = to!string(glGetString(GL_VERSION));
     auto a = split(derp, ".");
     auto major = to!int(a[0]);
@@ -27,17 +27,21 @@ void initOpenGL(){
     glError();
     glFrontFace(GL_CCW);
     glError();
-    DerelictGL.loadClassicVersions(GLVersion.GL30);
-    glError();
-    DerelictGL.loadModernVersions(GLVersion.GL30);
-    glError();
+    if (client) {
+        DerelictGL.loadClassicVersions(GLVersion.GL30);
+        glError();
+        DerelictGL.loadModernVersions(GLVersion.GL30);
+        glError();
+    } else {
+        //Load with lesser requirements.
+    }
 
     int temp;
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &temp);
     glError();
     renderSettings.maxTextureSize = temp;
     if(renderSettings.maxTextureSize > 512){
-        debug writeln("MaxTextureSize(", renderSettings.maxTextureSize, ") to big; clamping to 512");
+        debug writeln("MaxTextureSize(", renderSettings.maxTextureSize, ") 'to big'; clamping to 512");
         renderSettings.maxTextureSize = 512;
     }
     glGetIntegerv(GL_MAX_ARRAY_TEXTURE_LAYERS, &temp);
@@ -49,11 +53,7 @@ void initOpenGL(){
     renderSettings.anisotropy = max(1.0f, min(renderSettings.anisotropy, maxAni));
 
     //Uh 1 or 2 if vsync enable......?
-    version (Windows) {
-        wglSwapIntervalEXT(renderSettings.disableVSync ? 0 : 1);
-    } else {
-        writeln("Cannot poke with vsync unless wgl blerp");
-    }
+    setVSync(!renderSettings.disableVSync);
     glError();
 
     glClearColor(1.0, 0.7, 0.4, 0.0);
@@ -107,5 +107,13 @@ bool setWireframe(bool wireframe) {
         glError();
     }
     return ret;
+}
+
+void setVSync(bool enableVSync) {
+    version (Windows) {
+        wglSwapIntervalEXT(enableVSync ? 0 : 1);
+    } else {
+        writeln("Cannot poke with vsync unless wgl blerp");
+    }
 }
 

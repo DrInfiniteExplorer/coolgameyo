@@ -20,18 +20,18 @@ class GuiElementWindow : public GuiElement {
     private GuiElementButton closeButton;
     
     private bool dragging; //true when dragging
-    vec2d dragHold; //Hold-position of window, kinda, yeah.
+    vec2i dragHold; //Hold-position of window, kinda, yeah.
     private GuiElementText captionText;
     
     
     
-    private Rect barRect;
-    private Rect clientRect;
-    private Rect closeRect;
+    private Recti barRect;
+    private Recti clientRect;
+    private Recti closeRect;
     
-    this(GuiElement parent, Rect r, string caption, bool dragAble = true, bool closeAble = true) {
+    this(GuiElement parent, Rectd relative, string caption, bool dragAble = true, bool closeAble = true) {        
         super(parent);
-        setRect(r);
+        setRelativeRect(relative);
         setCaption(caption);
         setDragable(dragAble);
         setCloseable(closeAble);
@@ -57,13 +57,13 @@ class GuiElementWindow : public GuiElement {
         }
         closeable = enable;
         if (enable) {
-            Rect r;
-            closeButton = new GuiElementButton(this, closeRect, "X", (bool down, bool abort){
+            closeButton = new GuiElementButton(this, Rectd(0,0,1,1), "X", (bool down, bool abort){
                 if (!down && !abort) {
                     onWindowClose();
                 }
             });
             closeButton.setColor(vec3f(0, 0, 0));
+            closeButton.setAbsoluteRect(closeRect);
         } else {
             if (closeButton) {
                 closeButton.destroy();
@@ -73,8 +73,11 @@ class GuiElementWindow : public GuiElement {
     }
     
     private void recalcRects() {
-        auto size = captionText.getRect().size;
-        absoluteRect = getAbsoluteRect();
+        if (captionText is null) {
+            return;
+        }
+        auto size = captionText.getAbsoluteRect().size;
+        getAbsoluteRect();
         barRect = absoluteRect;
         clientRect = absoluteRect;
         barRect.size.Y = size.Y;
@@ -84,8 +87,7 @@ class GuiElementWindow : public GuiElement {
         closeRect = barRect;
         closeRect.start.X += closeRect.size.X - closeRect.size.Y;
         closeRect.size.X = closeRect.size.Y;
-        closeRect = pixDiff(closeRect, vec2i(2, 2), vec2i(-2, -2));
-        closeRect = absoluteRect.getSubRectInv(closeRect);        
+        closeRect.diff(vec2i(2, 2), vec2i(-2, -2));
     }
     
     override void onMove() {
@@ -95,7 +97,7 @@ class GuiElementWindow : public GuiElement {
     
     override void render() {
         //Render background, etc, etc.
-        renderRect(absoluteRect, vec3f(0.5, 0.5, 0.5)); //Background color
+        renderRect(absoluteRect, vec3f(0.85, 0.85, 0.5)); //Background color
         renderOutlineRect(clientRect, vec3f(0.0, 0.0, 1.0));
         renderRect(barRect, vec3f(1.0, 0.0, 0.0));
         renderOutlineRect(barRect, vec3f(0.0, 1.0, 0.0));
@@ -114,7 +116,7 @@ class GuiElementWindow : public GuiElement {
                     if(barRect.isInside(m.pos)) {
                         dragging = true;
                         //Calculate relative drag-hold-position.                        
-                        dragHold = rect.start - parent.getAbsoluteRect().getRelative(m.pos);
+                        dragHold = absoluteRect.start - m.pos;
                         return GuiEventResponse.Accept;
                     }                    
                 } else if(dragging) {
@@ -126,8 +128,9 @@ class GuiElementWindow : public GuiElement {
         if (e.type == GuiEventType.MouseMove) {
             if (dragging) {
                 auto m = e.mouseMove;
-                auto relPos = parent.getAbsoluteRect().getRelative(m.pos);
-                rect.start = relPos + dragHold;
+                auto r = absoluteRect;
+                r.start = m.pos + dragHold;
+                setAbsoluteRect(r);
                 
                 //Move window
                 onMove();
