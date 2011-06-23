@@ -39,7 +39,7 @@ class GuiElementText : public GuiElement {
     
     void setText(string str) {
         if (text is null) {
-            text = new StringTexture(getFont());
+            text = new StringTexture(font);
         }
         text.setText(str);
     }

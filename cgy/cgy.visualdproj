@@ -327,6 +327,7 @@
     <File path="gui\guisystem\button.d" />
     <File path="gui\guisystem\element.d" />
     <File path="gui\guisystem\checkbox.d" />
+    <File path="gui\guisystem\editbox.d" />
    </Folder>
    <File path="gui\mainmenu.d" />
    <File path="gui\optionmenu.d" />

@@ -136,6 +136,9 @@ class Main {
         enforce(surface, text("Could not set sdl video mode (" , SDLError() , ")"));                            
         initOpenGL(client);
         
+        SDL_EnableUNICODE(1);
+        SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
+        
         guiSystem = new GuiSystem;
         
     }

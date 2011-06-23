@@ -61,7 +61,7 @@ class GuiElement {
 
     protected Rectd relativeRect;
     protected Recti absoluteRect;
-    private Font font;
+    protected Font font;
     protected bool visible;
     
     this(GuiElement parent){
@@ -69,7 +69,7 @@ class GuiElement {
         visible = true;
         if(parent) {
             setParent(parent);
-            font = parent.getFont();        
+            font = parent.font;        
             while(parent.getParent() !is null) {
                 parent = parent.getParent();
             }

@@ -14,11 +14,6 @@ import worldparts.block;
 import stolen.all;
 import pos;
 
-version(Windows){
-    import std.c.windows.windows;
-    import win32.windows : SYSTEM_INFO, GetSystemInfo, RaiseException; //Not available in std.c.windows.windows
-}
-
 version (Posix) {
     import core.sys.posix.stdlib: posix_memalign;
     import std.c.stdlib;
@@ -165,6 +160,13 @@ void BREAKPOINT(uint doBreak=1) {
 void ASSERT(uint dontBreak){
     BREAKPOINT(!dontBreak);
 }
+
+version(Windows){
+//    import std.c.windows.windows;
+//    import win32.windows : SYSTEM_INFO, GetSystemInfo, RaiseException; //Not available in std.c.windows.windows
+    import win32.windows;
+}
+
 
 void[] allocateBlob(size_t size) {
     version (Windows) {
@@ -536,3 +538,42 @@ void setThreadName(string threadName) {
     }
 }
 
+version(Windows){
+    /*import win32.windows : GlobalAlloc, GlobalLock, GlobalUnlock, GMEM_MOVEABLE,
+        OpenClipboard, EmptyClipboard, SetClipboardData, CF_TEXT, CloseClipboard, GetClipboardData;
+    */
+    import win32.windows;
+
+    void setCopyString(string str) {
+        auto strZ = str.toStringz();
+        DWORD len = str.length+1;
+        HANDLE hMem =  GlobalAlloc(GMEM_MOVEABLE, len);
+        memcpy(GlobalLock(hMem), strZ, len);
+        GlobalUnlock(hMem);
+        OpenClipboard(null);
+        EmptyClipboard();
+        SetClipboardData(CF_TEXT, hMem);
+        CloseClipboard();    
+    }
+
+    bool getCopyString(ref string output) {
+        const(char*) clip;
+        if (OpenClipboard(null)) {
+	        HANDLE hData = GetClipboardData( CF_TEXT );
+	        char * buffer = cast(char*)GlobalLock( hData );
+	        output = to!string(buffer);
+	        GlobalUnlock( hData );
+	        CloseClipboard();
+            return true;
+        }
+        return false;
+    }
+
+}
+
+unittest{
+    setCopyString("dix");
+    string s;
+    assert(getCopyString(s), "Could not get string from clipboard");
+    assert(s == "dix", "Didn't get correct string from clipboard");
+}
