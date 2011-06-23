@@ -329,6 +329,7 @@
     <File path="gui\guisystem\checkbox.d" />
    </Folder>
    <File path="gui\mainmenu.d" />
+   <File path="gui\optionmenu.d" />
   </Folder>
   <File path="changelist.d" />
   <File path="game.d" />

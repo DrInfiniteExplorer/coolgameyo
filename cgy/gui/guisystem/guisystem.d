@@ -2,7 +2,9 @@
 
 module gui.guisystem.guisystem;
 
+import std.conv;
 import std.exception;
+
 
 import graphics._2d.rect;
 import graphics.font;
@@ -12,7 +14,12 @@ public import util;
 public import gui.guisystem.element;
 
 
+
 final class GuiSystem : GuiElement{
+    
+    alias void delegate() HotkeyCallback;
+    
+    private HotkeyCallback[int] hotkeys;
     
     private GuiElement hoverElement;
     private GuiElement focusElement;
@@ -28,6 +35,16 @@ final class GuiSystem : GuiElement{
     
     override bool isInside(vec2i p) {
         return true;
+    }
+    
+    void addHotkey(int key, HotkeyCallback cb) {
+        enforce(key !in hotkeys, text("Key ", key, " already in hotkey-callbacks"));
+        hotkeys[key] = cb;
+    }
+    
+    void removeHotkey(int key) {
+        enforce(key in hotkeys, text("Trying to remove key ",key, " from callbacks when not registered"));
+        hotkeys.remove(key);
     }
     
     override void setFocus(GuiElement e) {
@@ -56,25 +73,30 @@ final class GuiSystem : GuiElement{
         return focusElement;
     }
     
+    void setHover(vec2i pos) {
+        auto element = getElementFromPoint(pos);
+        if (hoverElement != element) {
+            GuiEvent hoverEvent;
+            hoverEvent.type = GuiEventType.HoverOn;
+            element.onEvent(hoverEvent);
+            hoverEvent.type = GuiEventType.HoverOff;
+            hoverElement.onEvent(hoverEvent);
+            hoverElement = element;
+        }
+    }
+    
     override GuiEventResponse onEvent(GuiEvent e) {
         switch (e.type) {
             case GuiEventType.MouseMove:
                 auto move = e.mouseMove;
-                auto element = getElementFromPoint(move.pos);
-                if (hoverElement != element) {
-                    GuiEvent hoverEvent;
-                    hoverEvent.type = GuiEventType.HoverOn;
-                    element.onEvent(hoverEvent);
-                    hoverEvent.type = GuiEventType.HoverOff;
-                    hoverElement.onEvent(hoverEvent);
-                    hoverElement = element;
-                }
+                setHover(move.pos);
                 if(focusElement && focusElement != this) {
                     return focusElement.onEvent(e);
                 }                
                 break;
             case GuiEventType.MouseClick:
                 auto m = e.mouseClick;
+                setHover(m.pos);
                 if (m.left && m.down) {
                     setFocus(hoverElement);
                 }
@@ -90,6 +112,13 @@ final class GuiSystem : GuiElement{
                    return ret;                   
                }
                //Handle other hotkeys
+               auto kb = e.keyboardEvent;
+               if (kb.pressed) {
+                   auto sym = kb.SdlSym;
+                   if (sym in hotkeys) {
+                       hotkeys[sym]();
+                   }
+               }
                //Else if non-focus-object'ish registered, send to it. (player walking etc..)
                break;
            case GuiEventType.HoverOn:

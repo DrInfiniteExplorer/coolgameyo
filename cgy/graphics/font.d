@@ -126,8 +126,17 @@ class StringTexture {
     }
 
     ~this() {
+        writeln("dtor text: ", currentText, " ", vbo);
         enforce(vbo == 0);
     }
+    void destroy() {
+        writeln("destroying text: ", currentText, " ", vbo);
+        glDeleteBuffers(1, &vbo);
+        glError();
+        vbo = 0;
+    }
+    
+    
     
     void resize(uint length){
         vertices.length = length;
@@ -191,12 +200,6 @@ class StringTexture {
         glBindTexture(GL_TEXTURE_2D, texId);
         glError();
         FontShader().render(rect, vbo, currentText.length, transparent, color);
-    }
-
-    void destroy() {
-        glDeleteBuffers(1, &vbo);
-        glError();
-        vbo = 0;
     }
 };
 

@@ -28,6 +28,11 @@ class GuiElementText : public GuiElement {
         setAbsoluteRect(absoluteRect);
     }
     
+    override void destroy() {
+        super.destroy();
+        text.destroy();
+    }
+    
     vec2i getSize() {
         return text.getSize();
     }

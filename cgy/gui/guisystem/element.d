@@ -54,7 +54,6 @@ struct GuiEvent{
     };
 }
 
-
 class GuiElement {
     protected GuiElement guiSystem;
     private GuiElement[] children;
@@ -80,8 +79,8 @@ class GuiElement {
     
     void destroy() {
         looseFocus();
-        foreach(child ; children) {
-            child.destroy();
+        while (children.length > 0) {
+            children[0].destroy(); //Proper chilredn should remove themselfves from this array.
         }
         setParent(null);
         //Release resources
@@ -89,6 +88,10 @@ class GuiElement {
     
     GuiElement getParent() {
         return parent;
+    }
+    
+    GuiElement getGuiSystem() {
+        return guiSystem;
     }
     
     void setParent(GuiElement p) {
@@ -103,7 +106,7 @@ class GuiElement {
     
     void removeChild(GuiElement e){
         bool b(GuiElement a){
-            return a==e;
+            return a is e;
         }
         children = remove!(b)(children);
         e.parent = null;
@@ -138,12 +141,13 @@ class GuiElement {
     }
     
     void looseFocus() {
+        foreach(child ; children) {
+            child.looseFocus();
+        }
         if (hasFocus()) {
             setFocus(parent);
         }
     }
-
-
     
     bool isInside(vec2i pos){
         return absoluteRect.isInside(pos);

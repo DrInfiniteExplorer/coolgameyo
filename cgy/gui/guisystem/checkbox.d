@@ -25,11 +25,17 @@ class GuiElementCheckBox : public GuiElementButton {
     
     override void setText(string str) {
         super.setText(str);
-        //auto buttonSize = buttonText.getSize();
-        auto textRect = Recti(vec2i(0, 0), buttonText.getSize());
-        textRect = absoluteRect.centerRect(textRect, false);
-        textRect = textRect.diff(vec2i(checkboxSizeInPixels+2, 0), vec2i(0, 0));
-        buttonText.setAbsoluteRect(textRect);
+        //auto buttonSize = buttonText.getSize();        
+    }
+    
+    override void onMove() {
+        if (buttonText !is null) {
+            auto textRect = Recti(vec2i(0, 0), buttonText.getSize());
+            textRect = absoluteRect.centerRect(textRect, false);
+            textRect = textRect.diff(vec2i(checkboxSizeInPixels+2, 0), vec2i(0, 0));
+            buttonText.setAbsoluteRect(textRect);
+        }
+        GuiElement.onMove();
     }
 
     override void onPushed(bool down, bool abort){
@@ -60,11 +66,12 @@ class GuiElementCheckBox : public GuiElementButton {
         renderXXRect(rect, vec3f(0.25, 0.25, 0.25), true);
         //rect = pixDiff(rect, vec2i(1, 1), vec2i(0, 0));
         
-        if (checked) {
-            renderRect(rect, vec3f(0.75, 0.75, 0.75), 1);
-        }
         if(pushedDown){
             renderRect(rect, vec3f(0.5, 0.5, 0.5), true);
+        }
+        if (checked) {
+            rect = rect.diff(vec2i(3,3), vec2i(-2,-3));
+            renderRect(rect, vec3f(0, 0, 0));
         }
         GuiElement.render();
     }
