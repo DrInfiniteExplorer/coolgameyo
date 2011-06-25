@@ -7,11 +7,8 @@ import std.conv;
 import derelict.sdl.sdl;
 
 import main;
-
 import game;
-
 import graphics._2d.rect;
-
 import gui.unitcontrol;
 import gui.optionmenu;
 import gui.guisystem.guisystem;
@@ -19,6 +16,7 @@ import gui.guisystem.window;
 import gui.guisystem.text;
 import gui.guisystem.button;
 import gui.guisystem.checkbox;
+import settings;
 
 class MainMenu : GuiElementWindow {
     Main main;
@@ -65,8 +63,8 @@ class MainMenu : GuiElementWindow {
         setVisible(false);
         guiSystem.addHotkey(SDLK_ESCAPE, &enterMenu);
         guiSystem.setEventDump(userControl);
-        auto middleX = cast(ushort)renderSettings.windowWidth/2;
-        auto middleY = cast(ushort)renderSettings.windowHeight/2;
+        ushort middleX = cast(ushort)renderSettings.windowWidth/2;
+        ushort middleY = cast(ushort)renderSettings.windowHeight/2;
         SDL_WarpMouse(middleX, middleY);
     }
     
