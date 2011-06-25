@@ -19,9 +19,14 @@ import util;
 
 
 class GuiElementEditbox : public GuiElement {
+    alias bool delegate(char ch) ValidCharFilter;
+    ValidCharFilter filter; //Return true to allow!
+    
     size_t startMarker, stopMarker;
+    size_t maxLength;
     string content;
     StringTexture text;
+    bool password;
     this(GuiElement parent) {
         super(parent);
     }
@@ -34,11 +39,32 @@ class GuiElementEditbox : public GuiElement {
         super(parent);
         setRelativeRect(relative);
         setText(str);
+        filter = &filterNone;
     }
     
     override void destroy() {
         super.destroy();
         text.destroy();
+    }
+
+    void setPassword(bool pass) {
+        password = pass;
+        setText(content);
+    }
+    
+    void setNumbersOnly(bool enable) {
+        filter = &filterNumber;
+    }
+    
+    void setMaxLength(size_t max) {
+        maxLength = max;
+    }
+    
+    bool filterNone(char ch) {
+        return true;
+    }
+    bool filterNumber(char ch) {
+        return -1 != std.string.indexOf(digits, ch);
     }
         
     void setText(string str) {
@@ -47,7 +73,12 @@ class GuiElementEditbox : public GuiElement {
             text = new StringTexture(font);
             text.setTransparent(true);
         }
-        text.setText(str);
+        if (password) {
+            str = "*".repeat(str.length);
+            text.setText(str);
+        } else {
+            text.setText(str);
+        }
     }
     
     int getPixelFromPos(size_t pos) {
@@ -91,12 +122,16 @@ class GuiElementEditbox : public GuiElement {
         super.render();
     }
         
-    void handleChar(int sdlSym, char ch) {
+    GuiEventResponse handleChar(int sdlSym, char ch) {
         bool delet = (sdlSym == SDLK_DELETE);
         bool erase = (ch == 8) || (sdlSym == SDLK_BACKSPACE);
-        bool insert = (ch != 0) && !erase && !delet;
+        bool insert = (ch != 0) && !erase && !delet && filter(ch);
+        if (maxLength != 0) {
+            insert = insert && content.length < maxLength;
+        }
+        
         if (!erase && !insert && !delet) {
-            return;
+            return GuiEventResponse.Ignore;
         }
         if (startMarker != stopMarker) {
             //Delete range between
@@ -108,7 +143,7 @@ class GuiElementEditbox : public GuiElement {
             setText(content);
             if(!insert) {
                 stopMarker = startMarker;
-                return;
+                return GuiEventResponse.Accept;
             }
         }
         if (delet && startMarker < content.length) {
@@ -118,13 +153,13 @@ class GuiElementEditbox : public GuiElement {
             content.replaceInPlace(startMarker-1, startMarker, "");
             startMarker--;
         }
-        writeln(to!int(ch), " asd ", sdlSym);
         if (insert) {
             insertInPlace(content, startMarker, cast(immutable(char))ch);
             startMarker++;
         }
         stopMarker = startMarker;
         setText(content);
+        return GuiEventResponse.Accept;
     }
     
     
@@ -222,12 +257,12 @@ class GuiElementEditbox : public GuiElement {
             auto kb = e.keyboardEvent;
             if (kb.pressed) {
                 //Also handles ctrl+c etc
-                if(!handleMove(kb.SdlSym, kb.SdlMod)) {
-                    handleChar(kb.SdlSym, kb.ch);
+                if(handleMove(kb.SdlSym, kb.SdlMod)) {
+                    return GuiEventResponse.Accept;
                 }
+                return handleChar(kb.SdlSym, kb.ch);
                 
             }
-            return GuiEventResponse.Accept;
         }
         if (e.type == GuiEventType.MouseClick) {
             auto m = e.mouseClick;

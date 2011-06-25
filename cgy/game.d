@@ -8,18 +8,17 @@ import std.array;
 import std.concurrency;
 import std.conv;
 import std.exception;
-import std.math;
 import std.stdio;
 
 import derelict.sdl.sdl;
 
 import graphics.ogl;
 import graphics.camera;
-import graphics.debugging;
 import graphics.font;
 import graphics.renderer;
 import graphics.texture;
 
+import ai.patrolai;
 import changelist;
 import modules.ai;
 import modules.path;
@@ -36,32 +35,29 @@ string SDLError() { return to!string(SDL_GetError()); }
 
 class Game{
 
-    World           world;
+    private World           world;
 
 
-    bool            isClient;
-    bool            isServer;
-    bool            isWorker;
+    private bool            isClient;
+    private bool            isServer;
+    private bool            isWorker;
 
-    ushort          middleX;
-    ushort          middleY;
-
-    Camera            camera;
-    Renderer          renderer;
-    Scheduler         scheduler;
-    TileTextureAtlas  atlas;
-    bool[SDLK_LAST]   keyMap;
-    bool              useCamera = true;
-
-    FPSControlAI      possesAI;
+    private Camera            camera;
+    private Renderer          renderer;
+    private Scheduler         scheduler;
+    private TileTextureAtlas  atlas;
+    
+    private Unit*             activeUnit; //TODO: Find out when this unit dies, and tell people.
+    
+    private bool              useCamera = true;
     
     /+
     StringTexture     f1, f2, f3, f4, fps, tickTime, renderTime;
     StringTexture     unitInfo, selectedInfo;
     +/
 
-    bool possesedActive = true;
-    bool _3rdPerson = false;
+    private bool possesedActive = true;
+    private bool _3rdPerson = false;
 
     this(bool serv, bool clie, bool work) {
         isServer = serv;
@@ -71,9 +67,6 @@ class Game{
         if (isClient) {
             writeln("Initializing client stuff");
             scope (success) writeln("Done with client stuff");
-
-            middleX = cast(ushort)renderSettings.windowWidth/2;
-            middleY = cast(ushort)renderSettings.windowHeight/2;
 
             atlas = new TileTextureAtlas; // HACK
         }
@@ -131,11 +124,15 @@ class Game{
         world.floodFillSome(1_000_000);
         // Commented out for presentation; Dont want stuff crashing :p
         u.ai = new PatrolAI(u, uu.pos, pathModule);
-
-        possesAI = new FPSControlAI(world);
-        possesAI.setUnit(uu);
+        
+        activeUnit = uu;
 
         scheduler.start();
+    }
+    
+    private bool destroyed;
+    ~this() {
+        enforce(destroyed, "Game.destroyed not called!");
     }
     
     void destroy() {
@@ -150,7 +147,19 @@ class Game{
         renderer.destroy();
         world.destroy();
 
-        //TODO: destroy "surface" and how? :P        
+        destroyed = true;
+    }
+    
+    Camera getCamera() {
+        return camera;
+    }
+    
+    Unit* getActiveUnit() {
+        return activeUnit;
+    }
+    
+    World getWorld() {
+        return world;
     }
 
     void parseGameData() {
@@ -240,16 +249,7 @@ class Game{
     }
     
     void render() {
-        if (useCamera) {
-            updateCamera();
-        }
-        if (possesedActive) {
-            updatePossesed();
-        }
-
-        rayPick();
         renderer.render();
-        updateGui();
     }
 
     void updateGui() {
@@ -269,46 +269,7 @@ class Game{
 
     }
 
-    void updateCamera() {
-        if(keyMap[SDLK_a]){ camera.axisMove(-0.1, 0.0, 0.0); }
-        if(keyMap[SDLK_d]){ camera.axisMove( 0.1, 0.0, 0.0); }
-        if(keyMap[SDLK_w]){ camera.axisMove( 0.0, 0.1, 0.0); }
-        if(keyMap[SDLK_s]){ camera.axisMove( 0.0,-0.1, 0.0); }
-        if(keyMap[SDLK_SPACE]){ camera.axisMove( 0.0, 0.0, 0.1); }
-        if(keyMap[SDLK_LCTRL]){ camera.axisMove( 0.0, 0.0,-0.1); }
-    }
-
     long then = 0;
-    void updatePossesed() { 
-
-        long now = utime();
-        float deltaT = (now-then) / 100_000.f;
-        then = now;
-
-        double right = 0;
-        double fwd = 0;
-        if(keyMap[SDLK_a]){ right-=0.4; }
-        if(keyMap[SDLK_d]){ right+=0.4; }
-        if(keyMap[SDLK_w]){ fwd+=0.4; }
-        if(keyMap[SDLK_s]){ fwd-=0.4; }
-        if(keyMap[SDLK_SPACE]){
-            if(possesAI.onGround){
-                possesAI.fallSpeed = 0.55f;
-            }
-        }
-        possesAI.move(right, fwd, 0.f, deltaT);
-
-        auto pos = possesAI.getUnitPos();
-        auto dir = camera.getTargetDir();
-        if(_3rdPerson) {
-            pos -= util.convert!double(dir) * 7.5;
-        } else {
-            pos += vec3d(0, 0, 1.5);
-        }
-        camera.setPosition(pos);
-        auto rad = atan2(dir.Y, dir.X);
-        possesAI.setRotation(rad);
-    }
 
     void stepMipMap() {
         int cnt =   (renderSettings.textureInterpolate ? 1 : 0) +
@@ -336,6 +297,7 @@ class Game{
         +/
     }
 
+/+    
     void onKey(SDL_KeyboardEvent event){
         auto key = event.keysym.sym;
         auto down = event.type == SDL_KEYDOWN;
@@ -368,215 +330,11 @@ class Game{
         if(key == SDLK_F5 && down) possesedActive ^= 1;
         if(key == SDLK_F6 && down) _3rdPerson ^= 1;
     }
++/    
 
-    bool oldUseCamera;
-    void mouseMove(SDL_MouseMotionEvent mouse){
-        auto x = mouse.x;
-        auto y = mouse.y;
-        if(x != middleX || y != middleY){
-            if(useCamera) {
-                SDL_WarpMouse(middleX, middleY);
-                if(oldUseCamera) {
-                    camera.mouseMove( mouse.xrel,  mouse.yrel);
-                }
-            }
-        }
-        oldUseCamera = useCamera;
-        mousecoords.set(x, y);
-    }
-    vec2i mousecoords;
     
-    void rayPick(){
-        vec3d start, dir;
-        camera.getRayFromScreenCoords(mousecoords, start, dir);
-        Tile tile;
-        TilePos tilePos;
-        vec3i normal;
-        if(0 < world.intersectTile(start, dir, 25, tile, tilePos, normal)){
-            if(asdasdasd){
-                removeAABB(asdasdasd);
-            }
-            auto temp = TilePos(tilePos.value);
-            aabbd aabb = temp.getAABB(tile.halfstep);
-            aabb.scale(vec3d(1.025f));
-            asdasdasd = addAABB(aabb);
-            /+
-            string tileString = "Tile under mouse: " ~ to!string(tilePos);            
-            selectedInfo.setText(tileString);
-            +/
-        }
-        if(dsadsadsa){
-            removeLine(dsadsadsa);
-        }
-        auto pt = start + dir;
-        auto _start = start + vec3d(0, 0, 2);
-        dsadsadsa = addLine([_start, pt], vec3f(0, 0, 1));
-    }    
-    int asdasdasd;
-    int dsadsadsa;
 }
 
-
-class FPSControlAI : UnitAI, CustomChange {
-    Unit* unit;
-    //vec3d velocity;
-    float fallSpeed;
-    bool onGround;
-    World world;
-    UnitPos oldPosition;
-
-    this(World w) {
-        world = w;
-    }
-
-    void setUnit(Unit* unit){
-        unit.ai = this;
-        this.unit = unit;
-        fallSpeed = 0.f;
-        onGround=false;
-        oldPosition = unit.pos;
-        //Save old ai?
-        //Send data to clients that this unit is possessed!!!!
-        // :)
-    }
-
-    vec3d collideMove(vec3d pos, vec3d dir, int level=0){
-        if (dir == vec3d(0, 0, 0)) { return pos; }
-        if (level > 5) {
-            writeln("Penix");
-            enforce(0, "DIX!");
-            return pos;
-        }
-
-        auto min = UnitPos(pos).tilePos; min.value -= vec3i(1, 1, 1);
-        auto max = min; max.value += vec3i(3, 3, 4);
-
-        bool checkCollision(vec3d pos, vec3d dir, out float minTime, out vec3d minNormal){
-            bool didCollide = false;
-            minTime = float.max;
-            auto aabb = unit.aabb(&pos);
-            foreach (rel; RangeFromTo(min.value, max.value)) {
-                auto tp = TilePos(rel);
-                auto tile = world.getTile(tp);
-                auto tileBox = tp.getAABB(tile.halfstep);
-                float time;
-                vec3d normal;
-                if (tile.transparent
-                        || !aabb.intersectsWithBox(tileBox, dir, time, normal)) {
-                    continue;
-                }
-                if (isNaN(time)) {
-                    minTime = float.nan;
-                    writeln("Unit is inside of something. Solve this, like, loop upwards until not collides anylonger. or something.");
-                    return true;
-                }
-                if (time < minTime) {
-                    minTime = time;
-                    minNormal = normal;
-                }
-                didCollide = true;
-            }
-            return didCollide;
-        }
-
-        float time = float.max;
-        vec3d normal;
-
-
-        if (!checkCollision(pos, dir, time, normal)) {
-            return pos + dir;
-        }
-        if (isNaN(time)) {
-            //enforce(0, "Implement, like move dude upwards until on top, something?");
-            //return pos;
-            vec3d _pos = pos + vec3d(0, 0, 1);
-            vec3d _dir = vec3d(0.0, 0.0, 0.0);
-            //while (!checkCollision(_pos, _dir, time, normal)) {
-            //    writeln("gay gay gay ", UnitPos(_pos));
-            //    _pos.Z += 1;
-            //}
-            return _pos;
-        }
-        // We have collided with some box
-        //IF CAN STEP STEP
-        if (normal.Z == 0 && fallSpeed <= 0) { //TODO: Is now a little better, but still not good.!
-            auto stepStart = pos + vec3d(0, 0, unit.stepHeight);
-            float stepTime;
-            auto stepDir = dir * vec3d(1, 1, 0);
-            vec3d stepNormal;
-            bool stepCollided = checkCollision(stepStart, dir, stepTime, stepNormal);
-            if (!stepCollided) {
-                return stepStart + dir;
-            }
-            if (stepTime < time) {
-                time = stepTime;
-                pos = stepStart;
-                normal = stepNormal;
-            }
-        } else{
-            onGround = true;
-        }
-        //ELSE Slideee!! :):):)
-
-        // move forward first
-        auto newPos = pos + dir * time;
-        dir = (1-time) * dir;
-
-        assert (normal.getLengthSQ == 1);
-
-        auto normPart = normal.dotProduct(dir) * normal;
-        auto tangPart = dir - normPart;
-
-        assert (tangPart.getLengthSQ() < dir.getLengthSQ());
-
-        return collideMove(newPos, tangPart, level+1);
-    }
-
-    //Make sure that it is sent over network, and such!! (like comment below)
-    void move(float right, float fwd, float up, float deltaT) {
-        immutable origo = vec3d(0, 0, 0);
-
-        onGround = false;
-        fallSpeed -= 0.15f * deltaT;
-        auto dir = vec3d(fwd, -right, up + fallSpeed) * deltaT;
-        dir.rotateXYBy(unit.rotation, origo);
-        unit.pos.value = collideMove(unit.pos.value, dir);
-        if(onGround){
-            fallSpeed = 0.f;
-        }
-    }
-
-    void setRotation(float rot){
-        enforce(unit !is null, "FPSControlAI's unit is null!!");
-        unit.rotation = rot;
-    }
-
-    vec3d getUnitPos(){
-        enforce(unit !is null, "FPSControlAI's unit is null!!");
-        return unit.pos.value;
-    }
-
-    //This is now mostly used to make a 'real' commit of the movement.
-    //Moving the unit would like, break things, kinda, otherwise, and such.
-    //How/what to do when networked? Other clients will want to know where it is positioned.
-    //Probably send information like "Unit X is player-controlled" to set NetworkControlledAI
-    //which'll work kina like this one, i suppose.
-    override int tick(Unit* unit, ChangeList changeList){
-        assert (unit == this.unit, "Derp! FPSControlAI.unit != unit-parameter in this.tick!");
-        changeList.addCustomChange(this);
-        return 0;
-    }
-    
-    //Hax used: oldPosition, to make the world produce a delta-pos-value and load sectors
-    void apply(World world) {
-        auto pos = unit.pos;
-        unit.pos = oldPosition;
-        oldPosition = pos;
-        world.unsafeMoveUnit(unit, pos.value, 1);
-        //TODO: Make rotate of units as well? :):):)
-    }
-
-}
 
 
 

@@ -203,6 +203,13 @@ class GuiElement {
         }
     }
     
+    //Do things such as animating or controlling unit motion, derp etc
+    void tick(float dTime) {
+        foreach(child ; children) {
+            child.tick(dTime);
+        }        
+    }
+    
     GuiEventResponse onEvent(GuiEvent e){
         switch(e.type) {
             case GuiEventType.MouseMove: writeln("MouseMove!"); break;
@@ -246,5 +253,12 @@ class GuiElement {
     }
     bool getVisible() {
         return visible;
+    }
+    
+    void bringToFront(bool uncursive = false) { //True to bring element and all parents to front.
+        setParent(parent);
+        if (uncursive) {
+            parent.bringToFront();
+        }
     }
 }

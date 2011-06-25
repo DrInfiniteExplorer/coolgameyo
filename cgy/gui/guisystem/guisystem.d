@@ -13,7 +13,10 @@ import graphics.ogl;
 public import util;
 public import gui.guisystem.element;
 
-
+interface GuiEventDump {
+    GuiEventResponse onDumpEvent(GuiEvent e);
+    void tick(float dTime);
+}
 
 final class GuiSystem : GuiElement{
     
@@ -23,6 +26,8 @@ final class GuiSystem : GuiElement{
     
     private GuiElement hoverElement;
     private GuiElement focusElement;
+    
+    private GuiEventDump eventDump;
     
     this() {
         super(null);
@@ -47,6 +52,16 @@ final class GuiSystem : GuiElement{
         hotkeys.remove(key);
     }
     
+    void setEventDump(GuiEventDump d)
+    in{
+        if (d !is null) {
+            enforce(eventDump is null, "eventDump !is null, programming erroooaaarr~~~!");
+        }
+    }
+    body{
+        eventDump = d;
+    }    
+
     override void setFocus(GuiElement e) {
         if (e == focusElement) {
             return;
@@ -73,7 +88,7 @@ final class GuiSystem : GuiElement{
         return focusElement;
     }
     
-    void setHover(vec2i pos) {
+    private void setHover(vec2i pos) {
         auto element = getElementFromPoint(pos);
         if (hoverElement != element) {
             GuiEvent hoverEvent;
@@ -91,7 +106,10 @@ final class GuiSystem : GuiElement{
                 auto move = e.mouseMove;
                 setHover(move.pos);
                 if(focusElement && focusElement != this) {
-                    return focusElement.onEvent(e);
+                    auto ret = focusElement.onEvent(e);
+                    if (ret != GuiEventResponse.Ignore) {
+                        return ret;
+                    }
                 }                
                 break;
             case GuiEventType.MouseClick:
@@ -101,7 +119,10 @@ final class GuiSystem : GuiElement{
                     setFocus(hoverElement);
                 }
                 if(focusElement && focusElement != this) {
-                    return focusElement.onEvent(e);
+                    auto ret = focusElement.onEvent(e);
+                    if (ret != GuiEventResponse.Ignore) {
+                        return ret;
+                    }
                 }
                 break;
            case GuiEventType.Keyboard:
@@ -109,7 +130,9 @@ final class GuiSystem : GuiElement{
                //Got focused object? Give him input
                if (focusElement && focusElement != this) {
                    auto ret = focusElement.onEvent(e);
-                   return ret;                   
+                   if (ret != GuiEventResponse.Ignore) {
+                       return ret;                   
+                   }
                }
                //Handle other hotkeys
                auto kb = e.keyboardEvent;
@@ -117,9 +140,11 @@ final class GuiSystem : GuiElement{
                    auto sym = kb.SdlSym;
                    if (sym in hotkeys) {
                        hotkeys[sym]();
+                       return GuiEventResponse.Accept;
                    }
                }
                //Else if non-focus-object'ish registered, send to it. (player walking etc..)
+               //Will be done automagically after this here break.
                break;
            case GuiEventType.HoverOn:
            case GuiEventType.HoverOff:
@@ -131,6 +156,9 @@ final class GuiSystem : GuiElement{
                break;
                 
         }
+        if (eventDump !is null) {
+            return eventDump.onDumpEvent(e);
+        }
         return GuiEventResponse.Ignore;
     }        
     
@@ -141,6 +169,13 @@ final class GuiSystem : GuiElement{
         super.render();
         glDepthMask(1);        
         glEnable(GL_DEPTH_TEST);        
+    }
+    
+    override void tick(float dTime) {
+        if (eventDump !is null) {
+            eventDump.tick(dTime);
+        }
+        super.tick(dTime);
     }
 }
 

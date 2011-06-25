@@ -1,6 +1,7 @@
 
 module modules.ai;
 
+import std.exception;
 import std.stdio;
 
 import modules.module_;
@@ -23,6 +24,15 @@ class AIModule : Module, WorldListener {
     this(PathModule pathmodule_, World w) {
         pathmodule = pathmodule_;
         world = w;
+        world.addListener(this);
+
+    }
+    bool destroyed;
+    ~this(){
+        enforce(destroyed, "AIModule.destroyed not called!");
+    }
+    void destroy() {
+        destroyed = true;
     }
 
     override void update(World world, Scheduler scheduler) {

@@ -331,6 +331,7 @@
    </Folder>
    <File path="gui\mainmenu.d" />
    <File path="gui\optionmenu.d" />
+   <File path="gui\unitcontrol.d" />
   </Folder>
   <File path="changelist.d" />
   <File path="game.d" />
@@ -344,5 +345,10 @@
   <File path="util.d" />
   <File path="world.d" />
   <File path="worldgen.d" />
+  <Folder name="ai">
+   <File path="ai\patrolai.d" />
+   <File path="ai\posessai.d" />
+   <File path="ai\movetoai.d" />
+  </Folder>
  </Folder>
 </DProject>

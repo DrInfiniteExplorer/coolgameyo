@@ -143,11 +143,13 @@ class Main {
         
     }
     
-    void startGame() {
+    Game startGame() {
         game = new Game(client, server, worker);
+        return game;
     }
     
     bool inputActive = true;
+    long then;
     void run() {
         auto exit = false;
         SDL_Event event;
@@ -224,7 +226,11 @@ class Main {
             if(game) {
                 game.render();
             }
-            guiSystem.render();
+            long now = utime();
+            float deltaT = (now-then) / 100_000.f;
+            then = now;
+            guiSystem.tick(deltaT); //Eventually add deltatime and such as well :)
+            guiSystem.render();            
             
             /+
             f1.render();
@@ -253,6 +259,7 @@ class Main {
     }
     
     void deinitLibraries() {
+        //TODO: destroy "surface" and how? :P        
         SDL_Quit();
         DerelictIL.unload();
         if (client) {

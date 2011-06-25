@@ -52,6 +52,11 @@ class OptionMenu : GuiElementWindow {
         main = m;
     }
     
+    override void destroy() {
+        saveSettings();        
+        super.destroy();
+    }
+    
     void onBack(bool down, bool abort) {
         if(down || abort) {
             return;
