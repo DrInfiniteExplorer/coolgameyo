@@ -258,6 +258,12 @@ class World {
         //Maybe add to list of moving units? Maybe all units are moving?
         //Consider this later. Related to comment in world.update
     }
+    
+    void unsafeSetTile(TilePos pos, Tile tile) {
+        //TODO: Think of any reason for or against calling setTile directly here.
+        //Like, maybe store it up and do setting in world.update()?
+        setTile(pos, tile);
+    }
 
 
     private void moveUnit(Unit* unit, UnitPos newPos) {
@@ -288,6 +294,8 @@ class World {
         return block.getTile(tilePos);
     }
     
+    //Returns number of iterations nexxxessarrry to intersect a tile.
+    //Returns 0 on instant-found or none found.
     int intersectTile(bool considerHalftiles = true)(vec3d start, vec3d dir, int tileIter, ref Tile outTile, ref TilePos outPos, ref vec3i Normal) {
         auto tileTypeAir = tileTypeManager.idByName("air");        
         TilePos oldTilePos;
@@ -314,9 +322,20 @@ class World {
         return 0;
     }
 
+    //Now only called from unsafeSetTile
     private void setTile(TilePos tilePos, const Tile newTile) {
-        enforce(0, "Called from where?");
-        getBlock(tilePos.getBlockNum()).setTile(tilePos, newTile);
+        //TODO: Make sure penis penis penis, penises.
+        //Durr, i mean, make sure to floodfill as well! :)
+        auto blockNum = tilePos.getBlockNum();
+        auto block = getBlock(blockNum, true, true);
+        BREAKPOINT(!block.valid);
+        block.setTile(tilePos, newTile);
+        //Only works to not set blocknum again, if we already
+        // have a block of memory that block.tiles points to;
+        // since then we'd be writing into the correct memory.
+        // a block is really read-only, but block.tiles if
+        // present is read-write.
+        setBlock(tilePos.getBlockNum(), block);
         notifyTileChange(tilePos);
     }
 

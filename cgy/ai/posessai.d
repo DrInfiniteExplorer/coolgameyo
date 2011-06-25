@@ -176,12 +176,24 @@ class FPSControlAI : UnitAI, CustomChange {
         return 0;
     }
     
+    Tile[TilePos] tilesToChange;
+    void changeTile(TilePos pos, Tile newTile) {
+        tilesToChange[pos] = newTile;
+    }        
+    
     //Hax used: oldPosition, to make the world produce a delta-pos-value and load sectors
     void apply(World world) {
         auto pos = unit.pos;
         unit.pos = oldPosition;
         oldPosition = pos;
         world.unsafeMoveUnit(unit, pos.value, 1);
+        
+        foreach(tilePos, tile ; tilesToChange) {
+            world.unsafeSetTile(tilePos, tile);
+        }
+        //tilesToChange.clear(); Apparently does _not_ work
+        tilesToChange = null;
+        
         //TODO: Make rotate of units as well? :):):)
     }
 

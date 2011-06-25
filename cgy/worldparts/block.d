@@ -30,7 +30,6 @@ enum BlockFlags : ubyte {
     sparse              = 1 << 1,
     sparse_transparent  = 1 << 2,   //Is only used to store information about tile-transparency for sparse blocks.
                                     //Can therefore be removed since tile-transparency is no longer supported.
-    dirty               = 1 << 6,
     valid               = 1 << 7,
 }
 
@@ -85,19 +84,18 @@ struct Block {
     body{
         assert(valid);
         auto p = pos.rel();
-
-        auto same = (*tiles)[p.X][p.Y][p.Z] == tile;
-        if(!same){
-            dirty = true;
-            if(sparse){ //If was sparse, populate with real tiles
-                Tile t;
-                t.type = sparseTileType;
-                t.flags = TileFlags.valid;
-                t.seen = seen;
-                t.transparent = sparseTileTransparent;
-                (*(cast(Tile[BlockSize.x*BlockSize.y*BlockSize.z]*)(tiles)))[] = t; //Fuck yeah!!!! ? :S:S:S
-                sparse = false;
-            }
+        
+        if(sparse){ //If was sparse, populate with real tiles
+            auto block = alloc();
+            tiles = block.tiles;
+            setFlag(flags, BlockFlags.sparse, false);
+                        
+            Tile t;
+            t.type = sparseTileType;
+            t.flags = TileFlags.valid;
+            t.seen = seen;
+            t.transparent = sparseTileTransparent;
+            (*(cast(Tile[BlockSize.x*BlockSize.y*BlockSize.z]*)(tiles)))[] = t; //Fuck yeah!!!! ? :S:S:S
         }
         (*tiles)[p.X][p.Y][p.Z] = tile;
     }
@@ -116,14 +114,10 @@ struct Block {
     bool sparse() const @property { return (flags & BlockFlags.sparse) != 0; }
     void sparse(bool val) @property { setFlag(flags, BlockFlags.sparse, val); }
 
-    bool dirty() const @property { return (flags & BlockFlags.dirty) != 0; }
-    void dirty(bool val) @property { setFlag(flags, BlockFlags.dirty, val); }
-
     static Block generateBlock(BlockNum blockNum, WorldGenerator worldgen) {
         //writeln("Generating block: ", blockNum);
         auto block = alloc();
         block.blockNum = blockNum;
-        block.dirty = true;
         
         //BREAKPOINT(blockNum.value == vec3i(13, 32, 1));
 

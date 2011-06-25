@@ -553,25 +553,35 @@ class VBOMaker : WorldListener
                 }
             }
         }
+        enforce("Implement");
     }
     void onTileChange(TilePos tilePos)
     {
+        GraphRegionNum[] newRegions;
         auto tileAABB = tilePos.getAABB();
-        int cnt=0;
         {
             regionMutex.lock();
             scope(exit) regionMutex.unlock();
             foreach(region ; regions){
-                if(intersects(region.grNum.getAABB(), tileAABB)){
-                    writeln("Update this region!!");
-                    cnt ++;
-                    asm{ int 3; }
+                if(tileAABB.intersectsWithBox(region.grNum.getAABB())){
+                    newRegions ~= region.grNum;
                 }
             }
         }
-        assert(cnt == 1, cnt == 0 ?
-               "Seems we were told to update a tile we dont have a graphics region for yet" :
-               "Seems we have more than one graphics region that claims to own a tile");
+
+        //Example, we dug into a yet invisible area.
+        //Maybe let the floodfill take care of it instead, somehow?
+        //dunno. think it's needed here as well.
+        if(newRegions.length == 0) {
+            newRegions ~= tilePos.getGraphRegionNum(); //Check neighboring graphregions as well.
+        }
+        updateMutex.lock();
+        scope(exit) updateMutex.unlock();
+        if(regionsToUpdate.length == 0){
+            //writeln("Starting taskFunc-task like so");
+            scheduler.push(asyncTask(&taskFunc));
+        }
+        regionsToUpdate ~= newRegions;
     }
 }
 

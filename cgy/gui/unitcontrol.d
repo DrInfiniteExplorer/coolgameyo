@@ -14,6 +14,7 @@ import graphics.camera;
 import graphics.debugging;
 import gui.guisystem.guisystem;
 import settings;
+import tiletypemanager;
 import unit;
 import world;
 
@@ -31,7 +32,16 @@ class HyperUnitControlInterfaceInputManager : GuiEventDump{
     private bool _3rdPerson;
     
     private ushort          middleX;
-    private ushort          middleY;    
+    private ushort          middleY;
+    
+    private vec2i mousecoords;
+    private Tile selectedTile;
+    private TilePos selectedTilePos;
+    private vec3i selectedTileNormal;
+    private bool tileSelected;
+    
+    private Tile copiedTile;
+
     
     this(Game g) {
         game = g;
@@ -63,7 +73,23 @@ class HyperUnitControlInterfaceInputManager : GuiEventDump{
         possesAI = new FPSControlAI(world);
         possesAI.setUnit(unit);
     }
-    
+        
+    override GuiEventResponse onDumpEvent(GuiEvent e) {
+        if (e.type == GuiEventType.MouseMove) {
+            mouseMove(e);
+            return GuiEventResponse.Accept;
+        } else if (e.type == GuiEventType.Keyboard) {
+            auto k = e.keyboardEvent;
+            auto key = k.SdlSym;
+            auto down = k.pressed;
+            keyMap[key] = down;            
+            return GuiEventResponse.Accept;
+        } else if (e.type == GuiEventType.MouseClick) {
+            mouseClick(e);
+        }
+        return GuiEventResponse.Ignore;
+    }
+
     void mouseMove(GuiEvent e){
         auto m = e.mouseMove;
         auto x = m.pos.X;
@@ -75,26 +101,28 @@ class HyperUnitControlInterfaceInputManager : GuiEventDump{
                     camera.mouseMove( diffX,  diffY);
         }
         mousecoords.set(x, y);
-    }
-    vec2i mousecoords;
+    }    
     
-    
-    override GuiEventResponse onDumpEvent(GuiEvent e) {
-        if (e.type == GuiEventType.MouseMove) {
-            mouseMove(e);
-            return GuiEventResponse.Accept;
-        } else if (e.type == GuiEventType.Keyboard) {
-            auto k = e.keyboardEvent;
-            auto key = k.SdlSym;
-            auto down = k.pressed;
-            keyMap[key] = down;            
-            return GuiEventResponse.Accept;
+    void mouseClick(GuiEvent e) {
+        auto m = e.mouseClick;
+        if (!m.down) {
+            return;
         }
-        return GuiEventResponse.Ignore;
+        else if (m.left && tileSelected) {
+            copiedTile = selectedTile;
+            //Remove transparensiness sometime!!
+            enum airTile = Tile(TileTypeAir, cast(TileFlags)(TileFlags.transparent | TileFlags.valid), 0, 0);
+
+            possesAI.changeTile(selectedTilePos, airTile);
+        } else if (tileSelected) {
+            TilePos whereToPlace = TilePos(selectedTilePos.value + selectedTileNormal);
+            possesAI.changeTile(whereToPlace, copiedTile);
+        }        
     }
     
     void tick(float dTime) {
         updatePossesed(dTime);
+        rayPick();
     }
 
     void updatePossesed(float dTime) { 
@@ -133,34 +161,24 @@ class HyperUnitControlInterfaceInputManager : GuiEventDump{
         if(keyMap[SDLK_LCTRL]){ camera.axisMove( 0.0, 0.0,-0.1); }
     }
     
+    
+    
+    int selectedTileBox; //TODO: Implement better way to render selected tile than debug functionality
     void rayPick(){
         vec3d start, dir;
         camera.getRayFromScreenCoords(mousecoords, start, dir);
         Tile tile;
-        TilePos tilePos;
-        vec3i normal;
-        if(0 < world.intersectTile(start, dir, 25, tile, tilePos, normal)){
-            if(asdasdasd){
-                removeAABB(asdasdasd);
+        tileSelected = 0 < world.intersectTile(start, dir, 25, selectedTile, selectedTilePos, selectedTileNormal);
+        if(tileSelected){
+            if(selectedTileBox){
+                removeAABB(selectedTileBox);
             }
-            auto temp = TilePos(tilePos.value);
+            auto temp = TilePos(selectedTilePos.value); //Why? :S:S :P
             aabbd aabb = temp.getAABB(tile.halfstep);
             aabb.scale(vec3d(1.025f));
-            asdasdasd = addAABB(aabb);
-            /+
-            string tileString = "Tile under mouse: " ~ to!string(tilePos);            
-            selectedInfo.setText(tileString);
-            +/
+            selectedTileBox = addAABB(aabb);
         }
-        if(dsadsadsa){
-            removeLine(dsadsadsa);
-        }
-        auto pt = start + dir;
-        auto _start = start + vec3d(0, 0, 2);
-        dsadsadsa = addLine([_start, pt], vec3f(0, 0, 1));
     }    
-    int asdasdasd;
-    int dsadsadsa;
     
     
     

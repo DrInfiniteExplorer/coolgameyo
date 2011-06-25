@@ -10,6 +10,10 @@ import json;
 import util;
 import worldparts.tile;
 
+//ALWAYS!!
+enum TileTypeInvalid = 0;
+enum TileTypeAir = 1;
+
 static struct TileTextureID {
     ushort top, side, bottom;
 }
