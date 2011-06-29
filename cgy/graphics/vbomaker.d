@@ -18,12 +18,14 @@ import derelict.opengl.glext;
 import graphics.camera;
 import graphics.debugging;
 import graphics.renderer;
+import modules.module_;
 import pos;
 import scheduler;
 import settings;
 import stolen.aabbox3d;
 import util;
 import world;
+
 
 private alias aabbox3d!double box;
 
@@ -100,7 +102,7 @@ unittest{
 
 }
 
-class VBOMaker : WorldListener
+class VBOMaker : Module, WorldListener
 {
     GraphRegionNum[] regionsToUpdate; //Only used in taskFunc and where we populate it, mutually exclusive locations.
     GraphicsRegion[GraphRegionNum] regions; //Accessed from getRegions and from taskFunc, could collide.
@@ -110,15 +112,14 @@ class VBOMaker : WorldListener
     Mutex updateMutex;
 
     World world;
-    Scheduler scheduler;
     Camera camera;
     double minReUseRatio;
 
     this(World w, Scheduler s, Camera c)
     {
         world = w;
-        scheduler = s;
         camera = c;
+        s.registerModule(this);
         world.addListener(this);
         minReUseRatio = 0.95;
         regionMutex = new Mutex;
@@ -413,49 +414,7 @@ class VBOMaker : WorldListener
         //writeln("It took ", sw.peek().msecs, " ms to build the geometry");
     }
 
-    void taskFunc() {
-        //writeln("taskFunc");
-        GraphRegionNum num;
-        {
-            updateMutex.lock();
-            scope(exit) updateMutex.unlock();
-            assert(regionsToUpdate.length > 0, "Error in VBOMaker.taskFunc; Got nothing to do!!");
-
-            double computeValue(GraphRegionNum num) {
-                const auto graphRegionAcross = sqrt(to!double(  GraphRegionSize.x*GraphRegionSize.x +
-                                                                GraphRegionSize.y*GraphRegionSize.y +
-                                                                GraphRegionSize.z*GraphRegionSize.z));
-                auto camDir = util.convert!double(camera.getTargetDir());
-                auto camPos = camera.getPosition() - camDir * graphRegionAcross;
-                vec3d toBlock = util.convert!double(num.toTilePos().value) - camPos;
-                double distSQ = toBlock.getLengthSQ();
-                if(camDir.dotProduct(toBlock) < 0) {
-                    distSQ +=1000; //Stuff behind our backs are considered as important as stuff a kilometer ahead of us. ? :)
-                }
-                return distSQ;
-            }
-
-            
-            schwartzSort!(computeValue, "a>b")(regionsToUpdate);
-            //writeln("before ", regionsToUpdate.length);
-            regionsToUpdate = array(uniq(regionsToUpdate));
-            //writeln("after ", regionsToUpdate.length);
-            num = regionsToUpdate[$-1];
-            regionsToUpdate.length -= 1;
-
-            if(regionsToUpdate.length != 0){
-                //TODO: May cause bugs and crashes when we get more than 1 non-render-thread, mm...
-                scheduler.push(asyncTask(&taskFunc));
-                //writeln("Only ", regionsToUpdate.length, " regions left!");
-            }
-        }
-        /*
-        auto rel = num.value;
-        if(rel == vec3i(-1, -1, 0)){
-            asm {int 3;}
-        }
-        */
-
+    void taskFunc(const(World) world, GraphRegionNum num) {
         GraphicsRegion reg;
         reg.grNum = num;
         {
@@ -471,21 +430,54 @@ class VBOMaker : WorldListener
         buildGraphicsRegion(reg);
     }
 
-    bool hasContent(GraphRegionNum grNum) {
+    override void update(World world, Scheduler scheduler) {
+        updateMutex.lock();
+        scope(exit) updateMutex.unlock();
 
-        /*
-        if(grNum.value == vec3i(-1,-1, 0)){
-            asm{
-                int 3;
-            }
+        if(regionsToUpdate.length == 0){
+            return;
         }
-        */
-        
-        //BREAKPOINT(grNum.value == vec3i(6, 16, 0));
 
+        double computeValue(GraphRegionNum num) {
+            const auto graphRegionAcross = sqrt(to!double(  GraphRegionSize.x*GraphRegionSize.x +
+                                                            GraphRegionSize.y*GraphRegionSize.y +
+                                                            GraphRegionSize.z*GraphRegionSize.z));
+            auto camDir = util.convert!double(camera.getTargetDir());
+            auto camPos = camera.getPosition() - camDir * graphRegionAcross;
+            vec3d toBlock = util.convert!double(num.toTilePos().value) - camPos;
+            double distSQ = toBlock.getLengthSQ();
+            if(camDir.dotProduct(toBlock) < 0) {
+                distSQ +=1000; //Stuff behind our backs are considered as important as stuff a kilometer ahead of us. ? :)
+            }
+            return distSQ;
+        }
+
+        //TODO: Do not sort every tick in the future.
+        schwartzSort!(computeValue, "a>b")(regionsToUpdate);
+        //writeln("before ", regionsToUpdate.length);
+        regionsToUpdate = array(uniq(regionsToUpdate));
+        //writeln("after ", regionsToUpdate.length);        
+        
+        enum GraphRegionsPerTick = 2;
+        auto cnt = min(regionsToUpdate.length, GraphRegionsPerTick);
+        assert(cnt > 0, "derp derp derp");
+        auto nums = regionsToUpdate[$-cnt .. $];
+        regionsToUpdate.length -= cnt;
+        foreach(num ; nums) {
+            //Trixy trick below; if we dont do this, the value num will be shared by all pushed tasks.
+            (GraphRegionNum num){
+                scheduler.push(asyncTask(
+                    (const(World) world){
+                        taskFunc(world, num);
+                    }));
+            }(num);
+        }        
+    }
+    
+    
+    bool hasContent(GraphRegionNum grNum) {
         auto minBlockNum = grNum.min.getBlockNum();
         BlockNum maxBlockNum = grNum.max.getBlockNum();
-        //writeln(minBlockNum, " ", maxBlockNum);
         int seenCount;
         foreach(rel ; RangeFromTo(minBlockNum.value, maxBlockNum.value)) {
 
@@ -519,6 +511,7 @@ class VBOMaker : WorldListener
         grNumMax.value += vec3i(1,1,1);
         sectorNum.value -= vec3i(1,1,1);
 
+        //TODO: figure out what kind of problems i was referring to.
         //ASSUMES THAT WE ARE IN THE UPDATE PHASE, OTHERWISE THIS MAY INTRODUCE PROBLEMS AND SUCH. :)
         //*
         GraphRegionNum[] newRegions;
@@ -532,13 +525,10 @@ class VBOMaker : WorldListener
         if(newRegions.length != 0){
             updateMutex.lock();
             scope(exit) updateMutex.unlock();
-            if(regionsToUpdate.length == 0){
-                //writeln("Starting taskFunc-task like so");
-                scheduler.push(asyncTask(&taskFunc));
-            }
             regionsToUpdate ~= newRegions;
         }
     }
+    
     void onSectorUnload(SectorNum sectorNum)
     {
         auto sectorAABB = sectorNum.getAABB();
@@ -577,10 +567,6 @@ class VBOMaker : WorldListener
         }
         updateMutex.lock();
         scope(exit) updateMutex.unlock();
-        if(regionsToUpdate.length == 0){
-            //writeln("Starting taskFunc-task like so");
-            scheduler.push(asyncTask(&taskFunc));
-        }
         regionsToUpdate ~= newRegions;
     }
 }
