@@ -17,6 +17,7 @@ import world;
 
 class PatrolAI : UnitAI {
 
+    Unit* unit;
     UnitPos a, b;
     Path path;
     PathModule pathModule;
@@ -25,6 +26,7 @@ class PatrolAI : UnitAI {
     bool toa, walking;
 
     this(Unit* u, UnitPos p, PathModule m) {
+        unit = u;
         a = u.pos;
         b = p;
         pathModule = m;
@@ -32,7 +34,7 @@ class PatrolAI : UnitAI {
         id = pathModule.findPath(u.pos, b);
     }
 
-    override int tick(Unit* unit, ChangeList changeList) {
+    override int tick(ChangeList changeList) {
         if (walking) {
             auto goal = toa ? a : b;
             auto p = path.path.back; //Apparently this .back requires the module std.array :P
@@ -72,7 +74,7 @@ class PatrolAI : UnitAI {
                 }
                 lineId = addLine(positions, vec3f(1, 1, 0));
                 walking = true;
-                return tick(unit, changeList);
+                return tick(changeList);
             } else {
                 // wait for path module to finish our path :(
                 return 0;

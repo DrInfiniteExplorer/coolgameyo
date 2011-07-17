@@ -19,7 +19,6 @@ version (Posix) {
     import std.c.stdlib;
 }
 
-
 void msg(string file=__FILE__, int line=__LINE__, T...)(T t) {
     writeln(file, "(", line, "): ", t);
 }

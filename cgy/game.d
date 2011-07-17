@@ -125,7 +125,7 @@ class Game{
         world.floodFillSome(1_000_000);
 
         //u.ai = new PatrolAI(u, uu.pos, pathModule);
-        u.ai = new DwarfAI;
+        u.ai = new DwarfAI(u);
         
         activeUnit = uu;
 

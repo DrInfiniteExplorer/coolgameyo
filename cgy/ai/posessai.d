@@ -170,8 +170,7 @@ class FPSControlAI : UnitAI, CustomChange {
     //How/what to do when networked? Other clients will want to know where it is positioned.
     //Probably send information like "Unit X is player-controlled" to set NetworkControlledAI
     //which'll work kina like this one, i suppose.
-    override int tick(Unit* unit, ChangeList changeList){
-        assert (unit == this.unit, "Derp! FPSControlAI.unit != unit-parameter in this.tick!");
+    override int tick(ChangeList changeList){
         changeList.addCustomChange(this);
         return 0;
     }

@@ -17,7 +17,7 @@ final class UnitType {
 }
 
 interface UnitAI {
-    int tick(Unit* unit, ChangeList changeList);
+    int tick(ChangeList changeList);
 }
 
 struct Demand {
@@ -70,7 +70,7 @@ struct Unit {
     int tick(ChangeList changeList) {
         hunger.tick();
         thirst.tick();
-        return ai.tick(&this, changeList);
+        return ai.tick(changeList);
     }
 
     //Returns the bounding box of the unit, in world space.
