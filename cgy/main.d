@@ -99,8 +99,11 @@ class Main {
         mainMenu = new MainMenu(guiSystem, this);
     }
     
-    void destroy() {        
-        game.destroy();
+    void destroy() {
+        if (game !is null) {
+            game.destroy();
+            game = null;
+        }
         deinitLibraries();
     }
     
@@ -283,13 +286,6 @@ void actualMain() {
     
     Main main = new Main(client, true, true); //Be a worker? lolololol
     main.run();
-    main.destroy();
-    return;
-    
-    auto game = new Game(true, client, true);    
-    
-    scope (exit) {
-    }
-    
+    main.destroy();    
 }
 

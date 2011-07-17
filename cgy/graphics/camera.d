@@ -89,8 +89,8 @@ class Camera{
         matrix4 mat;
         double degZ; //Degrees rotation around Z-axis(up).
         double degX; //Degrees rotation around X-axis(left->right-axis)
-        degZ = dx * controlSettings.mouseSensitivityZ;
-        degX = dy * controlSettings.mouseSensitivityX;
+        degZ = dx * controlSettings.mouseSensitivityX;
+        degX = dy * controlSettings.mouseSensitivityY;
 
         swap(targetDir.Y, targetDir.Z);
         auto temp = convert!float(targetDir);

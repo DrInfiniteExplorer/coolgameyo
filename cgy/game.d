@@ -30,6 +30,7 @@ import tiletypemanager;
 import util;
 import unit;
 import world;
+import worldgen.worldgen;
 
 import settings;
 
@@ -62,6 +63,9 @@ class Game{
     private bool _3rdPerson = false;
 
     this(bool serv, bool clie, bool work) {
+        //TODO: Move world-creation etc out of here, and put in init-function instead.
+        //We might want to load stuff, so worldgen-settings for example should be 
+        //passed elsewhere.
         isServer = serv;
         isClient = clie;
         isWorker = work;
@@ -74,7 +78,8 @@ class Game{
         }
 
         auto tileTypeManager = new TileTypeManager(atlas);//parseGameData();
-        world = new World(tileTypeManager);
+        WorldGenParams worldParams;
+        world = new World(worldParams, tileTypeManager);
         assert (isWorker, "otherwise wont work lol (maybe)");
         //TODO: Make fix so that stuff doesn't lag when using non-1 value for num o threads.
         scheduler = new Scheduler(world);
@@ -127,7 +132,8 @@ class Game{
 
         //auto goal = UnitPos(u.pos.value + vec3d(-30, 0, 0));
         auto goal = uu.pos;
-        u.ai = new PatrolAI(u, goal, pathModule);
+        //NO AI FOR NO PATHABLENESS WITH NEW RANDOMMAPNESS
+        //u.ai = new PatrolAI(u, goal, pathModule);
         goal.value.Z += 1;
         addAABB(goal.tilePos.getAABB());
         //u.ai = new DwarfAI(u);

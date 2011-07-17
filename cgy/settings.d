@@ -49,7 +49,7 @@ struct RenderSettings {
 struct ControlSettings {
 	static struct InnerControlSettings {
 		float mouseSensitivityX = 1;
-		float mouseSensitivityZ = 1;
+		float mouseSensitivityY = 1;
 	}
 	InnerControlSettings serializableSettings;
 	alias serializableSettings this;

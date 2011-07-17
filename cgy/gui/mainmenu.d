@@ -9,13 +9,10 @@ import derelict.sdl.sdl;
 import main;
 import game;
 import graphics._2d.rect;
+import gui.all;
 import gui.unitcontrol;
 import gui.optionmenu;
-import gui.guisystem.guisystem;
-import gui.guisystem.window;
-import gui.guisystem.text;
-import gui.guisystem.button;
-import gui.guisystem.checkbox;
+import gui.randommenu;
 import settings;
 
 class MainMenu : GuiElementWindow {
@@ -31,10 +28,13 @@ class MainMenu : GuiElementWindow {
 //*
         auto text = new GuiElementText(this, vec2d(0.1, 0.1), "CoolGameYo!!");     
         auto text2 = new GuiElementText(this, vec2d(0.1, 0.2), "Where logic comes to die");
-        newGameButton = new GuiElementButton(this, Rectd(vec2d(0.1, 0.3), vec2d(0.3, 0.3)), "New gay me?", &onNewGame);
+        newGameButton = new GuiElementButton(this, Rectd(vec2d(0.1, 0.2), vec2d(0.3, 0.2)), "New gay me?", &onNewGame);
   
-        auto optionsButt = new GuiElementButton(this, Rectd(vec2d(0.1, 0.6), vec2d(0.3, 0.3)), "Options", &onOptions);
-//        auto cb = new GuiElementCheckBox(this, Rectd(vec2d(0.10, 0.6), vec2d(0.3, 0.2)), "CHECKBOX", null);
+        auto optionsButt = new GuiElementButton(this, Rectd(vec2d(0.1, 0.4), vec2d(0.3, 0.2)), "Options", &onOptions);
+
+        auto randomButt = new GuiElementButton(this, Rectd(vec2d(0.1, 0.6), vec2d(0.3, 0.2)), "Random", &onRandom);
+        
+        //        auto cb = new GuiElementCheckBox(this, Rectd(vec2d(0.10, 0.6), vec2d(0.3, 0.2)), "CHECKBOX", null);
 //*/
         main = m;
     }
@@ -48,7 +48,7 @@ class MainMenu : GuiElementWindow {
             return;
         }
         game = main.startGame();
-        userControl = new HyperUnitControlInterfaceInputManager(game);
+        userControl = new HyperUnitControlInterfaceInputManager(game, guiSystem);
         newGameButton.destroy();
         newGameButton = null;
         resumeGameButton = new GuiElementButton(this, Rectd(vec2d(0.1, 0.3), vec2d(0.3, 0.3)), "Resume gay me?", &onResumeGame);
@@ -66,6 +66,14 @@ class MainMenu : GuiElementWindow {
         ushort middleX = cast(ushort)renderSettings.windowWidth/2;
         ushort middleY = cast(ushort)renderSettings.windowHeight/2;
         SDL_WarpMouse(middleX, middleY);
+    }
+    
+    void onRandom(bool down, bool abort) {
+        if(down || abort) {
+            return;
+        }
+        setVisible(false);
+        new RandomMenu(this);
     }
     
     void enterMenu() {

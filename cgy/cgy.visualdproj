@@ -286,6 +286,8 @@
   <Folder name="graphics">
    <Folder name="_2d">
     <File path="graphics\_2d\rect.d" />
+    <File path="graphics\_2d\image.d" />
+    <File path="graphics\_2d\line.d" />
    </Folder>
    <File path="graphics\camera.d" />
    <File path="graphics\debugging.d" />
@@ -296,6 +298,7 @@
    <File path="graphics\shader.d" />
    <File path="graphics\texture.d" />
    <File path="graphics\vbomaker.d" />
+   <File path="graphics\image.d" />
   </Folder>
   <Folder name="worldparts">
    <File path="worldparts\block.d" />
@@ -303,6 +306,14 @@
    <File path="worldparts\tile.d" />
   </Folder>
   <Folder name="shaders">
+   <Folder name="gui">
+    <File path="..\gameroot\shaders\gui\imageRectShader.frag" />
+    <File path="..\gameroot\shaders\gui\imageRectShader.vert" />
+    <File path="..\gameroot\shaders\gui\rectShader.frag" />
+    <File path="..\gameroot\shaders\gui\rectShader.vert" />
+    <File path="..\gameroot\shaders\gui\lineShader.frag" />
+    <File path="..\gameroot\shaders\gui\lineShader.vert" />
+   </Folder>
    <File path="..\gameroot\shaders\fontShader.frag" />
    <File path="..\gameroot\shaders\fontShader.vert" />
    <File path="..\gameroot\shaders\lineShader.frag" />
@@ -311,8 +322,6 @@
    <File path="..\gameroot\shaders\renderDude.vert" />
    <File path="..\gameroot\shaders\renderGR.frag" />
    <File path="..\gameroot\shaders\renderGR.vert" />
-   <File path="..\gameroot\shaders\rectShader.frag" />
-   <File path="..\gameroot\shaders\rectShader.vert" />
   </Folder>
   <Folder name="modules">
    <File path="modules\ai.d" />
@@ -328,10 +337,27 @@
     <File path="gui\guisystem\element.d" />
     <File path="gui\guisystem\checkbox.d" />
     <File path="gui\guisystem\editbox.d" />
+    <File path="gui\guisystem\slider.d" />
+    <File path="gui\guisystem\image.d" />
+    <File path="gui\guisystem\simplegraph.d" />
    </Folder>
    <File path="gui\mainmenu.d" />
    <File path="gui\optionmenu.d" />
    <File path="gui\unitcontrol.d" />
+   <File path="gui\randommenu.d" />
+   <File path="gui\all.d" />
+  </Folder>
+  <Folder name="ai">
+   <File path="ai\patrolai.d" />
+   <File path="ai\posessai.d" />
+   <File path="ai\movetoai.d" />
+  </Folder>
+  <Folder name="worldgen">
+   <File path="worldgen\worldgen.d" />
+   <File path="worldgen\newgen.d" />
+  </Folder>
+  <Folder name="random">
+   <File path="random\random.d" />
   </Folder>
   <File path="changelist.d" />
   <File path="game.d" />
@@ -344,11 +370,5 @@
   <File path="unit.d" />
   <File path="util.d" />
   <File path="world.d" />
-  <File path="worldgen.d" />
-  <Folder name="ai">
-   <File path="ai\patrolai.d" />
-   <File path="ai\posessai.d" />
-   <File path="ai\movetoai.d" />
-  </Folder>
  </Folder>
 </DProject>

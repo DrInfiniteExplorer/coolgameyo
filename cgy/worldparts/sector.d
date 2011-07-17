@@ -9,7 +9,7 @@ import std.exception;
 import std.stdio;
 
 import worldparts.block;
-import worldgen;
+import worldgen.worldgen;
 import pos;
 import unit;
 import util;

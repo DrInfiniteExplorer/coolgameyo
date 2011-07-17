@@ -12,7 +12,7 @@ import std.stdio;
 
 import worldparts.tile;
 import pos;
-import worldgen;
+import worldgen.worldgen;
 import util;
 
 enum BlockSize {

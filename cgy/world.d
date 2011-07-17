@@ -6,7 +6,8 @@ import std.typecons;
 import graphics.camera;
 
 import tiletypemanager;
-import worldgen;
+import worldgen.worldgen;
+import worldgen.newgen;
 public import unit;
 import util;
 
@@ -48,6 +49,7 @@ class World {
     SectorXY[SectorXYNum] sectorXY;
     Sector[] sectorList;
 
+    WorldGenParams worldGenParams;
     WorldGenerator worldGen;
     bool isServer;  //TODO: How, exactly, does the world function differently if it actually is a server? Find out!
 
@@ -61,10 +63,13 @@ class World {
     WorkSet toFloodFill;
     SectorNum[] floodingSectors;
 
-    this(TileTypeManager tilesys) {
+    this(WorldGenParams params, TileTypeManager tilesys) {
         isServer = true;
         tileTypeManager = tilesys;
-        worldGen = new WorldGenerator(tilesys);
+        worldGen = new WorldGeneratorOld;
+        worldGen = new WorldGeneratorNew;
+        worldGenParams = params;
+        worldGen.init(worldGenParams, tilesys);
 
         toFloodFill = new WorkSet;
     }

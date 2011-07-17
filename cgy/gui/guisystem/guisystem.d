@@ -16,6 +16,7 @@ public import gui.guisystem.element;
 interface GuiEventDump {
     GuiEventResponse onDumpEvent(GuiEvent e);
     void tick(float dTime);
+    void activate(bool activate);
 }
 
 final class GuiSystem : GuiElement{
@@ -59,7 +60,13 @@ final class GuiSystem : GuiElement{
         }
     }
     body{
+        if (eventDump !is null) {
+            eventDump.activate(false);
+        }
         eventDump = d;
+        if (eventDump !is null) {
+            eventDump.activate(true);
+        }
     }    
 
     override void setFocus(GuiElement e) {

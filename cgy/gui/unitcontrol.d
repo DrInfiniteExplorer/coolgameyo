@@ -5,6 +5,7 @@ module gui.unitcontrol;
 import std.conv;
 import std.exception;
 import std.math;
+import std.stdio;
 
 import derelict.sdl.sdl;
 
@@ -12,7 +13,7 @@ import ai.posessai;
 import game;
 import graphics.camera;
 import graphics.debugging;
-import gui.guisystem.guisystem;
+import gui.all;
 import settings;
 import tiletypemanager;
 import unit;
@@ -21,6 +22,9 @@ import world;
 
 
 class HyperUnitControlInterfaceInputManager : GuiEventDump{
+    
+    private GuiSystem guiSystem;
+    private GuiElementText fpsText, tickText;
 
     private Game game;    
     private World world;
@@ -43,7 +47,8 @@ class HyperUnitControlInterfaceInputManager : GuiEventDump{
     private Tile copiedTile;
 
     
-    this(Game g) {
+    this(Game g, GuiSystem s) {
+        guiSystem = s;
         game = g;
         world = game.getWorld();
         camera = game.getCamera();
@@ -89,6 +94,28 @@ class HyperUnitControlInterfaceInputManager : GuiEventDump{
         }
         return GuiEventResponse.Ignore;
     }
+    
+    override void activate(bool activated) {
+        if (activated) {
+            spawnGui();
+        } else {
+            iuGnwaps();
+        }
+    }
+    
+    void updateGui() {
+        //fpsText.setText(
+    }
+    
+    void spawnGui() {
+        fpsText = new GuiElementText(guiSystem, vec2d(0, 0), "Fps counter");
+        tickText = new GuiElementText(guiSystem, vec2d(0, fpsText.getRelativeRect.getBottom()), "Tick counter");
+    }
+    void iuGnwaps() {
+        fpsText.destroy(); fpsText = null;
+        tickText.destroy(); tickText = null;
+        
+    }
 
     void mouseMove(GuiEvent e){
         auto m = e.mouseMove;
@@ -123,6 +150,7 @@ class HyperUnitControlInterfaceInputManager : GuiEventDump{
     void tick(float dTime) {
         updatePossesed(dTime);
         rayPick();
+        updateGui();
     }
 
     void updatePossesed(float dTime) { 
@@ -168,7 +196,9 @@ class HyperUnitControlInterfaceInputManager : GuiEventDump{
         vec3d start, dir;
         camera.getRayFromScreenCoords(mousecoords, start, dir);
         Tile tile;
-        tileSelected = 0 < world.intersectTile(start, dir, 25, selectedTile, selectedTilePos, selectedTileNormal);
+        auto a = world.intersectTile(start, dir, 25, selectedTile, selectedTilePos, selectedTileNormal);;
+        //writeln(a);
+        tileSelected = 0.0 < a;
         if(tileSelected){
             if(selectedTileBox){
                 removeAABB(selectedTileBox);

@@ -13,6 +13,7 @@ import gui.guisystem.button;
 import gui.guisystem.checkbox;
 import gui.guisystem.editbox;
 import gui.guisystem.guisystem;
+import gui.guisystem.slider;
 import gui.guisystem.text;
 import gui.guisystem.window;
 
@@ -24,6 +25,8 @@ class OptionMenu : GuiElementWindow {
     GuiElementCheckBox mipmap;
     GuiElementCheckBox wireframe;
     GuiElementCheckBox renderinvalid;
+    GuiElementSlider!float sensX, sensY;
+    
     MainMenu main;
     this(MainMenu m) {
         main = m;
@@ -43,6 +46,9 @@ class OptionMenu : GuiElementWindow {
 
         renderinvalid = new GuiElementCheckBox(this, Rectd(vec2d(0.10, 0.30), vec2d(0.3, 0.05)), "Render invalid tiles?", &onInvalid);
         renderinvalid.setChecked(renderSettings.renderInvalidTiles);
+        
+        sensX = new GuiElementSlider!float(this, Rectd(vec2d(0.10, 0.40), vec2d(0.3, 0.05)), controlSettings.mouseSensitivityX, 0.25, 5.0, &onMouseX);
+        sensY = new GuiElementSlider!float(this, Rectd(vec2d(0.10, 0.45), vec2d(0.3, 0.05)), controlSettings.mouseSensitivityY, 0.25, 5.0, &onMouseY);
         
         new GuiElementEditbox(this, Rectd(vec2d(0.10, 0.35), vec2d(0.3, 0.05)), "Render invalid tiles?",);
         
@@ -88,6 +94,12 @@ class OptionMenu : GuiElementWindow {
             return;
         }
         renderSettings.renderInvalidTiles = renderinvalid.getChecked();
+    }
+    void onMouseX(float x) {
+        controlSettings.mouseSensitivityX = x;
+    }
+    void onMouseY(float y) {
+        controlSettings.mouseSensitivityY = y;
     }
 }
 

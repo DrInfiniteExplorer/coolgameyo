@@ -93,7 +93,7 @@ class RectShader {
     }
     
     private this() {
-        rectProgram = new RectProgram("shaders/rectShader.vert", "shaders/rectShader.frag");
+        rectProgram = new RectProgram("shaders/gui/rectShader.vert", "shaders/gui/rectShader.frag");
         rectProgram.position = rectProgram.getAttribLocation("position");
         rectProgram.color = rectProgram.getAttribLocation("in_color");    
         rectProgram.stripes = rectProgram.getUniformLocation("stripes");

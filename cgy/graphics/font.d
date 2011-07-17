@@ -13,7 +13,7 @@ import derelict.opengl.gl;
 
 import graphics.renderer;
 import graphics.ogl;
-import graphics.texture;
+import graphics.image;
 import graphics.shader;
 import util;
 
@@ -195,7 +195,7 @@ class StringTexture {
     }
 
     void render(Recti rect) {
-        glActiveTexture(GL_TEXTURE1);
+        glActiveTexture(GL_TEXTURE1); //TODO: Make not hardcoded?
         glError();
         glBindTexture(GL_TEXTURE_2D, texId);
         glError();

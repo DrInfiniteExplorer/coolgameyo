@@ -126,9 +126,14 @@ struct Rect(T) {
     const bool opEquals(ref const(Rect!T) o) {
         return start == o.start && size == o.size;
     }
+    
+    T getBottom() const {
+        return start.Y + size.Y;
+    }
 }
 
 alias Rect!double Rectd;
+alias Rect!float Rectf;
 alias Rect!int Recti;
 
 unittest{

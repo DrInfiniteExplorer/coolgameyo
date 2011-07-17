@@ -473,8 +473,7 @@ class VBOMaker : Module, WorldListener
             }(num);
         }        
     }
-    
-    
+
     bool hasContent(GraphRegionNum grNum) {
         auto minBlockNum = grNum.min.getBlockNum();
         BlockNum maxBlockNum = grNum.max.getBlockNum();
