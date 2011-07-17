@@ -9,6 +9,7 @@ import pos;
 import stolen.aabbox3d;
 import util;
 import world;
+import clan;
 
 final class UnitType {
     string name;
@@ -19,6 +20,25 @@ interface UnitAI {
     int tick(Unit* unit, ChangeList changeList);
 }
 
+struct Demand {
+    float current;
+
+    float max;
+    float critical;
+
+    float r;
+
+    this(float c, float m, float cc, float rr=1./3) {
+        current = c;
+        max = m;
+        critical = cc;
+        r = rr;
+    }
+
+    void tick() { current -= r; }
+
+    alias current this;
+}
 
 struct Unit {
 
@@ -28,10 +48,14 @@ struct Unit {
 
     UnitAI ai;
     UnitType type;
+
+    Clan clan;
+
+    Demand hunger = Demand(100, 100, 10);
+    Demand thirst = Demand(100, 100, 20);
+
     UnitPos pos;
     float rotation = 0; //radians
-
-
     float speed = 0.124;
     UnitPos destination;
     uint ticksToArrive;
@@ -42,6 +66,12 @@ struct Unit {
     float unitWidth = 0.7;
     float unitHeight = 1.5;
     float stepHeight = 0.5;
+
+    int tick(ChangeList changeList) {
+        hunger.tick();
+        thirst.tick();
+        return ai.tick(&this, changeList);
+    }
 
     //Returns the bounding box of the unit, in world space.
     //If no parameter is passed, the units position is used as base,

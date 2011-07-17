@@ -12,6 +12,7 @@ public import derelict.opengl.glext;
 
 import graphics.renderer;
 import settings;
+import util;
 
 void initOpenGL(bool client){
     string derp = to!string(glGetString(GL_VERSION));

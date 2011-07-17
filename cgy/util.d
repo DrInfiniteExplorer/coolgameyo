@@ -20,7 +20,7 @@ version (Posix) {
 }
 
 
-void msg(string file=__FILE__, int line=__line__, T...)(T t) {
+void msg(string file=__FILE__, int line=__LINE__, T...)(T t) {
     writeln(file, "(", line, "): ", t);
 }
 

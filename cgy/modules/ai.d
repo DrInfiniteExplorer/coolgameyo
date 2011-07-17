@@ -44,8 +44,7 @@ class AIModule : Module, WorldListener {
             }
             assert (state.restTime == 0);
             scheduler.push(syncTask((const World world, ChangeList changelist) {
-                        state.restTime = state.unit.ai.tick(
-                            state.unit, changelist);
+                        state.restTime = state.unit.tick(changelist);
                         }));
         }
         foreach (ref state; states) {

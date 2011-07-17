@@ -19,6 +19,7 @@ import graphics.renderer;
 import graphics.texture;
 
 import ai.patrolai;
+import ai.dwarf;
 import changelist;
 import modules.ai;
 import modules.path;
@@ -122,8 +123,9 @@ class Game{
         camera.setTarget(vec3d(0, 1, 0));
 
         world.floodFillSome(1_000_000);
-        // Commented out for presentation; Dont want stuff crashing :p
-        u.ai = new PatrolAI(u, uu.pos, pathModule);
+
+        //u.ai = new PatrolAI(u, uu.pos, pathModule);
+        u.ai = new DwarfAI;
         
         activeUnit = uu;
 
