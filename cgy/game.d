@@ -18,6 +18,8 @@ import graphics.font;
 import graphics.renderer;
 import graphics.texture;
 
+import graphics.debugging;
+
 import ai.patrolai;
 import changelist;
 import modules.ai;
@@ -123,7 +125,10 @@ class Game{
 
         world.floodFillSome(1_000_000);
 
-        u.ai = new PatrolAI(u, uu.pos, pathModule);
+        auto goal = UnitPos(u.pos.value + vec3d(-30, 0, 0));
+        u.ai = new PatrolAI(u, goal, pathModule);
+        goal.value.Z += 1;
+        addAABB(goal.tilePos.getAABB());
         //u.ai = new DwarfAI(u);
         
         activeUnit = uu;

@@ -64,7 +64,11 @@ class PatrolAI : UnitAI {
             }
         } else {
             if (pathModule.pollPath(id, path)) {
-                assert (path.path.length > 0);
+                if (path.path.length == 0) {
+                    msg("COULDN'T FIND PATH DUDE");
+                    return 100000;
+                }
+
                 //vec3d toVec(UnitPos p){
                 //    return p.value;
                 //}            // stringy function should work here

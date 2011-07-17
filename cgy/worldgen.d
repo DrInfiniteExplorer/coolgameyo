@@ -107,6 +107,7 @@ class WorldGenerator {
             freq *= 3.f;
             amp /= 3.f;
         }
+        return 100;
         return ret*25.f;
     }
 
@@ -124,15 +125,15 @@ class WorldGenerator {
         
         enum useHalfStep = true ? TileFlags.halfstep : TileFlags.none;
         
-        if (-0.5 < d && d <= 0) {
+        if (0 < d && d <= 0.5) {
             ret = Tile(groundType, useHalfStep, 0, 0);
-        } else if (d <= -0.5) {
+        } else if (d <= 0) {
             ret = Tile(groundType, TileFlags.none, 0, 0);
         } else {
-            assert (d > 0, text(d));
+            assert (d > 0.5, text(d));
             ret = Tile(airType, transparent, 0, 0);
         }
-        if (-0.5 <= d && d < 0.5) {
+        if (0 < d && d <= 1) { // is this even sane? D:
             ret.pathable = true;
             //addAABB(pos.getAABB());
         }
