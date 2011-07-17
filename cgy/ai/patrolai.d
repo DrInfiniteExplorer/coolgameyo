@@ -37,7 +37,7 @@ class PatrolAI : UnitAI {
     override int tick(ChangeList changeList) {
         if (walking) {
             auto goal = toa ? a : b;
-            auto p = path.path.back; //Apparently this .back requires the module std.array :P
+            auto p = path.path.back;
             //write("going to ", toa ? "a=" : "b=", p, ", ");
             auto d = p.value.getDistanceFrom(unit.pos.value);
 

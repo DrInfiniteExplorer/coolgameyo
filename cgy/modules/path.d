@@ -13,6 +13,16 @@ import util;
 
 import graphics.debugging;
 
+template CondAlias(bool cond, alias a, alias b) {
+    static if (cond) {
+        alias a CondAlias;
+    } else {
+        alias b CondAlias;
+    }
+}
+
+
+
 struct PathID {
     ulong id;
 }
@@ -20,6 +30,19 @@ struct Path {
     // World w;
     // TODO: add path smoothing here? D:
     UnitPos[] path;
+
+    double pathLength() @property {
+        auto m = map!q{a.value}(path);
+        auto p = m.front;
+        m.popFront();
+
+        double ret = 0;
+        foreach (x; m) {
+            ret += x.getDistanceFrom(p);
+            p = x;
+        }
+        return ret;
+    }
 }
 
 enum maxPathTicks = 35;
@@ -104,8 +127,11 @@ class PathModule : Module {
 
 enum stateTickCount = 10;
 
+
 static struct PathFindState {
     PathID id;
+
+    alias RedBlackTree!(TilePos, q{a.value < b.value}) Set; 
 
     bool finished;
     Path result;
@@ -114,13 +140,18 @@ static struct PathFindState {
     UnitPos goal;
 
     TilePos[TilePos] cameFrom;
+    TilePos[TilePos] wentTo;
     double[TilePos] g_score;
     double[TilePos] f_score;
 
     int[TilePos] boxes;
 
-    RedBlackTree!(TilePos, q{a.value < b.value}) openSet;
-    RedBlackTree!(TilePos, q{a.value < b.value}) closedSet;
+    Set openf;
+    Set openb;
+
+    Set closed;
+
+    int tick_count;
 
     this(PathID id_, UnitPos from_, UnitPos goal_) {
 
@@ -130,93 +161,110 @@ static struct PathFindState {
         
         msg("goal = ", goal.tilePos);
 
-        closedSet = new typeof(closedSet);
-        openSet = new typeof(openSet);
-        openSet.insert(from);
+        closed = new Set;
+        openf = new Set;
+        openb = new Set;
+
+        openf.insert(from);
+        openb.insert(goal);
+
         g_score[from] = 0;
+        g_score[goal] = 0;
         f_score[from] = estimateBetween(from, goal);
+        f_score[goal] = estimateBetween(from, goal);
         boxes[from] = addAABB(from.getAABB(), vec3f(1,0,0));
+        boxes[goal] = addAABB(goal.getAABB(), vec3f(1,0,0));
     }
 
     bool tick(World world) {
         assert (!finished);
         foreach (i; 0 .. stateTickCount) {
-            tickety(world);
-            if (finished) {
-                return true;
-            }
+
+            // Working one way only:
+            //  948, 54.5623
+            //  781, 54.0623
+
+            // Working both ways:
+            //  681, 53.4443
+            //  595, 54.2984
+
+            // It's good that the tick count is lower, not so good that the
+            // distance is different. However, they are so close that we don't
+            // really care, I guess? (-:
+
+            tickety!true(world);
+            if (finished) { return true; }
+            tickety!false(world);
+            if (finished) { return true; }
         }
         return false;
     }
 
-    void tickety(World world) {
-        if (openSet.empty) { // we failed to find a path
+    void tickety(bool fwd)(World world) {
+        alias CondAlias!(fwd, openf, openb) open;
+        alias CondAlias!(!fwd, openf, openb) other;
+
+        tick_count += 1;
+
+        if (open.empty) { // we failed to find a path
             finished = true;
             return;
         }
 
-        auto x = findSmallest();
+        auto x = findSmallest!fwd();
 
-        assert (x !in closedSet);
-        assert (x in g_score);
-        assert (x in f_score);
- 
-        // this is retarded, cannot use goal.tilePos as rhs because it is
-        // an rvalue, but using it as lhs is fine, wtf!
-        if (goal.tilePos == x) { // woohoo!
+        if (x in other) {
             completePath(world, x);
             finished = true;
             return;
         }
 
-        openSet.removeKey(x);
+        open.removeKey(x);
 
-        closedSet.insert(x);
+        closed.insert(x);
 
         removeAABB(boxes[x]);
         boxes[x] = addAABB(x.getAABB(), vec3f(0,1,0));
 
         f_score.remove(x);
 
-        assert (x !in openSet);
-        assert (x !in f_score);
-
-        //msg("from = ", from);
-        //msg("goal = ", goal);
-        //msg("x = ", x);
-
-        foreach (y; availibleNeighbors(world, x)) {
+        foreach (y; availibleNeighbors!fwd(world, x)) {
             // msg("y = ", y);
-            if (y in closedSet) continue;
+            if (y in closed) continue;
 
-            assert (y !in closedSet);
-
-            auto new_g = g_score[x] + costBetween(world, x, y);
-            bool is_new = y !in g_score;
+            static if (fwd) {
+                auto new_g = g_score[x] + costBetween(world, x, y);
+            } else {
+                auto new_g = g_score[x] + costBetween(world, y, x);
+            }
+            bool is_new = y !in open;
 
             if (is_new) {
-                openSet.insert(y);
+                open.insert(y);
+                if (y in boxes) removeAABB(boxes[y]);
                 boxes[y] = addAABB(y.getAABB(), vec3f(1,0,0));
             }
             if (is_new || new_g < g_score[y]) {
-                cameFrom[y] = x;
                 g_score[y] = new_g;
-                f_score[y] = new_g + estimateBetween(y, goal);
+                static if (fwd) {
+                    f_score[y] = new_g + estimateBetween(y, goal);
+                    cameFrom[y] = x;
+                } else {
+                    f_score[y] = new_g + estimateBetween(from, y);
+                    wentTo[y] = x;
+                }
+
             }
         }
     }
 
-    TilePos findSmallest() {
+    TilePos findSmallest(bool fwd)() {
+        alias CondAlias!(fwd, openf, openb) open;
+        //alias CondAlias!(!fwd, openf, openb) other;
         TilePos x;
         double f = double.infinity;
         
-        foreach (t; openSet[]) {
-            //msg(g_score);
-            //msg(f_score);
-            assert (t in g_score);
-            assert (t in f_score);
-            assert (t in openSet, "WTFFFFFFFFFFFF!!!!!!!!!");
-            assert (t !in closedSet, text("DIED ON ", t));
+        foreach (t; open[]) {
             if (f_score[t] < f) {
                 x = t;
                 f = f_score[t];
@@ -268,17 +316,37 @@ static struct PathFindState {
     }
 
     void completePath(World world, TilePos x) {
-        UnitPos[] p = [goal];
-        while (from.tilePos != x) {
-            p ~= x.toUnitPos();
-            if (world.getTile(x).halfstep) {
+        UnitPos[] p;
+        TilePos y = x;
+
+        void push(TilePos tp) {
+            p ~= tp.toUnitPos();
+            if (world.getTile(tp).halfstep) {
                 p[$-1].value.Z += 0.5;
             }
+        }
+
+        while (goal.tilePos != y) {
+            y = wentTo[y];
+            push(y);
+        }
+        
+        p ~= goal;
+
+        //std.algorithm.reverse(p); bug/shit/whatever
+        foreach (i; 0 .. p.length / 2) {
+            swap(p[i], p[$-1-i]);
+        }
+
+        while (from.tilePos != x) {
+            push(x);
             x = cameFrom[x];
         }
-        //p ~= from;
+
         result = Path(p);
 
+        msg("Path completed in ", tick_count,
+                " with length ", result.pathLength);
 
         foreach (tp, i; boxes) {
             removeAABB(i);
@@ -288,7 +356,7 @@ static struct PathFindState {
 
     // BUG: TODO: I have no idea if this is correct code
     // TODO: Now only walks {n,e,s,w}, should walk diagonally as well
-    private static struct AvailibleNeighbors {
+    private static struct AvailibleNeighbors(bool fwd) {
         World world;
         TilePos around;
 
@@ -306,28 +374,34 @@ static struct PathFindState {
             bool avail(TilePos tp) { return pathable(tp) && clear(above(tp)); }
             bool half(TilePos tp) { return tile(tp).halfstep; }
 
-            bool test(TilePos tp) {
-                if (!avail(tp)) return false;
+            bool test_from_to(TilePos a, TilePos b) {
+                if (!avail(a) || !avail(b)) return false;
 
-                if (tp.value.Z == around.value.Z) {
+                assert (a.value.X != b.value.X
+                        || a.value.Y != b.value.Y
+                        || a.value.Z != b.value.Z);
+                if (a.value.Z == b.value.Z) {
                     return true;
-                } else if (tp.value.Z > around.value.Z) {
-                    assert (tp.value.X != around.value.X
-                            || tp.value.Y != around.value.Y);
-                    return half(around) || !half(tp);
+                } else if (a.value.Z < b.value.Z) {
+                    return half(a) || !half(b);
                 } else {
-                    assert (tp.value.X != around.value.X
-                            || tp.value.Y != around.value.Y);
-                    return half(tp) || !half(around);
+                    return !half(a) || half(b);
+                }
+            }
+            
+            bool test(TilePos tp) {
+                static if (fwd) {
+                    return test_from_to(around, tp);
+                } else {
+                    return test_from_to(tp, around);
                 }
             }
         }
 
         // this turned retarded;
         int opApply(scope int delegate(ref TilePos) y) {
-            //msg("around = ", around);
             if (!avail(around)) {
-                debug msg(around, " not availible, skipping");
+                msg(around, " not availible, skipping");
                 return 0;
             }
 
@@ -365,7 +439,7 @@ static struct PathFindState {
         }
     }
 
-    AvailibleNeighbors availibleNeighbors(World world, TilePos tp) {
-        return AvailibleNeighbors(world, tp);
+    auto availibleNeighbors(bool fwd)(World world, TilePos tp) {
+        return AvailibleNeighbors!fwd(world, tp);
     }
 }

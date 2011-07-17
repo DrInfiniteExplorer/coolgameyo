@@ -125,7 +125,8 @@ class Game{
 
         world.floodFillSome(1_000_000);
 
-        auto goal = UnitPos(u.pos.value + vec3d(-30, 0, 0));
+        //auto goal = UnitPos(u.pos.value + vec3d(-30, 0, 0));
+        auto goal = uu.pos;
         u.ai = new PatrolAI(u, goal, pathModule);
         goal.value.Z += 1;
         addAABB(goal.tilePos.getAABB());

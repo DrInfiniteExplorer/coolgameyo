@@ -107,7 +107,7 @@ class WorldGenerator {
             freq *= 3.f;
             amp /= 3.f;
         }
-        return 100;
+        //return 100;
         return ret*25.f;
     }
 
