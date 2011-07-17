@@ -19,7 +19,6 @@ import graphics.renderer;
 import graphics.texture;
 
 import ai.patrolai;
-import ai.dwarf;
 import changelist;
 import modules.ai;
 import modules.path;
@@ -124,8 +123,8 @@ class Game{
 
         world.floodFillSome(1_000_000);
 
-        //u.ai = new PatrolAI(u, uu.pos, pathModule);
-        u.ai = new DwarfAI(u);
+        u.ai = new PatrolAI(u, uu.pos, pathModule);
+        //u.ai = new DwarfAI(u);
         
         activeUnit = uu;
 
