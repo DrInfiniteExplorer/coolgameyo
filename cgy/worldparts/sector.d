@@ -108,7 +108,7 @@ class Sector {
         //TODO: make use of block.isSame ?
         if(currentBlock.valid && !currentBlock.sparse){
             if(currentBlock.tiles.ptr != newBlock.tiles.ptr){
-                writeln("Make fix this");
+                msg("Make fix this");
                 //TODO: Make fix line below!
                 //enforce(0, "We want to free this memory i think...The current, that is.");
             }

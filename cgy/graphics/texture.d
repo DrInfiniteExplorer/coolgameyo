@@ -216,12 +216,12 @@ class TileTextureAtlas{
         tilesPerLayer = tilesPerAxis^^2;
         maxTileCount = tilesPerLayer * renderSettings.maxTextureLayers;
         debug{
-            writeln(tilesPerAxis, "x", tilesPerAxis,"=", tilesPerLayer, " tiles per layer");
-            writeln(renderSettings.maxTextureLayers, " layers at most");
+            msg(tilesPerAxis, "x", tilesPerAxis,"=", tilesPerLayer, " tiles per layer");
+            msg(renderSettings.maxTextureLayers, " layers at most");
             auto bytes = (renderSettings.maxTextureSize^^2)*4;
-            writeln(bytes, " bytes per layer");
-            writeln(bytes/1024, " kilobytes per layer");
-            writeln(bytes/(1024^^2), " megabytes per layer");
+            msg(bytes, " bytes per layer");
+            msg(bytes/1024, " kilobytes per layer");
+            msg(bytes/(1024^^2), " megabytes per layer");
         }
     }
 
@@ -324,7 +324,7 @@ class TileTextureAtlas{
         tileMap = null;
 
         if(renderSettings.glVersion >= 3.0){
-            debug writeln("Generating mipmaps 'manually' for tile atlas...");
+            debug msg("Generating mipmaps 'manually' for tile atlas...");
             glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
             glError();
         }

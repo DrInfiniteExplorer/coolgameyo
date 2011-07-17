@@ -69,7 +69,7 @@ final class ShaderProgram(T...){
             arr[len]=0;
             glGetShaderInfoLog(shader, len, &len2, arr.ptr);
             glError();
-            writeln("!!! %s", arr);
+            msg("!!! %s", arr);
             return to!string(arr);
         }
         return "";
@@ -85,7 +85,7 @@ final class ShaderProgram(T...){
             arr[len]=0;
             glGetProgramInfoLog(program, len, &len2, arr.ptr);
             glError();
-            writeln("!!! %s", arr);
+            msg("!!! %s", arr);
             return to!string(arr);
         }
         return "";
@@ -103,8 +103,8 @@ final class ShaderProgram(T...){
         glGetShaderiv(shader, GL_COMPILE_STATUS, &p);
         glError();
         if(p != GL_TRUE){
-            writeln(constants ~ content);
-            writeln(*ptrptr);
+            msg(constants ~ content);
+            msg(*ptrptr);
             auto error = printShaderError(shader);
             assert(0, "Shader compilation failed: " ~ filename ~"\n" ~error);
         }

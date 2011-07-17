@@ -245,7 +245,7 @@ class Main {
             +/
             SDL_GL_SwapBuffers();
         }
-        writeln("Main thread got exited? :S");
+        msg("Main thread got exited? :S");
         BREAKPOINT(!exit);        
     }
     

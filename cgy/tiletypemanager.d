@@ -64,7 +64,7 @@ class TileTypeManager {
 		
 		TileType tempType;
 		if(!std.file.exists("data/tile_types.json")){
-			writeln("Could not load tile types");
+			msg("Could not load tile types");
 			return;
 		}
 		auto content = readText("data/tile_types.json");

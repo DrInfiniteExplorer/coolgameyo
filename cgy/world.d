@@ -368,10 +368,10 @@ class World {
             //allBlocks++;
             if (!block.valid) { continue; }
 
-            //writeln("\tFlooding block ", blockNum);
+            //msg("\tFlooding block ", blockNum);
 
             //blockCount++;
-            //writeln("blockCount:", blockCount);
+            //msg("blockCount:", blockCount);
             auto blockPos = blockNum.toTilePos();
 
             block.seen = true;
@@ -444,14 +444,14 @@ class World {
             floodingSectors.length = 0;
             //floodingSectors.assumeSafeAppend(); // yeaaaaahhhh~~~
         }
-        //writeln("allBlocks");
-        //writeln(allBlocks);
-        //writeln("blockCount");
-        //writeln(blockCount);
-        //writeln("sparseCount");
-        //writeln(sparseCount);
+        //msg("allBlocks");
+        //msg(allBlocks);
+        //msg("blockCount");
+        //msg(blockCount);
+        //msg("sparseCount");
+        //msg(sparseCount);
 
-        //writeln("Floodfill took ", sw.peek().msecs, " ms to complete");
+        //msg("Floodfill took ", sw.peek().msecs, " ms to complete");
     }
 
 

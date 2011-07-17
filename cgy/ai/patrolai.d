@@ -40,7 +40,7 @@ class PatrolAI : UnitAI {
             auto d = p.value.getDistanceFrom(unit.pos.value);
 
             if (d <= unit.speed) {
-                //writeln("arrived!");
+                //msg("arrived!");
                 changeList.addMovement(unit, p, 1);
                 if (p == goal) {
                     walking = false;
@@ -54,7 +54,7 @@ class PatrolAI : UnitAI {
                 auto dp = p.value - unit.pos.value;
                 int ticks = to!int(floor(dp.getLength() / unit.speed));
                 dp.setLength(ticks * unit.speed);
-                //writeln("from ", unit.pos,
+                //msg("from ", unit.pos,
                 //        " to ", UnitPos(unit.pos.value + dp));
                 changeList.addMovement(
                         unit, UnitPos(unit.pos.value + dp), ticks);

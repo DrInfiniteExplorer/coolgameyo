@@ -44,7 +44,7 @@ class Camera{
         double percentY = to!double(coords.Y) / to!double(renderSettings.windowHeight);
         dir = (targetDir + leftmost + percentX*toRight + upper + percentY * toDown).normalize();   
         //dir = (targetDir + leftmost + upper).normalize();   
-        //writeln(percentX, " ", percentY);
+        //msg(percentX, " ", percentY);
         start = position;
     }
     

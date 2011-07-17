@@ -188,7 +188,7 @@ class GuiElementEditbox : public GuiElement {
                 auto tmp = startMarker;   
                 foreach(i ; 0 .. tmp) {
                     auto pos = tmp-i-1;
-                    writeln(i, " ",tmp, " ", pos);
+                    msg(i, " ",tmp, " ", pos);
                     auto ch = content[pos];
                     startMarker = pos;
                     inWhitespace = -1 != std.string.indexOf(std.string.whitespace, ch);

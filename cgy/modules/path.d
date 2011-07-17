@@ -72,7 +72,7 @@ class PathModule : Module {
                                  return {
                                      if (state.tick(world)) {
                                          assert(state.finished);
-                                         //writeln("finishing state ", i);
+                                         //msg("finishing state ", i);
                                          finishPath(i);
                                      }};
                                  })(i, &state)));
@@ -128,7 +128,7 @@ static struct PathFindState {
         from = from_;
         goal = goal_;
         
-        writeln("goal = ", goal.tilePos);
+        msg("goal = ", goal.tilePos);
 
         closedSet = new typeof(closedSet);
         openSet = new typeof(openSet);
@@ -181,12 +181,12 @@ static struct PathFindState {
         assert (x !in openSet);
         assert (x !in f_score);
 
-        //writeln("from = ", from);
-        //writeln("goal = ", goal);
-        //writeln("x = ", x);
+        //msg("from = ", from);
+        //msg("goal = ", goal);
+        //msg("x = ", x);
 
         foreach (y; availibleNeighbors(world, x)) {
-            // writeln("y = ", y);
+            // msg("y = ", y);
             if (y in closedSet) continue;
 
             assert (y !in closedSet);
@@ -211,8 +211,8 @@ static struct PathFindState {
         double f = double.infinity;
         
         foreach (t; openSet[]) {
-            //writeln(g_score);
-            //writeln(f_score);
+            //msg(g_score);
+            //msg(f_score);
             assert (t in g_score);
             assert (t in f_score);
             assert (t in openSet, "WTFFFFFFFFFFFF!!!!!!!!!");
@@ -325,8 +325,11 @@ static struct PathFindState {
 
         // this turned retarded;
         int opApply(scope int delegate(ref TilePos) y) {
-            //writeln("around = ", around);
-            assert (avail(around));
+            //msg("around = ", around);
+            if (!avail(around)) {
+                debug msg(around, " not availible, skipping");
+                return 0;
+            }
 
             auto w = TilePos(around.value + vec3i(-1, 0, 0));
             auto e = TilePos(around.value + vec3i( 1, 0, 0));

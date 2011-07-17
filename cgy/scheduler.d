@@ -46,7 +46,7 @@ Task syncTask(void delegate () run) {
 private Task sleepyTask(long usecs) {
     enforce(usecs > 0 && usecs <= 1000000*15, "sleepyTask called with bad usec count:" ~to!string(usecs)); //Valid time and not more than 15 secs
     void asd(const World, ChangeList changeList){
-        //writeln("worker sleeping ", usecs, " usecs");
+        //msg("worker sleeping ", usecs, " usecs");
         Thread.sleep(dur!"usecs"(usecs));
     }
     return Task(false, false, &asd);
@@ -77,7 +77,7 @@ private void workerFun(shared Scheduler ssched) {
             }
         }
     } catch (Throwable o) {
-        writeln("Thread exception!\n", o.toString());
+        msg("Thread exception!\n", o.toString());
         version(Windows) {
             MessageBoxA(null, cast(char *)toStringz(o.toString()),
                     "Error", MB_OK | MB_ICONEXCLAMATION);
@@ -178,7 +178,7 @@ class Scheduler {
     //If we synchronize threads, changelist is used and stuff. Otherwise it is ignored.
     bool getTask(ref Task task, ChangeList changeList) {
         synchronized(this) {
-            //writeln("scheduler state: ", to!string(state));
+            //msg("scheduler state: ", to!string(state));
             switch (state) {
                 default:
                 case State.update:
@@ -196,7 +196,7 @@ class Scheduler {
                         //TODO: Wait for all workers here. Synchronize. Etc. :)
                     }
 
-                    //writeln("updating!");
+                    //msg("updating!");
                     //TODO: Make threads wait and synchronize with each other before this phase!
                     //Important! :)
 

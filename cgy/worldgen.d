@@ -129,7 +129,7 @@ class WorldGenerator {
         } else if (d < -0.5) {
             ret = Tile(groundType, TileFlags.none, 0, 0);
         } else {
-            assert (d > 0);
+            assert (d > 0, text(d));
             ret = Tile(airType, transparent, 0, 0);
         }
         if (-0.5 <= d && d < 0.5) {

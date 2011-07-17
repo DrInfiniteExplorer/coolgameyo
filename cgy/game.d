@@ -65,8 +65,8 @@ class Game{
         isWorker = work;
 
         if (isClient) {
-            writeln("Initializing client stuff");
-            scope (success) writeln("Done with client stuff");
+            msg("Initializing client stuff");
+            scope (success) msg("Done with client stuff");
 
             atlas = new TileTextureAtlas; // HACK
         }
@@ -94,14 +94,14 @@ class Game{
 
         UnitPos topOfTheWorld(TileXYPos xy) {
             auto top = world.getTopTilePos(xy);
-            writeln("top: ", top);
+            msg("top: ", top);
             auto ret = top.toUnitPos();
             if (world.getTile(top).halfstep) {
                 ret.value.Z += 0.5;
             } else {
                 ret.value.Z += 1;
             }
-            writeln("ret: ", ret);
+            msg("ret: ", ret);
             return ret;
         }
 
@@ -111,7 +111,7 @@ class Game{
         //u.pos.value.Z += 1;
         world.addUnit(u);
         
-        writeln("u.pos == ", u.pos);
+        msg("u.pos == ", u.pos);
 
         auto uu = new Unit;
         auto xyy = TileXYPos(vec2i(3,3));
@@ -139,7 +139,7 @@ class Game{
         //Wait until done.
         scheduler.exit();
         while(scheduler.running()){
-            writeln("Waiting for scheduler to terminate worker threads...");
+            msg("Waiting for scheduler to terminate worker threads...");
             Thread.sleep(dur!"seconds"(1));
         }
 
@@ -243,7 +243,7 @@ class Game{
     void runServer() {
         // set up network interface...? D:
         while (true) {
-            //writeln("Server loop!");
+            //msg("Server loop!");
             Thread.sleep(dur!"seconds"(1));
         }
     }
@@ -290,7 +290,7 @@ class Game{
             case 3:
                 tmp = ("GL_LINEAR_MIPMAP_LINEAR"); break;
         }
-        writeln(tmp);
+        msg(tmp);
 
         /+
         f3.setText(tmp);
@@ -321,7 +321,7 @@ class Game{
                 setVSync(!renderSettings.disableVSync);
                 
             } else {
-                writeln("Cannot poke with vsync unless wgl blerp");
+                msg("Cannot poke with vsync unless wgl blerp");
             }
             /+
             f4.setText("VSync:" ~ (renderSettings.disableVSync? "Disabled" : "Enabled"));

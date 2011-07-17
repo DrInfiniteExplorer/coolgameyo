@@ -376,7 +376,7 @@ class VBOMaker : Module, WorldListener
             glBindBuffer(GL_ARRAY_BUFFER, region.VBO);
             glBufferData(GL_ARRAY_BUFFER, geometrySize, region.faces.ptr, GL_STATIC_DRAW);
         } else {
-            writeln("GOT NOTHING FROM GRAPHREGION! >:( ", region.grNum);
+            msg("GOT NOTHING FROM GRAPHREGION! >:( ", region.grNum);
         }
         //addAABB(region.grNum.getAABB());
     }
@@ -411,7 +411,7 @@ class VBOMaker : Module, WorldListener
         }
 
         sw.stop();
-        //writeln("It took ", sw.peek().msecs, " ms to build the geometry");
+        //msg("It took ", sw.peek().msecs, " ms to build the geometry");
     }
 
     void taskFunc(const(World) world, GraphRegionNum num) {
@@ -518,7 +518,7 @@ class VBOMaker : Module, WorldListener
         foreach(pos ; RangeFromTo(grNumMin.value, grNumMax.value)) {
             auto grNum = GraphRegionNum(pos);
             if(hasContent(grNum)){
-                //writeln("Has content;", grNum);
+                //msg("Has content;", grNum);
                 newRegions ~= grNum;
             }
         }
@@ -537,8 +537,8 @@ class VBOMaker : Module, WorldListener
             scope(exit) regionMutex.unlock();
             foreach(region ; regions){
                 if(intersects(sectorAABB, region.grNum.getAABB())){
-                    writeln("Unload stuff oh yeah!!");
-                    writeln("Perhaps.. Should we.. Maybe.. Stora data on disk? We'll see how things turn out.");
+                    msg("Unload stuff oh yeah!!");
+                    msg("Perhaps.. Should we.. Maybe.. Stora data on disk? We'll see how things turn out.");
                     //How to do stuff, et c?
                 }
             }

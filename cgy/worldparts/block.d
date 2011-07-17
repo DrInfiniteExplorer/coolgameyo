@@ -115,7 +115,7 @@ struct Block {
     void sparse(bool val) @property { setFlag(flags, BlockFlags.sparse, val); }
 
     static Block generateBlock(BlockNum blockNum, WorldGenerator worldgen) {
-        //writeln("Generating block: ", blockNum);
+        //msg("Generating block: ", blockNum);
         auto block = alloc();
         block.blockNum = blockNum;
         

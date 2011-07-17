@@ -21,7 +21,7 @@ void initOpenGL(bool client){
 
     //TODO: POTENTIAL BUG EEAPASASALPDsAPSLDPLASDsPLQWPRMtopmkg>jfekofsaplPSLFPsLSDF
     renderSettings.glVersion=major + 0.1*minor;
-    writeln("OGL version ", renderSettings.glVersion);
+    msg("OGL version ", renderSettings.glVersion);
 
     DerelictGL.loadExtensions();
     glError();
@@ -41,7 +41,7 @@ void initOpenGL(bool client){
     glError();
     renderSettings.maxTextureSize = temp;
     if(renderSettings.maxTextureSize > 512){
-        debug writeln("MaxTextureSize(", renderSettings.maxTextureSize, ") 'to big'; clamping to 512");
+        debug msg("MaxTextureSize(", renderSettings.maxTextureSize, ") 'to big'; clamping to 512");
         renderSettings.maxTextureSize = 512;
     }
     glGetIntegerv(GL_MAX_ARRAY_TEXTURE_LAYERS, &temp);
@@ -113,7 +113,7 @@ void setVSync(bool enableVSync) {
     version (Windows) {
         wglSwapIntervalEXT(enableVSync ? 0 : 1);
     } else {
-        writeln("Cannot poke with vsync unless wgl blerp");
+        msg("Cannot poke with vsync unless wgl blerp");
     }
 }
 

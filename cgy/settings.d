@@ -76,7 +76,7 @@ vec3f getTileCoordSize(){
 
 void loadSettings(){
     if(!std.file.exists("settings.json")){
-        writeln("Could not load settings");
+        msg("Could not load settings");
         return;
     }
     auto content = readText("settings.json");

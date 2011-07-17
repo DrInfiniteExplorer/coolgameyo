@@ -126,11 +126,11 @@ class StringTexture {
     }
 
     ~this() {
-        writeln("dtor text: ", currentText, " ", vbo);
+        msg("dtor text: ", currentText, " ", vbo);
         enforce(vbo == 0);
     }
     void destroy() {
-        writeln("destroying text: ", currentText, " ", vbo);
+        msg("destroying text: ", currentText, " ", vbo);
         glDeleteBuffers(1, &vbo);
         glError();
         vbo = 0;

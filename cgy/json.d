@@ -132,7 +132,7 @@ static:
             }
         }
         auto r = text(negative ? "-" : "", n, old[0 .. old.length - s.length]);
-        //writeln(s);
+        //msg(s);
         return to!real(r); // BUG LINE?
     }
 
@@ -219,7 +219,7 @@ static:
     Value parseValue(string s) { return parseValue(new Input(s)); }
     Value parseValue(Input i) {
         string s; real n;
-        //writeln(to!string(i.front.tag));
+        //msg(to!string(i.front.tag));
         switch (i.front.tag) {
             case Tag.string: s = i.front.str; i.popFront(); return Value(s);
             case Tag.number: n = i.front.num; i.popFront(); return Value(n);
@@ -241,7 +241,7 @@ static:
             enforce(i.front.tag == Tag.string);
             string s = i.front.str;
             i.popFront();
-            //writeln("parsed ", s);
+            //msg("parsed ", s);
             i.skip(Tag.colon);
             blep[s] = parseValue(i);
             if (i.front.tag != Tag.comma) break;
@@ -286,7 +286,7 @@ T read(T)(Value val) {
         }
         return us;
     } else {
-        writeln("Json cannot read '", M.stringof, " ", m,
+        msg("Json cannot read '", M.stringof, " ", m,
                 "' in ", T.stringof,
                 " because I don't know what it is!");
     }

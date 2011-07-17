@@ -212,8 +212,8 @@ class GuiElement {
     
     GuiEventResponse onEvent(GuiEvent e){
         switch(e.type) {
-            case GuiEventType.MouseMove: writeln("MouseMove!"); break;
-            default: writeln("other event." ~ to!string(e.type)); break;
+            case GuiEventType.MouseMove: msg("MouseMove!"); break;
+            default: msg("other event." ~ to!string(e.type)); break;
         }
         return GuiEventResponse.Ignore;
     }    

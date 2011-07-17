@@ -19,6 +19,11 @@ version (Posix) {
     import std.c.stdlib;
 }
 
+
+void msg(string file=__FILE__, int line=__line__, T...)(T t) {
+    writeln(file, "(", line, "): ", t);
+}
+
 long utime() {
     return TickDuration.currSystemTick().usecs;
 }
@@ -533,7 +538,7 @@ void setThreadName(string threadName) {
         }
         catch(Throwable o) //__except(EXCEPTION_EXECUTE_HANDLER)
         {
-            writeln("asdasdasd");
+            msg("asdasdasd");
         }
     }
 }
@@ -559,11 +564,11 @@ version(Windows){
     bool getCopyString(ref string output) {
         const(char*) clip;
         if (OpenClipboard(null)) {
-	        HANDLE hData = GetClipboardData( CF_TEXT );
-	        char * buffer = cast(char*)GlobalLock( hData );
-	        output = to!string(buffer);
-	        GlobalUnlock( hData );
-	        CloseClipboard();
+            HANDLE hData = GetClipboardData( CF_TEXT );
+            char * buffer = cast(char*)GlobalLock( hData );
+            output = to!string(buffer);
+            GlobalUnlock( hData );
+            CloseClipboard();
             return true;
         }
         return false;

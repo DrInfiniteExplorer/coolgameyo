@@ -52,7 +52,7 @@ class FPSControlAI : UnitAI, CustomChange {
     vec3d collideMove(vec3d pos, vec3d dir, int level=0){
         if (dir == vec3d(0, 0, 0)) { return pos; }
         if (level > 5) {
-            writeln("Penix");
+            msg("Penix");
             enforce(0, "DIX!");
             return pos;
         }
@@ -76,7 +76,7 @@ class FPSControlAI : UnitAI, CustomChange {
                 }
                 if (isNaN(time)) {
                     minTime = float.nan;
-                    writeln("Unit is inside of something. Solve this, like, loop upwards until not collides anylonger. or something.");
+                    msg("Unit is inside of something. Solve this, like, loop upwards until not collides anylonger. or something.");
                     return true;
                 }
                 if (time < minTime) {
@@ -101,7 +101,7 @@ class FPSControlAI : UnitAI, CustomChange {
             vec3d _pos = pos + vec3d(0, 0, 1);
             vec3d _dir = vec3d(0.0, 0.0, 0.0);
             //while (!checkCollision(_pos, _dir, time, normal)) {
-            //    writeln("gay gay gay ", UnitPos(_pos));
+            //    msg("gay gay gay ", UnitPos(_pos));
             //    _pos.Z += 1;
             //}
             return _pos;
