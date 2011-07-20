@@ -109,10 +109,11 @@ class Game{
                 ret.value.Z += 1;
             }
             msg("ret: ", ret);
+			
             return ret;
         }
 
-        auto xy = TileXYPos(vec2i(30,30));
+        auto xy = TileXYPos(vec2i(3,-20));
         auto u = new Unit;
         u.pos = topOfTheWorld(xy);
         //u.pos.value.Z += 1;
@@ -129,7 +130,6 @@ class Game{
         camera.setTarget(vec3d(0, 1, 0));
 
         world.floodFillSome(1_000_000);
-
         //auto goal = UnitPos(u.pos.value + vec3d(-30, 0, 0));
         auto goal = uu.pos;
         //NO AI FOR NO PATHABLENESS WITH NEW RANDOMMAPNESS

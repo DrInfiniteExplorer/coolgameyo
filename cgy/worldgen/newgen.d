@@ -45,8 +45,8 @@ final class WorldGeneratorNew : WorldGenerator {
             null,
             new Fractal!3(
                 [gradNoise, gradNoise, gradNoise],
-                [1/30.1, 1.0/10, 1.0/3],
-                [50.0, 20, 5]
+                [1/90.1, 1.0/10, 1.0/3],
+                [150.0, 00, 0]
             ),
             vec3d(1, 1, 1));
         

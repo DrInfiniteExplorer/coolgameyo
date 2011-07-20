@@ -82,6 +82,7 @@ struct BlockNum {
         return aabbox3d!double(minPos, maxPos);
     }
 
+	// Relative index
     vec3i rel() const
     out(x){
         assert(0 <= x.X);
@@ -144,6 +145,7 @@ struct TilePos {
     }
 
 
+	// Relative index
     vec3i rel() const
     out(x){
         assert(x.X >= 0, "rel.X < 0!!! :(");

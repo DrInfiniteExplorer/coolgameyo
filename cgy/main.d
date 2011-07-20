@@ -126,7 +126,7 @@ class Main {
 
             //Antialiasing. now off-turned.
             //Apparently this AA only works on edges and not on surfaces, so turned off for now.
-            SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS,  0);
+            SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS,  1);
             SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES,  16);
         }
 
@@ -147,6 +147,7 @@ class Main {
     }
     
     Game startGame() {
+		assert(game !is null, "We already had a game, lawl");
         game = new Game(client, server, worker);
         return game;
     }
