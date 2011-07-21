@@ -237,7 +237,8 @@ class World {
     long last_time;
     void update(){
         auto now = utime();
-        msg((now - last_time) / 1_000.0, "ms since last tick");
+        //msg((now - last_time) / 1_000.0, "ms since last tick");
+        //We already have a display of this value in the gui? :S
         last_time = now;
 
 
@@ -339,6 +340,7 @@ class World {
         // present is read-write.
         setBlock(tilePos.getBlockNum(), block);
         
+        //Update heightmap
         auto sectorNum = tilePos.getSectorNum();
         auto sectorXY = getSectorXY(SectorXYNum(vec2i(sectorNum.value.X, sectorNum.value.Y)));
         auto heightmap = sectorXY.heightmap;
@@ -357,6 +359,11 @@ class World {
             if (newTile.type !is TileTypeAir) {
                 heightmap[sectRel.X, sectRel.Y] = tilePos.value.Z;
             }
+        }
+        
+        //Start floodfill, and updating of discovered areas
+        if (newTile.type is TileTypeAir) {
+            addFloodFillPos(tilePos);
         }
         
         notifyTileChange(tilePos);
