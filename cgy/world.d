@@ -333,6 +333,26 @@ class World {
         // a block is really read-only, but block.tiles if
         // present is read-write.
         setBlock(tilePos.getBlockNum(), block);
+        
+        auto sectorXY = getSectorXY(tilePos);
+        auto heightmap = sectorXY.heightmap;
+        auto sectRel = tilePos.sectorRel();
+        auto heightmapZ = heightmap[sectRel.X, sectRel.Y];
+        if (heightmapZ == tilePos.Z) {
+            if (newTile.type is tileTypeAir) {
+                auto pos = tilePos;
+                //Iterate down until find ground, set Z
+                while (getTile(pos).type is tileTypeAir) {
+                    pos.Z -= 1;
+                }
+                heightmap[sectRel.X, sectRel.Y] = pos.Z;
+            }
+        } else if (heightmapZ < tilePos.Z) {
+            if (newTile.type !is tileTypeAir) {
+                heightmap[sectRel.X, sectRel.Y] = tilePos.Z;
+            }
+        }
+        
         notifyTileChange(tilePos);
     }
 
