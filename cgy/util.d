@@ -130,6 +130,15 @@ struct Rect(T) {
     T getBottom() const {
         return start.Y + size.Y;
     }
+    T getTop() const {
+        return start.Y;
+    }
+    T getRight() const {
+        return start.X + size.X;
+    }
+    T getLeft() const {
+        return start.X;
+    }
 }
 
 alias Rect!double Rectd;

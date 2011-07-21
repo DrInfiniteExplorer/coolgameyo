@@ -174,6 +174,14 @@ class Game{
     World getWorld() {
         return world;
     }
+    
+    Renderer getRenderer() {
+        return renderer;
+    }
+    
+    Scheduler getScheduler() {
+        return scheduler;
+    }
 
     void parseGameData() {
         if (isClient) {

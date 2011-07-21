@@ -283,4 +283,12 @@ class Scheduler {
         frameAvg /= Frames;
     }
 
+    ulong getTickTime() const @property {
+        return frameTimes[(frameId+Frames-1)%Frames];
+    }
+    ulong getTickTimeAverage() const @property {
+        return frameAvg;
+    }
+
+
 }

@@ -13,7 +13,9 @@ import ai.posessai;
 import game;
 import graphics.camera;
 import graphics.debugging;
+import graphics.renderer;
 import gui.all;
+import scheduler;
 import settings;
 import tiletypemanager;
 import unit;
@@ -24,9 +26,11 @@ import world;
 class HyperUnitControlInterfaceInputManager : GuiEventDump{
     
     private GuiSystem guiSystem;
-    private GuiElementText fpsText, tickText;
+    private GuiElementText fpsText, tickText, frameTimeText, tickTimeText;
 
     private Game game;    
+    private Renderer renderer;    //This and scheduler only used to get fps / tps info. Make proxy or thing?
+    private Scheduler scheduler;
     private World world;
     private FPSControlAI possesAI;
     private Camera camera;
@@ -50,8 +54,10 @@ class HyperUnitControlInterfaceInputManager : GuiEventDump{
     this(Game g, GuiSystem s) {
         guiSystem = s;
         game = g;
+        renderer = game.getRenderer();
         world = game.getWorld();
         camera = game.getCamera();
+        scheduler = game.getScheduler();
         setControlledUnit(game.getActiveUnit());
 
         middleX = cast(ushort)renderSettings.windowWidth/2;
@@ -104,12 +110,24 @@ class HyperUnitControlInterfaceInputManager : GuiEventDump{
     }
     
     void updateGui() {
-        //fpsText.setText(
+        auto frameTime = renderer.getFrameTimeAverage();
+        auto fps = 1_000_000 / frameTime;
+        fpsText.setText(text(fps));
+        frameTimeText.setText(text(frameTime));
+        
+        auto tickTime = scheduler.getTickTimeAverage();
+        auto tps = 1_000_000 / tickTime;
+        tickText.setText(text(tps));
+        tickTimeText.setText(text(tickTime));
     }
     
     void spawnGui() {
         fpsText = new GuiElementText(guiSystem, vec2d(0, 0), "Fps counter");
         tickText = new GuiElementText(guiSystem, vec2d(0, fpsText.getRelativeRect.getBottom()), "Tick counter");
+        
+        frameTimeText = new GuiElementText(guiSystem, vec2d(0.2, 0), "Frame time counter");
+        tickTimeText = new GuiElementText(guiSystem, vec2d(0.2, frameTimeText.getRelativeRect.getBottom()), "Tick time counter");
+        
     }
     void iuGnwaps() {
         fpsText.destroy(); fpsText = null;

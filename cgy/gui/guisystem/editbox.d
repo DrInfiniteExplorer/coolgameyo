@@ -53,7 +53,11 @@ class GuiElementEditbox : public GuiElement {
     }
     
     void setNumbersOnly(bool enable) {
-        filter = &filterNumber;
+        if (enable) {
+            filter = &filterNumber;
+        } else {
+            filter = null;
+        }
     }
     
     void setMaxLength(size_t max) {

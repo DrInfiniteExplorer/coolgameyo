@@ -13,6 +13,7 @@ import gui.all;
 import gui.unitcontrol;
 import gui.optionmenu;
 import gui.randommenu;
+import gui.newgamemenu;
 import settings;
 
 class MainMenu : GuiElementWindow {
@@ -33,6 +34,7 @@ class MainMenu : GuiElementWindow {
         auto optionsButt = new GuiElementButton(this, Rectd(vec2d(0.1, 0.4), vec2d(0.3, 0.2)), "Options", &onOptions);
 
         auto randomButt = new GuiElementButton(this, Rectd(vec2d(0.1, 0.6), vec2d(0.3, 0.2)), "Random", &onRandom);
+        auto startNewButt = new GuiElementButton(this, Rectd(vec2d(0.1, randomButt.getRelativeRect().getBottom()+0.05), vec2d(0.3, 0.2)), "newgamemenu", &onStartNewGame);
         
         //        auto cb = new GuiElementCheckBox(this, Rectd(vec2d(0.10, 0.6), vec2d(0.3, 0.2)), "CHECKBOX", null);
 //*/
@@ -49,9 +51,9 @@ class MainMenu : GuiElementWindow {
         }
         game = main.startGame();
         userControl = new HyperUnitControlInterfaceInputManager(game, guiSystem);
+        resumeGameButton = new GuiElementButton(this, newGameButton.getRelativeRect(), "Resume gay me?", &onResumeGame);
         newGameButton.destroy();
         newGameButton = null;
-        resumeGameButton = new GuiElementButton(this, Rectd(vec2d(0.1, 0.3), vec2d(0.3, 0.3)), "Resume gay me?", &onResumeGame);
         
         onResumeGame(false, false);
     }
@@ -74,6 +76,14 @@ class MainMenu : GuiElementWindow {
         }
         setVisible(false);
         new RandomMenu(this);
+    }
+    
+    void onStartNewGame(bool down, bool abort) {
+        if (down || abort) {
+            return;
+        }
+        setVisible(false);
+        new NewGameMenu(this);
     }
     
     void enterMenu() {

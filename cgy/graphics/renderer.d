@@ -230,6 +230,13 @@ class Renderer : Module {
         }
         frameAvg /= Frames;
     }
+    
+    ulong getFrameTime() const @property {
+        return frameTimes[(frameId+Frames-1)%Frames];
+    }
+    ulong getFrameTimeAverage() const @property {
+        return frameAvg;
+    }
 
     float soFar = 0;
     override void update(World world, Scheduler sched) {

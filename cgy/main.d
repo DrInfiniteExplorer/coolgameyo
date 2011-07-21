@@ -147,7 +147,7 @@ class Main {
     }
     
     Game startGame() {
-		assert(game !is null, "We already had a game, lawl");
+		assert(game is null, "We already had a game, lawl");
         game = new Game(client, server, worker);
         return game;
     }
