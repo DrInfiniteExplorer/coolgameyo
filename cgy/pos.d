@@ -168,15 +168,15 @@ struct TilePos {
         assert(x.X >= 0, "rel.X < 0!!! :(");
         assert(x.Y >= 0, "rel.Y < 0!!! :(");
         assert(x.Z >= 0, "rel.Z < 0!!! :(");
-        assert(x.X < TilesPerSector.x, "rel.X > TilesPerSector.x!!! :(");
-        assert(x.Y < TilesPerSector.y, "rel.Y > TilesPerSector.y!!! :(");
-        assert(x.Z < TilesPerSector.z, "rel.Z > TilesPerSector.z!!! :(");
+        assert(x.X < SectorSize.x, "rel.X > SectorSize.x!!! :(");
+        assert(x.Y < SectorSize.y, "rel.Y > SectorSize.y!!! :(");
+        assert(x.Z < SectorSize.z, "rel.Z > SectorSize.z!!! :(");
     }
     body{
         return vec3i(
-            posMod(value.X, TilesPerSector.x),
-            posMod(value.Y, TilesPerSector.y),
-            posMod(value.Z, TilesPerSector.z)
+            posMod(value.X, SectorSize.x),
+            posMod(value.Y, SectorSize.y),
+            posMod(value.Z, SectorSize.z)
             );
     }
     

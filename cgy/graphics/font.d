@@ -159,13 +159,15 @@ class StringTexture {
         auto len = text.length;
         bool resized = false;
         if(len > vertices.length){
-            resize(len+3);
+            resize(len+10);
             resized = true;
         }
+        /*
         if(len*2 < vertices.length){
             resize(len);
             resized = true;
-        }        
+        } 
+        */
         foreach(cnt, ch ; text) {
             vertices[cnt] = font.getQuad(ch, vec2i(cnt, 0));
         }

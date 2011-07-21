@@ -334,22 +334,23 @@ class World {
         // present is read-write.
         setBlock(tilePos.getBlockNum(), block);
         
-        auto sectorXY = getSectorXY(tilePos);
+        auto sectorNum = tilePos.getSectorNum();
+        auto sectorXY = getSectorXY(SectorXYNum(vec2i(sectorNum.value.X, sectorNum.value.Y)));
         auto heightmap = sectorXY.heightmap;
         auto sectRel = tilePos.sectorRel();
         auto heightmapZ = heightmap[sectRel.X, sectRel.Y];
-        if (heightmapZ == tilePos.Z) {
-            if (newTile.type is tileTypeAir) {
+        if (heightmapZ == tilePos.value.Z) {
+            if (newTile.type is TileTypeAir) {
                 auto pos = tilePos;
                 //Iterate down until find ground, set Z
-                while (getTile(pos).type is tileTypeAir) {
-                    pos.Z -= 1;
+                while (getTile(pos).type is TileTypeAir) {
+                    pos.value.Z -= 1;
                 }
-                heightmap[sectRel.X, sectRel.Y] = pos.Z;
+                heightmap[sectRel.X, sectRel.Y] = pos.value.Z;
             }
-        } else if (heightmapZ < tilePos.Z) {
-            if (newTile.type !is tileTypeAir) {
-                heightmap[sectRel.X, sectRel.Y] = tilePos.Z;
+        } else if (heightmapZ < tilePos.value.Z) {
+            if (newTile.type !is TileTypeAir) {
+                heightmap[sectRel.X, sectRel.Y] = tilePos.value.Z;
             }
         }
         
