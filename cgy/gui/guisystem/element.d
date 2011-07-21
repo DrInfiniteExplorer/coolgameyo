@@ -3,6 +3,7 @@
 module gui.guisystem.element;
 
 import std.algorithm;
+import std.range;
 import std.conv;
 import std.stdio;
 
@@ -229,7 +230,7 @@ class GuiElement {
 
     GuiElement getElementFromPoint(vec2i pos){
         if (visible && isInside(pos)) {
-            foreach(child ; children) {
+            foreach(child ; retro(children)) {
                 auto ret = child.getElementFromPoint(pos);
                 if(ret !is null){
                     return ret;
