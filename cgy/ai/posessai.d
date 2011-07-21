@@ -67,7 +67,7 @@ class FPSControlAI : UnitAI, CustomChange {
             foreach (rel; RangeFromTo(min.value, max.value)) {
                 auto tp = TilePos(rel);
                 auto tile = world.getTile(tp);
-                auto tileBox = tp.getAABB(tile.halfstep);
+                auto tileBox = tp.getAABB();
                 float time;
                 vec3d normal;
                 if (tile.transparent

@@ -134,10 +134,8 @@ final class WorldGeneratorOld : WorldGenerator{
         auto transparent = airType == air ?
             TileFlags.transparent : TileFlags.none;
         
-        enum useHalfStep = true ? TileFlags.halfstep : TileFlags.none;
-        
         if (-0.5 <= d && d < 0) {
-            ret = Tile(groundType, useHalfStep, 0, 0);
+            ret = Tile(groundType, TileFlags.none, 0, 0);
         } else if (d < -0.5) {
             ret = Tile(groundType, TileFlags.none, 0, 0);
         } else {

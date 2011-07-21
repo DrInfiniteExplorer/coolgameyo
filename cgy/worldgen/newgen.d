@@ -75,8 +75,6 @@ final class WorldGeneratorNew : WorldGenerator {
         auto airType =  air;
         auto transparent = TileFlags.transparent;
         
-        enum useHalfStep = true ? TileFlags.halfstep : TileFlags.none;
-        
         ret = v > 0 ? Tile(groundType, TileFlags.none, 0, 0) : Tile(airType, transparent, 0, 0);
 
         /*

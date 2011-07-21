@@ -301,7 +301,7 @@ class World {
     
     //Returns number of iterations nexxxessarrry to intersect a tile.
     //Returns 0 on instant-found or none found.
-    int intersectTile(bool considerHalftiles = true)(vec3d start, vec3d dir, int tileIter, ref Tile outTile, ref TilePos outPos, ref vec3i Normal) {
+    int intersectTile(vec3d start, vec3d dir, int tileIter, ref Tile outTile, ref TilePos outPos, ref vec3i Normal) {
         auto tileTypeAir = tileTypeManager.idByName("air");        
         TilePos oldTilePos;
         int cnt;
@@ -310,14 +310,6 @@ class World {
             auto tile = getTile(tilePos);            
             scope(exit) oldTilePos = tilePos;
             if (tile.type != tileTypeAir) {
-                static if (considerHalftiles) {                    
-                    if (tile.halfstep) {
-                        auto aabb = tilePos.getAABB(true);
-                        if(!aabb.intersectsWithLine(start, dir)) {
-                            continue;
-                        }
-                    }
-                }
                 outPos = tilePos;
                 Normal = oldTilePos.value - tilePos.value;
                 outTile = tile;
@@ -403,7 +395,7 @@ class World {
 
                 scope (exit) block.setTile(tp, tile);
 
-                if (tile.transparent || tile.halfstep) {
+                if (tile.transparent) {
                     tile.seen = true;
                     if (rel.X == 0) {
                         toFloodFill.insert(
@@ -419,7 +411,7 @@ class World {
                         toFloodFill.insert(
                                 BlockNum(blockNum.value + vec3i(0,1,0)));
                     }
-                    if (rel.Z == 0 && !tile.halfstep) { //halfsteps only propagate visibility up and to sides
+                    if (rel.Z == 0) {
                         toFloodFill.insert(
                                 BlockNum(blockNum.value - vec3i(0,0,1)));
                     } else if (rel.Z == BlockSize.z - 1) {
@@ -430,11 +422,6 @@ class World {
                     foreach (npos; neighbors(tp)) {
                         auto neighbor = getTile(npos, true, false);
                         if (neighbor.valid && neighbor.transparent) {
-                            tile.seen = true;
-                            break;
-                        }
-                        auto dz = npos.value.Z - tp.value.Z;    //Propagate visibility alll but down for halfsteps.
-                        if(neighbor.valid && neighbor.halfstep && dz >= 0){
                             tile.seen = true;
                             break;
                         }

@@ -282,29 +282,12 @@ static struct PathFindState {
 
     double costBetween(World world, TilePos a, TilePos b) {
 
-        bool halfa = world.getTile(a).halfstep;
-        bool halfb = world.getTile(b).halfstep;
-
         if (a.value.Z == b.value.Z) {
-            if (halfa == halfb) {
-                return normalStep;
-            } else {
-                return halfa ? moveDownHalfstep : moveUpHalfstep;
-            }
+            return normalStep;
         } else if (a.value.Z > b.value.Z) {
-            if (halfa == halfb) {
-                return moveDownRegular;
-            } else {
-                assert (halfb);
-                return moveDownHalfstep;
-            }
+            return moveDownRegular;
         } else {
-            if (halfa == halfb) {
-                return moveUpRegular;
-            } else {
-                assert (halfa);
-                return moveUpHalfstep;
-            }
+            return moveUpRegular;
         }
     }
     double estimateBetween(TilePos a, TilePos b) {
@@ -321,9 +304,6 @@ static struct PathFindState {
 
         void push(TilePos tp) {
             p ~= tp.toUnitPos();
-            if (world.getTile(tp).halfstep) {
-                p[$-1].value.Z += 0.5;
-            }
         }
 
         while (goal.tilePos != y) {
@@ -372,7 +352,7 @@ static struct PathFindState {
             bool pathable(TilePos tp) { return tile(tp).pathable; }
             bool solid(TilePos tp) { return !clear(tp) && !half(tp); }
             bool avail(TilePos tp) { return pathable(tp) && clear(above(tp)); }
-            bool half(TilePos tp) { return tile(tp).halfstep; }
+            bool half(TilePos tp) { return false; } //TODO: Plol make fix remove this function
 
             bool test_from_to(TilePos a, TilePos b) {
                 if (!avail(a) || !avail(b)) return false;

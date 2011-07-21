@@ -222,7 +222,7 @@ class HyperUnitControlInterfaceInputManager : GuiEventDump{
                 removeAABB(selectedTileBox);
             }
             auto temp = TilePos(selectedTilePos.value); //Why? :S:S :P
-            aabbd aabb = temp.getAABB(tile.halfstep);
+            aabbd aabb = temp.getAABB();
             aabb.scale(vec3d(1.025f));
             selectedTileBox = addAABB(aabb);
         }

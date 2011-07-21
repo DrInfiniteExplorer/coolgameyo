@@ -175,23 +175,15 @@ class VBOMaker : Module, WorldListener
                         auto tileUpper = world.getTile(TilePos(vec3i(x,y,z+ett)), false, false);
                         auto transUpper = tileUpper.transparent;
                         auto transLower = tileLower.transparent;
-                        if(ett == 1) {
-                            transUpper |= tileLower.halfstep;
-                        } else {
-                            transUpper |= tileUpper.halfstep;
-                        }
 
                         auto bothValid = (tileUpper.valid && tileLower.valid) || renderSettings.renderInvalidTiles;
 
-                        //If doing upper surface; if lower tile is half-surface
-                        auto halfLower = doUpper == 0 && tileLower.halfstep;
-                        halfEtt = halfLower ? 0.5 : 1.0;
 
                         if(bothValid && transUpper && !transLower){ //Floor tile detected!
-                            newFace.quad[0].vertex.set(x, y+ett, z+halfEtt);
-                            newFace.quad[1].vertex.set(x, y+noll, z+halfEtt);
-                            newFace.quad[2].vertex.set(x+1, y+noll, z+halfEtt);
-                            newFace.quad[3].vertex.set(x+1, y+ett, z+halfEtt);
+                            newFace.quad[0].vertex.set(x, y+ett, z+1);
+                            newFace.quad[1].vertex.set(x, y+noll, z+1);
+                            newFace.quad[2].vertex.set(x+1, y+noll, z+1);
+                            newFace.quad[3].vertex.set(x+1, y+ett, z+1);
                             newFace.quad[0].texcoord.set(0, 0, 0);
                             newFace.quad[1].texcoord.set(0, 1, 0);
                             newFace.quad[2].texcoord.set(1, 1, 0);
@@ -236,27 +228,20 @@ class VBOMaker : Module, WorldListener
             foreach(y ; min.value.Y-1 .. max.value.Y) {
                 foreach(z ; min.value.Z .. max.value.Z) {
                     onStrip = false;
-                    float halfEtt;
-                    float halfNoll;
                     foreach(x; min.value.X .. max.value.X){
 
                         auto tileLower = world.getTile(TilePos(vec3i(x,y+noll,z)), false, false);
                         auto tileUpper = world.getTile(TilePos(vec3i(x,y+ett,z)), false, false);
-                        auto transUpper = tileUpper.transparent || tileUpper.halfstep;
+                        auto transUpper = tileUpper.transparent;
                         auto transLower = tileLower.transparent;
 
                         auto bothValid = (tileUpper.valid && tileLower.valid) || renderSettings.renderInvalidTiles;
 
-                        bool halfLower = tileLower.halfstep;
-
-                        halfEtt = to!float(ett) * (halfLower ? 0.5 : 1.0);
-                        halfNoll = to!float(noll) * (halfLower ? 0.5 : 1.0);
-
-                        if(bothValid && transUpper && !transLower && !(tileUpper.halfstep && tileLower.halfstep)){ //Floor tile detected!
-                            newFace.quad[0].vertex.set(x, y+1, z+halfNoll);
-                            newFace.quad[1].vertex.set(x, y+1, z+halfEtt);
-                            newFace.quad[2].vertex.set(x+1, y+1, z+halfEtt);
-                            newFace.quad[3].vertex.set(x+1, y+1, z+halfNoll);
+                        if(bothValid && transUpper && !transLower){ //Floor tile detected!
+                            newFace.quad[0].vertex.set(x, y+1, z+noll);
+                            newFace.quad[1].vertex.set(x, y+1, z+ett);
+                            newFace.quad[2].vertex.set(x+1, y+1, z+ett);
+                            newFace.quad[3].vertex.set(x+1, y+1, z+noll);
                             newFace.quad[0].texcoord.set(0, ett, 0);
                             newFace.quad[1].texcoord.set(0, noll, 0);
                             newFace.quad[2].texcoord.set(1, noll, 0);
@@ -301,21 +286,16 @@ class VBOMaker : Module, WorldListener
                     foreach(y; min.value.Y .. max.value.Y){
                         auto tileLower = world.getTile(TilePos(vec3i(x+noll,y,z)), false, false);
                         auto tileUpper = world.getTile(TilePos(vec3i(x+ett,y,z)), false, false);
-                        auto transUpper = tileUpper.transparent || tileUpper.halfstep;
+                        auto transUpper = tileUpper.transparent;
                         auto transLower = tileLower.transparent;
 
                         auto bothValid = (tileUpper.valid && tileLower.valid) || renderSettings.renderInvalidTiles;
 
-                        bool halfLower = tileLower.halfstep;
-
-                        halfEtt = to!float(ett) * (halfLower ? 0.5 : 1.0);
-                        halfNoll = to!float(noll) * (halfLower ? 0.5 : 1.0);
-
-                        if(bothValid && transUpper && !transLower && !(tileUpper.halfstep && tileLower.halfstep)){ //Floor tile detected!
-                            newFace.quad[0].vertex.set(x+1, y, z+halfEtt);
-                            newFace.quad[1].vertex.set(x+1, y, z+halfNoll);
-                            newFace.quad[2].vertex.set(x+1, y+1, z+halfNoll);
-                            newFace.quad[3].vertex.set(x+1, y+1, z+halfEtt);
+                        if(bothValid && transUpper && !transLower){ //Floor tile detected!
+                            newFace.quad[0].vertex.set(x+1, y, z+ett);
+                            newFace.quad[1].vertex.set(x+1, y, z+noll);
+                            newFace.quad[2].vertex.set(x+1, y+1, z+noll);
+                            newFace.quad[3].vertex.set(x+1, y+1, z+ett);
                             newFace.quad[0].texcoord.set(0, noll, 0);
                             newFace.quad[1].texcoord.set(0, ett, 0);
                             newFace.quad[2].texcoord.set(1, ett, 0);

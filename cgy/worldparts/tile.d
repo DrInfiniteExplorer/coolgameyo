@@ -11,7 +11,6 @@ enum TileFlags : ushort {
     none        = 0,
     seen        = 1 << 0,
     transparent = 1 << 2, //TO REMOVE: There are no tile types which are transparent except for air!! :P
-    halfstep    = 1 << 3,
     pathable    = 1 << 4,
     valid       = 1 << 15,
 }
@@ -30,9 +29,6 @@ struct Tile {
 
     bool transparent() const @property { return (flags & TileFlags.transparent) != 0; }
     void transparent(bool val) @property { setFlag(flags, TileFlags.transparent, val); }
-
-    bool halfstep() const @property { return (flags & TileFlags.halfstep) != 0; }
-    void halfstep(bool val) @property { setFlag(flags, TileFlags.halfstep, val); }
 
     bool pathable() const @property { return (flags & TileFlags.pathable) != 0; }
     void pathable(bool val) @property { setFlag(flags, TileFlags.pathable, val); }

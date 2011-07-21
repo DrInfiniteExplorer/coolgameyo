@@ -136,7 +136,7 @@ struct Block {
                 block.sparseTileType = tile.type;
                 block.sparseTileTransparent = tile.transparent; //Copy transparency-property from first tile.
             }
-            if (block.sparseTileType != tile.type || tile.halfstep) {
+            if (block.sparseTileType != tile.type) {
                 homogenous = false;
             }
         }

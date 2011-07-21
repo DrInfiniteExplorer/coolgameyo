@@ -103,11 +103,7 @@ class Game{
             auto top = world.getTopTilePos(xy);
             msg("top: ", top);
             auto ret = top.toUnitPos();
-            if (world.getTile(top).halfstep) {
-                ret.value.Z += 0.5;
-            } else {
-                ret.value.Z += 1;
-            }
+            ret.value.Z += 1;
             msg("ret: ", ret);
 			
             return ret;
