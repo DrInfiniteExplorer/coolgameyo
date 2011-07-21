@@ -543,6 +543,7 @@ class VBOMaker : Module, WorldListener
         //dunno. think it's needed here as well.
         if(newRegions.length == 0) {
             newRegions ~= tilePos.getGraphRegionNum(); //Check neighboring graphregions as well.
+            newRegions ~= tilePos.getNeighboringGraphRegionNums();
         }
         updateMutex.lock();
         scope(exit) updateMutex.unlock();

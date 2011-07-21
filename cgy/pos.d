@@ -126,6 +126,46 @@ struct TilePos {
                     negDiv(value.Z, GraphRegionSize.z),
                     ));
     }
+    GraphRegionNum[] getNeighboringGraphRegionNums() const {
+        GraphRegionNum[] ret;
+        auto thisNum = getGraphRegionNum();
+        auto rel = vec3i(
+                    posMod(value.X, GraphRegionSize.x),
+                    posMod(value.Y, GraphRegionSize.y),
+                    posMod(value.Z, GraphRegionSize.z),
+                    );
+        if (rel.X == 0) {
+            auto tmp = thisNum;
+            tmp.value.X -= 1;
+            ret ~= tmp;
+        }
+        if (rel.X == GraphRegionSize.x-1) {
+            auto tmp = thisNum;
+            tmp.value.X += 1;
+            ret ~= tmp;
+        }
+        if (rel.Y == 0) {
+            auto tmp = thisNum;
+            tmp.value.Y -= 1;
+            ret ~= tmp;
+        }
+        if (rel.Y == GraphRegionSize.y-1) {
+            auto tmp = thisNum;
+            tmp.value.Y += 1;
+            ret ~= tmp;
+        }
+        if (rel.Z == 0) {
+            auto tmp = thisNum;
+            tmp.value.Z -= 1;
+            ret ~= tmp;
+        }
+        if (rel.Z == GraphRegionSize.z-1) {
+            auto tmp = thisNum;
+            tmp.value.Z += 1;
+            ret ~= tmp;
+        }
+        return ret;
+    }
 
     UnitPos toUnitPos() const{
         return UnitPos(vec3d(value.X + 0.5,

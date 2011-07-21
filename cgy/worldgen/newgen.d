@@ -75,7 +75,16 @@ final class WorldGeneratorNew : WorldGenerator {
         auto airType =  air;
         auto transparent = TileFlags.transparent;
         
-        ret = v > 0 ? Tile(groundType, TileFlags.none, 0, 0) : Tile(airType, transparent, 0, 0);
+        if (v > 0) { //Solid
+            ret = Tile(groundType, TileFlags.none, 0, 0);
+        } else {
+            ret = Tile(airType, transparent, 0, 0);
+            if (heightmap.getValue(pos.value.X, pos.value.Y, pos.value.Z-1) > 0) {
+                ret.pathable = true;
+            }
+        }
+        
+        
 
         /*
         if (-0.5 <= d && d < 0.5) {
@@ -91,7 +100,7 @@ final class WorldGeneratorNew : WorldGenerator {
         //auto v = foo(xypos.value.X, xypos.value.Y);
         //auto vv = to!int(v);
         //return vv;
-        return 15;
+        return 170;
     }
 }
 
