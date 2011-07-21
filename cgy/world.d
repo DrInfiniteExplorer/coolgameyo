@@ -234,7 +234,12 @@ class World {
         return ret;
     }
 
+    long last_time;
     void update(){
+        auto now = utime();
+        msg((now - last_time) / 1_000.0, "ms since last tick");
+        last_time = now;
+
 
         floodFillSome();
 
@@ -371,7 +376,7 @@ class World {
         return TilePos(pos);
     }
 
-    void floodFillSome(int max=1000) {// 10 lol
+    void floodFillSome(int max=10) {// 10 lol
         //auto sw = StopWatch(AutoStart.yes);
 
         //int allBlocks = 0;
@@ -379,6 +384,7 @@ class World {
         //int sparseCount = 0;
         int i = 0;
         while (i < max && !toFloodFill.empty) {
+            i += 1;
             auto blockNum = toFloodFill.removeAny();
 
             auto block = getBlock(blockNum);
