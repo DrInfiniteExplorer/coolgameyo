@@ -219,6 +219,7 @@ class Scheduler {
                     }
                     
                     state = state.sync;
+                    goto case;
 
                     // fallin through...~~~~
                 case State.sync:

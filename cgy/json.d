@@ -337,7 +337,7 @@ string prettyfyJSON(string text){
 	text = std.array.replace(text, "," ,",\n");
 	text = std.array.replace(text, "{" ,"{\n");
 	text = std.array.replace(text, "}" ,"\n}");
-	string[] asdf = std.string.splitlines(text);
+	string[] asdf = std.string.splitLines(text);
 	text = "";
 	foreach(fdsa; asdf){
 		if (indexOf(fdsa, "}") != -1){

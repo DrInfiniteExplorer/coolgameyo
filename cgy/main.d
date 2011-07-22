@@ -171,7 +171,8 @@ class Main {
                     case SDL_MOUSEMOTION:
                     case SDL_MOUSEBUTTONDOWN:
                     case SDL_MOUSEBUTTONUP:
-                    if(!inputActive) continue;
+                        if(!inputActive) continue;
+                        goto default;
                     default:
                 }
                 switch (event.type) {

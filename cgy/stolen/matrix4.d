@@ -85,7 +85,7 @@ struct CMatrix4(T)
     }
 
     //! Simple operator for directly accessing every element of the matrix.
-    const ref T at(const int row, const int col) const { return M[row * 4 + col]; }
+    ref const(T) at(const int row, const int col) const { return M[row * 4 + col]; }
 
     //! Simple operator for linearly accessing every element of the matrix.
     ref T opIndex(uint index)
@@ -94,7 +94,7 @@ struct CMatrix4(T)
     }
 
     //! Simple operator for linearly accessing every element of the matrix.
-    const ref T opIndex(uint index) const { return M[index]; }
+    ref const(T) opIndex(uint index) const { return M[index]; }
 
     void opIndexAssign(T val, uint index)  { M[index] = val; }
     void opIndexAssign(const T val, uint index) const { (cast(T[16]) M) = val; }
@@ -1527,7 +1527,7 @@ struct CMatrix4(T)
 
   private:
     //! Matrix data, stored in row-major order
-    T M[16] = [  1,0,0,0,
+    T[16] M = [  1,0,0,0,
           0,1,0,0,
           0,0,1,0,
           0,0,0,1];
@@ -1536,9 +1536,4 @@ struct CMatrix4(T)
 alias CMatrix4!(float) matrix4;
 
 //! global const identity matrix
-CMatrix4!(float) IdentityMatrix;
-
-static this()
-{
-  IdentityMatrix = CMatrix4!(float)(CMatrix4!(float).eConstructor.EM4CONST_IDENTITY);
-}
+enum IdentityMatrix = CMatrix4!(float)();

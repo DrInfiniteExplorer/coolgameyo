@@ -350,23 +350,27 @@ static struct PathFindState {
             Tile tile(TilePos tp) { return world.getTile(tp, false, false); }
             bool clear(TilePos tp) { return tile(tp).transparent; }
             bool pathable(TilePos tp) { return tile(tp).pathable; }
-            bool solid(TilePos tp) { return !clear(tp) && !half(tp); }
+            bool solid(TilePos tp) { return !clear(tp); }
             bool avail(TilePos tp) { return pathable(tp) && clear(above(tp)); }
-            bool half(TilePos tp) { return false; } //TODO: Plol make fix remove this function
 
-            bool test_from_to(TilePos a, TilePos b) {
-                if (!avail(a) || !avail(b)) return false;
-
+            bool test_from_to(TilePos a, TilePos b)
+            in{
                 assert (a.value.X != b.value.X
                         || a.value.Y != b.value.Y
-                        || a.value.Z != b.value.Z);
+                        || a.value.Z != b.value.Z, "a and b are the same tile!");
+            }
+            body{
+                if (!avail(a) || !avail(b)) return false;
+                return true;
+                /*
                 if (a.value.Z == b.value.Z) {
                     return true;
                 } else if (a.value.Z < b.value.Z) {
-                    return half(a) || !half(b);
+                    return true;
                 } else {
-                    return !half(a) || half(b);
+                    return true;
                 }
+                */
             }
             
             bool test(TilePos tp) {

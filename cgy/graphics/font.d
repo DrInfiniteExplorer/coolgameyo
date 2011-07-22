@@ -237,7 +237,7 @@ class Font {
 
     this(string fontFile)
     in{
-        auto lower = tolower(fontFile);
+        auto lower = toLower(fontFile);
         assert( !endsWith(lower, ".json") && !endsWith(lower, ".png"), "Specify font files without ending!");
     }
     body{

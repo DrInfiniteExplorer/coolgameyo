@@ -78,7 +78,7 @@ class GuiElementEditbox : public GuiElement {
             text.setTransparent(true);
         }
         if (password) {
-            str = "*".repeat(str.length);
+            str = "*".replicate(str.length);
             text.setText(str);
         } else {
             text.setText(str);
