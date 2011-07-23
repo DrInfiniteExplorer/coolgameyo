@@ -4,6 +4,7 @@
 
 module worldparts.sector;
 
+import std.conv;
 import std.container;
 import std.exception;
 import std.stdio;
@@ -42,15 +43,15 @@ enum GraphRegionSize {
 
 class Sector {
 
-    TilePos pos;
-    SectorNum sectorNum;
-    int blockCount;
+    private TilePos pos;
+    private SectorNum sectorNum;
+    private int blockCount;
 
-    Block[BlocksPerSector.z][BlocksPerSector.y][BlocksPerSector.x] blocks;
+    private Block[BlocksPerSector.z][BlocksPerSector.y][BlocksPerSector.x] blocks;
     static assert(blocks.length == BlocksPerSector.x);
 
-    RedBlackTree!(Unit*) units;
-    int activityCount;
+    RedBlackTree!(Unit*) units; //TODO: how to make this private without breaking stuff derp? :S
+    private int activityCount;
 
     invariant(){
         ASSERT(sectorNum.toTilePos() == pos);
@@ -64,7 +65,6 @@ class Sector {
         units = new typeof(units);
     }
 
-    //TODO: Validate this code
     const(Block)[] getBlocks() const {
         debug {
             auto b = &blocks[0][0][0];
@@ -82,6 +82,10 @@ class Sector {
     in{
         assert(blockNum.getSectorNum() == sectorNum, "Trying to generate a block in the wrong sector!");
         assert(blockNum.getSectorNum.toTilePos() == pos); //Good to have? In that case, add to other places like getBlock() as well.
+        auto pos = blockNum.rel();
+//        auto block = blocks[pos.X][pos.Y][pos.Z];
+//        writeln("! ", block.tiles, " ", cast(int)block.flags, " ", block.blockNum, " ", block.sparseTileType);
+        assert(blocks[pos.X][pos.Y][pos.Z] == INVALID_BLOCK, text("Trying to generate a block which already contains stuff.", blockNum));
     }
     body{
         auto pos = blockNum.rel();
@@ -102,6 +106,7 @@ class Sector {
         assert(blockNum.getSectorNum() == sectorNum, "Sector.setBlock: Trying to set a block that doesn't belong here!");
     }
     body {
+        
         auto rel = blockNum.rel();
         auto currentBlock = blocks[rel.X][rel.Y][rel.Z];
         //TODO: Make comment detailing the logic behind this
@@ -120,7 +125,8 @@ class Sector {
     void addUnit(Unit* u) {
         units.insert(u);
     }
-
+    
+    int activity() const @property { return activityCount; }
     void increaseActivity() { activityCount += 1; }
     void decreaseActivity() { activityCount -= 1; }
 }

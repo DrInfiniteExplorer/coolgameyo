@@ -10,10 +10,11 @@ module worldparts.block;
 import std.algorithm;
 import std.stdio;
 
-import worldparts.tile;
 import pos;
-import worldgen.worldgen;
+import tiletypemanager;
 import util;
+import worldgen.worldgen;
+import worldparts.tile;
 
 enum BlockSize {
     x = 8,
@@ -39,7 +40,7 @@ struct Block {
 
     BlockFlags flags = BlockFlags.none;
 
-    BlockNum blockNum;
+    BlockNum blockNum = BlockNum(vec3i(int.min, int.min, int.min));;
 
     ushort sparseTileType;
     bool sparseTileTransparent() @property { return 0!=(flags & BlockFlags.sparse_transparent); }
@@ -219,6 +220,14 @@ Block INVALID_BLOCK = {
     tiles : null,
     flags : BlockFlags.none,
     blockNum : BlockNum(vec3i(int.min, int.min, int.min)),
+};
+
+Block AirBlock(BlockNum blockNum) {
+    Block ret = Block();
+    ret.flags = cast(BlockFlags)(BlockFlags.valid | BlockFlags.sparse | BlockFlags.sparse_transparent);
+    ret.blockNum = blockNum;
+    ret.sparseTileType = TileTypeAir;
+    return ret;
 };
 
 

@@ -26,7 +26,7 @@ import world;
 class HyperUnitControlInterfaceInputManager : GuiEventDump{
     
     private GuiSystem guiSystem;
-    private GuiElementText fpsText, tickText, frameTimeText, tickTimeText;
+    private GuiElementText fpsText, tickText, frameTimeText, tickTimeText, position;
 
     private Game game;    
     private Renderer renderer;    //This and scheduler only used to get fps / tps info. Make proxy or thing?
@@ -38,6 +38,7 @@ class HyperUnitControlInterfaceInputManager : GuiEventDump{
 
     private bool[SDLK_LAST]   keyMap;    
     private bool _3rdPerson;
+    private bool freeFlight;
     
     private ushort          middleX;
     private ushort          middleY;
@@ -93,7 +94,8 @@ class HyperUnitControlInterfaceInputManager : GuiEventDump{
             auto k = e.keyboardEvent;
             auto key = k.SdlSym;
             auto down = k.pressed;
-            keyMap[key] = down;            
+            keyMap[key] = down;
+            onKey(k);
             return GuiEventResponse.Accept;
         } else if (e.type == GuiEventType.MouseClick) {
             mouseClick(e);
@@ -112,13 +114,16 @@ class HyperUnitControlInterfaceInputManager : GuiEventDump{
     void updateGui() {
         auto frameTime = renderer.getFrameTimeAverage();
         auto fps = 1_000_000 / frameTime;
-        fpsText.setText(text(fps));
-        frameTimeText.setText(text(frameTime));
+        fpsText.setText(text("fps ", fps));
+        frameTimeText.setText(text("frametime ", frameTime));
         
         auto tickTime = scheduler.getTickTimeAverage();
         auto tps = 1_000_000 / tickTime;
-        tickText.setText(text(tps));
-        tickTimeText.setText(text(tickTime));
+        tickText.setText(text("tps ", tps));
+        tickTimeText.setText(text("ticktime ", tickTime));
+        
+        auto camPos = camera.getPosition();
+        position.setText(text("position ", camPos.X, " ", camPos.Y, " ", camPos.Z));
     }
     
     void spawnGui() {
@@ -128,11 +133,24 @@ class HyperUnitControlInterfaceInputManager : GuiEventDump{
         frameTimeText = new GuiElementText(guiSystem, vec2d(0.2, 0), "Frame time counter");
         tickTimeText = new GuiElementText(guiSystem, vec2d(0.2, frameTimeText.getRelativeRect.getBottom()), "Tick time counter");
         
+        position = new GuiElementText(guiSystem, vec2d(0, tickText.getRelativeRect.getBottom()), "Position");
+        
     }
     void iuGnwaps() {
-        fpsText.destroy(); fpsText = null;
+        fpsText.destroy(); fpsText = null;        
         tickText.destroy(); tickText = null;
+        frameTimeText.destroy(); frameTimeText = null;
+        tickTimeText.destroy(); tickTimeText = null;        
+        position.destroy(); position = null;
         
+    }
+    
+    void onKey(GuiEvent.KeyboardEvent k) {
+        if (k.pressed) {
+            if (k.SdlSym == SDLK_F1) {
+                freeFlight = !freeFlight;
+            }
+        }
     }
 
     void mouseMove(GuiEvent e){
@@ -166,7 +184,11 @@ class HyperUnitControlInterfaceInputManager : GuiEventDump{
     }
     
     void tick(float dTime) {
-        updatePossesed(dTime);
+        if (freeFlight ) {
+            updateCamera();
+        } else {
+            updatePossesed(dTime);
+        }
         rayPick();
         updateGui();
     }

@@ -92,70 +92,121 @@ class World {
     }
 
 
+    //This function generates a block of world.
+    //If the block is decidedly above ground level, we use a shortcut and set it as a sparse air block immediately.
+    //Otherwise we let the world-generator produce a block for us.
+    //TODO: Measure the time it takes to check for above-ground-level for comparisons.
     void generateBlock(BlockNum blockNum) {
-        auto sector = getSector(blockNum.getSectorNum());
-        sector.generateBlock(blockNum, worldGen);
+        SectorXY xy;
+        auto sectorNum = blockNum.getSectorNum();
+        auto sector = getSector(sectorNum, true, &xy);
+        auto heightmap = xy.heightmap;
+        auto tp = blockNum.toTilePos();
+        auto sectTp = sectorNum.toTilePos();
+        auto sectToBlock = tp.value - sectTp.value;
+        bool above = true;
+        foreach(rel ; RangeFromTo(0, BlockSize.x,
+                                  0, BlockSize.y,
+                                  0, BlockSize.z)) {
+            auto heightmapIndex = rel + sectToBlock;
+            if (tp.value.Z <= heightmap[heightmapIndex.X, heightmapIndex.Y]){
+                above = false;
+                break;
+            }
+        }
+        if (above) {
+            auto airBlock = AirBlock(blockNum);
+            sector.setBlock(blockNum, airBlock);
+        } else {
+            sector.generateBlock(blockNum, worldGen);
+        }
     }
 
     //TODO: Somehow ensure that we're only called from allocateSector
-    SectorXY getSectorXY(SectorXYNum xy) {
-
-        if(xy in sectorXY){
-            return sectorXY[xy];
+    //Why would we want this, hmmm?
+    //TODO: This function suffers from a horrible bugish behaviour
+    //If there is a sectorXY, then it is returned and all is well, EXCEPT for the fact that
+    // if the sectorXY does not contain anything in it's .sectors-AA, then adding anthing to
+    // that copy of SectorXY will not affect what is stored in the sectorXY-list.
+    SectorXY getSectorXY(SectorXYNum xy)
+    body{
+        SectorXY* xyPtr = xy in sectorXY; //One fast lookup. Ptr is only used these three lines.
+        if (xyPtr !is null) {
+            return *xyPtr;
         }
+        //We didnt have it. Create it, and a heightmap along with it!
         SectorXY ret;
         ret.heightmap = new Heightmap;
-
         auto p = xy.getTileXYPos();
-
-        auto tileTypeAir = tileTypeManager.idByName("air");
+        msg("Generating heightmap for xysector.", xy);
         foreach(relPos ; RangeFromTo(0, SectorSize.x, 0, SectorSize.y, 0, 1)){
+            //write("\r", relPos); stdout.flush();
+            if ((relPos.X % BlockSize.x) == 0 && (relPos.Y % BlockSize.y) == 0) {
+                write("."); stdout.flush();
+            }
             auto tmp = p.value + vec2i(relPos.X, relPos.Y);
             auto posXY = TileXYPos(tmp);
             auto z = worldGen.maxZ(posXY);
-            //TODO: Also consider the case where we 
-            //      might actually want to move upwards?
-            //            ...what?
+
             while (worldGen.getTile(TilePos(vec3i(
                                 posXY.value.X, posXY.value.Y, z))).type
-                    is tileTypeAir) {
+                    is TileTypeAir) {
                 z -= 1;
             }
 
             ret.heightmap[relPos.X, relPos.Y] = z;
         }
+        writeln("");
 
         sectorXY[xy] = ret; //Spara det vi skapar, yeah!
         return ret;
     }
-
-    Sector allocateSector(SectorNum sectorNum) {
-        auto xy = SectorXYNum(vec2i(sectorNum.value.X, sectorNum.value.Y));
+    
+    Sector allocateSector(SectorNum sectorNum, SectorXY* xy = null) {
+        auto xyNum = SectorXYNum(vec2i(sectorNum.value.X, sectorNum.value.Y));
         auto z = sectorNum.value.Z;
-
-        if (xy !in sectorXY) {
-            auto ret = getSectorXY(xy);
-            sectorXY[xy] = ret;
+        
+        //If has not has sectorXY, make one
+        SectorXY* xyPtr;
+        xyPtr = xyNum in sectorXY;
+        if (xyPtr is null) {
+            getSectorXY(xyNum);
+            xyPtr = &sectorXY[xyNum]; //Grab address directly to where it is stored, dont use return value of the one above.
         }
 
         auto sector = new Sector(sectorNum);
         assert(sector !is null, "derp!");
 
-        assert (z !in sectorXY[xy].sectors);
-        sectorXY[xy].sectors[z] = sector;
+        assert (z !in xyPtr.sectors);
+        xyPtr.sectors[z] = sector;
         sectorList ~= sector;
 
+        if (xy !is null) {
+            *xy = *xyPtr;
+        }
         return sector;
     }
 
-    Sector getSector(SectorNum sectorNum, bool get=true) {
-        auto xy = SectorXYNum(vec2i(sectorNum.value.X, sectorNum.value.Y));
+    Sector getSector(SectorNum sectorNum, bool get=true, SectorXY* xy=null) {
+        auto xyNum = SectorXYNum(vec2i(sectorNum.value.X, sectorNum.value.Y));
         auto z = sectorNum.value.Z;
-
-        if (xy in sectorXY && z in sectorXY[xy].sectors) {
-            return sectorXY[xy].sectors[z];
+        
+        SectorXY* xyPtr = xyNum in sectorXY;
+        Sector* ptr;
+        if (xyPtr !is null){
+            ptr = z in xyPtr.sectors;
+            if (ptr !is null) {
+                if (xy !is null) {
+                    *xy = *xyPtr; //This is 'safe' ; If the xyPtr is valid AND ptr is valid, then
+                                  //copying SectorXY will work since it's .sectors is non-empty :)
+                }
+                return *ptr;
+            }
         }
-        return get ? allocateSector(sectorNum) : null;
+        if (get) {
+            return allocateSector(sectorNum, xy);
+        }
+        return null;
     }
 
 
@@ -167,9 +218,11 @@ class World {
         if (!block.valid) {
             if (!generate) return INVALID_BLOCK;
 
-            generateBlock(blockNum);
+            //TODO: Pass sector as parameter, to make generateBlock not have to look it up itself?
+            generateBlock(blockNum); //Somewhere in this, we make a new sector. Or an old one. Dont know yet.
             block = sector.getBlock(blockNum);
         }
+        BREAKPOINT(!block.valid);
         assert (block.valid);
         return block;
     }
@@ -530,7 +583,7 @@ private mixin template ActivityHandlerMethods() {
         auto sectorNum = activityLoc.getSectorNum();
         auto sector = getSector(sectorNum);
 
-        if (sector.activityCount == 0) {
+        if (sector.activity == 0) {
             addFloodFillPos(activityLoc);
         }
         
@@ -539,12 +592,12 @@ private mixin template ActivityHandlerMethods() {
         }
 
         foreach (p; activityRange(sectorNum)) {
-            if (getSector(p).activityCount == 1) {
+            if (getSector(p).activity == 1) {
                 floodingSectors ~= p;
                 foreach (n; neighbors(p)) {
                     auto s = getSector(n, false);
 
-                    if (s && s.activityCount > 1) {
+                    if (s && s.activity > 1) {
                         addFloodFillWall(p, n);
                     }
                 }
