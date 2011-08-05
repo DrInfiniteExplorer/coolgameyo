@@ -1,16 +1,15 @@
 
 module worldparts.tile;
 
+import tiletypemanager : TileTypeAir;
 import util;
 
-//TODO: Remove transparent property from TileFlags / Tiles. See comment for transparent-flag.
 //TODO: Make things private?
 
 
 enum TileFlags : ushort {
     none        = 0,
     seen        = 1 << 0,
-    transparent = 1 << 2, //TO REMOVE: There are no tile types which are transparent except for air!! :P
     pathable    = 1 << 4,
     valid       = 1 << 15,
 }
@@ -27,8 +26,7 @@ struct Tile {
     bool seen() const @property { return (flags & TileFlags.seen) != 0; }
     void seen(bool val) @property { setFlag(flags, TileFlags.seen, val); }
 
-    bool transparent() const @property { return (flags & TileFlags.transparent) != 0; }
-    void transparent(bool val) @property { setFlag(flags, TileFlags.transparent, val); }
+    bool transparent() const @property { return type == TileTypeAir; }
 
     bool pathable() const @property { return (flags & TileFlags.pathable) != 0; }
     void pathable(bool val) @property { setFlag(flags, TileFlags.pathable, val); }

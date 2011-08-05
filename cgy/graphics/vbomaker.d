@@ -6,6 +6,7 @@ import std.algorithm;
 import std.array;
 import std.container;
 import std.conv;
+import std.datetime;
 import std.exception;
 import std.math;
 import std.stdio;
@@ -22,6 +23,7 @@ import modules.module_;
 import pos;
 import scheduler;
 import settings;
+import statistics;
 import stolen.aabbox3d;
 import util;
 import world;
@@ -317,12 +319,15 @@ class VBOMaker : Module, WorldListener
         {
             dirtyMutex.lock();
             scope(exit) dirtyMutex.unlock();
-            foreach(num; dirtyRegions){
-                regionMutex.lock();
-                scope(exit) regionMutex.unlock();
-                buildVBO(regions[num]);
+            if(dirtyRegions.length) {
+                mixin(LogTime!("GRUploadTime"));
+                foreach(num; dirtyRegions){
+                    regionMutex.lock();
+                    scope(exit) regionMutex.unlock();
+                    buildVBO(regions[num]);
+                }
+                dirtyRegions.length = 0;
             }
-            dirtyRegions.length = 0;
         }
 
         return regions;
@@ -362,9 +367,8 @@ class VBOMaker : Module, WorldListener
     }
 
     void buildGraphicsRegion(GraphicsRegion region){
-        StopWatch sw;
-        sw.start();
-        //Face[] faces;
+        mixin(LogTime!("BuildGeometry"));
+        
         auto min = region.grNum.min();
         auto max = region.grNum.max();
         buildGeometryX(min, max, region.faces);
@@ -372,6 +376,7 @@ class VBOMaker : Module, WorldListener
         //Floor
         buildGeometryZ(min, max, region.faces);
 
+        //TODO: Fix so that this is not needed anylonger.
         foreach(ref face ; region.faces) {
             foreach(ref vert ; face.quad) {
                 vert.vertex -= util.convert!float(min.value);
@@ -389,12 +394,10 @@ class VBOMaker : Module, WorldListener
             scope(exit) dirtyMutex.unlock();
             dirtyRegions ~= region.grNum;
         }
-
-        sw.stop();
-        //msg("It took ", sw.peek().msecs, " ms to build the geometry");
     }
 
     void taskFunc(const(World) world, GraphRegionNum num) {
+        //TODO: Maybe move geometry-building-timing to here?
         GraphicsRegion reg;
         reg.grNum = num;
         {
@@ -417,6 +420,8 @@ class VBOMaker : Module, WorldListener
         if(regionsToUpdate.length == 0){
             return;
         }
+        
+        mixin(LogTime!("MakeGeometryTasks"));
 
         double computeValue(GraphRegionNum num) {
             const auto graphRegionAcross = sqrt(to!double(  GraphRegionSize.x*GraphRegionSize.x +

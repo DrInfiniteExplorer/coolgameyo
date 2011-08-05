@@ -430,6 +430,7 @@
     <File path="gui\guisystem\slider.d" />
     <File path="gui\guisystem\image.d" />
     <File path="gui\guisystem\simplegraph.d" />
+    <File path="gui\guisystem\progressbar.d" />
    </Folder>
    <File path="gui\mainmenu.d" />
    <File path="gui\optionmenu.d" />
@@ -437,6 +438,7 @@
    <File path="gui\randommenu.d" />
    <File path="gui\all.d" />
    <File path="gui\newgamemenu.d" />
+   <File path="gui\statistics.d" />
   </Folder>
   <Folder name="ai">
    <File path="ai\patrolai.d" />
@@ -462,5 +464,6 @@
   <File path="util.d" />
   <File path="world.d" />
   <File path="clan.d" />
+  <File path="statistics.d" />
  </Folder>
 </DProject>

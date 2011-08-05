@@ -15,6 +15,7 @@ import graphics.camera;
 import graphics.debugging;
 import graphics.renderer;
 import gui.all;
+import gui.statistics;
 import scheduler;
 import settings;
 import tiletypemanager;
@@ -27,6 +28,7 @@ class HyperUnitControlInterfaceInputManager : GuiEventDump{
     
     private GuiSystem guiSystem;
     private GuiElementText fpsText, tickText, frameTimeText, tickTimeText, position;
+    private StatisticsWindow statistics;
 
     private Game game;    
     private Renderer renderer;    //This and scheduler only used to get fps / tps info. Make proxy or thing?
@@ -71,6 +73,9 @@ class HyperUnitControlInterfaceInputManager : GuiEventDump{
         enforce(destroyed, text(typeof(this).stringof, ".destroy not called!"));
     }    
     void destroy(){
+        if( statistics !is null) {
+            statistics.destroy();
+        }
         destroyed = true;
     }
     
@@ -134,7 +139,12 @@ class HyperUnitControlInterfaceInputManager : GuiEventDump{
         tickTimeText = new GuiElementText(guiSystem, vec2d(0.2, frameTimeText.getRelativeRect.getBottom()), "Tick time counter");
         
         position = new GuiElementText(guiSystem, vec2d(0, tickText.getRelativeRect.getBottom()), "Position");
-        
+        void spawnStatistics() {
+            if( statistics is null) {
+                statistics = new StatisticsWindow(guiSystem);
+            }
+        }
+        guiSystem.addHotkey(SDLK_F1, &spawnStatistics);
     }
     void iuGnwaps() {
         fpsText.destroy(); fpsText = null;        
@@ -142,7 +152,11 @@ class HyperUnitControlInterfaceInputManager : GuiEventDump{
         frameTimeText.destroy(); frameTimeText = null;
         tickTimeText.destroy(); tickTimeText = null;        
         position.destroy(); position = null;
-        
+        guiSystem.removeHotkey(SDLK_F1);        
+        if(statistics !is null) {
+            statistics.destroy();
+            statistics = null;
+        }
     }
     
     void onKey(GuiEvent.KeyboardEvent k) {
@@ -174,7 +188,7 @@ class HyperUnitControlInterfaceInputManager : GuiEventDump{
         else if (m.left && tileSelected) {
             copiedTile = selectedTile;
             //Remove transparensiness sometime!!
-            enum airTile = Tile(TileTypeAir, cast(TileFlags)(TileFlags.transparent | TileFlags.valid), 0, 0);
+            enum airTile = Tile(TileTypeAir, TileFlags.valid, 0, 0);
 
             possesAI.changeTile(selectedTilePos, airTile);
         } else if (tileSelected) {

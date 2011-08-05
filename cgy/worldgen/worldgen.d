@@ -131,8 +131,6 @@ final class WorldGeneratorOld : WorldGenerator{
 
         auto groundType = Z > 11 ? mud : rock;
         auto airType = Z > 5 ? air : water;
-        auto transparent = airType == air ?
-            TileFlags.transparent : TileFlags.none;
         
         if (-0.5 <= d && d < 0) {
             ret = Tile(groundType, TileFlags.none, 0, 0);
@@ -140,7 +138,7 @@ final class WorldGeneratorOld : WorldGenerator{
             ret = Tile(groundType, TileFlags.none, 0, 0);
         } else {
             assert (d > 0);
-            ret = Tile(airType, transparent, 0, 0);
+            ret = Tile(airType, TileFlags.none, 0, 0);
         }
         if (-0.5 <= d && d < 0.5) {
             ret.pathable = true;

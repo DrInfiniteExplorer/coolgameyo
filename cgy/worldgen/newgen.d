@@ -46,7 +46,7 @@ final class WorldGeneratorNew : WorldGenerator {
             new Fractal!3(
                 [gradNoise, gradNoise, gradNoise],
                 [1/90.1, 1.0/10, 1.0/3],
-                [150.0, 00, 0]
+                [15.0, 00, 0]
             ),
             vec3d(1, 1, 1));
         
@@ -73,12 +73,11 @@ final class WorldGeneratorNew : WorldGenerator {
 
         auto groundType = mud;
         auto airType =  air;
-        auto transparent = TileFlags.transparent;
         
         if (v > 0) { //Solid
             ret = Tile(groundType, TileFlags.none, 0, 0);
         } else {
-            ret = Tile(airType, transparent, 0, 0);
+            ret = Tile(airType, TileFlags.none, 0, 0);
             if (heightmap.getValue(pos.value.X, pos.value.Y, pos.value.Z-1) > 0) {
                 ret.pathable = true;
             }
@@ -100,7 +99,7 @@ final class WorldGeneratorNew : WorldGenerator {
         //auto v = foo(xypos.value.X, xypos.value.Y);
         //auto vv = to!int(v);
         //return vv;
-        return 170;
+        return 16;
     }
 }
 

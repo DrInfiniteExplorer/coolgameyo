@@ -109,6 +109,9 @@ struct Rect(T) {
         return Rect!T(tmp, toCenter.size);
     }
     
+    Rect!T diff(int a, int b, int c, int d){
+        return diff(vector2d!T(a,b), vector2d!T(c,d));
+    }
     Rect!T diff(vector2d!T dStart, vector2d!T dSize){
         return Rect!T(  start + dStart,
                         size - dStart + dSize);

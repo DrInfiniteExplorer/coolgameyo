@@ -124,8 +124,7 @@ class Main {
             SDL_GL_SetAttribute(SDL_GL_BUFFER_SIZE,     32);
             SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER,      1);
 
-            //Antialiasing. now off-turned.
-            //Apparently this AA only works on edges and not on surfaces, so turned off for now.
+            //Smoothes the edges of the tiles, makes it look real nice
             SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS,  1);
             SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES,  16);
         }
@@ -139,6 +138,7 @@ class Main {
         enforce(surface, text("Could not set sdl video mode (" , SDLError() , ")"));                            
         initOpenGL(client);
         
+        //Durnt remember what this actually did.. think this enables translation of keypresses to characters? :)
         SDL_EnableUNICODE(1);
         SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
         

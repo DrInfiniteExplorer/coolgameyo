@@ -11,7 +11,8 @@ import std.algorithm;
 import std.stdio;
 
 import pos;
-import tiletypemanager;
+import tiletypemanager : TileTypeAir;
+//import tiletypemanager;
 import util;
 import worldgen.worldgen;
 import worldparts.tile;
@@ -29,8 +30,6 @@ enum BlockFlags : ubyte {
     none                = 0,
     seen                = 1 << 0,
     sparse              = 1 << 1,
-    sparse_transparent  = 1 << 2,   //Is only used to store information about tile-transparency for sparse blocks.
-                                    //Can therefore be removed since tile-transparency is no longer supported.
     valid               = 1 << 7,
 }
 
@@ -43,8 +42,7 @@ struct Block {
     BlockNum blockNum = BlockNum(vec3i(int.min, int.min, int.min));;
 
     ushort sparseTileType;
-    bool sparseTileTransparent() @property { return 0!=(flags & BlockFlags.sparse_transparent); }
-    void sparseTileTransparent(bool flag) @property { setFlag(flags, BlockFlags.sparse_transparent, flag); }
+    bool sparseTileTransparent() @property { return sparseTileType == TileTypeAir; }
 
     invariant()
     {
@@ -72,7 +70,6 @@ struct Block {
             t.type = sparseTileType;
             t.flags = TileFlags.valid;
             t.seen = seen;
-            t.transparent = sparseTileTransparent;
             return t;
         }
         auto pos = tilePos.rel();
@@ -95,7 +92,6 @@ struct Block {
             t.type = sparseTileType;
             t.flags = TileFlags.valid;
             t.seen = seen;
-            t.transparent = sparseTileTransparent;
             (*(cast(Tile[BlockSize.x*BlockSize.y*BlockSize.z]*)(tiles)))[] = t; //Fuck yeah!!!! ? :S:S:S
         }
         (*tiles)[p.X][p.Y][p.Z] = tile;
@@ -135,7 +131,6 @@ struct Block {
             if (first) {
                 first = false;
                 block.sparseTileType = tile.type;
-                block.sparseTileTransparent = tile.transparent; //Copy transparency-property from first tile.
             }
             if (block.sparseTileType != tile.type) {
                 homogenous = false;
@@ -224,7 +219,7 @@ Block INVALID_BLOCK = {
 
 Block AirBlock(BlockNum blockNum) {
     Block ret = Block();
-    ret.flags = cast(BlockFlags)(BlockFlags.valid | BlockFlags.sparse | BlockFlags.sparse_transparent);
+    ret.flags = cast(BlockFlags)(BlockFlags.valid | BlockFlags.sparse);
     ret.blockNum = blockNum;
     ret.sparseTileType = TileTypeAir;
     return ret;

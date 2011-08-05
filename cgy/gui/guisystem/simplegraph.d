@@ -22,13 +22,13 @@ class GuiElementSimpleGraph(Type) : public GuiElement {
         onMove();
     }    
     
-    void setData(Type[] data,  Type _min, Type _max) {
+    void setData(const(Type)[] data,  Type _min, Type _max) {
         length = data.length;
         min = _min;
         max = _max;
         lines.makeGraph(absoluteRect, data, min, max);
     }
-    void setData(Type[] data) {
+    void setData(const(Type)[] data) {
         Type min = Type.max;
         Type max = -Type.max;
         foreach( value ; data ) {

@@ -21,7 +21,7 @@ void initOpenGL(bool client){
     auto minor = to!int(a[1]);
 
     //TODO: POTENTIAL BUG EEAPASASALPDsAPSLDPLASDsPLQWPRMtopmkg>jfekofsaplPSLFPsLSDF
-    renderSettings.glVersion=major + 0.1*minor;
+    renderSettings.glVersion=major + 0.1*minor; //TODO: version might be 3.45 in which case this will not work.
     msg("OGL version ", renderSettings.glVersion);
 
     DerelictGL.loadExtensions();

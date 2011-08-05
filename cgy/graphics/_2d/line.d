@@ -37,17 +37,17 @@ struct Lines{
         LineShader().render(this);
     }
     
-    void makeGraph(Recti r, const(double[]) values, double min, double max) {
+    void makeGraph(T)(Recti r, const(T[]) values, T min, T max) {
         enum offset = 0;
         mixin(fixRect);
-        double dx = 1.0 / to!double(values.length);
+        double dx = 1.0 / to!(double)(values.length);
         vertices.length = values.length;
 
+        double b = to!double(max - min);
         foreach(idx , value ; values) {    
-            auto a = value - min;            
-            auto b = (max - min);
+            double a = to!double(value - min);
             double dy = a / b;
-            vertices[idx].pos = start + x * to!double(idx) * dx + y * dy;
+            vertices[idx].pos = start + x * to!(double)(idx) * dx + y * dy;
         }
     }
     
