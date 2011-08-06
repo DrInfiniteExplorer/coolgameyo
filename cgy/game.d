@@ -184,80 +184,9 @@ class Game{
         return scheduler;
     }
 
-    void runServer() {
-        // set up network interface...? D:
-        while (true) {
-            //msg("Server loop!");
-            Thread.sleep(dur!"seconds"(1));
-        }
-    }
-    
     void render() {
         renderer.render();
     }
-
-    void stepMipMap() {
-        int cnt =   (renderSettings.textureInterpolate ? 1 : 0) +
-                    (renderSettings.mipLevelInterpolate ? 2 : 0);
-        cnt = (cnt+1)%4;
-        renderSettings.textureInterpolate = (cnt%2 != 0);
-        renderSettings.mipLevelInterpolate = (cnt > 1);
-        atlas.setMinFilter(renderSettings.mipLevelInterpolate, renderSettings.textureInterpolate);
-        string tmp;
-        switch(cnt){
-            default:
-            case 0:
-                tmp = "GL_NEAREST_MIPMAP_NEAREST"; break;
-            case 1:
-                tmp = ("GL_LINEAR_MIPMAP_NEAREST"); break;
-            case 2:
-                tmp = ("GL_NEAREST_MIPMAP_LINEAR"); break;
-            case 3:
-                tmp = ("GL_LINEAR_MIPMAP_LINEAR"); break;
-        }
-        msg(tmp);
-
-        /+
-        f3.setText(tmp);
-        +/
-    }
-
-/+    
-    void onKey(SDL_KeyboardEvent event){
-        auto key = event.keysym.sym;
-        auto down = event.type == SDL_KEYDOWN;
-        keyMap[key] = down;
-        if(key == SDLK_F1 && down){
-            renderSettings.renderWireframe ^= 1;
-            /+
-            f1.setText("polygon fill:" ~ (renderSettings.renderWireframe? "Wireframe":"Fill"));
-            +/
-        }
-        if(key == SDLK_F2 && down) {
-            useCamera ^= 1;
-            /+
-            f2.setText(useCamera ? "Camera active" : "Camera locked");
-            +/
-        }
-        if(key == SDLK_F3 && down) stepMipMap();
-        if(key == SDLK_F4 && down) {
-            renderSettings.disableVSync ^= 1;
-            version (Windows) {
-                setVSync(!renderSettings.disableVSync);
-                
-            } else {
-                msg("Cannot poke with vsync unless wgl blerp");
-            }
-            /+
-            f4.setText("VSync:" ~ (renderSettings.disableVSync? "Disabled" : "Enabled"));
-            +/
-        }
-        if(key == SDLK_F5 && down) possesedActive ^= 1;
-        if(key == SDLK_F6 && down) _3rdPerson ^= 1;
-    }
-+/    
-
-    
 }
 
 
