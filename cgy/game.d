@@ -45,22 +45,17 @@ class Game{
     private bool            isServer;
     private bool            isWorker;
 
-    private Camera            camera;
-    private Renderer          renderer;
-    private Scheduler         scheduler;
-    private TileTextureAtlas  atlas;
+    private Camera              camera;
+    private Renderer            renderer;
+    private Scheduler           scheduler;
+    private TileTextureAtlas    atlas;
+    private TileTypeManager     tileTypeManager;    
+    private PathModule          pathModule;
+    private AIModule            aiModule;
     
-    private Unit*             activeUnit; //TODO: Find out when this unit dies, and tell people.
+    private Unit*               activeUnit; //TODO: Find out when this unit dies, and tell people.
     
-    private bool              useCamera = true;
     
-    /+
-    StringTexture     f1, f2, f3, f4, fps, tickTime, renderTime;
-    StringTexture     unitInfo, selectedInfo;
-    +/
-
-    private bool possesedActive = true;
-    private bool _3rdPerson = false;
 
     this(bool serv, bool clie, bool work) {
         //TODO: Move world-creation etc out of here, and put in init-function instead.
@@ -69,27 +64,28 @@ class Game{
         isServer = serv;
         isClient = clie;
         isWorker = work;
-
+    }
+    
+    private bool destroyed;
+    ~this() {
+        enforce(destroyed, "Game.destroyed not called!");
+    }
+    
+    private void init(WorldGenParams worldParams) {
         if (isClient) {
-            msg("Initializing client stuff");
-            scope (success) msg("Done with client stuff");
-
             atlas = new TileTextureAtlas; // HACK
             //TODO: Find out what the above comment indicates.
         }
-
-        auto tileTypeManager = new TileTypeManager(atlas);//parseGameData();
-        WorldGenParams worldParams;
+        tileTypeManager = new TileTypeManager(atlas);
         world = new World(worldParams, tileTypeManager);
         assert (isWorker, "otherwise wont work lol (maybe)");
-        //TODO: Make fix so that stuff doesn't lag when using non-1 value for num o threads.
-        scheduler = new Scheduler(world);
 
-        auto pathModule = new PathModule;
-        auto aiModule = new AIModule(pathModule, world);
+        scheduler = new Scheduler(world);
+        pathModule = new PathModule;
+        aiModule = new AIModule(pathModule, world);
         scheduler.registerModule(pathModule);
         scheduler.registerModule(aiModule);
-
+        
         if (isClient) {
             camera = new Camera();
             renderer = new Renderer(world, scheduler, camera);
@@ -99,7 +95,10 @@ class Game{
             camera.setPosition(vec3d(-2, -2, 20));
             camera.setTarget(vec3d(0, 0, 20));
         }
-
+        
+    }
+    
+    void populateWorld() {
         UnitPos topOfTheWorld(TileXYPos xy) {
             auto top = world.getTopTilePos(xy);
             msg("top: ", top);
@@ -121,12 +120,7 @@ class Game{
         auto uu = new Unit;
         auto xyy = TileXYPos(vec2i(3,3));
         uu.pos = topOfTheWorld(xyy);
-        world.addUnit(uu);
-
-        camera.setPosition(vec3d(0, 0, 0));
-        camera.setTarget(vec3d(0, 1, 0));
-
-        world.floodFillSome(1_000_000);
+        world.addUnit(uu);      
         //auto goal = UnitPos(u.pos.value + vec3d(-30, 0, 0));
         auto goal = uu.pos;
         //NO AI FOR NO PATHABLENESS WITH NEW RANDOMMAPNESS
@@ -136,17 +130,29 @@ class Game{
         //u.ai = new DwarfAI(u);
         
         activeUnit = uu;
+        
+    }
+
+    void newGame(WorldGenParams worldParams) {
+        init(worldParams);
+        populateWorld();
+        camera.setPosition(vec3d(0, 0, 0));
+        camera.setTarget(vec3d(0, 1, 0));
+        world.floodFillSome(1_000_000);
 
         scheduler.start();
     }
     
-    private bool destroyed;
-    ~this() {
-        enforce(destroyed, "Game.destroyed not called!");
+    void loadGame(string name) {
+        enforce(0, "Implement!");
+        //init(worldParams);
+        //Deserialize into world and stufffff!
+        //Load camera! Active unit! Stuff!
+        scheduler.start();
     }
     
-    void init() {
-        
+    void saveGame(string name) {
+        enforce(0, "Implement!");
     }
     
     void destroy() {

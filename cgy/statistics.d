@@ -8,7 +8,7 @@ import std.stdio;
 
 __gshared Statistics g_Statistics;
 
-static this() {
+shared static this() {
     g_Statistics = new Statistics;
 }
 

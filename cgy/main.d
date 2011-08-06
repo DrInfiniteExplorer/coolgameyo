@@ -26,6 +26,7 @@ import util;
 import pos;
 import statistics;
 import settings;
+import worldgen.worldgen;
 
 version (Windows) {
 import std.c.windows.windows;
@@ -151,6 +152,8 @@ class Main {
 		assert(game is null, "We already had a game, lawl");
         mixin(LogTime!("StartupTime"));
         game = new Game(client, server, worker);
+        WorldGenParams worldParams;
+        game.newGame(worldParams);
         return game;
     }
     
