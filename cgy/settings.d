@@ -12,7 +12,7 @@ import util;
 struct RenderSettings {
     static struct InnerRenderSettings {
         // Just user settings.
-        bool disableVSync;
+        bool enableVSync;
         bool mipLevelInterpolate = true; // Interpolate between mip-levels or not?
         bool textureInterpolate = false;  // pick nearest pixel or interpolate?
         float anisotropy = 0; // set to max of this(uservalue)

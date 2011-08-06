@@ -25,9 +25,9 @@ class StatisticsWindow : GuiElement {
     this(GuiElement parent) {
         super(parent);
         setRelativeRect(Rectd(0,0,1,1));
-        geometryBuildGraph = new LongGraph(this, Rectd(0, 0.50, 0.5, 0.15));
-        geometryUploadGraph = new LongGraph(this, Rectd(0, 0.65, 0.5, 0.15));
-        geometryTaskGraph = new LongGraph(this, Rectd(0, 0.80, 0.5, 0.15));
+        geometryBuildGraph = new LongGraph(this, Rectd(0, 0.50, 0.5, 0.15), true);
+        geometryUploadGraph = new LongGraph(this, Rectd(0, 0.65, 0.5, 0.15), true);
+        geometryTaskGraph = new LongGraph(this, Rectd(0, 0.80, 0.5, 0.15), true);
     }
     
     override void tick(float dTime) {

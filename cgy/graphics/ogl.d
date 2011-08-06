@@ -54,7 +54,7 @@ void initOpenGL(bool client){
     renderSettings.anisotropy = max(1.0f, min(renderSettings.anisotropy, maxAni));
 
     //Uh 1 or 2 if vsync enable......?
-    setVSync(!renderSettings.disableVSync);
+    enableVSync(renderSettings.enableVSync);
     glError();
 
     glClearColor(1.0, 0.7, 0.4, 0.0);
@@ -110,9 +110,9 @@ bool setWireframe(bool wireframe) {
     return ret;
 }
 
-void setVSync(bool enableVSync) {
+void enableVSync(bool enableVSync) {
     version (Windows) {
-        wglSwapIntervalEXT(enableVSync ? 0 : 1);
+        wglSwapIntervalEXT(enableVSync ? 1 : 0);
     } else {
         msg("Cannot poke with vsync unless wgl blerp");
     }

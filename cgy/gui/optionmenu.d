@@ -17,6 +17,8 @@ import gui.guisystem.slider;
 import gui.guisystem.text;
 import gui.guisystem.window;
 
+import graphics.ogl;
+
 import settings;
 
 class OptionMenu : GuiElementWindow {
@@ -35,8 +37,8 @@ class OptionMenu : GuiElementWindow {
         super(guiSystem, Rectd(vec2d(0.1, 0.1), vec2d(0.8, 0.8)), "Options Menu~~~!", false, false);
 //*
         auto text = new GuiElementText(this, vec2d(0.1, 0.1), "Settings yeah!");     
-        vsync = new GuiElementCheckBox(this, Rectd(vec2d(0.10, 0.15), vec2d(0.3, 0.05)), "Disable vsync?", &onVsync);
-        vsync.setChecked(renderSettings.disableVSync);
+        vsync = new GuiElementCheckBox(this, Rectd(vec2d(0.10, 0.15), vec2d(0.3, 0.05)), "Enable vsync?", &onVsync);
+        vsync.setChecked(renderSettings.enableVSync);
         
         mipmap = new GuiElementCheckBox(this, Rectd(vec2d(0.10, 0.20), vec2d(0.3, 0.05)), "Interpolate mipmap levels?", &onMipmap);
         mipmap.setChecked(renderSettings.mipLevelInterpolate);
@@ -75,7 +77,9 @@ class OptionMenu : GuiElementWindow {
         if(down || abort) {
             return;
         }
-        renderSettings.disableVSync = vsync.getChecked();
+        auto val = vsync.getChecked();
+        renderSettings.enableVSync = val;
+        enableVSync(val);
     }
     void onMipmap(bool down, bool abort) {
         if(down || abort) {

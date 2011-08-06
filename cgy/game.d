@@ -75,6 +75,7 @@ class Game{
             scope (success) msg("Done with client stuff");
 
             atlas = new TileTextureAtlas; // HACK
+            //TODO: Find out what the above comment indicates.
         }
 
         auto tileTypeManager = new TileTypeManager(atlas);//parseGameData();
@@ -144,6 +145,10 @@ class Game{
         enforce(destroyed, "Game.destroyed not called!");
     }
     
+    void init() {
+        
+    }
+    
     void destroy() {
         //Wait until done.
         scheduler.exit();
@@ -179,84 +184,6 @@ class Game{
         return scheduler;
     }
 
-    void parseGameData() {
-        if (isClient) {
-            /+
-            font = new Font("fonts/courier");
-            f1 = new StringTexture(font);
-            f2 = new StringTexture(font);
-            f3 = new StringTexture(font);
-            f4 = new StringTexture(font);
-            fps = new StringTexture(font);
-            tickTime = new StringTexture(font);
-            renderTime = new StringTexture(font);
-            unitInfo = new StringTexture(font);
-            selectedInfo = new StringTexture(font);
-
-            f1.setPositionI(vec2i(0, 0));
-            f2.setPositionI(vec2i(0, 1));
-            f3.setPositionI(vec2i(0, 2));
-            f4.setPositionI(vec2i(0, 3));
-            fps.setPositionI(vec2i(0, 4));
-            tickTime.setPositionI(vec2i(30, 0));
-            renderTime.setPositionI(vec2i(30, 1));
-            unitInfo.setPositionI(vec2i(0, 5));
-            selectedInfo.setPositionI(vec2i(0, 6));
-
-            f1.setText("polygon fill:" ~ (renderSettings.renderWireframe? "Wireframe":"Fill"));
-            f2.setText(useCamera ? "Camera active" : "Camera locked");
-            f3.setText("Mipmapppinngggg!! (press f3 to togggeleee");
-            f4.setText("VSync:" ~ (renderSettings.disableVSync? "Disabled" : "Enabled"));
-            fps.setText("No fps calculted yet");
-            +/
-        }
-
-/*        auto sys = new TileTypeManager;
-
-        enum f = "textures/001.png";
-        if(isClient) atlas.addTile(f, vec2i(16, 0)); //Makes uninitialized tiles show the notiles-tile.
-
-        TileType mud = new TileType;
-        if (isClient) {
-            mud.textures.side   = atlas.addTile(f);
-            mud.textures.top    = atlas.addTile(f, vec2i(0, 16));
-            mud.textures.bottom = atlas.addTile(f, vec2i(0, 32));
-        }
-        mud.transparent = false;
-        mud.name = "mud";
-
-        TileType rock = new TileType;
-        if (isClient) {
-            int x = 200;
-            rock.textures.side   = atlas.addTile(f,
-                    vec2i(0, 0), vec3i(x,x,x));
-            rock.textures.top    = atlas.addTile(f,
-                    vec2i(0, 16), vec3i(x,x,x));
-            rock.textures.bottom = atlas.addTile(f,
-                    vec2i(0, 32), vec3i(x,x,x));
-        }
-        rock.transparent = false;
-        rock.name = "rock";
-
-        TileType water = new TileType;
-        if (isClient) {
-            water.textures.side   = atlas.addTile(f,
-                    vec2i(0, 0), vec3i(0,0,255));
-            water.textures.top    = atlas.addTile(f,
-                    vec2i(0, 16), vec3i(0,0,255));
-            water.textures.bottom = atlas.addTile(f,
-                    vec2i(0, 32), vec3i(0,0,255));
-        }
-        water.transparent = false;
-        water.name = "water";
-
-        sys.add(mud);
-        sys.add(rock);
-        sys.add(water);
-
-        return sys;*/
-    }
-
     void runServer() {
         // set up network interface...? D:
         while (true) {
@@ -268,25 +195,6 @@ class Game{
     void render() {
         renderer.render();
     }
-
-    void updateGui() {
-        string str = to!string(1_000_000 / renderer.frameAvg);
-        /+
-        fps.setText("FPS: " ~str);
-
-        str = to!string(renderer.frameAvg / 1000);
-        renderTime.setText("Frame time: " ~ str);
-
-        str = to!string(scheduler.frameAvg / 1000);
-        tickTime.setText("tick time: " ~ str);
-        
-        string playerPos = "Camera position: " ~ to!string(camera.getPosition());
-        unitInfo.setText(playerPos);
-        +/
-
-    }
-
-    long then = 0;
 
     void stepMipMap() {
         int cnt =   (renderSettings.textureInterpolate ? 1 : 0) +

@@ -39,9 +39,9 @@ class RandomMenu : GuiElementWindow {
         
         super(guiSystem, Rectd(vec2d(0.0, 0.0), vec2d(1, 1)), "Randomness experiment Menu~~~!", false, false);
 
-        valueImage = new GuiElementImage(this, Rectd(0.05, 0.1, 0.6, 0.3));
-        valueGraph = new typeof(valueGraph)(this, Rectd(0.05, 0.45, 0.6, 0.10));
-        sliceGraph = new typeof(sliceGraph)(this, Rectd(0.05, 0.45, 0.6, 0.10));
+        valueImage = new GuiElementImage(this, Rectd(0.05, 0.1, 0.6, 0.3), false);
+        valueGraph = new typeof(valueGraph)(this, Rectd(0.05, 0.45, 0.6, 0.10), false);
+        sliceGraph = new typeof(sliceGraph)(this, Rectd(0.05, 0.45, 0.6, 0.10), false);
         
         new GuiElementSlider!double(this, Rectd(0.05, 0.8, 0.4, 0.1), sliceValue, 0.0, 10.0, &onSliceSlider);
 

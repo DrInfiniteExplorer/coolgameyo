@@ -24,6 +24,7 @@ import gui.guisystem.guisystem;
 import game;
 import util;
 import pos;
+import statistics;
 import settings;
 
 version (Windows) {
@@ -148,6 +149,7 @@ class Main {
     
     Game startGame() {
 		assert(game is null, "We already had a game, lawl");
+        mixin(LogTime!("StartupTime"));
         game = new Game(client, server, worker);
         return game;
     }

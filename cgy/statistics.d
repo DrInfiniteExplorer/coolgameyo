@@ -1,5 +1,6 @@
 module statistics;
 
+import std.algorithm;
 import std.conv;
 import std.exception;
 import std.string;
@@ -14,15 +15,18 @@ static this() {
 
 enum MaxSamples = 100;
 
-template DerpDerp(const char[] name) { //TODO: Think of better name than "DerpDerp"
-    const char [] DerpDerp = text(
-        "long[MaxSamples] time",name,";
+template SampleCircleBuffer(const char[] name, const int MaxSamples) {
+    const char [] SampleCircleBuffer = text(
+        "long[",MaxSamples,"] time",name,";
+        long time",name,"Max=-long.max;
+        long time",name,"Min= long.max;
         uint index",name,";
         void add",name,"(long usecs) {
             synchronized(this) {
+                time",name,"Min = min(time",name,"Min, usecs);
+                time",name,"Max = max(time",name,"Min, usecs);
                 time",name,"[index",name,"] = usecs;
-                index",name," = (index",name,"+1)%MaxSamples;
-                writeln(\"", name, " \", index",name,", \" \", usecs);
+                index",name," = (index",name,"+1)%",MaxSamples,";
             }
         }
         long average",name,"() const {
@@ -31,10 +35,35 @@ template DerpDerp(const char[] name) { //TODO: Think of better name than "DerpDe
                 foreach(v ; time",name,") {
                     sum += v;
                 }
-                return sum / MaxSamples;
+                return sum / ",MaxSamples,";
             }
         }
+        long get",name,"Min() const {
+            return time",name,"Min;
+        }
+        long get",name,"Max() const {
+            return time",name,"Max;
+        }
+        long getLatest",name,"() const{
+                return time",name,"[(index",name,"+",MaxSamples,"-1)%",MaxSamples,"];
+        }
         const(long)[] get",name,"() const{
+            synchronized(this) {
+                return time",name,";
+            }
+        }
+    ");
+}
+
+template SampleSingle(const char[] name) {
+    const char [] SampleSingle = text(
+        "long time",name,";
+        void add",name,"(long usecs) {
+            synchronized(this) {
+                time",name," = usecs;
+            }
+        }
+        long get",name,"() const{
             synchronized(this) {
                 return time",name,";
             }
@@ -55,9 +84,10 @@ class Statistics {
     }        
 */  
     
-    mixin(DerpDerp!("GRUploadTime"));
-    mixin(DerpDerp!("BuildGeometry"));
-    mixin(DerpDerp!("MakeGeometryTasks"));
+    mixin(SampleCircleBuffer!("GRUploadTime", 50));
+    mixin(SampleCircleBuffer!("BuildGeometry", 50));
+    mixin(SampleCircleBuffer!("MakeGeometryTasks", 50));
+    mixin(SampleSingle!("StartupTime"));
     
 }
 

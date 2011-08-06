@@ -12,14 +12,16 @@ import graphics._2d.line;
 
 class GuiElementSimpleGraph(Type) : public GuiElement {
     
-    Lines lines;
-    uint length;
-    Type min, max;
+    private Lines lines;
+    private uint length;
+    private Type min, max;
+    private bool transparent;
 
-    this(GuiElement parent, Rectd relative) {
+    this(GuiElement parent, Rectd relative, bool transparent) {
         super(parent);
         setRelativeRect(relative);
         onMove();
+        setTransparent(transparent);
     }    
     
     void setData(const(Type)[] data,  Type _min, Type _max) {
@@ -46,10 +48,17 @@ class GuiElementSimpleGraph(Type) : public GuiElement {
         absoluteRect.size.Y = height;
         setAbsoluteRect(absoluteRect);
     }
+    
+    void setTransparent(bool trans) {
+        transparent = trans;
+    }
 
     override void render() {
         //Render background, etc, etc.
-        renderRect(absoluteRect, vec3f(0.75, 0.75, 0.75));
+        if (!transparent) {
+            renderRect(absoluteRect, vec3f(0.75, 0.75, 0.75));
+        }
+        renderOutlineRect(absoluteRect, vec3f(0, 0, 0));
         renderLines(lines, vec3f(1.0, 0, 0));
         super.render();
     }
