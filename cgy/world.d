@@ -66,7 +66,6 @@ class World {
     this(WorldGenParams params, TileTypeManager tilesys) {
         isServer = true;
         tileTypeManager = tilesys;
-        worldGen = new WorldGeneratorOld;
         worldGen = new WorldGeneratorNew;
         worldGenParams = params;
         worldGen.init(worldGenParams, tilesys);

@@ -22,6 +22,7 @@ import modules.module_;
 import world;
 import scheduler;
 import settings;
+import statistics;
 import unit;
 import util;
 
@@ -47,6 +48,7 @@ class Renderer : Module {
 
     this(World w, Scheduler s, Camera c)
     {
+        mixin(LogTime!("RendererInit"));
         world = w;
         scheduler = s;
         camera = c;
@@ -251,6 +253,8 @@ class Renderer : Module {
         if(avgTickTime > frameAvg){
             ratio = to!float(frameAvg) / to!float(avgTickTime);
         }
+        
+        g_Statistics.addFPS(frameAvg);
 
         soFar += ratio;
 

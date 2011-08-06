@@ -9,6 +9,7 @@ import core.thread;
 
 import std.c.stdlib;
 import std.conv;
+import std.concurrency;
 import std.exception;
 import std.stdio;
 import std.string;
@@ -92,6 +93,7 @@ class Main {
         server = s;
         worker = w;
         setThreadName("Main thread");
+        std.concurrency.register("Main thread", thisTid());
         loadSettings();
         saveSettings();
         
@@ -148,13 +150,17 @@ class Main {
         
     }
     
-    Game startGame() {
+    Game startGame(void delegate() loadDone) {
 		assert(game is null, "We already had a game, lawl");
         mixin(LogTime!("StartupTime"));
         game = new Game(client, server, worker);
         WorldGenParams worldParams;
-        game.newGame(worldParams);
+        game.newGame(worldParams, loadDone);
         return game;
+    }
+    
+    void loadDone() {
+        game.loadDone();
     }
     
     bool inputActive = true;
@@ -229,6 +235,10 @@ class Main {
                     }
                 }
             }
+            
+            receiveTimeout(0, 
+                (string msg) { if(msg == "finishInit") { loadDone();}}
+            );
 
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             glError();
@@ -242,17 +252,6 @@ class Main {
             guiSystem.tick(deltaT); //Eventually add deltatime and such as well :)
             guiSystem.render();            
             
-            /+
-            f1.render();
-            f2.render();
-            f3.render();
-            f4.render();
-            fps.render();
-            renderTime.render();
-            tickTime.render();
-            unitInfo.render();
-            selectedInfo.render();
-            +/
             SDL_GL_SwapBuffers();
         }
         msg("Main thread got exited? :S");

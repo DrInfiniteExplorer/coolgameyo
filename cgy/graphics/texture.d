@@ -10,9 +10,10 @@ import std.stdio;
 import graphics.image;
 import graphics.ogl;
 import graphics.renderer;
+import settings;
+import statistics;
 import util;
 
-import settings;
 
 
 
@@ -109,6 +110,7 @@ class TileTextureAtlas{
 
     //Upload if can
     void upload(){
+        mixin(LogTime!("AtlasUpload"));
         enforce(!texId, "texId != 0, error error error crying babies");
         int tileCount = tileMap.length;
         enforce(tileCount <= maxTileCount, "Derp e ti derp! can't allocate space for all tiles!");

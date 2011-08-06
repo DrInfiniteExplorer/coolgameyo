@@ -49,13 +49,16 @@ class MainMenu : GuiElementWindow {
         if(down || abort) {
             return;
         }
-        game = main.startGame();
-        userControl = new HyperUnitControlInterfaceInputManager(game, guiSystem);
-        resumeGameButton = new GuiElementButton(this, newGameButton.getRelativeRect(), "Resume gay me?", &onResumeGame);
+        auto rect = newGameButton.getRelativeRect();
+        void loadDone() {
+            userControl = new HyperUnitControlInterfaceInputManager(game, guiSystem);
+            resumeGameButton = new GuiElementButton(this, rect, "Resume gay me?", &onResumeGame);
+            onResumeGame(false, false);
+        }
+        game = main.startGame(&loadDone);
         newGameButton.destroy();
         newGameButton = null;
         
-        onResumeGame(false, false);
     }
 
     void onResumeGame(bool down, bool abort) {

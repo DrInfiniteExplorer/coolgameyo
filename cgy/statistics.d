@@ -6,6 +6,8 @@ import std.exception;
 import std.string;
 import std.stdio;
 
+import util;
+
 __gshared Statistics g_Statistics;
 
 shared static this() {
@@ -55,12 +57,15 @@ template SampleCircleBuffer(const char[] name, const int MaxSamples) {
     ");
 }
 
-template SampleSingle(const char[] name) {
+template SampleSingle(const char[] name, const bool Write=false) {
     const char [] SampleSingle = text(
         "long time",name,";
         void add",name,"(long usecs) {
             synchronized(this) {
                 time",name," = usecs;
+                static if(",Write,") {
+                    msg(\"",name,":\", usecs/1000, \" ms\");
+                }
             }
         }
         long get",name,"() const{
@@ -87,8 +92,14 @@ class Statistics {
     mixin(SampleCircleBuffer!("GRUploadTime", 50));
     mixin(SampleCircleBuffer!("BuildGeometry", 50));
     mixin(SampleCircleBuffer!("MakeGeometryTasks", 50));
-    mixin(SampleSingle!("StartupTime"));
-    
+    mixin(SampleCircleBuffer!("FPS", 50));
+    mixin(SampleCircleBuffer!("TPS", 50));
+    mixin(SampleSingle!("StartupTime", true));
+    mixin(SampleSingle!("GameInit", true));
+    mixin(SampleSingle!("TileTypeManagerCreation", true));    
+    mixin(SampleSingle!("RendererInit", true));
+    mixin(SampleSingle!("AtlasUpload", true));    
+
 }
 
 template LogTime(const char[] What) {
@@ -101,4 +112,3 @@ template LogTime(const char[] What) {
     }";
     
 }
-

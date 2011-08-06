@@ -26,6 +26,7 @@ import modules.ai;
 import modules.path;
 import pos;
 import scheduler;
+import statistics;
 import tiletypemanager;
 import util;
 import unit;
@@ -71,7 +72,9 @@ class Game{
         enforce(destroyed, "Game.destroyed not called!");
     }
     
+    //This and finishInit are run in the thread which becomes the scheduler thread
     private void init(WorldGenParams worldParams) {
+        mixin(LogTime!("GameInit"));
         if (isClient) {
             atlas = new TileTextureAtlas; // HACK
             //TODO: Find out what the above comment indicates.
@@ -88,14 +91,29 @@ class Game{
         
         if (isClient) {
             camera = new Camera();
-            renderer = new Renderer(world, scheduler, camera);
-            renderer.atlas = atlas;
-            
-            atlas.upload();
+            //The renderer also needs to be created in the main thread, it loads shaders and stuff.
+            //Mainly all in this block of code actually :)
             camera.setPosition(vec3d(-2, -2, 20));
             camera.setTarget(vec3d(0, 0, 20));
         }
         
+    }
+    //This and init are run in the thread which becomes the scheduler thread
+    private void finishInit() {
+        //This line needs to be moved elsewhere, if we want to do loading in a different thread.
+        Tid mainThreadTid = locate("Main thread"); // This is set in main.d : Main.this()
+        send(mainThreadTid, "finishInit"); //This will be detected by the main loop, which calls game.loadDone
+        scheduler.start();        
+    }
+    
+    //This is called when the main thread is notified that the loading thread is done loading. We upload gpu stuff here.
+    void loadDone() {
+        if (isClient) {
+            renderer = new Renderer(world, scheduler, camera);
+            renderer.atlas = atlas;
+            atlas.upload(); //About 0 ms
+        }            
+        initCallback(); //Call the registered 'tell me when your finished starting the game'-callback here.
     }
     
     void populateWorld() {
@@ -133,22 +151,41 @@ class Game{
         
     }
 
-    void newGame(WorldGenParams worldParams) {
+    void newGameThread(WorldGenParams worldParams) {
         init(worldParams);
         populateWorld();
         camera.setPosition(vec3d(0, 0, 0));
         camera.setTarget(vec3d(0, 1, 0));
         world.floodFillSome(1_000_000);
-
-        scheduler.start();
+        finishInit();
     }
-    
-    void loadGame(string name) {
-        enforce(0, "Implement!");
+
+    void loadGameThread(string name) {
         //init(worldParams);
         //Deserialize into world and stufffff!
         //Load camera! Active unit! Stuff!
-        scheduler.start();
+        finishInit();
+    }
+    
+    //TODO: Move to better place
+    void delegate() initCallback = null;
+
+    void newGame(WorldGenParams worldParams, void delegate() onDone) {
+        initCallback = onDone;
+        static void newGameThreadStarter(shared Game g, shared WorldGenParams p) {
+            Game game = cast(Game)g;
+            game.newGameThread(cast(WorldGenParams)p);
+        }        
+        spawn(&newGameThreadStarter, cast(shared)this, cast(shared)worldParams);
+    }
+    void loadGame(string name, void delegate() onDone) {
+        initCallback = onDone;
+        enforce(0, "Implement!");
+        static void loadGameThreadStarter(shared Game g, shared string s) {
+            Game game = cast(Game)g;
+            game.loadGameThread(cast(string)s);
+        }        
+        spawn(&loadGameThreadStarter, cast(shared)this, cast(shared)name);
     }
     
     void saveGame(string name) {
@@ -191,6 +228,7 @@ class Game{
     }
 
     void render() {
+        if(renderer is null) return;
         renderer.render();
     }
 }

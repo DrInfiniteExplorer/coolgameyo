@@ -140,10 +140,13 @@ class Scheduler {
     }
 
     void start(int workerCount=1) {
+        workerCount--;
         foreach (x; 0 .. workerCount) {
             workers ~= spawn(&workerFun, cast(shared)this);
         }
+        workers ~= thisTid();
         syncTime = utime();
+        workerFun(cast(shared)this);
     }
 
     void exit() {

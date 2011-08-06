@@ -9,6 +9,7 @@ import graphics.texture;
 import json;
 import util;
 import worldparts.tile;
+import statistics;
 
 //ALWAYS!!
 enum TileTypeInvalid = 0;
@@ -54,6 +55,8 @@ class TileTypeManager {
     }
 
     this(TileTextureAtlas atlas) {
+        mixin(LogTime!("TileTypeManagerCreation"));
+
 		TileType invalid;
         TileType air;
         air.name = "air";
