@@ -357,17 +357,19 @@ class World {
         return block.getTile(tilePos);
     }
     
-    //Returns number of iterations nexxxessarrry to intersect a tile.
+    //Returns number of iterations nexxxessarrry to intersect a non-air tile.
     //Returns 0 on instant-found or none found.
     int intersectTile(vec3d start, vec3d dir, int tileIter, ref Tile outTile, ref TilePos outPos, ref vec3i Normal) {
-        auto tileTypeAir = tileTypeManager.idByName("air");        
         TilePos oldTilePos;
         int cnt;
         foreach(tilePos ; TileIterator(start, dir, tileIter)) {
             cnt++;
-            auto tile = getTile(tilePos);            
+            auto tile = getTile(tilePos, false, false);
+            if (tile.type == TileTypeInvalid) {
+                return 0;
+            }
             scope(exit) oldTilePos = tilePos;
-            if (tile.type != tileTypeAir) {
+            if (tile.type != TileTypeAir) {
                 outPos = tilePos;
                 Normal = oldTilePos.value - tilePos.value;
                 outTile = tile;

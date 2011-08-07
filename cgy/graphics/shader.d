@@ -140,11 +140,35 @@ final class ShaderProgram(T...){
             assert(0, "Linking failed!");
         }
     }
+    
+    void getAttributeNames() {
+        int attribCount;
+        int bufferSize;
+        glGetProgramiv(program, GL_ACTIVE_ATTRIBUTES, &attribCount);
+        glError();
+        glGetProgramiv(program, GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, &bufferSize);
+        glError();
+        char[] buffer;
+        buffer.length = bufferSize+1;
+        foreach(idx ; 0 .. attribCount) {
+            int writtenSize;
+            uint type;
+            int size; //Number of "type"'s that the attribute takes            
+            glGetActiveAttrib(program, idx, bufferSize, &writtenSize, &size, &type, buffer.ptr);
+            glError();
+            writeln("Attribute(",idx, "):", buffer);
+        }
+        
+    }
 
     //There is also bindAttribLocation (Which must be followed by a link())
     uint getAttribLocation(string name){
-        uint ret = glGetAttribLocation(program, name.ptr);        
+        const char *ptr = std.string.toStringz(name);
+        uint ret = glGetAttribLocation(program, ptr);        
         glError();
+        if( ret == -1) {
+            getAttributeNames();
+        }
         enforce(ret != -1, "Could not find attribute of name: " ~name);
         return ret;
     }

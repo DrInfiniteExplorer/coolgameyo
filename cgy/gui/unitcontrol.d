@@ -41,6 +41,7 @@ class HyperUnitControlInterfaceInputManager : GuiEventDump{
     private bool[SDLK_LAST]   keyMap;    
     private bool _3rdPerson;
     private bool freeFlight;
+    private bool useMouse = true;
     
     private ushort          middleX;
     private ushort          middleY;
@@ -161,8 +162,11 @@ class HyperUnitControlInterfaceInputManager : GuiEventDump{
     
     void onKey(GuiEvent.KeyboardEvent k) {
         if (k.pressed) {
-            if (k.SdlSym == SDLK_F1) {
+            if (k.SdlSym == SDLK_F3) {
                 freeFlight = !freeFlight;
+            }
+            if (k.SdlSym == SDLK_F2) {
+                useMouse = !useMouse;
             }
         }
     }
@@ -173,7 +177,7 @@ class HyperUnitControlInterfaceInputManager : GuiEventDump{
         auto y = m.pos.Y;
         auto diffX = x - middleX;
         auto diffY = y - middleY;
-        if(diffX != 0 || diffY != 0){
+        if((diffX != 0 || diffY != 0) && useMouse){
                 SDL_WarpMouse(middleX, middleY);
                     camera.mouseMove( diffX,  diffY);
         }
@@ -216,7 +220,7 @@ class HyperUnitControlInterfaceInputManager : GuiEventDump{
         if(keyMap[SDLK_s]){ fwd-=0.4; }
         if(keyMap[SDLK_SPACE]){
             if(possesAI.onGround){
-                possesAI.fallSpeed = 0.55f;
+                possesAI.fallSpeed = 0.75f;
             }
         }
         possesAI.move(right, fwd, 0.f, dTime);
@@ -226,7 +230,7 @@ class HyperUnitControlInterfaceInputManager : GuiEventDump{
         if(_3rdPerson) {
             pos -= util.convert!double(dir) * 7.5;
         } else {
-            pos += vec3d(0, 0, 1.5);
+            pos += vec3d(0, 0, 0.50); //Unit is 1.5 big now; unitpos is at 0.5 above feets
         }
         camera.setPosition(pos);
         auto rad = atan2(dir.Y, dir.X);

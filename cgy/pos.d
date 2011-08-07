@@ -170,7 +170,7 @@ struct TilePos {
     UnitPos toUnitPos() const{
         return UnitPos(vec3d(value.X + 0.5,
                              value.Y + 0.5,
-                             value.Z + 0.25));
+                             value.Z + 0.5));
 
     }
 

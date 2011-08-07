@@ -30,6 +30,21 @@ public:
   this(const vector3d!(T) other) {X = other.X; Y = other.Y; Z = other.Z;}
 
   // operators
+  
+  ref T opIndex(uint index)
+  in{
+      assert(0 <= index, "Bad index for indexing vectors! " ~ to!string(index));
+      assert(index <= 2, "Bad index for indexing vectors! " ~ to!string(index));
+  }
+  body{
+      switch(index) {
+          case 0: return X;
+          case 1: return Y;
+          case 2: return Z;
+          default: enforce(0, "Bad index"); assert(0);
+      }
+  }
+
 
   vector3d!(T) opNeg() const { return vector3d!(T)(-X, -Y, -Z); }
 

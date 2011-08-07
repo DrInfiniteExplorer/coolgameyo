@@ -464,16 +464,17 @@ struct TileIterator{
         tDelta.Y = abs(1.f / _dir.Y);
         tDelta.Z = abs(1.f / _dir.Z);
         
-        double inter(double start, int dir, double vel){
-            auto func = vel >= 0 ? &floor : &ceil;
+        double inter(double start, int dir, double vel, double delta){
+            if(cast(int)start == start) return vel > 0 ? delta : 0;
+            auto func = vel > 0 ? &floor : &ceil;
             float stop = func(start+to!double(dir));
             float dist = stop-start;
             return dist/vel;
         }
         
-        tMax.X = inter(start.X, dir.X, _dir.X);
-        tMax.Y = inter(start.Y, dir.Y, _dir.Y);
-        tMax.Z = inter(start.Z, dir.Z, _dir.Z);
+        tMax.X = inter(start.X, dir.X, _dir.X, tDelta.X);
+        tMax.Y = inter(start.Y, dir.Y, _dir.Y, tDelta.Y);
+        tMax.Z = inter(start.Z, dir.Z, _dir.Z, tDelta.Z);
     }
     TilePos front() @property {
         return tile;

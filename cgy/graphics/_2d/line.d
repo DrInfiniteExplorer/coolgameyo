@@ -76,7 +76,7 @@ class LineShader {
     private this() {
         lineProgram = new LineProgram("shaders/gui/lineShader.vert", "shaders/gui/lineShader.frag");
         lineProgram.position = lineProgram.getAttribLocation("position");
-        lineProgram.color = lineProgram.getAttribLocation("in_color");    
+        lineProgram.color = lineProgram.getAttribLocation("in_color");
     }
     
     void destroy() {

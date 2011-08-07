@@ -2,6 +2,7 @@
 
 module ai.posessai;
 
+import std.conv;
 import std.exception;
 import std.math;
 import std.stdio;
@@ -49,96 +50,99 @@ class FPSControlAI : UnitAI, CustomChange {
         // :)
     }
 
-    vec3d collideMove(vec3d pos, vec3d dir, int level=0){
+    vec3d collideMove(vec3d pos, vec3d dir){
+        enum epsilon = 1.0E-7;
+        enum OneEps = 1.0-epsilon;
         if (dir == vec3d(0, 0, 0)) { return pos; }
-        if (level > 5) {
-            msg("Penix");
-            enforce(0, "DIX!");
-            return pos;
+        if (dir.getLength > OneEps) {
+            dir.setLength(OneEps);
         }
+        //TODO: The stuff below
+        /*
+        if (dir.getLengthSQ() >= OneEps) {
+            //It will fail otherwise, because we currently only check one layer of tiles in the direction we move.
+            //Could make it check many layers, but would then be better to split the movement into many
+            //unit-sized movements, to handle for example fast running in a diagonal corridor.
+            enforce(0, "Implement handling of dir lengths longer than 1");
+        }
+        */
+        auto tp = UnitPos(pos).tilePos;
 
-        auto min = UnitPos(pos).tilePos; min.value -= vec3i(1, 1, 1);
-        auto max = min; max.value += vec3i(3, 3, 4);
-
-        bool checkCollision(vec3d pos, vec3d dir, out float minTime, out vec3d minNormal){
-            bool didCollide = false;
-            minTime = float.max;
-            auto aabb = unit.aabb(&pos);
-            foreach (rel; RangeFromTo(min.value, max.value)) {
-                auto tp = TilePos(rel);
-                auto tile = world.getTile(tp);
-                auto tileBox = tp.getAABB();
-                float time;
-                vec3d normal;
-                if (tile.transparent
-                        || !aabb.intersectsWithBox(tileBox, dir, time, normal)) {
+        auto unitWidth = unit.unitWidth;
+        auto unitHeight = unit.unitHeight;
+        enum dirs = [vec3i(1, 0, 0), vec3i(0, 1, 0), vec3i(0, 0, 1)];
+        
+        //+2. +1 for making sure we cover some cases, then +1 again because RangeFromTo
+        auto sizes = [
+            vec3i(1,                to!int(ceil(unitWidth)+1),    to!int(ceil(unitHeight)+1)),
+            vec3i(to!int(ceil(unitWidth)+1),  1,                  to!int(ceil(unitHeight)+1)),
+            vec3i(to!int(ceil(unitWidth)+1),  to!int(ceil(unitWidth)+1),    1)
+        ];
+        foreach(idx ; 0 .. 3) {
+            auto axis = dirs[idx];
+            auto daxis = convert!double(axis);
+            auto axisLength = daxis.dotProduct(dir); //The length we want to move along this axis, and direction.
+            auto sign = axisLength > 0 ? 1.0 : -1.0;
+            double axisPos = pos.dotProduct(daxis); //
+            if (axisLength == 0) {
+                continue; //No need to check directions we dont move in.
+            }
+            auto D = daxis * axisLength;
+            double size;
+            if (idx == 2) {
+                if ( axisLength > 0 ) { //If moving upwards, this is how much from 'unit body middle' to top of head
+                    size = unitHeight-0.5;
+                } else {
+                    size = 0.5; //Units body centers are 0.5 from bottom of their feet.
+                }
+            } else {
+                size = unitWidth * 0.5;
+            }
+            double axisDistanceToWall; //Not absolute
+            int wallNum;
+            if (axisLength > 0) {
+                // 'Fails' in one case; When one starts in [0, epsilon] from the "last" wall.
+                // Works fine though, as long as one moves less than OneEps per movement.
+                wallNum = to!int(floor(axisPos+size+OneEps));
+                axisDistanceToWall = to!double(wallNum) - (axisPos + size);
+            } else {
+                //'Fails' when we are [0, epsilon] from the "last" wall;
+                // If so, correct the result.
+                wallNum = to!int(ceil(axisPos-size-OneEps))-1;
+                auto tmp = wallNum+1.0 -(axisPos-size);
+                if (0 < tmp && tmp < epsilon) {
+                    wallNum --;
+                }
+                axisDistanceToWall = tmp;
+            }
+            //The sign-multiplication should make it absolute.
+            // But would abs be faster / better?
+            //If we move exactly up to the wall, then that's ok too.
+            if (axisLength * sign <= axisDistanceToWall * sign) { //Will not collide with this wall
+                continue;
+            }
+            vec3i start;
+            if( idx == 0 ) {
+                start = vec3i(0, to!int(floor(pos.Y - unitWidth * 0.5)), to!int(floor(pos.Z - 0.5)));
+            } else if (idx == 1) {
+                start = vec3i(to!int(floor(pos.X - unitWidth * 0.5)), 0, to!int(floor(pos.Z - 0.5)));
+            } else if (idx == 2) {
+                start = vec3i(to!int(floor(pos.X - unitWidth * 0.5)), to!int(floor(pos.Y - unitWidth * 0.5)), 0);
+            }
+            foreach( rel ; RangeFromTo(vec3i(0,0,0), sizes[idx])) {
+                auto p = (start + axis * wallNum) + rel;
+                auto tile = world.getTile(TilePos(p), false, false);
+                if (tile.type == TileTypeAir) {
                     continue;
                 }
-                if (isNaN(time)) {
-                    minTime = float.nan;
-                    msg("Unit is inside of something. Solve this, like, loop upwards until not collides anylonger. or something.");
-                    return true;
+                dir[idx] = axisDistanceToWall;
+                if (idx == 2) {
+                    onGround = true;
                 }
-                if (time < minTime) {
-                    minTime = time;
-                    minNormal = normal;
-                }
-                didCollide = true;
+                break;
             }
-            return didCollide;
         }
-
-        float time = float.max;
-        vec3d normal;
-
-
-        if (!checkCollision(pos, dir, time, normal)) {
-            return pos + dir;
-        }
-        if (isNaN(time)) {
-            //enforce(0, "Implement, like move dude upwards until on top, something?");
-            //return pos;
-            vec3d _pos = pos + vec3d(0, 0, 1);
-            vec3d _dir = vec3d(0.0, 0.0, 0.0);
-            //while (!checkCollision(_pos, _dir, time, normal)) {
-            //    msg("gay gay gay ", UnitPos(_pos));
-            //    _pos.Z += 1;
-            //}
-            return _pos;
-        }
-        // We have collided with some box
-        //IF CAN STEP STEP
-        if (normal.Z == 0 && fallSpeed <= 0) { //TODO: Is now a little better, but still not good.!
-            auto stepStart = pos + vec3d(0, 0, unit.stepHeight);
-            float stepTime;
-            auto stepDir = dir * vec3d(1, 1, 0);
-            vec3d stepNormal;
-            bool stepCollided = checkCollision(stepStart, dir, stepTime, stepNormal);
-            if (!stepCollided) {
-                return stepStart + dir;
-            }
-            if (stepTime < time) {
-                time = stepTime;
-                pos = stepStart;
-                normal = stepNormal;
-            }
-        } else{
-            onGround = true;
-        }
-        //ELSE Slideee!! :):):)
-
-        // move forward first
-        auto newPos = pos + dir * time;
-        dir = (1-time) * dir;
-
-        assert (normal.getLengthSQ == 1);
-
-        auto normPart = normal.dotProduct(dir) * normal;
-        auto tangPart = dir - normPart;
-
-        assert (tangPart.getLengthSQ() < dir.getLengthSQ());
-
-        return collideMove(newPos, tangPart, level+1);
+        return pos + dir;
     }
 
     //Make sure that it is sent over network, and such!! (like comment below)
