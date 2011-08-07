@@ -25,6 +25,9 @@ final class ShaderProgram(T...){
     uint program=0;
     uint vert=0;
     uint frag=0;
+    
+    string vertexShader;
+    string fragmentShader;
 
     this(){
         vert = glCreateShader(GL_VERTEX_SHADER);
@@ -111,9 +114,11 @@ final class ShaderProgram(T...){
     }
 
     void vertex(string filename) @property{
+        vertexShader = filename;
         compileFile(vert, filename);
     }
     void fragment(string filename) @property{
+        fragmentShader = filename;
         compileFile(frag, filename);
     }
 
@@ -130,6 +135,8 @@ final class ShaderProgram(T...){
         glError();
         if(p != GL_TRUE) {
             printProgramError(program);
+            msg("vert: ", vertexShader);
+            msg("frag: ", fragmentShader);
             assert(0, "Linking failed!");
         }
     }

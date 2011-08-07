@@ -388,7 +388,7 @@
    <File path="graphics\shader.d" />
    <File path="graphics\texture.d" />
    <File path="graphics\image.d" />
-   <File path="graphics\geometryrcreator.d" />
+   <File path="graphics\geometrycreator.d" />
   </Folder>
   <Folder name="worldparts">
    <File path="worldparts\block.d" />
@@ -439,6 +439,7 @@
    <File path="gui\all.d" />
    <File path="gui\newgamemenu.d" />
    <File path="gui\statistics.d" />
+   <File path="gui\loadscreen.d" />
   </Folder>
   <Folder name="ai">
    <File path="ai\patrolai.d" />

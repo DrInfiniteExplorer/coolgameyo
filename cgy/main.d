@@ -279,10 +279,8 @@ class Main {
 }
 
 import world;
-void actualMain() {
+void actualMain() {    
 
-    
-    
     version (Windows) {
         bool client = true;
     } else {
