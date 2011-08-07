@@ -3,7 +3,7 @@
 in vec2 position;
 in vec3 in_color;
 
-smooth out vec3 color;
+out vec3 color;
 
 void main(){
    vec2 tmp;

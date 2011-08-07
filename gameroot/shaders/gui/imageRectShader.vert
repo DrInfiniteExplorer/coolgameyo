@@ -3,7 +3,7 @@
 in vec2 position;
 in vec2 texcoord;
 
-smooth out vec2 texcoords;
+out vec2 texcoords;
 
 void main(){
    vec2 tmp;
