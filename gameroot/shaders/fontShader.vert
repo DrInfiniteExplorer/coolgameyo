@@ -6,7 +6,7 @@ uniform vec2 viewportInv;
 in vec2 position;
 in vec2 texcoord;
 
-smooth out vec2 tex_texcoord;
+out vec2 tex_texcoord;
 
 void main(){
    tex_texcoord = texcoord;

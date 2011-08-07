@@ -6,8 +6,7 @@ uniform ivec3 offset;
 in vec3 position;
 in vec3 texcoord;
 
-smooth out vec3 tex_texcoord;
-flat out uint texId;
+out vec3 tex_texcoord;
    
 void main(){
    tex_texcoord = texcoord;
