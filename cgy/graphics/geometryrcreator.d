@@ -117,11 +117,9 @@ class GeometryCreator : Module, WorldListener
     Camera camera;
     double minReUseRatio;
 
-    this(World w, Scheduler s, Camera c)
+    this(World w)
     {
         world = w;
-        camera = c;
-        s.registerModule(this);
         world.addListener(this);
         minReUseRatio = 0.95;
         regionMutex = new Mutex;
@@ -139,6 +137,10 @@ class GeometryCreator : Module, WorldListener
             glDeleteBuffers(1, &region.VBO);
         }
         regions = null;
+    }
+    
+    void setCamera(Camera cam) {
+        camera = cam;
     }
 
     //Floor/Roof-tiles.

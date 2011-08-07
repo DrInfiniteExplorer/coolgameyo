@@ -46,13 +46,13 @@ class Renderer : Module {
     DudeShaderProgram dudeShader;
     LineShaderProgram lineShader;
 
-    this(World w, Scheduler s, Camera c)
+    this(World w, Scheduler s, Camera c, GeometryCreator g)
     {
         mixin(LogTime!("RendererInit"));
         world = w;
         scheduler = s;
-        camera = c;
-        geometryCreator = new GeometryCreator(w, s, c);
+        camera = c;        
+        geometryCreator = g;
 
         scheduler.registerModule(this);
 

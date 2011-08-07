@@ -21,7 +21,8 @@ import graphics.texture;
 import graphics.debugging;
 
 import ai.patrolai;
-import changelist;
+//import changelist;
+import graphics.geometrycreator;
 import modules.ai;
 import modules.path;
 import pos;
@@ -48,6 +49,7 @@ class Game{
 
     private Camera              camera;
     private Renderer            renderer;
+    private GeometryCreator     geometryCreator;
     private Scheduler           scheduler;
     private TileTextureAtlas    atlas;
     private TileTypeManager     tileTypeManager;    
@@ -95,6 +97,9 @@ class Game{
             //Mainly all in this block of code actually :)
             camera.setPosition(vec3d(-2, -2, 20));
             camera.setTarget(vec3d(0, 0, 20));
+            geometryCreator = new GeometryCreator(world);
+            scheduler.registerModule(geometryCreator);
+            geometryCreator.setCamera(camera);
         }
         
     }
@@ -109,7 +114,7 @@ class Game{
     //This is called when the main thread is notified that the loading thread is done loading. We upload gpu stuff here.
     void loadDone() {
         if (isClient) {
-            renderer = new Renderer(world, scheduler, camera);
+            renderer = new Renderer(world, scheduler, camera, geometryCreator);
             renderer.atlas = atlas;
             atlas.upload(); //About 0 ms
         }            
