@@ -1,4 +1,4 @@
-module graphics.vbomaker;
+module graphics.geometrycreator;
 
 import core.sync.mutex;
 
@@ -104,7 +104,7 @@ unittest{
 
 }
 
-class VBOMaker : Module, WorldListener
+class GeometryCreator : Module, WorldListener
 {
     GraphRegionNum[] regionsToUpdate; //Only used in taskFunc and where we populate it, mutually exclusive locations.
     GraphicsRegion[GraphRegionNum] regions; //Accessed from getRegions and from taskFunc, could collide.

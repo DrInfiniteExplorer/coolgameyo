@@ -16,7 +16,7 @@ import graphics.misc;
 import graphics.ogl;
 import graphics.shader;
 import graphics.texture;
-import graphics.vbomaker;
+import graphics.geometrycreator;
 
 import modules.module_;
 import world;
@@ -33,7 +33,7 @@ class Renderer : Module {
     //TODO: Leave comment on what these members are use for in this class
     World world;
     Scheduler scheduler;
-    VBOMaker vboMaker;
+    GeometryCreator geometryCreator;
     Camera camera;
 
     TileTextureAtlas atlas;
@@ -52,7 +52,7 @@ class Renderer : Module {
         world = w;
         scheduler = s;
         camera = c;
-        vboMaker = new VBOMaker(w, s, c);
+        geometryCreator = new GeometryCreator(w, s, c);
 
         scheduler.registerModule(this);
 
@@ -87,7 +87,7 @@ class Renderer : Module {
     }
     
     void destroy() {
-        vboMaker.destroy();
+        geometryCreator.destroy();
         scheduler.unregisterModule(this);
         worldShader.destroy();
         dudeShader.destroy();
@@ -301,7 +301,7 @@ class Renderer : Module {
         atlas.use();
         auto transform = camera.getProjectionMatrix() * camera.getViewMatrix();
         worldShader.setUniform(worldShader.VP, transform);
-        auto regions = vboMaker.getRegions();
+        auto regions = geometryCreator.getRegions();
         foreach(region ; regions){
             if(region.VBO && camera.inFrustum(region.grNum.getAABB())){
                 renderGraphicsRegion(region);

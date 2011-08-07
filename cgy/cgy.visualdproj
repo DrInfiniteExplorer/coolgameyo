@@ -387,8 +387,8 @@
    <File path="graphics\renderer.d" />
    <File path="graphics\shader.d" />
    <File path="graphics\texture.d" />
-   <File path="graphics\vbomaker.d" />
    <File path="graphics\image.d" />
+   <File path="graphics\geometryrcreator.d" />
   </Folder>
   <Folder name="worldparts">
    <File path="worldparts\block.d" />
