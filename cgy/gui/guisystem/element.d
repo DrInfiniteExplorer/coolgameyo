@@ -63,11 +63,11 @@ class GuiElement {
     protected Rectd relativeRect;
     protected Recti absoluteRect;
     protected Font font;
-    protected bool visible;
+    protected bool visible = true;
+    protected bool selectable = true;
     
     this(GuiElement parent){
         //Uh, yeah! make sure that if parent == null then we are a GuiSystem.
-        visible = true;
         if(parent) {
             setParent(parent);
             font = parent.font;        
@@ -228,7 +228,7 @@ class GuiElement {
         }
     }
 
-    GuiElement getElementFromPoint(vec2i pos){
+    GuiElement getElementFromPoint(vec2i pos, bool all = false){
         if (visible && isInside(pos)) {
             foreach(child ; retro(children)) {
                 auto ret = child.getElementFromPoint(pos);
@@ -236,7 +236,9 @@ class GuiElement {
                     return ret;
                 }
             }
-            return this;
+            if(all || selectable) {
+                return this;
+            }
         }
         return null;
     }
@@ -256,6 +258,13 @@ class GuiElement {
     }
     bool getVisible() {
         return visible;
+    }
+    
+    void setSelectable(bool v) {
+        selectable = v;
+    }
+    bool getSelectable() const {
+        return selectable;
     }
     
     void bringToFront(bool uncursive = false) { //True to bring element and all parents to front.

@@ -3,20 +3,59 @@
 module gui.loadscreen;
 
 import gui.all;
+import statistics;
 
 class LoadScreen : GuiElementWindow {
     GuiSystem guiSystem;
     
-    GuiElementProgressBar loading;
+    bool showLoading;
+    GuiElementProgressBar graphRegions;
+    GuiElementProgressBar floodFill;
 
     this(GuiSystem g) {
         guiSystem = g;
         super(guiSystem, Rectd(vec2d(0.0, 0.0), vec2d(1, 1)), "Loading screen~~~!", false, false);
 
-        loading = new GuiElementProgressBar(this, Rectd(0.1, 0.3, 0.8, 0.1), "Loading", 100, 0);
+        graphRegions = new GuiElementProgressBar(guiSystem, Rectd(0.1, 0.1, 0.8, 0.05), "Building geometry", 100, 0);        
+        floodFill = new GuiElementProgressBar(guiSystem, Rectd(0.1, 0.2, 0.8, 0.05), "Floodfilling..", 100, 0);        
+        showLoading = false;
+        setSelectable(false);
     }
     
-    override void destroy() {        
+    void setLoading(bool val) {
+        showLoading = val;
+    }
+    
+    override void tick(float dTime) {
+        auto todo = g_Statistics.GraphRegionsToDo;
+        graphRegions.setVisible(todo != 0);
+        graphRegions.setMax(todo);
+        graphRegions.setProgress(g_Statistics.GraphRegionsDone);
+
+        todo = g_Statistics.FloodFillToDo;
+        floodFill.setVisible(todo != 0);
+        floodFill.setMax(todo);
+        floodFill.setProgress(g_Statistics.FloodFillDone);
+
+        super.tick(dTime);
+    }
+
+/*    
+    override GuiEventResponse onEvent(GuiEvent e){
+        if (e.type == GuiEventType.FocusOn) {
+            return GuiEventResponse.Reject;
+        }
+        return super.onEvent(e);
+    }
+*/    
+    
+    override void render() {
+        if (showLoading) {
+            super.render();
+        }
+    }
+    
+    override void destroy() {
         super.destroy();        
     }    
         

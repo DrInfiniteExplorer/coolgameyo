@@ -10,10 +10,11 @@ import main;
 import game;
 import graphics._2d.rect;
 import gui.all;
-import gui.unitcontrol;
+import gui.loadscreen;
+import gui.newgamemenu;
 import gui.optionmenu;
 import gui.randommenu;
-import gui.newgamemenu;
+import gui.unitcontrol;
 import settings;
 
 class MainMenu : GuiElementWindow {
@@ -23,6 +24,7 @@ class MainMenu : GuiElementWindow {
     GuiElementButton newGameButton;
     GuiElementButton resumeGameButton;
     HyperUnitControlInterfaceInputManager userControl;
+    LoadScreen loadScreen;
     this(GuiSystem g, Main m) {
         guiSystem = g;
         super(guiSystem, Rectd(vec2d(0.1, 0.1), vec2d(0.8, 0.8)), "Main Menu~~~!", false, false);
@@ -39,6 +41,7 @@ class MainMenu : GuiElementWindow {
         //        auto cb = new GuiElementCheckBox(this, Rectd(vec2d(0.10, 0.6), vec2d(0.3, 0.2)), "CHECKBOX", null);
 //*/
         main = m;
+        loadScreen = new LoadScreen(guiSystem);
     }
     
     override void destroy() {
@@ -49,8 +52,10 @@ class MainMenu : GuiElementWindow {
         if(down || abort) {
             return;
         }
-        auto rect = newGameButton.getRelativeRect();
+        auto rect = newGameButton.getRelativeRect();        
+        loadScreen.setLoading(true);
         void loadDone() {
+            loadScreen.setLoading(false);
             userControl = new HyperUnitControlInterfaceInputManager(game, guiSystem);
             resumeGameButton = new GuiElementButton(this, rect, "Resume gay me?", &onResumeGame);
             onResumeGame(false, false);
@@ -58,7 +63,7 @@ class MainMenu : GuiElementWindow {
         game = main.startGame(&loadDone);
         newGameButton.destroy();
         newGameButton = null;
-        
+        setVisible(false);        
     }
 
     void onResumeGame(bool down, bool abort) {

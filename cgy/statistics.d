@@ -76,6 +76,30 @@ template SampleSingle(const char[] name, const bool Write=false) {
     ");
 }
 
+template ProgressData(const char[] name) {
+    const char [] ProgressData = text(
+    "    int ",name,"ToDo;
+        int ",name,"Done;
+        void ",name,"New(int _new) {
+            synchronized(this) {
+                if (_new == 0) {
+                    ",name,"ToDo = 0;
+                    ",name,"Done = 0;
+                } else {
+                    ",name,"ToDo += _new;
+                }
+            }
+        }
+        void ",name,"Progress(int numDone) {
+            synchronized(this) {
+                ",name,"Done += numDone;
+            }
+        }
+    "
+    );
+}
+
+
 class Statistics {
 
     this() {
@@ -98,8 +122,10 @@ class Statistics {
     mixin(SampleSingle!("GameInit", true));
     mixin(SampleSingle!("TileTypeManagerCreation", true));    
     mixin(SampleSingle!("RendererInit", true));
-    mixin(SampleSingle!("AtlasUpload", true));    
-
+    mixin(SampleSingle!("AtlasUpload", true));
+        
+    mixin(ProgressData!("GraphRegions"));
+    mixin(ProgressData!("FloodFill"));
 }
 
 template LogTime(const char[] What) {
@@ -109,6 +135,18 @@ template LogTime(const char[] What) {
     scope(exit) {
         sw.stop();
         g_Statistics.add"~What~"(sw.peek().usecs);
+    }";
+    
+}
+
+template Time(const char[] WhenDone) {
+    const char[] Time = 
+    "StopWatch sw;    
+    sw.start();
+    scope(exit) {
+        sw.stop();
+        auto usecs = sw.peek().usecs;
+        "~WhenDone~"
     }";
     
 }

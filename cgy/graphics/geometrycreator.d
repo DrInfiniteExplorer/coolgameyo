@@ -369,7 +369,8 @@ class GeometryCreator : Module, WorldListener
     }
 
     void buildGraphicsRegion(GraphicsRegion region){
-        mixin(LogTime!("BuildGeometry"));
+        mixin(LogTime!("BuildGeometry"));        
+        g_Statistics.GraphRegionsProgress(1);
         
         auto min = region.grNum.min();
         auto max = region.grNum.max();
@@ -420,6 +421,7 @@ class GeometryCreator : Module, WorldListener
         scope(exit) updateMutex.unlock();
 
         if(regionsToUpdate.length == 0){
+            g_Statistics.GraphRegionsNew(0);
             return;
         }
         
@@ -511,6 +513,7 @@ class GeometryCreator : Module, WorldListener
         if(newRegions.length != 0){
             updateMutex.lock();
             scope(exit) updateMutex.unlock();
+            g_Statistics.GraphRegionsNew(newRegions.length);
             regionsToUpdate ~= newRegions;
         }
     }

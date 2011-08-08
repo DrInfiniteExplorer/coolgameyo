@@ -29,11 +29,20 @@ class GuiElementProgressBar : public GuiElement {
         onMove();
     }    
 
+    void setMax(uint val) {
+        max = val;
+    }
     void setProgress(uint val) {
         progress = val;
         progressBar = absoluteRect.diff(1,1,-1,-1);
-        double ratio = to!double(progress) / to!double(max);
+        double ratio;
+        if (max != 0) {
+            ratio = to!double(progress) / to!double(max);
+        } else {
+            ratio = 0;
+        }
         progressBar.size.X = to!int( ratio * to!double(progressBar.size.X));
+        updateText();
     }
     
     private void updateText() {

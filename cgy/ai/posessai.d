@@ -143,7 +143,6 @@ class FPSControlAI : UnitAI, CustomChange {
                 if (idx == 2) {
                     onGround = true;
                 }
-                writeln(p);                
                 break;
             }
         }

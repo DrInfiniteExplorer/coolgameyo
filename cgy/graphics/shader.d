@@ -156,7 +156,7 @@ final class ShaderProgram(T...){
             int size; //Number of "type"'s that the attribute takes            
             glGetActiveAttrib(program, idx, bufferSize, &writtenSize, &size, &type, buffer.ptr);
             glError();
-            writeln("Attribute(",idx, "):", buffer);
+            msg("Attribute(",idx, "):", buffer);
         }
         
     }
