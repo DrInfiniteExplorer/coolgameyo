@@ -74,9 +74,9 @@ class FPSControlAI : UnitAI, CustomChange {
         
         //+2. +1 for making sure we cover some cases, then +1 again because RangeFromTo
         auto sizes = [
-            vec3i(1,                to!int(ceil(unitWidth)+1),    to!int(ceil(unitHeight)+1)),
-            vec3i(to!int(ceil(unitWidth)+1),  1,                  to!int(ceil(unitHeight)+1)),
-            vec3i(to!int(ceil(unitWidth)+1),  to!int(ceil(unitWidth)+1),    1)
+            vec3i(1,                to!int(floor(unitWidth)+1),    to!int(ceil(unitHeight)+1)),
+            vec3i(to!int(floor(unitWidth)+1),  1,                  to!int(ceil(unitHeight)+1)),
+            vec3i(to!int(floor(unitWidth)+1),  to!int(ceil(unitWidth)+1),    1)
         ];
         foreach(idx ; 0 .. 3) {
             auto axis = dirs[idx];
@@ -122,15 +122,19 @@ class FPSControlAI : UnitAI, CustomChange {
                 continue;
             }
             vec3i start;
+            vec3i stop;
             if( idx == 0 ) {
                 start = vec3i(0, to!int(floor(pos.Y - unitWidth * 0.5)), to!int(floor(pos.Z - 0.5)));
+                stop = vec3i(1, to!int(ceil(pos.Y + unitWidth * 0.5)), to!int(ceil(pos.Z + unitHeight - 0.5)));
             } else if (idx == 1) {
                 start = vec3i(to!int(floor(pos.X - unitWidth * 0.5)), 0, to!int(floor(pos.Z - 0.5)));
+                stop = vec3i(to!int(ceil(pos.X + unitWidth * 0.5)), 1, to!int(ceil(pos.Z + unitHeight - 0.5)));
             } else if (idx == 2) {
                 start = vec3i(to!int(floor(pos.X - unitWidth * 0.5)), to!int(floor(pos.Y - unitWidth * 0.5)), 0);
+                stop = vec3i(to!int(ceil(pos.X + unitWidth * 0.5)), to!int(ceil(pos.Y + unitWidth * 0.5)), 1);
             }
-            foreach( rel ; RangeFromTo(vec3i(0,0,0), sizes[idx])) {
-                auto p = (start + axis * wallNum) + rel;
+            foreach( ppp ; RangeFromTo(start, stop)) {
+                auto p = (axis * wallNum) + ppp;
                 auto tile = world.getTile(TilePos(p), false, false);
                 if (tile.type == TileTypeAir) {
                     continue;
@@ -139,6 +143,7 @@ class FPSControlAI : UnitAI, CustomChange {
                 if (idx == 2) {
                     onGround = true;
                 }
+                writeln(p);                
                 break;
             }
         }
