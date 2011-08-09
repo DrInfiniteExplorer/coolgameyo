@@ -314,6 +314,132 @@ class GeometryCreator : Module, WorldListener
             }
         }
     }
+    
+    void buildGeometry(TilePos min, TilePos max, ref GRFace[]faceList)
+    in{
+        assert(min.value.X < max.value.X);
+        assert(min.value.Y < max.value.Y);
+        assert(min.value.Z < max.value.Z);
+    }
+    body{
+        //Make floor triangles
+        GRFace newFace;
+        void fixTex(ref GRFace f, const(Tile) t, bool side, bool upper){
+            ushort tileId;
+            if (side) {
+                tileId = world.tileTypeManager.byID(t.type).textures.side;
+            } else {
+                tileId = upper ? 
+                    world.tileTypeManager.byID(t.type).textures.top :
+                    world.tileTypeManager.byID(t.type).textures.bottom;
+            }
+            vec3f tileTexSize = settings.getTileCoordSize();
+            vec3f tileTexCoord = settings.getTileCoords(tileId);
+            foreach(ref vert ; f.quad){
+                vert.texcoord = vert.texcoord * tileTexSize + tileTexCoord;
+            }
+        }
+        
+        //Will iterate trough all tiles within this graphregion.
+        //TODO: Implement a method in world, which returns a collection of all tiles
+        // within a specified area, for fast access instead of getTile all the time.
+        foreach( pos ; RangeFromTo(min.value, max.value)) {
+            auto tile = world.getTile(TilePos(pos), false, false);
+            if (tile.type == TileTypeAir) {
+                continue;
+            }
+            auto tileXp = world.getTile(TilePos(pos+vec3i(1,0,0)), false, false);
+            auto tileXn = world.getTile(TilePos(pos-vec3i(1,0,0)), false, false);
+            auto tileYp = world.getTile(TilePos(pos+vec3i(0,1,0)), false, false);
+            auto tileYn = world.getTile(TilePos(pos-vec3i(0,1,0)), false, false);
+            auto tileZp = world.getTile(TilePos(pos+vec3i(0,0,1)), false, false);
+            auto tileZn = world.getTile(TilePos(pos-vec3i(0,0,1)), false, false);
+            //To generate where is invalid tiles, replace == with <=
+            auto Xp = tileXp.type == TileTypeAir;
+            auto Xn = tileXn.type == TileTypeAir;
+            auto Yp = tileYp.type == TileTypeAir;
+            auto Yn = tileYn.type == TileTypeAir;
+            auto Zp = tileZp.type == TileTypeAir;
+            auto Zn = tileZn.type == TileTypeAir;
+            auto x = pos.X;
+            auto y = pos.Y;
+            auto z = pos.Z;
+            if (Xp) {
+                newFace.quad[0].vertex.set(x+1, y, z+1);
+                newFace.quad[1].vertex.set(x+1, y, z);
+                newFace.quad[2].vertex.set(x+1, y+1, z);
+                newFace.quad[3].vertex.set(x+1, y+1, z+1);
+                newFace.quad[0].texcoord.set(0, 0, 0);
+                newFace.quad[1].texcoord.set(0, 1, 0);
+                newFace.quad[2].texcoord.set(1, 1, 0);
+                newFace.quad[3].texcoord.set(1, 0, 0);
+                fixTex(newFace, tile, true, false);
+                faceList ~= newFace;
+            }
+            if (Xn) {
+                newFace.quad[0].vertex.set(x, y, z);
+                newFace.quad[1].vertex.set(x, y, z+1);
+                newFace.quad[2].vertex.set(x, y+1, z+1);
+                newFace.quad[3].vertex.set(x, y+1, z);
+                newFace.quad[0].texcoord.set(0, 1, 0);
+                newFace.quad[1].texcoord.set(0, 0, 0);
+                newFace.quad[2].texcoord.set(1, 0, 0);
+                newFace.quad[3].texcoord.set(1, 1, 0);
+                fixTex(newFace, tile, true, false);
+                faceList ~= newFace;
+            }
+            if (Yp) {
+                newFace.quad[0].vertex.set(x, y+1, z);
+                newFace.quad[1].vertex.set(x, y+1, z+1);
+                newFace.quad[2].vertex.set(x+1, y+1, z+1);
+                newFace.quad[3].vertex.set(x+1, y+1, z);
+                newFace.quad[0].texcoord.set(0, 1, 0);
+                newFace.quad[1].texcoord.set(0, 0, 0);
+                newFace.quad[2].texcoord.set(1, 0, 0);
+                newFace.quad[3].texcoord.set(1, 1, 0);
+                fixTex(newFace, tile, true, false);
+                faceList ~= newFace;
+            }
+            if (Yn) {
+                newFace.quad[0].vertex.set(x, y, z+1);
+                newFace.quad[1].vertex.set(x, y, z);
+                newFace.quad[2].vertex.set(x+1, y, z);
+                newFace.quad[3].vertex.set(x+1, y, z+1);
+                newFace.quad[0].texcoord.set(0, 0, 0);
+                newFace.quad[1].texcoord.set(0, 1, 0);
+                newFace.quad[2].texcoord.set(1, 1, 0);
+                newFace.quad[3].texcoord.set(1, 0, 0);
+                fixTex(newFace, tile, true, false);
+                faceList ~= newFace;
+            }
+            if (Zp) {
+                newFace.quad[0].vertex.set(x, y+1, z+1);
+                newFace.quad[1].vertex.set(x, y, z+1);
+                newFace.quad[2].vertex.set(x+1, y, z+1);
+                newFace.quad[3].vertex.set(x+1, y+1, z+1);
+                newFace.quad[0].texcoord.set(0, 0, 0);
+                newFace.quad[1].texcoord.set(0, 1, 0);
+                newFace.quad[2].texcoord.set(1, 1, 0);
+                newFace.quad[3].texcoord.set(1, 0, 0);
+                fixTex(newFace, tile, false, true);
+                faceList ~= newFace;
+            }
+            if (Zn) {
+                newFace.quad[0].vertex.set(x, y, z);
+                newFace.quad[1].vertex.set(x, y+1, z);
+                newFace.quad[2].vertex.set(x+1, y+1, z);
+                newFace.quad[3].vertex.set(x+1, y, z);
+                newFace.quad[0].texcoord.set(0, 0, 0);
+                newFace.quad[1].texcoord.set(0, 1, 0);
+                newFace.quad[2].texcoord.set(1, 1, 0);
+                newFace.quad[3].texcoord.set(1, 0, 0);
+                fixTex(newFace, tile, false, false);
+                faceList ~= newFace;
+            }
+        }
+    }
+    
+    
 
 
 
@@ -374,11 +500,12 @@ class GeometryCreator : Module, WorldListener
         
         auto min = region.grNum.min();
         auto max = region.grNum.max();
-        buildGeometryX(min, max, region.faces);
+        buildGeometry(min, max, region.faces);
+        /*buildGeometryX(min, max, region.faces);
         buildGeometryY(min, max, region.faces);
         //Floor
         buildGeometryZ(min, max, region.faces);
-
+        */
         //TODO: Fix so that this is not needed anylonger.
         foreach(ref face ; region.faces) {
             foreach(ref vert ; face.quad) {
