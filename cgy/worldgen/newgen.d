@@ -58,12 +58,11 @@ final class WorldGeneratorNew : WorldGenerator {
     
     bool destroyed = false;
     ~this() {
-        enforce(destroyed, "WorldGeneratorNew.destroy not called!");
+        BREAK_IF(!destroyed);
     }
     
     void destroy() {
-        //TODO: Implement later
-        //destroyed = true;
+        destroyed = true;
     }
 
     Tile getTile(TilePos pos) {

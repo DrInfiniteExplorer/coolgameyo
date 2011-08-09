@@ -32,15 +32,17 @@ struct FontQuad {
 
 uint FontVert_texCoord_offset = FontVertex.texCoord.offsetof;
 
+static FontShader fontShader;
+
+void initFont() {
+    fontShader = new FontShader();
+}
+void deinitFont() {
+    fontShader.destroy();
+}
+
 class FontShader {
     static FontShader fs;
-    static opCall() {
-        if(fs is null){
-            fs = new FontShader();
-        }
-        return fs;
-    }
-
     
     alias ShaderProgram!("position", "texcoord", "offset", "tex", "viewportInv", "color") FontShaderProgram;
     FontShaderProgram program;
@@ -63,15 +65,16 @@ class FontShader {
         );
     }
 
+    bool destroyed;
     ~this(){
-        enforce(program.offset == -1, "FontShader.destroy not called!");
+        BREAK_IF(!destroyed);
     }
 
     void destroy() {
         program.use(false);
         program.destroy();
-        program.offset = -1;
         fs = null;
+        destroyed = true;
     }
 
     void render(Recti rect, uint vbo, uint charCount, bool transparent, vec3f color){
@@ -125,15 +128,16 @@ class StringTexture {
         texId = font.texId;
     }
 
+    bool destroyed;
     ~this() {
         msg("dtor text: ", currentText, " ", vbo);
-        enforce(vbo == 0);
+        BREAK_IF(!destroyed);
     }
     void destroy() {
         msg("destroying text: ", currentText, " ", vbo);
         glDeleteBuffers(1, &vbo);
         glError();
-        vbo = 0;
+        destroyed = true;
     }
     
     
@@ -201,7 +205,7 @@ class StringTexture {
         glError();
         glBindTexture(GL_TEXTURE_2D, texId);
         glError();
-        FontShader().render(rect, vbo, currentText.length, transparent, color);
+        fontShader.render(rect, vbo, currentText.length, transparent, color);
     }
 };
 
@@ -231,9 +235,17 @@ class Font {
 
     uint texId;
 
+    bool destroyed;
     ~this(){
-        enforce(texId == 0, "Font.~this texId != 0");
+        BREAK_IF(!destroyed);
     }
+    void destroy() {
+        destroyed = true;
+        if (texId) {
+            glDeleteTextures(1, &texId);
+        }
+    }
+
 
     this(string fontFile)
     in{
@@ -300,10 +312,6 @@ class Font {
 
     vec2i glyphSize() const @property {
         return vec2i(conf.glyphWidth, conf.glyphHeight);
-    }
-
-    void destroy() {
-        throw new Exception("Implement font.destroy!");
     }
 
 }

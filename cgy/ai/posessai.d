@@ -27,10 +27,10 @@ class FPSControlAI : UnitAI, CustomChange {
     
     private bool destroyed;
     ~this() {
-        enforce(destroyed, "FPSControlAI.destroy not called!");        
+        BREAK_IF(!destroyed);
     }
     void destroy() {
-        
+        destroyed = true;        
     }
 
     void setUnit(Unit* u){

@@ -29,14 +29,31 @@ final class GuiSystem : GuiElement{
     private GuiElement focusElement;
     
     private GuiEventDump eventDump;
+
+    private Font standardFont;    
     
     this() {
         super(null);
-        setFont(new Font("fonts/courier"));
+        standardFont = new Font("fonts/courier");
+        setFont(standardFont);
         relativeRect = Rectd(vec2d(0, 0), vec2d(1, 1));
         hoverElement = this;
         focusElement = this;
         getAbsoluteRect();
+    }
+    
+    private bool destroyed;
+    ~this() {
+        BREAK_IF(!destroyed);
+    }
+    
+    override void destroy() {
+        destroyed = true;
+        super.destroy();
+        if (standardFont !is null) {
+            standardFont.destroy();
+            standardFont = null;
+        }
     }
     
     override bool isInside(vec2i p) {

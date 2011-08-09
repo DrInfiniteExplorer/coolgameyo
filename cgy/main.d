@@ -49,7 +49,7 @@ import std.c.windows.windows;
 
             result = myWinMain(hInstance, hPrevInstance, lpCmdLine, nCmdShow);
 
-            exit(0); //TODO: Fix. If not here, we get bad and sad memory errors the following line :(
+            //exit(0); //TODO: Fix. If not here, we get bad and sad memory errors the following line :(
             Runtime.terminate(&exceptionHandler);
         }
         catch (Throwable o) // catch any uncaught exceptions
@@ -100,10 +100,12 @@ class Main {
         initLibraries();
         
         createWindow();
+        guiSystem = new GuiSystem;
         mainMenu = new MainMenu(guiSystem, this);
     }
     
     void destroy() {
+        guiSystem.destroy();
         if (game !is null) {
             game.destroy();
             game = null;
@@ -145,9 +147,6 @@ class Main {
         //Durnt remember what this actually did.. think this enables translation of keypresses to characters? :)
         SDL_EnableUNICODE(1);
         SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
-        
-        guiSystem = new GuiSystem;
-        
     }
     
     Game startGame(void delegate() loadDone) {
@@ -269,6 +268,7 @@ class Main {
     
     void deinitLibraries() {
         //TODO: destroy "surface" and how? :P        
+        deinitOpenGL();
         SDL_Quit();
         DerelictIL.unload();
         if (client) {
@@ -290,6 +290,6 @@ void actualMain() {
     
     Main main = new Main(client, true, true); //Be a worker? lolololol
     main.run();
-    main.destroy();    
+    main.destroy();
 }
 

@@ -71,8 +71,25 @@ class Game{
     
     private bool destroyed;
     ~this() {
-        enforce(destroyed, "Game.destroyed not called!");
+        BREAK_IF(!destroyed);
     }
+    
+    void destroy() {
+        //Wait until done.
+        scheduler.exit();
+        while(scheduler.running()){
+            msg("Waiting for scheduler to terminate worker threads...");
+            Thread.sleep(dur!"seconds"(1));
+        }
+
+        atlas.destroy();
+        renderer.destroy();
+        world.destroy();
+        aiModule.destroy();
+
+        destroyed = true;
+    }
+    
     
     //This and finishInit are run in the thread which becomes the scheduler thread
     private void init(WorldGenParams worldParams) {
@@ -196,22 +213,7 @@ class Game{
     void saveGame(string name) {
         enforce(0, "Implement!");
     }
-    
-    void destroy() {
-        //Wait until done.
-        scheduler.exit();
-        while(scheduler.running()){
-            msg("Waiting for scheduler to terminate worker threads...");
-            Thread.sleep(dur!"seconds"(1));
-        }
-
-        atlas.destroy();
-        renderer.destroy();
-        world.destroy();
-
-        destroyed = true;
-    }
-    
+        
     Camera getCamera() {
         return camera;
     }

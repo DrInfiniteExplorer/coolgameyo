@@ -3,6 +3,7 @@ module statistics;
 import std.algorithm;
 import std.conv;
 import std.exception;
+import std.file;
 import std.string;
 import std.stdio;
 
@@ -12,6 +13,10 @@ __gshared Statistics g_Statistics;
 
 shared static this() {
     g_Statistics = new Statistics;
+}
+
+shared static ~this() {
+    g_Statistics.save();
 }
 
 
@@ -26,7 +31,7 @@ template SampleCircleBuffer(const char[] name, const int MaxSamples) {
         void add",name,"(long usecs) {
             synchronized(this) {
                 time",name,"Min = min(time",name,"Min, usecs);
-                time",name,"Max = max(time",name,"Min, usecs);
+                time",name,"Max = max(time",name,"Max, usecs);
                 time",name,"[index",name,"] = usecs;
                 index",name," = (index",name,"+1)%",MaxSamples,";
             }
@@ -54,6 +59,13 @@ template SampleCircleBuffer(const char[] name, const int MaxSamples) {
                 return time",name,";
             }
         }
+        string saveData",name,"() {
+            return text(
+                \"",name," min:\", time",name,"Min, \"\\n\",
+                \"",name," max:\", time",name,"Max, \"\\n\",
+                \"",name," averate:\", average",name,"(), \"\\n\",
+            );
+        }
     ");
 }
 
@@ -73,12 +85,15 @@ template SampleSingle(const char[] name, const bool Write=false) {
                 return time",name,";
             }
         }
+        string saveData",name,"() {
+            return text(\"",name,":\", time",name,",\"\\n\");
+        }
     ");
 }
 
 template ProgressData(const char[] name) {
     const char [] ProgressData = text(
-    "    int ",name,"ToDo;
+    "   int ",name,"ToDo;
         int ",name,"Done;
         void ",name,"New(int _new) {
             synchronized(this) {
@@ -104,6 +119,22 @@ class Statistics {
 
     this() {
     }    
+    
+    void save() {
+        string str = 
+            saveDataGRUploadTime() ~
+            saveDataBuildGeometry() ~
+            saveDataMakeGeometryTasks() ~
+            saveDataFPS() ~
+            saveDataTPS() ~
+            saveDataStartupTime() ~
+            saveDataGameInit() ~
+            saveDataTileTypeManagerCreation() ~
+            saveDataRendererInit() ~
+            saveDataAtlasUpload();
+        
+        std.file.write("statistics.txt", str);
+    }
 
 /*
     Collects during full gc collect. Shouldnt? :S    

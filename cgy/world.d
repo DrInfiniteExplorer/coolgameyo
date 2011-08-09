@@ -438,7 +438,8 @@ class World {
         return TilePos(pos);
     }
 
-    void floodFillSome(int max=10) {// 10 lol
+    void floodFillSome(int max=100) {// 10 lol
+        //100 for 10 was plain slow and horrible!!
         //auto sw = StopWatch(AutoStart.yes);
 
         //int allBlocks = 0;

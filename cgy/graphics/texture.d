@@ -53,15 +53,16 @@ class TileTextureAtlas{
         }
     }
 
-    debug{
-        ~this(){
-            assert(!texId, "Should've called TileTextureAtlas.destroy() at some point!");
-        }
+
+    bool destroyed;    
+    ~this(){
+        BREAK_IF(!destroyed);
     }
 
     void destroy(){
         glDeleteTextures(1, &texId);
         texId = 0;
+        destroyed = true;
     }
 
     void genTex(){

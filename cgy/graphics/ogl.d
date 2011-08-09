@@ -11,6 +11,7 @@ public import derelict.opengl.gl;
 public import derelict.opengl.glext;
 
 import graphics.renderer;
+import graphics.font;
 import settings;
 import util;
 
@@ -65,8 +66,13 @@ void initOpenGL(bool client){
     glEnable(GL_CULL_FACE);
     glError();
     glDepthFunc(GL_LEQUAL);
+    
+    initFont();
 }
 
+void deinitOpenGL() {
+    deinitFont();
+}
 
 void glError(string file = __FILE__, int line = __LINE__){
     debug{

@@ -177,6 +177,7 @@ void BREAKPOINT(uint doBreak=1) {
         asm { int 3; }
     }
 }
+alias BREAKPOINT BREAK_IF;
 
 void ASSERT(uint dontBreak){
     BREAKPOINT(!dontBreak);

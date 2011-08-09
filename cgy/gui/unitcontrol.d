@@ -71,12 +71,13 @@ class HyperUnitControlInterfaceInputManager : GuiEventDump{
     
     private bool destroyed;
     ~this(){
-        enforce(destroyed, text(typeof(this).stringof, ".destroy not called!"));
+        BREAK_IF(!destroyed);
     }    
     void destroy(){
         if( statistics !is null) {
             statistics.destroy();
         }
+        possesAI.destroy();
         destroyed = true;
     }
     

@@ -8,6 +8,7 @@ import modules.module_;
 import modules.path;
 
 import unit;
+import util;
 
 class AIModule : Module, WorldListener {
 
@@ -29,7 +30,7 @@ class AIModule : Module, WorldListener {
     }
     bool destroyed;
     ~this(){
-        enforce(destroyed, "AIModule.destroyed not called!");
+        BREAK_IF(!destroyed);
     }
     void destroy() {
         destroyed = true;

@@ -45,6 +45,10 @@ class MainMenu : GuiElementWindow {
     }
     
     override void destroy() {
+        if (userControl !is null) {
+            userControl.destroy();
+            userControl = null;
+        }
         super.destroy();
     }    
         
