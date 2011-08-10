@@ -209,7 +209,7 @@ class Scheduler {
 
                     syncTime = utime();
                     changeList.apply(world);
-                    world.update();
+                    world.update(this);
                     foreach (mod; modules) {
                         mod.update(world, this);
                     }

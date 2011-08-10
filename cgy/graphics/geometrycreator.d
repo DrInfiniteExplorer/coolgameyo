@@ -183,12 +183,27 @@ class GeometryCreator : Module, WorldListener
             auto tileZp = world.getTile(TilePos(pos+vec3i(0,0,1)), false, false);
             auto tileZn = world.getTile(TilePos(pos-vec3i(0,0,1)), false, false);
             //To generate where is invalid tiles, replace == with <=
-            auto Xp = tileXp.type == TileTypeAir;
-            auto Xn = tileXn.type == TileTypeAir;
-            auto Yp = tileYp.type == TileTypeAir;
-            auto Yn = tileYn.type == TileTypeAir;
-            auto Zp = tileZp.type == TileTypeAir;
-            auto Zn = tileZn.type == TileTypeAir;
+            bool Xp;
+            bool Xn;
+            bool Yp;
+            bool Yn;
+            bool Zp;
+            bool Zn;
+            if (renderSettings.renderInvalidTiles) {
+                Xp = tileXp.type <= TileTypeAir;
+                Xn = tileXn.type <= TileTypeAir;
+                Yp = tileYp.type <= TileTypeAir;
+                Yn = tileYn.type <= TileTypeAir;
+                Zp = tileZp.type <= TileTypeAir;
+                Zn = tileZn.type <= TileTypeAir;
+            } else {
+                Xp = tileXp.type == TileTypeAir;
+                Xn = tileXn.type == TileTypeAir;
+                Yp = tileYp.type == TileTypeAir;
+                Yn = tileYn.type == TileTypeAir;
+                Zp = tileZp.type == TileTypeAir;
+                Zn = tileZn.type == TileTypeAir;
+            }
             auto x = pos.X;
             auto y = pos.Y;
             auto z = pos.Z;

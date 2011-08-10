@@ -150,7 +150,9 @@ class Statistics {
             saveDataGameInit() ~
             saveDataTileTypeManagerCreation() ~
             saveDataRendererInit() ~
-            saveDataAtlasUpload();
+            saveDataAtlasUpload() ~
+            saveDataInitialFloodFill() ~
+            saveDataInitialHeightmaps();
         
         std.file.write("statistics.txt", str);
     }
@@ -173,7 +175,11 @@ class Statistics {
     mixin(SampleSingle!("TileTypeManagerCreation", true));    
     mixin(SampleSingle!("RendererInit", true));
     mixin(SampleSingle!("AtlasUpload", true));
+    mixin(SampleSingle!("InitialFloodFill", true));
+    mixin(SampleSingle!("InitialHeightmaps", true));
         
+    
+    mixin(ProgressData!("Heightmaps"));
     mixin(ProgressData!("GraphRegions"));
     mixin(ProgressData!("FloodFill"));
 }

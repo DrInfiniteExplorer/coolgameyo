@@ -178,7 +178,14 @@ class Game{
         populateWorld();
         camera.setPosition(vec3d(0, 0, 0));
         camera.setTarget(vec3d(0, 1, 0));
-        world.floodFillSome(1_000_000);
+        {
+            mixin(LogTime!("InitialHeightmaps"));
+            world.generateAllHeightmaps();
+        }
+        {
+            mixin(LogTime!("InitialFloodFill"));            
+            world.floodFillSome(1_000_000);
+        }
         finishInit();
     }
 
@@ -186,7 +193,7 @@ class Game{
         //init(worldParams);
         //Deserialize into world and stufffff!
         //Load camera! Active unit! Stuff!
-        finishInit();
+        finishInit();        
     }
     
     //TODO: Move to better place

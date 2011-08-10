@@ -10,6 +10,7 @@ import worldgen.worldgen;
 import worldgen.newgen;
 public import unit;
 import util;
+import scheduler;
 import statistics;
 
 public import pos;
@@ -47,6 +48,24 @@ class World {
         Sector[int] sectors;
     }
 
+    final class HeightmapTaskState {
+        SectorXYNum pos;
+        Heightmap heightmap;
+        int x, y, z;
+        this(SectorXYNum p) {
+            pos = p;
+            heightmap = new Heightmap;
+            x = 0;
+            y = 0;
+            z = int.max;
+        }            
+    }
+    
+    final class HeightmapTasks {
+        HeightmapTaskState[] list;
+    };
+    HeightmapTasks heightmapTasks;
+    
     SectorXY[SectorXYNum] sectorXY;
     Sector[] sectorList;
 
@@ -72,6 +91,7 @@ class World {
         worldGen.init(worldGenParams, tilesys);
 
         toFloodFill = new WorkSet;
+        heightmapTasks = new HeightmapTasks;
     }
     
     void destroy() {
@@ -101,24 +121,83 @@ class World {
         auto sectorNum = blockNum.getSectorNum();
         auto sector = getSector(sectorNum, true, &xy);
         auto heightmap = xy.heightmap;
-        auto tp = blockNum.toTilePos();
-        auto sectTp = sectorNum.toTilePos();
-        auto sectToBlock = tp.value - sectTp.value;
         bool above = true;
-        foreach(rel ; RangeFromTo(0, BlockSize.x,
-                                  0, BlockSize.y,
-                                  0, BlockSize.z)) {
-            auto heightmapIndex = rel + sectToBlock;
-            if (tp.value.Z <= heightmap[heightmapIndex.X, heightmapIndex.Y]){
-                above = false;
-                break;
+        if(heightmap !is null) {
+            auto tp = blockNum.toTilePos();
+            auto sectTp = sectorNum.toTilePos();
+            auto sectToBlock = tp.value - sectTp.value;
+            foreach(rel ; RangeFromTo(0, BlockSize.x,
+                                      0, BlockSize.y,
+                                      0, BlockSize.z)) {
+                auto heightmapIndex = rel + sectToBlock;
+                if (tp.value.Z <= heightmap[heightmapIndex.X, heightmapIndex.Y]){
+                    above = false;
+                    break;
+                }
+            }
+            if (above) {
+                auto airBlock = AirBlock(blockNum);
+                sector.setBlock(blockNum, airBlock);
+                return;
             }
         }
-        if (above) {
-            auto airBlock = AirBlock(blockNum);
-            sector.setBlock(blockNum, airBlock);
-        } else {
-            sector.generateBlock(blockNum, worldGen);
+        sector.generateBlock(blockNum, worldGen);
+    }
+    
+    void generateHeightmapTaskFunc(HeightmapTaskState state) {
+        enum iterationLimit = 10_000;
+        auto xy = state.pos;
+        auto p = xy.getTileXYPos();
+        int iterations = 0;
+        int done = 0;
+        int yStart = state.y;
+        foreach (x ; state.x .. SectorSize.x) {
+            foreach (y ; yStart .. SectorSize.y) {
+                yStart = 0;
+                auto tmp = p.value + vec2i(x, y);
+                int z;
+                auto posXY = TileXYPos(tmp);
+                if (state.z == int.max) {
+                    z = worldGen.maxZ(posXY);
+                }
+
+                while (worldGen.getTile(TilePos(vec3i(
+                                    posXY.value.X, posXY.value.Y, z))).type
+                        is TileTypeAir) {
+                    z -= 1;
+                    iterations++;
+                    if (iterations >= iterationLimit) {
+                        state.x = x;
+                        state.y = y;
+                        state.z = z;
+                        g_Statistics.HeightmapsProgress(done);
+                        return;
+                    }
+                }
+                state.z = int.max;
+                state.heightmap[x, y] = z;
+                done++;
+            }
+        }
+        synchronized(heightmapTasks) {
+            bool pred(HeightmapTaskState a) {
+                return a == state;
+            }
+            heightmapTasks.list = remove!pred(heightmapTasks.list);
+            if (heightmapTasks.list.empty) {
+                g_Statistics.HeightmapsNew(0);
+            }
+        }
+        sectorXY[xy].heightmap = state.heightmap;
+        g_Statistics.HeightmapsProgress(done);        
+    }
+    
+    //Causes blocking, yeah!
+    void generateAllHeightmaps() {
+        synchronized(heightmapTasks) {
+            while (!heightmapTasks.list.empty) {
+                generateHeightmapTaskFunc(heightmapTasks.list[0]);
+            }
         }
     }
 
@@ -136,27 +215,10 @@ class World {
         }
         //We didnt have it. Create it, and a heightmap along with it!
         SectorXY ret;
-        ret.heightmap = new Heightmap;
-        auto p = xy.getTileXYPos();
-        msg("Generating heightmap for xysector.", xy);
-        foreach(relPos ; RangeFromTo(0, SectorSize.x, 0, SectorSize.y, 0, 1)){
-            //write("\r", relPos); stdout.flush();
-            if ((relPos.X % BlockSize.x) == 0 && (relPos.Y % BlockSize.y) == 0) {
-                write("."); stdout.flush();
-            }
-            auto tmp = p.value + vec2i(relPos.X, relPos.Y);
-            auto posXY = TileXYPos(tmp);
-            auto z = worldGen.maxZ(posXY);
-
-            while (worldGen.getTile(TilePos(vec3i(
-                                posXY.value.X, posXY.value.Y, z))).type
-                    is TileTypeAir) {
-                z -= 1;
-            }
-
-            ret.heightmap[relPos.X, relPos.Y] = z;
+        synchronized(heightmapTasks) {
+            heightmapTasks.list ~= new HeightmapTaskState(xy);
+            g_Statistics.HeightmapsNew(SectorSize.x * SectorSize.y);
         }
-        writeln("");
 
         sectorXY[xy] = ret; //Spara det vi skapar, yeah!
         return ret;
@@ -287,8 +349,20 @@ class World {
         return ret;
     }
 
-    void update(){
+    void update(Scheduler scheduler){
         floodFillSome();
+        
+        synchronized(heightmapTasks) { //Not needed, since only thread working now. Anyway.. :)
+            foreach(state ; heightmapTasks.list) {
+                //Trixy trick below; if we dont do this, the value num will be shared by all pushed tasks.
+                (HeightmapTaskState state){
+                    scheduler.push(asyncTask(
+                        (const(World) world){
+                            generateHeightmapTaskFunc(state);
+                        }));
+                }(state);
+            }        
+        }
 
         //MOVE UNITS
         //TODO: Make list of only-moving units, so as to not process every unit?
@@ -424,6 +498,15 @@ class World {
         auto sectorXY = getSectorXY(t);
 
         auto heightmap = sectorXY.heightmap;
+        if (heightmap is null ) {
+            int z = worldGen.maxZ(xy);
+            while (worldGen.getTile(TilePos(vec3i(
+                    xy.value.X, xy.value.Y, z))).type
+                is TileTypeAir) {
+                z -= 1;
+            }
+            return TilePos(vec3i(xy.value.X, xy.value.Y, z));
+        }
         assert(heightmap !is null, "heightmap == null! :(");
         auto pos = vec3i(xy.value.X, xy.value.Y, heightmap[x, y]);
         return TilePos(pos);
