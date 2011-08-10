@@ -45,7 +45,9 @@ class Renderer : Module {
     WorldShaderProgram worldShader;
     DudeShaderProgram dudeShader;
     LineShaderProgram lineShader;
-
+    
+    vec3d*[Unit*] specialUnits;
+    
     this(World w, Scheduler s, Camera c, GeometryCreator g)
     {
         mixin(LogTime!("RendererInit"));
@@ -98,8 +100,9 @@ class Renderer : Module {
     uint dudeVBO;
     void createDudeModel(){
         vec3f[] vertices;
-        vertices ~= makeCube(vec3f(0.5, 0.5, 1), vec3f(0, 0, 0.5)); //Body, -.25, -.25, -.5 -> .25, .25, .5
-        vertices ~= makeCube(vec3f(1, 1, 1), vec3f(0, 0, 1.5)); //Head, -.5, -.5, .5 -> .5, .5, 1.0
+        //Body centered at 0.5 z so main body centered aroung local origo
+        vertices ~= makeCube(vec3f(0.5, 0.5, 1), vec3f(0, 0, 0.0)); //Body, -.5, -.5, -1 -> .5, .5, 1
+        vertices ~= makeCube(vec3f(1, 1, 1), vec3f(0, 0, 1)); //Head, -1, -1, 1 -> 1, 1, 2.0
         glGenBuffers(1, &dudeVBO);
         glError();
         glBindBuffer(GL_ARRAY_BUFFER, dudeVBO);
@@ -165,7 +168,13 @@ class Renderer : Module {
 
     void renderDude(Unit* unit, float tickTimeSoFar){
         auto M = matrix4();
-        vec3d unitPos = unit.pos.value; //TODO: Subtract the camera position from the unit before rendering
+        vec3d unitPos;
+        vec3d **p = unit in specialUnits;
+        if (p !is null) {
+            unitPos = **p;
+        } else {
+            unitPos = unit.pos.value; //TODO: Subtract the camera position from the unit before rendering
+        }
         unitPos += tickTimeSoFar * unit.velocity;
         M.setTranslation(util.convert!float(unitPos));
         M.setRotationRadians(vec3f(0, 0, unit.rotation));
@@ -187,6 +196,15 @@ class Renderer : Module {
             renderAABB(unit.aabb);
             dudeShader.use();
         }
+    }
+    
+    void normalUnit(Unit *unit) {
+        specialUnits[unit] = null;
+    }
+    vec3d* specialUnit(Unit *unit, vec3d pos) {
+        auto p = new vec3d(pos);
+        specialUnits[unit] = p;
+        return p;
     }
 
     // D MINECRAFT MAP VIEWER CLONE INSPIRATION ETC
@@ -210,53 +228,15 @@ class Renderer : Module {
         glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
 
-
-    //Copied from scheduler.d
-    //Consider making this a mixin functionality, sortof.
-    //TODO: Think about this functionality. What is it used for? Where is it used? What do we use it for?
-    // Is there any place we can put this code to make it usable from other places too?
-    enum Frames = 3;
-    long[Frames] frameTimes;
-    long lastTime;
-    ulong frameAvg;
-    int frameId;
-    void insertFrameTime(){
-        long now = utime();
-        long delta = now - lastTime;
-        lastTime = now;
-        frameTimes[frameId] = delta;
-        frameId = (frameId+1)%Frames;
-        frameAvg = 0;
-        foreach(time ; frameTimes) {
-            frameAvg += time;
-        }
-        frameAvg /= Frames;
-    }
-    
-    ulong getFrameTime() const @property {
-        return frameTimes[(frameId+Frames-1)%Frames];
-    }
-    ulong getFrameTimeAverage() const @property {
-        return frameAvg;
-    }
-
     float soFar = 0;
     override void update(World world, Scheduler sched) {
         soFar = 0;
     }
-
-
-    void render()
+    
+    void render(long usecs)
     {
-        long avgTickTime = scheduler.frameAvg;
-        float ratio = 0.0f;
-        if(avgTickTime > frameAvg){
-            ratio = to!float(frameAvg) / to!float(avgTickTime);
-        }
         
-        g_Statistics.addFPS(frameAvg);
-
-        soFar += ratio;
+        g_Statistics.addFPS(usecs);
 
         //TODO: Decide if to move clearing of buffer to outside of renderer, or is render responsible for
         // _ALL_ rendering?
@@ -265,13 +245,10 @@ class Renderer : Module {
         //Render world
         setWireframe(renderSettings.renderWireframe);
         renderWorld(camera);
-        renderDudes(camera, soFar);
+        renderDudes(camera, 0.f);
         renderDebug(camera);
         
         setWireframe(false);
-
-        insertFrameTime();
-
   }
 
     void renderGraphicsRegion(const GraphicsRegion region){

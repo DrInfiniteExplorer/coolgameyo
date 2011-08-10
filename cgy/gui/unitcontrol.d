@@ -18,6 +18,7 @@ import gui.all;
 import gui.statistics;
 import scheduler;
 import settings;
+import statistics;
 import tiletypemanager;
 import unit;
 import world;
@@ -89,7 +90,7 @@ class HyperUnitControlInterfaceInputManager : GuiEventDump{
             possesAI.destroy();
         }
         unit = u;
-        possesAI = new FPSControlAI(world);
+        possesAI = new FPSControlAI(world, renderer);
         possesAI.setUnit(unit);
     }
         
@@ -119,12 +120,13 @@ class HyperUnitControlInterfaceInputManager : GuiEventDump{
     }
     
     void updateGui() {
-        auto frameTime = renderer.getFrameTimeAverage();
+        //We plus one microsecond to avoid division by 0.
+        auto frameTime = g_Statistics.averageFPS()+1;
         auto fps = 1_000_000 / frameTime;
         fpsText.setText(text("fps ", fps));
         frameTimeText.setText(text("frametime ", frameTime));
         
-        auto tickTime = scheduler.getTickTimeAverage();
+        auto tickTime = g_Statistics.averageTPS()+1;
         auto tps = 1_000_000 / tickTime;
         tickText.setText(text("tps ", tps));
         tickTimeText.setText(text("ticktime ", tickTime));
@@ -215,13 +217,14 @@ class HyperUnitControlInterfaceInputManager : GuiEventDump{
     void updatePossesed(float dTime) { 
         double right = 0;
         double fwd = 0;
-        if(keyMap[SDLK_a]){ right-=0.4; }
-        if(keyMap[SDLK_d]){ right+=0.4; }
-        if(keyMap[SDLK_w]){ fwd+=0.4; }
-        if(keyMap[SDLK_s]){ fwd-=0.4; }
+        enum speed = 4.0;
+        if(keyMap[SDLK_a]){ right-=speed; }
+        if(keyMap[SDLK_d]){ right+=speed; }
+        if(keyMap[SDLK_w]){ fwd+=speed; }
+        if(keyMap[SDLK_s]){ fwd-=speed; }
         if(keyMap[SDLK_SPACE]){
             if(possesAI.onGround){
-                possesAI.fallSpeed = 0.75f;
+                possesAI.fallSpeed = 5.5f;
             }
         }
         possesAI.move(right, fwd, 0.f, dTime);

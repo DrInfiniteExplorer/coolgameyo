@@ -287,14 +287,7 @@ class World {
         return ret;
     }
 
-    long last_time;
     void update(){
-        auto now = utime();
-        //msg((now - last_time) / 1_000.0, "ms since last tick");
-        //We already have a display of this value in the gui? :S
-        last_time = now;
-
-
         floodFillSome();
 
         //MOVE UNITS
@@ -329,9 +322,7 @@ class World {
         setTile(pos, tile);
     }
 
-
     private void moveUnit(Unit* unit, UnitPos newPos) {
-
         moveActivity(unit.pos, newPos);
 
         unit.pos = newPos;
@@ -393,6 +384,11 @@ class World {
         // since then we'd be writing into the correct memory.
         // a block is really read-only, but block.tiles if
         // present is read-write.
+        //Start floodfill, and updating of discovered areas
+        if (newTile.type is TileTypeAir) {
+            block.seen = false; //To enable floodfilling of area again.
+            addFloodFillPos(tilePos);
+        }
         setBlock(tilePos.getBlockNum(), block);
         
         //Update heightmap
@@ -415,12 +411,7 @@ class World {
                 heightmap[sectRel.X, sectRel.Y] = tilePos.value.Z;
             }
         }
-        
-        //Start floodfill, and updating of discovered areas
-        if (newTile.type is TileTypeAir) {
-            addFloodFillPos(tilePos);
-        }
-        
+                
         notifyTileChange(tilePos);
     }
 

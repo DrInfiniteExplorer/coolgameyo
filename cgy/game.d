@@ -234,9 +234,9 @@ class Game{
         return scheduler;
     }
 
-    void render() {
+    void render(long usecs) {
         if(renderer is null) return;
-        renderer.render();
+        renderer.render(usecs);
     }
 }
 

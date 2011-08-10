@@ -69,6 +69,25 @@ template SampleCircleBuffer(const char[] name, const int MaxSamples) {
     ");
 }
 
+template SamplesPerSecond(const char[] name, const int samples) {
+    const char[] SamplesPerSecond = text("mixin(SampleCircleBuffer!(\"",name,"\", ",samples,"));
+        float get",name,"PS() const {
+            auto val = getLatest",name,"();
+            if (val == 0) {
+                return float.infinity;
+            }
+            return 1_000_000.f / to!float(val);
+        }
+        float get",name,"PSAverage() const {
+            auto val = average",name,"();
+            if (val == 0) {
+                return float.infinity;
+            }
+            return 1_000_000.f / to!float(val);
+        }"
+    );
+}
+
 template SampleSingle(const char[] name, const bool Write=false) {
     const char [] SampleSingle = text(
         "long time",name,";
@@ -147,8 +166,8 @@ class Statistics {
     mixin(SampleCircleBuffer!("GRUploadTime", 50));
     mixin(SampleCircleBuffer!("BuildGeometry", 50));
     mixin(SampleCircleBuffer!("MakeGeometryTasks", 50));
-    mixin(SampleCircleBuffer!("FPS", 50));
-    mixin(SampleCircleBuffer!("TPS", 50));
+    mixin(SamplesPerSecond!("FPS", 50));
+    mixin(SamplesPerSecond!("TPS", 50));
     mixin(SampleSingle!("StartupTime", true));
     mixin(SampleSingle!("GameInit", true));
     mixin(SampleSingle!("TileTypeManagerCreation", true));    

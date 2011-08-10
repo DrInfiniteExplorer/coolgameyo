@@ -8,21 +8,25 @@ import std.math;
 import std.stdio;
 
 import changelist;
+import graphics.renderer;
 import unit;
 import util;
 import world;
 
 class FPSControlAI : UnitAI, CustomChange {
     Unit* unit;
+
     UnitAI oldAi;
     //vec3d velocity;
     float fallSpeed;
     bool onGround;
     World world;
-    UnitPos oldPosition;
+    Renderer renderer;
+    vec3d* unitPos;
 
-    this(World w) {
+    this(World w, Renderer r) {
         world = w;
+        renderer = r;
     }
     
     private bool destroyed;
@@ -30,7 +34,7 @@ class FPSControlAI : UnitAI, CustomChange {
         BREAK_IF(!destroyed);
     }
     void destroy() {
-        destroyed = true;        
+        destroyed = true;
     }
 
     void setUnit(Unit* u){
@@ -38,24 +42,31 @@ class FPSControlAI : UnitAI, CustomChange {
             return;
         }
         if (unit) {
+            renderer.normalUnit(unit);
             unit.ai = oldAi;
         }
-        unit = u;
+        if (u is null) return;
+        unit = u;        
         unit.ai = this;
         fallSpeed = 0.f;
         onGround=false;
-        oldPosition = unit.pos;
+        unitPos = renderer.specialUnit(unit, unit.pos.value);
 
         //TODO: Send data to clients that this unit is possessed!!!!
         // :)
     }
 
     vec3d collideMove(vec3d pos, vec3d dir){
+        enum NOOO = vec3d(0,0,0);
+        if (dir == NOOO) {
+            return pos;
+        }
         enum epsilon = 1.0E-7;
         enum OneEps = 1.0-epsilon;
         if (dir == vec3d(0, 0, 0)) { return pos; }
         if (dir.getLength > OneEps) {
             dir.setLength(OneEps);
+            writeln("derp");
         }
         //TODO: The stuff below
         /*
@@ -72,7 +83,6 @@ class FPSControlAI : UnitAI, CustomChange {
         auto unitHeight = unit.unitHeight;
         enum dirs = [vec3i(1, 0, 0), vec3i(0, 1, 0), vec3i(0, 0, 1)];
         
-        //+2. +1 for making sure we cover some cases, then +1 again because RangeFromTo
         auto sizes = [
             vec3i(1,                to!int(floor(unitWidth)+1),    to!int(ceil(unitHeight)+1)),
             vec3i(to!int(floor(unitWidth)+1),  1,                  to!int(ceil(unitHeight)+1)),
@@ -154,10 +164,10 @@ class FPSControlAI : UnitAI, CustomChange {
         immutable origo = vec3d(0, 0, 0);
 
         onGround = false;
-        fallSpeed -= 0.15f * deltaT;
+        fallSpeed -= 10.f * deltaT;
         auto dir = vec3d(fwd, -right, up + fallSpeed) * deltaT;
         dir.rotateXYBy(unit.rotation, origo);
-        unit.pos.value = collideMove(unit.pos.value, dir);
+        *unitPos = collideMove(*unitPos, dir);
         if(onGround){
             fallSpeed = 0.f;
         }
@@ -170,7 +180,7 @@ class FPSControlAI : UnitAI, CustomChange {
 
     vec3d getUnitPos(){
         enforce(unit !is null, "FPSControlAI's unit is null!!");
-        return unit.pos.value;
+        return *unitPos;
     }
 
     //This is now mostly used to make a 'real' commit of the movement.
@@ -190,18 +200,13 @@ class FPSControlAI : UnitAI, CustomChange {
     
     //Hax used: oldPosition, to make the world produce a delta-pos-value and load sectors
     void apply(World world) {
-        auto pos = unit.pos;
-        unit.pos = oldPosition;
-        oldPosition = pos;
-        world.unsafeMoveUnit(unit, pos.value, 1);
+        world.unsafeMoveUnit(unit, *unitPos, 1);
         
         foreach(tilePos, tile ; tilesToChange) {
             world.unsafeSetTile(tilePos, tile);
         }
-        //tilesToChange.clear(); Apparently does _not_ work
+
         tilesToChange = null;
-        
-        //TODO: Make rotate of units as well? :):):)
     }
 
 }

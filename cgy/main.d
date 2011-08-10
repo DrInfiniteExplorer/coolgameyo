@@ -242,12 +242,13 @@ class Main {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             glError();
             
-            if(game) {
-                game.render();
-            }
             long now = utime();
-            float deltaT = (now-then) / 100_000.f;
+            long diff = now-then;
+            float deltaT = to!float(diff) / 1_000_000.f;            
             then = now;
+            if(game) {
+                game.render(diff);
+            }
             guiSystem.tick(deltaT); //Eventually add deltatime and such as well :)
             guiSystem.render();            
             

@@ -15,6 +15,7 @@ import std.range;
 version(Windows) import std.c.windows.windows;
 
 public import changelist;
+import statistics;
 import util;
 import world;
 
@@ -95,6 +96,8 @@ class Scheduler {
 
     bool shouldSave;
     bool exiting;
+    
+    private StopWatch tickWatch;
 
     World world;
     Module[] modules;
@@ -146,6 +149,7 @@ class Scheduler {
         }
         workers ~= thisTid();
         syncTime = utime();
+        tickWatch.start();
         workerFun(cast(shared)this);
     }
 
@@ -209,7 +213,10 @@ class Scheduler {
                     foreach (mod; modules) {
                         mod.update(world, this);
                     }
-                    insertFrameTime();
+                    tickWatch.stop();
+                    g_Statistics.addTPS(tickWatch.peek().usecs);
+                    tickWatch.reset();
+                    tickWatch.start();
 
                     if (shouldSave) {
                         world.serialize();
@@ -267,32 +274,4 @@ class Scheduler {
             }
         }
     }
-
-
-    enum Frames = 3;
-    long[Frames] frameTimes;
-    long lastTime;
-    ulong frameAvg;
-    int frameId;
-    void insertFrameTime(){
-        long now = utime();
-        long delta = now - lastTime;
-        lastTime = now;
-        frameTimes[frameId] = delta;
-        frameId = (frameId+1)%Frames;
-        frameAvg = 0;
-        foreach(time ; frameTimes) {
-            frameAvg += time;
-        }
-        frameAvg /= Frames;
-    }
-
-    ulong getTickTime() const @property {
-        return frameTimes[(frameId+Frames-1)%Frames];
-    }
-    ulong getTickTimeAverage() const @property {
-        return frameAvg;
-    }
-
-
 }

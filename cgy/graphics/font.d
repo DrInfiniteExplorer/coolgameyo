@@ -172,6 +172,18 @@ class StringTexture {
             resized = true;
         } 
         */
+        
+        debug{
+            {
+                int cnt=0;
+                foreach(idx,ch ; text) {
+                    BREAK_IF(idx != cnt);
+                    cnt++;
+                }
+                BREAK_IF(cnt != text.length);
+                BREAK_IF(cnt > vertices.length);
+            }
+        }
         foreach(cnt, ch ; text) {
             vertices[cnt] = font.getQuad(ch, vec2i(cnt, 0));
         }
