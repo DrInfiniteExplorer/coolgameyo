@@ -373,6 +373,11 @@
    <File path="stolen\math.d" />
    <File path="stolen\quaternion.d" />
   </Folder>
+  <Folder name="ai">
+   <File path="ai\movetoai.d" />
+   <File path="ai\patrolai.d" />
+   <File path="ai\posessai.d" />
+  </Folder>
   <Folder name="graphics">
    <Folder name="_2d">
     <File path="graphics\_2d\rect.d" />
@@ -382,18 +387,44 @@
    <File path="graphics\camera.d" />
    <File path="graphics\debugging.d" />
    <File path="graphics\font.d" />
+   <File path="graphics\geometrycreator.d" />
+   <File path="graphics\image.d" />
    <File path="graphics\misc.d" />
    <File path="graphics\ogl.d" />
    <File path="graphics\renderer.d" />
    <File path="graphics\shader.d" />
    <File path="graphics\texture.d" />
-   <File path="graphics\image.d" />
-   <File path="graphics\geometrycreator.d" />
   </Folder>
-  <Folder name="worldparts">
-   <File path="worldparts\block.d" />
-   <File path="worldparts\sector.d" />
-   <File path="worldparts\tile.d" />
+  <Folder name="gui">
+   <Folder name="guisystem">
+    <File path="gui\guisystem\button.d" />
+    <File path="gui\guisystem\checkbox.d" />
+    <File path="gui\guisystem\editbox.d" />
+    <File path="gui\guisystem\element.d" />
+    <File path="gui\guisystem\guisystem.d" />
+    <File path="gui\guisystem\image.d" />
+    <File path="gui\guisystem\progressbar.d" />
+    <File path="gui\guisystem\simplegraph.d" />
+    <File path="gui\guisystem\slider.d" />
+    <File path="gui\guisystem\text.d" />
+    <File path="gui\guisystem\window.d" />
+   </Folder>
+   <File path="gui\all.d" />
+   <File path="gui\loadscreen.d" />
+   <File path="gui\mainmenu.d" />
+   <File path="gui\newgamemenu.d" />
+   <File path="gui\optionmenu.d" />
+   <File path="gui\randommenu.d" />
+   <File path="gui\statistics.d" />
+   <File path="gui\unitcontrol.d" />
+  </Folder>
+  <Folder name="modules">
+   <File path="modules\ai.d" />
+   <File path="modules\module_.d" />
+   <File path="modules\path.d" />
+  </Folder>
+  <Folder name="random">
+   <File path="random\random.d" />
   </Folder>
   <Folder name="shaders">
    <Folder name="gui">
@@ -413,58 +444,27 @@
    <File path="..\gameroot\shaders\renderGR.frag" />
    <File path="..\gameroot\shaders\renderGR.vert" />
   </Folder>
-  <Folder name="modules">
-   <File path="modules\ai.d" />
-   <File path="modules\module_.d" />
-   <File path="modules\path.d" />
-  </Folder>
-  <Folder name="gui">
-   <Folder name="guisystem">
-    <File path="gui\guisystem\guisystem.d" />
-    <File path="gui\guisystem\window.d" />
-    <File path="gui\guisystem\text.d" />
-    <File path="gui\guisystem\button.d" />
-    <File path="gui\guisystem\element.d" />
-    <File path="gui\guisystem\checkbox.d" />
-    <File path="gui\guisystem\editbox.d" />
-    <File path="gui\guisystem\slider.d" />
-    <File path="gui\guisystem\image.d" />
-    <File path="gui\guisystem\simplegraph.d" />
-    <File path="gui\guisystem\progressbar.d" />
-   </Folder>
-   <File path="gui\mainmenu.d" />
-   <File path="gui\optionmenu.d" />
-   <File path="gui\unitcontrol.d" />
-   <File path="gui\randommenu.d" />
-   <File path="gui\all.d" />
-   <File path="gui\newgamemenu.d" />
-   <File path="gui\statistics.d" />
-   <File path="gui\loadscreen.d" />
-  </Folder>
-  <Folder name="ai">
-   <File path="ai\patrolai.d" />
-   <File path="ai\posessai.d" />
-   <File path="ai\movetoai.d" />
-  </Folder>
   <Folder name="worldgen">
-   <File path="worldgen\worldgen.d" />
    <File path="worldgen\newgen.d" />
+   <File path="worldgen\worldgen.d" />
   </Folder>
-  <Folder name="random">
-   <File path="random\random.d" />
+  <Folder name="worldparts">
+   <File path="worldparts\tile.d" />
+   <File path="worldparts\block.d" />
+   <File path="worldparts\sector.d" />
   </Folder>
   <File path="changelist.d" />
+  <File path="clan.d" />
   <File path="game.d" />
   <File path="json.d" />
   <File path="main.d" />
   <File path="pos.d" />
   <File path="scheduler.d" />
   <File path="settings.d" />
+  <File path="statistics.d" />
   <File path="tiletypemanager.d" />
   <File path="unit.d" />
   <File path="util.d" />
   <File path="world.d" />
-  <File path="clan.d" />
-  <File path="statistics.d" />
  </Folder>
 </DProject>
