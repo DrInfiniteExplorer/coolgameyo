@@ -3,9 +3,11 @@ module modules.path;
 import std.container;
 import std.algorithm;
 import std.math;
+import std.range;
 import std.stdio;
 import std.conv;
 
+import json;
 import modules.module_;
 import scheduler;
 import util;
@@ -43,6 +45,13 @@ struct Path {
         }
         return ret;
     }
+    Value serialize() {
+        Value derp(UnitPos a) {
+            return encode(a.value);
+        }
+        //auto a = array(map!(derp)(path));
+        return Value(array(map!derp(path)));
+    }
 }
 
 enum maxPathTicks = 35;
@@ -54,12 +63,12 @@ class PathModule : Module {
     Path[PathID] finishedPaths;
 
     PathFindState[] activeStates;
-    size_t[] toRemoveIndexes;
+    size_t[] toRemoveIndices;
 
     void finishPath(size_t activeStatesIndex) {
         synchronized {
             auto s = activeStates[activeStatesIndex];
-            toRemoveIndexes ~= activeStatesIndex;
+            toRemoveIndices ~= activeStatesIndex;
 
             assert (s.finished, "s.finished");
             finishedPaths[s.id] = s.result;
@@ -84,7 +93,43 @@ class PathModule : Module {
         }
     }
 
-    override void update(World world, Scheduler scheduler) {
+     //Module interface
+    override void serializeModule() {
+        
+        Value serializeFinishedPaths() {
+            Value[string] values;
+            foreach(key, value ; finishedPaths) {
+                values[to!string(key.id)] = value.serialize();
+            }
+            return Value(values);
+        }
+        Value serializeActiveStates() {
+            Value derp(PathFindState state) {
+                return Value([
+                    "from" : encode(state.from.value),
+                    "goal" : encode(state.goal.value),
+                    ]);
+            }
+            return Value(array(map!derp(activeStates)));            
+        }
+        
+        Value[string] values;
+        values["nextIdNum"] = Value(nextIDNum);
+        values["finishedPaths"] = serializeFinishedPaths();
+        values["activeStates"] = serializeActiveStates();
+        values["toRemoveIndices"] = Value(array(map!((uint a){ return Value(a);})(toRemoveIndices)));
+        Value jsonRoot = Value(values);
+        auto jsonString = to!string(jsonRoot);	
+	    jsonString = json.prettyfyJSON(jsonString);
+        std.file.mkdirRecurse("saves/current/modules/path");
+        std.file.write("saves/current/modules/path/states.json", jsonString);
+        
+    }
+    override void deserializeModule() {
+        BREAKPOINT;
+    }
+
+    override void update(World world, Scheduler scheduler) { //Module interface
         synchronized {
             removeFinished();
 
@@ -104,23 +149,23 @@ class PathModule : Module {
     }
 
     void removeFinished() {
-        if (toRemoveIndexes.length == 0) return;
+        if (toRemoveIndices.length == 0) return;
 
         size_t r;
         size_t i;
         foreach (j, state; activeStates) {
-            if (j == toRemoveIndexes[r]) {
+            if (j == toRemoveIndices[r]) {
                 r += 1;
             } else {
                 activeStates[i] = state;
                 i += 1;
             }
         }
-        activeStates.length -= toRemoveIndexes.length;
-        toRemoveIndexes.length = 0;
+        activeStates.length -= toRemoveIndices.length;
+        toRemoveIndices.length = 0;
 
         activeStates.assumeSafeAppend();
-        toRemoveIndexes.assumeSafeAppend();
+        toRemoveIndices.assumeSafeAppend();
     }
 }
 

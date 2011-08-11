@@ -6,6 +6,9 @@ public import world;
 
 abstract class Module {
     void update(World world, Scheduler scheduler);
+    
+    void serializeModule();
+    void deserializeModule();
 }
 
 

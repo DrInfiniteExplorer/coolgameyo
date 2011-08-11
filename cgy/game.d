@@ -8,6 +8,7 @@ import std.array;
 import std.concurrency;
 import std.conv;
 import std.exception;
+import std.file;
 import std.stdio;
 
 import derelict.sdl.sdl;
@@ -79,7 +80,7 @@ class Game{
         scheduler.exit();
         while(scheduler.running()){
             msg("Waiting for scheduler to terminate worker threads...");
-            Thread.sleep(dur!"seconds"(1));
+            core.thread.Thread.sleep(dur!"seconds"(1));
         }
 
         atlas.destroy();
@@ -217,10 +218,48 @@ class Game{
         spawn(&loadGameThreadStarter, cast(shared)this, cast(shared)name);
     }
     
-    void saveGame(string name) {
-        enforce(0, "Implement!");
-    }
+  void serializeAll(void delegate() andThen) {
+        /*
+        //Takes care of world and tasks.        
+        scheduler.startSerialize({
+            writeln("WOHOO!");
+            if (andThen !is null) {
+                andThen();
+            }
+        });
+      */
         
+        /*
+        private bool            isClient;
+        private bool            isServer;
+        private bool            isWorker;
+        private Camera              camera;
+        private Renderer            renderer;
+        private GeometryCreator     geometryCreator;
+        private Scheduler           scheduler;
+        private TileTextureAtlas    atlas;
+        private TileTypeManager     tileTypeManager;    
+        private PathModule          pathModule;
+        private AIModule            aiModule;
+        private Unit*               activeUnit; //TODO: Find out when this unit dies, and tell people.
+        */
+    }
+    
+    void saveGame(string name)
+    in{
+        enforce( name != "current", "Invalid save name: " ~ name);
+    }
+    body{
+        /*
+        serializeAll({
+            string saveDir = "saves/" ~ name ~ "/";
+            if (exists(saveDir)) {
+                rmdirRecurse(saveDir);
+            }
+            copy("saves/current/", saveDir);
+        });
+        */
+    }        
     Camera getCamera() {
         return camera;
     }

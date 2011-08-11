@@ -29,7 +29,7 @@ import util;
 //TODO: Make fix this, or make testcase and report it if not done already.
 auto grTexCoordOffset = GRVertex.texcoord.offsetof;
 
-class Renderer : Module {
+class Renderer {
     //TODO: Leave comment on what these members are use for in this class
     World world;
     Scheduler scheduler;
@@ -55,8 +55,6 @@ class Renderer : Module {
         scheduler = s;
         camera = c;        
         geometryCreator = g;
-
-        scheduler.registerModule(this);
 
         //Would be kewl if with templates and compile-time one could specify uniform names / attrib slot names
         //that with help of shaders where made into member variables / compile-time-lookup(attrib slot names)
@@ -90,7 +88,6 @@ class Renderer : Module {
     
     void destroy() {
         geometryCreator.destroy();
-        scheduler.unregisterModule(this);
         worldShader.destroy();
         dudeShader.destroy();
         lineShader.destroy();
@@ -228,10 +225,6 @@ class Renderer : Module {
         glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
 
-    float soFar = 0;
-    override void update(World world, Scheduler sched) {
-        soFar = 0;
-    }
     
     void render(long usecs)
     {

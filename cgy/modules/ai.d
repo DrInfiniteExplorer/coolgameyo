@@ -1,8 +1,11 @@
 
 module modules.ai;
 
+import std.conv;
 import std.exception;
 import std.stdio;
+
+import json;
 
 import modules.module_;
 import modules.path;
@@ -14,6 +17,15 @@ class AIModule : Module, WorldListener {
 
     static struct UnitState {
         Unit* unit;
+        int restTime;
+    }
+    
+    static struct UnitStateJson {
+        this(UnitState state) {
+            unitId = state.unit.unitId;
+            restTime = state.restTime;
+        }
+        uint unitId;
         int restTime;
     }
 
@@ -36,7 +48,27 @@ class AIModule : Module, WorldListener {
         destroyed = true;
     }
 
-    override void update(World world, Scheduler scheduler) {
+    Value serializeState(UnitState state) {
+        UnitStateJson data = UnitStateJson(state);
+        return encode(data);
+    }
+    
+    override void serializeModule() { //module interface
+        Value[] jsonStates;
+        foreach( state ; states ) {
+            jsonStates ~= serializeState(state);
+        }
+        auto jsonRoot = Value(jsonStates);
+        auto jsonString = to!string(jsonRoot);	
+	    jsonString = json.prettyfyJSON(jsonString);
+        std.file.mkdirRecurse("saves/current/modules/ai");
+        std.file.write("saves/current/modules/ai/states.json", jsonString);
+        
+    }
+    override void deserializeModule() { //module interface
+        BREAKPOINT;
+    }
+    override void update(World world, Scheduler scheduler) { //module interface
         void push(ref UnitState state) {
             if (state.unit.ai is null) return;
             if (state.restTime > 0) {

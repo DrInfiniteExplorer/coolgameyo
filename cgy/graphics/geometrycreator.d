@@ -173,7 +173,13 @@ class GeometryCreator : Module, WorldListener
         // within a specified area, for fast access instead of getTile all the time.
         foreach( pos ; RangeFromTo(min.value, max.value)) {
             auto tile = world.getTile(TilePos(pos), false, false);
+           if (!tile.valid)  {
+                continue;
+            }
             if (tile.type == TileTypeAir) {
+                continue;
+            }            
+            if (!tile.seen) {
                 continue;
             }
             auto tileXp = world.getTile(TilePos(pos+vec3i(1,0,0)), false, false);
@@ -386,7 +392,18 @@ class GeometryCreator : Module, WorldListener
         buildGraphicsRegion(reg);
     }
 
-    override void update(World world, Scheduler scheduler) {
+   
+    override void serializeModule() {  // Module interface
+        //Do nothing. Rebuild geometry when loading instead.
+        //TODO: In the future, examine saving of polygon data.
+    }
+    
+    override void deserializeModule() {  // Module interface
+        //Tightly linked to the one above.
+        //BREAKPOINT;
+    }
+
+    override void update(World world, Scheduler scheduler) { // Module interface
         updateMutex.lock();
         scope(exit) updateMutex.unlock();
 
@@ -508,6 +525,7 @@ class GeometryCreator : Module, WorldListener
     {
         GraphRegionNum[] newRegions;
         auto tileAABB = tilePos.getAABB();
+        /*
         {
             regionMutex.lock();
             scope(exit) regionMutex.unlock();
@@ -517,14 +535,15 @@ class GeometryCreator : Module, WorldListener
                 }
             }
         }
+        */
 
         //Example, we dug into a yet invisible area.
         //Maybe let the floodfill take care of it instead, somehow?
         //dunno. think it's needed here as well.
-        if(newRegions.length == 0) {
+        //if(newRegions.length == 0) {
             newRegions ~= tilePos.getGraphRegionNum(); //Check neighboring graphregions as well.
             newRegions ~= tilePos.getNeighboringGraphRegionNums();
-        }
+        //}
         updateMutex.lock();
         scope(exit) updateMutex.unlock();
         regionsToUpdate ~= newRegions;

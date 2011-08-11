@@ -46,6 +46,7 @@ struct Unit {
         assert (0, "Implement Unit.opEquals or find where it's called and make not called!");
     }
 
+    uint unitId;
     UnitAI ai;
     UnitType type;
 
