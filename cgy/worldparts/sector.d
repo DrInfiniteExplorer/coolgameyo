@@ -4,11 +4,15 @@
 
 module worldparts.sector;
 
+import std.algorithm;
 import std.conv;
 import std.container;
 import std.exception;
+import std.file;
+import std.range;
 import std.stdio;
 
+import json;
 import worldparts.block;
 import worldgen.worldgen;
 import pos;
@@ -75,6 +79,37 @@ class Sector {
 
         return (&blocks[0][0][0])[0 .. BlocksPerSector.total];
     }
+    
+    void serialize() {
+        string folder = text("saves/current/world/", sectorNum.value.X, ",", sectorNum.value.Y, "/", sectorNum.value.Z, "/");
+        mkdirRecurse(folder);
+        
+        auto file = std.stdio.File(folder ~ "blocks.bin", "wb");
+        
+        void write(ubyte[] buff) {
+            file.write(buff);
+        }
+        
+        foreach( block ; (&blocks[0][0][0])[0 .. BlocksPerSector.total]) {
+            if (!block.valid) continue;
+            BREAKPOINT;
+            //block.serialize(write);
+        }
+        file.close();
+        
+        int asd[] = [activityCount];
+        std.file.write(folder ~ "activityCount", asd);
+        
+        Value derp(Unit* unit) {
+            return unit.serialize();
+        }
+
+        Value jsonRoot = Value(array(map!derp(array(units))));
+        auto jsonString = to!string(jsonRoot);	
+	    jsonString = json.prettyfyJSON(jsonString);
+        std.file.write(folder ~ "units.json", jsonString);
+    }
+    
 
     //TODO: What about if there already was a block there?
     //   potential solution; use setBlock ?

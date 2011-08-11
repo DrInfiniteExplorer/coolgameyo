@@ -94,7 +94,7 @@ class Scheduler {
     enum State { update, sync, forcedAsync, async }
     enum ASYNC_COUNT = 23;
 
-    bool shouldSave;
+    bool shouldSerialize;
     bool exiting;
     
     private StopWatch tickWatch;
@@ -176,10 +176,21 @@ class Scheduler {
     }
 
 
-    void serialize() {
+    void delegate() whenSerialized;
+    void startSerialize(void delegate() whenDone) {
+        whenSerialized = whenDone;
+        shouldSerialize = true;
+    }
+
+    private void serialize() {
+        BREAKPOINT; //Implement serializable tasks.
         foreach (task; chain(sync[], async[])) {
             //task.writeTo(output);
         }
+        foreach (mod; modules) {
+            mod.serializeModule();
+        }
+        
     }
 
     //If we synchronize threads, changelist is used and stuff. Otherwise it is ignored.
@@ -218,9 +229,13 @@ class Scheduler {
                     tickWatch.reset();
                     tickWatch.start();
 
-                    if (shouldSave) {
+                    if (shouldSerialize) {
                         world.serialize();
                         serialize();
+                        if (whenSerialized !is null) {
+                            whenSerialized();
+                        }
+                        shouldSerialize = false;
                     }
                     
                     if(exiting){

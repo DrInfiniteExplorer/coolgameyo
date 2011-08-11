@@ -200,7 +200,12 @@ class HyperUnitControlInterfaceInputManager : GuiEventDump{
             possesAI.changeTile(selectedTilePos, airTile);
         } else if (tileSelected) {
             TilePos whereToPlace = TilePos(selectedTilePos.value + selectedTileNormal);
-            possesAI.changeTile(whereToPlace, copiedTile);
+            auto pos = possesAI.getUnitPos();
+            auto unitAABB = unit.aabb(&pos);
+            auto tileAABB = whereToPlace.getAABB();
+            if (! intersectsExclusive(unitAABB, tileAABB)) {
+                possesAI.changeTile(whereToPlace, copiedTile);
+            }
         }        
     }
     

@@ -28,23 +28,6 @@ import stolen.aabbox3d;
 import util;
 import world;
 
-
-private alias aabbox3d!double box;
-
-//This is different from box.intersectsWithBox in that the upper ranges are strictly smaller than, making adjancent boxes not intersect.
-//(I hope)
-bool intersects(box a, box b){
-    auto minx = max(a.MinEdge.X, b.MinEdge.X);
-    auto miny = max(a.MinEdge.Y, b.MinEdge.Y);
-    auto minz = max(a.MinEdge.Z, b.MinEdge.Z);
-    auto maxx = min(a.MaxEdge.X, b.MaxEdge.X);
-    auto maxy = min(a.MaxEdge.Y, b.MaxEdge.Y);
-    auto maxz = min(a.MaxEdge.Z, b.MaxEdge.Z);
-
-    return minx < maxx && miny<maxy && minz<maxz;
-
-}
-
 struct GraphicsRegion
 {
     GraphRegionNum grNum;
@@ -62,47 +45,6 @@ struct GRFace{
     GRVertex[4] quad;
 }
 
-
-
-unittest{
-    //alias aabbox3d!double box;
-    auto a = box(-1, -1, -1, 1, 1, 1);
-    auto b = box(-2, -2, -2, 2, 2, 2);
-    assert(intersects(b, a) == true, "Intersectswithbox doesnt seem to account for wholly swallowed boxes");
-    assert(intersects(b, a) == true, "Intersectswithbox doesnt seem to account for wholly bigger boxes");
-    assert(intersects(a, a) == true, "Intersection when exactly the same wvaluated to false");
-
-    assert(intersects(box(0, 0, 0, 1, 1, 1), box(0, 0, 0, 2, 2, 2)) == true, "This shouldve been true");
-    assert(intersects(box(0, 0, 0, 2, 2, 2), box(0, 0, 0, 1, 1, 1)) == true, "This shouldve been true");
-
-    //This makes the ones below this for redundant, i think and hope and such
-    auto c = box(0, 0, 0, 1, 1, 1);
-    foreach(p ; RangeFromTo(-1, 2, -1, 2, -1, 2)){
-        auto d = c;
-        d.MinEdge += util.convert!double(p);
-        d.MaxEdge += util.convert!double(p);
-        bool bbb = p == vec3i(0,0,0);
-        assert(intersects(c, d) == bbb, "This should've been " ~ bbb);
-        assert(intersects(d, c) == bbb, "This should've been " ~ bbb);
-    }
-
-    //We dont want boxes that are lining up to intersect with each other...
-    assert(intersects(box(0, 0, 0, 1, 1, 1), box(0-1, 0, 0, 1-1, 1, 1)) == false, "Seems that boxes next to each other intersect. Sadface in x-.");
-    assert(intersects(box(0-1, 0, 0, 1-1, 1, 1), box(0, 0, 0, 1, 1, 1)) == false, "Seems that boxes next to each other intersect. Sadface in x-(2).");
-    assert(intersects(box(0, 0, 0, 1, 1, 1), box(0+1, 0, 0, 1+1, 1, 1)) == false, "Seems that boxes next to each other intersect. Sadface in x+.");
-    assert(intersects(box(0+1, 0, 0, 1+1, 1, 1), box(0, 0, 0, 1, 1, 1)) == false, "Seems that boxes next to each other intersect. Sadface in x+(2).");
-
-    assert(intersects(box(0, 0, 0, 1, 1, 1), box(0, 0-1, 0, 1, 1-1, 1)) == false, "Seems that boxes next to each other intersect. Sadface in y-.");
-    assert(intersects(box(0, 0-1, 0, 1, 1-1, 1), box(0, 0, 0, 1, 1, 1)) == false, "Seems that boxes next to each other intersect. Sadface in y-(2).");
-    assert(intersects(box(0, 0, 0, 1, 1, 1), box(0, 0+1, 0, 1, 1+1, 1)) == false, "Seems that boxes next to each other intersect. Sadface in y+.");
-    assert(intersects(box(0, 0+1, 0, 1, 1+1, 1), box(0, 0, 0, 1, 1, 1)) == false, "Seems that boxes next to each other intersect. Sadface in y+(2).");
-
-    assert(intersects(box(0, 0, 0, 1, 1, 1), box(0, 0, 0-1, 1, 1, 1-1)) == false, "Seems that boxes next to each other intersect. Sadface in z-.");
-    assert(intersects(box(0, 0, 0-1, 1, 1, 1-1), box(0, 0, 0, 1, 1, 1)) == false, "Seems that boxes next to each other intersect. Sadface in z-(2).");
-    assert(intersects(box(0, 0, 0, 1, 1, 1), box(0, 0, 0+1, 1, 1, 1+1)) == false, "Seems that boxes next to each other intersect. Sadface in z+.");
-    assert(intersects(box(0, 0, 0+1, 1, 1, 1+1), box(0, 0, 0, 1, 1, 1)) == false, "Seems that boxes next to each other intersect. Sadface in z+(2).");
-
-}
 
 class GeometryCreator : Module, WorldListener
 {
@@ -512,7 +454,7 @@ class GeometryCreator : Module, WorldListener
             regionMutex.lock();
             scope(exit) regionMutex.unlock();
             foreach(region ; regions){
-                if(intersects(sectorAABB, region.grNum.getAABB())){
+                if(intersectsExclusive(sectorAABB, region.grNum.getAABB())){
                     msg("Unload stuff oh yeah!!");
                     msg("Perhaps.. Should we.. Maybe.. Stora data on disk? We'll see how things turn out.");
                     //How to do stuff, et c?

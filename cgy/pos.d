@@ -178,9 +178,9 @@ struct TilePos {
         return TileXYPos(vec2i(value.X, value.Y));
     }
 
-    aabbox3d!double getAABB(bool halfTile = false){
+    aabbox3d!double getAABB(){
         auto minPos = util.convert!double(value);
-        auto maxPos = minPos + (halfTile ? vec3d(1.0, 1.0, 0.5) : vec3d(1.0, 1.0, 1.0));
+        auto maxPos = minPos + vec3d(1.0, 1.0, 1.0);
         return aabbox3d!double(minPos, maxPos);
     }
 

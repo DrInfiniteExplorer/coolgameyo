@@ -4,6 +4,7 @@ module unit;
 import std.exception;
 import std.stdio;
 
+import json;
 import changelist;
 import pos;
 import stolen.aabbox3d;
@@ -67,6 +68,11 @@ struct Unit {
     float unitWidth = 0.7;
     float unitHeight = 1.5;
     float stepHeight = 0.5;
+    
+    Value serialize() {
+        BREAKPOINT;
+        return Value(1);
+    }
 
     int tick(ChangeList changeList) {
         hunger.tick();

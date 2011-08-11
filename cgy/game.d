@@ -219,7 +219,6 @@ class Game{
     }
     
   void serializeAll(void delegate() andThen) {
-        /*
         //Takes care of world and tasks.        
         scheduler.startSerialize({
             writeln("WOHOO!");
@@ -227,7 +226,6 @@ class Game{
                 andThen();
             }
         });
-      */
         
         /*
         private bool            isClient;
@@ -250,7 +248,6 @@ class Game{
         enforce( name != "current", "Invalid save name: " ~ name);
     }
     body{
-        /*
         serializeAll({
             string saveDir = "saves/" ~ name ~ "/";
             if (exists(saveDir)) {
@@ -258,7 +255,6 @@ class Game{
             }
             copy("saves/current/", saveDir);
         });
-        */
     }        
     Camera getCamera() {
         return camera;

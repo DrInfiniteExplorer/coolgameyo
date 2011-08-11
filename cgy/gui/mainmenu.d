@@ -23,6 +23,7 @@ class MainMenu : GuiElementWindow {
     GuiSystem guiSystem;
     GuiElementButton newGameButton;
     GuiElementButton resumeGameButton;
+    GuiElementButton saveGameButton;
     HyperUnitControlInterfaceInputManager userControl;
     LoadScreen loadScreen;
     this(GuiSystem g, Main m) {
@@ -62,6 +63,8 @@ class MainMenu : GuiElementWindow {
             loadScreen.setLoading(false);
             userControl = new HyperUnitControlInterfaceInputManager(game, guiSystem);
             resumeGameButton = new GuiElementButton(this, rect, "Resume gay me?", &onResumeGame);
+            rect.start.X += rect.size.X * 2;
+            saveGameButton = new GuiElementButton(this, rect, "Save gay me?", &onSaveGame);
             onResumeGame(false, false);
         }
         game = main.startGame(&loadDone);
@@ -80,6 +83,13 @@ class MainMenu : GuiElementWindow {
         ushort middleX = cast(ushort)renderSettings.windowWidth/2;
         ushort middleY = cast(ushort)renderSettings.windowHeight/2;
         SDL_WarpMouse(middleX, middleY);
+    }
+    
+    void onSaveGame(bool down, bool abort) {
+        if(down || abort) {
+            return;
+        }    
+        game.saveGame("Save1");
     }
     
     void onRandom(bool down, bool abort) {

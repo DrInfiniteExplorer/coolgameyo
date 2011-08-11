@@ -1,6 +1,8 @@
 import std.algorithm, std.range, std.stdio;
 import std.container;
+import std.conv;
 import std.exception;
+import std.file;
 import std.typecons;
 
 import graphics.camera;
@@ -98,16 +100,29 @@ class World {
         worldGen.destroy();
     }
 
-    void serialize() {  //TODO: Implement serialization
-        enforce(0);
-        foreach (xy, sectorxy; sectorXY) {
-            // write xy markers
+    void serialize() { 
+        //TODO: Things commented should probably be serialized.
+        //HeightmapTasks heightmapTasks;
+        //WorldGenParams worldGenParams;
+        //WorldGenerator worldGen;
+        //bool isServer;  //TODO: How, exactly, does the world function differently if it actually is a server? Find out!
 
-            // write heightmap
-            foreach (z, sectors; sectorxy.sectors) {
-                // write sectors
+        //WorldListener[] listeners;
+        //TileTypeManager tileTypeManager;
 
+        //WorkSet toFloodFill;
+        //SectorNum[] floodingSectors;
+        void serializeSectorXY(SectorXYNum xy, SectorXY sectorxy) {
+            string folder = text("saves/current/world/", xy.value.X, ",", xy.value.Y, "/");
+            mkdirRecurse(folder);
+            std.file.write(folder ~ "heightmap.bin", sectorxy.heightmap.heightmap);
+            foreach( sector ; sectorxy.sectors) {
+                sector.serialize();
             }
+        }
+        
+        foreach( xy, sectorxy ; sectorXY) {
+            serializeSectorXY(xy, sectorxy);
         }
     }
 
