@@ -7,6 +7,7 @@ import std.typecons;
 
 import graphics.camera;
 
+import json;
 import tiletypemanager;
 import worldgen.worldgen;
 import worldgen.newgen;
@@ -105,13 +106,22 @@ class World {
         //HeightmapTasks heightmapTasks;
         //WorldGenParams worldGenParams;
         //WorldGenerator worldGen;
+        worldGen.serialize();
         //bool isServer;  //TODO: How, exactly, does the world function differently if it actually is a server? Find out!
 
         //WorldListener[] listeners;
         //TileTypeManager tileTypeManager;
+        
+        //auto toFlood = Value(array(map!encode(array(toFloodFill))));
+        auto toFlood = encode(array(toFloodFill));
+        //auto floodSect = Value(array(map!encode(floodingSectors)));
+        auto floodSect = encode(floodingSectors);
+        auto jsonRoot = Value([ "toFlood" : toFlood, "floodSect" : floodSect]);
+        auto jsonString = to!string(jsonRoot);	
+	    jsonString = json.prettyfyJSON(jsonString);
+        util.mkdir("saves/current/world/");
+        std.file.write("saves/current/world/flooding.json", jsonString);
 
-        //WorkSet toFloodFill;
-        //SectorNum[] floodingSectors;
         void serializeSectorXY(SectorXYNum xy, SectorXY sectorxy) {
             string folder = text("saves/current/world/", xy.value.X, ",", xy.value.Y, "/");
             mkdirRecurse(folder);
@@ -124,6 +134,23 @@ class World {
         foreach( xy, sectorxy ; sectorXY) {
             serializeSectorXY(xy, sectorxy);
         }
+    }
+    
+    void deserialize() {
+        worldGen.deserialize();
+
+        auto content = readText("saves/current/world/flooding.json");
+        auto jsonRoot = json.parse(content);
+        uint activeUnitId;
+        uint unitCount;
+        json.read(toFloodFill, jsonRoot["toFlood"]);
+/*
+        auto toFlood = encode(array(toFloodFill));
+        //auto floodSect = Value(array(map!encode(floodingSectors)));
+        auto floodSect = encode(floodingSectors);
+        auto jsonRoot = Value([ "toFlood" : toFlood, "floodSect" : floodSect]);
+*/
+        
     }
 
 
@@ -362,6 +389,15 @@ class World {
         }
         ret.prop();
         return ret;
+    }
+    
+    Unit* getUnitFromId(uint id) {
+        foreach(unit ; getUnits()) {
+            if (unit.unitId == id) {
+                return unit;
+            }
+        }
+        return null;
     }
 
     void update(Scheduler scheduler){

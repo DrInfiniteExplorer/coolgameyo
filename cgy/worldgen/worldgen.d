@@ -30,6 +30,9 @@ interface WorldGenerator {
     Tile getTile(TilePos pos);
     int maxZ(const TileXYPos xypos);
     
+    void serialize();
+    void deserialize();
+    
     void destroy();
 }
 
@@ -39,6 +42,9 @@ final class WorldGeneratorOld : WorldGenerator{
     uint randMap[512][512];
 
     ushort air, mud, rock, water;
+    
+    void serialize(){}
+    void deserialize(){}
 
     void destroy() {
         //Nothing here yet.

@@ -61,7 +61,7 @@ class AIModule : Module, WorldListener {
         auto jsonRoot = Value(jsonStates);
         auto jsonString = to!string(jsonRoot);	
 	    jsonString = json.prettyfyJSON(jsonString);
-        std.file.mkdirRecurse("saves/current/modules/ai");
+        util.mkdir("saves/current/modules/ai");
         std.file.write("saves/current/modules/ai/states.json", jsonString);
         
     }

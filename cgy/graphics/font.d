@@ -272,7 +272,7 @@ class Font {
         }
         auto content = readText(fontFile ~ ".json");
 
-        json.update(&conf, content);
+        json.read(conf, content);
 
         auto img = Image(path ~ conf.textureFile);
         texId = img.toGLTex(0);

@@ -1,9 +1,12 @@
+module pos;
 
+import std.conv;
+
+import json;
 import stolen.aabbox3d;
 import util;
 import worldparts.sector;
 import worldparts.block;
-import std.conv;
 
 
 mixin template ToStringMethod3D() {
@@ -23,6 +26,15 @@ mixin template ToStringMethod2D() {
     }
 }
 
+mixin template SerializeValue() {
+    Value toJSON() {
+        return encode(value);
+    }
+    void fromJSON(Value v) {
+        read(value, v);
+    }
+}
+
 struct UnitPos {
     vec3d value;
 
@@ -34,6 +46,7 @@ struct UnitPos {
     alias tilePos this;
 
     mixin ToStringMethod3D;
+    mixin SerializeValue;
 }
 
 struct SectorNum {
@@ -58,6 +71,7 @@ struct SectorNum {
     }
 
     mixin ToStringMethod3D;
+    mixin SerializeValue;
 }
 
 struct BlockNum {
@@ -101,6 +115,7 @@ struct BlockNum {
     }
 
     mixin ToStringMethod3D;
+    mixin SerializeValue;
 
 }
 struct TilePos {
@@ -221,6 +236,7 @@ struct TilePos {
     }
     
     mixin ToStringMethod3D;
+    mixin SerializeValue;
 }
 
 struct GraphRegionNum{
@@ -249,6 +265,7 @@ struct GraphRegionNum{
     }
 
     mixin ToStringMethod3D;
+    mixin SerializeValue;
 }
 
 struct SectorXYNum {
@@ -276,4 +293,5 @@ struct TileXYPos {
                      posMod(value.Y, SectorSize.y));
     }
     mixin ToStringMethod2D;
+    mixin SerializeValue;
 }

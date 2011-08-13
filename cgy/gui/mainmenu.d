@@ -24,6 +24,7 @@ class MainMenu : GuiElementWindow {
     GuiElementButton newGameButton;
     GuiElementButton resumeGameButton;
     GuiElementButton saveGameButton;
+    GuiElementButton loadGameButton;
     HyperUnitControlInterfaceInputManager userControl;
     LoadScreen loadScreen;
     this(GuiSystem g, Main m) {
@@ -37,6 +38,7 @@ class MainMenu : GuiElementWindow {
         auto optionsButt = new GuiElementButton(this, Rectd(vec2d(0.1, 0.4), vec2d(0.3, 0.2)), "Options", &onOptions);
 
         auto randomButt = new GuiElementButton(this, Rectd(vec2d(0.1, 0.6), vec2d(0.3, 0.2)), "Random", &onRandom);
+        auto loadGameButt = new GuiElementButton(this, Rectd(vec2d(randomButt.getRelativeRect().getRight()+0.05, 0.6), vec2d(0.3, 0.2)), "Load game", &onLoadGame);
         auto startNewButt = new GuiElementButton(this, Rectd(vec2d(0.1, randomButt.getRelativeRect().getBottom()+0.05), vec2d(0.3, 0.2)), "newgamemenu", &onStartNewGame);
         
         //        auto cb = new GuiElementCheckBox(this, Rectd(vec2d(0.10, 0.6), vec2d(0.3, 0.2)), "CHECKBOX", null);
@@ -90,6 +92,25 @@ class MainMenu : GuiElementWindow {
             return;
         }    
         game.saveGame("Save1");
+    }
+    void onLoadGame(bool down, bool abort) {
+        if(down || abort) {
+            return;
+        }    
+        loadScreen.setLoading(true);
+        auto rect = newGameButton.getRelativeRect();        
+        void loadDone() {
+            loadScreen.setLoading(false);
+            userControl = new HyperUnitControlInterfaceInputManager(game, guiSystem);
+            resumeGameButton = new GuiElementButton(this, rect, "Resume gay me?", &onResumeGame);
+            rect.start.X += rect.size.X * 2;
+            saveGameButton = new GuiElementButton(this, rect, "Save gay me?", &onSaveGame);
+            onResumeGame(false, false);
+        }
+        game = main.startGame(&loadDone);
+        newGameButton.destroy();
+        newGameButton = null;
+        setVisible(false);        
     }
     
     void onRandom(bool down, bool abort) {

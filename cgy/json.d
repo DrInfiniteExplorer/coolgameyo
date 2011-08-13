@@ -32,11 +32,11 @@ struct Value {
         enforce (type == Type.object);
         return !!(name in pairs); //TODO: WTF is !! ????
     }
-    Value opIndex(string name) {
+    ref Value opIndex(string name) {
         enforce (type == Type.object);
         return pairs[name];
     }
-    Value opIndex(size_t index) {
+    ref Value opIndex(size_t index) {
         enforce (type == Type.array);
         return elements[index];
     }
@@ -266,7 +266,12 @@ static:
 
 alias Parser.parseValue parse;
 
-
+void read(T)(ref T t, string s) {
+    t = read!T(s);    
+}
+void read(T)(ref T t, Value v) {
+    t = read!T(v);
+}
 T read(T)(string s) { return read!T(parse(s)); }
 T read(T)(Value val) {
     static if (isNumeric!T) {
@@ -285,15 +290,26 @@ T read(T)(Value val) {
             us ~= read!U(e);
         }
         return us;
+    } else static if (__traits(compiles, T.fromJSON(val))) {
+        T t;
+        t.fromJSON(val);
+        return t;
+    } else static if (__traits(compiles, T.insert)) {
+        alias typeof(T.removeAny()) Type;
+        T t = new T();
+        foreach( e; val.elements) {
+            t.insert(read!Type(e));
+        }
+        return t;
     } else {
-        msg("Json cannot read '", M.stringof, " ", m,
+        pragma(msg, text("Json cannot read '", T.stringof, " ", T.stringof,
                 "' in ", T.stringof,
-                " because I don't know what it is!");
+                " because I don't know what it is!"));
     }
 }
 
-void update(T)(T* t, string s) { return update!T(t, parse(s)); }
-void update(T)(T* t, Value val) {
+private void update(T)(T* t, string s) { return update!T(t, parse(s)); }
+private void update(T)(T* t, Value val) {
     foreach (m; __traits(allMembers, T)) {
         alias typeof(__traits(getMember, *t, m)) M;
         static if (isSomeFunction!(__traits(getMember, T, m))){
@@ -306,12 +322,16 @@ void update(T)(T* t, Value val) {
                 __traits(getMember, *t, m) = read!M(val[m]);
             }
         }
-    }
+    }    
 }
 
 Value encode(T)(T t) {
-    static if (isNumeric!T || is (T : string) || is (T : bool)) {
+    static if (isNumeric!T || is (T : string) || is (T : bool)) { //Normal primitive
         return Value(t);
+    } else static if (is (T U : U[])) { //Array of things
+        return Value(array(map!(encode!U)(t)));
+    } else static if (__traits(compiles, t.toJSON())) { //Has method to serialize
+        return t.toJSON();
     } else static if (is (T == struct)) {
         Value[string] blep;
         foreach (m; __traits(allMembers, T)) { 
@@ -322,8 +342,6 @@ Value encode(T)(T t) {
             }
         }
         return Value(blep);
-    } else static if (is (T U : U[])) {
-        return Value(array(map!(encode!U)(t)));
     } else {
         pragma (msg, "cannot encode ", T);
         assert (0);

@@ -1,4 +1,4 @@
-
+﻿
 module game;
 
 import core.thread;
@@ -21,6 +21,7 @@ import graphics.texture;
 
 import graphics.debugging;
 
+import json;
 import ai.patrolai;
 //import changelist;
 import graphics.geometrycreator;
@@ -140,6 +141,9 @@ class Game{
     }
     
     void populateWorld() {
+        
+        g_UnitCount = 0;
+        
         UnitPos topOfTheWorld(TileXYPos xy) {
             auto top = world.getTopTilePos(xy);
             msg("top: ", top);
@@ -151,14 +155,14 @@ class Game{
         }
 
         auto xy = TileXYPos(vec2i(3,-20));
-        auto u = new Unit;
+        auto u = newUnit();
         u.pos = topOfTheWorld(xy);
         //u.pos.value.Z += 1;
         world.addUnit(u);
         
         msg("u.pos == ", u.pos);
 
-        auto uu = new Unit;
+        auto uu = newUnit();
         auto xyy = TileXYPos(vec2i(3,3));
         uu.pos = topOfTheWorld(xyy);
         world.addUnit(uu);      
@@ -191,9 +195,9 @@ class Game{
     }
 
     void loadGameThread(string name) {
-        //init(worldParams);
-        //Deserialize into world and stufffff!
-        //Load camera! Active unit! Stuff!
+        WorldGenParams worldParams;
+        init(worldParams);
+        deserialize();
         finishInit();        
     }
     
@@ -209,6 +213,13 @@ class Game{
         spawn(&newGameThreadStarter, cast(shared)this, cast(shared)worldParams);
     }
     void loadGame(string name, void delegate() onDone) {
+        string saveDir = "saves/" ~ name;
+        if (exists(saveDir)) {
+            rmdirRecurse("saves/current");
+        }
+        //Need to implement a recursive copy function, in util, perhaps?
+        util.copy(saveDir, "saves/current");
+        
         initCallback = onDone;
         enforce(0, "Implement!");
         static void loadGameThreadStarter(shared Game g, shared string s) {
@@ -218,29 +229,62 @@ class Game{
         spawn(&loadGameThreadStarter, cast(shared)this, cast(shared)name);
     }
     
-  void serializeAll(void delegate() andThen) {
+    //Called in loading thread.
+    private void deserialize() {
+        
+        
+
+        auto content = readText("saves/current/game.json");
+        auto rootVal = json.parse(content);
+        uint activeUnitId;
+        uint unitCount;
+        if("activeUnit" in rootVal){
+            activeUnitId = to!int(rootVal["activeUnit"].num);
+        }
+        if("unitCount" in rootVal){
+            unitCount = to!int(rootVal["unitCount"].num);
+        }
+        
+        g_UnitCount = unitCount;
+        activeUnit = world.getUnitFromId(activeUnitId);
+        
+    }
+    
+    void serializeAll(void delegate() andThen) {
+        void serialize() {
+            //private World           world; Tas hand om av scheduler.
+            //private bool            isClient;
+            //private bool            isServer;
+            //private bool            isWorker;
+
+            //Spara position för kameran?
+            //private Camera              camera;
+        
+            //Behöver inte sparas. Eller? Kan göra det, för snabb laddning av atlas, och flera 'moddar' igång samtidigt.
+            //private TileTextureAtlas    atlas;
+            //private TileTypeManager     tileTypeManager;    
+    
+            //private Unit*               activeUnit; //TODO: Find out when this unit dies, and tell people.
+            auto activeUnit = Value(activeUnit.unitId);
+            auto unitCount = Value(g_UnitCount);
+            auto jsonRoot = Value([
+                "activeUnit" : activeUnit,
+                "unitCount" : unitCount,
+            ]);
+            auto jsonString = to!string(jsonRoot);	
+	        jsonString = json.prettyfyJSON(jsonString);
+        
+            mkdirRecurse("saves/current");
+            std.file.write("saves/current/game.json", jsonString);
+        }
         //Takes care of world and tasks.        
         scheduler.startSerialize({
             writeln("WOHOO!");
+            serialize();
             if (andThen !is null) {
                 andThen();
             }
         });
-        
-        /*
-        private bool            isClient;
-        private bool            isServer;
-        private bool            isWorker;
-        private Camera              camera;
-        private Renderer            renderer;
-        private GeometryCreator     geometryCreator;
-        private Scheduler           scheduler;
-        private TileTextureAtlas    atlas;
-        private TileTypeManager     tileTypeManager;    
-        private PathModule          pathModule;
-        private AIModule            aiModule;
-        private Unit*               activeUnit; //TODO: Find out when this unit dies, and tell people.
-        */
     }
     
     void saveGame(string name)
@@ -249,13 +293,15 @@ class Game{
     }
     body{
         serializeAll({
-            string saveDir = "saves/" ~ name ~ "/";
+            string saveDir = "saves/" ~ name;
             if (exists(saveDir)) {
                 rmdirRecurse(saveDir);
             }
-            copy("saves/current/", saveDir);
+            //Need to implement a recursive copy function, in util, perhaps?
+            util.copy("saves/current", saveDir);
         });
-    }        
+    }
+    
     Camera getCamera() {
         return camera;
     }

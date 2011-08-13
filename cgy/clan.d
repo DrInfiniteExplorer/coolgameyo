@@ -64,6 +64,8 @@ struct Mission {
 
 
 class Clan {
+    uint clanId;
+    
     TilePos[] toMine;
 
     Mission getMission() {

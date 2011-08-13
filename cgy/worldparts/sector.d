@@ -49,7 +49,6 @@ class Sector {
 
     private TilePos pos;
     private SectorNum sectorNum;
-    private int blockCount;
 
     private Block[BlocksPerSector.z][BlocksPerSector.y][BlocksPerSector.x] blocks;
     static assert(blocks.length == BlocksPerSector.x);
@@ -86,14 +85,13 @@ class Sector {
         
         auto file = std.stdio.File(folder ~ "blocks.bin", "wb");
         
-        void write(ubyte[] buff) {
+        void write(const void[] buff) {
             file.write(buff);
         }
         
         foreach( block ; (&blocks[0][0][0])[0 .. BlocksPerSector.total]) {
             if (!block.valid) continue;
-            BREAKPOINT;
-            //block.serialize(write);
+            block.serialize(&write);
         }
         file.close();
         
@@ -101,7 +99,7 @@ class Sector {
         std.file.write(folder ~ "activityCount", asd);
         
         Value derp(Unit* unit) {
-            return unit.serialize();
+            return encode(*unit);
         }
 
         Value jsonRoot = Value(array(map!derp(array(units))));

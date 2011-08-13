@@ -121,7 +121,8 @@ class PathModule : Module {
         Value jsonRoot = Value(values);
         auto jsonString = to!string(jsonRoot);	
 	    jsonString = json.prettyfyJSON(jsonString);
-        std.file.mkdirRecurse("saves/current/modules/path");
+        
+        util.mkdir("saves/current/modules/path");
         std.file.write("saves/current/modules/path/states.json", jsonString);
         
     }

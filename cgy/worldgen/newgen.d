@@ -24,7 +24,13 @@ final class WorldGeneratorNew : WorldGenerator {
     ValueSource heightmap;
     //Uniform randoms -> stored in map -> coserpolate
 
-
+    void serialize() {
+        msg("Implement serializing worldgen");
+    }
+    void deserialize() {
+        msg("Implement deserializing worldgen");
+    }
+    
     ushort air, mud, rock, water;
     
     void init(WorldGenParams params, TileTypeManager tileTypeManager) {

@@ -110,6 +110,24 @@ struct Block {
 
     bool sparse() const @property { return (flags & BlockFlags.sparse) != 0; }
     void sparse(bool val) @property { setFlag(flags, BlockFlags.sparse, val); }
+    
+    void serialize(void delegate(const void[]) write)
+    in{
+        BREAK_IF(!valid);
+    }
+    body{
+        auto a = [blockNum];
+        write(a);
+        auto b = [flags];
+        write(b);
+        if (sparse) {
+            auto c = [sparseTileType];
+            write(c);
+        } else {
+            BREAK_IF(tiles is null);            
+            write((&((*tiles)[0][0][0]))[0 .. BlockSize.x * BlockSize.y * BlockSize.z]);
+        }
+    }
 
     static Block generateBlock(BlockNum blockNum, WorldGenerator worldgen) {
         //msg("Generating block: ", blockNum);

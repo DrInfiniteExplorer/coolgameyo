@@ -84,11 +84,13 @@ void loadSettings(){
     auto rootVal = json.parse(content);
     if("renderSettings" in rootVal){
         auto rsVal = rootVal["renderSettings"];
-        json.update(&renderSettings.serializableSettings, rsVal);
+        //json.update(&renderSettings.serializableSettings, rsVal);
+        json.read(renderSettings.serializableSettings, rsVal);
     }
     if("controlSettings" in rootVal){
 	    auto controlVal = rootVal["controlSettings"];
-	    json.update(&controlSettings.serializableSettings, controlVal);
+	    //json.update(&controlSettings.serializableSettings, controlVal);
+        json.read(controlSettings.serializableSettings, controlVal);
     }
 }
 

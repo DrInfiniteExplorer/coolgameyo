@@ -2,6 +2,7 @@ import core.time;
 
 import std.conv;
 import std.exception;
+import std.file;
 import std.stdio;
 import std.string;
 import std.range;
@@ -189,6 +190,31 @@ version(Windows){
     import win32.windows;
 }
 
+void mkdir(string path) {
+    if (exists(path)) {
+        enforce(isDir(path), "Non-filder with name exists:" ~path);
+        return;
+    }
+    mkdirRecurse(path);
+}
+
+void copy(string from, string to)
+in{
+    BREAK_IF(!exists(from));
+}
+body{
+    if (isDir(from)) {
+        mkdir(to);
+        foreach(string item ; dirEntries(from, SpanMode.shallow)) {
+            item = item[max(lastIndexOf(item, "/")+1,
+                            lastIndexOf(item, "\\")+1) .. $];
+            auto too = to ~ "/" ~ item;
+            util.copy(from ~ "/" ~ item, too);
+        }
+    } else {
+        std.file.copy(from, to);
+    }
+}
 
 void[] allocateBlob(size_t size) {
     version (Windows) {

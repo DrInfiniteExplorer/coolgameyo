@@ -149,6 +149,7 @@ class Main {
         SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
     }
     
+    //The delegate is called when all is done. Used to update gui and the likes.
     Game startGame(void delegate() loadDone) {
 		assert(game is null, "We already had a game, lawl");
         mixin(LogTime!("StartupTime"));
@@ -157,7 +158,15 @@ class Main {
         game.newGame(worldParams, loadDone);
         return game;
     }
+    Game loadGame(string saveName, void delegate() loadDone) {
+		assert(game is null, "We already had a game, lawl");
+        mixin(LogTime!("StartupTime"));
+        game = new Game(client, server, worker);
+        game.loadGame(saveName, loadDone);
+        return game;
+    }
     
+    //Called by mainloop. Will call delegate passed in startGame / loadGame above.
     void loadDone() {
         game.loadDone();
     }

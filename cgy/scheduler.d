@@ -183,14 +183,24 @@ class Scheduler {
     }
 
     private void serialize() {
-        BREAKPOINT; //Implement serializable tasks.
+        world.serialize();
         foreach (task; chain(sync[], async[])) {
             //task.writeTo(output);
         }
         foreach (mod; modules) {
             mod.serializeModule();
         }
-        
+        if (whenSerialized !is null) {
+            whenSerialized();
+        }
+        shouldSerialize = false;
+    }
+    
+    void deserialize() {
+        world.deserialize();
+        foreach (mod; modules) {
+            mod.deserializeModule();
+        }
     }
 
     //If we synchronize threads, changelist is used and stuff. Otherwise it is ignored.
@@ -230,12 +240,7 @@ class Scheduler {
                     tickWatch.start();
 
                     if (shouldSerialize) {
-                        world.serialize();
                         serialize();
-                        if (whenSerialized !is null) {
-                            whenSerialized();
-                        }
-                        shouldSerialize = false;
                     }
                     
                     if(exiting){

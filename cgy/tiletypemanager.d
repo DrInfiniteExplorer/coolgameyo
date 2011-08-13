@@ -74,7 +74,7 @@ class TileTypeManager {
 		auto rootVal = json.parse(content);
 		enforce(rootVal.type == json.Value.Type.object, "rootval in tiltypejson not object roawoaowoawo: " ~ to!string(rootVal.type));
 		foreach(name, rsVal ; rootVal.pairs) {
-			json.update(&tempType.serializableSettings, rsVal);
+			json.read(tempType.serializableSettings, rsVal);
 			tempType.textures.top = atlas.addTile(
 					tempType.texturePathTop,
                     tempType.textureCoordTop,
