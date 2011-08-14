@@ -10,6 +10,9 @@ import std.conv;
 import std.exception;
 import std.file;
 import std.stdio;
+import std.string;
+
+version(Windows) import std.c.windows.windows;
 
 import derelict.sdl.sdl;
 
@@ -175,6 +178,25 @@ class Game{
         //u.ai = new DwarfAI(u);
         
         activeUnit = uu;
+		
+		
+		ObjectPos topOfTheWorld2(TileXYPos xy) {
+            auto top = world.getTopTilePos(xy);
+            msg("top: ", top);
+            auto ret = top.toObjectPos();
+            ret.value.Z += 1;
+            msg("ret: ", ret);
+			
+            return ret;
+        }
+		
+		xy = TileXYPos(vec2i(3,10));
+        auto o = newObject();
+        o.pos = topOfTheWorld2(xy);
+        //o.pos.value.Z += 1;
+        world.addObject(o);
+        
+        msg("o.pos == ", o.pos);
         
     }
 
@@ -207,8 +229,16 @@ class Game{
     void newGame(WorldGenParams worldParams, void delegate() onDone) {
         initCallback = onDone;
         static void newGameThreadStarter(shared Game g, shared WorldGenParams p) {
-            Game game = cast(Game)g;
-            game.newGameThread(cast(WorldGenParams)p);
+			try {
+				Game game = cast(Game)g;
+				game.newGameThread(cast(WorldGenParams)p);
+			} catch (Throwable o) {
+				msg("Thread exception!\n", o.toString());
+				version(Windows) {
+					MessageBoxA(null, cast(char *)toStringz(o.toString()),
+							"Error", MB_OK | MB_ICONEXCLAMATION);
+				}
+			}
         }        
         spawn(&newGameThreadStarter, cast(shared)this, cast(shared)worldParams);
     }

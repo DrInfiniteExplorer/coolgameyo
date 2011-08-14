@@ -239,6 +239,7 @@ class Renderer {
         setWireframe(renderSettings.renderWireframe);
         renderWorld(camera);
         renderDudes(camera, 0.f);
+		renderObjects(camera, 0.f);
         renderDebug(camera);
         
         setWireframe(false);
@@ -286,5 +287,61 @@ class Renderer {
         glError();
         worldShader.use(false);
     }
+	
+	
+	
+	void renderObject(_Object* _object, float tickTimeSoFar){
+        auto M = matrix4();
+        vec3d objectPos;
+        /*vec3d **p = _object in specialUnits;
+        if (p !is null) {
+            objectPos = **p;
+        } else {*/
+            objectPos = _object.pos.value; //TODO: Subtract the camera position from the unit before rendering
+        //}
+        M.setTranslation(util.convert!float(objectPos));
+        M.setRotationRadians(vec3f(0, 0, _object.rotation));
+        dudeShader.setUniform(dudeShader.M, M);
+        dudeShader.setUniform(dudeShader.color, vec3f(1, 0, 0)); //Color :p
+        glBindBuffer(GL_ARRAY_BUFFER, dudeVBO);
+        glError();
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, vec3f.sizeof, null /* offset in vbo */);
+        glError();
+
+        glDrawArrays(GL_QUADS, 0, 4*6*2 /*2 cubes */);
+        glError();
+
+
+        //TODO: Move to own function, make own shader or abstractify a "simpleshader"-thing to use.
+        const bool RenderDudeAABB = false;
+        static if(RenderDudeAABB == true){
+            dudeShader.use(false);
+            renderAABB(_object.aabb);
+            dudeShader.use();
+        }
+    }
+    
+
+    // D MINECRAFT MAP VIEWER CLONE INSPIRATION ETC
+    // https://github.com/Wallbraker/Charged-Miners
+    // wiki is down so arbitrary place is best for future reference and documentation.
+
+    void renderObjects(Camera camera, float tickTimeSoFar) {
+        //TODO: Remove camera position from dudes!! Matrix to set = proj*viewRotation
+        auto vp = camera.getProjectionMatrix() * camera.getViewMatrix();
+        dudeShader.use();
+        dudeShader.setUniform(dudeShader.VP, vp);
+        glEnableVertexAttribArray(0);
+        glError();
+        auto _objects = world.getVisibleObjects(camera);
+        foreach(_object ; _objects) {
+            renderObject(_object, tickTimeSoFar);
+        }
+        glDisableVertexAttribArray(0);
+        dudeShader.use(false);
+        glError();
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+    }
+
 }
 

@@ -416,6 +416,7 @@ class GeometryCreator : Module, WorldListener
     }
 
     void onAddUnit(SectorNum, Unit*) { }
+	void onAddObject(SectorNum, _Object*) { }
 
     void onSectorLoad(SectorNum sectorNum)
     {

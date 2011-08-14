@@ -17,6 +17,7 @@ import worldparts.block;
 import worldgen.worldgen;
 import pos;
 import unit;
+import _object;
 import util;
 
 enum BlocksPerSector {
@@ -54,6 +55,7 @@ class Sector {
     static assert(blocks.length == BlocksPerSector.x);
 
     RedBlackTree!(Unit*) units; //TODO: how to make this private without breaking stuff derp? :S
+	RedBlackTree!(_Object*) _objects;
     private int activityCount;
 
     invariant(){
@@ -66,6 +68,7 @@ class Sector {
         sectorNum = sectorNum_;
         pos = sectorNum.toTilePos();
         units = new typeof(units);
+		_objects = new typeof(_objects);
     }
 
     const(Block)[] getBlocks() const {
@@ -157,6 +160,9 @@ class Sector {
     //TODO: Add more unit-interfacing etc.
     void addUnit(Unit* u) {
         units.insert(u);
+    }
+	void addObject(_Object* o) {
+        _objects.insert(o);
     }
     
     int activity() const @property { return activityCount; }

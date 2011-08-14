@@ -12,6 +12,7 @@ import tiletypemanager;
 import worldgen.worldgen;
 import worldgen.newgen;
 public import unit;
+public import _object;
 import util;
 import scheduler;
 import statistics;
@@ -26,6 +27,7 @@ public import worldparts.tile;
 // and remove the world member from listeners
 interface WorldListener {
     void onAddUnit(SectorNum sectorNum, Unit* unit);
+	void onAddObject(SectorNum sectorNum, _Object* _object);
     void onSectorLoad(SectorNum sectorNum);
     void onSectorUnload(SectorNum sectorNum);
     void onTileChange(TilePos tilePos);
@@ -77,6 +79,7 @@ class World {
     bool isServer;  //TODO: How, exactly, does the world function differently if it actually is a server? Find out!
 
     int unitCount;  //TODO: Is used?
+	int objectCount;  //TODO: Is used?
 
     WorldListener[] listeners;
 
@@ -352,7 +355,16 @@ class World {
         }
         return units;
     }
-
+	_Object*[] getVisibleObjects(Camera camera){
+        _Object*[] _objects;
+        foreach(_object; getObjects()){
+            if(camera.inFrustum(_object)){
+                _objects ~= _object;
+            }
+        }
+        return _objects;
+    }
+	
     private Sector[] getSectors() {
         return sectorList;
     }
@@ -401,6 +413,53 @@ class World {
         }
         return null;
     }
+	
+	/////////////// Samma lika fast med objects
+	static struct ObjectRange {
+        Sector[] sectors;
+        typeof(Sector.init._objects[]) currentObjectRange;
+
+        _Object* front() @property {
+            return currentObjectRange.front;
+        }
+        void popFront() {
+            currentObjectRange.popFront();
+            prop();
+        }
+        void prop() {
+            if(sectors.empty) return;
+            while (currentObjectRange.empty) {
+                sectors.popFront();
+                if (sectors.empty) break;
+                currentObjectRange = sectors.front._objects[];
+            }
+        }
+
+        bool empty() @property {
+            return sectors.empty && currentObjectRange.empty;
+        }
+    }
+
+    // Returns a range with all the units in the world
+    ObjectRange getObjects() {
+        ObjectRange ret;
+        ret.sectors = getSectors();
+        if (!ret.sectors.empty) {
+            ret.currentObjectRange = ret.sectors.front._objects[];
+        }
+        ret.prop();
+        return ret;
+    }
+    
+    _Object* getObjectFromId(uint id) {
+        foreach(_object ; getObjects()) {
+            if (_object.objectId == id) {
+                return _object;
+            }
+        }
+        return null;
+    }
+	///////////////// inge mer object kod!
 
     void update(Scheduler scheduler){
         floodFillSome();
@@ -465,6 +524,14 @@ class World {
         increaseActivity(unit.pos);
 
         notifyAddUnit(sectorNum, unit);
+    }
+	void addObject(_Object* _object) {
+        objectCount += 1;
+        auto sectorNum = _object.pos.getSectorNum();
+
+        getSector(sectorNum).addObject(_object);
+
+        notifyAddObject(sectorNum, _object);
     }
 
     Tile getTile(TilePos tilePos, bool createBlock=true,
@@ -693,6 +760,11 @@ class World {
     void notifyAddUnit(SectorNum sectorNum, Unit* unit) {
         foreach (listener; listeners) {
             listener.onAddUnit(sectorNum, unit);
+        }
+    }
+	void notifyAddObject(SectorNum sectorNum, _Object* _object) {
+        foreach (listener; listeners) {
+            listener.onAddObject(sectorNum, _object);
         }
     }
     void notifySectorLoad(SectorNum sectorNum) {

@@ -49,6 +49,21 @@ struct UnitPos {
     mixin SerializeValue;
 }
 
+struct ObjectPos {
+    vec3d value;
+	// ToDo: fix so that the hoalls reada pao the side of the tile.
+	
+    TilePos tilePos() const @property {
+        return TilePos(
+            getTilePos(value)
+        );
+    }
+    alias tilePos this;
+
+    mixin ToStringMethod3D;
+	mixin SerializeValue;
+}
+
 struct SectorNum {
     vec3i value;
 
@@ -184,6 +199,13 @@ struct TilePos {
 
     UnitPos toUnitPos() const{
         return UnitPos(vec3d(value.X + 0.5,
+                             value.Y + 0.5,
+                             value.Z + 0.5));
+
+    }
+	
+	ObjectPos toObjectPos() const{
+        return ObjectPos(vec3d(value.X + 0.5,
                              value.Y + 0.5,
                              value.Z + 0.5));
 
