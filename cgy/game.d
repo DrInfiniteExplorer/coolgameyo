@@ -221,7 +221,6 @@ class Game{
         util.copy(saveDir, "saves/current");
         
         initCallback = onDone;
-        enforce(0, "Implement!");
         static void loadGameThreadStarter(shared Game g, shared string s) {
             Game game = cast(Game)g;
             game.loadGameThread(cast(string)s);
@@ -232,7 +231,7 @@ class Game{
     //Called in loading thread.
     private void deserialize() {
         
-        
+        world.deserialize();
 
         auto content = readText("saves/current/game.json");
         auto rootVal = json.parse(content);
@@ -274,7 +273,7 @@ class Game{
             auto jsonString = to!string(jsonRoot);	
 	        jsonString = json.prettyfyJSON(jsonString);
         
-            mkdirRecurse("saves/current");
+            util.mkdir("saves/current");
             std.file.write("saves/current/game.json", jsonString);
         }
         //Takes care of world and tasks.        

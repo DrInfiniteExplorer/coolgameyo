@@ -266,41 +266,40 @@ static:
 
 alias Parser.parseValue parse;
 
-void read(T)(ref T t, string s) {
-    t = read!T(s);    
+T read(T)(string s) {
+    T t;
+    read!T(t, s);    
+    return t;
 }
-void read(T)(ref T t, Value v) {
+T read(T)(Value v) {
+    T t;
     t = read!T(v);
+    return t;
 }
-T read(T)(string s) { return read!T(parse(s)); }
-T read(T)(Value val) {
+void read(T)(out T t, string s) { return read!T(t, parse(s)); }
+void read(T)(out T t, Value val) {
     static if (isNumeric!T) {
-        return to!T(val.num);
+        t = to!T(val.num);
     } else static if (is (T : string)) {
-        return val.str;
+        t = val.str;
     } else static if (is (T : bool)) {
-        return val.boolVal;
+        t = val.boolVal;
     } else static if (is (T == struct)) {
-        T t;
         update!T(&t, val);
-        return t;
     } else static if (is (T U : U[])) {
-        U[] us;
+        //U[] us;
         foreach (e; val.elements) {
-            us ~= read!U(e);
+            //us ~= read!U(e);
+            t ~= read!U(e);
         }
-        return us;
+        //return us;
     } else static if (__traits(compiles, T.fromJSON(val))) {
-        T t;
         t.fromJSON(val);
-        return t;
     } else static if (__traits(compiles, T.insert)) {
         alias typeof(T.removeAny()) Type;
-        T t = new T();
         foreach( e; val.elements) {
             t.insert(read!Type(e));
         }
-        return t;
     } else {
         pragma(msg, text("Json cannot read '", T.stringof, " ", T.stringof,
                 "' in ", T.stringof,
@@ -319,7 +318,7 @@ private void update(T)(T* t, Value val) {
             static if (is (M == struct)) {
                 update(&__traits(getMember, *t, m), val[m]);            
             } else static if (__traits(compiles, read!M(val[m]))){
-                __traits(getMember, *t, m) = read!M(val[m]);
+                read!M(__traits(getMember, *t, m), val[m]);
             }
         }
     }    

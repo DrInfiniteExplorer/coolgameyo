@@ -107,7 +107,7 @@ class MainMenu : GuiElementWindow {
             saveGameButton = new GuiElementButton(this, rect, "Save gay me?", &onSaveGame);
             onResumeGame(false, false);
         }
-        game = main.startGame(&loadDone);
+        game = main.loadGame("Save1", &loadDone);
         newGameButton.destroy();
         newGameButton = null;
         setVisible(false);        
