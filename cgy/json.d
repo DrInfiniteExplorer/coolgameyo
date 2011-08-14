@@ -254,7 +254,7 @@ static:
     Value parseArray(Input i) {
         i.skip(Tag.lbra);
         Value[] blep;
-        while (true) {
+        while (i.front.tag != Tag.rbra) {
             blep ~= parseValue(i);
             if (i.front.tag != Tag.comma) break;
             else i.popFront();
@@ -276,8 +276,8 @@ T read(T)(Value v) {
     t = read!T(v);
     return t;
 }
-void read(T)(out T t, string s) { return read!T(t, parse(s)); }
-void read(T)(out T t, Value val) {
+void read(T)(ref T t, string s) { return read!T(t, parse(s)); }
+void read(T)(ref T t, Value val) {
     static if (isNumeric!T) {
         t = to!T(val.num);
     } else static if (is (T : string)) {

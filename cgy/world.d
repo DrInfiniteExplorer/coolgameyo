@@ -143,8 +143,10 @@ class World {
         auto jsonRoot = json.parse(content);
         uint activeUnitId;
         uint unitCount;
+        toFloodFill = new typeof(toFloodFill);
         json.read(toFloodFill, jsonRoot["toFlood"]);
-/*
+        json.read(floodingSectors, jsonRoot["floodSect"]);
+/*        
         auto toFlood = encode(array(toFloodFill));
         //auto floodSect = Value(array(map!encode(floodingSectors)));
         auto floodSect = encode(floodingSectors);
