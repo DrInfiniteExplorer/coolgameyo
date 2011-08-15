@@ -273,7 +273,7 @@ T read(T)(string s) {
 }
 T read(T)(Value v) {
     T t;
-    t = read!T(v);
+    read!T(t, v);
     return t;
 }
 void read(T)(ref T t, string s) { return read!T(t, parse(s)); }
@@ -284,8 +284,6 @@ void read(T)(ref T t, Value val) {
         t = val.str;
     } else static if (is (T : bool)) {
         t = val.boolVal;
-    } else static if (is (T == struct)) {
-        update!T(&t, val);
     } else static if (is (T U : U[])) {
         //U[] us;
         foreach (e; val.elements) {
@@ -293,13 +291,15 @@ void read(T)(ref T t, Value val) {
             t ~= read!U(e);
         }
         //return us;
-    } else static if (__traits(compiles, T.fromJSON(val))) {
+    } else static if (__traits(compiles, t.fromJSON(val))) {
         t.fromJSON(val);
     } else static if (__traits(compiles, T.insert)) {
         alias typeof(T.removeAny()) Type;
         foreach( e; val.elements) {
             t.insert(read!Type(e));
         }
+    } else static if (is (T == struct)) {
+        update!T(&t, val);
     } else {
         pragma(msg, text("Json cannot read '", T.stringof, " ", T.stringof,
                 "' in ", T.stringof,
@@ -315,10 +315,10 @@ private void update(T)(T* t, Value val) {
             continue;
         } else {
             if (m !in val) continue;
-            static if (is (M == struct)) {
-                update(&__traits(getMember, *t, m), val[m]);            
-            } else static if (__traits(compiles, read!M(val[m]))){
+            static if (__traits(compiles, read!M(val[m]))){
                 read!M(__traits(getMember, *t, m), val[m]);
+            } else static if (is (M == struct)) {
+                update(&__traits(getMember, *t, m), val[m]);
             }
         }
     }    
@@ -357,13 +357,13 @@ string prettyfyJSON(string text){
 	string[] asdf = std.string.splitLines(text);
 	text = "";
 	foreach(fdsa; asdf){
-		if (indexOf(fdsa, "}") != -1){
+		if (countUntil(fdsa, "}") != -1){
 			tabs--;
 		}
 		for (int a = 0; a < tabs; a++){
 			std.array.insertInPlace(fdsa, 0, "  ");
 		}
-		if (indexOf(fdsa, "{") != -1){
+		if (countUntil(fdsa, "{") != -1){
 			tabs++;
 		}
 		text = text ~ fdsa;

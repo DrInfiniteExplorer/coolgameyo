@@ -90,6 +90,20 @@ struct Unit {
         //Add ai
         return val;
     }
+    void fromJSON(Value val) {
+        read(unitData, val);
+        if ("clanId" in val) {
+            int clanId;
+            read(clanId, val["clanId"]);
+            BREAKPOINT;
+        }
+        if ("unitTypeId" in val) {
+            int unitTypeId;
+            read(unitTypeId, val["unitTypeId"]);
+            BREAKPOINT;
+        }
+        //Add ai
+    }
     
 
 

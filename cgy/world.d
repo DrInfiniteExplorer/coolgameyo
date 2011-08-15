@@ -71,7 +71,7 @@ class World {
     };
     HeightmapTasks heightmapTasks;
     
-    SectorXY[SectorXYNum] sectorXY;
+    SectorXY[SectorXYNum] sectorsXY;
     Sector[] sectorList;
 
     WorldGenParams worldGenParams;
@@ -115,26 +115,39 @@ class World {
         //WorldListener[] listeners;
         //TileTypeManager tileTypeManager;
         
-        //auto toFlood = Value(array(map!encode(array(toFloodFill))));
         auto toFlood = encode(array(toFloodFill));
-        //auto floodSect = Value(array(map!encode(floodingSectors)));
         auto floodSect = encode(floodingSectors);
-        auto jsonRoot = Value([ "toFlood" : toFlood, "floodSect" : floodSect]);
+        
+        SectorNum[] actives;
+        foreach(sector ; sectorList) {
+            if (sector.activity > 0) {
+                actives ~= sector.getSectorNum;
+            }
+        }
+        auto activeSectors = Value(array(map!encode(actives)));
+        auto jsonRoot = Value([
+            "toFlood" : toFlood,
+            "floodSect" : floodSect,
+            "activeSectors" : activeSectors
+        ]);
+        
         auto jsonString = to!string(jsonRoot);	
 	    jsonString = json.prettyfyJSON(jsonString);
         util.mkdir("saves/current/world/");
-        std.file.write("saves/current/world/flooding.json", jsonString);
+        std.file.write("saves/current/world/world.json", jsonString);
 
         void serializeSectorXY(SectorXYNum xy, SectorXY sectorxy) {
             string folder = text("saves/current/world/", xy.value.X, ",", xy.value.Y, "/");
             mkdirRecurse(folder);
-            std.file.write(folder ~ "heightmap.bin", sectorxy.heightmap.heightmap);
+            if (sectorxy.heightmap !is null) {
+                std.file.write(folder ~ "heightmap.bin", sectorxy.heightmap.heightmap);
+            }
             foreach( sector ; sectorxy.sectors) {
                 sector.serialize();
             }
         }
         
-        foreach( xy, sectorxy ; sectorXY) {
+        foreach( xy, sectorxy ; sectorsXY) {
             serializeSectorXY(xy, sectorxy);
         }
     }
@@ -142,20 +155,51 @@ class World {
     void deserialize() {
         worldGen.deserialize();
 
-        auto content = readText("saves/current/world/flooding.json");
+        auto content = readText("saves/current/world/world.json");
         auto jsonRoot = json.parse(content);
         uint activeUnitId;
         uint unitCount;
         toFloodFill = new typeof(toFloodFill);
         json.read(toFloodFill, jsonRoot["toFlood"]);
         json.read(floodingSectors, jsonRoot["floodSect"]);
-/*        
-        auto toFlood = encode(array(toFloodFill));
-        //auto floodSect = Value(array(map!encode(floodingSectors)));
-        auto floodSect = encode(floodingSectors);
-        auto jsonRoot = Value([ "toFlood" : toFlood, "floodSect" : floodSect]);
-*/
+        SectorNum[] actives;
+        json.read(actives, jsonRoot["activeSectors"]);
+        foreach(sectorNum ; actives) {
+            loadSector(sectorNum);
+        }
         
+    }
+    
+    
+    //Ensure that it only happens when no other code is running.
+    void loadSector(SectorNum num)
+    in{
+        BREAK_IF(getSector(num, false) !is null);
+    }
+    body{
+        
+        void loadSectorXY(SectorXYNum xy) {
+            SectorXY* xyPtr = getSectorXY(xy, false);
+            string folder = text("saves/current/world/", xy.value.X, ",", xy.value.Y, "/");
+            if (exists(folder ~ "heightmap.bin")) {
+                Heightmap heightmap = new Heightmap;            
+                heightmap.heightmap = cast(int[128][])std.file.read(folder ~ "heightmap.bin");
+                xyPtr.heightmap = heightmap;
+            } else {
+                heightmapTasks.list ~= new HeightmapTaskState(xy);
+                g_Statistics.HeightmapsNew(SectorSize.x * SectorSize.y);                
+            }
+        }
+
+        auto xyNum = SectorXYNum(vec2i(num.value.X, num.value.Y));
+        SectorXY* xyPtr = xyNum in sectorsXY;
+        if (xyPtr is null) {
+            loadSectorXY(xyNum);
+        }
+        
+        auto sector = allocateSector(num);
+        sector.deserialize();
+        notifySectorLoad(num);
     }
 
 
@@ -164,7 +208,7 @@ class World {
     //Otherwise we let the world-generator produce a block for us.
     //TODO: Measure the time it takes to check for above-ground-level for comparisons.
     void generateBlock(BlockNum blockNum) {
-        SectorXY xy;
+        SectorXY* xy;
         auto sectorNum = blockNum.getSectorNum();
         auto sector = getSector(sectorNum, true, &xy);
         auto heightmap = xy.heightmap;
@@ -235,7 +279,7 @@ class World {
                 g_Statistics.HeightmapsNew(0);
             }
         }
-        sectorXY[xy].heightmap = state.heightmap;
+        getSectorXY(xy).heightmap = state.heightmap;
         g_Statistics.HeightmapsProgress(done);        
     }
     
@@ -254,34 +298,31 @@ class World {
     //If there is a sectorXY, then it is returned and all is well, EXCEPT for the fact that
     // if the sectorXY does not contain anything in it's .sectors-AA, then adding anthing to
     // that copy of SectorXY will not affect what is stored in the sectorXY-list.
-    SectorXY getSectorXY(SectorXYNum xy)
+    SectorXY* getSectorXY(SectorXYNum xy, bool generateHeightmap = true)
     body{
-        SectorXY* xyPtr = xy in sectorXY; //One fast lookup. Ptr is only used these three lines.
+        SectorXY* xyPtr = xy in sectorsXY; //One fast lookup. Ptr is only used these three lines.
         if (xyPtr !is null) {
-            return *xyPtr;
+            return xyPtr;
         }
         //We didnt have it. Create it, and a heightmap along with it!
         SectorXY ret;
-        synchronized(heightmapTasks) {
-            heightmapTasks.list ~= new HeightmapTaskState(xy);
-            g_Statistics.HeightmapsNew(SectorSize.x * SectorSize.y);
+        if (generateHeightmap) {
+            synchronized(heightmapTasks) {
+                heightmapTasks.list ~= new HeightmapTaskState(xy);
+                g_Statistics.HeightmapsNew(SectorSize.x * SectorSize.y);
+            }
         }
 
-        sectorXY[xy] = ret; //Spara det vi skapar, yeah!
-        return ret;
+        sectorsXY[xy] = ret; //Spara det vi skapar, yeah!
+        return &sectorsXY[xy]; //Return address of AAAARRRRGGGHHHH
     }
     
-    Sector allocateSector(SectorNum sectorNum, SectorXY* xy = null) {
+    Sector allocateSector(SectorNum sectorNum, SectorXY** xy = null) {
         auto xyNum = SectorXYNum(vec2i(sectorNum.value.X, sectorNum.value.Y));
         auto z = sectorNum.value.Z;
         
         //If has not has sectorXY, make one
-        SectorXY* xyPtr;
-        xyPtr = xyNum in sectorXY;
-        if (xyPtr is null) {
-            getSectorXY(xyNum);
-            xyPtr = &sectorXY[xyNum]; //Grab address directly to where it is stored, dont use return value of the one above.
-        }
+        SectorXY* xyPtr = getSectorXY(xyNum);
 
         auto sector = new Sector(sectorNum);
         assert(sector !is null, "derp!");
@@ -291,23 +332,23 @@ class World {
         sectorList ~= sector;
 
         if (xy !is null) {
-            *xy = *xyPtr;
+            *xy = xyPtr;
         }
         return sector;
     }
 
-    Sector getSector(SectorNum sectorNum, bool get=true, SectorXY* xy=null) {
+    Sector getSector(SectorNum sectorNum, bool get=true, SectorXY** xy=null) {
         auto xyNum = SectorXYNum(vec2i(sectorNum.value.X, sectorNum.value.Y));
         auto z = sectorNum.value.Z;
         
-        SectorXY* xyPtr = xyNum in sectorXY;
+        SectorXY* xyPtr = xyNum in sectorsXY;
         Sector* ptr;
-        if (xyPtr !is null){
+        if( xyPtr !is null) {
             ptr = z in xyPtr.sectors;
             if (ptr !is null) {
                 if (xy !is null) {
-                    *xy = *xyPtr; //This is 'safe' ; If the xyPtr is valid AND ptr is valid, then
-                                  //copying SectorXY will work since it's .sectors is non-empty :)
+                    *xy = xyPtr; //This is 'safe' ; If the xyPtr is valid AND ptr is valid, then
+                                    //copying SectorXY will work since it's .sectors is non-empty :)
                 }
                 return *ptr;
             }

@@ -128,6 +128,21 @@ struct Block {
             write((&((*tiles)[0][0][0]))[0 .. BlockSize.x * BlockSize.y * BlockSize.z]);
         }
     }
+    
+    void deserialize(void delegate(size_t size, ubyte* buff) read) {
+        read(blockNum.sizeof, cast(ubyte*)&blockNum);
+        read(flags.sizeof, cast(ubyte*)&flags);
+        if ((flags & BlockFlags.sparse) != 0) {
+            read(sparseTileType.sizeof, cast(ubyte*)&sparseTileType);
+        } else {
+            auto block = alloc();
+            block.flags = flags;
+            block.blockNum = blockNum;
+            static assert(BlockSize.x * BlockSize.y * BlockSize.z * Tile.sizeof == (*tiles).sizeof);
+            read((*tiles).sizeof, cast(ubyte*)block.tiles.ptr);
+            this = block;
+        }
+    }
 
     static Block generateBlock(BlockNum blockNum, WorldGenerator worldgen) {
         //msg("Generating block: ", blockNum);

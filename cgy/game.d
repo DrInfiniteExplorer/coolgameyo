@@ -244,7 +244,7 @@ class Game{
     }
     void loadGame(string name, void delegate() onDone) {
         string saveDir = "saves/" ~ name;
-        if (exists(saveDir)) {
+        if (exists("saves/current")) {
             rmdirRecurse("saves/current");
         }
         //Need to implement a recursive copy function, in util, perhaps?
@@ -252,8 +252,16 @@ class Game{
         
         initCallback = onDone;
         static void loadGameThreadStarter(shared Game g, shared string s) {
-            Game game = cast(Game)g;
-            game.loadGameThread(cast(string)s);
+            try{
+                Game game = cast(Game)g;
+                game.loadGameThread(cast(string)s);
+			} catch (Throwable o) {
+				msg("Thread exception!\n", o.toString());
+				version(Windows) {
+					MessageBoxA(null, cast(char *)toStringz(o.toString()),
+							"Error", MB_OK | MB_ICONEXCLAMATION);
+				}
+			}
         }        
         spawn(&loadGameThreadStarter, cast(shared)this, cast(shared)name);
     }

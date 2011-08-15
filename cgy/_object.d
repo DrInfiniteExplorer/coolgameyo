@@ -14,7 +14,7 @@ import clan;
 
 shared int g_ObjectCount = 0; //Global counter of units. Make shared static variable in Game-class?
 
-final class UnitType {
+final class ObjectType {
     string name;
     int x;
 }
@@ -32,21 +32,47 @@ struct _Object {
         assert (0, "Implement _Object.opEquals or find where it's called and make not called!");
     }
 
-    uint objectId;
-    UnitType type;
+    struct ObjectData {
+        uint objectId;
+        ObjectPos pos;
+        float rotation = 0; //radians
 
-    Clan clan;
-	
-    ObjectPos pos;
-    float rotation = 0; //radians
-
-    float objectWidth = 0.7;
-    float objectHeight = 1.5;
-    
-    Value serialize() {
-        BREAKPOINT;
-        return Value(1);
+        float objectWidth = 0.7;
+        float objectHeight = 1.5;        
     }
+    ObjectData objectData;
+    alias objectData this;
+
+    ObjectType type;
+    Clan clan;
+    
+    Value toJSON() {
+        Value val = encode(objectData);
+        if (clan !is null) {
+            val["clanId"] = Value(clan.clanId);
+        }
+        if (type !is null) {
+            val["unitTypeId"] = Value(type.name);
+        }
+        //Add ai
+        return val;
+    }
+    void fromJSON(Value val) {
+        read(objectData, val);
+        if ("clanId" in val) {
+            int clanId;
+            read(clanId, val["clanId"]);
+            BREAKPOINT;
+        }
+        if ("unitTypeId" in val) {
+            int unitTypeId;
+            read(unitTypeId, val["unitTypeId"]);
+            BREAKPOINT;
+        }
+        //Add ai
+    }
+        
+	
 
     int tick(ChangeList changeList) {
         
@@ -58,10 +84,10 @@ struct _Object {
     //otherwise the passed position is padded with the unit-size.
     aabbox3d!(double) aabb(const(vec3d)* v = null) const @property {
         if(v is null){
-            v = &pos.value;
+            v = &objectData.pos.value;
         }
-        auto minPos = (*v)  - vec3d(objectWidth * 0.5, objectWidth*0.5, 0);
-        auto maxPos = minPos + vec3d(objectWidth, objectWidth, objectHeight);
+        auto minPos = (*v)  - vec3d(objectData.objectWidth * 0.5, objectData.objectWidth*0.5, 0);
+        auto maxPos = minPos + vec3d(objectData.objectWidth, objectData.objectWidth, objectData.objectHeight);
         return aabbox3d!double(minPos, maxPos);
     }
 }

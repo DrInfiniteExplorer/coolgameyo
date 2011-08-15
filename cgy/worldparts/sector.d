@@ -89,7 +89,7 @@ class Sector {
         auto file = std.stdio.File(folder ~ "blocks.bin", "wb");
         
         void write(const void[] buff) {
-            file.write(buff);
+            file.rawWrite(buff);
         }
         
         foreach( block ; (&blocks[0][0][0])[0 .. BlocksPerSector.total]) {
@@ -104,11 +104,60 @@ class Sector {
         Value derp(Unit* unit) {
             return encode(*unit);
         }
-
         Value jsonRoot = Value(array(map!derp(array(units))));
         auto jsonString = to!string(jsonRoot);	
 	    jsonString = json.prettyfyJSON(jsonString);
         std.file.write(folder ~ "units.json", jsonString);
+
+        Value darp(_Object* _object) {
+            return encode(*_object);
+        }
+        jsonRoot = Value(array(map!darp(array(_objects))));
+        jsonString = to!string(jsonRoot);	
+	    jsonString = json.prettyfyJSON(jsonString);
+        std.file.write(folder ~ "objects.json", jsonString);
+    }
+    
+    void deserialize() {
+        string folder = text("saves/current/world/", sectorNum.value.X, ",", sectorNum.value.Y, "/", sectorNum.value.Z, "/");
+        auto file = std.stdio.File(folder ~ "blocks.bin", "rb");
+        
+        ulong readBytes = 0;
+        ulong fileSize = file.size();
+        void read(size_t amount, ubyte* buff) {
+            enforce(readBytes + amount <= fileSize, "Error, trying to read more data from a file than there is!");
+            readBytes += amount;
+            auto herp = buff[0 .. amount];
+            enforce( file.rawRead(herp) !is null, "Failed reading block!");
+        }
+
+        while (readBytes < fileSize) {
+            Block block;
+            block.deserialize(&read);
+            auto num = block.blockNum.rel();
+            blocks[num.X][num.Y][num.Z] = block;
+        }
+        file.close();
+        
+        int asd[] = cast(int[])std.file.read(folder ~ "activityCount");
+        activityCount = asd[0];
+        
+        auto content = readText(folder ~ "units.json");
+        auto jsonRoot = json.parse(content);
+        foreach (unitVal ; jsonRoot.elements) {
+            Unit* unit = new Unit;
+            unit.fromJSON(unitVal);
+            units.insert(unit);
+        }
+        
+         
+        content = readText(folder ~ "objects.json");
+        jsonRoot = json.parse(content);
+        foreach (objectVal ; jsonRoot.elements) {
+            _Object* _object = new _Object;
+            _object.fromJSON(objectVal);
+            _objects.insert(_object);
+        }
     }
     
 
@@ -164,6 +213,8 @@ class Sector {
 	void addObject(_Object* o) {
         _objects.insert(o);
     }
+    
+    SectorNum getSectorNum() const @property { return sectorNum; }
     
     int activity() const @property { return activityCount; }
     void increaseActivity() { activityCount += 1; }
