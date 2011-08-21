@@ -29,6 +29,9 @@ class GuiElementProgressBar : public GuiElement {
         onMove();
     }    
 
+    void setTitle(string str) {
+        title = str;
+    }
     void setMax(uint val) {
         max = val;
     }

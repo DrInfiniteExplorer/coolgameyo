@@ -324,7 +324,7 @@ class Game{
         });
     }
     
-    void saveGame(string name)
+    void saveGame(string name, void delegate() onDone)
     in{
         enforce( name != "current", "Invalid save name: " ~ name);
     }
@@ -336,6 +336,7 @@ class Game{
             }
             //Need to implement a recursive copy function, in util, perhaps?
             util.copy("saves/current", saveDir);
+            onDone();
         });
     }
     

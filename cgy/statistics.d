@@ -182,6 +182,8 @@ class Statistics {
     mixin(ProgressData!("Heightmaps"));
     mixin(ProgressData!("GraphRegions"));
     mixin(ProgressData!("FloodFill"));
+    mixin(ProgressData!("SaveGame"));
+    mixin(ProgressData!("LoadGame"));
 }
 
 template LogTime(const char[] What) {

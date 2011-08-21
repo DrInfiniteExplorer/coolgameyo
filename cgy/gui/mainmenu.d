@@ -38,9 +38,9 @@ class MainMenu : GuiElementWindow {
         auto optionsButt = new GuiElementButton(this, Rectd(vec2d(0.1, 0.4), vec2d(0.3, 0.2)), "Options", &onOptions);
 
         auto randomButt = new GuiElementButton(this, Rectd(vec2d(0.1, 0.6), vec2d(0.3, 0.2)), "Random", &onRandom);
-        auto loadGameButt = new GuiElementButton(this, Rectd(vec2d(randomButt.getRelativeRect().getRight()+0.05, 0.6), vec2d(0.3, 0.2)), "Load game", &onLoadGame);
         auto startNewButt = new GuiElementButton(this, Rectd(vec2d(0.1, randomButt.getRelativeRect().getBottom()+0.05), vec2d(0.3, 0.2)), "newgamemenu", &onStartNewGame);
         
+        loadGameButton = new GuiElementButton(this, Rectd(vec2d(randomButt.getRelativeRect().getRight()+0.05, 0.6), vec2d(0.3, 0.2)), "Load game", &onLoadGame);
         //        auto cb = new GuiElementCheckBox(this, Rectd(vec2d(0.10, 0.6), vec2d(0.3, 0.2)), "CHECKBOX", null);
 //*/
         main = m;
@@ -72,6 +72,8 @@ class MainMenu : GuiElementWindow {
         game = main.startGame(&loadDone);
         newGameButton.destroy();
         newGameButton = null;
+        loadGameButton.destroy();
+        loadGameButton = null;
         setVisible(false);        
     }
 
@@ -91,7 +93,9 @@ class MainMenu : GuiElementWindow {
         if(down || abort) {
             return;
         }    
-        game.saveGame("Save1");
+        
+        loadScreen.setLoading(true);
+        game.saveGame("Save1", { loadScreen.setLoading(false); } );
     }
     void onLoadGame(bool down, bool abort) {
         if(down || abort) {
@@ -110,6 +114,8 @@ class MainMenu : GuiElementWindow {
         game = main.loadGame("Save1", &loadDone);
         newGameButton.destroy();
         newGameButton = null;
+        loadGameButton.destroy();
+        loadGameButton = null;
         setVisible(false);        
     }
     
