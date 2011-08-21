@@ -67,7 +67,7 @@ class HyperUnitControlInterfaceInputManager : GuiEventDump{
 
         middleX = cast(ushort)renderSettings.windowWidth/2;
         middleY = cast(ushort)renderSettings.windowHeight/2;
-        
+        copiedTile.type = TileTypeAir;
     }
     
     private bool destroyed;
