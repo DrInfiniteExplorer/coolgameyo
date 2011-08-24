@@ -12,7 +12,7 @@ import tiletypemanager;
 import worldgen.worldgen;
 import worldgen.newgen;
 public import unit;
-public import _object;
+public import entity;
 import util;
 import scheduler;
 import statistics;
@@ -27,7 +27,7 @@ public import worldparts.tile;
 // and remove the world member from listeners
 interface WorldListener {
     void onAddUnit(SectorNum sectorNum, Unit* unit);
-	void onAddObject(SectorNum sectorNum, _Object* _object);
+	void onAddEntity(SectorNum sectorNum, Entity* entity);
     void onSectorLoad(SectorNum sectorNum);
     void onSectorUnload(SectorNum sectorNum);
     void onTileChange(TilePos tilePos);
@@ -79,7 +79,7 @@ class World {
     bool isServer;  //TODO: How, exactly, does the world function differently if it actually is a server? Find out!
 
     int unitCount;  //TODO: Is used?
-	int objectCount;  //TODO: Is used?
+	int entityCount;  //TODO: Is used?
 
     WorldListener[] listeners;
 
@@ -398,14 +398,14 @@ class World {
         }
         return units;
     }
-	_Object*[] getVisibleObjects(Camera camera){
-        _Object*[] _objects;
-        foreach(_object; getObjects()){
-            if(camera.inFrustum(_object)){
-                _objects ~= _object;
+	Entity*[] getVisibleEntities(Camera camera){
+        Entity*[] entities;
+        foreach(entity; getEntities()){
+            if(camera.inFrustum(entity)){
+                entities ~= entity;
             }
         }
-        return _objects;
+        return entities;
     }
 	
     private Sector[] getSectors() {
@@ -457,52 +457,52 @@ class World {
         return null;
     }
 	
-	/////////////// Samma lika fast med objects
-	static struct ObjectRange {
+	/////////////// Samma lika fast med entities
+	static struct EntityRange {
         Sector[] sectors;
-        typeof(Sector.init._objects[]) currentObjectRange;
+        typeof(Sector.init.entities[]) currentEntityRange;
 
-        _Object* front() @property {
-            return currentObjectRange.front;
+        Entity* front() @property {
+            return currentEntityRange.front;
         }
         void popFront() {
-            currentObjectRange.popFront();
+            currentEntityRange.popFront();
             prop();
         }
         void prop() {
             if(sectors.empty) return;
-            while (currentObjectRange.empty) {
+            while (currentEntityRange.empty) {
                 sectors.popFront();
                 if (sectors.empty) break;
-                currentObjectRange = sectors.front._objects[];
+                currentEntityRange = sectors.front.entities[];
             }
         }
 
         bool empty() @property {
-            return sectors.empty && currentObjectRange.empty;
+            return sectors.empty && currentEntityRange.empty;
         }
     }
 
     // Returns a range with all the units in the world
-    ObjectRange getObjects() {
-        ObjectRange ret;
+    EntityRange getEntities() {
+        EntityRange ret;
         ret.sectors = getSectors();
         if (!ret.sectors.empty) {
-            ret.currentObjectRange = ret.sectors.front._objects[];
+            ret.currentEntityRange = ret.sectors.front.entities[];
         }
         ret.prop();
         return ret;
     }
     
-    _Object* getObjectFromId(uint id) {
-        foreach(_object ; getObjects()) {
-            if (_object.objectId == id) {
-                return _object;
+    Entity* getEntityFromId(uint id) {
+        foreach(entity ; getEntities()) {
+            if (entity.entityId == id) {
+                return entity;
             }
         }
         return null;
     }
-	///////////////// inge mer object kod!
+	///////////////// inge mer entity kod!
 
     void update(Scheduler scheduler){
         floodFillSome();
@@ -567,13 +567,13 @@ class World {
 
         notifyAddUnit(sectorNum, unit);
     }
-	void addObject(_Object* _object) {
-        objectCount += 1;
-        auto sectorNum = _object.pos.getSectorNum();
+	void addEntity(Entity* entity) {
+        entityCount += 1;
+        auto sectorNum = entity.pos.getSectorNum();
 
-        getSector(sectorNum).addObject(_object);
+        getSector(sectorNum).addEntity(entity);
 
-        notifyAddObject(sectorNum, _object);
+        notifyAddEntity(sectorNum, entity);
     }
 
     Tile getTile(TilePos tilePos, bool createBlock=true,
@@ -804,9 +804,9 @@ class World {
             listener.onAddUnit(sectorNum, unit);
         }
     }
-	void notifyAddObject(SectorNum sectorNum, _Object* _object) {
+	void notifyAddEntity(SectorNum sectorNum, Entity* entity) {
         foreach (listener; listeners) {
-            listener.onAddObject(sectorNum, _object);
+            listener.onAddEntity(sectorNum, entity);
         }
     }
     void notifySectorLoad(SectorNum sectorNum) {

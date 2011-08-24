@@ -17,7 +17,7 @@ import worldparts.block;
 import worldgen.worldgen;
 import pos;
 import unit;
-import _object;
+import entity;
 import util;
 
 enum BlocksPerSector {
@@ -55,7 +55,7 @@ class Sector {
     static assert(blocks.length == BlocksPerSector.x);
 
     RedBlackTree!(Unit*) units; //TODO: how to make this private without breaking stuff derp? :S
-	RedBlackTree!(_Object*) _objects;
+	RedBlackTree!(Entity*) entities;
     private int activityCount;
 
     invariant(){
@@ -68,7 +68,7 @@ class Sector {
         sectorNum = sectorNum_;
         pos = sectorNum.toTilePos();
         units = new typeof(units);
-		_objects = new typeof(_objects);
+		entities = new typeof(entities);
     }
 
     const(Block)[] getBlocks() const {
@@ -109,13 +109,13 @@ class Sector {
 	    jsonString = json.prettyfyJSON(jsonString);
         std.file.write(folder ~ "units.json", jsonString);
 
-        Value darp(_Object* _object) {
-            return encode(*_object);
+        Value darp(Entity* entity) {
+            return encode(*entity);
         }
-        jsonRoot = Value(array(map!darp(array(_objects))));
+        jsonRoot = Value(array(map!darp(array(entities))));
         jsonString = to!string(jsonRoot);	
 	    jsonString = json.prettyfyJSON(jsonString);
-        std.file.write(folder ~ "objects.json", jsonString);
+        std.file.write(folder ~ "entities.json", jsonString);
     }
     
     bool deserialize() {
@@ -153,13 +153,18 @@ class Sector {
             units.insert(unit);
         }
         
-         
-        content = readText(folder ~ "objects.json");
+		// Todo: remove this whenever everyone has renamed their saves
+		if(!std.file.exists(folder ~ "entities.json")){
+			content = readText(folder ~ "objects.json");
+		}
+        else{
+			content = readText(folder ~ "entities.json");
+		}
         jsonRoot = json.parse(content);
-        foreach (objectVal ; jsonRoot.elements) {
-            _Object* _object = new _Object;
-            _object.fromJSON(objectVal);
-            _objects.insert(_object);
+        foreach (entityVal ; jsonRoot.elements) {
+            Entity* entity = new Entity;
+            entity.fromJSON(entityVal);
+            entities.insert(entity);
         }
         return true;
     }
@@ -214,8 +219,8 @@ class Sector {
     void addUnit(Unit* u) {
         units.insert(u);
     }
-	void addObject(_Object* o) {
-        _objects.insert(o);
+	void addEntity(Entity* o) {
+        entities.insert(o);
     }
     
     SectorNum getSectorNum() const @property { return sectorNum; }

@@ -466,6 +466,7 @@
   <File path="world.d" />
   <File path="clan.d" />
   <File path="statistics.d" />
-  <File path="_object.d" />
+  <File path="entity.d" />
+  <File path="entitytypemanager.d" />
  </Folder>
 </DProject>

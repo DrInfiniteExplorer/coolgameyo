@@ -239,7 +239,7 @@ class Renderer {
         setWireframe(renderSettings.renderWireframe);
         renderWorld(camera);
         renderDudes(camera, 0.f);
-		renderObjects(camera, 0.f);
+		renderEntities(camera, 0.f);
         renderDebug(camera);
         
         setWireframe(false);
@@ -290,17 +290,17 @@ class Renderer {
 	
 	
 	
-	void renderObject(_Object* _object, float tickTimeSoFar){
+	void renderEntity(Entity* entity, float tickTimeSoFar){
         auto M = matrix4();
-        vec3d objectPos;
-        /*vec3d **p = _object in specialUnits;
+        vec3d entityPos;
+        /*vec3d **p = entity in specialUnits;
         if (p !is null) {
-            objectPos = **p;
+            entityPos = **p;
         } else {*/
-            objectPos = _object.pos.value; //TODO: Subtract the camera position from the unit before rendering
+            entityPos = entity.pos.value; //TODO: Subtract the camera position from the unit before rendering
         //}
-        M.setTranslation(util.convert!float(objectPos));
-        M.setRotationRadians(vec3f(0, 0, _object.rotation));
+        M.setTranslation(util.convert!float(entityPos));
+        M.setRotationRadians(vec3f(0, 0, entity.rotation));
         dudeShader.setUniform(dudeShader.M, M);
         dudeShader.setUniform(dudeShader.color, vec3f(1, 0, 0)); //Color :p
         glBindBuffer(GL_ARRAY_BUFFER, dudeVBO);
@@ -316,7 +316,7 @@ class Renderer {
         const bool RenderDudeAABB = false;
         static if(RenderDudeAABB == true){
             dudeShader.use(false);
-            renderAABB(_object.aabb);
+            renderAABB(entity.aabb);
             dudeShader.use();
         }
     }
@@ -326,16 +326,16 @@ class Renderer {
     // https://github.com/Wallbraker/Charged-Miners
     // wiki is down so arbitrary place is best for future reference and documentation.
 
-    void renderObjects(Camera camera, float tickTimeSoFar) {
+    void renderEntities(Camera camera, float tickTimeSoFar) {
         //TODO: Remove camera position from dudes!! Matrix to set = proj*viewRotation
         auto vp = camera.getProjectionMatrix() * camera.getViewMatrix();
         dudeShader.use();
         dudeShader.setUniform(dudeShader.VP, vp);
         glEnableVertexAttribArray(0);
         glError();
-        auto _objects = world.getVisibleObjects(camera);
-        foreach(_object ; _objects) {
-            renderObject(_object, tickTimeSoFar);
+        auto entities = world.getVisibleEntities(camera);
+        foreach(entity ; entities) {
+            renderEntity(entity, tickTimeSoFar);
         }
         glDisableVertexAttribArray(0);
         dudeShader.use(false);

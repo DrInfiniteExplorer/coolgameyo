@@ -180,10 +180,10 @@ class Game{
         activeUnit = uu;
 		
 		
-		ObjectPos topOfTheWorld2(TileXYPos xy) {
+		EntityPos topOfTheWorld2(TileXYPos xy) {
             auto top = world.getTopTilePos(xy);
             msg("top: ", top);
-            auto ret = top.toObjectPos();
+            auto ret = top.toEntityPos();
             ret.value.Z += 1;
             msg("ret: ", ret);
 			
@@ -191,10 +191,10 @@ class Game{
         }
 		
 		xy = TileXYPos(vec2i(3,10));
-        auto o = newObject();
+        auto o = newEntity();
         o.pos = topOfTheWorld2(xy);
         //o.pos.value.Z += 1;
-        world.addObject(o);
+        world.addEntity(o);
         
         msg("o.pos == ", o.pos);
         

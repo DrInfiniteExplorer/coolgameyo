@@ -95,7 +95,7 @@ class AIModule : Module, WorldListener {
     override void onAddUnit(SectorNum num, Unit* unit) {
         addUnit(unit);
     }
-	void onAddObject(SectorNum, _Object*) { }
+	void onAddEntity(SectorNum, Entity*) { }
 	
     override void onSectorLoad(SectorNum num) {
         foreach (unit; world.getSector(num).units) {

@@ -49,7 +49,7 @@ struct UnitPos {
     mixin SerializeValue;
 }
 
-struct ObjectPos {
+struct EntityPos {
     vec3d value;
 	// ToDo: fix so that the hoalls reada pao the side of the tile.
 	
@@ -204,8 +204,8 @@ struct TilePos {
 
     }
 	
-	ObjectPos toObjectPos() const{
-        return ObjectPos(vec3d(value.X + 0.5,
+	EntityPos toEntityPos() const{
+        return EntityPos(vec3d(value.X + 0.5,
                              value.Y + 0.5,
                              value.Z + 0.5));
 

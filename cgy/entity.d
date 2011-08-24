@@ -1,5 +1,5 @@
 
-module _object;
+module entity;
 
 import std.exception;
 import std.stdio;
@@ -12,42 +12,42 @@ import util;
 import world;
 import clan;
 
-shared int g_ObjectCount = 0; //Global counter of units. Make shared static variable in Game-class?
+shared int g_EntityCount = 0; //Global counter of entities. Make shared static variable in Game-class?
 
-final class ObjectType {
+final class EntityType {
     string name;
     int x;
 }
 
-_Object* newObject() {
-    auto _object = new _Object;
-    _object.objectId = g_ObjectCount;
-    g_ObjectCount++;
-    return _object;
+Entity* newEntity() {
+    auto entity = new Entity;
+    entity.entityId = g_EntityCount;
+    g_EntityCount++;
+    return entity;
 }
 
-struct _Object {
+struct Entity {
 
-    bool opEquals(ref const(_Object) o) const {
-        assert (0, "Implement _Object.opEquals or find where it's called and make not called!");
+    bool opEquals(ref const(Entity) o) const {
+        assert (0, "Implement Entity.opEquals or find where it's called and make not called!");
     }
 
-    struct ObjectData {
-        uint objectId;
-        ObjectPos pos;
+    struct EntityData {
+        uint entityId;
+        EntityPos pos;
         float rotation = 0; //radians
 
-        float objectWidth = 0.7;
-        float objectHeight = 1.5;        
+        float entityWidth = 0.7;
+        float entityHeight = 1.5;        
     }
-    ObjectData objectData;
-    alias objectData this;
+    EntityData entityData;
+    alias entityData this;
 
-    ObjectType type;
+    EntityType type;
     Clan clan;
     
     Value toJSON() {
-        Value val = encode(objectData);
+        Value val = encode(entityData);
         if (clan !is null) {
             val["clanId"] = Value(clan.clanId);
         }
@@ -58,7 +58,7 @@ struct _Object {
         return val;
     }
     void fromJSON(Value val) {
-        read(objectData, val);
+        read(entityData, val);
         if ("clanId" in val) {
             int clanId;
             read(clanId, val["clanId"]);
@@ -84,10 +84,10 @@ struct _Object {
     //otherwise the passed position is padded with the unit-size.
     aabbox3d!(double) aabb(const(vec3d)* v = null) const @property {
         if(v is null){
-            v = &objectData.pos.value;
+            v = &entityData.pos.value;
         }
-        auto minPos = (*v)  - vec3d(objectData.objectWidth * 0.5, objectData.objectWidth*0.5, 0);
-        auto maxPos = minPos + vec3d(objectData.objectWidth, objectData.objectWidth, objectData.objectHeight);
+        auto minPos = (*v)  - vec3d(entityData.entityWidth * 0.5, entityData.entityWidth*0.5, 0);
+        auto maxPos = minPos + vec3d(entityData.entityWidth, entityData.entityWidth, entityData.entityHeight);
         return aabbox3d!double(minPos, maxPos);
     }
 }
