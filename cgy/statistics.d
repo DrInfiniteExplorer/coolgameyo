@@ -174,6 +174,7 @@ class Statistics {
     mixin(SampleSingle!("GameInit", true));
     mixin(SampleSingle!("TileTypeManagerCreation", true));
 	mixin(SampleSingle!("EntityTypeManagerCreation", true));
+	mixin(SampleSingle!("UnitTypeManagerCreation", true));
     mixin(SampleSingle!("RendererInit", true));
     mixin(SampleSingle!("AtlasUpload", true));
     mixin(SampleSingle!("InitialFloodFill", true));

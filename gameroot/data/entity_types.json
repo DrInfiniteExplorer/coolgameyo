@@ -1,0 +1,12 @@
+{
+  "tree":{
+    "displayName":"Pretty Tree",
+	"tintFromMaterial":1,
+	"tintColor":{ "X":50, "Y":200, "Z":50 },
+  },
+  "shrubbery":{
+    "displayName":"SHRUBBERY!!!",
+	"tintFromMaterial":1,
+	"tintColor":{ "X":200, "Y":50, "Z":50 },
+  },
+}

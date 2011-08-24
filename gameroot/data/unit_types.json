@@ -1,0 +1,10 @@
+{
+  "dwarf":{
+    "displayName":"Dwarf",
+	"tintColor":{ "X":150, "Y":0, "Z":100 },
+  },
+  "elf":{
+    "displayName":"Hippie",
+	"tintColor":{ "X":0, "Y":150, "Z":0 },
+  },
+}

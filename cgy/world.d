@@ -9,6 +9,8 @@ import graphics.camera;
 
 import json;
 import tiletypemanager;
+import entitytypemanager;
+import unittypemanager;
 import worldgen.worldgen;
 import worldgen.newgen;
 public import unit;
@@ -84,14 +86,18 @@ class World {
     WorldListener[] listeners;
 
     TileTypeManager tileTypeManager;
+	EntityTypeManager entityTypeManager;
+	UnitTypeManager unitTypeManager;
 
     private alias RedBlackTree!(BlockNum, q{a.value < b.value}) WorkSet;
     WorkSet toFloodFill;
     SectorNum[] floodingSectors;
 
-    this(WorldGenParams params, TileTypeManager tilesys) {
+    this(WorldGenParams params, TileTypeManager tilesys, EntityTypeManager entitysys, UnitTypeManager unitsys) {
         isServer = true;
         tileTypeManager = tilesys;
+		entityTypeManager = entitysys;
+		unitTypeManager = unitsys;
         worldGen = new WorldGeneratorNew;
         worldGenParams = params;
         worldGen.init(worldGenParams, tilesys);

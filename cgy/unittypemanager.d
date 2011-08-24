@@ -12,14 +12,13 @@ import worldparts.tile;
 import statistics;
 
 
-struct EntityType {
-	static struct InnerEntityType {
+struct UnitType {
+	static struct InnerUnitType {
 		string displayName;
-		float tintFromMaterial;
 		vec3i tintColor;
 	}
 	
-	InnerEntityType serializableSettings;
+	InnerUnitType serializableSettings;
     alias serializableSettings this;
 
 	// These settings are generated in the program, not from settings file
@@ -28,8 +27,8 @@ struct EntityType {
 }
 
 
-class EntityTypeManager {
-    EntityType[] types;
+class UnitTypeManager {
+    UnitType[] types;
     ushort[string] _byName;
 	
     invariant() {
@@ -38,17 +37,17 @@ class EntityTypeManager {
     }
 	
     this() {
-        mixin(LogTime!("EntityTypeManagerCreation"));
+        mixin(LogTime!("UnitTypeManagerCreation"));
 		
 		
-		EntityType tempType;
-		if(!std.file.exists("data/entity_types.json")){
-			msg("Could not load entity types");
+		UnitType tempType;
+		if(!std.file.exists("data/unit_types.json")){
+			msg("Could not load unit types");
 			return;
 		}
-		auto content = readText("data/entity_types.json");
+		auto content = readText("data/unit_types.json");
 		auto rootVal = json.parse(content);
-		enforce(rootVal.type == json.Value.Type.object, "rootval in entitytypejson not object roawoaowoawo: " ~ to!string(rootVal.type));
+		enforce(rootVal.type == json.Value.Type.object, "rootval in unittypejson not object roawoaowoawo: " ~ to!string(rootVal.type));
 		foreach(name, rsVal ; rootVal.pairs) {
 			json.read(tempType.serializableSettings, rsVal);
 			
@@ -57,17 +56,17 @@ class EntityTypeManager {
 		}
     }
 
-    EntityType byID(ushort id) {
+    UnitType byID(ushort id) {
         return types[id];
     }
-    EntityType byName(string name) {
+    UnitType byName(string name) {
         return types[idByName(name)];
     }
     ushort idByName(string name) {
-        return *enforce(name in _byName, "no entity type by name '" ~ name ~ "'");
+        return *enforce(name in _byName, "no unit type by name '" ~ name ~ "'");
     }
 
-    ushort add(EntityType t) {
+    ushort add(UnitType t) {
         enforce(!(t.name in _byName));
 		
         t.id = to!ushort(types.length);

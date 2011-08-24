@@ -11,13 +11,9 @@ import stolen.aabbox3d;
 import util;
 import world;
 import clan;
+import entitytypemanager;
 
 shared int g_EntityCount = 0; //Global counter of entities. Make shared static variable in Game-class?
-
-final class EntityType {
-    string name;
-    int x;
-}
 
 Entity* newEntity() {
     auto entity = new Entity;
@@ -51,9 +47,9 @@ struct Entity {
         if (clan !is null) {
             val["clanId"] = Value(clan.clanId);
         }
-        if (type !is null) {
+/*        if (type !is null) {
             val["unitTypeId"] = Value(type.name);
-        }
+        }*/
         //Add ai
         return val;
     }

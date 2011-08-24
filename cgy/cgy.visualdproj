@@ -468,5 +468,6 @@
   <File path="statistics.d" />
   <File path="entity.d" />
   <File path="entitytypemanager.d" />
+  <File path="unittypemanager.d" />
  </Folder>
 </DProject>

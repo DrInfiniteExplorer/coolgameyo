@@ -11,13 +11,10 @@ import stolen.aabbox3d;
 import util;
 import world;
 import clan;
+import unittypemanager;
 
 shared int g_UnitCount = 0; //Global counter of units. Make shared static variable in Game-class?
 
-final class UnitType {
-    string name;
-    int x;
-}
 
 interface UnitAI {
     int tick(ChangeList changeList);
@@ -71,7 +68,7 @@ struct Unit {
         float unitHeight = 1.5;
         float stepHeight = 0.5;
     };
-
+	
     UnitData unitData;
     alias unitData this;
     
@@ -84,9 +81,9 @@ struct Unit {
         if (clan !is null) {
             val["clanId"] = Value(clan.clanId);
         }
-        if (type !is null) {
+        /*if (type !is null) {
             val["unitTypeId"] = Value(type.name);
-        }
+        }*/
         //Add ai
         return val;
     }

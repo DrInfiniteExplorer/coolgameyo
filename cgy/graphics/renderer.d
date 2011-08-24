@@ -157,7 +157,7 @@ class Renderer {
         renderLineList(&set);
         setWireframe(oldWireframe);
         glDisableVertexAttribArray(0);
-        glError();        
+        glError();
         lineShader.use(false);
     }
     
@@ -176,7 +176,9 @@ class Renderer {
         M.setTranslation(util.convert!float(unitPos));
         M.setRotationRadians(vec3f(0, 0, unit.rotation));
         dudeShader.setUniform(dudeShader.M, M);
-        dudeShader.setUniform(dudeShader.color, vec3f(0, 0.7, 0)); //Color :p
+        dudeShader.setUniform(dudeShader.color, vec3f(unit.type.tintColor.X/255.f,
+													  unit.type.tintColor.Y/255.f,
+													  unit.type.tintColor.Z/255.f)); //Color :p
         glBindBuffer(GL_ARRAY_BUFFER, dudeVBO);
         glError();
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, vec3f.sizeof, null /* offset in vbo */);
@@ -302,7 +304,9 @@ class Renderer {
         M.setTranslation(util.convert!float(entityPos));
         M.setRotationRadians(vec3f(0, 0, entity.rotation));
         dudeShader.setUniform(dudeShader.M, M);
-        dudeShader.setUniform(dudeShader.color, vec3f(1, 0, 0)); //Color :p
+        dudeShader.setUniform(dudeShader.color, vec3f(entity.type.tintColor.X/255.f,
+													  entity.type.tintColor.Y/255.f,
+													  entity.type.tintColor.Z/255.f)); //Color :p
         glBindBuffer(GL_ARRAY_BUFFER, dudeVBO);
         glError();
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, vec3f.sizeof, null /* offset in vbo */);

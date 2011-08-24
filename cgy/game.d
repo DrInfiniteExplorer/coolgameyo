@@ -34,6 +34,8 @@ import pos;
 import scheduler;
 import statistics;
 import tiletypemanager;
+import entitytypemanager;
+import unittypemanager;
 import util;
 import unit;
 import world;
@@ -57,7 +59,9 @@ class Game{
     private GeometryCreator     geometryCreator;
     private Scheduler           scheduler;
     private TileTextureAtlas    atlas;
-    private TileTypeManager     tileTypeManager;    
+    private TileTypeManager     tileTypeManager;
+	private EntityTypeManager   entityTypeManager;
+	private UnitTypeManager     unitTypeManager;
     private PathModule          pathModule;
     private AIModule            aiModule;
     
@@ -104,7 +108,9 @@ class Game{
             //TODO: Find out what the above comment indicates.
         }
         tileTypeManager = new TileTypeManager(atlas);
-        world = new World(worldParams, tileTypeManager);
+		entityTypeManager = new EntityTypeManager();
+		unitTypeManager = new UnitTypeManager();
+        world = new World(worldParams, tileTypeManager, entityTypeManager, unitTypeManager);
         assert (isWorker, "otherwise wont work lol (maybe)");
 
         scheduler = new Scheduler(world);
@@ -160,6 +166,7 @@ class Game{
         auto xy = TileXYPos(vec2i(3,-20));
         auto u = newUnit();
         u.pos = topOfTheWorld(xy);
+		u.type = world.unitTypeManager.byName("elf");
         //u.pos.value.Z += 1;
         world.addUnit(u);
         
@@ -168,7 +175,8 @@ class Game{
         auto uu = newUnit();
         auto xyy = TileXYPos(vec2i(3,3));
         uu.pos = topOfTheWorld(xyy);
-        world.addUnit(uu);      
+		uu.type = world.unitTypeManager.byName("dwarf");
+        world.addUnit(uu);
         //auto goal = UnitPos(u.pos.value + vec3d(-30, 0, 0));
         auto goal = uu.pos;
         //NO AI FOR NO PATHABLENESS WITH NEW RANDOMMAPNESS
@@ -193,11 +201,15 @@ class Game{
 		xy = TileXYPos(vec2i(3,10));
         auto o = newEntity();
         o.pos = topOfTheWorld2(xy);
-        //o.pos.value.Z += 1;
+		o.type = world.entityTypeManager.byName("tree");
         world.addEntity(o);
-        
         msg("o.pos == ", o.pos);
-        
+        xy = TileXYPos(vec2i(10,10));
+        o = newEntity();
+        o.pos = topOfTheWorld2(xy);
+		o.type = world.entityTypeManager.byName("shrubbery");
+        world.addEntity(o);
+        msg("o.pos == ", o.pos);
     }
 
     void newGameThread(WorldGenParams worldParams) {
