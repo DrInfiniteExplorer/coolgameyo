@@ -172,12 +172,11 @@ class World {
     
     
     //Ensure that it only happens when no other code is running.
-    void loadSector(SectorNum num)
+    Sector loadSector(SectorNum num)
     in{
-        BREAK_IF(getSector(num, false) !is null);
+        BREAK_IF(getSector(num) !is null);
     }
     body{
-        
         void loadSectorXY(SectorXYNum xy) {
             SectorXY* xyPtr = getSectorXY(xy, false);
             string folder = text("saves/current/world/", xy.value.X, ",", xy.value.Y, "/");
@@ -199,7 +198,10 @@ class World {
         
         auto sector = allocateSector(num);
         sector.deserialize();
-        notifySectorLoad(num);
+        if (sector.deserialize()) {
+            notifySectorLoad(num);
+        }
+        return sector;
     }
 
 
@@ -210,7 +212,10 @@ class World {
     void generateBlock(BlockNum blockNum) {
         SectorXY* xy;
         auto sectorNum = blockNum.getSectorNum();
-        auto sector = getSector(sectorNum, true, &xy);
+        auto sector = getSector(sectorNum, &xy);
+        if (sector is null) {
+            sector = allocateSector(sectorNum);
+        }
         auto heightmap = xy.heightmap;
         bool above = true;
         if(heightmap !is null) {
@@ -337,7 +342,7 @@ class World {
         return sector;
     }
 
-    Sector getSector(SectorNum sectorNum, bool get=true, SectorXY** xy=null) {
+    Sector getSector(SectorNum sectorNum, SectorXY** xy=null) {
         auto xyNum = SectorXYNum(vec2i(sectorNum.value.X, sectorNum.value.Y));
         auto z = sectorNum.value.Z;
         
@@ -353,15 +358,12 @@ class World {
                 return *ptr;
             }
         }
-        if (get) {
-            return allocateSector(sectorNum, xy);
-        }
         return null;
     }
 
 
-    Block getBlock(BlockNum blockNum, bool generate=true, bool getSector=false) {
-        auto sector = this.getSector(blockNum.getSectorNum(), getSector);
+    Block getBlock(BlockNum blockNum, bool generate=true) {
+        auto sector = this.getSector(blockNum.getSectorNum());
         if (sector is null) return INVALID_BLOCK;
 
         auto block = sector.getBlock(blockNum);
@@ -560,9 +562,8 @@ class World {
         unitCount += 1;
         auto sectorNum = unit.pos.getSectorNum();
 
-        getSector(sectorNum).addUnit(unit);
-
         increaseActivity(unit.pos);
+        getSector(sectorNum).addUnit(unit);
 
         notifyAddUnit(sectorNum, unit);
     }
@@ -577,7 +578,7 @@ class World {
 
     Tile getTile(TilePos tilePos, bool createBlock=true,
                                   bool createSector=true) {
-        auto block = getBlock(tilePos.getBlockNum(), createBlock, createSector);
+        auto block = getBlock(tilePos.getBlockNum(), createBlock);
         if(!block.valid){
             return INVALID_TILE;
         }
@@ -611,7 +612,7 @@ class World {
         //TODO: Make sure penis penis penis, penises.
         //Durr, i mean, make sure to floodfill as well! :)
         auto blockNum = tilePos.getBlockNum();
-        auto block = getBlock(blockNum, true, true);
+        auto block = getBlock(blockNum, true);
         BREAKPOINT(!block.valid);
         block.setTile(tilePos, newTile);
         //Only works to not set blocknum again, if we already
@@ -843,20 +844,27 @@ private mixin template ActivityHandlerMethods() {
     void increaseActivity(UnitPos activityLoc) {
         auto sectorNum = activityLoc.getSectorNum();
         auto sector = getSector(sectorNum);
+        if (sector is null) {
+            sector = loadSector(sectorNum);
+        }
 
         if (sector.activity == 0) {
             addFloodFillPos(activityLoc);
         }
         
         foreach (p; activityRange(sectorNum)) {
-            getSector(p).increaseActivity();
+            auto s = getSector(p);
+            if (s is null) {
+                s = loadSector(p);
+            }
+            s.increaseActivity();
         }
 
         foreach (p; activityRange(sectorNum)) {
             if (getSector(p).activity == 1) {
                 floodingSectors ~= p;
                 foreach (n; neighbors(p)) {
-                    auto s = getSector(n, false);
+                    auto s = getSector(n);
 
                     if (s && s.activity > 1) {
                         addFloodFillWall(p, n);

@@ -118,8 +118,11 @@ class Sector {
         std.file.write(folder ~ "objects.json", jsonString);
     }
     
-    void deserialize() {
+    bool deserialize() {
         string folder = text("saves/current/world/", sectorNum.value.X, ",", sectorNum.value.Y, "/", sectorNum.value.Z, "/");
+        if (!exists(folder)) {
+            return false;
+        }
         auto file = std.stdio.File(folder ~ "blocks.bin", "rb");
         
         ulong readBytes = 0;
@@ -158,6 +161,7 @@ class Sector {
             _object.fromJSON(objectVal);
             _objects.insert(_object);
         }
+        return true;
     }
     
 

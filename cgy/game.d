@@ -227,6 +227,9 @@ class Game{
     void delegate() initCallback = null;
 
     void newGame(WorldGenParams worldParams, void delegate() onDone) {
+        if (exists("saves/current")) {
+            rmdirRecurse("saves/current");
+        }
         initCallback = onDone;
         static void newGameThreadStarter(shared Game g, shared WorldGenParams p) {
 			try {

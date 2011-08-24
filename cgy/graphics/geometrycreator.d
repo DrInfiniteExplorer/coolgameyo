@@ -399,7 +399,7 @@ class GeometryCreator : Module, WorldListener
         foreach(rel ; RangeFromTo(minBlockNum.value, maxBlockNum.value)) {
 
             auto num = BlockNum(rel);
-            auto block = world.getBlock(num, false, false);
+            auto block = world.getBlock(num, false);
             if(block.seen){
                 auto a=true;
                 seenCount++;
