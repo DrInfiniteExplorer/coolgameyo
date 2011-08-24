@@ -197,7 +197,6 @@ class World {
         }
         
         auto sector = allocateSector(num);
-        sector.deserialize();
         if (sector.deserialize()) {
             notifySectorLoad(num);
         }
