@@ -10,7 +10,9 @@ import std.conv;
 import json;
 import modules.module_;
 import scheduler;
-import util;
+import util.util;
+import util.filesystem;
+
 
 
 import graphics.debugging;
@@ -122,7 +124,7 @@ class PathModule : Module {
         auto jsonString = to!string(jsonRoot);	
 	    jsonString = json.prettyfyJSON(jsonString);
         
-        util.mkdir("saves/current/modules/path");
+        mkdir("saves/current/modules/path");
         std.file.write("saves/current/modules/path/states.json", jsonString);
         
     }

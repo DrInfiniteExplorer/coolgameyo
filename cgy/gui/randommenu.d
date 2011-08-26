@@ -12,6 +12,8 @@ import gui.all;
 import random.random;
 import settings;
 import worldgen.worldgen;
+import util.util;
+import util.rect;
 
 auto derp = WorldGenParams.randomSeed.init; //TODO: Why this needed? ;_;
 
@@ -93,11 +95,10 @@ class RandomMenu : GuiElementWindow {
             auto source = new ValueMap2Dd();
             source.fill(randSource, samples, samples);
         } else static if (type == "permv"){
-            alias PermMap2D!(samples) asd;
+            alias PermMap!(samples) asd;
             auto source = new asd(randSource);
         } else static if (type == "permg"){
-            alias GradientNoise2D!(samples) asd;
-            auto source = new asd(randSource);
+            auto source = new GradientNoise!()(samples, randSource);
         }
         
         static if (type != "permg") {
@@ -149,7 +150,8 @@ class RandomMenu : GuiElementWindow {
                 auto v = CatmullRomSpline(t, c);
                 return [v.X, v.Y, v.Z, 0];
             }
-            auto img = toImage(source, 0, 0, graphWidth, graphWidth, pixels, pixels, 0, 1, &colorize);
+            //auto img = toImage(source, 0, 0, graphWidth, graphWidth, pixels, pixels, 0, 1, &colorize);
+            auto img = toImage(source, 0, 0, graphWidth, graphWidth, pixels, pixels, 0, 1, null);
             valueImage.setImage(img.toGLTex(0));
             valueImage.setSize(img.imgWidth, img.imgHeight);
         }

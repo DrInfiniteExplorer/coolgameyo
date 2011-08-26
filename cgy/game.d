@@ -36,8 +36,9 @@ import statistics;
 import tiletypemanager;
 import entitytypemanager;
 import unittypemanager;
-import util;
 import unit;
+import util.util;
+import util.filesystem;
 import world;
 import worldgen.worldgen;
 
@@ -263,7 +264,7 @@ class Game{
             rmdirRecurse("saves/current");
         }
         //Need to implement a recursive copy function, in util, perhaps?
-        util.copy(saveDir, "saves/current");
+        util.filesystem.copy(saveDir, "saves/current");
         
         initCallback = onDone;
         static void loadGameThreadStarter(shared Game g, shared string s) {
@@ -326,7 +327,7 @@ class Game{
             auto jsonString = to!string(jsonRoot);	
 	        jsonString = json.prettyfyJSON(jsonString);
         
-            util.mkdir("saves/current");
+            util.filesystem.mkdir("saves/current");
             std.file.write("saves/current/game.json", jsonString);
         }
         //Takes care of world and tasks.        
@@ -350,7 +351,7 @@ class Game{
                 rmdirRecurse(saveDir);
             }
             //Need to implement a recursive copy function, in util, perhaps?
-            util.copy("saves/current", saveDir);
+            util.filesystem.copy("saves/current", saveDir);
             onDone();
         });
     }

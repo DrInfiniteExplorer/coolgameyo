@@ -2,7 +2,8 @@
 
 module graphics.misc;
 
-import util;
+import util.util;
+
 
 vec3f[] makeCube(vec3f size=vec3f(1, 1, 1), vec3f offset=vec3f(0, 0, 0)){
     alias vec3f v;

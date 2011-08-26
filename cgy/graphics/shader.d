@@ -9,7 +9,8 @@ import std.stdio;
 import graphics.ogl;
 import graphics.renderer;
 import stolen.all;
-import util;
+import util.util;
+
 
 string makeUints(T...)() {
     string ret;

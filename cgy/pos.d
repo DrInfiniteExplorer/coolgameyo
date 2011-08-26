@@ -1,12 +1,17 @@
 module pos;
 
+pragma(msg, "> pos.d");
+
 import std.conv;
 
 import json;
 import stolen.aabbox3d;
-import util;
-import worldparts.sector;
-import worldparts.block;
+pragma(msg, "! pos.d");
+//import worldparts.sector;
+import worldparts.sizes;
+import util.util;
+import util.math;
+
 
 
 mixin template ToStringMethod3D() {
@@ -35,6 +40,8 @@ mixin template SerializeValue() {
     }
 }
 
+
+
 struct UnitPos {
     vec3d value;
 
@@ -48,6 +55,8 @@ struct UnitPos {
     mixin ToStringMethod3D;
     mixin SerializeValue;
 }
+
+
 
 struct EntityPos {
     vec3d value;
@@ -80,7 +89,7 @@ struct SectorNum {
                     value.Z * SectorSize.z));
     }
     aabbox3d!double getAABB(){
-        auto minPos = util.convert!double(toTilePos().value);
+        auto minPos = util.util.convert!double(toTilePos().value);
         auto maxPos = minPos + vec3d(SectorSize.x, SectorSize.y, SectorSize.z);
         return aabbox3d!double(minPos, maxPos);
     }
@@ -106,7 +115,7 @@ struct BlockNum {
     }
 
     aabbox3d!double getAABB(){
-        auto minPos = util.convert!double(toTilePos().value);
+        auto minPos = util.util.convert!double(toTilePos().value);
         auto maxPos = minPos + vec3d(BlockSize.x, BlockSize.y, BlockSize.z);
         return aabbox3d!double(minPos, maxPos);
     }
@@ -216,7 +225,7 @@ struct TilePos {
     }
 
     aabbox3d!double getAABB(){
-        auto minPos = util.convert!double(value);
+        auto minPos = util.util.convert!double(value);
         auto maxPos = minPos + vec3d(1.0, 1.0, 1.0);
         return aabbox3d!double(minPos, maxPos);
     }
@@ -281,8 +290,8 @@ struct GraphRegionNum{
     }
     alias min toTilePos;
     aabbox3d!double getAABB() const{
-        auto minPos = util.convert!double(min().value);
-        auto maxPos = util.convert!double(max().value);
+        auto minPos = util.util.convert!double(min().value);
+        auto maxPos = util.util.convert!double(max().value);
         return aabbox3d!double(minPos, maxPos);
     }
 
@@ -317,3 +326,6 @@ struct TileXYPos {
     mixin ToStringMethod2D;
     mixin SerializeValue;
 }
+
+pragma(msg, "< pos.d");
+

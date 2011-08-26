@@ -7,9 +7,9 @@ import std.stdio;
 import stolen.all;
 
 import settings;
-import util;
+import util.util;
 
-alias util.convert convert;
+alias util.util.convert convert;
 
 class Camera{
     vec3d position;

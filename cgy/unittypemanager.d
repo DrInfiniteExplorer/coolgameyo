@@ -7,7 +7,7 @@ import std.file;
 import graphics.texture;
 
 import json;
-import util;
+import util.util;
 import worldparts.tile;
 import statistics;
 

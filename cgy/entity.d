@@ -8,7 +8,7 @@ import json;
 import changelist;
 import pos;
 import stolen.aabbox3d;
-import util;
+import util.util;
 import world;
 import clan;
 import entitytypemanager;

@@ -14,8 +14,11 @@ import gui.loadscreen;
 import gui.newgamemenu;
 import gui.optionmenu;
 import gui.randommenu;
+import gui.worldview;
 import gui.unitcontrol;
 import settings;
+import util.util;
+import util.rect;
 
 class MainMenu : GuiElementWindow {
     Main main;
@@ -41,6 +44,7 @@ class MainMenu : GuiElementWindow {
         auto startNewButt = new GuiElementButton(this, Rectd(vec2d(0.1, randomButt.getRelativeRect().getBottom()+0.05), vec2d(0.3, 0.2)), "newgamemenu", &onStartNewGame);
         
         loadGameButton = new GuiElementButton(this, Rectd(vec2d(randomButt.getRelativeRect().getRight()+0.05, 0.6), vec2d(0.3, 0.2)), "Load game", &onLoadGame);
+        auto viewButt = new GuiElementButton(this, Rectd(vec2d(loadGameButton.getRelativeRect().getRight(), 0.6), vec2d(0.3, 0.2)), "World View", &onWorldView);
         //        auto cb = new GuiElementCheckBox(this, Rectd(vec2d(0.10, 0.6), vec2d(0.3, 0.2)), "CHECKBOX", null);
 //*/
         main = m;
@@ -125,6 +129,13 @@ class MainMenu : GuiElementWindow {
         }
         setVisible(false);
         new RandomMenu(this);
+    }
+    void onWorldView(bool down, bool abort) {
+        if(down || abort) {
+            return;
+        }
+        setVisible(false);
+        new WorldViewMenu(this);
     }
     
     void onStartNewGame(bool down, bool abort) {

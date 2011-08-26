@@ -3,8 +3,9 @@
 
 module graphics.debugging;
 
-import util;
+
 import graphics.ogl;
+import util.util;
 
 struct AABBData{
     vec3f color;

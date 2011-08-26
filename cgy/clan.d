@@ -2,7 +2,7 @@ module clan;
 
 import std.array;
 
-import util;
+
 import unit;
 import world;
 

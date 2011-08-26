@@ -7,7 +7,8 @@ import std.file;
 import std.string;
 import std.stdio;
 
-import util;
+import util.util;
+
 
 __gshared Statistics g_Statistics;
 

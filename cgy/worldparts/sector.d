@@ -14,37 +14,12 @@ import std.stdio;
 
 import json;
 import worldparts.block;
+import worldparts.sizes;
 import worldgen.worldgen;
 import pos;
 import unit;
 import entity;
-import util;
-
-enum BlocksPerSector {
-    x = 16,
-    y = 16,
-    z = 4,
-    total = x*y*z
-}
-
-enum SectorSize {
-    x = BlockSize.x * BlocksPerSector.x,
-    y = BlockSize.y * BlocksPerSector.y,
-    z = BlockSize.z * BlocksPerSector.z,
-    total = x*y*z
-}
-
-//TODO: UPDATE THESE MEASUREMENT VALUES
-//We may want to experiment with these values, or even make it a user settingable setting. Yeah.
-// blocksize * 2 gives ~30 ms per block and a total of ~3500-3700 per sector
-// blocksize * 4 gives ~500 ms per block and a total of ~3500 per sector
-// blocksize * 2 seems more do-want-able since its faster when updating, yeah.
-enum GraphRegionSize {
-    x = BlockSize.x*2,
-    y = BlockSize.y*2,
-    z = BlockSize.z*2,
-    total = x*y*z
-}
+import util.util;
 
 class Sector {
 
@@ -59,9 +34,9 @@ class Sector {
     private int activityCount;
 
     invariant(){
-        ASSERT(sectorNum.toTilePos() == pos);
-        ASSERT(pos.getSectorNum() == sectorNum);
-        ASSERT(activityCount >= 0);
+        BREAK_IF(sectorNum.toTilePos() != pos);
+        BREAK_IF(pos.getSectorNum() != sectorNum);
+        BREAK_IF(activityCount < 0);
     }
 
     this(SectorNum sectorNum_) {

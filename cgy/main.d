@@ -2,6 +2,7 @@
 
 module main;
 
+pragma(msg, "main.d");
 
 import core.memory;
 import core.runtime;
@@ -20,13 +21,15 @@ import derelict.devil.il;
 
 import graphics.ogl;
 
+
 import gui.guisystem.guisystem;
 
 import game;
-import util;
+
 import pos;
 import statistics;
 import settings;
+import util.util;
 import worldgen.worldgen;
 
 version (Windows) {

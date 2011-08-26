@@ -24,7 +24,8 @@ import scheduler;
 import settings;
 import statistics;
 import unit;
-import util;
+import util.util;
+
 
 //TODO: Make fix this, or make testcase and report it if not done already.
 auto grTexCoordOffset = GRVertex.texcoord.offsetof;
@@ -173,7 +174,7 @@ class Renderer {
             unitPos = unit.pos.value; //TODO: Subtract the camera position from the unit before rendering
         }
         unitPos += tickTimeSoFar * unit.velocity;
-        M.setTranslation(util.convert!float(unitPos));
+        M.setTranslation(util.util.convert!float(unitPos));
         M.setRotationRadians(vec3f(0, 0, unit.rotation));
         dudeShader.setUniform(dudeShader.M, M);
         dudeShader.setUniform(dudeShader.color, vec3f(unit.type.tintColor.X/255.f,
@@ -301,7 +302,7 @@ class Renderer {
         } else {*/
             entityPos = entity.pos.value; //TODO: Subtract the camera position from the unit before rendering
         //}
-        M.setTranslation(util.convert!float(entityPos));
+        M.setTranslation(util.util.convert!float(entityPos));
         M.setRotationRadians(vec3f(0, 0, entity.rotation));
         dudeShader.setUniform(dudeShader.M, M);
         dudeShader.setUniform(dudeShader.color, vec3f(entity.type.tintColor.X/255.f,

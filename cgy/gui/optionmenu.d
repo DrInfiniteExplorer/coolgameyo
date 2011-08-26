@@ -20,6 +20,8 @@ import gui.guisystem.window;
 import graphics.ogl;
 
 import settings;
+import util.util;
+import util.rect;
 
 class OptionMenu : GuiElementWindow {
     GuiElement guiSystem;

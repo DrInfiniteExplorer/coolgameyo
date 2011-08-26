@@ -14,6 +14,8 @@ import gui.randommenu;
 import gui.newgamemenu;
 import settings;
 import statistics;
+import util.util;
+import util.rect;
 
 class StatisticsWindow : GuiElement {
 

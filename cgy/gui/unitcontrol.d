@@ -21,6 +21,8 @@ import settings;
 import statistics;
 import tiletypemanager;
 import unit;
+import util.util;
+import util.intersect;
 import world;
 
 
@@ -237,7 +239,7 @@ class HyperUnitControlInterfaceInputManager : GuiEventDump{
         auto pos = possesAI.getUnitPos();
         auto dir = camera.getTargetDir();
         if(_3rdPerson) {
-            pos -= util.convert!double(dir) * 7.5;
+            pos -= util.util.convert!double(dir) * 7.5;
         } else {
             pos += vec3d(0, 0, 0.50); //Unit is 1.5 big now; unitpos is at 0.5 above feets
         }

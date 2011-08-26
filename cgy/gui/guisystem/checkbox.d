@@ -11,6 +11,8 @@ import gui.guisystem.button;
 import gui.guisystem.text;
 
 import graphics._2d.rect;
+import util.util;
+import util.rect;
 
 enum checkboxSizeInPixels = 12;
 

@@ -5,9 +5,11 @@ module gui.guisystem.image;
 import std.stdio;
 
 import gui.guisystem.guisystem;
-import util;
+
 
 import graphics._2d.image;
+import util.util;
+import util.rect;
 
 
 

@@ -5,10 +5,12 @@ module gui.guisystem.simplegraph;
 import std.stdio;
 
 import gui.guisystem.guisystem;
-import util;
+
 
 import graphics._2d.rect;
 import graphics._2d.line;
+import util.util;
+import util.rect;
 
 class GuiElementSimpleGraph(Type) : public GuiElement {
     

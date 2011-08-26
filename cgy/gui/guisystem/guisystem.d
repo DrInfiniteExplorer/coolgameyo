@@ -9,8 +9,9 @@ import std.exception;
 import graphics._2d.rect;
 import graphics.font;
 import graphics.ogl;
+import util.util;
+import util.rect;
 
-public import util;
 public import gui.guisystem.element;
 
 interface GuiEventDump {

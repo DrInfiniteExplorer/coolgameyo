@@ -1,3 +1,5 @@
+module entitytypemanager;
+
 import std.exception;
 import std.algorithm;
 import std.conv;
@@ -7,9 +9,10 @@ import std.file;
 import graphics.texture;
 
 import json;
-import util;
+
 import worldparts.tile;
 import statistics;
+import util.util;
 
 
 struct EntityType {

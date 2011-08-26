@@ -12,7 +12,8 @@ import graphics.ogl;
 import graphics.renderer;
 import settings;
 import statistics;
-import util;
+import util.util;
+
 
 
 

@@ -11,7 +11,9 @@ import modules.module_;
 import modules.path;
 
 import unit;
-import util;
+import util.util;
+import util.filesystem;
+
 
 class AIModule : Module, WorldListener {
 
@@ -61,7 +63,7 @@ class AIModule : Module, WorldListener {
         auto jsonRoot = Value(jsonStates);
         auto jsonString = to!string(jsonRoot);	
 	    jsonString = json.prettyfyJSON(jsonString);
-        util.mkdir("saves/current/modules/ai");
+        mkdir("saves/current/modules/ai");
         std.file.write("saves/current/modules/ai/states.json", jsonString);
         
     }

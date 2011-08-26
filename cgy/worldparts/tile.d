@@ -2,7 +2,8 @@
 module worldparts.tile;
 
 import tiletypemanager : TileTypeAir;
-import util;
+import util.util;
+
 
 //TODO: Make things private?
 

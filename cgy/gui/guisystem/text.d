@@ -5,7 +5,9 @@ import std.exception;
 
 import graphics.font;
 import gui.guisystem.guisystem;
-import util;
+import util.util;
+import util.rect;
+
 
 
 class GuiElementText : public GuiElement {

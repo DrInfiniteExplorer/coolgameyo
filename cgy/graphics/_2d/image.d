@@ -3,10 +3,13 @@ module graphics._2d.image;
 
 import std.exception;
 
-import util;
+
 import graphics.ogl;
 import graphics.shader;
 import settings;
+import util.util;
+import util.rect;
+alias util.util.convert convert;
 
 struct ImageRectVertex {
     vec2f pos;

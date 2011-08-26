@@ -7,7 +7,7 @@ import std.file;
 import std.stdio;
 
 import json;
-import util;
+import util.util;
 
 struct RenderSettings {
     static struct InnerRenderSettings {
@@ -64,7 +64,7 @@ vec3f getTileCoords(uint tileNum){
     tmp.X = tileNum % TilesPerTexDim;
     tmp.Y = (tileNum / TilesPerTexDim) % TilesPerTexDim;
     tmp.Z = tileNum / (TilesPerTexDim*TilesPerTexDim);        
-    vec3f ret = util.convert!float(tmp);
+    vec3f ret = util.util.convert!float(tmp);
     float tileScale = 1.f / to!float(TilesPerTexDim);    
     return ret * vec3f(tileScale, tileScale, 1.f);;
 }

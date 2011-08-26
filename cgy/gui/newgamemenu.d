@@ -11,6 +11,8 @@ import gui.mainmenu;
 import gui.all;
 import settings;
 import worldgen.worldgen;
+import util.util;
+import util.rect;
 
 class NewGameMenu : GuiElementWindow {
     GuiElement guiSystem;

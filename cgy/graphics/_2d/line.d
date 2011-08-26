@@ -5,10 +5,13 @@ import std.conv;
 import std.exception;
 import std.stdio;
 
-import util;
+
 import graphics.ogl;
 import graphics.shader;
 import settings;
+import util.util;
+import util.rect;
+alias util.util.convert convert;
 
 struct LineVertex {
     vec2f pos;
@@ -18,13 +21,9 @@ struct LineVertex {
 
 immutable(char[]) fixRect = "
     auto screenSize = vec2f(renderSettings.windowWidth-1, renderSettings.windowHeight-1);
-//    auto start = (vec2f(0.375, 0.375) + convert!float(r.start)) / screenSize;
     auto start = (vec2f(offset, offset) + convert!float(r.start)) / screenSize;
-//    auto start = (convert!float(r.start)) / screenSize;
-//    auto start = (convert!float(r.start));
     start.Y = 1.0 - start.Y;
     auto size = convert!float(r.size) / screenSize;
-//    auto size = convert!float(r.size);
     size.Y = - size.Y;
     auto x = vec2f(size.X, 0);
     auto y = vec2f(0, size.Y);

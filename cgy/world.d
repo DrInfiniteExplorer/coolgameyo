@@ -1,3 +1,5 @@
+module world;
+
 import std.algorithm, std.range, std.stdio;
 import std.container;
 import std.conv;
@@ -12,17 +14,20 @@ import tiletypemanager;
 import entitytypemanager;
 import unittypemanager;
 import worldgen.worldgen;
-import worldgen.newgen;
 public import unit;
 public import entity;
-import util;
+
 import scheduler;
 import statistics;
 
 public import pos;
+public import worldparts.sizes;
 public import worldparts.sector;
 public import worldparts.block;
 public import worldparts.tile;
+import util.util;
+import util.rangefromto;
+import util.tileiterator;
 
 
 // TODO: Refactor so these send world as first parameter,
@@ -96,9 +101,9 @@ class World {
     this(WorldGenParams params, TileTypeManager tilesys, EntityTypeManager entitysys, UnitTypeManager unitsys) {
         isServer = true;
         tileTypeManager = tilesys;
+        worldGen = new WorldGenerator;
 		entityTypeManager = entitysys;
 		unitTypeManager = unitsys;
-        worldGen = new WorldGeneratorNew;
         worldGenParams = params;
         worldGen.init(worldGenParams, tilesys);
 
@@ -139,7 +144,7 @@ class World {
         
         auto jsonString = to!string(jsonRoot);	
 	    jsonString = json.prettyfyJSON(jsonString);
-        util.mkdir("saves/current/world/");
+        mkdir("saves/current/world/");
         std.file.write("saves/current/world/world.json", jsonString);
 
         void serializeSectorXY(SectorXYNum xy, SectorXY sectorxy) {

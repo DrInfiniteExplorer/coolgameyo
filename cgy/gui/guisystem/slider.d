@@ -10,6 +10,8 @@ import gui.guisystem.guisystem;
 import gui.guisystem.text;
 
 import graphics._2d.rect;
+import util.util;
+import util.rect;
 
 class GuiElementSlider(ValueType) : public GuiElement {
 
@@ -95,11 +97,11 @@ class GuiElementSlider(ValueType) : public GuiElement {
                 if (m.down) {
                     if(absoluteRect.isInside(m.pos)) {
                         pushedDown = true;
-                        auto fAbs = util.convert!double(absoluteRect);
-                        auto fPos = util.convert!double(m.pos);
+                        auto fAbs = util.rect.convert!double(absoluteRect);
+                        auto fPos = util.util.convert!double(m.pos);
                         //TODO: Figure out why the following lines causes a compiler crash but the once above dont
-                        //auto fAbs = util.convert!float(absoluteRect);
-                        //auto fPos = util.convert!float(m.pos);
+                        //auto fAbs = util.util.convert!float(absoluteRect);
+                        //auto fPos = util.util.convert!float(m.pos);
                         auto relative = fAbs.getRelative(fPos);
                         repositionSlider(relative.X);
                         return GuiEventResponse.Accept;
@@ -112,8 +114,8 @@ class GuiElementSlider(ValueType) : public GuiElement {
         } else if (e.type == GuiEventType.MouseMove) {
             if (pushedDown) {
                 auto m = &e.mouseMove;
-                auto fAbs = util.convert!double(absoluteRect);
-                auto fPos = util.convert!double(m.pos);
+                auto fAbs = util.rect.convert!double(absoluteRect);
+                auto fPos = util.util.convert!double(m.pos);
                 auto relative = fAbs.getRelative(fPos);
                 repositionSlider(relative.X);
                 return GuiEventResponse.Accept;

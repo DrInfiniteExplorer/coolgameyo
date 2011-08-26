@@ -1,3 +1,5 @@
+module scheduler;
+
 import core.time;
 import core.thread;
 
@@ -16,10 +18,12 @@ version(Windows) import std.c.windows.windows;
 
 public import changelist;
 import statistics;
-import util;
+
 import world;
 
 import modules.module_;
+import util.util;
+import util.queue;
 
 struct Task {
     bool sync;

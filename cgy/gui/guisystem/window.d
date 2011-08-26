@@ -9,8 +9,10 @@ import graphics._2d.rect;
 import gui.guisystem.guisystem;
 import gui.guisystem.text;
 import gui.guisystem.button;
+import util.util;
+import util.rect;
 
-import util;
+
 
 class GuiElementWindow : public GuiElement {
     private string caption;

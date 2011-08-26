@@ -4,7 +4,8 @@ module changelist;
 import std.stdio;
 
 import unit;
-import util;
+
+import util.util;
 import world;
 
 // Only implemented by experimental or semi-hacky classes.

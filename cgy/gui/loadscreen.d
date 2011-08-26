@@ -4,6 +4,8 @@ module gui.loadscreen;
 
 import gui.all;
 import statistics;
+import util.util;
+import util.rect;
 
 class LoadScreen : GuiElementWindow {
     GuiSystem guiSystem;

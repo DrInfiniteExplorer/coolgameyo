@@ -10,7 +10,9 @@ import std.stdio;
 import std.typecons;
 
 import graphics.image;
-import util;
+import util.util;
+import util.math;
+
 
 //TODO: Make interface, etc laters
 
@@ -135,6 +137,7 @@ class ModMultAdd(double mult, double offset) : ValueSource {
         return v;
     }
 }
+
 
 double clamp(double value, double _min, double _max) {
     return min(_max, max(_min, value));
@@ -281,14 +284,14 @@ class ValueMap2D(StorageType, bool Wrap = true) : ValueSource {
             value = (value-min) / range;
             if (color is null ) {
                 if(doClamp) {
-                    value = clamp(value, min, max);
+                    value = clamp(value, 0, 1);
                 }
                 ptr[0..3] = to!ubyte(255 * value);
             } else {
                 auto v = color(value);
                 if(doClamp) {
                     foreach(ref vv; v) {
-                        vv = clamp(vv, min, max);
+                        vv = clamp(vv, 0, 1);
                     }
                 }
                 ptr[0] = to!ubyte(255 * v[0]);
@@ -308,13 +311,22 @@ class ValueMap2D(StorageType, bool Wrap = true) : ValueSource {
     }
 };
 
-mixin template Permutation(uint SIZE) {
-    uint[SIZE] permutations;
+mixin template Permutation(alias SIZE) {
+    uint[] permutations;
     
     void initPermutations(RandSourceUniform rsu) {
-        foreach(ref p ; permutations) {
-            p = rsu.get!uint(0, SIZE);
+        permutations.length = SIZE;
+        uint[] src;
+        src.length = SIZE;
+        foreach( i ; 0 .. SIZE){
+            src[i] = i;
         }
+        foreach( i ; 0 .. SIZE-1){
+            uint idx = rsu.get!uint(0, SIZE-i-1);
+            permutations[i] = src[idx];
+            src[idx] = src[SIZE-i-1];
+        }
+        permutations[SIZE-1] = src[0];
     }
     
     uint Perm(int i) {
@@ -344,7 +356,7 @@ mixin template Permutation(uint SIZE) {
 }
 
 
-class PermMap2D(uint SIZE = 128) : ValueSource {
+class PermMap(uint SIZE = 128) : ValueSource {
     double[SIZE] PRNs;
     mixin Permutation!SIZE;
 
@@ -366,15 +378,18 @@ class PermMap2D(uint SIZE = 128) : ValueSource {
     }
 };
 
-class GradientNoise2D(uint SIZE, string Step = "smoothStep", string Lerp = "lerp") : ValueSource {
+class GradientNoise(string Step = "smoothStep", string Lerp = "lerp") : ValueSource {
     mixin("alias " ~ Step ~ " StepFunc;");
     mixin("alias " ~ Lerp ~ " Interpolate;");
-    vec3d[SIZE] PRNs;
-    mixin Permutation!SIZE;
-    this(RandSourceUniform rsu) {
+    uint size;
+    vec3d[] PRNs;
+    mixin Permutation!size;
+    this(uint Size, RandSourceUniform rsu) {
+        size = Size;
+        PRNs.length = size;
         initPermutations(rsu);
         foreach(ref p ; permutations) {
-            p = rsu.get!uint(0, SIZE);
+            p = rsu.get!uint(0, size);
         }
 
         foreach(ref p ; PRNs) {
@@ -464,6 +479,23 @@ class GradientNoise2D(uint SIZE, string Step = "smoothStep", string Lerp = "lerp
     }
 }
 
+class GradientNoise01(string Step = "smoothStep", string Lerp = "lerp") : GradientNoise!(Step, Lerp) {
+    this(uint Size, RandSourceUniform rsu) {
+        super(Size, rsu);
+    }
+    
+    override double getValue(double x, double y, double z) {
+        return super.getValue(x,y,z) + 0.5;
+    }    
+    double getValue(double x, double y) {
+        return super.getValue(x,y) + 0.5;
+    }
+    
+    double getValue(double x) {
+        return super.getValue(x) + 0.5;
+    }
+}
+
 class GradientField : ValueSource {
     vec3d normal;
     double d;
@@ -532,9 +564,10 @@ class Fractal(uint Count) : ValueSource { //TODO: Think of better name than Frac
     ValueSource[Count] sources;
     double[Count] freqs;
     double[Count] amps;
-    this(ValueSource[Count] s, double[Count] f, double[Count] a) {
+    //The period is 1/freq
+    this(ValueSource[Count] s, double[Count] period, double[Count] a) {
         sources = s;
-        freqs = f;
+        freqs = 1.0 / period[];
         amps = a;
     }
     
@@ -580,11 +613,12 @@ body{
     double x = clamp(t, 0, 1) * to!double(spans);
     int span = to!int(x);
     if (span > count - 3) {
+        BREAKPOINT;
         span = count - 3;
     }
     x -= to!int(span);
     Type* knot = &ar[span];
-    auto c3 = -0.5 * knot[0] +  1.5 * knot[1] + -1.5 * knot[2] +  1.0 * knot[3];
+    auto c3 = -0.5 * knot[0] +  1.5 * knot[1] + -1.5 * knot[2] +  0.5 * knot[3];
     auto c2 =  1.0 * knot[0] + -2.5 * knot[1] +  2.0 * knot[2] + -0.5 * knot[3];
     auto c1 = -0.5 * knot[0] +  0.0 * knot[1] +  0.5 * knot[2] +  0.0 * knot[3];
     auto c0 =  0.0 * knot[0] +  1.0 * knot[1] +  0.0 * knot[2] +  0.0 * knot[3];

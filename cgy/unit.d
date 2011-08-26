@@ -8,9 +8,10 @@ import json;
 import changelist;
 import pos;
 import stolen.aabbox3d;
-import util;
+
 import world;
 import clan;
+import util.util;
 import unittypemanager;
 
 shared int g_UnitCount = 0; //Global counter of units. Make shared static variable in Game-class?

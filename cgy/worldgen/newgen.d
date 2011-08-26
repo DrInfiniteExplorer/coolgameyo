@@ -18,7 +18,7 @@ import world;
 import worldgen.worldgen;
 
 
-final class WorldGeneratorNew : WorldGenerator {
+final class WorldGeneratorNew {
     TileTypeManager sys;
 
     ValueSource heightmap;

@@ -25,8 +25,11 @@ import scheduler;
 import settings;
 import statistics;
 import stolen.aabbox3d;
-import util;
+
 import world;
+import util.util;
+import util.rangefromto;
+import util.intersect;
 
 struct GraphicsRegion
 {
@@ -300,7 +303,7 @@ class GeometryCreator : Module, WorldListener
         //TODO: Fix so that this is not needed anylonger.
         foreach(ref face ; region.faces) {
             foreach(ref vert ; face.quad) {
-                vert.vertex -= util.convert!float(min.value);
+                vert.vertex -= util.util.convert!float(min.value);
             }
         }
 
@@ -360,9 +363,9 @@ class GeometryCreator : Module, WorldListener
             const auto graphRegionAcross = sqrt(to!double(  GraphRegionSize.x*GraphRegionSize.x +
                                                             GraphRegionSize.y*GraphRegionSize.y +
                                                             GraphRegionSize.z*GraphRegionSize.z));
-            auto camDir = util.convert!double(camera.getTargetDir());
+            auto camDir = util.util.convert!double(camera.getTargetDir());
             auto camPos = camera.getPosition() - camDir * graphRegionAcross;
-            vec3d toBlock = util.convert!double(num.toTilePos().value) - camPos;
+            vec3d toBlock = util.util.convert!double(num.toTilePos().value) - camPos;
             double distSQ = toBlock.getLengthSQ();
             if(camDir.dotProduct(toBlock) < 0) {
                 distSQ +=1000; //Stuff behind our backs are considered as important as stuff a kilometer ahead of us. ? :)

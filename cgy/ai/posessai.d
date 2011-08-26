@@ -10,7 +10,9 @@ import std.stdio;
 import changelist;
 import graphics.renderer;
 import unit;
-import util;
+import util.util;
+import util.rangefromto;
+
 import world;
 
 class FPSControlAI : UnitAI, CustomChange {

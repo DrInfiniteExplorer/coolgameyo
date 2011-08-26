@@ -13,18 +13,15 @@ import std.stdio;
 import pos;
 import tiletypemanager : TileTypeAir;
 //import tiletypemanager;
-import util;
+
 import worldgen.worldgen;
 import worldparts.tile;
+import worldparts.sizes;
+import util.util;
+import util.rangefromto;
 
-enum BlockSize {
-    x = 8,
-    y = 8,
-    z = 8,
-    total = x*y*z
-}
 
-alias BlockSize TilesPerBlock;
+
 
 enum BlockFlags : ubyte {
     none                = 0,
