@@ -5,6 +5,7 @@
 module stolen.vector2d;
 
 import stolen.math;
+import stolen.vector3d;
 
 //! 2d vector template class with lots of operators and methods.
 /** As of Irrlicht 1.6, this class supercedes position2d, which should
@@ -19,6 +20,9 @@ public:
 	//! Copy constructor
 	this(const vector2d!(T) other) {X = other.X; Y = other.Y;}
 
+    vector3d!T vec3(T z = 0) const {
+        return vector3d!T(X, Y, z);
+    }
 
 	// operators
 

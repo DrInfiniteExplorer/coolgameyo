@@ -15,12 +15,12 @@ import random.random;
 struct WorldGenParams {
     uint randomSeed = 880128;
     uint worldSize = 8; //Measures diameter of world, in number of sectors.
-    //TODO: Heightlimits as parameter?
+    
 }
 
 final class WorldGenerator {
     TileTypeManager sys;
-    WorldGenParams worldParams;
+    WorldGenParams params;
 
     ValueSource worldHeightMap;
     ValueSource wierdnessMap;
@@ -36,21 +36,21 @@ final class WorldGenerator {
     }
     
     void init(WorldGenParams params, TileTypeManager tileTypeManager) {
-        worldParams = params;
+        this.params = params;
         sys = tileTypeManager;
-        auto randSource = new RandSourceUniform(worldParams.randomSeed);
+        auto randSource = new RandSourceUniform(params.randomSeed);
 
-        worldHeightMap = new GradientNoise01!()(worldParams.worldSize, randSource);   // [-500, 1500]
+        worldHeightMap = new GradientNoise01!()(params.worldSize, randSource);   // [-500, 1500]
         worldHeightMap = new ModMultAdd!(2000, -500)(worldHeightMap);
-        wierdnessMap = new GradientNoise01!()(worldParams.worldSize, randSource);     // [0, 1]
+        wierdnessMap = new GradientNoise01!()(params.worldSize, randSource);     // [0, 1]
         //wierdnessMap = new ModMultAdd!(0.5, 0.5)(wierdnessMap);
-        temperatureMap = new GradientNoise01!()(worldParams.worldSize, randSource);   // [-20, 50]
+        temperatureMap = new GradientNoise01!()(params.worldSize, randSource);   // [-20, 50]
         temperatureMap = new ModMultAdd!(70, -20)(temperatureMap);
-        rainfallMap = new GradientNoise01!()(worldParams.worldSize, randSource);      // [0, 100]
+        rainfallMap = new GradientNoise01!()(params.worldSize, randSource);      // [0, 100]
         rainfallMap = new ModMultAdd!(100, 0)(rainfallMap);
-        drainageMap = new GradientNoise01!()(worldParams.worldSize, randSource);      // [0, 100]
+        drainageMap = new GradientNoise01!()(params.worldSize, randSource);      // [0, 100]
         drainageMap = new ModMultAdd!(100, 00)(drainageMap);
-        vegetationMap = new GradientNoise01!()(worldParams.worldSize, randSource);    // [0, 100]
+        vegetationMap = new GradientNoise01!()(params.worldSize, randSource);    // [0, 100]
 //        vegetationMap = new ModMultAdd!(100, 00)(vegetationMap);
         vegetationMap = new Fractal!3(
                 [vegetationMap, vegetationMap, vegetationMap],
@@ -79,6 +79,9 @@ final class WorldGenerator {
     }
     double getVegetation(TilePos pos) {
         return vegetationMap.getValue(pos.value.X, pos.value.Y);
+    }
+    double getVegetation01(TilePos pos) {
+        return getVegetation(pos) / 100.0;
     }
 
     Tile getTile(TilePos pos) {        

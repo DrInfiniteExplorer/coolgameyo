@@ -105,18 +105,20 @@ struct Image {
 
     uint toGLTex(uint tex){
         int width, height;
-        debug scope(exit){
-            auto tmp = Image(null, imgWidth, imgHeight);
-            glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, tmp.imgData.ptr);
-            glError();
-            tmp.save("derp.png");
+        version(derpderp){
+            debug scope(exit){
+                auto tmp = Image(null, imgWidth, imgHeight);
+                glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, tmp.imgData.ptr);
+                glError();
+                tmp.save("derp.png");
+            }
         }
         if(tex) {
             glBindTexture(GL_TEXTURE_2D, tex);
             glError();
-            glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_WIDTH, &width);
+            glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
             glError();
-            glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_HEIGHT, &height);
+            glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
             glError();
             if(width == imgWidth && height == imgHeight){
                 glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, imgWidth, imgHeight, GL_RGBA, GL_UNSIGNED_BYTE, imgData.ptr);
@@ -135,6 +137,10 @@ struct Image {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, imgWidth, imgHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, imgData.ptr);
         glError();
         return tex;
+    }
+    
+    void setPixel(int x, int y, ubyte[4] pixel) {
+        imgData[4*(x + y * imgWidth) .. 4*(x + y * imgWidth) + 4] = pixel;
     }
 
     void save(string filename){

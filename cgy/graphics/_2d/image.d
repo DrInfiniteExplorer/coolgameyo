@@ -58,8 +58,8 @@ struct ImageRectQuad{
         vertices[1].texcoord    = imgSource.start;
         vertices[2].texcoord    = imgSource.start + imgSource.size;
         vertices[3].texcoord    = imgSource.start;
-        vertices[1].texcoord.X += imgSource.size.X;
-        vertices[3].texcoord.Y += imgSource.size.Y;        
+        vertices[1].texcoord.Y += imgSource.size.Y;
+        vertices[3].texcoord.X += imgSource.size.X;
     }
 
 }

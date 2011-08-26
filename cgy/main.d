@@ -223,6 +223,8 @@ class Main {
                         auto m = &guiEvent.mouseMove;
                         m.pos.set(event.motion.x,
                                   event.motion.y);
+                        m.delta.set(event.motion.xrel,
+                                  event.motion.yrel);
                         guiSystem.onEvent(guiEvent);
                         break;
                     case SDL_MOUSEBUTTONDOWN:

@@ -620,8 +620,8 @@ body{
     Type* knot = &ar[span];
     auto c3 = -0.5 * knot[0] +  1.5 * knot[1] + -1.5 * knot[2] +  0.5 * knot[3];
     auto c2 =  1.0 * knot[0] + -2.5 * knot[1] +  2.0 * knot[2] + -0.5 * knot[3];
-    auto c1 = -0.5 * knot[0] +  0.0 * knot[1] +  0.5 * knot[2] +  0.0 * knot[3];
-    auto c0 =  0.0 * knot[0] +  1.0 * knot[1] +  0.0 * knot[2] +  0.0 * knot[3];
+    auto c1 = -0.5 * knot[0] +                   0.5 * knot[2];
+    auto c0 =                   1.0 * knot[1];
     
     return ((c3*x + c2)*x + c1)*x + c0;
 }
