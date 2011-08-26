@@ -59,10 +59,7 @@ class MainMenu : GuiElementWindow {
         super.destroy();
     }    
         
-    void onNewGame(bool down, bool abort) {
-        if(down || abort) {
-            return;
-        }
+    void onNewGame() {
         auto rect = newGameButton.getRelativeRect();        
         loadScreen.setLoading(true);
         void loadDone() {
@@ -71,7 +68,7 @@ class MainMenu : GuiElementWindow {
             resumeGameButton = new GuiElementButton(this, rect, "Resume gay me?", &onResumeGame);
             rect.start.X += rect.size.X * 2;
             saveGameButton = new GuiElementButton(this, rect, "Save gay me?", &onSaveGame);
-            onResumeGame(false, false);
+            onResumeGame();
         }
         game = main.startGame(&loadDone);
         newGameButton.destroy();
@@ -81,10 +78,7 @@ class MainMenu : GuiElementWindow {
         setVisible(false);        
     }
 
-    void onResumeGame(bool down, bool abort) {
-        if(down || abort) {
-            return;
-        }
+    void onResumeGame() {
         setVisible(false);
         guiSystem.addHotkey(SDLK_ESCAPE, &enterMenu);
         guiSystem.setEventDump(userControl);
@@ -93,18 +87,12 @@ class MainMenu : GuiElementWindow {
         SDL_WarpMouse(middleX, middleY);
     }
     
-    void onSaveGame(bool down, bool abort) {
-        if(down || abort) {
-            return;
-        }    
+    void onSaveGame() {
         
         loadScreen.setLoading(true);
         game.saveGame("Save1", { loadScreen.setLoading(false); } );
     }
-    void onLoadGame(bool down, bool abort) {
-        if(down || abort) {
-            return;
-        }    
+    void onLoadGame() {
         loadScreen.setLoading(true);
         auto rect = newGameButton.getRelativeRect();        
         void loadDone() {
@@ -113,7 +101,7 @@ class MainMenu : GuiElementWindow {
             resumeGameButton = new GuiElementButton(this, rect, "Resume gay me?", &onResumeGame);
             rect.start.X += rect.size.X * 2;
             saveGameButton = new GuiElementButton(this, rect, "Save gay me?", &onSaveGame);
-            onResumeGame(false, false);
+            onResumeGame();
         }
         game = main.loadGame("Save1", &loadDone);
         newGameButton.destroy();
@@ -123,25 +111,16 @@ class MainMenu : GuiElementWindow {
         setVisible(false);        
     }
     
-    void onRandom(bool down, bool abort) {
-        if(down || abort) {
-            return;
-        }
+    void onRandom() {
         setVisible(false);
         new RandomMenu(this);
     }
-    void onWorldView(bool down, bool abort) {
-        if(down || abort) {
-            return;
-        }
+    void onWorldView() {
         setVisible(false);
         new WorldViewMenu(this);
     }
     
-    void onStartNewGame(bool down, bool abort) {
-        if (down || abort) {
-            return;
-        }
+    void onStartNewGame() {
         setVisible(false);
         new NewGameMenu(this);
     }
@@ -153,10 +132,7 @@ class MainMenu : GuiElementWindow {
     }
     
 
-    void onOptions(bool down, bool abort) {
-        if(down || abort) {
-            return;
-        }
+    void onOptions() {
         new OptionMenu(this);
         setVisible(false);
     }

@@ -67,10 +67,7 @@ class OptionMenu : GuiElementWindow {
         super.destroy();
     }
     
-    void onBack(bool down, bool abort) {
-        if(down || abort) {
-            return;
-        }
+    void onBack() {
         main.setVisible(true);
         destroy();
     }    

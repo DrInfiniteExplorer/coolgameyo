@@ -12,7 +12,9 @@ import util.util;
 import util.rect;
 
 
-class GuiElementButton : public GuiElement {
+//Difference between this and subclass GuiElementButton
+//is that GuiElementButton only calls callback on released click on button.
+class GuiElementButtonAll : public GuiElement {
     protected GuiElementText buttonText;
 
     protected bool pushedDown;    
@@ -100,4 +102,17 @@ class GuiElementButton : public GuiElement {
     }
 }
 
+class GuiElementButton : GuiElementButtonAll {
+    private void delegate() callback;
+    this(GuiElement parent, Rectd relative, string text, void delegate() cb = null) {
+        super(parent, relative, text);
+        callback = cb;
+    }
+    
+    void onPushed(bool down, bool abort){
+        if (!down && !abort && callback !is null) {
+            callback();
+        }
+    }
+}
 

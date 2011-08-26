@@ -57,30 +57,18 @@ class RandomMenu : GuiElementWindow {
         super.destroy();
     }
     
-    void onBack(bool down, bool abort) {
-        if(down || abort) {
-            return;
-        }
+    void onBack() {
         main.setVisible(true);
         destroy();
     }    
     
-    void onMapVNoise(bool down, bool abort) {
-        if(down || abort) {
-            return;
-        }
+    void onMapVNoise() {
         makeNoise!("map", true, true)();
     }
-    void onPermVNoise(bool down, bool abort) {
-        if(down || abort) {
-            return;
-        }
+    void onPermVNoise() {
         makeNoise!("permv", true, true)();
     }
-    void onPermGNoise(bool down, bool abort) {
-        if(down || abort) {
-            return;
-        }
+    void onPermGNoise() {
         makeNoise!("permg", true, true)();
     }
     

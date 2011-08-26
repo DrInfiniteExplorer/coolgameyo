@@ -139,7 +139,7 @@ class GuiElement {
         return guiSystem.getFocusElement();
     }
     
-    bool hasFocus() {
+    bool hasFocus() @property {
         return this is getFocusElement();
     }
     
@@ -275,4 +275,11 @@ class GuiElement {
             parent.bringToFront();
         }
     }
+    
+    double rightOf() const @property { return relativeRect.getRight(); }
+    double leftOf() const @property { return relativeRect.getLeft(); }
+    double topOf() const @property { return relativeRect.getTop(); }
+    double bottomOf() const @property { return relativeRect.getBottom(); }
+    double widthOf() const @property { return relativeRect.getWidth(); }
+    double heightOf() const @property { return relativeRect.getHeight(); }
 }

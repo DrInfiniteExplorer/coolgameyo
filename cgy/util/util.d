@@ -1,0 +1,210 @@
+module util.util;
+
+import core.time;
+
+import std.conv;
+import std.exception;
+import std.stdio;
+import std.range;
+import std.string;
+
+public import std.datetime;
+
+//TODO: Got order-dependant bugs here. If doing pos, stolen, worldparts, then we get bugs and bugs. sadface.
+//import worldparts.sector;
+//import worldparts.block;
+import stolen.all;
+
+version (Posix) {
+    import core.sys.posix.stdlib: posix_memalign;
+    import std.c.stdlib;
+}
+
+void msg(string file=__FILE__, int line=__LINE__, T...)(T t) {
+    writeln(file, "(", line, "): ", t);
+}
+
+long utime() {
+    return TickDuration.currSystemTick().usecs;
+}
+
+alias vector2d!(int)  vec2i;
+alias vector2d!(float)  vec2f;
+alias vector2d!(double)  vec2d;
+
+alias vector3d!(int)  vec3i;
+alias vector3d!(float)  vec3f;
+alias vector3d!(double) vec3d;
+
+alias aabbox3d!double aabbd;
+
+vector3d!(A) convert(A,B)(const vector3d!(B) wap){
+    return vector3d!A(to!A(wap.X), to!A(wap.Y), to!A(wap.Z));
+}
+vector2d!(A) convert(A,B)(const vector2d!(B) wap){
+    return vector2d!A(to!A(wap.X), to!A(wap.Y));
+}
+
+vec3i getTilePos(T)(vector3d!T v){
+    return vec3i(
+        to!int(floor(v.X)),
+        to!int(floor(v.Y)),
+        to!int(floor(v.Z))
+    );
+}
+
+void setFlag(A,B)(ref A flags, B flag, bool value) {
+    if (value) {
+        flags |= flag;
+    } else {
+        flags &= ~flag;
+    }
+}
+
+void BREAKPOINT(uint doBreak=1) {
+    if(doBreak) {
+        asm { int 3; }
+    }
+}
+alias BREAKPOINT BREAK_IF;
+
+version(Windows){
+//    import std.c.windows.windows;
+//    import win32.windows : SYSTEM_INFO, GetSystemInfo, RaiseException; //Not available in std.c.windows.windows
+    import win32.windows;
+}
+
+
+void[] allocateBlob(size_t size) {
+    version (Windows) {
+        auto ret = VirtualAlloc(null, 4096 * size, MEM_COMMIT, PAGE_READWRITE);
+        auto tmp = enforce(ret[0 .. 4096*size], "memory allocation fail :-)");
+        return tmp;
+    } else version (Posix) {
+        void* ret;
+        auto result = posix_memalign(&ret, 4096, 4096 * size);
+        enforce (result == 0, "memory allocation fail :-)");
+        return ret[0 .. 4096 * size];
+    } else {
+        static assert (0, "version?");
+    }
+}
+void freeBlob(void* blob) {
+    version (Windows) {
+        VirtualFree(blob, 0, MEM_RELEASE);
+    } else version (Posix) {
+        free(blob);
+    } else {
+        static assert (0);
+    }
+}
+
+unittest {
+    SYSTEM_INFO si;
+    GetSystemInfo(&si);
+    assert(si.dwPageSize == 4096);
+}
+
+T[6] neighbors(T)(T t) {
+    T[6] ret;
+    ret[] = t;
+    ret[0].value += vec3i(0,0,1);
+    ret[1].value -= vec3i(0,0,1);
+    ret[2].value += vec3i(0,1,0);
+    ret[3].value -= vec3i(0,1,0);
+    ret[4].value += vec3i(1,0,0);
+    ret[5].value -= vec3i(1,0,0);
+    return ret;
+}
+
+
+enum Direction{
+    north = 1<<0,
+    south = 1<<1,
+    west  = 1<<2,
+    east  = 1<<3,
+    up    = 1<<4,
+    down  = 1<<5,
+    all   = north | up | west | down | south | east,
+}
+
+
+
+void setThreadName(string threadName) {
+    version(Windows){
+        //
+        // Usage: SetThreadName (-1, "MainThread");
+        //
+        //#include <windows.h>
+        uint MS_VC_EXCEPTION=0x406D1388;
+
+        struct THREADNAME_INFO{
+            align(8):
+           uint dwType; // Must be 0x1000.
+           char* szName; // Pointer to name (in user addr space).
+           uint dwThreadID; // Thread ID (-1=caller thread).
+           uint dwFlags; // Reserved for future use, must be zero.
+        };
+
+        //const char* name = toStringz(threadName);
+        char* name = cast(char*)(threadName ~ "\0").ptr;
+
+        THREADNAME_INFO info;
+        info.dwType = 0x1000;
+        info.szName = to!(char*)(name);
+        info.dwThreadID = GetCurrentThreadId();
+        info.dwFlags = 0;
+
+        uint* ptr = cast(uint*)&info;
+
+        try//__try
+        {
+            RaiseException( MS_VC_EXCEPTION, 0u, info.sizeof/ptr.sizeof, ptr );
+        }
+        catch(Throwable o) //__except(EXCEPTION_EXECUTE_HANDLER)
+        {
+            msg("asdasdasd");
+        }
+    }
+}
+
+version(Windows){
+    /*import win32.windows : GlobalAlloc, GlobalLock, GlobalUnlock, GMEM_MOVEABLE,
+        OpenClipboard, EmptyClipboard, SetClipboardData, CF_TEXT, CloseClipboard, GetClipboardData;
+    */
+    import win32.windows;
+
+    void setCopyString(string str) {
+        auto strZ = str.toStringz();
+        DWORD len = str.length+1;
+        HANDLE hMem =  GlobalAlloc(GMEM_MOVEABLE, len);
+        memcpy(GlobalLock(hMem), strZ, len);
+        GlobalUnlock(hMem);
+        OpenClipboard(null);
+        EmptyClipboard();
+        SetClipboardData(CF_TEXT, hMem);
+        CloseClipboard();    
+    }
+
+    bool getCopyString(ref string output) {
+        const(char*) clip;
+        if (OpenClipboard(null)) {
+            HANDLE hData = GetClipboardData( CF_TEXT );
+            char * buffer = cast(char*)GlobalLock( hData );
+            output = to!string(buffer);
+            GlobalUnlock( hData );
+            CloseClipboard();
+            return true;
+        }
+        return false;
+    }
+
+}
+
+unittest{
+    setCopyString("dix");
+    string s;
+    assert(getCopyString(s), "Could not get string from clipboard");
+    assert(s == "dix", "Didn't get correct string from clipboard");
+}
+

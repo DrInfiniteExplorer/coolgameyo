@@ -59,11 +59,7 @@ class GuiElementWindow : public GuiElement {
         }
         closeable = enable;
         if (enable) {
-            closeButton = new GuiElementButton(this, Rectd(0,0,1,1), "X", (bool down, bool abort){
-                if (!down && !abort) {
-                    onWindowClose();
-                }
-            });
+            closeButton = new GuiElementButton(this, Rectd(0,0,1,1), "X", &onWindowClose);
             closeButton.setColor(vec3f(0, 0, 0));
             closeButton.setAbsoluteRect(closeRect);
         } else {

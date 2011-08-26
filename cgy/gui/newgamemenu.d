@@ -40,19 +40,13 @@ class NewGameMenu : GuiElementWindow {
         super.destroy();
     }
     
-    void onBack(bool down, bool abort) {
-        if(down || abort) {
-            return;
-        }
+    void onBack() {
         main.setVisible(true);
         destroy();
     }    
-    void onStart(bool down, bool abort) {
-        if(down || abort) {
-            return;
-        }
+    void onStart() {
         destroy();
-        main.onNewGame(false, false);
+        main.onNewGame();
     }    
     
 }

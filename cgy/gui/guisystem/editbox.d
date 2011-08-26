@@ -15,6 +15,7 @@ import derelict.sdl.sdl;
 import graphics._2d.rect;
 import graphics.font;
 import gui.guisystem.guisystem;
+import gui.guisystem.text;
 import util.util;
 import util.rect;
 
@@ -24,7 +25,7 @@ class GuiElementEditbox : public GuiElement {
     alias bool delegate(char ch) ValidCharFilter;
     ValidCharFilter filter; //Return true to allow!
     
-    size_t startMarker, stopMarker;
+    int startMarker, stopMarker;
     size_t maxLength;
     string content;
     StringTexture text;
@@ -72,6 +73,10 @@ class GuiElementEditbox : public GuiElement {
     bool filterNumber(char ch) {
         return -1 != std.string.indexOf(digits, ch);
     }
+    
+    string getText() {
+        return content;
+    }
         
     void setText(string str) {
         content = str;
@@ -105,8 +110,9 @@ class GuiElementEditbox : public GuiElement {
         auto inner = absoluteRect.diff(vec2i(2, 2), vec2i(-2, -2));
         
         auto markerColor = vec3f(0.5, 0.5, 0.5);
+        //Render marking
         if (startMarker != stopMarker) {
-            markerColor = vec3f(0.0, 0.0, 0.0);
+            //markerColor = vec3f(0.0, 0.0, 0.0);
             auto start = startMarker;
             auto stop = stopMarker;
             if (start > stop) {
@@ -116,14 +122,18 @@ class GuiElementEditbox : public GuiElement {
             auto dx = getPixelFromPos(start);
             marked.start.X += dx;
             marked.size.X = getPixelFromPos(stop)-dx;    
-            renderRect(marked, vec3f(0.25, 0.25, 0.75));
+            
+            renderRect(marked, hasFocus ?   vec3f(0.25, 0.25, 0.75) :
+                                            vec3f(0.5, 0.5, 0.5) );
             //Figure out how to translate this to a rect :)
         }
         text.render(inner);
-        auto dx = getPixelFromPos(startMarker);
-        auto mark = absoluteRect.diff(vec2i(dx, 3), vec2i(0,-3));
-        mark.size.X = 1;
-        renderRect(mark, markerColor);
+        if (hasFocus) {
+            auto dx = getPixelFromPos(startMarker);
+            auto mark = absoluteRect.diff(vec2i(dx, 3), vec2i(0,-3));
+            mark.size.X = 1;
+            renderRect(mark, markerColor);
+        }
         
         super.render();
     }
@@ -206,6 +216,7 @@ class GuiElementEditbox : public GuiElement {
                 }
             } else {
                 startMarker = max(0, startMarker-1);
+                writeln(startMarker);
             }
             moved = true;
         } else if (sdlSym == SDLK_HOME || (sdlSym == SDLK_KP7 && !(sdlMod & KMOD_NUM))) {
@@ -293,3 +304,20 @@ class GuiElementEditbox : public GuiElement {
     }
 }
 
+//A bit of a hack. It relies on the fact that we use no clipping when drawing outside of our parents.
+//Maybe set clipping up as a property of parents?
+class GuiElementLabeledEdit : GuiElementEditbox {
+    GuiElementText label;
+    this(GuiElement parent, Rectd relative, string _label, string str) {
+         // ~ " " to make space between label/edit in a simpel manner xD
+        label = new GuiElementText(parent, relative.start, _label ~ " ");
+        auto labelRect = label.getRelativeRect();
+        relative.start.X += labelRect.size.X;
+        
+        label.setRelativeRect(Rectd(0,0,1,1).getSubRectInv(labelRect));
+        super(parent, relative, str);
+        label.setParent(this);
+    }
+    
+    
+}
