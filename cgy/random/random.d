@@ -138,6 +138,37 @@ class ModMultAdd(double mult, double offset) : ValueSource {
     }
 }
 
+//Scale and offset. For example, to use a valuemap(width, height) as source for world height,
+// we want to scale with width/(worldSize*sectorsize.x) and offset with (width/2, height/2) to make sampling of
+// 0, SectorSize.Y*worldSize/2 sample the value at width/2, height
+class ModScaleOffset : ValueSource {
+    ValueSource source;
+    vec3d scale;
+    vec3d offset;
+    this(ValueSource s, vec3d _scale, vec3d _offset) {
+        source = s;
+        scale = _scale;
+        offset = _offset;
+    }
+    
+    ~this(){
+    }
+    
+    double getValue(double x, double y, double z) {
+        auto v = source.getValue(x*scale.X + offset.X, y*scale.Y + offset.Y, z*scale.Z + offset.Z);
+        return v;
+    }
+    
+    double getValue(double x, double y) {
+        auto v = source.getValue(x*scale.X + offset.X, y*scale.Y + offset.Y);
+        return v;
+    }
+    double getValue(double x) {
+        auto v = source.getValue(x*scale.X + offset.X);
+        return v;
+    }
+}
+
 
 double clamp(double value, double _min, double _max) {
     return min(_max, max(_min, value));
@@ -147,9 +178,14 @@ double lerp(double x0, double x1, double t) {
     return (1.0 - t) * x0 + t * x1;
 }
 
+//Also called "hermite curve smooth transition" (Texturing/modelling - a procedural aproach p. 166)
 double smoothStep(double time) {
     return time*time * (3 - 2 * time); 
 }
+double smootherStep(double time) {
+    return time*time*time * (10 + time*(-15 + time*6)); 
+}
+
 
 double cosStep(double time) {
     float tmp = (1.0-cos(time*PI))/2.0; //TODO: Make fancy cos-table? mayhaps? interpolate in table? :)
@@ -164,9 +200,20 @@ double CosInter(double x0, double x1, double time){
     return lerp(x0, x1, cosStep(time));
 }
 
-double CosineInterpolate(ValueSource source, double x, double y, double z) {
+double SmoothInter(double x0, double x1, double time) {
+    return lerp(x0, x1, smoothStep(time));
+}
+double SmootherInter(double x0, double x1, double time) {
+    return lerp(x0, x1, smootherStep(time));
+}
+
+
+double XInterpolate(string Lerp)(ValueSource source, double x, double y, double z) {
     //TODO: Do not assume that the source is a lattice with grid of size 1,1
     // Ie. dX dY may span [0, 1] over a range that is 4 long instead of current length 1.
+    
+    mixin("alias " ~ Lerp ~ " LERP;");
+    
     int loX = to!int(floor(x));
     int loY = to!int(floor(y));
     int loZ = to!int(floor(z));
@@ -184,44 +231,51 @@ double CosineInterpolate(ValueSource source, double x, double y, double z) {
     double v011 = source.getValue(loX  , loY+1, loZ+1);
     double v111 = source.getValue(loX+1, loY+1, loZ+1);
     
-    auto v00 = CosInter(v000, v001, dZ);
-    auto v01 = CosInter(v010, v011, dZ);
-    auto v11 = CosInter(v110, v111, dZ);
-    auto v10 = CosInter(v100, v101, dZ);
+    auto v00 = LERP(v000, v001, dZ);
+    auto v01 = LERP(v010, v011, dZ);
+    auto v11 = LERP(v110, v111, dZ);
+    auto v10 = LERP(v100, v101, dZ);
     
-    auto v0 = CosInter(v00, v01, dY);
-    auto v1 = CosInter(v10, v11, dY);
+    auto v0 = LERP(v00, v01, dY);
+    auto v1 = LERP(v10, v11, dY);
 
-    return CosInter(v0, v1, dX);
+    return LERP(v0, v1, dX);
 }
 
-double CosineInterpolate(ValueSource source, double x, double y) {
+double XInterpolate(string Lerp)(ValueSource source, double x, double y) {
     //TODO: Do not assume that the source is a lattice with grid of size 1,1
     // Ie. dX dY may span [0, 1] over a range that is 4 long instead of current length 1.
+
+    mixin("alias " ~ Lerp ~ " LERP;");
+    
     int loX = to!int(floor(x));
     int loY = to!int(floor(y));
     
     float dX = x - to!float(loX);
     float dY = y - to!float(loY);
 
-    auto tx1 = CosInter(source.getValue(loX, loY),   source.getValue(loX+1, loY), dX);
-    auto tx2 = CosInter(source.getValue(loX, loY+1), source.getValue(loX+1, loY+1), dX);
-    return CosInter(tx1, tx2, dY);
+    auto tx1 = LERP(source.getValue(loX, loY),   source.getValue(loX+1, loY), dX);
+    auto tx2 = LERP(source.getValue(loX, loY+1), source.getValue(loX+1, loY+1), dX);
+    return LERP(tx1, tx2, dY);
 }
 
-double CosineInterpolate(ValueSource source, double x) {
+double XInterpolate(string Lerp)(ValueSource source, double x) {
     //TODO: Do not assume that the source is a lattice with grid of size 1,1
     // Ie. dX dY may span [0, 1] over a range that is 4 long instead of current length 1.
+    
+    mixin("alias " ~ Lerp ~ " LERP;");
+    
     int loX = to!int(floor(x));
     
     float dX = x - to!float(loX);
-    auto tx1 = CosInter(source.getValue(loX),   source.getValue(loX+1), dX);
+    auto tx1 = LERP(source.getValue(loX),   source.getValue(loX+1), dX);
     return tx1;
 }
 
-
-class CosInterpolation : ValueSource{
+class XInterpolation(string Lerp) : ValueSource{
     ValueSource source;
+    
+    
 /*
     this() {
         source = new Source;
@@ -231,30 +285,48 @@ class CosInterpolation : ValueSource{
         source = _source;
     }
     double getValue(double x, double y, double z) {
-        return CosineInterpolate(source, x, y, z);
+        mixin("return XInterpolate!(\"" ~ Lerp ~ "\")(source, x,y,z);");
     }
     double getValue(double x, double y) {
-        return CosineInterpolate(source, x, y);
+        mixin("return XInterpolate!(\"" ~ Lerp ~ "\")(source, x,y);");
     }
     double getValue(double x) {
-        return CosineInterpolate(source, x);
+        mixin("return XInterpolate!(\"" ~ Lerp ~ "\")(source, x);");
     }
 }
+
+//alias XInterpolation!"CosInter" CosInterpolation;
+alias XInterpolation!"SmoothInter" CosInterpolation;
 
 class ValueMap2D(StorageType, bool Wrap = true) : ValueSource {
     
     StorageType[] randMap;
     uint sizeX, sizeY;
         
+    //Gets values 0.._sizeX, 0.._sizeY from source and puts in place.
     void fill(Source)(Source source, uint _sizeX, uint _sizeY) {
         sizeX = _sizeX;
         sizeY = _sizeY;
         auto mul = sizeX * sizeY;
         randMap.length = mul;
         foreach(i ; 0 .. mul) {
-            randMap[i] = random.random.getValue(source, to!double(i / sizeX), to!double(i % sizeX));
+            randMap[i] = random.random.getValue(source, to!double(i % sizeX), to!double(i / sizeX));
         }
     }
+
+    //Takes x*y samples in designated area.
+    void fill(Source)(Source source, uint _sizeX, uint _sizeY, double minX, double minY, double maxX, double maxY) {
+        sizeX = _sizeX;
+        sizeY = _sizeY;
+        auto mul = sizeX * sizeY;
+        auto deltaX = (maxX - minX) / to!double(sizeX);
+        auto deltaY = (maxY - minY) / to!double(sizeY);
+        randMap.length = mul;
+        foreach(i ; 0 .. mul) {
+            randMap[i] = random.random.getValue(source, minX + to!double(i % sizeX) * deltaX, to!double(i / sizeX) * deltaY);
+        }
+    }
+
     
     StorageType getValue(double x, double y, double z) {
         return getValue(x, y);
@@ -487,11 +559,11 @@ class GradientNoise01(string Step = "smoothStep", string Lerp = "lerp") : Gradie
     override double getValue(double x, double y, double z) {
         return super.getValue(x,y,z) + 0.5;
     }    
-    double getValue(double x, double y) {
+    override double getValue(double x, double y) {
         return super.getValue(x,y) + 0.5;
     }
     
-    double getValue(double x) {
+    override double getValue(double x) {
         return super.getValue(x) + 0.5;
     }
 }
@@ -509,10 +581,10 @@ class GradientField : ValueSource {
         return normal.dotProduct(vec3d(x, y, z)) - d;
     }
     double getValue(double x, double y) {
-        return getValue(x, y);
+        return getValue(x, y, 0);
     }
     double getValue(double x) {
-        return getValue(x);
+        return getValue(x, 0, 0);
     }    
 }
 
@@ -601,27 +673,67 @@ class Fractal(uint Count) : ValueSource { //TODO: Think of better name than Frac
 }
 
 
-Type CatmullRomSpline(Type)(double t, Type[] ar ...)
+Type CatmullRomSpline(Type)(double t, Type[] ar)
 in{
     enforce(ar.length >= 4, "Can't do catmull-rom with less than 4 control points!");
 }
-body{
+body{    
+    if(ar.length == 4) {
+        auto c3 = -0.5 * ar[0] +  1.5 * ar[1] + -1.5 * ar[2] +  0.5 * ar[3];
+        auto c2 =  1.0 * ar[0] + -2.5 * ar[1] +  2.0 * ar[2] + -0.5 * ar[3];
+        auto c1 = -0.5 * ar[0] +                 0.5 * ar[2];
+        auto c0 =                 1.0 * ar[1];
     
-    int count = ar.length;
-    int spans = count-3;
+        return ((c3*t + c2)*t + c1)*t + c0;
+    } else {
+        int count = ar.length;
+        int spans = count-3;
     
-    double x = clamp(t, 0, 1) * to!double(spans);
-    int span = to!int(x);
-    if (span > count - 3) {
-        BREAKPOINT;
-        span = count - 3;
+        double x = clamp(t, 0, 1) * to!double(spans);
+        int span = to!int(x);
+        if (span > count - 3) {
+            BREAKPOINT;
+            span = count - 3;
+        }
+        x -= to!int(span);
+        Type* knot = &ar[span];
+        auto c3 = -0.5 * knot[0] +  1.5 * knot[1] + -1.5 * knot[2] +  0.5 * knot[3];
+        auto c2 =  1.0 * knot[0] + -2.5 * knot[1] +  2.0 * knot[2] + -0.5 * knot[3];
+        auto c1 = -0.5 * knot[0] +                   0.5 * knot[2];
+        auto c0 =                   1.0 * knot[1];
+    
+        return ((c3*x + c2)*x + c1)*x + c0;
     }
-    x -= to!int(span);
-    Type* knot = &ar[span];
-    auto c3 = -0.5 * knot[0] +  1.5 * knot[1] + -1.5 * knot[2] +  0.5 * knot[3];
-    auto c2 =  1.0 * knot[0] + -2.5 * knot[1] +  2.0 * knot[2] + -0.5 * knot[3];
-    auto c1 = -0.5 * knot[0] +                   0.5 * knot[2];
-    auto c0 =                   1.0 * knot[1];
+}
+
+Type CatmullRomSpline(Type...)(double t, Type ar)
+body{
+    static if(ar.length < 4) {
+        pragma(msg, "Need at least 4 control points.");        
+    } else static if(ar.length == 4) {
+        auto c3 = -0.5 * ar[0] +  1.5 * ar[1] + -1.5 * ar[2] +  0.5 * ar[3];
+        auto c2 =  1.0 * ar[0] + -2.5 * ar[1] +  2.0 * ar[2] + -0.5 * ar[3];
+        auto c1 = -0.5 * ar[0] +                 0.5 * ar[2];
+        auto c0 =                 1.0 * ar[1];
     
-    return ((c3*x + c2)*x + c1)*x + c0;
+        return ((c3*x + c2)*x + c1)*x + c0;
+    } else {
+        int count = ar.length;
+        int spans = count-3;
+    
+        double x = clamp(t, 0, 1) * to!double(spans);
+        int span = to!int(x);
+        if (span > count - 3) {
+            BREAKPOINT;
+            span = count - 3;
+        }
+        x -= to!int(span);
+        Type* knot = &ar[span];
+        auto c3 = -0.5 * knot[0] +  1.5 * knot[1] + -1.5 * knot[2] +  0.5 * knot[3];
+        auto c2 =  1.0 * knot[0] + -2.5 * knot[1] +  2.0 * knot[2] + -0.5 * knot[3];
+        auto c1 = -0.5 * knot[0] +                   0.5 * knot[2];
+        auto c0 =                   1.0 * knot[1];
+    
+        return ((c3*x + c2)*x + c1)*x + c0;
+    }
 }

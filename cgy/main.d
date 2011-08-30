@@ -233,8 +233,12 @@ class Main {
                         auto m = &guiEvent.mouseClick;
                         m.down = event.type == SDL_MOUSEBUTTONDOWN;
                         m.left = event.button.button == SDL_BUTTON_LEFT; //Makes all others right. including scrollwheel, i think. :P
+                        m.right = event.button.button == SDL_BUTTON_RIGHT; //Makes all others right. including scrollwheel, i think. :P
+                        m.middle = event.button.button == SDL_BUTTON_MIDDLE; //Makes all others right. including scrollwheel, i think. :P
+                        m.wheelUp = event.button.button == SDL_BUTTON_WHEELUP; //Makes all others right. including scrollwheel, i think. :P
+                        m.wheelDown = event.button.button == SDL_BUTTON_WHEELDOWN; //Makes all others right. including scrollwheel, i think. :P
                         m.pos.set(event.button.x,
-                                  event.button.y);
+                                    event.button.y);
                         guiSystem.onEvent(guiEvent);                        
                         break;
                     default:

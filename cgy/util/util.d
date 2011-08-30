@@ -7,6 +7,7 @@ import std.exception;
 import std.stdio;
 import std.range;
 import std.string;
+import std.traits;
 
 public import std.datetime;
 
@@ -206,5 +207,13 @@ unittest{
     string s;
     assert(getCopyString(s), "Could not get string from clipboard");
     assert(s == "dix", "Didn't get correct string from clipboard");
+}
+
+CommonType!(T)[T.length] makeStackArray(T...)(T ts) {
+    typeof(return) ret;
+    foreach (i, t; ts) {
+        ret[i] = t;
+    }
+    return ret;
 }
 

@@ -18,8 +18,9 @@ import worldparts.sizes;
 import worldparts.block;
 import worldparts.sector;
 import random.random;
-import settings;
 import pos;
+import settings;
+import statistics;
 import worldgen.worldgen;
 import util.util;
 import util.rect;
@@ -42,7 +43,7 @@ class MapImage : GuiElementImage {
     }
     
     override void setSize(uint width, uint height) {
-        img = Image(null, width, height);
+        img = Image(null, width/2, height/2);
         super.setSize(width, height);
     }
     
@@ -85,57 +86,60 @@ class MapImage : GuiElementImage {
             default:
         }
     }
+    
+    private void generateMap(double delegate(TilePos p) getVal, ubyte[4] delegate(double) colorize) {
+        writeln(to!string(viewPos.vec3()));
+        int width = absoluteRect.size.X / 2;
+        int halfWidth = width / 2;
+        int height = absoluteRect.size.Y / 2;
+        int halfHeight = height / 2;
+        
+        auto derpX = SectorSize.x / to!double(width);
+        auto derpY = SectorSize.y / to!double(height);
+        foreach(x ; 0 .. width) {
+            auto xx = x - halfWidth;
+            auto px = xx * derpX;
+            foreach(y ; 0 .. height) {
+                auto  yy = y - halfHeight;
+                auto py = yy * derpY;
+                auto p = util.util.convert!int(vec3d(px, py, 0) / zoom + viewPos.vec3);                
+                
+                auto val = getVal(TilePos(p)); 
+                img.setPixel(x, y, colorize(val));
+                //img.setPixel(x, y, [0,0,0,0]);
+            }
+        }
+        imgGl = img.toGLTex(imgGl);
+        setImage(imgGl);
+    }
 
     void updateElevation() {
     }
     void updateTemperature() {
     }
     void updateVegetation() {
+        mixin(Time!"writeln(\"Time to make map: \", usecs);");
+        auto colors = [
+            vec3d(0.0, 0.0, 0.0),
+            vec3d(0.0, 0.25, 0.0),
+            vec3d(0.0, 0.5, 0.0),
+            vec3d(0.0, 0.75, 0.0), 
+            vec3d(0.0, 1.0, 0.0),
+            ];
         ubyte[4] colorize(double t) {
-            //writeln(t);
             t = max(0.5, t);
             t = (t - 0.5) * 2.0;
-            auto c = [
-                vec3d(0.0, 0.0, 0.0),
-                vec3d(0.0, 0.25, 0.0),
-                vec3d(0.0, 0.5, 0.0),
-                vec3d(0.0, 0.75, 0.0), 
-                vec3d(0.0, 1.0, 0.0),
-                ];
-            auto v = CatmullRomSpline(t, c);
-            ubyte[4] a = [
-                to!ubyte(v.X * 255),
-                to!ubyte(v.Y * 255),
-                to!ubyte(v.Z * 255), 0];
             
-            return a;
+            auto v = CatmullRomSpline(t, colors);
+            //*
+            return makeStackArray(
+                cast(ubyte)(v.X * 255),
+                cast(ubyte)(v.Y * 255),
+                cast(ubyte)(v.Z * 255),
+                cast(ubyte)0);
         }
-        //*
-        /*
-        auto img = toImage(worldGen.vegetationMap,
-                           -hs * SectorSize.x, -hs * SectorSize.y
-                           , hs* SectorSize.x, hs * SectorSize.y,
-                           256, 256, 0, 100, &colorize);
-        */
-        writeln(to!string(viewPos.vec3()));
-        int width = absoluteRect.size.X;
-        int halfWidth = width / 2;
-        int height = absoluteRect.size.Y;
-        int halfHeight = height / 2;
         
-        foreach(x ; 0 .. width) {
-            auto xx = x - halfWidth;
-            auto px = (xx / to!double(width)) * SectorSize.x;
-            foreach(y ; 0 .. height) {
-                auto  yy = y - halfHeight;
-                auto py = (yy / to!double(height)) * SectorSize.y;
-                auto p = util.util.convert!int(vec3d(px, py, 0) / zoom + viewPos.vec3);                
-                auto val = worldGen.getVegetation01(TilePos(p));
-                img.setPixel(x, y, colorize(val));
-            }
-        }
-        imgGl = img.toGLTex(imgGl);
-        setImage(imgGl);
+        generateMap((TilePos p){ return worldGen.getVegetation01(p);}, &colorize);
     }
     void updateRainfall() {
     }
@@ -147,7 +151,7 @@ class MapImage : GuiElementImage {
     
     //vec2i dragPos;
     bool dragging = false;
-    GuiEventResponse onEvent(GuiEvent e){
+    override GuiEventResponse onEvent(GuiEvent e){
         
         if(e.type == GuiEventType.MouseClick) {
             auto m = e.mouseClick;
@@ -156,6 +160,14 @@ class MapImage : GuiElementImage {
                 if(m.down) {
                 //    dragPos = m.pos;
                 }
+            }
+            if (m.wheelUp && m.down) {
+                zoom *= 1.1;
+                updateMap();
+            }
+            if (m.wheelDown && m.down) {
+                zoom *= (1.0/1.1);
+                updateMap();
             }
         }
         else if(e.type == GuiEventType.MouseMove) {
@@ -236,7 +248,7 @@ class WorldViewMenu : GuiElementWindow {
         worldGen.init(params, null);
         worldImage.setGenerator(worldGen);
         worldImage.setZoom( 1.0 / size);
-        worldImage.setViewPos(vec2d(0,0));
+        worldImage.setViewPos(vec2d(0.5 / size, 0.5 / size));
         worldImage.updateMap();
     }
     

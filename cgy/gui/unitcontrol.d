@@ -200,7 +200,7 @@ class HyperUnitControlInterfaceInputManager : GuiEventDump{
             enum airTile = Tile(TileTypeAir, TileFlags.valid, 0, 0);
 
             possesAI.changeTile(selectedTilePos, airTile);
-        } else if (tileSelected) {
+        } else if (m.right && tileSelected) {
             TilePos whereToPlace = TilePos(selectedTilePos.value + selectedTileNormal);
             auto pos = possesAI.getUnitPos();
             auto unitAABB = unit.aabb(&pos);

@@ -109,7 +109,7 @@ class GuiElementButton : GuiElementButtonAll {
         callback = cb;
     }
     
-    void onPushed(bool down, bool abort){
+    override void onPushed(bool down, bool abort){
         if (!down && !abort && callback !is null) {
             callback();
         }

@@ -140,6 +140,13 @@ final class GuiSystem : GuiElement{
             case GuiEventType.MouseClick:
                 auto m = e.mouseClick;
                 setHover(m.pos);
+                if (hoverElement != focusElement) {
+                    if(m.wheelUp || m.wheelDown) {
+                        if (hoverElement !is null) {
+                            return hoverElement.onEvent(e);
+                        }
+                    }
+                }
                 if (m.left && m.down) {
                     setFocus(hoverElement);
                 }
