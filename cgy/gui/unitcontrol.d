@@ -27,7 +27,7 @@ import world;
 
 
 
-class HyperUnitControlInterfaceInputManager : GuiEventDump{
+class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{ 
     
     private GuiSystem guiSystem;
     private GuiElementText fpsText, tickText, frameTimeText, tickTimeText, position;
