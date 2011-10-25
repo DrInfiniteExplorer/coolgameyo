@@ -203,10 +203,10 @@ version(Windows){
 }
 
 unittest{
-    setCopyString("dix");
+    setCopyString("dix\n");
     string s;
     assert(getCopyString(s), "Could not get string from clipboard");
-    assert(s == "dix", "Didn't get correct string from clipboard");
+    assert(s == "dix\n", "Didn't get correct string from clipboard");
 }
 
 CommonType!(T)[T.length] makeStackArray(T...)(T ts) {

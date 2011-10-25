@@ -323,6 +323,9 @@ struct TileXYPos {
         return vec2i(posMod(value.X, SectorSize.x),
                      posMod(value.Y, SectorSize.y));
     }
+    TilePos toTilePos(int z) const {
+        return TilePos(vec3i(value.X, value.Y, z));
+    }
     mixin ToStringMethod2D;
     mixin SerializeValue;
 }

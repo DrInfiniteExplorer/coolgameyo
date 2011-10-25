@@ -102,7 +102,7 @@ class GuiElementButtonAll : public GuiElement {
     }
 }
 
-class GuiElementButton : GuiElementButtonAll {
+class GuiElementButton   : GuiElementButtonAll {
     private void delegate() callback;
     this(GuiElement parent, Rectd relative, string text, void delegate() cb = null) {
         super(parent, relative, text);

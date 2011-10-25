@@ -199,13 +199,13 @@ class Game{
             return ret;
         }
 		
-		xy = TileXYPos(vec2i(3,10));
+		xy = xyy; //TileXYPos(vec2i(3,10));
         auto o = newEntity();
         o.pos = topOfTheWorld2(xy);
 		o.type = world.entityTypeManager.byName("tree");
         world.addEntity(o);
         msg("o.pos == ", o.pos);
-        xy = TileXYPos(vec2i(10,10));
+        xy = xyy; //TileXYPos(vec2i(10,10));
         o = newEntity();
         o.pos = topOfTheWorld2(xy);
 		o.type = world.entityTypeManager.byName("shrubbery");

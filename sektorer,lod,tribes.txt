@@ -1,0 +1,23 @@
+När man allokerar sektorer:
+  I __increase-activity___ 
+    * görs när man lägger in första gubben och andra gubbar
+
+  När man laddar banor
+  
+  Nätverk gör addunit på rätt sätt, skickar till klienter
+
+getSector returnerar null om det inte finns en sektor redan.
+
+
+LOD-units
+ tribes LOD'ar sina units beroende på stuff
+ djur, katter, ratmen etc sköter LOD'ing som dvärgar och saker
+
+spelet har en array med intressanta saker. en LOD-modul(?) ser till att tribes som är inom DIST ifrån minst en
+intressant sak är o-lodad, sen lodad, sen utpagead. Det kollas med boundingboxes, intressanta saker (spelarens tribe tex)
+har en boundingbox. En goblincivilisation (tribe) är aktiv, sen flyttas den till LODtribe; då laddas alla enheter ut ur
+världen, och LODtriben har simpla beräkningar. Ifall den överlappar med intressant område igen, så laddas enheterna in igen
+(och också därmed sektorerna som hör till). Vi har en LODifying modul som typ var 50'e tick kollar överlapp mellan tribes
+och intressanta områden och sköter sånt. 
+
+ 

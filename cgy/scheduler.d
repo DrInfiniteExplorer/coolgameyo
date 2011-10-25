@@ -62,7 +62,7 @@ private Task syncTask() {
 }
 
 
-enum TICKS_PER_SECOND = 15;
+enum TICKS_PER_SECOND = 35;
 
 // THIS WILL PROBABLY NEED SOME FLESHING OUT...!!!
 private void workerFun(shared Scheduler ssched) {

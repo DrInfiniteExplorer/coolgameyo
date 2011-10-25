@@ -223,9 +223,7 @@ class World {
         SectorXY* xy;
         auto sectorNum = blockNum.getSectorNum();
         auto sector = getSector(sectorNum, &xy);
-        if (sector is null) {
-            sector = allocateSector(sectorNum);
-        }
+        enforce(sector !is null, "Cant generate block in sector that isnt allocated yet");
         auto heightmap = xy.heightmap;
         bool above = true;
         if(heightmap !is null) {
@@ -352,6 +350,7 @@ class World {
         return sector;
     }
 
+    //Returns a sector. Does not allocate sectors.
     Sector getSector(SectorNum sectorNum, SectorXY** xy=null) {
         auto xyNum = SectorXYNum(vec2i(sectorNum.value.X, sectorNum.value.Y));
         auto z = sectorNum.value.Z;
@@ -581,8 +580,11 @@ class World {
         entityCount += 1;
         auto sectorNum = entity.pos.getSectorNum();
 
-        getSector(sectorNum).addEntity(entity);
+        auto sector = getSector(sectorNum);
 
+        enforce(sector !is null, "Cant add entities to sectors that dont exist");
+
+        sector.addEntity(entity);
         notifyAddEntity(sectorNum, entity);
     }
 
@@ -691,9 +693,10 @@ class World {
         //int allBlocks = 0;
         //int blockCount = 0;
         //int sparseCount = 0;
-        int i = 0;
+        max *= 15;
+        int i=0;
         while (i < max && !toFloodFill.empty) {
-            i += 1;
+            i += 15;
             auto blockNum = toFloodFill.removeAny();
             g_Statistics.FloodFillProgress(1);
 
@@ -714,6 +717,7 @@ class World {
 
             if (block.sparse) {
                 //sparseCount++;
+                i -= 14;
                 if (block.sparseTileTransparent) {
                     int cnt = 0;
                     cnt += toFloodFill.insert(BlockNum(blockNum.value + vec3i(1,0,0)));
@@ -856,6 +860,9 @@ private mixin template ActivityHandlerMethods() {
         auto sector = getSector(sectorNum);
         if (sector is null) {
             sector = loadSector(sectorNum);
+        }
+        if (sector is null) {
+            sector = allocateSector(sectorNum);
         }
 
         if (sector.activity == 0) {
