@@ -18,9 +18,9 @@ struct RangeFromTo {
             int beginY, int endY,
             int beginZ, int endZ)
     in{
-        assert(endX>beginX);
-        assert(endY>beginY);
-        assert(endZ>beginZ);
+        assert(endX>=beginX);
+        assert(endY>=beginY);
+        assert(endZ>=beginZ);
     }
     body{
         x = bx = beginX;
