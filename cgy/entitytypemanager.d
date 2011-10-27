@@ -20,6 +20,8 @@ struct EntityType {
 		string displayName;
 		float tintFromMaterial;
 		vec3i tintColor;
+		bool droppable;
+		bool placeable;
 	}
 	
 	InnerEntityType serializableSettings;

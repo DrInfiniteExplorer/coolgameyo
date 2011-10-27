@@ -34,7 +34,7 @@ import util.tileiterator;
 // and remove the world member from listeners
 interface WorldListener {
     void onAddUnit(SectorNum sectorNum, Unit* unit);
-	void onAddEntity(SectorNum sectorNum, Entity* entity);
+	void onAddEntity(SectorNum sectorNum, Entity entity);
     void onSectorLoad(SectorNum sectorNum);
     void onSectorUnload(SectorNum sectorNum);
     void onTileChange(TilePos tilePos);
@@ -208,7 +208,7 @@ class World {
         }
         
         auto sector = allocateSector(num);
-        if (sector.deserialize()) {
+        if (sector.deserialize(entityTypeManager)) {
             notifySectorLoad(num);
         }
         return sector;
@@ -407,8 +407,8 @@ class World {
         }
         return units;
     }
-	Entity*[] getVisibleEntities(Camera camera){
-        Entity*[] entities;
+	Entity[] getVisibleEntities(Camera camera){
+        Entity[] entities;
         foreach(entity; getEntities()){
             if(camera.inFrustum(entity)){
                 entities ~= entity;
@@ -471,7 +471,7 @@ class World {
         Sector[] sectors;
         typeof(Sector.init.entities[]) currentEntityRange;
 
-        Entity* front() @property {
+        Entity front() @property {
             return currentEntityRange.front;
         }
         void popFront() {
@@ -492,7 +492,7 @@ class World {
         }
     }
 
-    // Returns a range with all the units in the world
+    // Returns a range with all the entities in the world
     EntityRange getEntities() {
         EntityRange ret;
         ret.sectors = getSectors();
@@ -503,7 +503,7 @@ class World {
         return ret;
     }
     
-    Entity* getEntityFromId(uint id) {
+    Entity getEntityFromId(uint id) {
         foreach(entity ; getEntities()) {
             if (entity.entityId == id) {
                 return entity;
@@ -576,7 +576,7 @@ class World {
 
         notifyAddUnit(sectorNum, unit);
     }
-	void addEntity(Entity* entity) {
+	void addEntity(Entity entity) {
         entityCount += 1;
         auto sectorNum = entity.pos.getSectorNum();
 
@@ -818,7 +818,7 @@ class World {
             listener.onAddUnit(sectorNum, unit);
         }
     }
-	void notifyAddEntity(SectorNum sectorNum, Entity* entity) {
+	void notifyAddEntity(SectorNum sectorNum, Entity entity) {
         foreach (listener; listeners) {
             listener.onAddEntity(sectorNum, entity);
         }

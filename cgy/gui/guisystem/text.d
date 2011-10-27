@@ -39,6 +39,10 @@ class GuiElementText : public GuiElement {
         return text.getSize();
     }
     
+    string getText() {
+        if (text is null) enforce(0, "lol, summit is wrooong!");
+        return text.getText();
+    }
     void setText(string str) {
         if (text is null) {
             text = new StringTexture(font);

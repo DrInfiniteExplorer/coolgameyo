@@ -20,6 +20,7 @@ import pos;
 import unit;
 import entity;
 import util.util;
+import entitytypemanager;
 
 class Sector {
 
@@ -30,7 +31,7 @@ class Sector {
     static assert(blocks.length == BlocksPerSector.x);
 
     RedBlackTree!(Unit*) units; //TODO: how to make this private without breaking stuff derp? :S
-	RedBlackTree!(Entity*) entities;
+	RedBlackTree!(Entity) entities;
     private int activityCount;
 
     invariant(){
@@ -84,8 +85,8 @@ class Sector {
 	    jsonString = json.prettyfyJSON(jsonString);
         std.file.write(folder ~ "units.json", jsonString);
 
-        Value darp(Entity* entity) {
-            return encode(*entity);
+        Value darp(Entity entity) {
+            return encode(entity);
         }
         jsonRoot = Value(array(map!darp(array(entities))));
         jsonString = to!string(jsonRoot);	
@@ -93,7 +94,7 @@ class Sector {
         std.file.write(folder ~ "entities.json", jsonString);
     }
     
-    bool deserialize() {
+    bool deserialize(EntityTypeManager entityTypeManager) {
         string folder = text("saves/current/world/", sectorNum.value.X, ",", sectorNum.value.Y, "/", sectorNum.value.Z, "/");
         if (!exists(folder)) {
             return false;
@@ -137,8 +138,8 @@ class Sector {
 		}
         jsonRoot = json.parse(content);
         foreach (entityVal ; jsonRoot.elements) {
-            Entity* entity = new Entity;
-            entity.fromJSON(entityVal);
+            Entity entity = new Entity;
+            entity.fromJSON(entityVal, entityTypeManager);
             entities.insert(entity);
         }
         return true;
@@ -194,8 +195,14 @@ class Sector {
     void addUnit(Unit* u) {
         units.insert(u);
     }
-	void addEntity(Entity* o) {
+	void addEntity(Entity o) {
         entities.insert(o);
+    }
+	void removeUnit(Unit* u) {
+        units.removeKey(u);
+    }
+	void removeEntity(Entity o) {
+        entities.removeKey(o);
     }
     
     SectorNum getSectorNum() const @property { return sectorNum; }

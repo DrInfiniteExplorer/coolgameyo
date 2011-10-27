@@ -292,11 +292,11 @@ struct aabbox3d(T)
     
     bool intersectsWithLine(const vector3d!T startPos, const vector3d!T dir) {
         static if (!isIntegral!T){
-            T start = -double.infinity;
-            T stop = double.infinity;
+            T start = -T.infinity;
+            T stop = T.infinity;
         } else {
-            T start = -1000000;
-            T stop = 10000000;
+            T start = T.min;
+            T stop = T.max;
         }
         T firstX = dir.X > 0 ? MinEdge.X : MaxEdge.X;
         T lastX = dir.X > 0 ? MaxEdge.X : MinEdge.X;

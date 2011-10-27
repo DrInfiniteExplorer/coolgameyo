@@ -3,6 +3,7 @@ module entity;
 
 import std.exception;
 import std.stdio;
+import std.math;
 
 import json;
 import changelist;
@@ -15,23 +16,27 @@ import entitytypemanager;
 
 shared int g_EntityCount = 0; //Global counter of entities. Make shared static variable in Game-class?
 
-Entity* newEntity() {
+Entity newEntity() {
     auto entity = new Entity;
     entity.entityId = g_EntityCount;
     g_EntityCount++;
     return entity;
 }
 
-struct Entity {
+class Entity {
 
     bool opEquals(ref const(Entity) o) const {
         assert (0, "Implement Entity.opEquals or find where it's called and make not called!");
     }
+	int opCmp(ref const(Entity) other) const {
+		return cast(int)sgn(cast(long)entityData.entityId - cast(long)other.entityId);
+	}
 
     struct EntityData {
-        uint entityId;
+        int entityId;
         EntityPos pos;
         float rotation = 0; //radians
+		bool isDropped = false;
 
         float entityWidth = 0.7;
         float entityHeight = 1.5;        
@@ -42,6 +47,10 @@ struct Entity {
     EntityType type;
     Clan clan;
     
+	void deconstruct() {
+		entityData.isDropped = true;
+	}
+	
     Value toJSON() {
         Value val = encode(entityData);
         if (clan !is null) {
@@ -53,17 +62,18 @@ struct Entity {
         //Add ai
         return val;
     }
-    void fromJSON(Value val) {
+    void fromJSON(Value val, EntityTypeManager entityTypeManager) {
         read(entityData, val);
         if ("clanId" in val) {
             int clanId;
             read(clanId, val["clanId"]);
             BREAKPOINT;
         }
-        if ("unitTypeId" in val) {
-            int unitTypeId;
-            read(unitTypeId, val["unitTypeId"]);
-            BREAKPOINT;
+        if ("entityTypeId" in val) {
+            int entityTypeId;
+            read(entityTypeId, val["entityTypeId"]);
+			type = entityTypeManager.byID(cast(ushort)entityTypeId);
+            //BREAKPOINT;
         }
         //Add ai
     }

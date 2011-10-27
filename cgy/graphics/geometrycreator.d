@@ -419,7 +419,7 @@ class GeometryCreator : Module, WorldListener
     }
 
     void onAddUnit(SectorNum, Unit*) { }
-	void onAddEntity(SectorNum, Entity*) { }
+	void onAddEntity(SectorNum, Entity) { }
 
     void onSectorLoad(SectorNum sectorNum)
     {

@@ -16,6 +16,7 @@ import graphics.debugging;
 import graphics.renderer;
 import gui.all;
 import gui.statistics;
+import gui.inventorywindow;
 import scheduler;
 import settings;
 import statistics;
@@ -32,6 +33,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
     private GuiSystem guiSystem;
     private GuiElementText fpsText, tickText, frameTimeText, tickTimeText, position;
     private StatisticsWindow statistics;
+	private InventoryWindow inventoryWindow;
 
     private Game game;    
     private Renderer renderer;    //This and scheduler only used to get fps / tps info. Make proxy or thing?
@@ -54,6 +56,9 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
     private TilePos selectedTilePos;
     private vec3i selectedTileNormal;
     private bool tileSelected;
+	
+	private Entity selectedEntity;
+    private bool entitySelected;
     
     private Tile copiedTile;
 
@@ -70,6 +75,9 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         middleX = cast(ushort)renderSettings.windowWidth/2;
         middleY = cast(ushort)renderSettings.windowHeight/2;
         copiedTile.type = TileTypeAir;
+
+		inventoryWindow = new InventoryWindow(guiSystem, this, &possesAI.unit.inventory);
+		guiSystem.addHotkey(SDLK_i, &(inventoryWindow.onOpenInventory));
     }
     
     private bool destroyed;
@@ -79,6 +87,9 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
     void destroy(){
         if( statistics !is null) {
             statistics.destroy();
+        }
+		if( inventoryWindow !is null) {
+            inventoryWindow.destroy();
         }
         possesAI.destroy();
         destroyed = true;
@@ -115,13 +126,13 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
     
     override void activate(bool activated) {
         if (activated) {
-            spawnGui();
+            spawnHUD();
         } else {
-            iuGnwaps();
+            DUHGnwaps();
         }
     }
     
-    void updateGui() {
+    void updateHUD() {
         //We plus one microsecond to avoid division by 0.
         auto frameTime = g_Statistics.averageFPS()+1;
         auto fps = 1_000_000 / frameTime;
@@ -137,7 +148,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         position.setText(text("position ", camPos.X, " ", camPos.Y, " ", camPos.Z));
     }
     
-    void spawnGui() {
+    void spawnHUD() {
         fpsText = new GuiElementText(guiSystem, vec2d(0, 0), "Fps counter");
         tickText = new GuiElementText(guiSystem, vec2d(0, fpsText.getRelativeRect.getBottom()), "Tick counter");
         
@@ -152,13 +163,13 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         }
         guiSystem.addHotkey(SDLK_F1, &spawnStatistics);
     }
-    void iuGnwaps() {
+    void DUHGnwaps() {
         fpsText.destroy(); fpsText = null;        
         tickText.destroy(); tickText = null;
         frameTimeText.destroy(); frameTimeText = null;
         tickTimeText.destroy(); tickTimeText = null;        
         position.destroy(); position = null;
-        guiSystem.removeHotkey(SDLK_F1);        
+        guiSystem.removeHotkey(SDLK_F1);
         if(statistics !is null) {
             statistics.destroy();
             statistics = null;
@@ -194,6 +205,15 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         if (!m.down) {
             return;
         }
+		else if (m.left && entitySelected) {
+			if (selectedEntity.isDropped) {
+				possesAI.unit.inventory.addToInventory(selectedEntity);
+				world.getSector(selectedEntity.pos.getSectorNum()).removeEntity(selectedEntity);
+			}
+			else {
+				selectedEntity.deconstruct();
+			}
+		}
         else if (m.left && tileSelected) {
             copiedTile = selectedTile;
             //Remove transparensiness sometime!!
@@ -217,8 +237,8 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         } else {
             updatePossesed(dTime);
         }
-        rayPick();
-        updateGui();
+        hoverRay();
+        updateHUD();
     }
 
     void updatePossesed(float dTime) { 
@@ -261,7 +281,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
     
     
     int selectedTileBox; //TODO: Implement better way to render selected tile than debug functionality
-    void rayPick(){
+    void rayPickTile() {
         vec3d start, dir;
         camera.getRayFromScreenCoords(mousecoords, start, dir);
         Tile tile;
@@ -277,7 +297,34 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
             aabb.scale(vec3d(1.025f));
             selectedTileBox = addAABB(aabb);
         }
-    }    
+    }
+	
+	
+	
+	void rayPickEntity() {
+		vec3d start, dir;
+        camera.getRayFromScreenCoords(mousecoords, start, dir);
+		double prevDist;
+		entitySelected = false;
+		foreach(entity ; world.getEntities()) {
+			if (entity.aabb.intersectsWithLine(start, dir) &&
+				(!entitySelected || prevDist > entity.pos.value.getDistanceFromSQ(camera.position))) {
+					prevDist = entity.pos.value.getDistanceFromSQ(camera.position);
+					selectedEntity = entity;
+					entitySelected = true;
+			}
+		}
+	}
+	
+	void hoverRay() {
+		rayPickTile();
+		rayPickEntity();
+		if (entitySelected && 
+			selectedEntity.pos.value.getDistanceFromSQ(camera.position) <
+			selectedTilePos.toUnitPos().value.getDistanceFromSQ(camera.position)) { // fulhaxxs
+				tileSelected = false;
+			}
+	}
     
     
     

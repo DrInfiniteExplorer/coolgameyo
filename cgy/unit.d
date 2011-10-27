@@ -13,6 +13,7 @@ import world;
 import clan;
 import util.util;
 import unittypemanager;
+import inventory;
 
 shared int g_UnitCount = 0; //Global counter of units. Make shared static variable in Game-class?
 
@@ -45,6 +46,7 @@ Unit* newUnit() {
     auto unit = new Unit;
     unit.unitId = g_UnitCount;
     g_UnitCount++;
+	unit.inventory = new Inventory();
     return unit;
 }
 
@@ -76,7 +78,10 @@ struct Unit {
     UnitAI ai;
     UnitType type;
     Clan clan;
+	Inventory inventory;
 
+	
+	
     Value toJSON() {
         Value val = encode(unitData);
         if (clan !is null) {
@@ -100,6 +105,7 @@ struct Unit {
             read(unitTypeId, val["unitTypeId"]);
             BREAKPOINT;
         }
+		inventory = new Inventory(); // TODO: RAWR!!
         //Add ai
     }
     

@@ -157,6 +157,10 @@ class StringTexture {
         glBufferData(GL_ARRAY_BUFFER, size, null, GL_STATIC_DRAW);
         glError();
     }
+    
+    string getText() {
+        return currentText;
+    }
 
     void setText(string text) {
         if(text == currentText){

@@ -397,6 +397,7 @@
     <File path="gui\guisystem\slider.d" />
     <File path="gui\guisystem\text.d" />
     <File path="gui\guisystem\window.d" />
+    <File path="gui\guisystem\listbox.d" />
    </Folder>
    <File path="gui\all.d" />
    <File path="gui\loadscreen.d" />
@@ -407,6 +408,7 @@
    <File path="gui\statistics.d" />
    <File path="gui\unitcontrol.d" />
    <File path="gui\worldview.d" />
+   <File path="gui\inventorywindow.d" />
   </Folder>
   <Folder name="modules">
    <File path="modules\ai.d" />
@@ -492,5 +494,6 @@
   <File path="unit.d" />
   <File path="unittypemanager.d" />
   <File path="world.d" />
+  <File path="inventory.d" />
  </Folder>
 </DProject>

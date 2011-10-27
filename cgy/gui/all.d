@@ -4,6 +4,7 @@ module gui.all;
 public import gui.guisystem.guisystem;
 
 public import gui.guisystem.button;
+public import gui.guisystem.listbox;
 public import gui.guisystem.checkbox;
 public import gui.guisystem.editbox;
 public import gui.guisystem.guisystem;

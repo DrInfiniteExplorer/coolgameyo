@@ -293,7 +293,7 @@ class Renderer {
 	
 	
 	
-	void renderEntity(Entity* entity, float tickTimeSoFar){
+	void renderEntity(Entity entity, float tickTimeSoFar){
         auto M = matrix4();
         vec3d entityPos;
         /*vec3d **p = entity in specialUnits;
@@ -304,6 +304,9 @@ class Renderer {
         //}
         M.setTranslation(util.util.convert!float(entityPos));
         M.setRotationRadians(vec3f(0, 0, entity.rotation));
+		if (entity.isDropped){
+			M.setScale(vec3f(0.2f, 0.2f, 0.2f));
+		}
         dudeShader.setUniform(dudeShader.M, M);
         dudeShader.setUniform(dudeShader.color, vec3f(entity.type.tintColor.X/255.f,
 													  entity.type.tintColor.Y/255.f,
