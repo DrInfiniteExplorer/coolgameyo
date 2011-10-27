@@ -72,6 +72,7 @@ struct Block {
         auto pos = tilePos.rel();
         return (*tiles)[pos.X][pos.Y][pos.Z];
     }
+
     void setTile(TilePos pos, Tile tile)
     in{
         assert(pos.getBlockNum() == this.blockNum);
@@ -79,12 +80,12 @@ struct Block {
     body{
         assert(valid);
         auto p = pos.rel();
-        
+
         if(sparse){ //If was sparse, populate with real tiles
             auto block = alloc();
             tiles = block.tiles;
             setFlag(flags, BlockFlags.sparse, false);
-                        
+
             Tile t;
             t.type = sparseTileType;
             t.flags = TileFlags.valid;
@@ -92,6 +93,28 @@ struct Block {
             (*(cast(Tile[BlockSize.x*BlockSize.y*BlockSize.z]*)(tiles)))[] = t; //Fuck yeah!!!! ? :S:S:S
         }
         (*tiles)[p.X][p.Y][p.Z] = tile;
+    }
+
+    void setTileLight(TilePos pos, const byte newVal)
+    in{
+        assert(pos.getBlockNum() == this.blockNum);
+    }
+    body{
+        assert(valid);
+        auto p = pos.rel();
+
+        if(sparse){ //If was sparse, populate with real tiles
+            auto block = alloc();
+            tiles = block.tiles;
+            setFlag(flags, BlockFlags.sparse, false);
+
+            Tile t;
+            t.type = sparseTileType;
+            t.flags = TileFlags.valid;
+            t.seen = seen;
+            (*(cast(Tile[BlockSize.x*BlockSize.y*BlockSize.z]*)(tiles)))[] = t; //Fuck yeah!!!! ? :S:S:S
+        }
+        (*tiles)[p.X][p.Y][p.Z].lightValue = newVal;
     }
 
     bool isSame(const Block other) const {
@@ -151,8 +174,8 @@ struct Block {
         bool homogenous = true;
         bool first = true;
 
-        foreach (relPos; RangeFromTo(0, BlockSize.x,
-                    0, BlockSize.y, 0, BlockSize.z)) {
+        foreach (relPos; RangeFromTo (0, BlockSize.x-1,
+                    0, BlockSize.y-1, 0, BlockSize.z-1)) {
             auto TP = blockNum.toTilePos();
             TP.value += relPos;
             auto tile = worldgen.getTile(TP);

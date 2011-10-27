@@ -29,6 +29,7 @@ import util.util;
 
 //TODO: Make fix this, or make testcase and report it if not done already.
 auto grTexCoordOffset = GRVertex.texcoord.offsetof;
+auto grLightOffset = GRVertex.light.offsetof;
 
 class Renderer {
     //TODO: Leave comment on what these members are use for in this class
@@ -62,6 +63,7 @@ class Renderer {
         worldShader = new WorldShaderProgram("shaders/renderGR.vert", "shaders/renderGR.frag");
         worldShader.bindAttribLocation(0, "position");
         worldShader.bindAttribLocation(1, "texcoord");
+        worldShader.bindAttribLocation(2, "light");
         worldShader.link();
         worldShader.offset = worldShader.getUniformLocation("offset");
         worldShader.VP = worldShader.getUniformLocation("VP");
@@ -261,6 +263,9 @@ class Renderer {
         glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, GRVertex.sizeof, cast(void*)grTexCoordOffset);
         glError();
 
+        glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, GRVertex.sizeof, cast(void*)grLightOffset);
+        glError();
+
         glDrawArrays(GL_QUADS, 0, region.quadCount*4);
         glError();
     }
@@ -271,6 +276,8 @@ class Renderer {
         glEnableVertexAttribArray(0);
         glError();
         glEnableVertexAttribArray(1);
+        glError();
+        glEnableVertexAttribArray(2);
         glError();
         atlas.use();
         auto transform = camera.getProjectionMatrix() * camera.getViewMatrix();
@@ -287,6 +294,8 @@ class Renderer {
         glDisableVertexAttribArray(0);
         glError();
         glDisableVertexAttribArray(1);
+        glError();
+        glDisableVertexAttribArray(2);
         glError();
         worldShader.use(false);
     }

@@ -2,6 +2,7 @@ module util.util;
 
 import core.time;
 
+import std.algorithm;
 import std.conv;
 import std.exception;
 import std.stdio;
@@ -54,6 +55,7 @@ vec3i getTilePos(T)(vector3d!T v){
     );
 }
 
+//TODO: Replace this shit with stuff from std.bitmanip.
 void setFlag(A,B)(ref A flags, B flag, bool value) {
     if (value) {
         flags |= flag;
@@ -217,3 +219,16 @@ CommonType!(T)[T.length] makeStackArray(T...)(T ts) {
     return ret;
 }
 
+Type clamp(Type)(Type val, Type min, Type max)
+in{
+    assert(min <= max, "Min must be less than or equal to max!");
+}
+body {
+    if(val < min) {
+        val = min;
+    }
+    if(val > max) {
+        val = max;
+    }
+    return val;
+}

@@ -1,6 +1,9 @@
 
 module worldparts.tile;
 
+import std.bitmanip;
+
+import light;
 import tiletypemanager : TileTypeAir;
 import util.util;
 
@@ -18,8 +21,25 @@ enum TileFlags : ushort {
 struct Tile {
     ushort type;
     TileFlags flags = TileFlags.none;
-    ushort hp = 0;
-    ushort derp;
+
+    this(ushort type, TileFlags flags) {
+        this.type = type;
+        this.flags = flags;
+        lightValue = 0;
+        hitpoints = 0;
+        restofderpystuff = 0;
+    }
+
+    static assert(2^^4 == MaxLightStrength);
+
+    mixin(bitfields!(
+        ubyte, "lightVal",           4,
+        uint, "hitpoints",          12,
+        uint, "restofderpystuff",   16 ));
+
+
+    byte lightValue() const @property { return lightVal; }
+    void lightValue(const byte light) @property { lightVal = clamp!byte(light, 0, 15); } //Do clamp in byte-domain to fix values like -1 etc
 
     bool valid() const @property { return (flags & TileFlags.valid) != 0; }
     void valid(bool val) @property { setFlag(flags, TileFlags.valid, val); }
@@ -33,5 +53,5 @@ struct Tile {
     void pathable(bool val) @property { setFlag(flags, TileFlags.pathable, val); }
 }
 
-enum INVALID_TILE = Tile(0, TileFlags.none, 0, 0);
+enum INVALID_TILE = Tile(0, TileFlags.none);
 

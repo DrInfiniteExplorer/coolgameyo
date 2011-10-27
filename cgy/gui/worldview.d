@@ -136,7 +136,24 @@ class MapImage : GuiElementImage {
     }
     
     void updateElevation() {
-        generateMap((TilePos p){ return worldGen.getHeight01(p);}, &colorize!(vec3d, vec3d(0,0,0), vec3d(1,1,1)));
+
+        ubyte[4] colorize(double t) {
+            auto c = [
+                vec3d(0.0, 0.0, 0.0),
+                vec3d(0.0, 0.1, 0.0),
+                vec3d(0.1, 0.9, 0.1),
+                vec3d(0.9, 0.9, 0.9),
+                vec3d(0.9, 0.9, 0.9),
+                vec3d(1.0, 1.0, 1.0),
+            ];
+            auto v = CatmullRomSpline(t, c);
+            return makeStackArray(
+                                  cast(ubyte)(clamp(v.X, 0, 1) * 255),
+                                  cast(ubyte)(clamp(v.Y, 0, 1) * 255),
+                                  cast(ubyte)(clamp(v.Z, 0, 1) * 255),
+                                  cast(ubyte)0);
+        }
+        generateMap((TilePos p){ return worldGen.getHeight01(p);}, &colorize);
     }
     void updateTemperature() {
     }
@@ -245,7 +262,7 @@ class WorldViewMenu : GuiElementWindow {
     
     void initWorld() {
         WorldGenParams params;
-        params.worldSize = size;
+        params.worldDiameter = size;
         params.randomSeed = seed;
         worldGen = new WorldGenerator;
         worldGen.init(params, null);

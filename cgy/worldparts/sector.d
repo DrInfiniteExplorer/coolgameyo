@@ -12,7 +12,9 @@ import std.file;
 import std.range;
 import std.stdio;
 
+import entitytypemanager;
 import json;
+import light;
 import worldparts.block;
 import worldparts.sizes;
 import worldgen.worldgen;
@@ -20,7 +22,7 @@ import pos;
 import unit;
 import entity;
 import util.util;
-import entitytypemanager;
+import util.intersect;
 
 class Sector {
 
@@ -210,5 +212,26 @@ class Sector {
     int activity() const @property { return activityCount; }
     void increaseActivity() { activityCount += 1; }
     void decreaseActivity() { activityCount -= 1; }
+
+    LightSource[] lights;
+    void addLight(LightSource light)
+    in{
+        foreach(l; lights) {
+            assert(l !is light, "Dont add the same light multiple times!");
+        }
+    }
+    body{
+        lights ~= light; 
+    }
+    LightSource[] getLightsWithin(TilePos min, TilePos max) {
+        LightSource[] ret;
+        foreach(light ; lights ) {
+            vec3i lightPos = convert!int(light.position);
+            if(within(lightPos, min.value, max.value)) {
+                ret ~= light;
+            }
+        }
+        return ret;
+    }
 }
 

@@ -35,3 +35,5 @@ enum GraphRegionSize {
     z = BlockSize.z*2,
     total = x*y*z
 }
+
+enum HeightMapSampleDistance = SectorSize.x / 4; // samples per sector

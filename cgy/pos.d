@@ -276,9 +276,9 @@ struct GraphRegionNum{
     TilePos max() const {
         auto ret = min();
         ret.value += vec3i(
-                    GraphRegionSize.x,
-                    GraphRegionSize.y,
-                    GraphRegionSize.z);
+                    GraphRegionSize.x-1,
+                    GraphRegionSize.y-1,
+                    GraphRegionSize.z-1);
         return ret;
     }
     TilePos min() const {

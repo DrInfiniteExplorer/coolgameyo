@@ -19,6 +19,7 @@ import derelict.opengl.glext;
 import graphics.camera;
 import graphics.debugging;
 import graphics.renderer;
+import light;
 import modules.module_;
 import pos;
 import scheduler;
@@ -42,6 +43,7 @@ struct GraphicsRegion
 struct GRVertex{
     vec3f vertex;
     vec3f texcoord;
+    float light;
 };
 
 struct GRFace{
@@ -83,7 +85,7 @@ class GeometryCreator : Module, WorldListener
         }
         regions = null;
     }
-    
+
     void setCamera(Camera cam) {
         camera = cam;
     }
@@ -110,14 +112,16 @@ class GeometryCreator : Module, WorldListener
             vec3f tileTexCoord = settings.getTileCoords(tileId);
             foreach(ref vert ; f.quad){
                 vert.texcoord = vert.texcoord * tileTexSize + tileTexCoord;
+                vert.light = cast(float)t.lightValue / cast(float)MaxLightStrength;
+                //vert.light = 1.f;
             }
         }
         
         //Will iterate trough all tiles within this graphregion.
         //TODO: Implement a method in world, which returns a collection of all tiles
         // within a specified area, for fast access instead of getTile all the time.
-        foreach( pos ; RangeFromTo(min.value, max.value)) {
-            auto tile = world.getTile(TilePos(pos), false, false);
+        foreach( pos ; RangeFromTo (min.value, max.value)) {
+            auto tile = world.getTile(TilePos(pos), false);
            if (!tile.valid)  {
                 continue;
             }
@@ -127,12 +131,12 @@ class GeometryCreator : Module, WorldListener
             if (!tile.seen) {
                 continue;
             }
-            auto tileXp = world.getTile(TilePos(pos+vec3i(1,0,0)), false, false);
-            auto tileXn = world.getTile(TilePos(pos-vec3i(1,0,0)), false, false);
-            auto tileYp = world.getTile(TilePos(pos+vec3i(0,1,0)), false, false);
-            auto tileYn = world.getTile(TilePos(pos-vec3i(0,1,0)), false, false);
-            auto tileZp = world.getTile(TilePos(pos+vec3i(0,0,1)), false, false);
-            auto tileZn = world.getTile(TilePos(pos-vec3i(0,0,1)), false, false);
+            auto tileXp = world.getTile(TilePos(pos+vec3i(1,0,0)), false);
+            auto tileXn = world.getTile(TilePos(pos-vec3i(1,0,0)), false);
+            auto tileYp = world.getTile(TilePos(pos+vec3i(0,1,0)), false);
+            auto tileYn = world.getTile(TilePos(pos-vec3i(0,1,0)), false);
+            auto tileZp = world.getTile(TilePos(pos+vec3i(0,0,1)), false);
+            auto tileZn = world.getTile(TilePos(pos-vec3i(0,0,1)), false);
             //To generate where is invalid tiles, replace == with <=
             bool Xp;
             bool Xn;
@@ -399,7 +403,7 @@ class GeometryCreator : Module, WorldListener
         auto minBlockNum = grNum.min.getBlockNum();
         BlockNum maxBlockNum = grNum.max.getBlockNum();
         int seenCount;
-        foreach(rel ; RangeFromTo(minBlockNum.value, maxBlockNum.value)) {
+        foreach(rel ; RangeFromTo (minBlockNum.value, maxBlockNum.value)) {
 
             auto num = BlockNum(rel);
             auto block = world.getBlock(num, false);
@@ -429,14 +433,13 @@ class GeometryCreator : Module, WorldListener
         auto tmp = sectorNum.toTilePos();
         tmp.value -= vec3i(1,1,1);
         auto grNumMax = tmp.getGraphRegionNum();
-        grNumMax.value += vec3i(1,1,1);
         sectorNum.value -= vec3i(1,1,1);
 
         //TODO: figure out what kind of problems i was referring to.
         //ASSUMES THAT WE ARE IN THE UPDATE PHASE, OTHERWISE THIS MAY INTRODUCE PROBLEMS AND SUCH. :)
         //*
         GraphRegionNum[] newRegions;
-        foreach(pos ; RangeFromTo(grNumMin.value, grNumMax.value)) {
+        foreach(pos ; RangeFromTo (grNumMin.value, grNumMax.value)) {
             auto grNum = GraphRegionNum(pos);
             if(hasContent(grNum)){
                 //msg("Has content;", grNum);

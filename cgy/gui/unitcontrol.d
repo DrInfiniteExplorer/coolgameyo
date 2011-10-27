@@ -17,6 +17,7 @@ import graphics.renderer;
 import gui.all;
 import gui.statistics;
 import gui.inventorywindow;
+import light;
 import scheduler;
 import settings;
 import statistics;
@@ -217,7 +218,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         else if (m.left && tileSelected) {
             copiedTile = selectedTile;
             //Remove transparensiness sometime!!
-            enum airTile = Tile(TileTypeAir, TileFlags.valid, 0, 0);
+            enum airTile = Tile(TileTypeAir, TileFlags.valid);
 
             possesAI.changeTile(selectedTilePos, airTile);
         } else if (m.right && tileSelected) {
@@ -228,7 +229,15 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
             if (! intersectsExclusive(unitAABB, tileAABB)) {
                 possesAI.changeTile(whereToPlace, copiedTile);
             }
-        }        
+        } else if(m.middle && tileSelected) {
+            vec3d pos = selectedTilePos.toEntityPos.value + 0.5 * convert!double(selectedTileNormal);
+            LightSource light = new LightSource;
+            light.position = pos;
+            light.tint.set(0.8, 0.8, 0);
+            light.strength = MaxLightStrength;
+            possesAI.addLight(light);
+        }
+
     }
     
     void tick(float dTime) {
@@ -244,14 +253,16 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
     void updatePossesed(float dTime) { 
         double right = 0;
         double fwd = 0;
-        enum speed = 4.0;
+        //enum speed = 4.0;
+        enum speed = 14.0;
         if(keyMap[SDLK_a]){ right-=speed; }
         if(keyMap[SDLK_d]){ right+=speed; }
         if(keyMap[SDLK_w]){ fwd+=speed; }
         if(keyMap[SDLK_s]){ fwd-=speed; }
         if(keyMap[SDLK_SPACE]){
             if(possesAI.onGround){
-                possesAI.fallSpeed = 5.5f;
+                //possesAI.fallSpeed = 4.5f;
+                possesAI.fallSpeed = 14.5f;
             }
         }
         possesAI.move(right, fwd, 0.f, dTime);

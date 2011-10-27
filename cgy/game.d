@@ -327,10 +327,10 @@ class Game{
             auto jsonString = to!string(jsonRoot);	
 	        jsonString = json.prettyfyJSON(jsonString);
         
-            util.filesystem.mkdir("saves/current");
             std.file.write("saves/current/game.json", jsonString);
         }
         //Takes care of world and tasks.        
+        util.filesystem.mkdir("saves/current");
         scheduler.startSerialize({
             writeln("WOHOO!");
             serialize();

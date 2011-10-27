@@ -10,6 +10,7 @@ import std.typecons;
 import graphics.camera;
 
 import json;
+import light;
 import tiletypemanager;
 import entitytypemanager;
 import unittypemanager;
@@ -26,6 +27,7 @@ public import worldparts.sector;
 public import worldparts.block;
 public import worldparts.tile;
 import util.util;
+import util.intersect;
 import util.rangefromto;
 import util.tileiterator;
 
@@ -230,9 +232,9 @@ class World {
             auto tp = blockNum.toTilePos();
             auto sectTp = sectorNum.toTilePos();
             auto sectToBlock = tp.value - sectTp.value;
-            foreach(rel ; RangeFromTo(0, BlockSize.x,
-                                      0, BlockSize.y,
-                                      0, BlockSize.z)) {
+            foreach(rel ; RangeFromTo (0, BlockSize.x-1,
+                                      0, BlockSize.y-1,
+                                      0, BlockSize.z-1)) {
                 auto heightmapIndex = rel + sectToBlock;
                 if (tp.value.Z <= heightmap[heightmapIndex.X, heightmapIndex.Y]){
                     above = false;
@@ -265,17 +267,19 @@ class World {
                     z = worldGen.maxZ(posXY);
                 }
 
-                while (worldGen.getTile(TilePos(vec3i(
-                                    posXY.value.X, posXY.value.Y, z))).type
-                        is TileTypeAir) {
-                    z -= 1;
-                    iterations++;
-                    if (iterations >= iterationLimit) {
-                        state.x = x;
-                        state.y = y;
-                        state.z = z;
-                        g_Statistics.HeightmapsProgress(done);
-                        return;
+                if(worldGen.isInsideWorld(TilePos(vec3i(posXY.value.X, posXY.value.Y, z)))) {
+                    while (worldGen.getTile(TilePos(vec3i(
+                                        posXY.value.X, posXY.value.Y, z))).type
+                            is TileTypeAir) {
+                        z -= 1;
+                        iterations++;
+                        if (iterations >= iterationLimit) {
+                            state.x = x;
+                            state.y = y;
+                            state.z = z;
+                            g_Statistics.HeightmapsProgress(done);
+                            return;
+                        }
                     }
                 }
                 state.z = int.max;
@@ -554,11 +558,6 @@ class World {
         //Consider this later. Related to comment in world.update
     }
     
-    void unsafeSetTile(TilePos pos, Tile tile) {
-        //TODO: Think of any reason for or against calling setTile directly here.
-        //Like, maybe store it up and do setting in world.update()?
-        setTile(pos, tile);
-    }
 
     private void moveUnit(Unit* unit, UnitPos newPos) {
         moveActivity(unit.pos, newPos);
@@ -588,8 +587,7 @@ class World {
         notifyAddEntity(sectorNum, entity);
     }
 
-    Tile getTile(TilePos tilePos, bool createBlock=true,
-                                  bool createSector=true) {
+    Tile getTile(TilePos tilePos, bool createBlock=true) {
         auto block = getBlock(tilePos.getBlockNum(), createBlock);
         if(!block.valid){
             return INVALID_TILE;
@@ -604,7 +602,7 @@ class World {
         int cnt;
         foreach(tilePos ; TileIterator(start, dir, tileIter)) {
             cnt++;
-            auto tile = getTile(tilePos, false, false);
+            auto tile = getTile(tilePos, false);
             if (tile.type == TileTypeInvalid) {
                 return 0;
             }
@@ -617,6 +615,24 @@ class World {
             }
         }
         return 0;
+    }
+
+    private void setTileLightVal(TilePos tilePos, const byte newVal) {
+        //TODO: Make sure penis penis penis, penises.
+        //Durr, i mean, make sure to floodfill as well! :)
+        auto blockNum = tilePos.getBlockNum();
+        auto block = getBlock(blockNum, true);
+        BREAKPOINT(!block.valid);
+        block.setTileLight(tilePos, newVal);
+        setBlock(tilePos.getBlockNum(), block);
+
+        //notifyTileChange(tilePos);
+    }
+
+    void unsafeSetTile(TilePos pos, Tile tile) {
+        //TODO: Think of any reason for or against calling setTile directly here.
+        //Like, maybe store it up and do setting in world.update()?
+        setTile(pos, tile);
     }
 
     //Now only called from unsafeSetTile
@@ -638,7 +654,9 @@ class World {
             addFloodFillPos(tilePos);
         }
         setBlock(tilePos.getBlockNum(), block);
-        
+
+        recalculateLight(tilePos);
+
         //Update heightmap
         auto sectorNum = tilePos.getSectorNum();
         auto sectorXY = getSectorXY(SectorXYNum(vec2i(sectorNum.value.X, sectorNum.value.Y)));
@@ -659,7 +677,7 @@ class World {
                 heightmap[sectRel.X, sectRel.Y] = tilePos.value.Z;
             }
         }
-                
+
         notifyTileChange(tilePos);
     }
 
@@ -734,7 +752,7 @@ class World {
             }
 
             foreach (rel;
-                    RangeFromTo(0,BlockSize.x,0,BlockSize.y,0,BlockSize.z)) {
+                    RangeFromTo (0,BlockSize.x-1,0,BlockSize.y-1,0,BlockSize.z-1)) {
                 auto tp = TilePos(blockPos.value + rel);
                 auto tile = block.getTile(tp);
 
@@ -777,7 +795,7 @@ class World {
                     }
                 } else {
                     foreach (npos; neighbors(tp)) {
-                        auto neighbor = getTile(npos, true, false);
+                        auto neighbor = getTile(npos, true);
                         if (neighbor.valid && neighbor.transparent) {
                             tile.seen = true;
                             break;
@@ -840,12 +858,117 @@ class World {
     }
 
 
+    mixin LightStorageMethods;
     mixin ActivityHandlerMethods;
+
 }
 
+import graphics.debugging;
+private mixin template LightStorageMethods() {
+
+    private void addLight(LightSource light) {
+        TilePos tp = TilePos(convert!int(light.position));
+
+        aabbd aabb = tp.getAABB();
+        aabb.scale(vec3d(0.4));
+        addAABB(aabb, vec3f(0,0, 0.8));
+
+        auto sectorNum = tp.getSectorNum;
+        auto sector = getSector(sectorNum);
+        enforce(sector !is null, "Cant add lights to sectors that dont exist you dummy!");
+        sector.addLight(light);
+        auto min = TilePos(tp.value - vec3i(MaxLightStrength,MaxLightStrength,MaxLightStrength));
+        auto max = TilePos(tp.value + vec3i(MaxLightStrength,MaxLightStrength,MaxLightStrength));
+        recalculateLight(min, max);
+
+        foreach(rel ; RangeFromTo(-1,1,-1, 1, -1, 1)) {
+            notifyTileChange(TilePos(tp.value + rel*vec3i(MaxLightStrength,MaxLightStrength,MaxLightStrength)));
+        }
+    }
+    void unsafeAddLight(LightSource light) {
+        addLight(light);
+    }
+
+    void recalculateLight(TilePos centre) {
+        recalculateLight(TilePos(centre.value-vec3i(MaxLightStrength, MaxLightStrength, MaxLightStrength)), 
+                         TilePos(centre.value+vec3i(MaxLightStrength, MaxLightStrength, MaxLightStrength)));
+    }
+
+    void recalculateLight(TilePos min, TilePos max) {
+        struct data {
+            TilePos p;
+            byte strength;
+        }
+        alias RedBlackTree!(data, q{a.p.value < b.p.value}) TileSet;
+
+        foreach(rel ; RangeFromTo (min.value, max.value)) {
+            auto tp = TilePos(rel);
+            //Tile tile = getTile(tp);
+            //tile.lightValue = 0;
+            //setTile(tp, tile); //We dont care about sending changes for this. It is calculated clientside anyway.
+            setTileLightVal(tp, 0); //We dont care about sending changes for this. It is calculated clientside anyway.
+        }
+        auto lights = getAffectingLights(min, max);
 
 
+        foreach(light ; lights) {
+            auto startTile = TilePos(convert!int(light.position));
+            TileSet open = new TileSet(data(startTile, light.strength));
+            TileSet current= new TileSet;
+            TileSet closed = new TileSet;
+            while (!open.empty) {
+                swap(open, current);
+                while (!current.empty) {
+                    auto d = current.removeAny();
+                    closed.insert(d);
+                    auto tilePos = d.p;
+                    auto tile = getTile(tilePos);
+                    tile.lightValue = cast(byte)((cast(byte)tile.lightValue) + (cast(byte)d.strength));
+                    if(within(tilePos.value, min.value, max.value)){
+                        setTileLightVal(tilePos, tile.lightValue);
+                        //setTile(tilePos, tile);
+                    }
+                    //notifyTileChange(tilePos);
+                    if (d.strength == 1) {
+                        continue;
+                    }
+                    if(tile.type != TileTypeAir) {
+                        continue;
+                    }
+                    foreach(neighbor ; neighbors(tilePos)) {
+                        auto tmp = data(neighbor, 0);
+                        if(!(tmp in closed) && !(tmp in current)){
+                            open.insert(data(neighbor, cast(byte)(d.strength-1)));
+                        }
+                    }
+                }
+            }
+        }
 
+    }
+
+    LightSource[] getAffectingLights(TilePos min, TilePos max) {
+        //Lightstrength has max limit of MaxLightStrength, so we need only look in ±MaxLightStrength-tile vincinity.
+        bool[SectorNum] sectors; //Lets make a naive implementation!!
+        //TODO: Make fix this to determine what sectors are interesting, in a not-retarded way.
+        LightSource[] lights;
+        auto Min = TilePos(min.value-vec3i(MaxLightStrength,MaxLightStrength,MaxLightStrength));
+        auto Max = TilePos(max.value+vec3i(MaxLightStrength,MaxLightStrength,MaxLightStrength));
+        foreach(rel; RangeFromTo (Min.value, Max.value)) {
+            TilePos tp = TilePos(rel);
+            SectorNum sectorNum = tp.getSectorNum();
+            if( sectorNum in sectors) {
+                continue;
+            }
+            sectors[sectorNum] = false; //hohoho just for the kicks of it!
+            Sector sector = getSector(sectorNum);
+            if(sector !is null) {
+                lights ~= sector.getLightsWithin(Min, Max);
+            }
+        }
+        return lights;
+    }
+}
 
 debug{
     auto activitySize = vec3i(1,1,1);
@@ -934,9 +1057,9 @@ auto activityRange(SectorNum base) {
     SectorNum a(vec3i d){
         return SectorNum(d);
     }
-    return map!a(RangeFromTo(
+    return map!a(RangeFromTo (
             base.value - activitySize/2,
-            base.value + activitySize/2 + vec3i(1,1,1)));
+            base.value + activitySize/2));
 }
 
 
@@ -963,15 +1086,15 @@ struct WallBetweenSectors {
                 : (delta.Z == 1 ? BlocksPerSector.z - 1 : 0));
         auto end = vec3i( 
                 delta.X == 0 ? BlocksPerSector.x
-                : (delta.X == 1 ? BlocksPerSector.x : 1),
+                : (delta.X == 1 ? BlocksPerSector.x-1 : 0),
                 delta.Y == 0 ? BlocksPerSector.y
-                : (delta.Y == 1 ? BlocksPerSector.y : 1),
+                : (delta.Y == 1 ? BlocksPerSector.y-1 : 0),
                 delta.Z == 0 ? BlocksPerSector.z
-                : (delta.Z == 1 ? BlocksPerSector.z : 1));
+                : (delta.Z == 1 ? BlocksPerSector.z-1 : 0));
         BlockNum b(vec3i v) {
             return BlockNum(v);
         }
-        auto wall = map!(b)(RangeFromTo(bb+start, bb+end));
+        auto wall = map!(b)(RangeFromTo (bb+start, bb+end));
 
         foreach (bn; wall) {
             if (y(BlockNum(bn.value+delta), bn)) return 1;

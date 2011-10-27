@@ -1,6 +1,6 @@
 {
-  "mud":{
-    "displayName":"Mud",
+  "dirt":{
+    "displayName":"Dirt",
     "material":"dirt",
 	"strength":10,
 	"tintFromMaterial":1,
@@ -12,18 +12,31 @@
 	"textureCoordSides":{ "X":16, "Y":16 },
 	"textureCoordBottom":{ "X":16, "Y":32 }
   },
-  "rock":{
-    "displayName":"Rock",
-    "material":"din mamma",
+  "stone":{
+    "displayName":"Stone",
+    "material":"fungus mamma",
 	"strength":10,
 	"tintFromMaterial":1,
-	"tintColor":{ "X":200, "Y":200, "Z":200 },
-	"texturePathTop":"textures/001.png",
-	"texturePathSides":"textures/001.png",
-	"texturePathBottom":"textures/001.png",
-	"textureCoordTop":{ "X":16, "Y":0 },
-	"textureCoordSides":{ "X":16, "Y":16 },
-	"textureCoordBottom":{ "X":16, "Y":32 }
+	"tintColor":{ "X":255, "Y":255, "Z":255 },
+	"texturePathTop":"textures/stone.png",
+	"texturePathSides":"textures/stone.png",
+	"texturePathBottom":"textures/stone.png",
+	"textureCoordTop":{ "X":0, "Y":0 },
+	"textureCoordSides":{ "X":0, "Y":0 },
+	"textureCoordBottom":{ "X":0, "Y":0 }
+  },
+  "snow":{
+    "displayName":"Snow",
+    "material":"fungus pappa",
+	"strength":10,
+	"tintFromMaterial":1,
+	"tintColor":{ "X":255, "Y":255, "Z":255 },
+	"texturePathTop":"textures/snow.png",
+	"texturePathSides":"textures/snow.png",
+	"texturePathBottom":"textures/snow.png",
+	"textureCoordTop":{ "X":0, "Y":0 },
+	"textureCoordSides":{ "X":0, "Y":0 },
+	"textureCoordBottom":{ "X":0, "Y":0 }
   },
   "water":{
     "displayName":"Water",

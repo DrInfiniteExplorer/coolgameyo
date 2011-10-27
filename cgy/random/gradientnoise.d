@@ -74,7 +74,7 @@ class GradientNoise(string Step = "smoothStep", string Lerp = "lerp") : ValueSou
         double v0 = Interpolate(v00, v01, wy);
         double v1 = Interpolate(v10, v11, wy);
         
-        return Interpolate(v0, v1, wx);
+        return 2.0 * Interpolate(v0, v1, wx);
     }    
     double getValue(double x, double y) {
         int i = to!int(floor(x));
@@ -92,7 +92,7 @@ class GradientNoise(string Step = "smoothStep", string Lerp = "lerp") : ValueSou
         
         double y0 = Interpolate(v00, v10, wx);
         double y1 = Interpolate(v01, v11, wx);
-        return Interpolate(y0, y1, wy);
+        return 2.0 * Interpolate(y0, y1, wy);
     }
     
     double getValue(double x) {
@@ -104,7 +104,7 @@ class GradientNoise(string Step = "smoothStep", string Lerp = "lerp") : ValueSou
         
         double wx = StepFunc(dx);
         
-        return Interpolate(v00, v10, wx);
+        return 2.0 * Interpolate(v00, v10, wx);
     }
 }
 
@@ -140,4 +140,21 @@ class OffsetGradientNoise(string Step = "smoothStep", string Lerp = "lerp") : Gr
     override double getValue(double x) {
         return super.getValue(x+0.57623493);
     }
+}
+
+import random.randsource;
+import std.stdio;
+import std.conv;
+unittest {
+    auto randSource = new RandSourceUniform(123453);
+    auto worldHeightMap = new OffsetGradientNoise!()(123456, randSource);   // [-500, 1500]
+    double min = double.max;
+    double max = -double.max;
+    for(double t = 0; t < 123456; t += 0.1) {
+        double v = worldHeightMap.getValue(t);
+        if (min > v) min = v;
+        if (max < v) max = v;
+    }
+    writeln(text("min ", min, " max ", max));
+    assert(max - min > 1.8, text("Derp derp lskjdflu blommorna brinner! ", max-min));
 }

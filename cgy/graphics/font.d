@@ -189,6 +189,14 @@ class StringTexture {
             BREAK_IF(cnt > vertices.length);
         }
         foreach(cnt, ch ; text) {
+            if (cnt < 0 || cnt > text.length) {
+                writeln(text);
+                BREAKPOINT;
+            }
+            if (ch < 0 || ch > 128) {
+                writeln(text);
+                BREAKPOINT;
+            }
             vertices[cnt] = font.getQuad(ch, vec2i(cnt, 0));
         }
         if(!resized){

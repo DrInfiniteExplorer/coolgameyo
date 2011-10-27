@@ -13,6 +13,7 @@ import graphics.debugging;
 import random.random;
 import random.randsource;
 import random.gradientnoise;
+import random.catmullrom;
 import random.fractal;
 import random.valuemap;
 import random.modmultadd;
@@ -21,13 +22,18 @@ import random.xinterpolate;
 import random.xinterpolate4;
 import random.gradient;
 import util.util;
+import util.filesystem;
 
 struct WorldGenParams {
     uint randomSeed = 880128;
-    uint worldSize = 8; //Measures diameter of world, in number of sectors.
+    uint worldDiameter = 16; //Measures diameter of world, in number of sectors.
 
     double worldMin = -50;
-    double worldMax = 200;
+    double worldMax = 150;
+
+    uint heightmapSamplesInWorld() const @property {
+        return worldDiameter * SectorSize.x / HeightMapSampleDistance;
+    }
     
 }
 
@@ -35,37 +41,67 @@ final class WorldGenerator {
     TileTypeManager sys;
     WorldGenParams params;
 
+    ValueMap2D!double worldHeightMapImg;
     ValueSource worldHeightMap;
     ValueSource wierdnessMap;
     ValueSource temperatureMap;
     ValueSource humidityMap; //Water outflux
     ValueSource vegetationMap; //Water outflux
     
-    void serialize(){}
-    void deserialize(){}
-
     void destroy() {
     }
     
+    void serialize() {
+        mkdir("saves/current/worldgen");
+        worldHeightMapImg.saveBin("saves/current/worldgen/heightmap.bin");
+
+        /*
+        double[4] colorize(double t) {
+            auto c = [
+                vec3d(0.0, 0.0, 1.0),
+                vec3d(0.0, 0.0, 1.0),
+                vec3d(0.0, 0.5, 0.5),
+                vec3d(0.0, 1.0, 0.0),
+                vec3d(0.5, 0.5, 0.0),
+                vec3d(1.0, 0.0, 0.0),
+                vec3d(1.0, 0.0, 0.0),
+            ];
+            auto v = CatmullRomSpline(t, c);
+            return [v.X, v.Y, v.Z, 0];
+        }
+
+        auto img = worldHeightMapImg.toImage(params.worldMin, params.worldMax, true, &colorize);
+        img.save("saves/current/worldgen/height.png");
+        */
+
+
+    }
+    void deserialize() {
+
+    }
+
     void init(WorldGenParams params, TileTypeManager tileTypeManager) {
         this.params = params;
         sys = tileTypeManager;
         auto randSource = new RandSourceUniform(params.randomSeed);
 
-        worldHeightMap = new OffsetGradientNoise!()(params.worldSize*BlocksPerSector.x, randSource);   // [-500, 1500]
-        auto ridgedHeightMap = new RidgedMultiFractal(worldHeightMap, 0.75, 2, 1, 0.75, 1.5);
-        ridgedHeightMap.setBaseWavelength(45); // Hur många block mellan varje "ursample". Storlek i block mätt på grövsta formationerna.
-        //worldHeightMap = ridgedHeightMap;
-        auto tmp = new ValueMap2D!double;
-        tmp.fill(ridgedHeightMap, params.worldSize*BlocksPerSector.x, params.worldSize * BlocksPerSector.x); //Sampla ett värde per block
-        tmp.normalize(params.worldMin, params.worldMax);
-        auto interpolated = new BicubeInterpolation(tmp);
+        worldHeightMap = new OffsetGradientNoise!()(params.heightmapSamplesInWorld, randSource);   // [-500, 1500]
+        auto fractalHeightMap = new HybridMultiFractal(worldHeightMap, 0.25, 2, 8, 0.6);
+        fractalHeightMap.setBaseWavelength(1_000/HeightMapSampleDistance); // Hur många samples mellan varje "ursample". Storlek i sample mätt på grövsta formationerna.
+        //worldHeightMap = fractalHeightMap;
+        worldHeightMapImg = new ValueMap2D!double;
+        writeln("Filling worldheightmap...");
+        worldHeightMapImg.fill(fractalHeightMap, params.heightmapSamplesInWorld, params.heightmapSamplesInWorld); //Sampla ett värde per block
+        writeln("...done!");
+        worldHeightMapImg.normalize(params.worldMin, params.worldMax);
+        auto interpolated = new BicubeInterpolation(worldHeightMapImg);
         //auto interpolated = worldHeightMap;
-        //auto interpolated = tmp;
-        double scale = 1.0 / BlocksPerSector.x;
-        worldHeightMap = new ModScaleOffset(interpolated, vec3d(scale), vec3d(params.worldSize*BlocksPerSector.x/2 + 0.5, params.worldSize*BlocksPerSector.x/2 + 0.5, 0));
-        auto conicalGradient = new ConicalGradientField(vec3d(0, 0, -1), vec3d(0, 0, params.worldMax), (params.worldMax-params.worldMin)/(0.5*params.worldSize*SectorSize.x));
-        worldHeightMap = new AddSources(worldHeightMap, conicalGradient);
+        //auto interpolated = worldHeightMapImg;
+        double scale = 1.0 / HeightMapSampleDistance;
+        worldHeightMap = new ModScaleOffset(interpolated, vec3d(scale), vec3d(params.heightmapSamplesInWorld/2 + 0.5, params.heightmapSamplesInWorld/2 + 0.5, 0));
+        auto conicalGradient = new ConicalGradientField(vec3d(0, 0, -1), vec3d(0, 0, params.worldMax), (params.worldMax-params.worldMin)/(0.5*params.worldDiameter*SectorSize.x));
+        //worldHeightMap = new AddSources(worldHeightMap, conicalGradient);
+        //worldHeightMap = conicalGradient;
 
 
 /*
@@ -99,39 +135,65 @@ final class WorldGenerator {
         //auto scale = to!double(params.worldSize) / (SectorSize.x * params.worldSize);
         //vegetationMap = new ModScaleOffset(vegetationMap, vec3d(scale), vec3d(params.worldSize/2, params.worldSize/2, 0));
     }
+
+    bool isInsideWorld(TilePos pos) {
+        return pos.value.X ^^ 2 + pos.value.Y ^^ 2 < (SectorSize.x * params.worldDiameter*0.5)^^ 2;
+    }
     
     double getHeight(TilePos pos) {
-        return worldHeightMap.getValue(pos.value.X, pos.value.Y);
+        return isInsideWorld(pos) ? worldHeightMap.getValue(pos.value.X, pos.value.Y)
+            : params.worldMin;
     }
     double getHeight01(TilePos pos) {
         return (getHeight(pos) - params.worldMin) / (params.worldMax-params.worldMin);
     }
     double getWierdness(TilePos pos) {
-        return wierdnessMap.getValue(pos.value.X, pos.value.Y);
+        return isInsideWorld(pos) ? wierdnessMap.getValue(pos.value.X, pos.value.Y)
+            : 0;
     }
     double getTemperature(TilePos pos) {
-        return temperatureMap.getValue(pos.value.X, pos.value.Y);
+        return isInsideWorld(pos) ? temperatureMap.getValue(pos.value.X, pos.value.Y)
+            : 0;
     }
     double getHumidity(TilePos pos) {
-        return humidityMap.getValue(pos.value.X, pos.value.Y);
+        return isInsideWorld(pos) ? humidityMap.getValue(pos.value.X, pos.value.Y)
+            : 0;
+
     }
     double getVegetation(TilePos pos) {
-        return vegetationMap.getValue(pos.value.X, pos.value.Y);
+        return isInsideWorld(pos) ? vegetationMap.getValue(pos.value.X, pos.value.Y)
+            : 0;
     }
     double getVegetation01(TilePos pos) {
         return getVegetation(pos);
     }
 
     Tile getTile(TilePos pos) {
+        if(! isInsideWorld(pos)) {
+            return Tile(TileTypeAir, TileFlags.valid);
+        }
         double height = getHeight(pos);
         double distAboveGround = pos.value.Z - height;
         if (distAboveGround > 0) {
             //Air
-            return Tile(TileTypeAir, TileFlags.valid, 0, 0);
+            return Tile(TileTypeAir, TileFlags.valid);
         }
         else {
             //Ground
-            return Tile(2, TileFlags.valid, 0, 0);
+            ushort type;
+            if ( distAboveGround < -4) {
+                type = sys.idByName("stone");
+            } else {
+                //auto snowHeight = params.worldMin + (params.worldMax-params.worldMin)*0.8;
+                auto snowHeight = 300;
+                if(pos.value.Z > snowHeight) {
+                    type = sys.idByName("snow");
+                } else {
+                    type = sys.idByName("dirt");
+                }
+            }
+
+            return Tile(type, TileFlags.valid);
         }
     }
     

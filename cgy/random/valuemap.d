@@ -50,6 +50,7 @@ class ValueMap2D(StorageType, bool Wrap = true) : ValueSource {
             max = std.algorithm.max(max, val);
         }
         double scale = (Max-Min) / (max-min);
+        writeln(text("normalize: min ", min, " max ", max));
 
         foreach(ref val; randMap) {
             val = (val-min) * scale + Min;
@@ -110,6 +111,10 @@ class ValueMap2D(StorageType, bool Wrap = true) : ValueSource {
     void saveAsImage(string imgName, StorageType min, StorageType max, bool clamp = true) {
         auto img = toImage(min, max, clamp);
         img.save(imgName);
+    }
+
+    void saveBin(string filename) {
+        std.file.write(filename, randMap);
     }
 };
 

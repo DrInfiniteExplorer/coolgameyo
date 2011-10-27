@@ -45,7 +45,7 @@ unittest{
 
     //This makes the ones below this for redundant, i think and hope and such
     auto c = box(0, 0, 0, 1, 1, 1);
-    foreach(p ; RangeFromTo(-1, 2, -1, 2, -1, 2)){
+    foreach(p ; RangeFromTo (-1, 1, -1, 1, -1, 1)){
         auto d = c;
         d.MinEdge += util.util.convert!double(p);
         d.MaxEdge += util.util.convert!double(p);
@@ -70,4 +70,13 @@ unittest{
     assert(intersectsExclusive(box(0, 0, 0, 1, 1, 1), box(0, 0, 0+1, 1, 1, 1+1)) == false, "Seems that boxes next to each other intersect. Sadface in z+.");
     assert(intersectsExclusive(box(0, 0, 0+1, 1, 1, 1+1), box(0, 0, 0, 1, 1, 1)) == false, "Seems that boxes next to each other intersect. Sadface in z+(2).");
 
+}
+
+
+//Returns a quick check if a pos is within the limits.
+//The limits are inclusive.
+bool within(T)(T pos, T min, T max) {
+    return !(pos.X < min.X || pos.X > max.X ||
+       pos.Y < min.Y || pos.Y > max.Y ||
+       pos.Z < min.Z || pos.Z > max.Z);
 }

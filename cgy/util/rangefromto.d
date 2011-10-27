@@ -5,8 +5,6 @@ import std.stdio;
 
 import util.util;
 
-
-
 struct RangeFromTo {
     int bx,ex,by,ey,bz,ez;
     int x,y,z;
@@ -52,21 +50,21 @@ struct RangeFromTo {
     }
     void popFront() {
         x += 1;
-        if (x < ex) return;
+        if (x <= ex) return;
         x = bx;
         y += 1;
-        if (y < ey) return;
+        if (y <= ey) return;
         y = by;
         z += 1;
     }
     bool empty() const {
-        return z >= ez;
+        return z > ez;
     }
 }
 unittest {
     int[5][5][5] x;
     cast(int[])(x[0][0])[] = 0;
-    foreach (p; RangeFromTo(0,5,0,5,0,5)) {
+    foreach (p; RangeFromTo (0,4,0,4,0,4)) {
         x[p.X][p.Y][p.Z] = 1;
     }
     auto xx = &x[0][0][0];

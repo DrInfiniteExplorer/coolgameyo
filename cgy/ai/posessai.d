@@ -9,6 +9,7 @@ import std.stdio;
 
 import changelist;
 import graphics.renderer;
+import light;
 import unit;
 import util.util;
 import util.rangefromto;
@@ -137,17 +138,17 @@ class FPSControlAI : UnitAI, CustomChange {
             vec3i stop;
             if( idx == 0 ) {
                 start = vec3i(0, to!int(floor(pos.Y - unitWidth * 0.5)), to!int(floor(pos.Z - 0.5)));
-                stop = vec3i(1, to!int(ceil(pos.Y + unitWidth * 0.5)), to!int(ceil(pos.Z + unitHeight - 0.5)));
+                stop = vec3i(0, to!int(ceil(pos.Y + unitWidth * 0.5))-1, to!int(ceil(pos.Z + unitHeight - 0.5))-1);
             } else if (idx == 1) {
                 start = vec3i(to!int(floor(pos.X - unitWidth * 0.5)), 0, to!int(floor(pos.Z - 0.5)));
-                stop = vec3i(to!int(ceil(pos.X + unitWidth * 0.5)), 1, to!int(ceil(pos.Z + unitHeight - 0.5)));
+                stop = vec3i(to!int(ceil(pos.X + unitWidth * 0.5))-1, 0, to!int(ceil(pos.Z + unitHeight - 0.5))-1);
             } else if (idx == 2) {
                 start = vec3i(to!int(floor(pos.X - unitWidth * 0.5)), to!int(floor(pos.Y - unitWidth * 0.5)), 0);
-                stop = vec3i(to!int(ceil(pos.X + unitWidth * 0.5)), to!int(ceil(pos.Y + unitWidth * 0.5)), 1);
+                stop = vec3i(to!int(ceil(pos.X + unitWidth * 0.5))-1, to!int(ceil(pos.Y + unitWidth * 0.5))-1, 0);
             }
             foreach( ppp ; RangeFromTo(start, stop)) {
                 auto p = (axis * wallNum) + ppp;
-                auto tile = world.getTile(TilePos(p), false, false);
+                auto tile = world.getTile(TilePos(p), false);
                 if (tile.type == TileTypeAir) {
                     continue;
                 }
@@ -199,6 +200,11 @@ class FPSControlAI : UnitAI, CustomChange {
     void changeTile(TilePos pos, Tile newTile) {
         tilesToChange[pos] = newTile;
     }        
+
+    LightSource[] lightsToAdd;
+    void addLight(LightSource light) {
+        lightsToAdd ~= light;
+    }
     
     //Hax used: oldPosition, to make the world produce a delta-pos-value and load sectors
     void apply(World world) {
@@ -207,8 +213,13 @@ class FPSControlAI : UnitAI, CustomChange {
         foreach(tilePos, tile ; tilesToChange) {
             world.unsafeSetTile(tilePos, tile);
         }
-
         tilesToChange = null;
+
+        foreach(light ; lightsToAdd) {
+            world.unsafeAddLight(light);
+        }
+        lightsToAdd = null;
+
     }
 
 }

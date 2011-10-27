@@ -83,8 +83,13 @@ class MultMultMult : ValueSource { //TODO: Think of better name than Fractal
 // TMPA p502
 class HybridMultiFractal : ValueSource {
     ValueSource source;
-    double H, lacunarity, offset;
-    double octaves;
+    double H = 0.25;
+    double lacunarity = 2;
+    double offset = 0.7;
+    double octaves = 12;
+    double baseFrequency = 1.0;
+
+    double[] exponents;
 
     /*
     H is a fractal dimension parameter, see TMPA p438  H=0 -> smooth ; H=1 -> whitenoise
@@ -98,17 +103,34 @@ class HybridMultiFractal : ValueSource {
         lacunarity = _lacunarity;
         octaves = _octaves;
         offset = _offset;
+
+        init();
     }
 
+    private void init() {
+        exponents.length = cast(int)octaves;
+        double frequency = 1.0;
+        foreach( int i ; 0 .. cast(int)octaves) {
+            exponents[i] = frequency ^^ -H;
+            frequency *= lacunarity;
+        }
+    }
+
+    void setBaseWavelength(double waveLength) {
+        baseFrequency = 1.0 / waveLength;
+    }
+
+
     double getValue(double x, double y, double z) {
-        double result = (source.getValue(x, y, z) + offset); //* 1^^-H; <-- lololol
+        x *= baseFrequency;
+        y *= baseFrequency;
+        z *= baseFrequency;
+        double result = (source.getValue(x, y, z) + offset) * exponents[0]; //[0] should be 1...
         double weight = result;
         x *= lacunarity; y *= lacunarity; z *= lacunarity;
-        foreach(i; 1 .. octaves) {
+        foreach(int i; 1 .. cast(int)octaves) {
             if (weight > 1) weight = 1;
-            double value = source.getValue(x, y, z) + offset;
-            double frequency = lacunarity ^^ i;
-            value *= frequency ^^ -H;
+            double value = (source.getValue(x, y, z) + offset) * exponents[i];
 
             result += weight * value;
             weight *= value;
@@ -117,34 +139,35 @@ class HybridMultiFractal : ValueSource {
         return result;
     }
     double getValue(double x, double y) {
-        double result = (source.getValue(x, y) + offset); //* 1^^-H; <-- lololol
+        x *= baseFrequency;
+        y *= baseFrequency;
+        double result = (source.getValue(x, y) + offset) * exponents[0]; //[0] should be 1...
         double weight = result;
         x *= lacunarity; y *= lacunarity;
-        foreach(i; 1 .. octaves) {
+        foreach(int i; 1 .. cast(int)octaves) {
             if (weight > 1) weight = 1;
-            double value = source.getValue(x, y) + offset;
-            double frequency = lacunarity ^^ i;
-            value *= frequency ^^ -H;
+            double value = (source.getValue(x, y) + offset) * exponents[i];
 
             result += weight * value;
             weight *= value;
             x *= lacunarity; y *= lacunarity;
+
         }
         return result;
     }
     double getValue(double x) {    
-        double result = (source.getValue(x) + offset); //* 1^^-H; <-- lololol
+        x *= baseFrequency;
+        double result = (source.getValue(x) + offset) * exponents[0]; //[0] should be 1...
         double weight = result;
         x *= lacunarity;
-        foreach(i; 1 .. octaves) {
+        foreach(int i; 1 .. cast(int)octaves) {
             if (weight > 1) weight = 1;
-            double value = source.getValue(x) + offset;
-            double frequency = lacunarity ^^ i;
-            value *= frequency ^^ -H;
+            double value = (source.getValue(x) + offset) * exponents[i];
 
             result += weight * value;
             weight *= value;
             x *= lacunarity;
+
         }
         return result;
     }    

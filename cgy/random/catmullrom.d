@@ -22,15 +22,14 @@ body{
         return ((c3*t + c2)*t + c1)*t + c0;
     } else {
         int count = ar.length;
-        int spans = count-3;
+        int nspans = count-3;
     
-        double x = clamp(t, 0, 1) * to!double(spans);
-        int span = to!int(x);
-        if (span > count - 3) {
-            BREAKPOINT;
+        double x = clamp(t, 0, 1) * to!double(nspans);
+        int span = cast(int)x;
+        if (span >= count - 3) {
             span = count - 3;
         }
-        x -= to!int(span);
+        x -= span;
         Type* knot = &ar[span];
         auto c3 = -0.5 * knot[0] +  1.5 * knot[1] + -1.5 * knot[2] +  0.5 * knot[3];
         auto c2 =  1.0 * knot[0] + -2.5 * knot[1] +  2.0 * knot[2] + -0.5 * knot[3];
