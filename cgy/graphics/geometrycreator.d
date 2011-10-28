@@ -43,7 +43,7 @@ struct GraphicsRegion
 struct GRVertex{
     vec3f vertex;
     vec3f texcoord;
-    float light;
+    float light = 0;
 };
 
 struct GRFace{
@@ -112,8 +112,8 @@ class GeometryCreator : Module, WorldListener
             vec3f tileTexCoord = settings.getTileCoords(tileId);
             foreach(ref vert ; f.quad){
                 vert.texcoord = vert.texcoord * tileTexSize + tileTexCoord;
-                vert.light = cast(float)t.lightValue / cast(float)MaxLightStrength;
-                //vert.light = 1.f;
+                //vert.light = cast(float)t.lightValue / cast(float)MaxLightStrength;
+                vert.light = 0.f;
             }
         }
         
@@ -122,6 +122,7 @@ class GeometryCreator : Module, WorldListener
         // within a specified area, for fast access instead of getTile all the time.
         foreach( pos ; RangeFromTo (min.value, max.value)) {
             auto tile = world.getTile(TilePos(pos), false);
+            newFace.quad[0].light = 0;
            if (!tile.valid)  {
                 continue;
             }
@@ -163,75 +164,162 @@ class GeometryCreator : Module, WorldListener
             auto y = pos.Y;
             auto z = pos.Z;
             if (Xp) {
-                newFace.quad[0].vertex.set(x+1, y, z+1);
-                newFace.quad[1].vertex.set(x+1, y, z);
-                newFace.quad[2].vertex.set(x+1, y+1, z);
-                newFace.quad[3].vertex.set(x+1, y+1, z+1);
+                newFace.quad[0].vertex.set(x+1, y, z+1); //Upper 'hither' corner
+                newFace.quad[1].vertex.set(x+1, y, z); //Lower 'hither' corner
+                newFace.quad[2].vertex.set(x+1, y+1, z); //Lower farther corner
+                newFace.quad[3].vertex.set(x+1, y+1, z+1); //upper farther corner
                 newFace.quad[0].texcoord.set(0, 0, 0);
                 newFace.quad[1].texcoord.set(0, 1, 0);
                 newFace.quad[2].texcoord.set(1, 1, 0);
                 newFace.quad[3].texcoord.set(1, 0, 0);
                 fixTex(newFace, tile, true, false);
+
+                float v00 = world.getTile(TilePos(pos+vec3i(1,-1,-1)), false).lightValue;
+                float v01 = world.getTile(TilePos(pos+vec3i(1,-1, 0)), false).lightValue;
+                float v02 = world.getTile(TilePos(pos+vec3i(1,-1, 1)), false).lightValue;
+                float v10 = world.getTile(TilePos(pos+vec3i(1, 0,-1)), false).lightValue;
+                float v11 = tileXp.lightValue;
+                float v12 = world.getTile(TilePos(pos+vec3i(1, 0, 1)), false).lightValue;
+                float v20 = world.getTile(TilePos(pos+vec3i(1, 1,-1)), false).lightValue;
+                float v21 = world.getTile(TilePos(pos+vec3i(1, 1, 0)), false).lightValue;
+                float v22 = world.getTile(TilePos(pos+vec3i(1, 1, 1)), false).lightValue;
+
+                newFace.quad[0].light = (v02+v01+v12+v11)/(4.0*MaxLightStrength);
+                newFace.quad[1].light = (v01+v00+v11+v10)/(4.0*MaxLightStrength);
+                newFace.quad[2].light = (v11+v10+v21+v20)/(4.0*MaxLightStrength);
+                newFace.quad[3].light = (v12+v11+v22+v21)/(4.0*MaxLightStrength);
                 faceList ~= newFace;
             }
             if (Xn) {
-                newFace.quad[0].vertex.set(x, y, z);
-                newFace.quad[1].vertex.set(x, y, z+1);
-                newFace.quad[2].vertex.set(x, y+1, z+1);
-                newFace.quad[3].vertex.set(x, y+1, z);
+                newFace.quad[0].vertex.set(x, y, z); //Lower hither
+                newFace.quad[1].vertex.set(x, y, z+1); //Upper hither
+                newFace.quad[2].vertex.set(x, y+1, z+1); //Upper farther
+                newFace.quad[3].vertex.set(x, y+1, z); //Lower farther
                 newFace.quad[0].texcoord.set(0, 1, 0);
                 newFace.quad[1].texcoord.set(0, 0, 0);
                 newFace.quad[2].texcoord.set(1, 0, 0);
                 newFace.quad[3].texcoord.set(1, 1, 0);
                 fixTex(newFace, tile, true, false);
+
+                float v00 = world.getTile(TilePos(pos+vec3i(-1,-1,-1)), false).lightValue;
+                float v01 = world.getTile(TilePos(pos+vec3i(-1,-1, 0)), false).lightValue;
+                float v02 = world.getTile(TilePos(pos+vec3i(-1,-1, 1)), false).lightValue;
+                float v10 = world.getTile(TilePos(pos+vec3i(-1, 0,-1)), false).lightValue;
+                float v11 = tileXn.lightValue;
+                float v12 = world.getTile(TilePos(pos+vec3i(-1, 0, 1)), false).lightValue;
+                float v20 = world.getTile(TilePos(pos+vec3i(-1, 1,-1)), false).lightValue;
+                float v21 = world.getTile(TilePos(pos+vec3i(-1, 1, 0)), false).lightValue;
+                float v22 = world.getTile(TilePos(pos+vec3i(-1, 1, 1)), false).lightValue;
+
+                newFace.quad[0].light = (v01+v00+v11+v10)/(4.0*MaxLightStrength);
+                newFace.quad[1].light = (v02+v01+v12+v11)/(4.0*MaxLightStrength);
+                newFace.quad[2].light = (v12+v11+v22+v21)/(4.0*MaxLightStrength);
+                newFace.quad[3].light = (v11+v10+v21+v20)/(4.0*MaxLightStrength);
                 faceList ~= newFace;
             }
             if (Yp) {
-                newFace.quad[0].vertex.set(x, y+1, z);
-                newFace.quad[1].vertex.set(x, y+1, z+1);
-                newFace.quad[2].vertex.set(x+1, y+1, z+1);
-                newFace.quad[3].vertex.set(x+1, y+1, z);
+                newFace.quad[0].vertex.set(x, y+1, z); //Lower hither
+                newFace.quad[1].vertex.set(x, y+1, z+1); //Upper hither
+                newFace.quad[2].vertex.set(x+1, y+1, z+1); //Upper farther
+                newFace.quad[3].vertex.set(x+1, y+1, z); //Lower father
                 newFace.quad[0].texcoord.set(0, 1, 0);
                 newFace.quad[1].texcoord.set(0, 0, 0);
                 newFace.quad[2].texcoord.set(1, 0, 0);
                 newFace.quad[3].texcoord.set(1, 1, 0);
                 fixTex(newFace, tile, true, false);
+
+                float v00 = world.getTile(TilePos(pos+vec3i(-1, 1,-1)), false).lightValue;
+                float v01 = world.getTile(TilePos(pos+vec3i(-1, 1, 0)), false).lightValue;
+                float v02 = world.getTile(TilePos(pos+vec3i(-1, 1, 1)), false).lightValue;
+                float v10 = world.getTile(TilePos(pos+vec3i( 0, 1,-1)), false).lightValue;
+                float v11 = tileYp.lightValue;
+                float v12 = world.getTile(TilePos(pos+vec3i( 0, 1, 1)), false).lightValue;
+                float v20 = world.getTile(TilePos(pos+vec3i( 1, 1,-1)), false).lightValue;
+                float v21 = world.getTile(TilePos(pos+vec3i( 1, 1, 0)), false).lightValue;
+                float v22 = world.getTile(TilePos(pos+vec3i( 1, 1, 1)), false).lightValue;
+
+                newFace.quad[0].light = (v01+v00+v11+v10)/(4.0*MaxLightStrength);
+                newFace.quad[1].light = (v02+v01+v12+v11)/(4.0*MaxLightStrength);
+                newFace.quad[2].light = (v12+v11+v22+v21)/(4.0*MaxLightStrength);
+                newFace.quad[3].light = (v11+v10+v21+v20)/(4.0*MaxLightStrength);
                 faceList ~= newFace;
             }
             if (Yn) {
-                newFace.quad[0].vertex.set(x, y, z+1);
-                newFace.quad[1].vertex.set(x, y, z);
-                newFace.quad[2].vertex.set(x+1, y, z);
-                newFace.quad[3].vertex.set(x+1, y, z+1);
+                newFace.quad[0].vertex.set(x, y, z+1); //Hither upper
+                newFace.quad[1].vertex.set(x, y, z); //Hither lower
+                newFace.quad[2].vertex.set(x+1, y, z); //Father lower
+                newFace.quad[3].vertex.set(x+1, y, z+1); //Father uper
                 newFace.quad[0].texcoord.set(0, 0, 0);
                 newFace.quad[1].texcoord.set(0, 1, 0);
                 newFace.quad[2].texcoord.set(1, 1, 0);
                 newFace.quad[3].texcoord.set(1, 0, 0);
                 fixTex(newFace, tile, true, false);
+
+                float v00 = world.getTile(TilePos(pos+vec3i(-1,-1,-1)), false).lightValue;
+                float v01 = world.getTile(TilePos(pos+vec3i(-1,-1, 0)), false).lightValue;
+                float v02 = world.getTile(TilePos(pos+vec3i(-1,-1, 1)), false).lightValue;
+                float v10 = world.getTile(TilePos(pos+vec3i( 0,-1,-1)), false).lightValue;
+                float v11 = tileYn.lightValue;
+                float v12 = world.getTile(TilePos(pos+vec3i( 0,-1, 1)), false).lightValue;
+                float v20 = world.getTile(TilePos(pos+vec3i( 1,-1,-1)), false).lightValue;
+                float v21 = world.getTile(TilePos(pos+vec3i( 1,-1, 0)), false).lightValue;
+                float v22 = world.getTile(TilePos(pos+vec3i( 1,-1, 1)), false).lightValue;
+                
+                newFace.quad[0].light = (v02+v01+v12+v11)/(4.0*MaxLightStrength);
+                newFace.quad[1].light = (v01+v00+v11+v10)/(4.0*MaxLightStrength);
+                newFace.quad[2].light = (v11+v10+v21+v20)/(4.0*MaxLightStrength);
+                newFace.quad[3].light = (v12+v11+v22+v21)/(4.0*MaxLightStrength);
+
                 faceList ~= newFace;
             }
             if (Zp) {
-                newFace.quad[0].vertex.set(x, y+1, z+1);
-                newFace.quad[1].vertex.set(x, y, z+1);
-                newFace.quad[2].vertex.set(x+1, y, z+1);
-                newFace.quad[3].vertex.set(x+1, y+1, z+1);
+                newFace.quad[0].vertex.set(x, y+1, z+1); //Hither upper
+                newFace.quad[1].vertex.set(x, y, z+1); //Hither lower
+                newFace.quad[2].vertex.set(x+1, y, z+1); //Farther lower
+                newFace.quad[3].vertex.set(x+1, y+1, z+1); //Farther upper
                 newFace.quad[0].texcoord.set(0, 0, 0);
                 newFace.quad[1].texcoord.set(0, 1, 0);
                 newFace.quad[2].texcoord.set(1, 1, 0);
                 newFace.quad[3].texcoord.set(1, 0, 0);
                 fixTex(newFace, tile, false, true);
+                float v00 = world.getTile(TilePos(pos+vec3i(-1,-1, 1)), false).lightValue;
+                float v01 = world.getTile(TilePos(pos+vec3i(-1, 0, 1)), false).lightValue;
+                float v02 = world.getTile(TilePos(pos+vec3i(-1, 1, 1)), false).lightValue;
+                float v10 = world.getTile(TilePos(pos+vec3i( 0,-1, 1)), false).lightValue;
+                float v11 = tileZp.lightValue;
+                float v12 = world.getTile(TilePos(pos+vec3i( 0, 1, 1)), false).lightValue;
+                float v20 = world.getTile(TilePos(pos+vec3i( 1,-1, 1)), false).lightValue;
+                float v21 = world.getTile(TilePos(pos+vec3i( 1, 0, 1)), false).lightValue;
+                float v22 = world.getTile(TilePos(pos+vec3i( 1, 1, 1)), false).lightValue;
+                newFace.quad[0].light = (v02+v01+v12+v11)/(4.0*MaxLightStrength);
+                newFace.quad[1].light = (v01+v00+v11+v10)/(4.0*MaxLightStrength);
+                newFace.quad[2].light = (v11+v10+v21+v20)/(4.0*MaxLightStrength);
+                newFace.quad[3].light = (v12+v11+v22+v21)/(4.0*MaxLightStrength);
                 faceList ~= newFace;
             }
             if (Zn) {
-                newFace.quad[0].vertex.set(x, y, z);
-                newFace.quad[1].vertex.set(x, y+1, z);
-                newFace.quad[2].vertex.set(x+1, y+1, z);
-                newFace.quad[3].vertex.set(x+1, y, z);
+                newFace.quad[0].vertex.set(x, y, z); //hiether lower
+                newFace.quad[1].vertex.set(x, y+1, z); //hither upper
+                newFace.quad[2].vertex.set(x+1, y+1, z); //father upper
+                newFace.quad[3].vertex.set(x+1, y, z); //father lower
                 newFace.quad[0].texcoord.set(0, 0, 0);
                 newFace.quad[1].texcoord.set(0, 1, 0);
                 newFace.quad[2].texcoord.set(1, 1, 0);
                 newFace.quad[3].texcoord.set(1, 0, 0);
                 fixTex(newFace, tile, false, false);
+                float v00 = world.getTile(TilePos(pos+vec3i(-1,-1,-1)), false).lightValue;
+                float v01 = world.getTile(TilePos(pos+vec3i(-1, 0,-1)), false).lightValue;
+                float v02 = world.getTile(TilePos(pos+vec3i(-1, 1,-1)), false).lightValue;
+                float v10 = world.getTile(TilePos(pos+vec3i( 0,-1,-1)), false).lightValue;
+                float v11 = tileZn.lightValue;
+                float v12 = world.getTile(TilePos(pos+vec3i( 0, 1,-1)), false).lightValue;
+                float v20 = world.getTile(TilePos(pos+vec3i( 1,-1,-1)), false).lightValue;
+                float v21 = world.getTile(TilePos(pos+vec3i( 1, 0,-1)), false).lightValue;
+                float v22 = world.getTile(TilePos(pos+vec3i( 1, 1,-1)), false).lightValue;
+                newFace.quad[0].light = (v01+v00+v11+v10)/(4.0*MaxLightStrength);
+                newFace.quad[1].light = (v02+v01+v12+v11)/(4.0*MaxLightStrength);
+                newFace.quad[2].light = (v12+v11+v22+v21)/(4.0*MaxLightStrength);
+                newFace.quad[3].light = (v11+v10+v21+v20)/(4.0*MaxLightStrength);
                 faceList ~= newFace;
             }
         }

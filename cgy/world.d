@@ -911,35 +911,37 @@ private mixin template LightStorageMethods() {
         auto lights = getAffectingLights(min, max);
 
 
+        TileSet open = new TileSet;
         foreach(light ; lights) {
             auto startTile = TilePos(convert!int(light.position));
-            TileSet open = new TileSet(data(startTile, light.strength));
-            TileSet current= new TileSet;
-            TileSet closed = new TileSet;
-            while (!open.empty) {
-                swap(open, current);
-                while (!current.empty) {
-                    auto d = current.removeAny();
-                    closed.insert(d);
-                    auto tilePos = d.p;
-                    auto tile = getTile(tilePos);
-                    tile.lightValue = cast(byte)((cast(byte)tile.lightValue) + (cast(byte)d.strength));
-                    if(within(tilePos.value, min.value, max.value)){
-                        setTileLightVal(tilePos, tile.lightValue);
-                        //setTile(tilePos, tile);
-                    }
-                    //notifyTileChange(tilePos);
-                    if (d.strength == 1) {
-                        continue;
-                    }
-                    if(tile.type != TileTypeAir) {
-                        continue;
-                    }
-                    foreach(neighbor ; neighbors(tilePos)) {
-                        auto tmp = data(neighbor, 0);
-                        if(!(tmp in closed) && !(tmp in current)){
-                            open.insert(data(neighbor, cast(byte)(d.strength-1)));
-                        }
+            open.insert(data(startTile, light.strength));
+        }
+        TileSet current= new TileSet;
+        TileSet closed = new TileSet;
+        while (!open.empty) {
+            swap(open, current);
+            while (!current.empty) {
+                auto d = current.removeAny();
+                closed.insert(d);
+                auto tilePos = d.p;
+                auto tile = getTile(tilePos);
+                if (tile.type != TileTypeAir) continue;
+                tile.lightValue = cast(byte)((cast(byte)tile.lightValue) + (cast(byte)d.strength));
+                if(within(tilePos.value, min.value, max.value)){
+                    setTileLightVal(tilePos, tile.lightValue);
+                    //setTile(tilePos, tile);
+                }
+                //notifyTileChange(tilePos);
+                if (d.strength == 1) {
+                    continue;
+                }
+                if(tile.type != TileTypeAir) {
+                    continue;
+                }
+                foreach(neighbor ; neighbors(tilePos)) {
+                    auto tmp = data(neighbor, 0);
+                    if(!(tmp in closed) && !(tmp in current)){
+                        open.insert(data(neighbor, cast(byte)(d.strength-1)));
                     }
                 }
             }
