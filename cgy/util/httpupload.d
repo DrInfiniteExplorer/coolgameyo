@@ -11,7 +11,7 @@ import std.stream;
 
 
 
-string sendFile(string host, int port, string path, string name, string filename, char[] data, string returnWhat=null) {
+string sendFile(string host, int port, string path, string name, string filename, char[] data, string returnWhat=null, string mime="application/octet-stream") {
     Socket sock = new TcpSocket(new InternetAddress("luben.se", 80));
     scope(exit) sock.close();
     Stream ss   = new SocketStream(sock);
@@ -19,7 +19,7 @@ string sendFile(string host, int port, string path, string name, string filename
     char[] Body =
         "--AaB03x\r\n"
         "content-disposition: form-data; name=\""~name~"\"; filename=\""~filename~"\"\r\n"
-        "Content-Type: application/octet-stream\r\n" ~
+        "Content-Type: "~mime~"\r\n" ~
     
         //"Content-Length: " ~to!string(data.length)~"\r\n"
         "\r\n"

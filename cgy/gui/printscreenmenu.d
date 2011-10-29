@@ -27,16 +27,18 @@ import util.rect;
 import util.util;
 
 class PrintScreenMenu : GuiElementWindow {
-    GuiElement guiSystem;
+    GuiSystem guiSystem;
     MainMenu main;
     GuiElementButton wikiButt, sendfileButt, fileButt, okButt;
     GuiElementEditbox nameBox;
+    GuiEventDump dump;
 
     Image img;
     this(MainMenu m) {
         img = screenCap();
         main = m;
-        guiSystem = m.getGuiSystem();
+        guiSystem = cast(GuiSystem)m.getGuiSystem();
+        dump = guiSystem.setEventDump(null);
 
         super(guiSystem, Rectd(vec2d(0.0, 0.0), vec2d(1.0, 1.0)), "Printscreen Menu~~~!", false, false);
         //*
@@ -46,10 +48,11 @@ class PrintScreenMenu : GuiElementWindow {
         sendfileButt = new GuiElementButton(this, Rectd(vec2d(0.1, 0.45), vec2d(0.3, 0.10)), "Sendfile", onClick(&onSendfile));
         fileButt = new GuiElementButton(this, Rectd(vec2d(0.1, 0.60), vec2d(0.3, 0.10)), "File", onClick(&onFile));
 
-        main.setVisible(false);
+        //main.setVisible(false);
     }
 
     override void destroy() {
+        guiSystem.setEventDump(dump);
         super.destroy();
     }
 
@@ -64,7 +67,7 @@ class PrintScreenMenu : GuiElementWindow {
             closeButt();
 
             nameBox = new GuiElementEditbox(this, Rectd(vec2d(0.10, 0.35), vec2d(0.3, 0.05)), "ImgName.png",); //TODO: <-- ending with ,) ?
-            fileButt = new GuiElementButton(this, Rectd(vec2d(0.1, 0.60), vec2d(0.3, 0.10)), "Ok", (){cb(); main.setVisible(true); destroy();});
+            fileButt = new GuiElementButton(this, Rectd(vec2d(0.1, 0.60), vec2d(0.3, 0.10)), "Ok", (){cb(); /*main.setVisible(true);*/ destroy();});
         };  
     }
 
@@ -82,7 +85,7 @@ class PrintScreenMenu : GuiElementWindow {
     void onSendfile() {
         auto str = nameBox.getText();
         img.save("tmp_img.png");
-        auto response = sendFile("luben.se", 80, "/sendfile/index.php?upload=true", "file", str, cast(char[]) read("tmp_img.png"), "body");
+        auto response = sendFile("luben.se", 80, "/sendfile/index.php?upload=true", "file", str, cast(char[]) read("tmp_img.png"), "body", "image/png");
         if(response !is null) {
             auto ex = regex(r"File <a href='\?id=(\d+)'>");
             auto m = match(response, ex);

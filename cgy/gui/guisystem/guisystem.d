@@ -71,13 +71,14 @@ final class GuiSystem : GuiElement{
         hotkeys.remove(key);
     }
     
-    void setEventDump(GuiEventDump d)
+    GuiEventDump setEventDump(GuiEventDump d)
     in{
         if (d !is null) {
             enforce(eventDump is null, "eventDump !is null, programming erroooaaarr~~~!");
         }
     }
     body{
+        auto old = eventDump;
         if (eventDump !is null) {
             eventDump.activate(false);
         }
@@ -85,6 +86,7 @@ final class GuiSystem : GuiElement{
         if (eventDump !is null) {
             eventDump.activate(true);
         }
+        return old;
     }    
 
     override void setFocus(GuiElement e) {
