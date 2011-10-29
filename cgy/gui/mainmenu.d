@@ -14,6 +14,7 @@ import gui.loadscreen;
 import gui.newgamemenu;
 import gui.optionmenu;
 import gui.randommenu;
+import gui.printscreenmenu;
 import gui.worldview;
 import gui.unitcontrol;
 import settings;
@@ -49,6 +50,12 @@ class MainMenu : GuiElementWindow {
 //*/
         main = m;
         loadScreen = new LoadScreen(guiSystem);
+
+
+        void printScreen() {
+            new PrintScreenMenu(this);
+        }
+        guiSystem.addHotkey(SDLK_PRINT, &printScreen);
     }
     
     override void destroy() {

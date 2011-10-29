@@ -12,6 +12,7 @@ public import derelict.opengl.glext;
 
 import graphics.renderer;
 import graphics.font;
+import graphics.image;
 import settings;
 import util.util;
 
@@ -124,3 +125,9 @@ void enableVSync(bool enableVSync) {
     }
 }
 
+Image screenCap() {
+    Image img = Image(null, renderSettings.windowWidth, renderSettings.windowHeight);
+    glReadPixels(0, 0, renderSettings.windowWidth, renderSettings.windowHeight,
+                 GL_RGBA, GL_UNSIGNED_BYTE, img.imgData.ptr);
+    return img;
+}

@@ -392,23 +392,24 @@
     <File path="gui\guisystem\element.d" />
     <File path="gui\guisystem\guisystem.d" />
     <File path="gui\guisystem\image.d" />
+    <File path="gui\guisystem\listbox.d" />
     <File path="gui\guisystem\progressbar.d" />
     <File path="gui\guisystem\simplegraph.d" />
     <File path="gui\guisystem\slider.d" />
     <File path="gui\guisystem\text.d" />
     <File path="gui\guisystem\window.d" />
-    <File path="gui\guisystem\listbox.d" />
    </Folder>
    <File path="gui\all.d" />
+   <File path="gui\inventorywindow.d" />
    <File path="gui\loadscreen.d" />
    <File path="gui\mainmenu.d" />
    <File path="gui\newgamemenu.d" />
    <File path="gui\optionmenu.d" />
+   <File path="gui\printscreenmenu.d" />
    <File path="gui\randommenu.d" />
    <File path="gui\statistics.d" />
    <File path="gui\unitcontrol.d" />
    <File path="gui\worldview.d" />
-   <File path="gui\inventorywindow.d" />
   </Folder>
   <Folder name="modules">
    <File path="modules\ai.d" />
@@ -462,6 +463,7 @@
   </Folder>
   <Folder name="util">
    <File path="util\filesystem.d" />
+   <File path="util\httpupload.d" />
    <File path="util\intersect.d" />
    <File path="util\math.d" />
    <File path="util\queue.d" />
@@ -484,6 +486,7 @@
   <File path="entity.d" />
   <File path="entitytypemanager.d" />
   <File path="game.d" />
+  <File path="inventory.d" />
   <File path="json.d" />
   <File path="light.d" />
   <File path="main.d" />
@@ -495,6 +498,5 @@
   <File path="unit.d" />
   <File path="unittypemanager.d" />
   <File path="world.d" />
-  <File path="inventory.d" />
  </Folder>
 </DProject>

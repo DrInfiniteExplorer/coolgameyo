@@ -877,13 +877,11 @@ private mixin template LightStorageMethods() {
         auto sector = getSector(sectorNum);
         enforce(sector !is null, "Cant add lights to sectors that dont exist you dummy!");
         sector.addLight(light);
-        auto min = TilePos(tp.value - vec3i(MaxLightStrength,MaxLightStrength,MaxLightStrength));
-        auto max = TilePos(tp.value + vec3i(MaxLightStrength,MaxLightStrength,MaxLightStrength));
-        recalculateLight(min, max);
+        //auto min = TilePos(tp.value - vec3i(MaxLightStrength,MaxLightStrength,MaxLightStrength));
+        //auto max = TilePos(tp.value + vec3i(MaxLightStrength,MaxLightStrength,MaxLightStrength));
+        //recalculateLight(min, max);
+        recalculateLight(tp);
 
-        foreach(rel ; RangeFromTo(-1,1,-1, 1, -1, 1)) {
-            notifyTileChange(TilePos(tp.value + rel*vec3i(MaxLightStrength,MaxLightStrength,MaxLightStrength)));
-        }
     }
     void unsafeAddLight(LightSource light) {
         addLight(light);
@@ -892,6 +890,10 @@ private mixin template LightStorageMethods() {
     void recalculateLight(TilePos centre) {
         recalculateLight(TilePos(centre.value-vec3i(MaxLightStrength, MaxLightStrength, MaxLightStrength)), 
                          TilePos(centre.value+vec3i(MaxLightStrength, MaxLightStrength, MaxLightStrength)));
+
+        foreach(rel ; RangeFromTo(-1,1,-1, 1, -1, 1)) {
+            notifyTileChange(TilePos(centre.value + rel*vec3i(MaxLightStrength,MaxLightStrength,MaxLightStrength)));
+        }
     }
 
     void recalculateLight(TilePos min, TilePos max) {
