@@ -10,6 +10,7 @@ import std.datetime;
 import std.exception;
 import std.math;
 import std.stdio;
+import std.string;
 version(Windows) import std.c.windows.windows; //TODO: What uses this?
 
 import derelict.opengl.gl;
@@ -48,6 +49,81 @@ struct GRVertex{
 
 struct GRFace{
     GRVertex[4] quad;
+}
+
+
+static const(string) FixLighting_map(const(string) one, const(string) two, const(string) three, const(string) four)
+    (const(string) key) {
+    string[string] map= [one : "0", two : "1", three : "2", four : "3"];
+    return map[key];
+}
+static const(string) FixLighting_get(int num, int dir, int which) pure {
+    string[int] map = [ 0 : "0", 1 : "1", 2 : "2", -1 : "-1"];
+    int div, mod;
+    div = (which/3) -1;
+    mod = (which%3) -1;
+    if(num == 0) { //X
+        //return format("%d, %d, %d", dir, which/3, mod);
+        return text(map[dir], ", ", map[div], ", ", map[mod]);
+    } else if(num == 1) { //Y
+        //return format("%d, %d, %d", div, dir, mod);
+        return text(map[div], ", ", map[dir], ", ", map[mod]);
+    } else if(num == 2) { //Z
+        //return format("%d, %d, %d", div, mod, dir);
+        return text(map[div], ", ", map[mod], ", ", map[dir]);
+    }
+    assert(0);
+}
+template FixLighting(const string A, const int num, const int dir, const string one, const string two, const string three, const string four) {
+    const char[] FixLighting = text("
+                                    if(0 == smoothMethod) {
+                                    newFace.quad[0].light = tile",A,".lightValue/cast(float)MaxLightStrength;
+                                    newFace.quad[1].light = tile",A,".lightValue/cast(float)MaxLightStrength;
+                                    newFace.quad[2].light = tile",A,".lightValue/cast(float)MaxLightStrength;
+                                    newFace.quad[3].light = tile",A,".lightValue/cast(float)MaxLightStrength;
+                                    } else if ( 1 == smoothMethod) {
+                                    float v00 = world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 0),")), false).lightValue;
+                                    float v01 = world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 1),")), false).lightValue;
+                                    float v02 = world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 2),")), false).lightValue;
+                                    float v10 = world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 3),")), false).lightValue;
+                                    float v11 = tile",A,".lightValue;
+                                    float v12 = world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 5),")), false).lightValue;
+                                    float v20 = world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 6),")), false).lightValue;
+                                    float v21 = world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 7),")), false).lightValue;
+                                    float v22 = world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 8),")), false).lightValue;
+
+                                    newFace.quad[",FixLighting_map!(one,two,three,four)("UH"),"].light = (v02+v01+v12+v11)/(4.0*MaxLightStrength); //UH
+                                    newFace.quad[",FixLighting_map!(one,two,three,four)("LH"),"].light = (v01+v00+v11+v10)/(4.0*MaxLightStrength); //LH
+                                    newFace.quad[",FixLighting_map!(one,two,three,four)("LF"),"].light = (v11+v10+v21+v20)/(4.0*MaxLightStrength); //LF
+                                    newFace.quad[",FixLighting_map!(one,two,three,four)("UF"),"].light = (v12+v11+v22+v21)/(4.0*MaxLightStrength); //UF
+                                    } else if ( 2 == smoothMethod) {
+                                    auto t00= world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 0),")), false);
+                                    auto t01= world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 1),")), false);
+                                    auto t02= world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 2),")), false);
+                                    auto t10= world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 4),")), false);
+                                    auto t11= tile",A,";
+                                    auto t12= world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 5),")), false);
+                                    auto t20= world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 6),")), false);
+                                    auto t21= world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 7),")), false);
+                                    auto t22= world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 8),")), false);
+
+                                    float v00 = t00.isAir ? t00.lightValue : 0;
+                                    float v01 = t01.isAir ? t01.lightValue : 0;
+                                    float v02 = t02.isAir ? t02.lightValue : 0;
+                                    float v10 = t10.isAir ? t10.lightValue : 0;
+                                    float v11 = t11.isAir ? t11.lightValue : 0;
+                                    float v12 = t12.isAir ? t12.lightValue : 0;
+                                    float v20 = t20.isAir ? t20.lightValue : 0;
+                                    float v21 = t21.isAir ? t21.lightValue : 0;
+                                    float v22 = t22.isAir ? t22.lightValue : 0;
+
+                                    newFace.quad[",FixLighting_map!(one,two,three,four)("UH"),"].light = (v02+v01+v12+v11)/(count(t02.isAir, t01.isAir, t12.isAir)*MaxLightStrength); //UH
+                                    newFace.quad[",FixLighting_map!(one,two,three,four)("LH"),"].light = (v01+v00+v11+v10)/(count(t01.isAir, t00.isAir, t10.isAir)*MaxLightStrength); //LH
+                                    newFace.quad[",FixLighting_map!(one,two,three,four)("LF"),"].light = (v11+v10+v21+v20)/(count(t10.isAir, t21.isAir, t20.isAir)*MaxLightStrength); //LF
+                                    newFace.quad[",FixLighting_map!(one,two,three,four)("UF"),"].light = (v12+v11+v22+v21)/(count(t12.isAir, t22.isAir, t21.isAir)*MaxLightStrength); //UF
+                                    }
+                                    ");
+    // */
 }
 
 
@@ -116,7 +192,13 @@ class GeometryCreator : Module, WorldListener
                 vert.light = 0.f;
             }
         }
-        
+
+        int smoothMethod = renderSettings.smoothSetting;
+        float count(bool a, bool b, bool c) {
+            return 1 + (a?1:0) + (b?1:0) + (c?1:0);
+        }
+
+
         //Will iterate trough all tiles within this graphregion.
         //TODO: Implement a method in world, which returns a collection of all tiles
         // within a specified area, for fast access instead of getTile all the time.
@@ -126,7 +208,7 @@ class GeometryCreator : Module, WorldListener
            if (!tile.valid)  {
                 continue;
             }
-            if (tile.type == TileTypeAir) {
+            if (tile.isAir) {
                 continue;
             }            
             if (!tile.seen) {
@@ -153,12 +235,12 @@ class GeometryCreator : Module, WorldListener
                 Zp = tileZp.type <= TileTypeAir;
                 Zn = tileZn.type <= TileTypeAir;
             } else {
-                Xp = tileXp.type == TileTypeAir;
-                Xn = tileXn.type == TileTypeAir;
-                Yp = tileYp.type == TileTypeAir;
-                Yn = tileYn.type == TileTypeAir;
-                Zp = tileZp.type == TileTypeAir;
-                Zn = tileZn.type == TileTypeAir;
+                Xp = tileXp.isAir;
+                Xn = tileXn.isAir;
+                Yp = tileYp.isAir;
+                Yn = tileYn.isAir;
+                Zp = tileZp.isAir;
+                Zn = tileZn.isAir;
             }
             auto x = pos.X;
             auto y = pos.Y;
@@ -173,21 +255,56 @@ class GeometryCreator : Module, WorldListener
                 newFace.quad[2].texcoord.set(1, 1, 0);
                 newFace.quad[3].texcoord.set(1, 0, 0);
                 fixTex(newFace, tile, true, false);
+                /*
+                if(0 == smoothMethod) {
+                    newFace.quad[0].light = tileXp.lightValue/cast(float)MaxLightStrength;
+                    newFace.quad[1].light = tileXp.lightValue/cast(float)MaxLightStrength;
+                    newFace.quad[2].light = tileXp.lightValue/cast(float)MaxLightStrength;
+                    newFace.quad[3].light = tileXp.lightValue/cast(float)MaxLightStrength;
+                } else if ( 1 == smoothMethod) {
+                    float v00 = world.getTile(TilePos(pos+vec3i(1,-1,-1)), false).lightValue;
+                    float v01 = world.getTile(TilePos(pos+vec3i(1,-1, 0)), false).lightValue;
+                    float v02 = world.getTile(TilePos(pos+vec3i(1,-1, 1)), false).lightValue;
+                    float v10 = world.getTile(TilePos(pos+vec3i(1, 0,-1)), false).lightValue;
+                    float v11 = tileXp.lightValue;
+                    float v12 = world.getTile(TilePos(pos+vec3i(1, 0, 1)), false).lightValue;
+                    float v20 = world.getTile(TilePos(pos+vec3i(1, 1,-1)), false).lightValue;
+                    float v21 = world.getTile(TilePos(pos+vec3i(1, 1, 0)), false).lightValue;
+                    float v22 = world.getTile(TilePos(pos+vec3i(1, 1, 1)), false).lightValue;
 
-                float v00 = world.getTile(TilePos(pos+vec3i(1,-1,-1)), false).lightValue;
-                float v01 = world.getTile(TilePos(pos+vec3i(1,-1, 0)), false).lightValue;
-                float v02 = world.getTile(TilePos(pos+vec3i(1,-1, 1)), false).lightValue;
-                float v10 = world.getTile(TilePos(pos+vec3i(1, 0,-1)), false).lightValue;
-                float v11 = tileXp.lightValue;
-                float v12 = world.getTile(TilePos(pos+vec3i(1, 0, 1)), false).lightValue;
-                float v20 = world.getTile(TilePos(pos+vec3i(1, 1,-1)), false).lightValue;
-                float v21 = world.getTile(TilePos(pos+vec3i(1, 1, 0)), false).lightValue;
-                float v22 = world.getTile(TilePos(pos+vec3i(1, 1, 1)), false).lightValue;
+                    newFace.quad[0].light = (v02+v01+v12+v11)/(4.0*MaxLightStrength);
+                    newFace.quad[1].light = (v01+v00+v11+v10)/(4.0*MaxLightStrength);
+                    newFace.quad[2].light = (v11+v10+v21+v20)/(4.0*MaxLightStrength);
+                    newFace.quad[3].light = (v12+v11+v22+v21)/(4.0*MaxLightStrength);
+                } else if ( 2 == smoothMethod) {
+                    auto t00= world.getTile(TilePos(pos+vec3i(1,-1,-1)), false);
+                    auto t01= world.getTile(TilePos(pos+vec3i(1,-1, 0)), false);
+                    auto t02= world.getTile(TilePos(pos+vec3i(1,-1, 1)), false);
+                    auto t10= world.getTile(TilePos(pos+vec3i(1, 0,-1)), false);
+                    auto t11= tileXp;
+                    auto t12= world.getTile(TilePos(pos+vec3i(1, 0, 1)), false);
+                    auto t20= world.getTile(TilePos(pos+vec3i(1, 1,-1)), false);
+                    auto t21= world.getTile(TilePos(pos+vec3i(1, 1, 0)), false);
+                    auto t22= world.getTile(TilePos(pos+vec3i(1, 1, 1)), false);
 
-                newFace.quad[0].light = (v02+v01+v12+v11)/(4.0*MaxLightStrength);
-                newFace.quad[1].light = (v01+v00+v11+v10)/(4.0*MaxLightStrength);
-                newFace.quad[2].light = (v11+v10+v21+v20)/(4.0*MaxLightStrength);
-                newFace.quad[3].light = (v12+v11+v22+v21)/(4.0*MaxLightStrength);
+                    float v00 = t00.isAir ? t00.lightValue : 0;
+                    float v01 = t01.isAir ? t01.lightValue : 0;
+                    float v02 = t02.isAir ? t02.lightValue : 0;
+                    float v10 = t10.isAir ? t10.lightValue : 0;
+                    float v11 = t11.isAir ? t11.lightValue : 0;
+                    float v12 = t12.isAir ? t12.lightValue : 0;
+                    float v20 = t20.isAir ? t20.lightValue : 0;
+                    float v21 = t21.isAir ? t21.lightValue : 0;
+                    float v22 = t22.isAir ? t22.lightValue : 0;
+
+                    newFace.quad[0].light = (v02+v01+v12+v11)/(count(t02.isAir, t01.isAir, t12.isAir)*MaxLightStrength);
+                    newFace.quad[1].light = (v01+v00+v11+v10)/(count(t01.isAir, t00.isAir, t10.isAir)*MaxLightStrength);
+                    newFace.quad[2].light = (v11+v10+v21+v20)/(count(t10.isAir, t21.isAir, t20.isAir)*MaxLightStrength);
+                    newFace.quad[3].light = (v12+v11+v22+v21)/(count(t12.isAir, t22.isAir, t21.isAir)*MaxLightStrength);
+                }*/
+
+                mixin(FixLighting!("Xp", 0, 1, "UH", "LH", "LF", "UF"));
+
                 faceList ~= newFace;
             }
             if (Xn) {
@@ -200,21 +317,31 @@ class GeometryCreator : Module, WorldListener
                 newFace.quad[2].texcoord.set(1, 0, 0);
                 newFace.quad[3].texcoord.set(1, 1, 0);
                 fixTex(newFace, tile, true, false);
+                /*
+                if(0 == smoothMethod) {
+                    newFace.quad[0].light = tileXn.lightValue/cast(float)MaxLightStrength;
+                    newFace.quad[1].light = tileXn.lightValue/cast(float)MaxLightStrength;
+                    newFace.quad[2].light = tileXn.lightValue/cast(float)MaxLightStrength;
+                    newFace.quad[3].light = tileXn.lightValue/cast(float)MaxLightStrength;
+                } else if ( 1 == smoothMethod) {
 
-                float v00 = world.getTile(TilePos(pos+vec3i(-1,-1,-1)), false).lightValue;
-                float v01 = world.getTile(TilePos(pos+vec3i(-1,-1, 0)), false).lightValue;
-                float v02 = world.getTile(TilePos(pos+vec3i(-1,-1, 1)), false).lightValue;
-                float v10 = world.getTile(TilePos(pos+vec3i(-1, 0,-1)), false).lightValue;
-                float v11 = tileXn.lightValue;
-                float v12 = world.getTile(TilePos(pos+vec3i(-1, 0, 1)), false).lightValue;
-                float v20 = world.getTile(TilePos(pos+vec3i(-1, 1,-1)), false).lightValue;
-                float v21 = world.getTile(TilePos(pos+vec3i(-1, 1, 0)), false).lightValue;
-                float v22 = world.getTile(TilePos(pos+vec3i(-1, 1, 1)), false).lightValue;
+                    float v00 = world.getTile(TilePos(pos+vec3i(-1,-1,-1)), false).lightValue;
+                    float v01 = world.getTile(TilePos(pos+vec3i(-1,-1, 0)), false).lightValue;
+                    float v02 = world.getTile(TilePos(pos+vec3i(-1,-1, 1)), false).lightValue;
+                    float v10 = world.getTile(TilePos(pos+vec3i(-1, 0,-1)), false).lightValue;
+                    float v11 = tileXn.lightValue;
+                    float v12 = world.getTile(TilePos(pos+vec3i(-1, 0, 1)), false).lightValue;
+                    float v20 = world.getTile(TilePos(pos+vec3i(-1, 1,-1)), false).lightValue;
+                    float v21 = world.getTile(TilePos(pos+vec3i(-1, 1, 0)), false).lightValue;
+                    float v22 = world.getTile(TilePos(pos+vec3i(-1, 1, 1)), false).lightValue;
 
-                newFace.quad[0].light = (v01+v00+v11+v10)/(4.0*MaxLightStrength);
-                newFace.quad[1].light = (v02+v01+v12+v11)/(4.0*MaxLightStrength);
-                newFace.quad[2].light = (v12+v11+v22+v21)/(4.0*MaxLightStrength);
-                newFace.quad[3].light = (v11+v10+v21+v20)/(4.0*MaxLightStrength);
+                    newFace.quad[0].light = (v01+v00+v11+v10)/(4.0*MaxLightStrength);
+                    newFace.quad[1].light = (v02+v01+v12+v11)/(4.0*MaxLightStrength);
+                    newFace.quad[2].light = (v12+v11+v22+v21)/(4.0*MaxLightStrength);
+                    newFace.quad[3].light = (v11+v10+v21+v20)/(4.0*MaxLightStrength);
+                }*/
+                mixin(FixLighting!("Xn", 0,-1, "LH", "UH", "UF", "LF"));
+
                 faceList ~= newFace;
             }
             if (Yp) {
@@ -227,21 +354,32 @@ class GeometryCreator : Module, WorldListener
                 newFace.quad[2].texcoord.set(1, 0, 0);
                 newFace.quad[3].texcoord.set(1, 1, 0);
                 fixTex(newFace, tile, true, false);
+                /*
+                if(0 == smoothMethod) {
+                    newFace.quad[0].light = tileYp.lightValue/cast(float)MaxLightStrength;
+                    newFace.quad[1].light = tileYp.lightValue/cast(float)MaxLightStrength;
+                    newFace.quad[2].light = tileYp.lightValue/cast(float)MaxLightStrength;
+                    newFace.quad[3].light = tileYp.lightValue/cast(float)MaxLightStrength;
+                } else if ( 1 == smoothMethod) {
 
-                float v00 = world.getTile(TilePos(pos+vec3i(-1, 1,-1)), false).lightValue;
-                float v01 = world.getTile(TilePos(pos+vec3i(-1, 1, 0)), false).lightValue;
-                float v02 = world.getTile(TilePos(pos+vec3i(-1, 1, 1)), false).lightValue;
-                float v10 = world.getTile(TilePos(pos+vec3i( 0, 1,-1)), false).lightValue;
-                float v11 = tileYp.lightValue;
-                float v12 = world.getTile(TilePos(pos+vec3i( 0, 1, 1)), false).lightValue;
-                float v20 = world.getTile(TilePos(pos+vec3i( 1, 1,-1)), false).lightValue;
-                float v21 = world.getTile(TilePos(pos+vec3i( 1, 1, 0)), false).lightValue;
-                float v22 = world.getTile(TilePos(pos+vec3i( 1, 1, 1)), false).lightValue;
+                    float v00 = world.getTile(TilePos(pos+vec3i(-1, 1,-1)), false).lightValue;
+                    float v01 = world.getTile(TilePos(pos+vec3i(-1, 1, 0)), false).lightValue;
+                    float v02 = world.getTile(TilePos(pos+vec3i(-1, 1, 1)), false).lightValue;
+                    float v10 = world.getTile(TilePos(pos+vec3i( 0, 1,-1)), false).lightValue;
+                    float v11 = tileYp.lightValue;
+                    float v12 = world.getTile(TilePos(pos+vec3i( 0, 1, 1)), false).lightValue;
+                    float v20 = world.getTile(TilePos(pos+vec3i( 1, 1,-1)), false).lightValue;
+                    float v21 = world.getTile(TilePos(pos+vec3i( 1, 1, 0)), false).lightValue;
+                    float v22 = world.getTile(TilePos(pos+vec3i( 1, 1, 1)), false).lightValue;
 
-                newFace.quad[0].light = (v01+v00+v11+v10)/(4.0*MaxLightStrength);
-                newFace.quad[1].light = (v02+v01+v12+v11)/(4.0*MaxLightStrength);
-                newFace.quad[2].light = (v12+v11+v22+v21)/(4.0*MaxLightStrength);
-                newFace.quad[3].light = (v11+v10+v21+v20)/(4.0*MaxLightStrength);
+                    newFace.quad[0].light = (v01+v00+v11+v10)/(4.0*MaxLightStrength);
+                    newFace.quad[1].light = (v02+v01+v12+v11)/(4.0*MaxLightStrength);
+                    newFace.quad[2].light = (v12+v11+v22+v21)/(4.0*MaxLightStrength);
+                    newFace.quad[3].light = (v11+v10+v21+v20)/(4.0*MaxLightStrength);
+                }
+                */
+                mixin(FixLighting!("Yp", 1, 1, "LH", "UH", "UF", "LF"));
+
                 faceList ~= newFace;
             }
             if (Yn) {
@@ -254,21 +392,30 @@ class GeometryCreator : Module, WorldListener
                 newFace.quad[2].texcoord.set(1, 1, 0);
                 newFace.quad[3].texcoord.set(1, 0, 0);
                 fixTex(newFace, tile, true, false);
+                /*
+                if(0 == smoothMethod) {
+                    newFace.quad[0].light = tileYn.lightValue/cast(float)MaxLightStrength;
+                    newFace.quad[1].light = tileYn.lightValue/cast(float)MaxLightStrength;
+                    newFace.quad[2].light = tileYn.lightValue/cast(float)MaxLightStrength;
+                    newFace.quad[3].light = tileYn.lightValue/cast(float)MaxLightStrength;
+                } else if ( 1 == smoothMethod) {
 
-                float v00 = world.getTile(TilePos(pos+vec3i(-1,-1,-1)), false).lightValue;
-                float v01 = world.getTile(TilePos(pos+vec3i(-1,-1, 0)), false).lightValue;
-                float v02 = world.getTile(TilePos(pos+vec3i(-1,-1, 1)), false).lightValue;
-                float v10 = world.getTile(TilePos(pos+vec3i( 0,-1,-1)), false).lightValue;
-                float v11 = tileYn.lightValue;
-                float v12 = world.getTile(TilePos(pos+vec3i( 0,-1, 1)), false).lightValue;
-                float v20 = world.getTile(TilePos(pos+vec3i( 1,-1,-1)), false).lightValue;
-                float v21 = world.getTile(TilePos(pos+vec3i( 1,-1, 0)), false).lightValue;
-                float v22 = world.getTile(TilePos(pos+vec3i( 1,-1, 1)), false).lightValue;
+                    float v00 = world.getTile(TilePos(pos+vec3i(-1,-1,-1)), false).lightValue;
+                    float v01 = world.getTile(TilePos(pos+vec3i(-1,-1, 0)), false).lightValue;
+                    float v02 = world.getTile(TilePos(pos+vec3i(-1,-1, 1)), false).lightValue;
+                    float v10 = world.getTile(TilePos(pos+vec3i( 0,-1,-1)), false).lightValue;
+                    float v11 = tileYn.lightValue;
+                    float v12 = world.getTile(TilePos(pos+vec3i( 0,-1, 1)), false).lightValue;
+                    float v20 = world.getTile(TilePos(pos+vec3i( 1,-1,-1)), false).lightValue;
+                    float v21 = world.getTile(TilePos(pos+vec3i( 1,-1, 0)), false).lightValue;
+                    float v22 = world.getTile(TilePos(pos+vec3i( 1,-1, 1)), false).lightValue;
                 
-                newFace.quad[0].light = (v02+v01+v12+v11)/(4.0*MaxLightStrength);
-                newFace.quad[1].light = (v01+v00+v11+v10)/(4.0*MaxLightStrength);
-                newFace.quad[2].light = (v11+v10+v21+v20)/(4.0*MaxLightStrength);
-                newFace.quad[3].light = (v12+v11+v22+v21)/(4.0*MaxLightStrength);
+                    newFace.quad[0].light = (v02+v01+v12+v11)/(4.0*MaxLightStrength);
+                    newFace.quad[1].light = (v01+v00+v11+v10)/(4.0*MaxLightStrength);
+                    newFace.quad[2].light = (v11+v10+v21+v20)/(4.0*MaxLightStrength);
+                    newFace.quad[3].light = (v12+v11+v22+v21)/(4.0*MaxLightStrength);
+                }*/
+                mixin(FixLighting!("Yn", 1,-1, "UH", "LH", "LF", "UF"));
 
                 faceList ~= newFace;
             }
@@ -282,19 +429,29 @@ class GeometryCreator : Module, WorldListener
                 newFace.quad[2].texcoord.set(1, 1, 0);
                 newFace.quad[3].texcoord.set(1, 0, 0);
                 fixTex(newFace, tile, false, true);
-                float v00 = world.getTile(TilePos(pos+vec3i(-1,-1, 1)), false).lightValue;
-                float v01 = world.getTile(TilePos(pos+vec3i(-1, 0, 1)), false).lightValue;
-                float v02 = world.getTile(TilePos(pos+vec3i(-1, 1, 1)), false).lightValue;
-                float v10 = world.getTile(TilePos(pos+vec3i( 0,-1, 1)), false).lightValue;
-                float v11 = tileZp.lightValue;
-                float v12 = world.getTile(TilePos(pos+vec3i( 0, 1, 1)), false).lightValue;
-                float v20 = world.getTile(TilePos(pos+vec3i( 1,-1, 1)), false).lightValue;
-                float v21 = world.getTile(TilePos(pos+vec3i( 1, 0, 1)), false).lightValue;
-                float v22 = world.getTile(TilePos(pos+vec3i( 1, 1, 1)), false).lightValue;
-                newFace.quad[0].light = (v02+v01+v12+v11)/(4.0*MaxLightStrength);
-                newFace.quad[1].light = (v01+v00+v11+v10)/(4.0*MaxLightStrength);
-                newFace.quad[2].light = (v11+v10+v21+v20)/(4.0*MaxLightStrength);
-                newFace.quad[3].light = (v12+v11+v22+v21)/(4.0*MaxLightStrength);
+                /*
+                if(0 == smoothMethod) {
+                    newFace.quad[0].light = tileZp.lightValue/cast(float)MaxLightStrength;
+                    newFace.quad[1].light = tileZp.lightValue/cast(float)MaxLightStrength;
+                    newFace.quad[2].light = tileZp.lightValue/cast(float)MaxLightStrength;
+                    newFace.quad[3].light = tileZp.lightValue/cast(float)MaxLightStrength;
+                } else if ( 1 == smoothMethod) {
+                    float v00 = world.getTile(TilePos(pos+vec3i(-1,-1, 1)), false).lightValue;
+                    float v01 = world.getTile(TilePos(pos+vec3i(-1, 0, 1)), false).lightValue;
+                    float v02 = world.getTile(TilePos(pos+vec3i(-1, 1, 1)), false).lightValue;
+                    float v10 = world.getTile(TilePos(pos+vec3i( 0,-1, 1)), false).lightValue;
+                    float v11 = tileZp.lightValue;
+                    float v12 = world.getTile(TilePos(pos+vec3i( 0, 1, 1)), false).lightValue;
+                    float v20 = world.getTile(TilePos(pos+vec3i( 1,-1, 1)), false).lightValue;
+                    float v21 = world.getTile(TilePos(pos+vec3i( 1, 0, 1)), false).lightValue;
+                    float v22 = world.getTile(TilePos(pos+vec3i( 1, 1, 1)), false).lightValue;
+                    newFace.quad[0].light = (v02+v01+v12+v11)/(4.0*MaxLightStrength);
+                    newFace.quad[1].light = (v01+v00+v11+v10)/(4.0*MaxLightStrength);
+                    newFace.quad[2].light = (v11+v10+v21+v20)/(4.0*MaxLightStrength);
+                    newFace.quad[3].light = (v12+v11+v22+v21)/(4.0*MaxLightStrength);
+                }*/
+                mixin(FixLighting!("Zp", 2, 1, "UH", "LH", "LF", "UF"));
+
                 faceList ~= newFace;
             }
             if (Zn) {
@@ -307,19 +464,29 @@ class GeometryCreator : Module, WorldListener
                 newFace.quad[2].texcoord.set(1, 1, 0);
                 newFace.quad[3].texcoord.set(1, 0, 0);
                 fixTex(newFace, tile, false, false);
-                float v00 = world.getTile(TilePos(pos+vec3i(-1,-1,-1)), false).lightValue;
-                float v01 = world.getTile(TilePos(pos+vec3i(-1, 0,-1)), false).lightValue;
-                float v02 = world.getTile(TilePos(pos+vec3i(-1, 1,-1)), false).lightValue;
-                float v10 = world.getTile(TilePos(pos+vec3i( 0,-1,-1)), false).lightValue;
-                float v11 = tileZn.lightValue;
-                float v12 = world.getTile(TilePos(pos+vec3i( 0, 1,-1)), false).lightValue;
-                float v20 = world.getTile(TilePos(pos+vec3i( 1,-1,-1)), false).lightValue;
-                float v21 = world.getTile(TilePos(pos+vec3i( 1, 0,-1)), false).lightValue;
-                float v22 = world.getTile(TilePos(pos+vec3i( 1, 1,-1)), false).lightValue;
-                newFace.quad[0].light = (v01+v00+v11+v10)/(4.0*MaxLightStrength);
-                newFace.quad[1].light = (v02+v01+v12+v11)/(4.0*MaxLightStrength);
-                newFace.quad[2].light = (v12+v11+v22+v21)/(4.0*MaxLightStrength);
-                newFace.quad[3].light = (v11+v10+v21+v20)/(4.0*MaxLightStrength);
+                /*
+                if(0 == smoothMethod) {
+                    newFace.quad[0].light = tileZn.lightValue/cast(float)MaxLightStrength;
+                    newFace.quad[1].light = tileZn.lightValue/cast(float)MaxLightStrength;
+                    newFace.quad[2].light = tileZn.lightValue/cast(float)MaxLightStrength;
+                    newFace.quad[3].light = tileZn.lightValue/cast(float)MaxLightStrength;
+                } else if ( 1 == smoothMethod) {
+                    float v00 = world.getTile(TilePos(pos+vec3i(-1,-1,-1)), false).lightValue;
+                    float v01 = world.getTile(TilePos(pos+vec3i(-1, 0,-1)), false).lightValue;
+                    float v02 = world.getTile(TilePos(pos+vec3i(-1, 1,-1)), false).lightValue;
+                    float v10 = world.getTile(TilePos(pos+vec3i( 0,-1,-1)), false).lightValue;
+                    float v11 = tileZn.lightValue;
+                    float v12 = world.getTile(TilePos(pos+vec3i( 0, 1,-1)), false).lightValue;
+                    float v20 = world.getTile(TilePos(pos+vec3i( 1,-1,-1)), false).lightValue;
+                    float v21 = world.getTile(TilePos(pos+vec3i( 1, 0,-1)), false).lightValue;
+                    float v22 = world.getTile(TilePos(pos+vec3i( 1, 1,-1)), false).lightValue;
+                    newFace.quad[0].light = (v01+v00+v11+v10)/(4.0*MaxLightStrength);
+                    newFace.quad[1].light = (v02+v01+v12+v11)/(4.0*MaxLightStrength);
+                    newFace.quad[2].light = (v12+v11+v22+v21)/(4.0*MaxLightStrength);
+                    newFace.quad[3].light = (v11+v10+v21+v20)/(4.0*MaxLightStrength);
+                }
+                */
+                mixin(FixLighting!("Zn", 2,-1, "LH", "UH", "UF", "LF"));
                 faceList ~= newFace;
             }
         }

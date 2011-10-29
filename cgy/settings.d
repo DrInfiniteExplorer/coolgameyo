@@ -15,10 +15,11 @@ struct RenderSettings {
         bool enableVSync;
         bool mipLevelInterpolate = true; // Interpolate between mip-levels or not?
         bool textureInterpolate = false;  // pick nearest pixel or interpolate?
-        float anisotropy = 0; // set to max of this(uservalue)
+        float anisotropy = 1; // set to max of this(uservalue)
                               // and implementation limit sometime
         bool renderWireframe;
         bool renderInvalidTiles = false;
+        int smoothSetting = 2; // 0 = flat, 1 = smooth + AO, 2 = smooth - AO
         /* Derp derp derp */
 
         int pixelsPerTile = 16;

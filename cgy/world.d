@@ -758,7 +758,7 @@ class World {
 
                 scope (exit) block.setTile(tp, tile);
 
-                if (tile.transparent) {
+                if (tile.isAir) {
                     tile.seen = true;
                     if (rel.X == 0) {
                         if(toFloodFill.insert(
@@ -796,7 +796,7 @@ class World {
                 } else {
                     foreach (npos; neighbors(tp)) {
                         auto neighbor = getTile(npos, true);
-                        if (neighbor.valid && neighbor.transparent) {
+                        if (neighbor.valid && neighbor.isAir) {
                             tile.seen = true;
                             break;
                         }

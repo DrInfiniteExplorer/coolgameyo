@@ -396,7 +396,7 @@ static struct PathFindState {
                 return TilePos(tp.value - vec3i(0,0,1));
             }
             Tile tile(TilePos tp) { return world.getTile(tp, false); }
-            bool clear(TilePos tp) { return tile(tp).transparent; }
+            bool clear(TilePos tp) { return tile(tp).isAir; }
             bool pathable(TilePos tp) { return tile(tp).pathable; }
             bool solid(TilePos tp) { return !clear(tp); }
             bool avail(TilePos tp) { return pathable(tp) && clear(above(tp)); }

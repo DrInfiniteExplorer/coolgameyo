@@ -149,7 +149,7 @@ class FPSControlAI : UnitAI, CustomChange {
             foreach( ppp ; RangeFromTo(start, stop)) {
                 auto p = (axis * wallNum) + ppp;
                 auto tile = world.getTile(TilePos(p), false);
-                if (tile.type == TileTypeAir) {
+                if (tile.isAir) {
                     continue;
                 }
                 dir[idx] = axisDistanceToWall;
