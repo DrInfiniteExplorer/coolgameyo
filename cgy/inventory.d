@@ -4,6 +4,7 @@ module inventory;
 import std.exception;
 import std.stdio;
 
+import gui.guisystem.listbox;
 import json;
 import util.util;
 import world;
@@ -12,6 +13,7 @@ import entity;
 
 class Inventory {
 	Entity[] inventory;
+    GuiElementListBox *listBox;
 	
 	this(){
 		inventory.length = 5;
@@ -22,11 +24,19 @@ class Inventory {
 		while (i < inventory.length && !(inventory[i] is null)) {
 			i++;
 		}
-		if (i == inventory.length){
-			inventory.length += 5;
-		}
-		inventory[i] = entity;
-		Entity[] inventorya = inventory;
+        if (inventory[i] is null) {
+		    /*if (i == inventory.length){
+			    inventory.length += 5;
+		    }*/
+		    inventory[i] = entity;
+		
+            if (listBox !is null) {
+                listBox.addItem(entity.type.displayName, i);
+            }
+        }
+        else {
+            assert(0, "To implement later. The entity should stay in its previous container (inventory/sector)");
+        }
 	}
 }
 

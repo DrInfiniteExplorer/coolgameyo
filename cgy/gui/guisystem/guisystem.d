@@ -93,11 +93,7 @@ final class GuiSystem : GuiElement{
         if (e == focusElement) {
             return;
         }
-        if (focusElement) {
-            GuiEvent event;
-            event.type = GuiEventType.FocusOff;
-            focusElement.onEvent(event);
-        }
+        auto oldElement = focusElement;
         focusElement = e;
         if (focusElement) {
             GuiEvent event;
@@ -107,7 +103,17 @@ final class GuiSystem : GuiElement{
                     break;
                 }
                 focusElement = focusElement.getParent();
+                if (focusElement == oldElement) {
+                    return;
+                }
             }
+        }
+        //Lololol maybe problem layer (solves things loosing focus, then setting focus on text in them which is rejected)
+        // maybe add willAcceptFocus?()-functionality instead
+        if (oldElement) {
+            GuiEvent event;
+            event.type = GuiEventType.FocusOff;
+            oldElement.onEvent(event);
         }
     }
     

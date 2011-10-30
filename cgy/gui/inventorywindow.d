@@ -28,6 +28,7 @@ class InventoryWindow : GuiElementWindow {
     GuiSystem guiSystem;
     HyperUnitControlInterfaceInputManager ofDOOM;
 	GuiElementListBox listBox;
+    GuiElementComboBox comboBox;
 	
     this(GuiSystem g, HyperUnitControlInterfaceInputManager DOOM, Inventory* inventory) {
         guiSystem = g;
@@ -36,9 +37,16 @@ class InventoryWindow : GuiElementWindow {
 		
 		
         new GuiElementButton(this, Rectd(vec2d(0.75, 0.9), vec2d(0.2, 0.10)), "Back", &onBack);
-		listBox = new GuiElementInventoryListBox(this, Rectd(vec2d(0.0, 0.0), vec2d(1.0, 0.80)), 5, inventory);
-		//listBox.addItem("First!");
-		//listBox.addItem("Wololoo");
+		listBox = new GuiElementListBox(this, Rectd(vec2d(0.5, 0.0), vec2d(0.5, 0.80)), 30);
+        inventory.listBox = &listBox;
+
+        comboBox = new GuiElementComboBox(this, Rectd(vec2d(0.1, 0.1), vec2d(0.3, 0.09)));
+        comboBox.addItem("Item 1");
+        comboBox.addItem("Ett till");
+        comboBox.addItem("Wololooo");
+        comboBox.addItem("Sista");
+        comboBox.addItem("First!", 0);
+
         setVisible(false);
     }
     

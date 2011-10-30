@@ -1,8 +1,7 @@
-
-
 module gui.guisystem.listbox;
 
 import std.stdio;
+import std.exception;
 
 import gui.guisystem.guisystem;
 import gui.guisystem.text;
@@ -14,59 +13,95 @@ import entity;
 import inventory;
 
 class GuiElementListBox : public GuiElement {
+
 	private struct RowItem{
 		Recti rect;
 		GuiElementText text;
-		
-		void whyyyyyyy(GuiElementListBox asdf) { // Detta ar en konstruktor
-			rect = Recti();
-			text = new GuiElementText(asdf, vec2d(0, 0), "");
-		}
 	};
-    int nrOfRows;
-	int rowHeight;
 	RowItem[] rows;
 	
-	int selectedIndex;
+	int selectedIndex = -1; // -1 is no item selected
 	int nrOfItems = 0;
+    int rowHeight;
+
+    alias void delegate(int index) SelectionChangedCallback;
+    private SelectionChangedCallback selectionChangedCallback;
 	
-    this(GuiElement parent, Rectd relative, int _nrOfRows) {
+
+    this(GuiElement parent, Rectd relative, int _rowHeight, SelectionChangedCallback cb = null) {
         super(parent);
         setRelativeRect(relative);
-		nrOfRows = _nrOfRows;
-		rowHeight = cast(int)(absoluteRect.size.Y / nrOfRows);
-		rows = new RowItem[nrOfRows];
-		for (int i = 0; i < nrOfRows; i++){
-			rows[i].whyyyyyyy(this);
-		}
+        selectionChangedCallback = cb;
+		rowHeight = _rowHeight;
+		rows = new RowItem[0];
+    }
+
+
+
+    public string getSelectedItemText() {
+        if (selectedIndex == -1) return ""; // Maybe throw error instead??
+        return rows[selectedIndex].text.getText();
+    }
+    public int getSelectedItemIndex() {
+        return selectedIndex;
+    }
+    public string getText(int index) {
+        return rows[index].text.getText();
+    }
+
+    // Returns the first occurance of text
+    public int getIndex(string text) {
+        for (int i = 0; i < nrOfItems; i++) {
+            if (rows[i].text.getText() == text) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    public void selectItem(int index) {
+        selectedIndex = index;
+        if (selectionChangedCallback !is null) {
+            selectionChangedCallback(index);
+        }
+    }
+    public void setText(int index, string text) {
+        rows[index].text.setText(text);
+    }
+
+    public void addItem(string str, int index) {
+        if (nrOfItems == rows.length) rows.length = rows.length + 1;
+
+        for (int i = nrOfItems; i > index; i--) {
+            rows[i] = rows[i-1];
+        }
+        rows[index].text = new GuiElementText(this, vec2d(0, 0), str);
+        updateRowTextPos(index);
+        nrOfItems++;
+    }
+	public void addItem(string str) {
+        addItem(str, nrOfItems);
+	}
+    public void removeItem(int index) {
+        enforce(index < nrOfItems, "ListBox error: Tried to remove out of index");
+        if (index < selectedIndex) selectedIndex--;
+        else if (index == selectedIndex) selectedIndex = -1;
+        for (int a = index; a < nrOfItems; a++){
+            rows[a] = rows[a+1];
+        }
+        nrOfItems--;
     }
     
-	public void addItem(string str) {
-		rows[nrOfItems].rect = Recti(absoluteRect.start.X, absoluteRect.start.Y + nrOfItems * rowHeight,
-										absoluteRect.size.X, rowHeight);
-		rows[nrOfItems].text = new GuiElementText(this, vec2d(0, 0), str);
-		rows[nrOfItems].text.setAbsoluteRect(rows[nrOfItems].rect); 
-		nrOfItems++;
-	}
-	
-	public void removeItem(string str) {
-		for (int i = 0; i < nrOfItems; i++) {
-			if (rows[i].text.getText() == str) {
-				for (int a = i; a < nrOfItems; a++){
-					rows[a] = rows[a+1];
-				}
-				return;
-			}
-		}
-	}
-    
+
+
+
     override void render() {
         //Render background, etc, etc.
         
 		renderRect(absoluteRect, vec3f(0.7, 0.7, 0.7));
         renderOutlineRect(absoluteRect, vec3f(0.0, 0.0, 0.0));
 		
-		renderRect(rows[selectedIndex].rect, vec3f(0.7, 0.7, 0.9));
+        if (selectedIndex != -1) renderRect(rows[selectedIndex].rect, vec3f(0.7, 0.7, 0.9));
 		for (int i = 0; i < nrOfItems; i++) {
 			renderOutlineRect(rows[i].rect, vec3f(0.0, 0.0, 0.0));
 		}
@@ -80,9 +115,9 @@ class GuiElementListBox : public GuiElement {
             if(m.left) {
                 if (m.down) {
                     if(absoluteRect.isInside(m.pos)) {
-						for (int i = 0; i < nrOfRows; i++) {
+						for (int i = 0; i < nrOfItems; i++) {
 							if (rows[i].rect.isInside(m.pos)) {
-								selectedIndex = i;
+								selectItem(i);
 							}
 						}
                         return GuiEventResponse.Accept;
@@ -94,23 +129,39 @@ class GuiElementListBox : public GuiElement {
         }
         return super.onEvent(e);
     }
-}
 
+    private void updateRowTextPos(int index) {
+        rows[index].rect = Recti(absoluteRect.start.X, absoluteRect.start.Y + index * rowHeight,
+                                 absoluteRect.size.X, rowHeight);
+        rows[index].text.setAbsoluteRect(rows[index].rect); 
+        /*auto buttonSize = buttonText.getSize();
+        auto newTextRect = absoluteRect.centerRect(Recti(vec2i(0, 0), buttonSize));
+        buttonText.setAbsoluteRect(newTextRect);*/
+    }
+}
+/*
 class GuiElementInventoryListBox : GuiElementListBox {
 	Inventory* inventory;
 	
-    this(GuiElement parent, Rectd relative, int _nrOfRows, Inventory* inv) {
-        super(parent, relative, _nrOfRows);
+    this(GuiElement parent, Rectd relative, int _rowHeight, Inventory* inv) {
+        super(parent, relative, _rowHeight);
         inventory = inv;
     }
-	
-	override void render() {
-		for (int i = 0; i < rows.length && i < inventory.inventory.length; i++){
+
+    public void inventoryUpdated() {
+        rows.length = nrOfItems = inventory.inventory.length;
+        for (int i = 0; i < rows.length && i < inventory.inventory.length; i++){
 			rows[i].text.setText(inventory.inventory[i] is null ? "" : inventory.inventory[i].type.displayName);
 			rows[i].rect = Recti(absoluteRect.start.X, absoluteRect.start.Y + i * rowHeight,
 								 absoluteRect.size.X, rowHeight);
-			rows[i].text.setAbsoluteRect(rows[i].rect); 
+			rows[i].text.setAbsoluteRect(rows[i].rect);
 		}
+    }
+
+	override void render() {
+        // ToDo: It is a bit lol to have this here, but I'm too lazy to do it properly yet
+		inventoryUpdated();
+
 		super.render();
 	}
-}
+}*/

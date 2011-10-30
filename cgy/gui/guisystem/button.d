@@ -47,7 +47,7 @@ class GuiElementButtonAll : public GuiElement {
         if (buttonText !is null) {
             auto buttonSize = buttonText.getSize();
             auto newTextRect = absoluteRect.centerRect(Recti(vec2i(0, 0), buttonSize));
-            buttonText.setAbsoluteRect(newTextRect);        
+            buttonText.setAbsoluteRect(newTextRect);
         }
         super.onMove();        
     }
@@ -69,7 +69,7 @@ class GuiElementButtonAll : public GuiElement {
     }
     
     void onPushed(bool down, bool abort){
-        if (pressCallback) {
+        if (pressCallback !is null) {
             pressCallback(down, abort);
         }
     }

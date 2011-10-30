@@ -57,7 +57,7 @@ static const(string) FixLighting_map(const(string) one, const(string) two, const
     string[string] map= [one : "0", two : "1", three : "2", four : "3"];
     return map[key];
 }
-static const(string) FixLighting_get(int num, int dir, int which) pure {
+static const(string) FixLighting_get(int num, int dir, int which) {
     string[int] map = [ 0 : "0", 1 : "1", 2 : "2", -1 : "-1"];
     int div, mod;
     div = (which/3) -1;

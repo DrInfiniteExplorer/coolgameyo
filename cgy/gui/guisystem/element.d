@@ -147,7 +147,9 @@ class GuiElement {
     bool hasFocus() @property {
         return this is getFocusElement();
     }
-    
+
+    //Note: not a OnLooseFocus biut more "Relinquish focus from this element!"
+    // Use GuiEvent e.type == GuiEventType.FocusOff instead
     void looseFocus() {
         foreach(child ; children) {
             child.looseFocus();
