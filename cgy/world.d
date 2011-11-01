@@ -1044,6 +1044,16 @@ private mixin template ActivityHandlerMethods() {
         if( toFloodFill.insert(pos.getBlockNum())) {
             g_Statistics.FloodFillNew(1);
         }
+        //Also clear seen-flag from neighbors.
+        //Dont add them to floodfill; If we're unlucky we'll process these blocks
+        //before the one which pos belongs to; and as such, if pos is a new air
+        //tile, the air-visibility wont propagate to this tile.
+        //Nevermind 3 lines above, solid tiles check for any nearby airtiles; they need not be seen themselves.... >.<
+        foreach(num ; pos.getNeighboringBlockNums()) {
+            auto block = getBlock(num);
+            block.seen = false;
+            setBlock(num, block);
+        }
         
     }
     void addFloodFillWall(SectorNum inactive, SectorNum active) {

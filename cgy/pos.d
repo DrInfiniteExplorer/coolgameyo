@@ -157,6 +157,34 @@ struct TilePos {
                     negDiv(value.Y, BlockSize.y),
                     negDiv(value.Z, BlockSize.z)));
     }
+    BlockNum[] getNeighboringBlockNums() const {
+        BlockNum[] ret;
+        auto thisNum = getBlockNum();
+        auto rel = vec3i(
+                         posMod(value.X, BlockSize.x),
+                         posMod(value.Y, BlockSize.y),
+                         posMod(value.Z, BlockSize.z),
+                         );
+        if (rel.X == 0) {
+            auto tmp = thisNum; tmp.value.X -= 1; ret ~= tmp;
+        }
+        else if (rel.X == BlockSize.x-1) {
+            auto tmp = thisNum; tmp.value.X += 1; ret ~= tmp;
+        }
+        if (rel.Y == 0) {
+            auto tmp = thisNum; tmp.value.Y -= 1; ret ~= tmp;
+        }
+        else if (rel.Y == BlockSize.y-1) {
+            auto tmp = thisNum; tmp.value.Y += 1; ret ~= tmp;
+        }
+        if (rel.Z == 0) {
+            auto tmp = thisNum; tmp.value.Z -= 1; ret ~= tmp;
+        }
+        else if (rel.Z == BlockSize.z-1) {
+            auto tmp = thisNum; tmp.value.Z += 1; ret ~= tmp;
+        }
+        return ret;
+    }
 
     GraphRegionNum getGraphRegionNum() const{
         return GraphRegionNum(vec3i(
@@ -174,34 +202,22 @@ struct TilePos {
                     posMod(value.Z, GraphRegionSize.z),
                     );
         if (rel.X == 0) {
-            auto tmp = thisNum;
-            tmp.value.X -= 1;
-            ret ~= tmp;
+            auto tmp = thisNum; tmp.value.X -= 1; ret ~= tmp;
         }
-        if (rel.X == GraphRegionSize.x-1) {
-            auto tmp = thisNum;
-            tmp.value.X += 1;
-            ret ~= tmp;
+        else if (rel.X == GraphRegionSize.x-1) {
+            auto tmp = thisNum; tmp.value.X += 1; ret ~= tmp;
         }
         if (rel.Y == 0) {
-            auto tmp = thisNum;
-            tmp.value.Y -= 1;
-            ret ~= tmp;
+            auto tmp = thisNum; tmp.value.Y -= 1; ret ~= tmp;
         }
-        if (rel.Y == GraphRegionSize.y-1) {
-            auto tmp = thisNum;
-            tmp.value.Y += 1;
-            ret ~= tmp;
+        else if (rel.Y == GraphRegionSize.y-1) {
+            auto tmp = thisNum; tmp.value.Y += 1; ret ~= tmp;
         }
         if (rel.Z == 0) {
-            auto tmp = thisNum;
-            tmp.value.Z -= 1;
-            ret ~= tmp;
+            auto tmp = thisNum; tmp.value.Z -= 1; ret ~= tmp;
         }
-        if (rel.Z == GraphRegionSize.z-1) {
-            auto tmp = thisNum;
-            tmp.value.Z += 1;
-            ret ~= tmp;
+        else if (rel.Z == GraphRegionSize.z-1) {
+            auto tmp = thisNum; tmp.value.Z += 1; ret ~= tmp;
         }
         return ret;
     }

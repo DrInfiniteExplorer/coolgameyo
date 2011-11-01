@@ -8,7 +8,7 @@ import std.stdio;
 import std.socket;
 import std.socketstream;
 import std.stream;
-
+import std.regex;
 
 
 string sendFile(string host, int port, string path, string name, string filename, char[] data, string returnWhat=null, string mime="application/octet-stream") {
@@ -46,20 +46,31 @@ string sendFile(string host, int port, string path, string name, string filename
 
     if (returnWhat == "body") {
         bool foundBody = false;
-        string ret = "";
-        while (!ss.eof())
+
+        int length = -1;
+        while (!ss.eof() && !foundBody)
         {
             auto line = ss.readLine();
-            if(foundBody) {
-                ret ~= line ~"\n";
+            auto ex = regex(r"(C|c)ontent-(L|l)ength: (\d+)");
+            auto m = match(line, ex);
+            if(!m.empty) {
+                length = to!int(m.captures[3]);
             }
             if(line == "") {
                 foundBody = true;
             }
             writeln(line);
         }
+        if(length == -1) {
+            return null;
+        }
+        char[] content;
+        content.length = length;
+        ss.readBlock(content.ptr, length);
 
-        return ret;
+        writeln(content);
+
+        return to!string(content);
     }
 
     /* //Debug stuff

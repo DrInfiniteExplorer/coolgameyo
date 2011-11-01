@@ -32,7 +32,7 @@ import world;
 class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{ 
     
     private GuiSystem guiSystem;
-    private GuiElementText fpsText, tickText, frameTimeText, tickTimeText, position;
+    private GuiElementText fpsText, tickText, frameTimeText, tickTimeText, position, tileInfo;
     private StatisticsWindow statistics;
 	private InventoryWindow inventoryWindow;
 
@@ -62,7 +62,6 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
     private bool entitySelected;
     
     private Tile copiedTile;
-
     
     this(Game g, GuiSystem s) {
         guiSystem = s;
@@ -147,6 +146,9 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         
         auto camPos = camera.getPosition();
         position.setText(text("position ", camPos.X, " ", camPos.Y, " ", camPos.Z));
+
+
+        tileInfo.setText(selectedTile.describe());
     }
     
     void spawnHUD() {
@@ -157,6 +159,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         tickTimeText = new GuiElementText(guiSystem, vec2d(0.2, frameTimeText.getRelativeRect.getBottom()), "Tick time counter");
         
         position = new GuiElementText(guiSystem, vec2d(0, tickText.getRelativeRect.getBottom()), "Position");
+        tileInfo = new GuiElementText(guiSystem, vec2d(0, position.getRelativeRect.getBottom()), "TileInfo");
         void spawnStatistics() {
             if( statistics is null) {
                 statistics = new StatisticsWindow(guiSystem);
@@ -170,6 +173,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         frameTimeText.destroy(); frameTimeText = null;
         tickTimeText.destroy(); tickTimeText = null;        
         position.destroy(); position = null;
+        tileInfo.destroy(); tileInfo = null;
         guiSystem.removeHotkey(SDLK_F1);
         if(statistics !is null) {
             statistics.destroy();

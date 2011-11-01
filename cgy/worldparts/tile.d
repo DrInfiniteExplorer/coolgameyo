@@ -51,6 +51,14 @@ struct Tile {
 
     bool pathable() const @property { return (flags & TileFlags.pathable) != 0; }
     void pathable(bool val) @property { setFlag(flags, TileFlags.pathable, val); }
+
+    string describe() const {
+        string ret = "";
+        ret ~= seen ? "Seen, " : "Unseen, ";
+        ret ~= pathable ? "Pathable, " : "Unpathable, ";
+        ret ~= valid ? "Valid, " : "Invalid, ";
+        return ret;
+    }
 }
 
 enum INVALID_TILE = Tile(0, TileFlags.none);

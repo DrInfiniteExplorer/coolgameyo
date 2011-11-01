@@ -1,5 +1,7 @@
 module graphics.geometrycreator;
 
+pragma(msg, "> geometrycreator.d");        
+
 import core.sync.mutex;
 
 import std.algorithm;
@@ -52,10 +54,12 @@ struct GRFace{
 }
 
 
-static const(string) FixLighting_map(const(string) one, const(string) two, const(string) three, const(string) four)
-    (const(string) key) {
-    string[string] map= [one : "0", two : "1", three : "2", four : "3"];
-    return map[key];
+static const(string) FixLighting_map(const(string) one, const(string) two, const(string) three, const(string) four,
+    const(string) key)() {
+    static if(key == one) return "0";
+    static if(key == two) return "1";
+    static if(key == three) return "2";
+    static if(key == four) return "3";
 }
 static const(string) FixLighting_get(int num, int dir, int which) {
     string[int] map = [ 0 : "0", 1 : "1", 2 : "2", -1 : "-1"];
@@ -92,10 +96,10 @@ template FixLighting(const string A, const int num, const int dir, const string 
                                     float v21 = world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 7),")), false).lightValue;
                                     float v22 = world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 8),")), false).lightValue;
 
-                                    newFace.quad[",FixLighting_map!(one,two,three,four)("UH"),"].light = (v02+v01+v12+v11)/(4.0*MaxLightStrength); //UH
-                                    newFace.quad[",FixLighting_map!(one,two,three,four)("LH"),"].light = (v01+v00+v11+v10)/(4.0*MaxLightStrength); //LH
-                                    newFace.quad[",FixLighting_map!(one,two,three,four)("LF"),"].light = (v11+v10+v21+v20)/(4.0*MaxLightStrength); //LF
-                                    newFace.quad[",FixLighting_map!(one,two,three,four)("UF"),"].light = (v12+v11+v22+v21)/(4.0*MaxLightStrength); //UF
+                                    newFace.quad[",FixLighting_map!(one,two,three,four,"UH"),"].light = (v02+v01+v12+v11)/(4.0*MaxLightStrength); //UH
+                                    newFace.quad[",FixLighting_map!(one,two,three,four,"LH"),"].light = (v01+v00+v11+v10)/(4.0*MaxLightStrength); //LH
+                                    newFace.quad[",FixLighting_map!(one,two,three,four,"LF"),"].light = (v11+v10+v21+v20)/(4.0*MaxLightStrength); //LF
+                                    newFace.quad[",FixLighting_map!(one,two,three,four,"UF"),"].light = (v12+v11+v22+v21)/(4.0*MaxLightStrength); //UF
                                     } else if ( 2 == smoothMethod) {
                                     auto t00= world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 0),")), false);
                                     auto t01= world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 1),")), false);
@@ -117,10 +121,10 @@ template FixLighting(const string A, const int num, const int dir, const string 
                                     float v21 = t21.isAir ? t21.lightValue : 0;
                                     float v22 = t22.isAir ? t22.lightValue : 0;
 
-                                    newFace.quad[",FixLighting_map!(one,two,three,four)("UH"),"].light = (v02+v01+v12+v11)/(count(t02.isAir, t01.isAir, t12.isAir)*MaxLightStrength); //UH
-                                    newFace.quad[",FixLighting_map!(one,two,three,four)("LH"),"].light = (v01+v00+v11+v10)/(count(t01.isAir, t00.isAir, t10.isAir)*MaxLightStrength); //LH
-                                    newFace.quad[",FixLighting_map!(one,two,three,four)("LF"),"].light = (v11+v10+v21+v20)/(count(t10.isAir, t21.isAir, t20.isAir)*MaxLightStrength); //LF
-                                    newFace.quad[",FixLighting_map!(one,two,three,four)("UF"),"].light = (v12+v11+v22+v21)/(count(t12.isAir, t22.isAir, t21.isAir)*MaxLightStrength); //UF
+                                    newFace.quad[",FixLighting_map!(one,two,three,four,"UH"),"].light = (v02+v01+v12+v11)/(count(t02.isAir, t01.isAir, t12.isAir)*MaxLightStrength); //UH
+                                    newFace.quad[",FixLighting_map!(one,two,three,four,"LH"),"].light = (v01+v00+v11+v10)/(count(t01.isAir, t00.isAir, t10.isAir)*MaxLightStrength); //LH
+                                    newFace.quad[",FixLighting_map!(one,two,three,four,"LF"),"].light = (v11+v10+v21+v20)/(count(t10.isAir, t21.isAir, t20.isAir)*MaxLightStrength); //LF
+                                    newFace.quad[",FixLighting_map!(one,two,three,four,"UF"),"].light = (v12+v11+v22+v21)/(count(t12.isAir, t22.isAir, t21.isAir)*MaxLightStrength); //UF
                                     }
                                     ");
     // */
@@ -754,3 +758,4 @@ class GeometryCreator : Module, WorldListener
     }
 }
 
+pragma(msg, "< geometrycreator.d");        
