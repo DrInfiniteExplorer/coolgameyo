@@ -110,7 +110,7 @@ struct Image {
                 auto tmp = Image(null, imgWidth, imgHeight);
                 glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, tmp.imgData.ptr);
                 glError();
-                tmp.save("derp.png");
+                tmp.save("derp.bmp");
             }
         }
         if(tex) {
@@ -139,6 +139,14 @@ struct Image {
         return tex;
     }
     
+
+    void setPixel(int x, int y, int r, int g, int b, int a=0) {
+        imgData[4*(x + y * imgWidth) + 0] = cast(ubyte)clamp(r, 0, 255);
+        imgData[4*(x + y * imgWidth) + 1] = cast(ubyte)clamp(g, 0, 255);
+        imgData[4*(x + y * imgWidth) + 2] = cast(ubyte)clamp(b, 0, 255);
+        imgData[4*(x + y * imgWidth) + 3] = cast(ubyte)clamp(a, 0, 255);
+    }
+
     void setPixel(int x, int y, ubyte[4] pixel) {
         imgData[4*(x + y * imgWidth) .. 4*(x + y * imgWidth) + 4] = pixel;
     }
@@ -167,7 +175,7 @@ struct Image {
         const char* ptr = toStringz(filename);
         ilEnable(IL_FILE_OVERWRITE);
         ilError();
-        ilSave(IL_BMP, ptr);
+        ilSaveImage(ptr);
         ilError();
     }
 

@@ -600,10 +600,10 @@ class World {
     
     //Returns number of iterations nexxxessarrry to intersect a non-air tile.
     //Returns 0 on instant-found or none found.
-    int intersectTile(vec3d start, vec3d dir, int tileIter, ref Tile outTile, ref TilePos outPos, ref vec3i Normal) {
+    int intersectTile(vec3d start, vec3d dir, int tileIter, ref Tile outTile, ref TilePos outPos, ref vec3i Normal, double* intersectionTime = null) {
         TilePos oldTilePos;
         int cnt;
-        foreach(tilePos ; TileIterator(start, dir, tileIter)) {
+        foreach(tilePos ; TileIterator(start, dir, tileIter, intersectionTime)) {
             cnt++;
             auto tile = getTile(tilePos, false);
             if (tile.type == TileTypeInvalid) {

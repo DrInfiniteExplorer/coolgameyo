@@ -148,7 +148,7 @@ int myWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int
         glyphWidth:9, glyphHeight:18
         glyphsPerRow:56, glyphsPerCollumn:56,
         antiAliased:false, bold:false, italic:false,
-        textureFile:"lol.png", textureWidth:512, textureHeight:512,
+        textureFile:"lol.bmp", textureWidth:512, textureHeight:512,
         textureSlices:1,
         //glyphMap:{'A':{x,y}, ...} ? may implement later, maybe. yeaaaah.
     }

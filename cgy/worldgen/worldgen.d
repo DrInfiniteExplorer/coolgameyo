@@ -71,7 +71,7 @@ final class WorldGenerator {
         }
 
         auto img = worldHeightMapImg.toImage(params.worldMin, params.worldMax, true, &colorize);
-        img.save("saves/current/worldgen/height.png");
+        img.save("saves/current/worldgen/height.bmp");
         */
 
 

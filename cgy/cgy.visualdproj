@@ -380,6 +380,7 @@
    <File path="graphics\misc.d" />
    <File path="graphics\obj.d" />
    <File path="graphics\ogl.d" />
+   <File path="graphics\raycastcpu.d" />
    <File path="graphics\renderer.d" />
    <File path="graphics\shader.d" />
    <File path="graphics\texture.d" />

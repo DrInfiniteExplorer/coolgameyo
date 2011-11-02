@@ -29,8 +29,8 @@ class Camera{
         proj.buildProjectionMatrixPerspectiveFovRH(FOV_Radians, aspect, _near, _far);
         return proj;
     }
-    
-    void getRayFromScreenCoords(vec2i coords, ref vec3d start, ref vec3d dir){
+
+    void getRayParameters(ref vec3d UpperLeft, ref vec3d _toRight, ref vec3d _toDown){
         immutable vec3d _up = vec3d(0.f, 0.f, 1.f);
         vec3d right = targetDir.crossProduct(_up).normalize();
         vec3d up = right.crossProduct(targetDir).normalize();
@@ -40,9 +40,18 @@ class Camera{
         auto dY =  dX / renderSettings.aspectRatio; //width / (width/height)
         auto upper = up * dY;
         auto toDown = -2.f * dY * up;
+
+        UpperLeft = targetDir + leftmost + upper;
+        _toRight = toRight;
+        _toDown = toDown;
+    }
+    
+    void getRayFromScreenCoords(vec2i coords, ref vec3d start, ref vec3d dir){
+        vec3d UL, toRight, toDown;
+        getRayParameters(UL, toRight, toDown);
         double percentX = to!double(coords.X) / to!double(renderSettings.windowWidth);
         double percentY = to!double(coords.Y) / to!double(renderSettings.windowHeight);
-        dir = (targetDir + leftmost + percentX*toRight + upper + percentY * toDown).normalize();   
+        dir = (UL + percentX*toRight + percentY * toDown).normalize();   
         //dir = (targetDir + leftmost + upper).normalize();   
         //msg(percentX, " ", percentY);
         start = position;

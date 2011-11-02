@@ -20,11 +20,14 @@ import gui.guisystem.window;
 
 import graphics.ogl;
 import graphics.image;
+import graphics.camera;
+import graphics.raycastcpu;
 
 import settings;
 import util.httpupload;
 import util.rect;
 import util.util;
+import world;
 
 class PrintScreenMenu : GuiElementWindow {
     GuiSystem guiSystem;
@@ -34,8 +37,9 @@ class PrintScreenMenu : GuiElementWindow {
     GuiEventDump dump;
 
     Image img;
-    this(MainMenu m) {
+    this(MainMenu m, World w, Camera c) {
         img = screenCap();
+        computeYourMother(w, img, c);
         main = m;
         guiSystem = cast(GuiSystem)m.getGuiSystem();
         dump = guiSystem.setEventDump(null);
@@ -66,7 +70,7 @@ class PrintScreenMenu : GuiElementWindow {
         return (){
             closeButt();
 
-            nameBox = new GuiElementEditbox(this, Rectd(vec2d(0.10, 0.35), vec2d(0.3, 0.05)), "ImgName.png",); //TODO: <-- ending with ,) ?
+            nameBox = new GuiElementEditbox(this, Rectd(vec2d(0.10, 0.35), vec2d(0.3, 0.05)), "ImgName.bmp",); //TODO: <-- ending with ,) ?
             fileButt = new GuiElementButton(this, Rectd(vec2d(0.1, 0.60), vec2d(0.3, 0.10)), "Ok", (){cb(); /*main.setVisible(true);*/ destroy();});
         };  
     }
@@ -77,15 +81,15 @@ class PrintScreenMenu : GuiElementWindow {
     }
     void onWiki() {
         auto str = nameBox.getText();
-        img.save("tmp_img.png");        
-        auto response = sendFile("luben.se", 80, "/wiki/editbin.php?name="~str, "save", "derpyhooves.lolol", cast(char[]) read("tmp_img.png"), "body");
+        img.save("tmp_img.bmp");        
+        auto response = sendFile("luben.se", 80, "/wiki/editbin.php?name="~str, "save", "derpyhooves.lolol", cast(char[]) read("tmp_img.bmp"), "body");
         writeln("File upload: Probably " ~ (response is null) ? "failed" : " success!");
         setCopyString("[[img:"~str~"]]");
     }
     void onSendfile() {
         auto str = nameBox.getText();
-        img.save("tmp_img.png");
-        auto response = sendFile("luben.se", 80, "/sendfile/index.php?upload=true", "file", str, cast(char[]) read("tmp_img.png"), "body", "image/png");
+        img.save("tmp_img.bmp");
+        auto response = sendFile("luben.se", 80, "/sendfile/index.php?upload=true", "file", str, cast(char[]) read("tmp_img.bmp"), "body", "image/png");
         if(response !is null) {
             auto ex = regex(r"File <a href='\?id=(\d+)'>");
             auto m = match(response, ex);
