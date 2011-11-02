@@ -12,9 +12,9 @@ import graphics.image;
 
 import gui.unitcontrol;
 
-import worldparts.sizes;
-import worldparts.block;
-import worldparts.sector;
+import world.sizes;
+import world.block;
+import world.sector;
 import random.random;
 import pos;
 import settings;

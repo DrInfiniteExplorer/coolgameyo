@@ -5,7 +5,7 @@
 //TODO: Make things private?
 
 
-module worldparts.block;
+module world.block;
 
 import std.algorithm;
 import std.stdio;
@@ -15,8 +15,8 @@ import tiletypemanager : TileTypeAir;
 //import tiletypemanager;
 
 import worldgen.worldgen;
-import worldparts.tile;
-import worldparts.sizes;
+import world.tile;
+import world.sizes;
 import util.util;
 import util.rangefromto;
 

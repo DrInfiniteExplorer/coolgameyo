@@ -2,7 +2,7 @@
 //TODO: make members private etc
 
 
-module worldparts.sector;
+module world.sector;
 
 import std.algorithm;
 import std.conv;
@@ -15,8 +15,8 @@ import std.stdio;
 import entitytypemanager;
 import json;
 import light;
-import worldparts.block;
-import worldparts.sizes;
+import world.block;
+import world.sizes;
 import worldgen.worldgen;
 import pos;
 import unit;

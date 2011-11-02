@@ -13,8 +13,8 @@ import std.traits;
 public import std.datetime;
 
 //TODO: Got order-dependant bugs here. If doing pos, stolen, worldparts, then we get bugs and bugs. sadface.
-//import worldparts.sector;
-//import worldparts.block;
+//import world.sector;
+//import world.block;
 import stolen.all;
 
 version (Posix) {

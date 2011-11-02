@@ -10,7 +10,7 @@ import pos;
 import util.rangefromto;
 import util.util;
 
-import worldparts.sizes;
+import world.sizes;
 
 
 debug{

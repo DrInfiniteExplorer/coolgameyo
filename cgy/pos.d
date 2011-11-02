@@ -7,8 +7,8 @@ import std.conv;
 import json;
 import stolen.aabbox3d;
 pragma(msg, "! pos.d");
-//import worldparts.sector;
-import worldparts.sizes;
+//import world.sector;
+import world.sizes;
 import util.util;
 import util.math;
 

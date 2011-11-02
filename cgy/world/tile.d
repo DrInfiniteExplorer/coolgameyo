@@ -1,5 +1,5 @@
 
-module worldparts.tile;
+module world.tile;
 
 import std.bitmanip;
 

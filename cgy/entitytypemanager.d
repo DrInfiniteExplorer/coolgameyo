@@ -10,7 +10,7 @@ import graphics.texture;
 
 import json;
 
-import worldparts.tile;
+import world.tile;
 import statistics;
 import util.util;
 

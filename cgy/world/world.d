@@ -26,10 +26,10 @@ import scheduler;
 import statistics;
 
 public import pos;
-public import worldparts.sizes;
-public import worldparts.sector;
-public import worldparts.block;
-public import worldparts.tile;
+public import world.sizes;
+public import world.sector;
+public import world.block;
+public import world.tile;
 import util.util;
 import util.intersect;
 import util.rangefromto;

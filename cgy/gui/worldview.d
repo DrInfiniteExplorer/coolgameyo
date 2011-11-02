@@ -14,9 +14,9 @@ import gui.mainmenu;
 import gui.all;
 import graphics.image;
 
-import worldparts.sizes;
-import worldparts.block;
-import worldparts.sector;
+import world.sizes;
+import world.block;
+import world.sector;
 import random.random;
 import random.catmullrom;
 import random.randsource;

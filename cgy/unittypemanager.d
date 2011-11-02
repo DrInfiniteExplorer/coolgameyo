@@ -8,7 +8,7 @@ import graphics.texture;
 
 import json;
 import util.util;
-import worldparts.tile;
+import world.tile;
 import statistics;
 
 

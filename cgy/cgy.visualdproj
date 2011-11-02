@@ -366,12 +366,6 @@
    <File path="ai\patrolai.d" />
    <File path="ai\posessai.d" />
   </Folder>
-  <Folder name="world">
-   <File path="world\activity.d" />
-   <File path="world\ambient.d" />
-   <File path="world\floodfill.d" />
-   <File path="world\world.d" />
-  </Folder>
   <Folder name="graphics">
    <Folder name="_2d">
     <File path="graphics\_2d\image.d" />
@@ -480,14 +474,18 @@
    <File path="util\tileiterator.d" />
    <File path="util\util.d" />
   </Folder>
+  <Folder name="world">
+   <File path="world\activity.d" />
+   <File path="world\ambient.d" />
+   <File path="world\block.d" />
+   <File path="world\floodfill.d" />
+   <File path="world\sector.d" />
+   <File path="world\sizes.d" />
+   <File path="world\tile.d" />
+   <File path="world\world.d" />
+  </Folder>
   <Folder name="worldgen">
    <File path="worldgen\worldgen.d" />
-  </Folder>
-  <Folder name="worldparts">
-   <File path="worldparts\block.d" />
-   <File path="worldparts\sector.d" />
-   <File path="worldparts\sizes.d" />
-   <File path="worldparts\tile.d" />
   </Folder>
   <File path="changelist.d" />
   <File path="clan.d" />

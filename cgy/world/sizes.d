@@ -1,5 +1,5 @@
 
-module worldparts.sizes;
+module world.sizes;
 
 
 enum BlockSize {

@@ -12,7 +12,7 @@ import json;
 
 import statistics;
 import util.util;
-import worldparts.tile;
+import world.tile;
 
 //ALWAYS!!
 enum TileTypeInvalid = 0;
