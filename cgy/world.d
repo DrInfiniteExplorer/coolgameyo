@@ -1,6 +1,8 @@
 module world;
 
-import std.algorithm, std.range, std.stdio;
+import std.algorithm;
+import std.range;
+import std.stdio;
 import std.container;
 import std.conv;
 import std.exception;
@@ -30,6 +32,7 @@ import util.util;
 import util.intersect;
 import util.rangefromto;
 import util.tileiterator;
+import util.filesystem;
 
 
 // TODO: Refactor so these send world as first parameter,
@@ -146,12 +149,12 @@ class World {
         
         auto jsonString = to!string(jsonRoot);	
 	    jsonString = json.prettyfyJSON(jsonString);
-        mkdir("saves/current/world/");
+        util.filesystem.mkdir("saves/current/world/");
         std.file.write("saves/current/world/world.json", jsonString);
 
         void serializeSectorXY(SectorXYNum xy, SectorXY sectorxy) {
             string folder = text("saves/current/world/", xy.value.X, ",", xy.value.Y, "/");
-            mkdirRecurse(folder);
+            util.filesystem.mkdir(folder);
             if (sectorxy.heightmap !is null) {
                 std.file.write(folder ~ "heightmap.bin", sectorxy.heightmap.heightmap);
             }

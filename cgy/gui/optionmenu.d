@@ -16,6 +16,7 @@ import gui.guisystem.guisystem;
 import gui.guisystem.slider;
 import gui.guisystem.text;
 import gui.guisystem.window;
+import gui.guisystem.combobox;
 
 import graphics.ogl;
 
@@ -30,6 +31,7 @@ class OptionMenu : GuiElementWindow {
     GuiElementCheckBox wireframe;
     GuiElementCheckBox renderinvalid;
     GuiElementSlider!float sensX, sensY;
+    GuiElementComboBox smoothSetting;
     
     MainMenu main;
     this(MainMenu m) {
@@ -54,9 +56,17 @@ class OptionMenu : GuiElementWindow {
         sensX = new GuiElementSlider!float(this, Rectd(vec2d(0.10, 0.40), vec2d(0.3, 0.05)), controlSettings.mouseSensitivityX, 0.25, 5.0, &onMouseX);
         sensY = new GuiElementSlider!float(this, Rectd(vec2d(0.10, 0.45), vec2d(0.3, 0.05)), controlSettings.mouseSensitivityY, 0.25, 5.0, &onMouseY);
         
-        new GuiElementEditbox(this, Rectd(vec2d(0.10, 0.35), vec2d(0.3, 0.05)), "Render invalid tiles?",);
-        
-        auto butt = new GuiElementButton(this, Rectd(vec2d(0.1, 0.50), vec2d(0.3, 0.10)), "Back", &onBack);
+        // Was only to test out the gui element
+        //new GuiElementEditbox(this, Rectd(vec2d(0.10, 0.35), vec2d(0.3, 0.05)), "Render invalid tiles?",);
+
+        auto smoothText = new GuiElementText(this, vec2d(0.1, sensY.bottomOf), "Shading style");
+        smoothSetting = new GuiElementComboBox(this, Rectd(smoothText.rightOf+0.05, sensY.bottomOf, 0.3, 0.05), &onSmoothChange);
+        smoothSetting.addItem("Flat shading");
+        smoothSetting.addItem("Smooth shading");
+        smoothSetting.addItem("Plol shading");
+        smoothSetting.selectItem(renderSettings.smoothSetting);
+
+        auto butt = new GuiElementButton(this, Rectd(vec2d(0.1, smoothSetting.bottomOf + 0.05), vec2d(0.3, 0.10)), "Back", &onBack);
         
   
         main = m;
@@ -103,6 +113,10 @@ class OptionMenu : GuiElementWindow {
     }
     void onMouseY(float y) {
         controlSettings.mouseSensitivityY = y;
+    }
+
+    void onSmoothChange(int selectedIndex) {
+        renderSettings.smoothSetting = selectedIndex;
     }
 }
 

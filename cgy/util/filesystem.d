@@ -16,6 +16,11 @@ void mkdir(string path) {
     mkdirRecurse(path);
 }
 
+void rmdir(string path) {
+    rmdirRecurse(path);
+}
+
+
 void copy(string from, string to)
 in{
     BREAK_IF(!exists(from));

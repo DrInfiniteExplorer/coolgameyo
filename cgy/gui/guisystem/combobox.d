@@ -81,8 +81,13 @@ class GuiElementComboBox : public GuiElement {
         rows[index].text.setText(text);
     }
 
-    public void addItem(string str, int index) {
-        if (nrOfItems == rows.length) rows.length = rows.length + 1;
+    public void addItem(string str, int index = -1) {
+        if(index == -1) {
+            index = nrOfItems;
+        }
+        if (nrOfItems == rows.length) {
+            rows.length = rows.length + 1;
+        }
         
         for (int i = nrOfItems; i > index; i--) {
             rows[i] = rows[i-1];

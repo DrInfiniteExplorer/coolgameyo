@@ -23,6 +23,7 @@ import unit;
 import entity;
 import util.util;
 import util.intersect;
+import util.filesystem;
 
 class Sector {
 
@@ -62,7 +63,7 @@ class Sector {
     
     void serialize() {
         string folder = text("saves/current/world/", sectorNum.value.X, ",", sectorNum.value.Y, "/", sectorNum.value.Z, "/");
-        mkdirRecurse(folder);
+        util.filesystem.mkdir(folder);
         
         auto file = std.stdio.File(folder ~ "blocks.bin", "wb");
         
