@@ -55,7 +55,7 @@ class FPSControlAI : UnitAI, CustomChange {
         onGround=false;
         unitPos = renderer.specialUnit(unit, unit.pos.value);
 
-        //TODO: Send data to clients that this unit is possessed!!!!
+        //LATER: Send data to clients that this unit is possessed!!!!
         // :)
     }
 

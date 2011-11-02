@@ -59,8 +59,8 @@ class OptionMenu : GuiElementWindow {
         // Was only to test out the gui element
         //new GuiElementEditbox(this, Rectd(vec2d(0.10, 0.35), vec2d(0.3, 0.05)), "Render invalid tiles?",);
 
-        auto smoothText = new GuiElementText(this, vec2d(0.1, sensY.bottomOf), "Shading style");
-        smoothSetting = new GuiElementComboBox(this, Rectd(smoothText.rightOf+0.05, sensY.bottomOf, 0.3, 0.05), &onSmoothChange);
+        auto smoothText = new GuiElementText(this, vec2d(0.1, sensY.bottomOf+0.05), "Shading style");
+        smoothSetting = new GuiElementComboBox(this, Rectd(smoothText.rightOf+0.05, sensY.bottomOf+0.05, 0.3, 0.05), &onSmoothChange);
         smoothSetting.addItem("Flat shading");
         smoothSetting.addItem("Smooth shading");
         smoothSetting.addItem("Plol shading");
@@ -68,6 +68,7 @@ class OptionMenu : GuiElementWindow {
 
         auto butt = new GuiElementButton(this, Rectd(vec2d(0.1, smoothSetting.bottomOf + 0.05), vec2d(0.3, 0.10)), "Back", &onBack);
         
+        smoothSetting.bringToFront;
   
         main = m;
     }
