@@ -5,7 +5,7 @@ import std.c.process;
 import std.stdio;
 
 import tiletypemanager;
-import world;
+import world.world;
 
 import pos;
 import graphics.texture;

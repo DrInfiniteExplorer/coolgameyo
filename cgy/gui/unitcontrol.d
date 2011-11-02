@@ -25,7 +25,7 @@ import tiletypemanager;
 import unit;
 import util.util;
 import util.intersect;
-import world;
+import world.world;
 
 
 

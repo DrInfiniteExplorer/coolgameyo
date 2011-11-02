@@ -8,7 +8,7 @@ import std.math;
 import changelist;
 import unit;
 
-import world;
+import world.world;
 
 
 class MoveToAI : UnitAI {

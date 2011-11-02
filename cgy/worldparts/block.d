@@ -95,7 +95,7 @@ struct Block {
         (*tiles)[p.X][p.Y][p.Z] = tile;
     }
 
-    void setTileLight(TilePos pos, const byte newVal)
+    void setTileLight(TilePos pos, const byte newVal, const bool isSunLight)
     in{
         assert(pos.getBlockNum() == this.blockNum);
     }
@@ -114,7 +114,11 @@ struct Block {
             t.seen = seen;
             (*(cast(Tile[BlockSize.x*BlockSize.y*BlockSize.z]*)(tiles)))[] = t; //Fuck yeah!!!! ? :S:S:S
         }
-        (*tiles)[p.X][p.Y][p.Z].lightValue = newVal;
+        if(isSunLight) {
+            (*tiles)[p.X][p.Y][p.Z].sunLightValue = newVal;
+        } else {
+            (*tiles)[p.X][p.Y][p.Z].lightValue = newVal;
+        }
     }
 
     bool isSame(const Block other) const {

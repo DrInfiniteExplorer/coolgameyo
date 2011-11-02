@@ -27,7 +27,7 @@ import settings;
 import util.httpupload;
 import util.rect;
 import util.util;
-import world;
+import world.world;
 
 class PrintScreenMenu : GuiElementWindow {
     GuiSystem guiSystem;

@@ -19,7 +19,7 @@ version(Windows) import std.c.windows.windows;
 public import changelist;
 import statistics;
 
-import world;
+import world.world;
 
 import modules.module_;
 import util.util;

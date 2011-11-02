@@ -39,7 +39,7 @@ import unittypemanager;
 import unit;
 import util.util;
 import util.filesystem;
-import world;
+import world.world;
 import worldgen.worldgen;
 
 import settings;

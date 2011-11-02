@@ -10,7 +10,7 @@ import changelist;
 import pos;
 import stolen.aabbox3d;
 import util.util;
-import world;
+import world.world;
 import clan;
 import entitytypemanager;
 

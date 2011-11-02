@@ -14,7 +14,7 @@ import unit;
 import util.util;
 import util.rangefromto;
 
-import world;
+import world.world;
 
 class FPSControlAI : UnitAI, CustomChange {
     Unit* unit;

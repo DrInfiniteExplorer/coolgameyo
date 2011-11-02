@@ -366,6 +366,12 @@
    <File path="ai\patrolai.d" />
    <File path="ai\posessai.d" />
   </Folder>
+  <Folder name="world">
+   <File path="world\activity.d" />
+   <File path="world\ambient.d" />
+   <File path="world\floodfill.d" />
+   <File path="world\world.d" />
+  </Folder>
   <Folder name="graphics">
    <Folder name="_2d">
     <File path="graphics\_2d\image.d" />
@@ -499,6 +505,5 @@
   <File path="tiletypemanager.d" />
   <File path="unit.d" />
   <File path="unittypemanager.d" />
-  <File path="world.d" />
  </Folder>
 </DProject>

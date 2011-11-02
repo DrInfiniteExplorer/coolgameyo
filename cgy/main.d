@@ -297,7 +297,7 @@ class Main {
     }
 }
 
-import world;
+import world.world;
 void actualMain() {    
 
     version (Windows) {

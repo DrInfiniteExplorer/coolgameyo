@@ -4,7 +4,7 @@ import std.array;
 
 
 import unit;
-import world;
+import world.world;
 
 // replace with struct if we decide we need type safety? :P
 static union Target {

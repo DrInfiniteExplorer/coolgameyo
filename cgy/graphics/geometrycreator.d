@@ -30,7 +30,7 @@ import settings;
 import statistics;
 import stolen.aabbox3d;
 
-import world;
+import world.world;
 import util.util;
 import util.rangefromto;
 import util.intersect;
@@ -47,6 +47,7 @@ struct GRVertex{
     vec3f vertex;
     vec3f texcoord;
     float light = 0;
+    float sunLight = 0;
 };
 
 struct GRFace{
@@ -78,28 +79,39 @@ static const(string) FixLighting_get(int num, int dir, int which) {
     }
     assert(0);
 }
-template FixLighting(const string A, const int num, const int dir, const string one, const string two, const string three, const string four) {
+
+static const(string) FixLighting_index(const bool sunLight, const int which)() {
+    static if(which == 0) {
+        return sunLight ? "sunLightValue" : "lightValue";
+    }
+    static if(which == 1) {
+        return sunLight ? "sunLight" : "light";
+    }
+}
+
+template FixLighting(const string A, const int num, const int dir, const string one, const string two, const string three, const string four, const bool sunLight) {
+
     const char[] FixLighting = text("
                                     if(0 == smoothMethod) {
-                                    newFace.quad[0].light = tile",A,".lightValue/cast(float)MaxLightStrength;
-                                    newFace.quad[1].light = tile",A,".lightValue/cast(float)MaxLightStrength;
-                                    newFace.quad[2].light = tile",A,".lightValue/cast(float)MaxLightStrength;
-                                    newFace.quad[3].light = tile",A,".lightValue/cast(float)MaxLightStrength;
+                                    newFace.quad[0].",FixLighting_index!(sunLight, 1)," = tile",A,".",FixLighting_index!(sunLight, 0),"/cast(float)MaxLightStrength;
+                                    newFace.quad[1].",FixLighting_index!(sunLight, 1)," = tile",A,".",FixLighting_index!(sunLight, 0),"/cast(float)MaxLightStrength;
+                                    newFace.quad[2].",FixLighting_index!(sunLight, 1)," = tile",A,".",FixLighting_index!(sunLight, 0),"/cast(float)MaxLightStrength;
+                                    newFace.quad[3].",FixLighting_index!(sunLight, 1)," = tile",A,".",FixLighting_index!(sunLight, 0),"/cast(float)MaxLightStrength;
                                     } else if ( 1 == smoothMethod) {
-                                    float v00 = world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 0),")), false).lightValue;
-                                    float v01 = world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 1),")), false).lightValue;
-                                    float v02 = world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 2),")), false).lightValue;
-                                    float v10 = world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 3),")), false).lightValue;
-                                    float v11 = tile",A,".lightValue;
-                                    float v12 = world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 5),")), false).lightValue;
-                                    float v20 = world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 6),")), false).lightValue;
-                                    float v21 = world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 7),")), false).lightValue;
-                                    float v22 = world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 8),")), false).lightValue;
+                                    float v00 = world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 0),")), false).",FixLighting_index!(sunLight, 0),";
+                                    float v01 = world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 1),")), false).",FixLighting_index!(sunLight, 0),";
+                                    float v02 = world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 2),")), false).",FixLighting_index!(sunLight, 0),";
+                                    float v10 = world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 3),")), false).",FixLighting_index!(sunLight, 0),";
+                                    float v11 = tile",A,".",FixLighting_index!(sunLight, 0),";
+                                    float v12 = world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 5),")), false).",FixLighting_index!(sunLight, 0),";
+                                    float v20 = world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 6),")), false).",FixLighting_index!(sunLight, 0),";
+                                    float v21 = world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 7),")), false).",FixLighting_index!(sunLight, 0),";
+                                    float v22 = world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 8),")), false).",FixLighting_index!(sunLight, 0),";
 
-                                    newFace.quad[",FixLighting_map!(one,two,three,four,"UH"),"].light = (v02+v01+v12+v11)/(4.0*MaxLightStrength); //UH
-                                    newFace.quad[",FixLighting_map!(one,two,three,four,"LH"),"].light = (v01+v00+v11+v10)/(4.0*MaxLightStrength); //LH
-                                    newFace.quad[",FixLighting_map!(one,two,three,four,"LF"),"].light = (v11+v10+v21+v20)/(4.0*MaxLightStrength); //LF
-                                    newFace.quad[",FixLighting_map!(one,two,three,four,"UF"),"].light = (v12+v11+v22+v21)/(4.0*MaxLightStrength); //UF
+                                    newFace.quad[",FixLighting_map!(one,two,three,four,"UH"),"].",FixLighting_index!(sunLight, 1)," = (v02+v01+v12+v11)/(4.0*MaxLightStrength); //UH
+                                    newFace.quad[",FixLighting_map!(one,two,three,four,"LH"),"].",FixLighting_index!(sunLight, 1)," = (v01+v00+v11+v10)/(4.0*MaxLightStrength); //LH
+                                    newFace.quad[",FixLighting_map!(one,two,three,four,"LF"),"].",FixLighting_index!(sunLight, 1)," = (v11+v10+v21+v20)/(4.0*MaxLightStrength); //LF
+                                    newFace.quad[",FixLighting_map!(one,two,three,four,"UF"),"].",FixLighting_index!(sunLight, 1)," = (v12+v11+v22+v21)/(4.0*MaxLightStrength); //UF
                                     } else if ( 2 == smoothMethod) {
                                     auto t00= world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 0),")), false);
                                     auto t01= world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 1),")), false);
@@ -111,20 +123,20 @@ template FixLighting(const string A, const int num, const int dir, const string 
                                     auto t21= world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 7),")), false);
                                     auto t22= world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 8),")), false);
 
-                                    float v00 = t00.isAir ? t00.lightValue : 0;
-                                    float v01 = t01.isAir ? t01.lightValue : 0;
-                                    float v02 = t02.isAir ? t02.lightValue : 0;
-                                    float v10 = t10.isAir ? t10.lightValue : 0;
-                                    float v11 = t11.isAir ? t11.lightValue : 0;
-                                    float v12 = t12.isAir ? t12.lightValue : 0;
-                                    float v20 = t20.isAir ? t20.lightValue : 0;
-                                    float v21 = t21.isAir ? t21.lightValue : 0;
-                                    float v22 = t22.isAir ? t22.lightValue : 0;
+                                    float v00 = t00.isAir ? t00.",FixLighting_index!(sunLight, 0)," : 0;
+                                    float v01 = t01.isAir ? t01.",FixLighting_index!(sunLight, 0)," : 0;
+                                    float v02 = t02.isAir ? t02.",FixLighting_index!(sunLight, 0)," : 0;
+                                    float v10 = t10.isAir ? t10.",FixLighting_index!(sunLight, 0)," : 0;
+                                    float v11 = t11.isAir ? t11.",FixLighting_index!(sunLight, 0)," : 0;
+                                    float v12 = t12.isAir ? t12.",FixLighting_index!(sunLight, 0)," : 0;
+                                    float v20 = t20.isAir ? t20.",FixLighting_index!(sunLight, 0)," : 0;
+                                    float v21 = t21.isAir ? t21.",FixLighting_index!(sunLight, 0)," : 0;
+                                    float v22 = t22.isAir ? t22.",FixLighting_index!(sunLight, 0)," : 0;
 
-                                    newFace.quad[",FixLighting_map!(one,two,three,four,"UH"),"].light = (v02+v01+v12+v11)/(count(t02.isAir, t01.isAir, t12.isAir)*MaxLightStrength); //UH
-                                    newFace.quad[",FixLighting_map!(one,two,three,four,"LH"),"].light = (v01+v00+v11+v10)/(count(t01.isAir, t00.isAir, t10.isAir)*MaxLightStrength); //LH
-                                    newFace.quad[",FixLighting_map!(one,two,three,four,"LF"),"].light = (v11+v10+v21+v20)/(count(t10.isAir, t21.isAir, t20.isAir)*MaxLightStrength); //LF
-                                    newFace.quad[",FixLighting_map!(one,two,three,four,"UF"),"].light = (v12+v11+v22+v21)/(count(t12.isAir, t22.isAir, t21.isAir)*MaxLightStrength); //UF
+                                    newFace.quad[",FixLighting_map!(one,two,three,four,"UH"),"].",FixLighting_index!(sunLight, 1)," = (v02+v01+v12+v11)/(count(t02.isAir, t01.isAir, t12.isAir)*MaxLightStrength); //UH
+                                    newFace.quad[",FixLighting_map!(one,two,three,four,"LH"),"].",FixLighting_index!(sunLight, 1)," = (v01+v00+v11+v10)/(count(t01.isAir, t00.isAir, t10.isAir)*MaxLightStrength); //LH
+                                    newFace.quad[",FixLighting_map!(one,two,three,four,"LF"),"].",FixLighting_index!(sunLight, 1)," = (v11+v10+v21+v20)/(count(t10.isAir, t21.isAir, t20.isAir)*MaxLightStrength); //LF
+                                    newFace.quad[",FixLighting_map!(one,two,three,four,"UF"),"].",FixLighting_index!(sunLight, 1)," = (v12+v11+v22+v21)/(count(t12.isAir, t22.isAir, t21.isAir)*MaxLightStrength); //UF
                                     }
                                     ");
     // */
@@ -307,7 +319,8 @@ class GeometryCreator : Module, WorldListener
                     newFace.quad[3].light = (v12+v11+v22+v21)/(count(t12.isAir, t22.isAir, t21.isAir)*MaxLightStrength);
                 }*/
 
-                mixin(FixLighting!("Xp", 0, 1, "UH", "LH", "LF", "UF"));
+                mixin(FixLighting!("Xp", 0, 1, "UH", "LH", "LF", "UF", true));
+                mixin(FixLighting!("Xp", 0, 1, "UH", "LH", "LF", "UF", false));
 
                 faceList ~= newFace;
             }
@@ -344,7 +357,8 @@ class GeometryCreator : Module, WorldListener
                     newFace.quad[2].light = (v12+v11+v22+v21)/(4.0*MaxLightStrength);
                     newFace.quad[3].light = (v11+v10+v21+v20)/(4.0*MaxLightStrength);
                 }*/
-                mixin(FixLighting!("Xn", 0,-1, "LH", "UH", "UF", "LF"));
+                mixin(FixLighting!("Xn", 0,-1, "LH", "UH", "UF", "LF", true));
+                mixin(FixLighting!("Xn", 0,-1, "LH", "UH", "UF", "LF", false));
 
                 faceList ~= newFace;
             }
@@ -382,7 +396,8 @@ class GeometryCreator : Module, WorldListener
                     newFace.quad[3].light = (v11+v10+v21+v20)/(4.0*MaxLightStrength);
                 }
                 */
-                mixin(FixLighting!("Yp", 1, 1, "LH", "UH", "UF", "LF"));
+                mixin(FixLighting!("Yp", 1, 1, "LH", "UH", "UF", "LF", true));
+                mixin(FixLighting!("Yp", 1, 1, "LH", "UH", "UF", "LF", false));
 
                 faceList ~= newFace;
             }
@@ -419,7 +434,8 @@ class GeometryCreator : Module, WorldListener
                     newFace.quad[2].light = (v11+v10+v21+v20)/(4.0*MaxLightStrength);
                     newFace.quad[3].light = (v12+v11+v22+v21)/(4.0*MaxLightStrength);
                 }*/
-                mixin(FixLighting!("Yn", 1,-1, "UH", "LH", "LF", "UF"));
+                mixin(FixLighting!("Yn", 1,-1, "UH", "LH", "LF", "UF", true));
+                mixin(FixLighting!("Yn", 1,-1, "UH", "LH", "LF", "UF", false));
 
                 faceList ~= newFace;
             }
@@ -454,7 +470,8 @@ class GeometryCreator : Module, WorldListener
                     newFace.quad[2].light = (v11+v10+v21+v20)/(4.0*MaxLightStrength);
                     newFace.quad[3].light = (v12+v11+v22+v21)/(4.0*MaxLightStrength);
                 }*/
-                mixin(FixLighting!("Zp", 2, 1, "UH", "LH", "LF", "UF"));
+                mixin(FixLighting!("Zp", 2, 1, "UH", "LH", "LF", "UF", true));
+                mixin(FixLighting!("Zp", 2, 1, "UH", "LH", "LF", "UF", false));
 
                 faceList ~= newFace;
             }
@@ -490,7 +507,8 @@ class GeometryCreator : Module, WorldListener
                     newFace.quad[3].light = (v11+v10+v21+v20)/(4.0*MaxLightStrength);
                 }
                 */
-                mixin(FixLighting!("Zn", 2,-1, "LH", "UH", "UF", "LF"));
+                mixin(FixLighting!("Zn", 2,-1, "LH", "UH", "UF", "LF", true));
+                mixin(FixLighting!("Zn", 2,-1, "LH", "UH", "UF", "LF", false));
                 faceList ~= newFace;
             }
         }

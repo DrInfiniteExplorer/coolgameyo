@@ -6,7 +6,7 @@ import std.stdio;
 import unit;
 
 import util.util;
-import world;
+import world.world;
 
 // Only implemented by experimental or semi-hacky classes.
 // List of such classes:

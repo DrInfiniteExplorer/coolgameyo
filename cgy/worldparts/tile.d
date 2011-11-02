@@ -34,12 +34,16 @@ struct Tile {
 
     mixin(bitfields!(
         ubyte, "lightVal",           4,
-        uint, "hitpoints",          12,
+        ubyte, "sunLightVal",        4,
+        ubyte, "hitpoints",          8,
         uint, "restofderpystuff",   16 ));
 
 
     byte lightValue() const @property { return lightVal; }
     void lightValue(const byte light) @property { lightVal = clamp!byte(light, 0, 15); } //Do clamp in byte-domain to fix values like -1 etc
+
+    byte sunLightValue() const @property { return sunLightVal; }
+    void sunLightValue(const byte light) @property { sunLightVal = clamp!byte(light, 0, 15); } //Do clamp in byte-domain to fix values like -1 etc
 
     bool valid() const @property { return (flags & TileFlags.valid) != 0; }
     void valid(bool val) @property { setFlag(flags, TileFlags.valid, val); }

@@ -8,7 +8,7 @@ import graphics.camera;
 import graphics.image;
 import light;
 import util.util;
-import world;
+import world.world;
 
 void computeYourMother(World world, Image img, Camera camera) {
 

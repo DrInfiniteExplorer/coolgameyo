@@ -19,7 +19,7 @@ import graphics.texture;
 import graphics.geometrycreator;
 
 import modules.module_;
-import world;
+import world.world;
 import scheduler;
 import settings;
 import statistics;
@@ -30,6 +30,7 @@ import util.util;
 //TODO: Make fix this, or make testcase and report it if not done already.
 auto grTexCoordOffset = GRVertex.texcoord.offsetof;
 auto grLightOffset = GRVertex.light.offsetof;
+auto grSunLightOffset = GRVertex.sunLight.offsetof;
 
 class Renderer {
     //TODO: Leave comment on what these members are use for in this class
@@ -266,6 +267,9 @@ class Renderer {
         glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, GRVertex.sizeof, cast(void*)grLightOffset);
         glError();
 
+        glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, GRVertex.sizeof, cast(void*)grSunLightOffset);
+        glError();
+
         glDrawArrays(GL_QUADS, 0, region.quadCount*4);
         glError();
     }
@@ -278,6 +282,8 @@ class Renderer {
         glEnableVertexAttribArray(1);
         glError();
         glEnableVertexAttribArray(2);
+        glError();
+        glEnableVertexAttribArray(3);
         glError();
         atlas.use();
         auto transform = camera.getProjectionMatrix() * camera.getViewMatrix();
@@ -296,6 +302,8 @@ class Renderer {
         glDisableVertexAttribArray(1);
         glError();
         glDisableVertexAttribArray(2);
+        glError();
+        glDisableVertexAttribArray(3);
         glError();
         worldShader.use(false);
     }
