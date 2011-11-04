@@ -213,8 +213,8 @@
   <useInline>0</useInline>
   <release>1</release>
   <preservePaths>0</preservePaths>
-  <warnings>0</warnings>
-  <infowarnings>0</infowarnings>
+  <warnings>1</warnings>
+  <infowarnings>1</infowarnings>
   <pic>0</pic>
   <cov>0</cov>
   <nofloat>0</nofloat>
@@ -468,6 +468,7 @@
    <File path="util\httpupload.d" />
    <File path="util\intersect.d" />
    <File path="util\math.d" />
+   <File path="util\memory.d" />
    <File path="util\queue.d" />
    <File path="util\rangefromto.d" />
    <File path="util\rect.d" />

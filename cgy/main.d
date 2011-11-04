@@ -30,6 +30,7 @@ import pos;
 import statistics;
 import settings;
 import util.util;
+import util.memory;
 import worldgen.worldgen;
 
 version (Windows) {
@@ -177,6 +178,7 @@ class Main {
     bool inputActive = true;
     long then;
     void run() {
+        long nextTime = utime();
         auto exit = false;
         SDL_Event event;
         GuiEvent guiEvent;
@@ -271,6 +273,13 @@ class Main {
             guiSystem.render();            
             
             SDL_GL_SwapBuffers();
+
+            if(nextTime < utime()) {
+                nextTime = utime() + 1_000_000; //1 sec
+                auto str = "CoolGameYo! ~ " ~ getMemoryUsage();
+                SDL_WM_SetCaption( toStringz(str), "Herp");
+            }
+            
         }
         msg("Main thread got exited? :S");
         BREAKPOINT(!exit);        

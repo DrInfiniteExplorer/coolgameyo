@@ -17,8 +17,9 @@ import tiletypemanager : TileTypeAir;
 import worldgen.worldgen;
 import world.tile;
 import world.sizes;
-import util.util;
+import util.memory;
 import util.rangefromto;
+import util.util;
 
 
 
