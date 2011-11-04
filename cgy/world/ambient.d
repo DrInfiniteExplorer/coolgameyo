@@ -162,7 +162,7 @@ mixin template LightStorageMethods() {
     }
 
     void spreadSunLight(SectorNum sectorNum) {
-        return;
+
         createSets();
         auto sectorTilePos = sectorNum.toTilePos();
         auto min = sectorTilePos;
