@@ -18,7 +18,7 @@ mixin template FloodFill() {
             auto blockNum = toFloodFill.removeAny();
             g_Statistics.FloodFillProgress(1);
 
-            auto block = getBlock(blockNum);
+            auto block = getBlock(blockNum, true); //Create blocks during floodfill
             if(block.seen) { continue; }
             //allBlocks++;
             if (!block.valid) { continue; }
@@ -31,7 +31,7 @@ mixin template FloodFill() {
 
             block.seen = true;
 
-            scope (exit) setBlock(blockNum, block);
+            //scope (exit) setBlock(blockNum, block);
 
             if (block.sparse) {
                 //sparseCount++;
@@ -54,7 +54,7 @@ mixin template FloodFill() {
             foreach (rel;
                      RangeFromTo (0,BlockSize.x-1,0,BlockSize.y-1,0,BlockSize.z-1)) {
                          auto tp = TilePos(blockPos.value + rel);
-                         auto tile = block.getTile(tp);
+                         auto tile = block.getTile(tp); //Create block
 
                          scope (exit) block.setTile(tp, tile);
 
@@ -95,7 +95,7 @@ mixin template FloodFill() {
                              }
                          } else {
                              foreach (npos; neighbors(tp)) {
-                                 auto neighbor = getTile(npos, true);
+                                 auto neighbor = getTile(npos, true); //Create block if need
                                  if (neighbor.valid && neighbor.isAir) {
                                      tile.seen = true;
                                      break;
@@ -108,6 +108,7 @@ mixin template FloodFill() {
             g_Statistics.FloodFillNew(0);            
             foreach (sectorNum; floodingSectors) {
                 notifySectorLoad(sectorNum);
+                spreadSunLight(sectorNum);
             }
             floodingSectors.length = 0;
             //floodingSectors.assumeSafeAppend(); // yeaaaaahhhh~~~

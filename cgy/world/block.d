@@ -210,7 +210,7 @@ struct Block {
             bool[] allocmap; // true = allocated, false = not
             T[] data;
 
-            static assert (T.sizeof == 4096);
+            //static assert (T.sizeof == 4096);
 
             enum dataSize = 128;
 
@@ -241,7 +241,7 @@ struct Block {
             static AllocationBlock* create() {
                 auto alloc = new AllocationBlock;
                 alloc.allocmap = new bool[](dataSize);
-                auto blob = allocateBlob(dataSize);
+                auto blob = allocateBlob(dataSize, T.sizeof);
                 (cast(ubyte[])blob)[] = 0;
                 alloc.data = cast(T[])blob;
                 return alloc;

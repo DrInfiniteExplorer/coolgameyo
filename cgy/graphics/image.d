@@ -141,6 +141,7 @@ struct Image {
     
 
     void setPixel(int x, int y, int r, int g, int b, int a=0) {
+        y = imgHeight - y -1;
         imgData[4*(x + y * imgWidth) + 0] = cast(ubyte)clamp(r, 0, 255);
         imgData[4*(x + y * imgWidth) + 1] = cast(ubyte)clamp(g, 0, 255);
         imgData[4*(x + y * imgWidth) + 2] = cast(ubyte)clamp(b, 0, 255);
@@ -148,6 +149,7 @@ struct Image {
     }
 
     void setPixel(int x, int y, ubyte[4] pixel) {
+        y = imgHeight - y -1;
         imgData[4*(x + y * imgWidth) .. 4*(x + y * imgWidth) + 4] = pixel;
     }
 

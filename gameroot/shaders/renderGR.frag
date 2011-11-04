@@ -11,7 +11,7 @@ in float sunLightStrength;
 out vec4 frag_color;
 void main() {
    vec4 color = texture(atlas, tex_texcoord);
-   frag_color = color * max(lightStrength, sunLightStrength);
+   frag_color = vec4(color.xyz * max(lightStrength, sunLightStrength), 1.0);
 }
 
 

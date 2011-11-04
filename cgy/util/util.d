@@ -78,16 +78,16 @@ version(Windows){
 }
 
 
-void[] allocateBlob(size_t size) {
+void[] allocateBlob(size_t size, size_t blobSize) {
     version (Windows) {
-        auto ret = VirtualAlloc(null, 4096 * size, MEM_COMMIT, PAGE_READWRITE);
-        auto tmp = enforce(ret[0 .. 4096*size], "memory allocation fail :-)");
+        auto ret = VirtualAlloc(null, blobSize * size, MEM_COMMIT, PAGE_READWRITE);
+        auto tmp = enforce(ret[0 .. blobSize*size], "memory allocation fail :-)");
         return tmp;
     } else version (Posix) {
         void* ret;
-        auto result = posix_memalign(&ret, 4096, 4096 * size);
+        auto result = posix_memalign(&ret, blobSize, blobSize * size);
         enforce (result == 0, "memory allocation fail :-)");
-        return ret[0 .. 4096 * size];
+        return ret[0 .. blobSize * size];
     } else {
         static assert (0, "version?");
     }

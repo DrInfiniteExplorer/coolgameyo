@@ -91,15 +91,16 @@ private mixin template ActivityHandlerMethods() {
         //tile, the air-visibility wont propagate to this tile.
         //Nevermind 3 lines above, solid tiles check for any nearby airtiles; they need not be seen themselves.... >.<
         foreach(num ; pos.getNeighboringBlockNums()) {
-            auto block = getBlock(num);
+            auto block = getBlock(num, true); //Create block if not exist
             block.seen = false;
-            setBlock(num, block);
         }
 
     }
     void addFloodFillWall(SectorNum inactive, SectorNum active) {
         foreach (inact, act; getWallBetween(inactive, active)) {
-            if (getBlock(act).seen) {
+            auto block = getBlock(act, false); //Dont create blocks when expanding floodfill
+            if(!block.valid) continue; //Skip invalid blocks; They cant be seen anyway.
+            if (block.seen) { 
                 if( toFloodFill.insert(inact) ){
                     g_Statistics.FloodFillNew(1);
                 }

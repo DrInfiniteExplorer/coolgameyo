@@ -24,6 +24,78 @@ import entity;
 import util.util;
 import util.intersect;
 import util.filesystem;
+import util.rangefromto;
+
+
+enum UsePackedData = true;
+struct SolidMap {
+    static if(UsePackedData) {
+        byte[SectorSize.z][SectorSize.y][SectorSize.x/8] data;
+    } else {
+        byte[SectorSize.z][SectorSize.y][SectorSize.x] data;
+    }
+
+    void set(vec3i idx, bool val) {
+        static if(UsePackedData) {
+            int x   = idx.X/8;
+            int bit = idx.X%8;
+            int y   = idx.Y;
+            int z   = idx.Z;
+
+            setFlag(data[x][y][z], 1<<bit, val);
+        } else {
+            data[idx.X][idx.Y][idx.Z] = cast(char)val;
+        }
+    }
+    bool get(vec3i idx) const {
+        static if(UsePackedData) {
+            int x   = idx.X/8;
+            int bit = idx.X%8;
+            int y   = idx.Y;
+            int z   = idx.Z;
+
+            return 0 != (data[x][y][z] & (1<<bit));
+        } else {
+            return data[idx.X][idx.Y][idx.Z] != 0;
+        }
+    }
+
+    void clear() {
+        (&data[0][0][0])[0..data.sizeof] = 0;
+    }
+
+    void updateBlock(Block b) {
+        auto blockNum = b.blockNum;
+        auto relNum = blockNum.rel();
+        auto blockTilePos = blockNum.toTilePos();
+        int x = relNum.X * BlockSize.x;
+        int y = relNum.Y * BlockSize.y;
+        int z = relNum.Z * BlockSize.z;
+
+
+        foreach(rel ; RangeFromTo(vec3i(0), vec3i(BlockSize.x-1, BlockSize.y-1, BlockSize.z-1))) {
+            int xx = x + rel.X;
+            int yy = y + rel.Y;
+            int zz = z + rel.Z;
+            set(vec3i(xx, yy, zz), !b.getTile(TilePos(blockTilePos.value + rel)).isAir);
+        }
+    }
+
+
+    bool hasContent(vec3i relMin, vec3i relMax) {
+        //TODO: Optimize this with kewl functions that counts/finds first set bit.
+        foreach( pos ; RangeFromTo(relMin, relMax)) {
+            if(get(pos)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+}
+static if(UsePackedData) {
+    static assert(SolidMap.sizeof == 65536); //64k yeah :)
+}
 
 class Sector {
 
@@ -32,6 +104,9 @@ class Sector {
 
     private Block[BlocksPerSector.z][BlocksPerSector.y][BlocksPerSector.x] blocks;
     static assert(blocks.length == BlocksPerSector.x);
+
+    private SolidMap solidMap;
+
 
     RedBlackTree!(Unit*) units; //TODO: how to make this private without breaking stuff derp? :S
 	RedBlackTree!(Entity) entities;
@@ -48,6 +123,7 @@ class Sector {
         pos = sectorNum.toTilePos();
         units = new typeof(units);
 		entities = new typeof(entities);
+        solidMap.clear;
     }
 
     const(Block)[] getBlocks() const {
@@ -118,6 +194,7 @@ class Sector {
             block.deserialize(&read);
             auto num = block.blockNum.rel();
             blocks[num.X][num.Y][num.Z] = block;
+            solidMap.updateBlock(block);
         }
         file.close();
         
@@ -162,16 +239,25 @@ class Sector {
     }
     body{
         auto pos = blockNum.rel();
-        blocks[pos.X][pos.Y][pos.Z] = Block.generateBlock(blockNum, worldGen);
+        auto block = Block.generateBlock(blockNum, worldGen);
+        blocks[pos.X][pos.Y][pos.Z] = block;
+        solidMap.updateBlock(block);
     }
 
-    Block getBlock(BlockNum blockNum)
+    void makeAirBlock(BlockNum blockNum) {
+        auto pos = blockNum.rel();
+        auto airBlock = AirBlock(blockNum);
+        blocks[pos.X][pos.Y][pos.Z] = airBlock;
+        //No need to update solidmap; will be clear from beginning, and only call this during worldgen anyway.
+    }
+
+    Block* getBlock(BlockNum blockNum)
     in{
         assert(blockNum.getSectorNum() == sectorNum);
     }
     body{
         auto pos = blockNum.rel();
-        return blocks[pos.X][pos.Y][pos.Z];
+        return &blocks[pos.X][pos.Y][pos.Z];
     }
 
     void setBlock(BlockNum blockNum, Block newBlock)
@@ -179,7 +265,7 @@ class Sector {
         assert(blockNum.getSectorNum() == sectorNum, "Sector.setBlock: Trying to set a block that doesn't belong here!");
     }
     body {
-        
+        enforce(false, "We dont support setting blocks anylonger. See http://luben.se/wiki/index.php?page=Tilerepresentation");
         auto rel = blockNum.rel();
         auto currentBlock = blocks[rel.X][rel.Y][rel.Z];
         //TODO: Make comment detailing the logic behind this
@@ -192,6 +278,22 @@ class Sector {
             }
         }
         blocks[rel.X][rel.Y][rel.Z] = newBlock;
+        solidMap.updateBlock(newBlock);
+    }
+
+    bool hasContent(TilePos min, TilePos max) {
+        auto relMin = min.sectorRel();
+        auto relMax = max.sectorRel();
+        return solidMap.hasContent(relMin, relMax);
+    }
+
+    void setSolid(TilePos tilePos, bool solid) {
+        auto sectorRel = tilePos.sectorRel;
+        solidMap.set(sectorRel, solid);
+    }
+    bool isSolid(TilePos tilePos) const {
+        auto sectorRel = tilePos.sectorRel;
+        return solidMap.get(sectorRel);
     }
 
     //TODO: Add more unit-interfacing etc.

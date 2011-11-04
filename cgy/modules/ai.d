@@ -110,5 +110,10 @@ class AIModule : Module, WorldListener {
         }
     }
     override void onTileChange(TilePos) { }
+    void onUpdateGeometry(TilePos tilePos) {
+    }
+    void onBuildGeometry(SectorNum sectorNum) {
+    }
+
 }
 

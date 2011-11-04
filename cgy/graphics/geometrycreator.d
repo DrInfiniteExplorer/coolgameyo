@@ -677,32 +677,15 @@ class GeometryCreator : Module, WorldListener
     }
 
     bool hasContent(GraphRegionNum grNum) {
-        auto minBlockNum = grNum.min.getBlockNum();
-        BlockNum maxBlockNum = grNum.max.getBlockNum();
-        int seenCount;
-        foreach(rel ; RangeFromTo (minBlockNum.value, maxBlockNum.value)) {
-
-            auto num = BlockNum(rel);
-            auto block = world.getBlock(num, false);
-            if(block.seen){
-                auto a=true;
-                seenCount++;
-                if(block.sparse && block.sparseTileTransparent) {
-                    seenCount--;
-                    a=false;
-                }
-                if(a){
-                    //addAABB(num.getAABB(), vec3f(0.f, 1.f, 0.f));
-                }
-            }
-        }
-        return seenCount != 0;
+        auto minTilePos = grNum.min;
+        auto maxTilePos = grNum.max();
+        return world.hasContent(minTilePos, maxTilePos);
     }
 
     void onAddUnit(SectorNum, Unit*) { }
 	void onAddEntity(SectorNum, Entity) { }
 
-    void onSectorLoad(SectorNum sectorNum)
+    void onBuildGeometry(SectorNum sectorNum)
     {
         //version(Windows) auto start = GetTickCount();
         auto grNumMin = sectorNum.toTilePos().getGraphRegionNum();
@@ -747,7 +730,7 @@ class GeometryCreator : Module, WorldListener
         }
         enforce("Implement");
     }
-    void onTileChange(TilePos tilePos)
+    void onUpdateGeometry(TilePos tilePos)
     {
         GraphRegionNum[] newRegions;
         auto tileAABB = tilePos.getAABB();
@@ -774,6 +757,14 @@ class GeometryCreator : Module, WorldListener
         scope(exit) updateMutex.unlock();
         regionsToUpdate ~= newRegions;
     }
+
+    void onTileChange(TilePos tilePos) {
+        onUpdateGeometry(tilePos);
+    }
+    void onSectorLoad(SectorNum sectorNum) {
+        onBuildGeometry(sectorNum);
+    }
+
 }
 
 pragma(msg, "< geometrycreator.d");        

@@ -23,8 +23,9 @@ import settings;
 import statistics;
 import tiletypemanager;
 import unit;
-import util.util;
 import util.intersect;
+import util.rangefromto;
+import util.util;
 import world.world;
 
 
@@ -57,6 +58,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
     private TilePos selectedTilePos;
     private vec3i selectedTileNormal;
     private bool tileSelected;
+    private double selectedDistance;
 	
 	private Entity selectedEntity;
     private bool entitySelected;
@@ -148,7 +150,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         position.setText(text("position ", camPos.X, " ", camPos.Y, " ", camPos.Z));
 
 
-        tileInfo.setText(selectedTile.describe());
+        tileInfo.setText(text(selectedTile.describe(), "; ", selectedDistance));
     }
     
     void spawnHUD() {
@@ -188,6 +190,26 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
             }
             if (k.SdlSym == SDLK_F2) {
                 useMouse = !useMouse;
+            }
+            if (k.SdlSym == SDLK_k) {
+                mixin(Time!q{
+                    writeln(cnt, "; ", usecs/1000);
+                });
+                int cnt=0;
+                Tile tile;
+                foreach(pos; RangeFromTo(vec3i(-SectorSize.x, -SectorSize.y, -SectorSize.z), vec3i(SectorSize.x, SectorSize.y, SectorSize.z))) {
+                    tile = world.getTile(TilePos(pos));
+                    cnt += cast(int)(!tile.isAir() && tile.valid);
+                }
+            }
+            if (k.SdlSym == SDLK_l) {
+                mixin(Time!q{
+                    writeln(cnt, "; ", usecs/1000);
+                });
+                int cnt=0;
+                foreach(pos; RangeFromTo(vec3i(-SectorSize.x, -SectorSize.y, -SectorSize.z), vec3i(SectorSize.x, SectorSize.y, SectorSize.z))) {
+                    cnt += cast(int)world.isSolid(TilePos(pos));
+                }
             }
         }
     }
@@ -234,7 +256,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
                 possesAI.changeTile(whereToPlace, copiedTile);
             }
         } else if(m.middle && tileSelected) {
-            vec3d pos = selectedTilePos.toEntityPos.value + 0.5 * convert!double(selectedTileNormal);
+            vec3d pos = TilePos(selectedTilePos.value+selectedTileNormal).toEntityPos.value; // + 0.5 * convert!double(selectedTileNormal);
             LightSource light = new LightSource;
             light.position = pos;
             light.tint.set(0.8, 0.8, 0);
@@ -258,7 +280,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         double right = 0;
         double fwd = 0;
         //enum speed = 4.0;
-        enum speed = 14.0;
+        enum speed = 4.0;
         if(keyMap[SDLK_a]){ right-=speed; }
         if(keyMap[SDLK_d]){ right+=speed; }
         if(keyMap[SDLK_w]){ fwd+=speed; }
@@ -300,9 +322,9 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         vec3d start, dir;
         camera.getRayFromScreenCoords(mousecoords, start, dir);
         Tile tile;
-        auto a = world.intersectTile(start, dir, 25, selectedTile, selectedTilePos, selectedTileNormal);;
+        auto a = world.intersectTile(start, dir, 25, selectedTile, selectedTilePos, selectedTileNormal, &selectedDistance);
         //writeln(a);
-        tileSelected = 0.0 < a;
+        tileSelected = a > 0;
         if(tileSelected){
             if(selectedTileBox){
                 removeAABB(selectedTileBox);
