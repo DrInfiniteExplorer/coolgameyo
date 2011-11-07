@@ -483,6 +483,7 @@
    <File path="world\sector.d" />
    <File path="world\sizes.d" />
    <File path="world\tile.d" />
+   <File path="world\time.d" />
    <File path="world\world.d" />
   </Folder>
   <Folder name="worldgen">

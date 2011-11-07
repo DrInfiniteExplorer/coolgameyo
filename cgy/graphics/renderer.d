@@ -19,12 +19,14 @@ import graphics.texture;
 import graphics.geometrycreator;
 
 import modules.module_;
-import world.world;
+import random.catmullrom;
 import scheduler;
 import settings;
 import statistics;
 import unit;
 import util.util;
+import world.world;
+import world.floodfill;
 
 
 //TODO: Make fix this, or make testcase and report it if not done already.
@@ -41,7 +43,7 @@ class Renderer {
 
     TileTextureAtlas atlas;
     
-    alias ShaderProgram!("offset", "VP", "atlas") WorldShaderProgram;
+    alias ShaderProgram!("offset", "VP", "atlas", "SkyColor") WorldShaderProgram;
     alias ShaderProgram!("VP", "M", "color") DudeShaderProgram;
     alias ShaderProgram!("VP", "V", "color", "radius") LineShaderProgram;
 
@@ -69,6 +71,7 @@ class Renderer {
         worldShader.offset = worldShader.getUniformLocation("offset");
         worldShader.VP = worldShader.getUniformLocation("VP");
         worldShader.atlas = worldShader.getUniformLocation("atlas");
+        worldShader.SkyColor = worldShader.getUniformLocation("SkyColor");
         worldShader.use();
         worldShader.setUniform(worldShader.atlas, 0); //Texture atlas will always reside in texture unit 0 yeaaaah
 
@@ -274,6 +277,20 @@ class Renderer {
         glError();
     }
 
+    immutable vec3f NightBlue = vec3f(0.0, 0.0, 0.2);
+    immutable vec3f SunLighty = vec3f(1.0, 1.0, 1.0);
+    immutable vec3f[] SkyColorDerp = [
+        NightBlue,
+        NightBlue,
+        NightBlue,
+        SunLighty,
+        SunLighty,
+        SunLighty,
+        SunLighty,
+        NightBlue,
+        NightBlue,
+    ];
+
     void renderWorld(Camera camera)
     {
         worldShader.use();
@@ -288,6 +305,8 @@ class Renderer {
         atlas.use();
         auto transform = camera.getProjectionMatrix() * camera.getViewMatrix();
         worldShader.setUniform(worldShader.VP, transform);
+        vec3f SkyColor = CatmullRomSpline(world.getDayTime(), SkyColorDerp);
+        worldShader.setUniform(worldShader.SkyColor, SkyColor);
         auto regions = geometryCreator.getRegions();
         foreach(region ; regions){
             if(region.VBO && camera.inFrustum(region.grNum.getAABB())){

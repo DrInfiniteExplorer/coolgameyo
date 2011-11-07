@@ -19,6 +19,7 @@ version(Windows) import std.c.windows.windows;
 public import changelist;
 import statistics;
 
+import world.time;
 import world.world;
 
 import modules.module_;
@@ -61,8 +62,6 @@ private Task syncTask() {
     return Task(true, true, null);
 }
 
-
-enum TICKS_PER_SECOND = 35;
 
 // THIS WILL PROBABLY NEED SOME FLESHING OUT...!!!
 private void workerFun(shared Scheduler ssched) {

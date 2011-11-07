@@ -28,6 +28,9 @@ class GuiElementText : public GuiElement {
         setRelativeRect(Rectd(pos, vec2d(0,0)));
         absoluteRect.size = text.getSize();
         setAbsoluteRect(absoluteRect);
+        if(!transparent) {
+            setColor(vec3f(1.0)); //If not transparent, make the font show by default :P
+        }
     }
     
     override void destroy() {

@@ -33,7 +33,7 @@ import world.world;
 class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{ 
     
     private GuiSystem guiSystem;
-    private GuiElementText fpsText, tickText, frameTimeText, tickTimeText, position, tileInfo;
+    private GuiElementText fpsText, tickText, frameTimeText, tickTimeText, position, tileInfo, timeInfo;
     private StatisticsWindow statistics;
 	private InventoryWindow inventoryWindow;
 
@@ -151,17 +151,19 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
 
 
         tileInfo.setText(text(selectedTile.describe(), "; ", selectedDistance));
+        timeInfo.setText(world.getDayTimeString());
     }
     
     void spawnHUD() {
-        fpsText = new GuiElementText(guiSystem, vec2d(0, 0), "Fps counter");
-        tickText = new GuiElementText(guiSystem, vec2d(0, fpsText.getRelativeRect.getBottom()), "Tick counter");
+        fpsText = new GuiElementText(guiSystem, vec2d(0, 0), "Fps counter", false);
+        tickText = new GuiElementText(guiSystem, vec2d(0, fpsText.getRelativeRect.getBottom()), "Tick counter", false);
         
-        frameTimeText = new GuiElementText(guiSystem, vec2d(0.2, 0), "Frame time counter");
-        tickTimeText = new GuiElementText(guiSystem, vec2d(0.2, frameTimeText.getRelativeRect.getBottom()), "Tick time counter");
+        frameTimeText = new GuiElementText(guiSystem, vec2d(0.2, 0), "Frame time counter", false);
+        tickTimeText = new GuiElementText(guiSystem, vec2d(0.2, frameTimeText.getRelativeRect.getBottom()), "Tick time counter", false);
         
-        position = new GuiElementText(guiSystem, vec2d(0, tickText.getRelativeRect.getBottom()), "Position");
-        tileInfo = new GuiElementText(guiSystem, vec2d(0, position.getRelativeRect.getBottom()), "TileInfo");
+        position = new GuiElementText(guiSystem, vec2d(0, tickText.getRelativeRect.getBottom()), "Position", false);
+        tileInfo = new GuiElementText(guiSystem, vec2d(0, position.getRelativeRect.getBottom()), "TileInfo", false);
+        timeInfo = new GuiElementText(guiSystem, vec2d(0, tileInfo.getRelativeRect.getBottom()), "00:00", false);
         void spawnStatistics() {
             if( statistics is null) {
                 statistics = new StatisticsWindow(guiSystem);
@@ -176,6 +178,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         tickTimeText.destroy(); tickTimeText = null;        
         position.destroy(); position = null;
         tileInfo.destroy(); tileInfo = null;
+        timeInfo.destroy(); timeInfo = null;
         guiSystem.removeHotkey(SDLK_F1);
         if(statistics !is null) {
             statistics.destroy();

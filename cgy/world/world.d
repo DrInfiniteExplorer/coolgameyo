@@ -40,6 +40,7 @@ import util.filesystem;
 import world.activity;
 import world.ambient;
 import world.floodfill;
+import world.time;
 
 
 // TODO: Refactor so these send world as first parameter,
@@ -571,6 +572,8 @@ class World {
             }
             moveUnit(unit, UnitPos(unit.pos.value + vel));
         }
+
+        updateTime();
     }
 
     // ONLY CALLED FROM CHANGELIST (And some CustomChange-implementations )
@@ -842,6 +845,7 @@ class World {
     }
 
 
+    mixin WorldTimeClockCode;
     mixin LightStorageMethods;
     mixin ActivityHandlerMethods;
     mixin FloodFill;
