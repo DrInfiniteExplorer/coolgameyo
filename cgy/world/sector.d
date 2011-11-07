@@ -35,17 +35,23 @@ struct SolidMap {
         byte[SectorSize.z][SectorSize.y][SectorSize.x] data;
     }
 
-    void set(vec3i idx, bool val) {
+    bool set(vec3i idx, bool val) {
         static if(UsePackedData) {
             int x   = idx.X/8;
             int bit = idx.X%8;
             int y   = idx.Y;
             int z   = idx.Z;
 
-            setFlag(data[x][y][z], 1<<bit, val);
+            byte value = data[x][y][z];
+            byte bitMask = cast(byte)(1<<bit);
+            bool oldVal = (value & bitMask) != 0;
+            setFlag(value, bitMask, val);
+            data[x][y][z] = value;
         } else {
+            bool oldVal = data[idx.X][idx.Y][idx.Z] != 0;
             data[idx.X][idx.Y][idx.Z] = cast(char)val;
         }
+        return oldVal;
     }
     bool get(vec3i idx) const {
         static if(UsePackedData) {
@@ -287,9 +293,10 @@ class Sector {
         return solidMap.hasContent(relMin, relMax);
     }
 
-    void setSolid(TilePos tilePos, bool solid) {
+    //Returns old solidnessvalue
+    bool setSolid(TilePos tilePos, bool solid) { 
         auto sectorRel = tilePos.sectorRel;
-        solidMap.set(sectorRel, solid);
+        return solidMap.set(sectorRel, solid);
     }
     bool isSolid(TilePos tilePos) const {
         auto sectorRel = tilePos.sectorRel;
@@ -329,7 +336,7 @@ class Sector {
     LightSource[] getLightsWithin(TilePos min, TilePos max) {
         LightSource[] ret;
         foreach(light ; lights ) {
-            vec3i lightPos = convert!int(light.position);
+            vec3i lightPos = light.position.tilePos.value;
             if(within(lightPos, min.value, max.value)) {
                 ret ~= light;
             }

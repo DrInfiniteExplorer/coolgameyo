@@ -329,6 +329,13 @@ struct SectorXYNum {
 struct TileXYPos {
     vec2i value;
 
+    this(vec2i pos) {
+        value = pos;
+    }
+    this(TilePos pos) {
+        value.set(pos.value.X, pos.value.Y);
+    }
+
     SectorXYNum getSectorXYNum() const {
         return SectorXYNum(vec2i(
                     negDiv(value.X, SectorSize.x),

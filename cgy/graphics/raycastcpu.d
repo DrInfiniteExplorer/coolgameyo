@@ -51,13 +51,13 @@ void computeYourMother(World world, Image img, Camera camera) {
                 auto lights = world.getAffectingLights(intersectionTilePos, intersectionTilePos);
                 double accumulatedLight = 0.0;
                 foreach(light ; lights) {
-                    auto toLight = light.position-intersectionPoint;
+                    auto toLight = light.position.value-intersectionPoint;
                     auto distance = toLight.getLength();
                     int maxLightIter = cast(int)ceil(abs(toLight.X) + abs(toLight.Y) + abs(toLight.Z));
                     double dotValue = toLight.dotProduct(convert!double(tileNormal));
                     if(dotValue <= 0) {
                     }
-                    if( !world.rayCollides(intersectionPoint, light.position)) {
+                    if( !world.rayCollides(intersectionPoint, light.position.value)) {
                         toLight.normalize();
                         accumulatedLight += dotValue * (1.0/(distance+1));
                     }

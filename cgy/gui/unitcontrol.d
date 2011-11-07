@@ -258,7 +258,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         } else if(m.middle && tileSelected) {
             vec3d pos = TilePos(selectedTilePos.value+selectedTileNormal).toEntityPos.value; // + 0.5 * convert!double(selectedTileNormal);
             LightSource light = new LightSource;
-            light.position = pos;
+            light.position = UnitPos(pos);
             light.tint.set(0.8, 0.8, 0);
             light.strength = MaxLightStrength;
             possesAI.addLight(light);

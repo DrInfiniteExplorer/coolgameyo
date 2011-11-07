@@ -108,7 +108,7 @@ mixin template FloodFill() {
             g_Statistics.FloodFillNew(0);            
             foreach (sectorNum; floodingSectors) {
                 notifySectorLoad(sectorNum);
-                spreadSunLight(sectorNum);
+                writeln("spreadSunLight(sectorNum);");
             }
             floodingSectors.length = 0;
             //floodingSectors.assumeSafeAppend(); // yeaaaaahhhh~~~

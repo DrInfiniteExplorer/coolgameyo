@@ -4,6 +4,8 @@ import std.math, std.conv, std.random, std.algorithm;
 import std.c.process;
 import std.stdio;
 
+import light;
+
 import tiletypemanager;
 import world.world;
 
@@ -171,6 +173,11 @@ final class WorldGenerator {
     Tile getTile(TilePos pos) {
         if(! isInsideWorld(pos)) {
             return Tile(TileTypeAir, TileFlags.valid);
+        }
+        if(pos.value.Z >= maxZ(TileXYPos(pos))) {
+            auto tile = Tile(TileTypeAir, TileFlags.valid);
+            tile.sunLightValue = MaxLightStrength;
+            return tile;
         }
         double height = getHeight(pos);
         double distAboveGround = pos.value.Z - height;

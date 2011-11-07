@@ -388,7 +388,14 @@ class World {
     }
 
 
+    Block* getBlockLastBlock = null;
+    BlockNum getBlockLastBlockNum = BlockNum(vec3i(int.min));
     private Block* getBlock(BlockNum blockNum, bool generate=false) {
+        /*
+        if (blockNum == getBlockLastBlockNum) {
+            return getBlockLastBlock;
+        }
+        */
         auto sector = this.getSector(blockNum.getSectorNum());
         if (sector is null) return &INVALID_BLOCK;
 
@@ -402,10 +409,13 @@ class World {
         }
         BREAKPOINT(!block.valid);
         assert (block.valid);
+        //getBlockLastBlockNum = blockNum;
+        //getBlockLastBlock = block;
         return block;
     }
 
     private void setBlock(BlockNum blockNum, Block newBlock) {
+        enforce(0, "Deprecated. see Sector.setBlock.");
         auto sector = getSector(blockNum.getSectorNum());
         sector.setBlock(blockNum, newBlock);
     }
@@ -601,6 +611,7 @@ class World {
     }
 
     //We only create blocks when we floodfill; this the default for this parameter is henceforth "false"
+
     Tile getTile(TilePos tilePos, bool createBlock=false) {
         auto block = getBlock(tilePos.getBlockNum(), createBlock);
         if(!block.valid){
@@ -686,13 +697,16 @@ class World {
         auto sectorNum = tilePos.getSectorNum();
         SectorXY* sectorXY;
         auto sector = getSector(sectorNum, &sectorXY);
-        sector.setSolid(tilePos, !newTile.isAir());
 
         auto blockNum = tilePos.getBlockNum();
         //auto block = getBlock(blockNum, true);
         auto block = sector.getBlock(blockNum); //No blocks are generated here :)
         BREAKPOINT(!block.valid);
+        auto oldTile = block.getTile(tilePos);
         block.setTile(tilePos, newTile);
+        bool newSolid = !newTile.isAir();
+        bool oldSolid = sector.setSolid(tilePos, newSolid);
+
         //Only works to not set blocknum again, if we already
         // have a block of memory that block.tiles points to;
         // since then we'd be writing into the correct memory.
@@ -717,16 +731,19 @@ class World {
                 while (getTile(pos, false).type is TileTypeAir) { //Create geometry if we need to
                     pos.value.Z -= 1;
                 }
-                recalculateSunLight(pos, pos);
                 heightmap[sectRel.X, sectRel.Y] = pos.value.Z;
             }
         } else if (heightmapZ < tilePos.value.Z) {
             if (newTile.type !is TileTypeAir) {
-                recalculateSunLight(tilePos, tilePos);
                 heightmap[sectRel.X, sectRel.Y] = tilePos.value.Z;
             }
         }
-        recalculateAllLight(tilePos);
+
+        if(oldSolid && !newSolid) { //Added air
+            removeTile(tilePos);
+        } else if( !oldSolid && newSolid ){ //Removed air
+            addTile(tilePos, oldTile);
+        }
 
         notifyTileChange(tilePos);
     }

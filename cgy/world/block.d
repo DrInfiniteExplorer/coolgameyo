@@ -10,6 +10,7 @@ module world.block;
 import std.algorithm;
 import std.stdio;
 
+import light;
 import pos;
 import tiletypemanager : TileTypeAir;
 //import tiletypemanager;
@@ -40,6 +41,7 @@ struct Block {
     BlockNum blockNum = BlockNum(vec3i(int.min, int.min, int.min));;
 
     ushort sparseTileType;
+    byte sunLightVal;
     bool sparseTileTransparent() @property { return sparseTileType == TileTypeAir; }
 
     invariant()
@@ -68,6 +70,7 @@ struct Block {
             t.type = sparseTileType;
             t.flags = TileFlags.valid;
             t.seen = seen;
+            t.sunLightValue = sunLightVal;
             return t;
         }
         auto pos = tilePos.rel();
@@ -91,6 +94,7 @@ struct Block {
             t.type = sparseTileType;
             t.flags = TileFlags.valid;
             t.seen = seen;
+            t.sunLightValue = sunLightVal;
             (*(cast(Tile[BlockSize.x*BlockSize.y*BlockSize.z]*)(tiles)))[] = t; //Fuck yeah!!!! ? :S:S:S
         }
         (*tiles)[p.X][p.Y][p.Z] = tile;
@@ -105,21 +109,11 @@ struct Block {
         auto p = pos.rel();
 
         if(sparse){ //If was sparse, populate with real tiles
-            auto block = alloc();
-            tiles = block.tiles;
-            setFlag(flags, BlockFlags.sparse, false);
+            setTile(pos, getTile(pos)); //Make unsparse. This may seem retarded, but it'll prevent
+            //bugs that come from having make-unsparse-code in mukltiple places (already had at least one such :P)
+        }
 
-            Tile t;
-            t.type = sparseTileType;
-            t.flags = TileFlags.valid;
-            t.seen = seen;
-            (*(cast(Tile[BlockSize.x*BlockSize.y*BlockSize.z]*)(tiles)))[] = t; //Fuck yeah!!!! ? :S:S:S
-        }
-        if(isSunLight) {
-            (*tiles)[p.X][p.Y][p.Z].sunLightValue = newVal;
-        } else {
-            (*tiles)[p.X][p.Y][p.Z].lightValue = newVal;
-        }
+        (*tiles)[p.X][p.Y][p.Z].setLight(isSunLight, newVal);
     }
 
     bool isSame(const Block other) const {
@@ -148,6 +142,8 @@ struct Block {
         if (sparse) {
             auto c = [sparseTileType];
             write(c);
+            auto d = [sunLightVal];
+            write(d);
         } else {
             BREAK_IF(tiles is null);            
             write((&((*tiles)[0][0][0]))[0 .. BlockSize.x * BlockSize.y * BlockSize.z]);
@@ -159,6 +155,7 @@ struct Block {
         read(flags.sizeof, cast(ubyte*)&flags);
         if ((flags & BlockFlags.sparse) != 0) {
             read(sparseTileType.sizeof, cast(ubyte*)&sparseTileType);
+            read(sunLightVal.sizeof, cast(ubyte*)&sunLightVal);
         } else {
             auto block = alloc();
             block.flags = flags;
@@ -189,8 +186,10 @@ struct Block {
             if (first) {
                 first = false;
                 block.sparseTileType = tile.type;
+                block.sunLightVal = tile.sunLightValue;
             }
-            if (block.sparseTileType != tile.type) {
+            if (block.sparseTileType != tile.type ||
+                block.sunLightVal != tile.sunLightValue) {
                 homogenous = false;
             }
         }
@@ -280,6 +279,7 @@ Block AirBlock(BlockNum blockNum) {
     ret.flags = cast(BlockFlags)(BlockFlags.valid | BlockFlags.sparse);
     ret.blockNum = blockNum;
     ret.sparseTileType = TileTypeAir;
+    ret.sunLightVal = MaxLightStrength;
     return ret;
 };
 
