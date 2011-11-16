@@ -27,47 +27,49 @@ import util.filesystem;
 import util.rangefromto;
 
 
-enum UsePackedData = true;
+
+enum PackInInt = true;
+static if(PackInInt) {
+    enum BitCount = 32;
+    alias uint StorageType;
+} else {
+    enum BitCount = 8;
+    alias ubyte StorageType;
+}
+
 struct SolidMap {
-    static if(UsePackedData) {
-        byte[SectorSize.z][SectorSize.y][SectorSize.x/8] data;
-    } else {
-        byte[SectorSize.z][SectorSize.y][SectorSize.x] data;
-    }
+    const int sizeX = SectorSize.x / BitCount;
+    const int sizeY = SectorSize.y;
+    const int sizeZ = SectorSize.z;
+    StorageType[sizeX][sizeY][sizeZ] data;
 
     bool set(vec3i idx, bool val) {
-        static if(UsePackedData) {
-            int x   = idx.X/8;
-            int bit = idx.X%8;
-            int y   = idx.Y;
-            int z   = idx.Z;
+        int x   = idx.X/BitCount;
+        int bit = idx.X%BitCount;
+        int y   = idx.Y;
+        int z   = idx.Z;
 
-            byte value = data[x][y][z];
-            byte bitMask = cast(byte)(1<<bit);
-            bool oldVal = (value & bitMask) != 0;
-            setFlag(value, bitMask, val);
-            data[x][y][z] = value;
-        } else {
-            bool oldVal = data[idx.X][idx.Y][idx.Z] != 0;
-            data[idx.X][idx.Y][idx.Z] = cast(char)val;
-        }
+        StorageType value = data[z][y][x];
+        StorageType bitMask = cast(StorageType)(1<<bit);
+        bool oldVal = (value & bitMask) != 0;
+        setFlag(value, bitMask, val);
+        data[z][y][x] = value;
         return oldVal;
     }
     bool get(vec3i idx) const {
-        static if(UsePackedData) {
-            int x   = idx.X/8;
-            int bit = idx.X%8;
-            int y   = idx.Y;
-            int z   = idx.Z;
+        int x   = idx.X/BitCount;
+        int bit = idx.X%BitCount;
+        int y   = idx.Y;
+        int z   = idx.Z;
 
-            return 0 != (data[x][y][z] & (1<<bit));
-        } else {
-            return data[idx.X][idx.Y][idx.Z] != 0;
-        }
+        return 0 != (data[z][y][x] & (1<<bit));
     }
 
     void clear() {
-        (&data[0][0][0])[0..data.sizeof] = 0;
+        (&data[0][0][0])[0..(data.sizeof / data[0][0][0].sizeof)] = 0;
+    }
+    void fill() {
+        (&data[0][0][0])[0..(data.sizeof / data[0][0][0].sizeof)] = 0xFF;
     }
 
     void updateBlock(Block b) {
@@ -99,9 +101,7 @@ struct SolidMap {
     }
 
 }
-static if(UsePackedData) {
-    static assert(SolidMap.sizeof == 65536); //64k yeah :)
-}
+static assert(SolidMap.sizeof == 65536); //64k yeah :)
 
 class Sector {
 
@@ -301,6 +301,9 @@ class Sector {
     bool isSolid(TilePos tilePos) const {
         auto sectorRel = tilePos.sectorRel;
         return solidMap.get(sectorRel);
+    }
+    SolidMap getSolidMap() const {
+        return solidMap;
     }
 
     //TODO: Add more unit-interfacing etc.

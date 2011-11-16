@@ -22,6 +22,7 @@ import graphics.ogl;
 import graphics.image;
 import graphics.camera;
 import graphics.raycastcpu;
+import graphics.raycastgpu;
 
 import settings;
 import util.httpupload;
@@ -39,7 +40,7 @@ class PrintScreenMenu : GuiElementWindow {
     Image img;
     this(MainMenu m, World w, Camera c) {
         img = screenCap();
-        computeYourMother(w, img, c);
+        computeYourFather(w, img, c);
         main = m;
         guiSystem = cast(GuiSystem)m.getGuiSystem();
         dump = guiSystem.setEventDump(null);

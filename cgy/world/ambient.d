@@ -106,6 +106,11 @@ mixin template LightStorageMethods() {
         sector.addLight(light);
         
         spreadLights(false, [LightPropagationData(tilePos, light.strength)], modifiedBlocks);
+        foreach(blockNum, trueVal ; modifiedBlocks) {
+            auto tilePos = blockNum.toTilePos();
+            notifyUpdateGeometry(tilePos);
+        }
+
     }
     void unsafeAddLight(LightSource light) {
         addLight(light);

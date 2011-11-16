@@ -48,6 +48,7 @@ body{
 void dir(string path, void delegate(string name) cb) {
     return dir(path, (string name){cb(name); return false;});
 }
+
 // cb should return true to stop iteration.
 void dir(string path, bool delegate(string name) cb)
 in{

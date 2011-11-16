@@ -388,6 +388,12 @@ class World {
         return null;
     }
 
+    SolidMap getSolidMap(TilePos tilePos) {
+        auto sectorNum = tilePos.getSectorNum();
+        auto sector = getSector(sectorNum);
+        return sector.getSolidMap();
+    }
+
 
     Block* getBlockLastBlock = null;
     BlockNum getBlockLastBlockNum = BlockNum(vec3i(int.min));
