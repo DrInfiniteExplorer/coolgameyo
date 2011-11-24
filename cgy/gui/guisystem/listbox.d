@@ -70,7 +70,12 @@ class GuiElementListBox : public GuiElement {
     }
 
     public void addItem(string str, int index) {
-        if (nrOfItems == rows.length) rows.length = rows.length + 1;
+        if (index > nrOfItems) {
+            index = nrOfItems;
+        }
+        if (nrOfItems == rows.length) {
+            rows.length += 1;
+        }
 
         for (int i = nrOfItems; i > index; i--) {
             rows[i] = rows[i-1];
@@ -84,8 +89,12 @@ class GuiElementListBox : public GuiElement {
 	}
     public void removeItem(int index) {
         enforce(index < nrOfItems, "ListBox error: Tried to remove out of index");
-        if (index < selectedIndex) selectedIndex--;
-        else if (index == selectedIndex) selectedIndex = -1;
+        if (index < selectedIndex) {
+            selectedIndex--;
+        }
+        else if (index == selectedIndex) {
+            selectedIndex = -1;
+        }
         for (int a = index; a < nrOfItems; a++){
             rows[a] = rows[a+1];
         }

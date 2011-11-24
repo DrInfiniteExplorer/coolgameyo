@@ -19,6 +19,7 @@ pragma(lib, "opencl.lib");
 import graphics.camera;
 import graphics.image;
 import light;
+import world.ambient;
 import settings;
 import statistics;
 import util.util;
@@ -31,8 +32,8 @@ CLCommandQueue clCommandQueue;
 CLProgram traceRaysProgram;
 
 //enum TileMemoryLocation = "global";
-enum TileMemoryLocation = "constant";
-//enum TileMemoryLocation = "texture";
+//enum TileMemoryLocation = "constant";
+enum TileMemoryLocation = "texture";
 
 static bool inited = false;
 void initOpenCL() {
@@ -91,68 +92,105 @@ struct CLCamera {
     int height;
 };
 
+struct CLLight {
+    float[4] position;
+    int[4] strength;
+};
+
 void computeYourFather(World world, Image img, Camera camera) {
-    initOpenCL();
+    try {
+        initOpenCL();
 
-    vec3d upperLeft, toRight, toDown, dir, startPos;
-    startPos = camera.getPosition();
-    camera.getRayParameters(upperLeft, toRight, toDown);
-    CLCamera clCamera;
-    clCamera.position   = [startPos.X, startPos.Y, startPos.Z, 0];
-    clCamera.upperLeft  = [upperLeft.X, upperLeft.Y, upperLeft.Z, 0];
-    clCamera.toRight    = [toRight.X, toRight.Y, toRight.Z, 0];
-    clCamera.toDown     = [toDown.X, toDown.Y, toDown.Z, 0];
-    clCamera.width = img.imgWidth;
-    clCamera.height= img.imgHeight;
+        vec3d upperLeft, toRight, toDown, dir, startPos;
+        startPos = camera.getPosition();
+        camera.getRayParameters(upperLeft, toRight, toDown);
+        CLCamera clCamera;
+        clCamera.position   = [startPos.X, startPos.Y, startPos.Z, 0];
+        clCamera.upperLeft  = [upperLeft.X, upperLeft.Y, upperLeft.Z, 0];
+        clCamera.toRight    = [toRight.X, toRight.Y, toRight.Z, 0];
+        clCamera.toDown     = [toDown.X, toDown.Y, toDown.Z, 0];
+        clCamera.width = img.imgWidth;
+        clCamera.height= img.imgHeight;
 
-    SolidMap tileMap = world.getSolidMap(UnitPos(camera.getPosition).tilePos);
-    enforce(tileMap.hasContent(vec3i(0,0,0), vec3i(SectorSize.x-1, SectorSize.y-1, SectorSize.z-1)), "Derp");
-    //tileMap.set(vec3i(1,1,1), false);
+        World.LightPropagationData[] lights;
+        world.getLightsWithin(TilePos(vec3i(-100, -100, -100)), TilePos(vec3i(100, 100, 100)), lights);
+        CLLight[] clLight;
+        clLight.length = lights.length;
+        for (int i = 0; i < lights.length; i++) {
+            clLight[i].position = [ lights[i].tilePos.value.X+0.1,
+                                    lights[i].tilePos.value.Y+0.1,
+                                    lights[i].tilePos.value.Z+0.1, 0];
+            clLight[i].strength = lights[i].strength;
+        }
+        /*clLight.length = 2;
+        clLight[0].position = [ 0, 0, 0, 0];
+        clLight[0].strength = 0;
+        clLight[1].position = [ 1, 2, 3, 4];
+        clLight[1].strength = 5;*/
 
-    static if(TileMemoryLocation == "texture") {
-        static if(PackInInt) {
-            auto format = cl_image_format(CL_R, CL_UNSIGNED_INT32);
+    
+    
+        SolidMap tileMap = world.getSolidMap(UnitPos(camera.getPosition).tilePos);
+        enforce(tileMap.hasContent(vec3i(0,0,0), vec3i(SectorSize.x-1, SectorSize.y-1, SectorSize.z-1)), "Derp");
+        //tileMap.set(vec3i(3,4,5), false);
+
+        static if(TileMemoryLocation == "texture") {
+            static if(PackInInt) {
+                auto format = cl_image_format(CL_R, CL_UNSIGNED_INT32);
+            } else {
+                auto format = cl_image_format(CL_R, CL_UNSIGNED_INT8);
+            }
+            auto tileBuffer = CLImage3D(clContext,
+                CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+                format,
+                tileMap.sizeX, tileMap.sizeY, tileMap.sizeZ,
+                0, 0,
+                tileMap.data.ptr
+            );
         } else {
-            auto format = cl_image_format(CL_R, CL_UNSIGNED_INT8);
+            auto tileBuffer = CLBuffer(clContext, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, tileMap.sizeof, tileMap.data.ptr);
         }
-        auto tileBuffer = CLImage3D(clContext,
-            CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-            format,
-            tileMap.sizeX, tileMap.sizeY, tileMap.sizeZ,
-            0, 0,
-            tileMap.data.ptr
-        );
-    } else {
-        auto tileBuffer = CLBuffer(clContext, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, tileMap.sizeof, tileMap.data.ptr);
-    }
 
-    auto constantBuffer = CLBuffer(clContext, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, clCamera.sizeof, &clCamera);
-    writeln("derp, ", tileMap.sizeof);
-    int imgSize = img.imgWidth * img.imgHeight * 4;
-    auto outputBuffer = CLBuffer(clContext, CL_MEM_WRITE_ONLY, imgSize, null);
+        auto lightBuffer = CLBuffer(clContext, CL_MEM_READ_ONLY,
+                                    clLight.length * clLight[0].sizeof + int.sizeof, null);
 
-    auto kernel = CLKernel(traceRaysProgram, "castRays");
-    //auto kernel = CLKernel(traceRaysProgram, "writeWhite");
-    kernel.setArgs(constantBuffer, tileBuffer, outputBuffer);
-    //kernel.setArgs(outputBuffer);
+        int cnt = clLight.length;
+        clCommandQueue.enqueueWriteBuffer(lightBuffer, CL_TRUE, 0, cnt.sizeof, &cnt);
+        int s = clLight.length * clLight[0].sizeof;
+        int asd = clLight[0].sizeof;
+        clCommandQueue.enqueueWriteBuffer(lightBuffer, CL_TRUE, cnt.sizeof, clLight.length * clLight[0].sizeof, clLight.ptr);
 
-    // Run the kernel on specific ND range
-    auto global	= NDRange(img.imgWidth, img.imgHeight);
+        auto constantBuffer = CLBuffer(clContext, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, clCamera.sizeof, &clCamera);
+        writeln("derp, ", tileMap.sizeof);
+        int imgSize = img.imgWidth * img.imgHeight * 4;
+        auto outputBuffer = CLBuffer(clContext, CL_MEM_WRITE_ONLY, imgSize, null);
 
-    {
-        mixin(Time!("writeln(\"Takes time: \", usecs/1000);"));
-        foreach(x ; 0 .. 1)
+        auto kernel = CLKernel(traceRaysProgram, "castRays");
+        //auto kernel = CLKernel(traceRaysProgram, "writeWhite");
+        kernel.setArgs(constantBuffer, lightBuffer, tileBuffer, outputBuffer);
+        //kernel.setArgs(outputBuffer);
+
+        // Run the kernel on specific ND range
+        auto global	= NDRange(img.imgWidth, img.imgHeight);
+
         {
-            CLEvent execEvent = clCommandQueue.enqueueNDRangeKernel(kernel, global);
-            clCommandQueue.flush();
-            // wait for the kernel to be executed
-            execEvent.wait();
+            mixin(Time!("writeln(\"Takes time: \", usecs/1000);"));
+            foreach(x ; 0 .. 1)
+            {
+                CLEvent execEvent = clCommandQueue.enqueueNDRangeKernel(kernel, global);
+                clCommandQueue.flush();
+                // wait for the kernel to be executed
+                execEvent.wait();
+            }
         }
+
+        clCommandQueue.enqueueReadBuffer(outputBuffer, CL_TRUE, 0, imgSize, img.imgData.ptr);
+
+        //world.intersectTile
+    } catch (Throwable e) { 
+        MessageBoxA(null, e.toString().toStringz(),
+                    "OpenCL ERRORR!", MB_OK | MB_ICONEXCLAMATION);
     }
-
-    clCommandQueue.enqueueReadBuffer(outputBuffer, CL_TRUE, 0, imgSize, img.imgData.ptr);
-
-    //world.intersectTile
 }
 
 

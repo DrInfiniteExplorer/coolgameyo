@@ -20,6 +20,11 @@ struct Camera {
     int height;
 };
 
+struct Light {
+	vec4f position;
+	int strength;
+};
+
 __constant int4 sectorSize = (int4)(128, 128, 32, 1); //1 to prevent division with 0 :p
 __constant int4 solidMapSize = (int4)(SolidMapSize, 1);
 
@@ -53,10 +58,10 @@ bool isSolid(int4 tilePos,
     TileStorageLocation const TileStorageType* solidMap
     ) {
     int4 rel = getSectorRel(tilePos);
-    int x   = tilePos.x/TileStorageBitCount;
-    int bit = tilePos.x%TileStorageBitCount;
-    int y   = tilePos.y;
-    int z   = tilePos.z;
+    int x   = rel.x/TileStorageBitCount;
+    int bit = rel.x%TileStorageBitCount;
+    int y   = rel.y;
+    int z   = rel.z;
 
     TileStorageType byte = solidMap[x + solidMapSize.x * (y + solidMapSize.y * z)];
     return 0 != (byte & (1<<bit));
@@ -67,6 +72,7 @@ int4 getTilePos(vec4f tilePos) {
     return convert_int4(floor(tilePos));
 }
 
+// Makes starting position floating. Alltsa tMax
 float initStuff(float start, float vel, float delta) {
     if( ((int)start) == start) {
         if (vel > 0.f) {
@@ -86,7 +92,14 @@ float initStuff(float start, float vel, float delta) {
     return dist / vel;
 }
 
-void stepIter(int4 dir, int4* tilePos, float4* tMax, float4 tDelta, float *tMin) {
+/*
+tMax - tid for att komma till nasta
+tMin - tid for att komma till denna
+tilePos - den tilen vi hamnar i denna gangen
+tDelta - tid att aka over en tile (alltid positiv)
+dir - den faktiska riktningen vi aker i
+*/
+void stepIter(const int4 dir, int4* tilePos, float4* tMax, const float4 tDelta, float *tMin) {
     *tMin = min(tMax->x, min(tMax->y, tMax->z));
     if(tMax->x < tMax->y) {
         if(tMax->x < tMax->z) {
@@ -107,17 +120,16 @@ void stepIter(int4 dir, int4* tilePos, float4* tMax, float4 tDelta, float *tMin)
     }
 }
 
-__kernel void castRays(
-    __constant struct Camera* camera,
+const void getDaPoint(
+	__constant struct Camera* camera,
 #ifdef UseTexture
     __read_only image3d_t solidMap,
 #else
     TileStorageLocation const TileStorageType* solidMap,
 #endif
-    __global int* outMap
-)
-{
-    int x = get_global_id(0);
+	vec4f* daPoint
+) {
+	int x = get_global_id(0);
     int y = get_global_id(1);
     float percentX = ((float)x) / ((float)camera->width);
     float percentY = ((float)y) / ((float)camera->height);
@@ -139,17 +151,101 @@ __kernel void castRays(
     float time;
     stepIter(dir, &tilePos, &tMax, tDelta, &time);
     int c = 0;
-    while(c < 16 && !isSolid(tilePos, solidMap)) {
+    while(c < 300 && !isSolid(tilePos, solidMap)) {
         c++;
         stepIter(dir, &tilePos, &tMax, tDelta, &time);
     }
+	
+	*daPoint = camera->position + rayDir * time*0.999;
+}
 
-    int val = 16777215 -  (int)((((float)c) / 300.f) * (16777215.f)); 
+bool equals(int4 a, int4 b) {
+	return 	a.x==b.x &&
+			a.y==b.y &&
+			a.z==b.z &&
+			a.w==b.w;
+}
+
+float calculateLightInPoint(
+	const vec4f daPoint,
+	__constant struct Light* lights,
+	const int nrOfLights,
+#ifdef UseTexture
+    __read_only image3d_t solidMap
+#else
+    TileStorageLocation const TileStorageType* solidMap
+#endif
+) {
+	//if (sizeof(lights[1]) == 20) return 255;
+	//if (sizeof(lights[1]) != 20) return 0;
+	
+	//if (lights[1].position.z == 1) return 255;
+	//if (lights[1].position.z == 2) return 65280;
+	//if (lights[1].position.z == 3) return 16711680;
+	float lightValue = 0.f;
+	int i;
+	vec4f rayDir;
+	int4 tilePos;
+	int4 dir;
+	vec4f tDelta;
+	vec4f tMax;
+	float time;
+	int c;
+	for (i = 0; i < nrOfLights; i++) {
+		rayDir = normalize(lights[i].position-daPoint);
+
+		tilePos  = convert_int4(daPoint);
+		dir      = convert_int4(sign(rayDir));
+		
+		tDelta.x = fabs(1.f / rayDir.x);
+		tDelta.y = fabs(1.f / rayDir.y);
+		tDelta.z = fabs(1.f / rayDir.z);
+		
+		tMax.x = initStuff(daPoint.x, rayDir.x, tDelta.x);
+		tMax.y = initStuff(daPoint.y, rayDir.y, tDelta.y);
+		tMax.z = initStuff(daPoint.z, rayDir.z, tDelta.z);
+		
+		stepIter(dir, &tilePos, &tMax, tDelta, &time);
+		
+		while(time < 16 && !isSolid(tilePos, solidMap)) {
+			if (equals(tilePos, getTilePos(lights[i].position))) {
+				lightValue += (16-time)*7;
+				break;
+			}
+			
+			stepIter(dir, &tilePos, &tMax, tDelta, &time);
+		}
+		
+	}
+	return lightValue;
+}
+
+
+__kernel void castRays(
+    __constant struct Camera* camera,
+	__constant int* _lights,
+#ifdef UseTexture
+    __read_only image3d_t solidMap,
+#else
+    TileStorageLocation const TileStorageType* solidMap,
+#endif
+    __global int* outMap
+)
+{
+    vec4f daPoint;
+	getDaPoint(camera, solidMap, &daPoint);
+	
+	int nrOfLights=_lights[0];
+	__constant struct Light *lights = (__constant struct Light*)(&_lights[1]);
+	
+	int val = (int)calculateLightInPoint(daPoint, lights, nrOfLights, solidMap);
+	
+    //int val = 16777215 -  (int)((((float)daPoint.x) / 300.f) * (16777215.f)); 
     //int val = (int)((((float)time) / 150.f) * (255)); 
 
     outMap[get_global_id(0) + (camera->height-1-get_global_id(1)) * camera->width] = val;
     
-    int4 checkPosition = (int4)(1, 1, 1, 0);
+    int4 checkPosition = (int4)(3, 4, 5, 0);
     //outMap[get_global_id(0) + (camera->height-1-get_global_id(1)) * camera->width] = isSolid(checkPosition, solidMap) ? 0xFFFFFFFF : 0x0;
 }
 

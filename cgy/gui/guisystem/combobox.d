@@ -81,12 +81,12 @@ class GuiElementComboBox : public GuiElement {
         rows[index].text.setText(text);
     }
 
-    public void addItem(string str, int index = -1) {
-        if(index == -1) {
+    public void addItem(string str, int index) {
+        if (index > nrOfItems) {
             index = nrOfItems;
         }
         if (nrOfItems == rows.length) {
-            rows.length = rows.length + 1;
+            rows.length += 1;
         }
         
         for (int i = nrOfItems; i > index; i--) {
@@ -105,8 +105,12 @@ class GuiElementComboBox : public GuiElement {
 	}
     public void removeItem(int index) {
         enforce(index < nrOfItems, "ComboBox error: Tried to remove out of index");
-        if (index < selectedIndex) selectedIndex--;
-        else if (index == selectedIndex) selectedIndex = -1;
+        if (index < selectedIndex) {
+            selectedIndex--;
+        }
+        else if (index == selectedIndex) {
+            selectedIndex = -1;
+        }
         for (int a = index; a < nrOfItems; a++){
             rows[a] = rows[a+1];
         }
