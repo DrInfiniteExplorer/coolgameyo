@@ -17,6 +17,7 @@ pragma(lib, "cl4d.lib");
 pragma(lib, "opencl.lib");
 
 import graphics.camera;
+import graphics.ogl;
 import graphics.image;
 import light;
 import world.ambient;
@@ -25,63 +26,9 @@ import statistics;
 import util.util;
 import world.world;
 
-
-CLContext       clContext;
-CLCommandQueue clCommandQueue;
-
-CLProgram traceRaysProgram;
-
 //enum TileMemoryLocation = "global";
 //enum TileMemoryLocation = "constant";
 enum TileMemoryLocation = "texture";
-
-static bool inited = false;
-void initOpenCL() {
-    inited = true; //And now just disregard initedness...
-	auto platforms = CLHost.getPlatforms();
-	auto platform = platforms[0];
-	auto devices = platform.allDevices;
-	clContext = CLContext(devices);
-    clCommandQueue = CLCommandQueue(clContext, devices[0]);
-
-    auto content = readText("opencl/yourfather.cl");
-
-    string defines = "";
-
-    static if(TileMemoryLocation == "constant") {
-        defines ~= " -D TileStorageLocation=__constant";
-    } else static if (TileMemoryLocation == "global"){
-        defines ~= " -D TileStorageLocation=__global";
-    } else static if (TileMemoryLocation == "texture") {
-        defines ~= " -D UseTexture";
-    } else {
-        derp=2;
-    }
-
-    static assert(SolidMap.sizeY == 128);
-    static assert(SolidMap.sizeZ == 32);
-    static if(PackInInt) {
-        static assert(SolidMap.sizeX == 4);
-        defines ~= " -D TileStorageType=uint -D TileStorageBitCount=32 -D SolidMapSize=4,128,32";
-
-    } else {
-        static assert(SolidMap.sizeX == 16);
-        defines ~= " -D TileStorageType=uchar -D TileStorageBitCount=8 -D SolidMapSize=16,128,32";
-    }
-
-    traceRaysProgram = clContext.createProgram(
-        content
-    );
-    try{
-        traceRaysProgram.build("-w -Werror " ~ defines);
-    }catch(Throwable t){}
-    string errors = traceRaysProgram.buildLog(devices[0]);
-    writeln(errors);
-    if(errors.length > 2) {
-        MessageBox(null, toStringz("!"~errors~"!?!"), "", 0);
-    }
-
-}
 
 struct CLCamera {
     float[4] position;
@@ -97,100 +44,143 @@ struct CLLight {
     int[4] strength;
 };
 
-void computeYourFather(World world, Image img, Camera camera) {
-    try {
-        initOpenCL();
+__gshared CLProgram g_traceRaysProgram;
+__gshared CLKernel g_kernel;
+__gshared CLBuffer g_cameraBuffer;
+static if(TileMemoryLocation == "texture") {
+    __gshared CLImage3D g_tileBuffer;
+} else {
+    __gshared CLBuffer g_tileBuffer;
+}
 
-        vec3d upperLeft, toRight, toDown, dir, startPos;
-        startPos = camera.getPosition();
-        camera.getRayParameters(upperLeft, toRight, toDown);
-        CLCamera clCamera;
-        clCamera.position   = [startPos.X, startPos.Y, startPos.Z, 0];
-        clCamera.upperLeft  = [upperLeft.X, upperLeft.Y, upperLeft.Z, 0];
-        clCamera.toRight    = [toRight.X, toRight.Y, toRight.Z, 0];
-        clCamera.toDown     = [toDown.X, toDown.Y, toDown.Z, 0];
-        clCamera.width = img.imgWidth;
-        clCamera.height= img.imgHeight;
 
-        World.LightPropagationData[] lights;
-        world.getLightsWithin(TilePos(vec3i(-100, -100, -100)), TilePos(vec3i(100, 100, 100)), lights);
-        CLLight[] clLight;
-        clLight.length = lights.length;
-        for (int i = 0; i < lights.length; i++) {
-            clLight[i].position = [ lights[i].tilePos.value.X+0.1,
-                                    lights[i].tilePos.value.Y+0.1,
-                                    lights[i].tilePos.value.Z+0.1, 0];
-            clLight[i].strength = lights[i].strength;
-        }
-        /*clLight.length = 2;
-        clLight[0].position = [ 0, 0, 0, 0];
-        clLight[0].strength = 0;
-        clLight[1].position = [ 1, 2, 3, 4];
-        clLight[1].strength = 5;*/
+void initInteractiveComputeYourFather(){
+    auto content = readText("opencl/yourfather.cl");
 
-    
-    
-        SolidMap tileMap = world.getSolidMap(UnitPos(camera.getPosition).tilePos);
-        enforce(tileMap.hasContent(vec3i(0,0,0), vec3i(SectorSize.x-1, SectorSize.y-1, SectorSize.z-1)), "Derp");
-        //tileMap.set(vec3i(3,4,5), false);
+    string defines = "";
 
-        static if(TileMemoryLocation == "texture") {
-            static if(PackInInt) {
-                auto format = cl_image_format(CL_R, CL_UNSIGNED_INT32);
-            } else {
-                auto format = cl_image_format(CL_R, CL_UNSIGNED_INT8);
-            }
-            auto tileBuffer = CLImage3D(clContext,
-                CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-                format,
-                tileMap.sizeX, tileMap.sizeY, tileMap.sizeZ,
-                0, 0,
-                tileMap.data.ptr
-            );
-        } else {
-            auto tileBuffer = CLBuffer(clContext, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, tileMap.sizeof, tileMap.data.ptr);
-        }
-
-        auto lightBuffer = CLBuffer(clContext, CL_MEM_READ_ONLY,
-                                    clLight.length * clLight[0].sizeof + int.sizeof, null);
-
-        int cnt = clLight.length;
-        clCommandQueue.enqueueWriteBuffer(lightBuffer, CL_TRUE, 0, cnt.sizeof, &cnt);
-        int s = clLight.length * clLight[0].sizeof;
-        int asd = clLight[0].sizeof;
-        clCommandQueue.enqueueWriteBuffer(lightBuffer, CL_TRUE, cnt.sizeof, clLight.length * clLight[0].sizeof, clLight.ptr);
-
-        auto constantBuffer = CLBuffer(clContext, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, clCamera.sizeof, &clCamera);
-        writeln("derp, ", tileMap.sizeof);
-        int imgSize = img.imgWidth * img.imgHeight * 4;
-        auto outputBuffer = CLBuffer(clContext, CL_MEM_WRITE_ONLY, imgSize, null);
-
-        auto kernel = CLKernel(traceRaysProgram, "castRays");
-        //auto kernel = CLKernel(traceRaysProgram, "writeWhite");
-        kernel.setArgs(constantBuffer, lightBuffer, tileBuffer, outputBuffer);
-        //kernel.setArgs(outputBuffer);
-
-        // Run the kernel on specific ND range
-        auto global	= NDRange(img.imgWidth, img.imgHeight);
-
-        {
-            mixin(Time!("writeln(\"Takes time: \", usecs/1000);"));
-            foreach(x ; 0 .. 1)
-            {
-                CLEvent execEvent = clCommandQueue.enqueueNDRangeKernel(kernel, global);
-                clCommandQueue.flush();
-                // wait for the kernel to be executed
-                execEvent.wait();
-            }
-        }
-
-        clCommandQueue.enqueueReadBuffer(outputBuffer, CL_TRUE, 0, imgSize, img.imgData.ptr);
-
-        //world.intersectTile
-    } catch (Throwable e) { 
-        MessageBoxA(null, e.toString().toStringz(),
-                    "OpenCL ERRORR!", MB_OK | MB_ICONEXCLAMATION);
+    static if(TileMemoryLocation == "constant") {
+        defines ~= " -D TileStorageLocation=__constant";
+    } else static if (TileMemoryLocation == "global"){
+        defines ~= " -D TileStorageLocation=__global";
+    } else static if (TileMemoryLocation == "texture") {
+        defines ~= " -D UseTexture";
+    } else {
+        static assert(0, "No u");
     }
+
+    static assert(SolidMap.sizeY == 128);
+    static assert(SolidMap.sizeZ == 32);
+    static if(PackInInt) {
+        static assert(SolidMap.sizeX == 4);
+        defines ~= " -D TileStorageType=uint -D TileStorageBitCount=32 -D SolidMapSize=4,128,32";
+
+    } else {
+        static assert(SolidMap.sizeX == 16);
+        defines ~= " -D TileStorageType=uchar -D TileStorageBitCount=8 -D SolidMapSize=16,128,32";
+    }
+
+    g_traceRaysProgram = g_clContext.createProgram(content);
+
+    try{
+        g_traceRaysProgram.build("-w -Werror " ~ defines);
+    }catch(Throwable t){}
+
+    string errors = g_traceRaysProgram.buildLog(g_clContext.devices[0]);
+    writeln(errors);
+    if(errors.length > 2) {
+        MessageBox(null, toStringz("!"~errors~"!?!"), "", 0);
+    }
+
+    g_cameraBuffer = CLBuffer(g_clContext, CL_MEM_READ_ONLY, CLCamera.sizeof, null);
+
+    g_kernel = CLKernel(g_traceRaysProgram, "castRays");
+
+    static if(TileMemoryLocation == "texture") {
+        static if(PackInInt) {
+            auto format = cl_image_format(CL_R, CL_UNSIGNED_INT32);
+        } else {
+            auto format = cl_image_format(CL_R, CL_UNSIGNED_INT8);
+        }
+        g_tileBuffer = CLImage3D(g_clContext,
+                                    CL_MEM_READ_ONLY,
+                                    format,
+                                    SolidMap.sizeX, SolidMap.sizeY, SolidMap.sizeZ,
+                                    0, 0,
+                                    null
+                                    );
+    } else {
+        g_tileBuffer = CLBuffer(g_clContext, CL_MEM_READ_ONLY, tileMap.sizeof, null);
+    }
+
+
+}
+void deinitInteractiveComputeYourFather(){
+}
+
+void interactiveComputeYourFather(World world, Camera camera) {
+    vec3d upperLeft, toRight, toDown, dir, startPos;
+    startPos = camera.getPosition();
+    camera.getRayParameters(upperLeft, toRight, toDown);
+    CLCamera clCamera;
+    clCamera.position   = [startPos.X, startPos.Y, startPos.Z, 0];
+    clCamera.upperLeft  = [upperLeft.X, upperLeft.Y, upperLeft.Z, 0];
+    clCamera.toRight    = [toRight.X, toRight.Y, toRight.Z, 0];
+    clCamera.toDown     = [toDown.X, toDown.Y, toDown.Z, 0];
+    clCamera.width = renderSettings.windowWidth;
+    clCamera.height= renderSettings.windowHeight;
+    g_clCommandQueue.enqueueWriteBuffer(g_cameraBuffer, CL_TRUE, 0, clCamera.sizeof, &clCamera);
+
+
+    World.LightPropagationData[] lights;
+    world.getLightsWithin(TilePos(vec3i(-100, -100, -100)), TilePos(vec3i(100, 100, 100)), lights);
+    if(lights.length == 0) {
+        return;
+    }
+    CLLight[] clLight;
+    clLight.length = lights.length;
+    for (int i = 0; i < lights.length; i++) {
+        clLight[i].position = [ lights[i].tilePos.value.X+0.1,
+        lights[i].tilePos.value.Y+0.1,
+        lights[i].tilePos.value.Z+0.1, 0];
+        clLight[i].strength = lights[i].strength;
+    }
+
+    SolidMap* tileMap = world.getSolidMap(UnitPos(camera.getPosition).tilePos);
+    if(tileMap is null) {
+        return;
+    }
+    static if(TileMemoryLocation == "texture") {
+        const size_t[3] origin = [0,0,0];
+        const size_t[3] region = [SolidMap.sizeX, SolidMap.sizeY, SolidMap.sizeZ];
+        g_clCommandQueue.enqueueWriteImage(g_tileBuffer, CL_TRUE, origin, region, tileMap.data.ptr);
+    } else {
+        g_clCommandQueue.enqueueWriteBuffer(g_tileBuffer, CL_TRUE, 0, tileMap.data.sizeof, tileMap.data.ptr);
+    }
+
+    //Need to create often. Not really, could reuse and make code to recognize and such!
+    auto lightBuffer = CLBuffer(g_clContext, CL_MEM_READ_ONLY, clLight.length * clLight[0].sizeof + int.sizeof, null);
+    int cnt = clLight.length;
+    g_clCommandQueue.enqueueWriteBuffer(lightBuffer, CL_TRUE, 0, cnt.sizeof, &cnt);
+    g_clCommandQueue.enqueueWriteBuffer(lightBuffer, CL_TRUE, cnt.sizeof, clLight.length * clLight[0].sizeof, clLight.ptr);
+
+    g_kernel.setArgs(g_cameraBuffer, lightBuffer, g_tileBuffer, g_clDepthBuffer, g_clResultTexture);
+
+    auto range	= NDRange(renderSettings.windowWidth, renderSettings.windowHeight);
+
+	glFinish();
+	g_clCommandQueue.enqueueAcquireGLObjects(g_clRayCastMemories);
+    {
+        //mixin(Time!("writeln(\"Takes time: \", usecs/1000);"));
+        CLEvent execEvent = g_clCommandQueue.enqueueNDRangeKernel(g_kernel, range);
+        g_clCommandQueue.flush();
+        // wait for the kernel to be executed
+        execEvent.wait();
+    }
+	g_clCommandQueue.enqueueReleaseGLObjects(g_clRayCastMemories);
+	g_clCommandQueue.finish();
+
+
 }
 
 

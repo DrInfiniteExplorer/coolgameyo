@@ -388,9 +388,12 @@ class World {
         return null;
     }
 
-    SolidMap getSolidMap(TilePos tilePos) {
+    SolidMap* getSolidMap(TilePos tilePos) {
         auto sectorNum = tilePos.getSectorNum();
         auto sector = getSector(sectorNum);
+        if(sector is null) {
+            return null;
+        }
         return sector.getSolidMap();
     }
 

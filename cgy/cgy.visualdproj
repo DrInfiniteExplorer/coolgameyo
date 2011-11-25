@@ -276,9 +276,6 @@
    <File path="ai\patrolai.d" />
    <File path="ai\posessai.d" />
   </Folder>
-  <Folder name="opencl">
-   <File path="..\gameroot\opencl\yourfather.cl" />
-  </Folder>
   <Folder name="graphics">
    <Folder name="_2d">
     <File path="graphics\_2d\image.d" />
@@ -332,6 +329,9 @@
    <File path="modules\module_.d" />
    <File path="modules\path.d" />
   </Folder>
+  <Folder name="opencl">
+   <File path="..\gameroot\opencl\yourfather.cl" />
+  </Folder>
   <Folder name="random">
    <File path="random\catmullrom.d" />
    <File path="random\fractal.d" />
@@ -360,6 +360,8 @@
    <File path="..\gameroot\shaders\fontShader.vert" />
    <File path="..\gameroot\shaders\lineShader.frag" />
    <File path="..\gameroot\shaders\lineShader.vert" />
+   <File path="..\gameroot\shaders\quadShader.frag" />
+   <File path="..\gameroot\shaders\quadShader.vert" />
    <File path="..\gameroot\shaders\renderDude.frag" />
    <File path="..\gameroot\shaders\renderDude.vert" />
    <File path="..\gameroot\shaders\renderGR.frag" />

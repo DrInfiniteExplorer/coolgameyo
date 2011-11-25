@@ -42,6 +42,8 @@ struct RenderSettings {
     // gathered on renderer creation
     int maxTextureLayers;
     int maxTextureSize;
+
+    bool renderTrueWorld = true;
     
     double glVersion = 0;
     

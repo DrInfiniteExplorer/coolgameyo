@@ -14,6 +14,7 @@ import graphics.camera;
 import graphics.debugging;
 import graphics.misc;
 import graphics.ogl;
+import graphics.raycastgpu;
 import graphics.shader;
 import graphics.texture;
 import graphics.geometrycreator;
@@ -43,7 +44,7 @@ class Renderer {
 
     TileTextureAtlas atlas;
     
-    alias ShaderProgram!("offset", "VP", "atlas", "SkyColor") WorldShaderProgram;
+    alias ShaderProgram!("campos", "offset", "VP", "atlas", "SkyColor") WorldShaderProgram;
     alias ShaderProgram!("VP", "M", "color") DudeShaderProgram;
     alias ShaderProgram!("VP", "V", "color", "radius") LineShaderProgram;
 
@@ -69,6 +70,7 @@ class Renderer {
         worldShader.bindAttribLocation(2, "light");
         worldShader.link();
         worldShader.offset = worldShader.getUniformLocation("offset");
+        worldShader.campos = worldShader.getUniformLocation("campos");
         worldShader.VP = worldShader.getUniformLocation("VP");
         worldShader.atlas = worldShader.getUniformLocation("atlas");
         worldShader.SkyColor = worldShader.getUniformLocation("SkyColor");
@@ -234,6 +236,19 @@ class Renderer {
         glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
 
+
+    void castShadowRays() {
+        interactiveComputeYourFather(world, camera);
+    }
+
+    void finishHim() {
+
+        //g_FBOTexture
+        //g_ResultTexture
+        renderQuad(renderSettings.renderTrueWorld ? g_FBOTexture : g_ResultTexture);
+
+        //Render stuff, make things.
+    }
     
     void render(long usecs)
     {
@@ -245,12 +260,23 @@ class Renderer {
 
         //TODO: Make function setWireframe(bool yes) that does this.
         //Render world
+        glBindFramebuffer(GL_FRAMEBUFFER, g_FBO);
+        glError();
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glError();
+
         setWireframe(renderSettings.renderWireframe);
         renderWorld(camera);
         renderDudes(camera, 0.f);
 		renderEntities(camera, 0.f);
         renderDebug(camera);
-        
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glError();
+    
+        castShadowRays();
+
+        finishHim();
+
         setWireframe(false);
   }
 
@@ -305,6 +331,8 @@ class Renderer {
         atlas.use();
         auto transform = camera.getProjectionMatrix() * camera.getViewMatrix();
         worldShader.setUniform(worldShader.VP, transform);
+        vec3f campos = convert!float(camera.getPosition());
+        worldShader.setUniform(worldShader.campos, campos);
         vec3f SkyColor = CatmullRomSpline(world.getDayTime(), SkyColorDerp);
         worldShader.setUniform(worldShader.SkyColor, SkyColor);
         auto regions = geometryCreator.getRegions();

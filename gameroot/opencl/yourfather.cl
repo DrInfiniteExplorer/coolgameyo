@@ -12,6 +12,7 @@ typedef float4 vec4f;
 #define MAXLIGHTDIST 16
 
 const sampler_t tileImageSampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_REPEAT | CLK_FILTER_NEAREST;
+const sampler_t depthImageSampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_REPEAT | CLK_FILTER_NEAREST;
 
 struct Camera {
     vec4f position;
@@ -161,6 +162,31 @@ const void getDaPoint(
 	*daPoint = camera->position + rayDir * time*0.99999;
 }
 
+
+const void getDaPoint2(
+	__constant struct Camera* camera,
+#ifdef UseTexture
+    __read_only image3d_t solidMap,
+#else
+    TileStorageLocation const TileStorageType* solidMap,
+#endif
+    __read_only image2d_t depth,
+	vec4f* daPoint
+) {
+	int x = get_global_id(0);
+    int y = get_global_id(1);
+    float percentX = ((float)x) / ((float)camera->width);
+    float percentY = ((float)y) / ((float)camera->height);
+    vec4f rayDir = normalize(camera->upperLeft + percentX * camera->toRight + percentY * camera->toDown);
+
+    float time = read_imagef(depth, depthImageSampler, (int2)(x,camera->height-y-1)).x;
+	
+	*daPoint = camera->position + rayDir * time*0.999;
+}
+
+
+
+
 bool equals(int4 a, int4 b) {
 	return 	a.x==b.x &&
 			a.y==b.y &&
@@ -239,21 +265,46 @@ __kernel void castRays(
 #else
     TileStorageLocation const TileStorageType* solidMap,
 #endif
-    __global int* outMap
+    __read_only image2d_t depth,
+    __write_only image2d_t output
 )
 {
+	int x = get_global_id(0);
+    int y = get_global_id(1);
+
+/*
+    float time = read_imagef(depth, depthImageSampler, (int2)(x,camera->height-y-1)).x;
+    write_imagef(output, (int2)(x,y), (float4)(0.f, 0.f, time/16.f ,1.0));
+    return;
+*/
+
+    vec4f daPoint;
+	getDaPoint2(camera, solidMap, depth, &daPoint);
+
+/*
+    vec4f daPoint2;
+	getDaPoint(camera, solidMap, &daPoint2);
+    write_imagef(output, (int2)(x,y), (float4)(0.f, 0.f, length(daPoint-daPoint2)/3.f ,1.0));
+    return;
+*/	
+
 	int nrOfLights=_lights[0];
 	__constant struct Light *lights = (__constant struct Light*)(&_lights[1]);
-	
-    vec4f daPoint;
-	getDaPoint(camera, solidMap, &daPoint);
-	
+
+
 	int val = (int)calculateLightInPoint(daPoint, lights, nrOfLights, solidMap);
 	
     //int val = 16777215 -  (int)((((float)daPoint.x) / 300.f) * (16777215.f)); 
     //int val = (int)((((float)time) / 150.f) * (255)); 
 
-    outMap[get_global_id(0) + (camera->height-1-get_global_id(1)) * camera->width] = val;
+    //outMap[get_global_id(0) + (camera->height-1-get_global_id(1)) * camera->width] = val;
+    int r = (val >> 16) & 0xFF;
+    int g = (val >> 8 ) & 0xFF;
+    int b = (val      ) & 0xFF;
+    //write_imageui(output, (int2)(x,y), (uint4)(r,g,b,255));
+    //write_imageui(output, (int2)(x,y), (uint4)(65535, 0, 0 ,255));
+    write_imagef(output, (int2)(x,camera->height-1-y), (float4)(r/255, g/255.f, b/255.f ,1.0));
+
     
     int4 checkPosition = (int4)(3, 4, 5, 0);
     //outMap[get_global_id(0) + (camera->height-1-get_global_id(1)) * camera->width] = isSolid(checkPosition, solidMap) ? 0xFFFFFFFF : 0x0;

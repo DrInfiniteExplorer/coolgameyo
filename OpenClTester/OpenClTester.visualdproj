@@ -1,0 +1,11 @@
+<DProject>
+ <ProjectGuid>53fefba6-4e59-418b-a809-54d16dad176e</ProjectGuid>
+ <Config name="Debug">
+  <!-- default to defaults -->
+ </Config>
+ <Config name="Release">
+  </Config>
+ <Folder name="OpenClTester">
+  <File path="main.d" />
+ </Folder>
+</DProject>

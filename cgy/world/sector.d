@@ -302,8 +302,8 @@ class Sector {
         auto sectorRel = tilePos.sectorRel;
         return solidMap.get(sectorRel);
     }
-    SolidMap getSolidMap() const {
-        return solidMap;
+    SolidMap* getSolidMap() {
+        return &solidMap;
     }
 
     //TODO: Add more unit-interfacing etc.

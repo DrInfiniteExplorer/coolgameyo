@@ -194,6 +194,14 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
             if (k.SdlSym == SDLK_F2) {
                 useMouse = !useMouse;
             }
+
+            if (k.SdlSym == SDLK_F6) {
+                renderSettings.renderTrueWorld = true;
+            }
+            if (k.SdlSym == SDLK_F7) {
+                renderSettings.renderTrueWorld = false;
+            }
+
             if (k.SdlSym == SDLK_k) {
                 mixin(Time!q{
                     writeln(cnt, "; ", usecs/1000);
