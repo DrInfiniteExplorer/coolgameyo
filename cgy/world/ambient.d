@@ -38,13 +38,11 @@ mixin template LightStorageMethods() {
     }
 
     private void spreadLights(bool sunLight, LightPropagationData[] lightSources, ref bool[BlockNum] modifiedBlocks) {
-        writeln("======", sunLight?"S":"");
         LightPropagationData[] moreLightSources;
         foreach(source; lightSources) {
             auto lightStrength = source.strength;
             auto tilePos = source.tilePos;
             modifiedBlocks[tilePos.getBlockNum()] = true;
-            writeln(to!string(tilePos));
             setTileLightVal(tilePos, lightStrength, sunLight);
             byte spreadLightStrength = cast(byte)(lightStrength-1);
             foreach(newTilePos ; neighbors(source.tilePos)) {

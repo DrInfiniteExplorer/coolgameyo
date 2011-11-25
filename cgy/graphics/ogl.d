@@ -183,7 +183,7 @@ void initFBO() {
         glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_FALSE); // automatic mipmap
         glError();
         glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, renderSettings.windowWidth, renderSettings.windowHeight, 0,
-                     GL_RED, GL_FLOAT, null);
+                     derelict.opengl.gltypes.GL_RED, GL_FLOAT, null);
         glError();
         glBindTexture(GL_TEXTURE_2D, 0);
 
