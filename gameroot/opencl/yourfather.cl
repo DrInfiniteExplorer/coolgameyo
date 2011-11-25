@@ -9,6 +9,8 @@
 //  #pragma OPENCL EXTENSION cl_khr_fp64 : enable
 typedef float4 vec4f;
 
+#define MAXLIGHTDIST 16
+
 const sampler_t tileImageSampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_REPEAT | CLK_FILTER_NEAREST;
 
 struct Camera {
@@ -156,7 +158,7 @@ const void getDaPoint(
         stepIter(dir, &tilePos, &tMax, tDelta, &time);
     }
 	
-	*daPoint = camera->position + rayDir * time*0.999;
+	*daPoint = camera->position + rayDir * time*0.99999;
 }
 
 bool equals(int4 a, int4 b) {
@@ -185,6 +187,7 @@ float calculateLightInPoint(
 	float lightValue = 0.f;
 	int i;
 	vec4f rayDir;
+	int4 lightPos;
 	int4 tilePos;
 	int4 dir;
 	vec4f tDelta;
@@ -192,31 +195,38 @@ float calculateLightInPoint(
 	float time;
 	int c;
 	for (i = 0; i < nrOfLights; i++) {
-		rayDir = normalize(lights[i].position-daPoint);
-
+		lightPos = getTilePos(lights[i].position);
 		tilePos  = convert_int4(daPoint);
-		dir      = convert_int4(sign(rayDir));
 		
-		tDelta.x = fabs(1.f / rayDir.x);
-		tDelta.y = fabs(1.f / rayDir.y);
-		tDelta.z = fabs(1.f / rayDir.z);
-		
-		tMax.x = initStuff(daPoint.x, rayDir.x, tDelta.x);
-		tMax.y = initStuff(daPoint.y, rayDir.y, tDelta.y);
-		tMax.z = initStuff(daPoint.z, rayDir.z, tDelta.z);
-		
-		stepIter(dir, &tilePos, &tMax, tDelta, &time);
-		
-		while(time < 16 && !isSolid(tilePos, solidMap)) {
-			if (equals(tilePos, getTilePos(lights[i].position))) {
-				lightValue += (16-time)*7;
-				break;
-			}
+		if (equals(tilePos, lightPos)) {
+			// *7 does it so it is 0-240 for 2 lights (16*15=240)
+			lightValue += ((MAXLIGHTDIST-distance(daPoint, lights[i].position))*7);
+		}
+		else {
+			rayDir = normalize(lights[i].position-daPoint);
+			dir      = convert_int4(sign(rayDir));
+			
+			tDelta.x = fabs(1.f / rayDir.x);
+			tDelta.y = fabs(1.f / rayDir.y);
+			tDelta.z = fabs(1.f / rayDir.z);
+			
+			tMax.x = initStuff(daPoint.x, rayDir.x, tDelta.x);
+			tMax.y = initStuff(daPoint.y, rayDir.y, tDelta.y);
+			tMax.z = initStuff(daPoint.z, rayDir.z, tDelta.z);
 			
 			stepIter(dir, &tilePos, &tMax, tDelta, &time);
+			while(time < MAXLIGHTDIST && !isSolid(tilePos, solidMap)) {
+				if (equals(tilePos, lightPos)) {
+					// *7 does it so it is 0-240 for 2 lights (16*15=240)
+					lightValue += (MAXLIGHTDIST-time)*7;
+					break;
+				}
+				
+				stepIter(dir, &tilePos, &tMax, tDelta, &time);
+			}
 		}
-		
 	}
+	if (lightValue > 255) lightValue = 255;
 	return lightValue;
 }
 
@@ -232,11 +242,11 @@ __kernel void castRays(
     __global int* outMap
 )
 {
-    vec4f daPoint;
-	getDaPoint(camera, solidMap, &daPoint);
-	
 	int nrOfLights=_lights[0];
 	__constant struct Light *lights = (__constant struct Light*)(&_lights[1]);
+	
+    vec4f daPoint;
+	getDaPoint(camera, solidMap, &daPoint);
 	
 	int val = (int)calculateLightInPoint(daPoint, lights, nrOfLights, solidMap);
 	
