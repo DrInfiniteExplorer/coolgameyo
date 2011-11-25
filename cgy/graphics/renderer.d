@@ -238,6 +238,7 @@ class Renderer {
 
 
     void castShadowRays() {
+        if(renderSettings.renderTrueWorld) return;
         interactiveComputeYourFather(world, camera);
     }
 
