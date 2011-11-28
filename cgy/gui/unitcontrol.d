@@ -14,6 +14,7 @@ import game;
 import graphics.camera;
 import graphics.debugging;
 import graphics.renderer;
+import graphics.raycastgpu;
 import gui.all;
 import gui.statistics;
 import gui.inventorywindow;
@@ -200,6 +201,9 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
             }
             if (k.SdlSym == SDLK_F7) {
                 renderSettings.renderTrueWorld = false;
+            }
+            if (k.SdlSym == SDLK_F8) {
+                reloadOpenCl();
             }
 
             if (k.SdlSym == SDLK_k) {

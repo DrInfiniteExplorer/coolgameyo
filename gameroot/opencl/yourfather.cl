@@ -1,5 +1,25 @@
 
+//#define UseTexture
 
+#ifndef TileStorageLocation
+#define TileStorageLocation texture
+#endif
+
+#ifndef TileStorageType
+#define TileStorageType uint
+#endif
+
+#ifndef SolidMapSize
+#define SolidMapSize 4,128,32
+#endif
+
+#ifndef UsePackedData
+#define UsePackedData 1
+#endif
+
+#ifndef TileStorageBitCount
+#define TileStorageBitCount 32
+#endif
 
 // TileStorageLocation passed as define from host
 // TileStorageType passed as define from host
@@ -9,7 +29,7 @@
 //  #pragma OPENCL EXTENSION cl_khr_fp64 : enable
 typedef float4 vec4f;
 
-#define MAXLIGHTDIST 16
+#define MAXLIGHTDIST 8
 
 const sampler_t tileImageSampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_REPEAT | CLK_FILTER_NEAREST;
 const sampler_t depthImageSampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_REPEAT | CLK_FILTER_NEAREST;
@@ -162,6 +182,14 @@ const void getDaPoint(
 	*daPoint = camera->position + rayDir * time*0.99999;
 }
 
+__constant vec4f normalDirections[6] = {
+    (vec4f)( 1, 0, 0, 0),
+    (vec4f)(-1, 0, 0, 0),
+    (vec4f)( 0, 1, 0, 0),
+    (vec4f)( 0,-1, 0, 0),
+    (vec4f)( 0, 0, 1, 0),
+    (vec4f)( 0, 0,-1, 0)
+};
 
 const void getDaPoint2(
 	__constant struct Camera* camera,
@@ -175,13 +203,9 @@ const void getDaPoint2(
 ) {
 	int x = get_global_id(0);
     int y = get_global_id(1);
-    float percentX = ((float)x) / ((float)camera->width);
-    float percentY = ((float)y) / ((float)camera->height);
-    vec4f rayDir = normalize(camera->upperLeft + percentX * camera->toRight + percentY * camera->toDown);
 
-    float time = read_imagef(depth, depthImageSampler, (int2)(x,camera->height-y-1)).x;
-	
-	*daPoint = camera->position + rayDir * time*0.999;
+    vec4f pos = read_imagef(depth, depthImageSampler, (int2)(x,camera->height-y-1));
+	*daPoint = pos;
 }
 
 
@@ -195,7 +219,7 @@ bool equals(int4 a, int4 b) {
 }
 
 float calculateLightInPoint(
-	const vec4f daPoint,
+	vec4f daPoint,
 	__constant struct Light* lights,
 	const int nrOfLights,
 #ifdef UseTexture
@@ -203,13 +227,10 @@ float calculateLightInPoint(
 #else
     TileStorageLocation const TileStorageType* solidMap
 #endif
+    ,__read_only image2d_t depth
 ) {
-	//if (sizeof(lights[1]) == 20) return 255;
-	//if (sizeof(lights[1]) != 20) return 0;
-	
-	//if (lights[1].position.z == 1) return 255;
-	//if (lights[1].position.z == 2) return 65280;
-	//if (lights[1].position.z == 3) return 16711680;
+    
+    
 	float lightValue = 0.f;
 	int i;
 	vec4f rayDir;
@@ -220,6 +241,22 @@ float calculateLightInPoint(
 	vec4f tMax;
 	float time;
 	int c;
+    vec4f normalDir;
+    int normalIndex = (int)daPoint.w;
+    daPoint.w = 0;
+    switch(normalIndex) {
+        case 0: normalDir = normalDirections[0]; break;
+        case 1: normalDir = normalDirections[1]; break;
+        case 2: normalDir = normalDirections[2]; break;
+        case 3: normalDir = normalDirections[3]; break;
+        case 4: normalDir = normalDirections[4]; break;
+        case 5: normalDir = normalDirections[5]; break;        
+    }
+    daPoint += normalDir * 0.01;
+
+    //if( dot(normalDirections[4], normalDirections[4]) > 0) return 0x00FF;
+    //wtf varför går det inte att slå upp normaldirection :(
+    
 	for (i = 0; i < nrOfLights; i++) {
 		lightPos = getTilePos(lights[i].position);
 		tilePos  = convert_int4(daPoint);
@@ -229,8 +266,16 @@ float calculateLightInPoint(
 			lightValue += ((MAXLIGHTDIST-distance(daPoint, lights[i].position))*7);
 		}
 		else {
-			rayDir = normalize(lights[i].position-daPoint);
+			rayDir = lights[i].position-daPoint;
+            if(dot(rayDir, rayDir) > MAXLIGHTDIST*MAXLIGHTDIST) {
+                continue;
+            }
+            rayDir =normalize(rayDir);
+            if(dot(rayDir, convert_float4(normalDir)) <= 0) { //Surface is hidden, ignore
+                continue;
+            }
 			dir      = convert_int4(sign(rayDir));
+            
 			
 			tDelta.x = fabs(1.f / rayDir.x);
 			tDelta.y = fabs(1.f / rayDir.y);
@@ -271,6 +316,8 @@ __kernel void castRays(
 {
 	int x = get_global_id(0);
     int y = get_global_id(1);
+    
+    
 
 /*
     float time = read_imagef(depth, depthImageSampler, (int2)(x,camera->height-y-1)).x;
@@ -292,7 +339,7 @@ __kernel void castRays(
 	__constant struct Light *lights = (__constant struct Light*)(&_lights[1]);
 
 
-	int val = (int)calculateLightInPoint(daPoint, lights, nrOfLights, solidMap);
+	int val = (int)calculateLightInPoint(daPoint, lights, nrOfLights, solidMap, depth);
 	
     //int val = 16777215 -  (int)((((float)daPoint.x) / 300.f) * (16777215.f)); 
     //int val = (int)((((float)time) / 150.f) * (255)); 

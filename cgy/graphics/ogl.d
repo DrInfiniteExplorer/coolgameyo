@@ -92,7 +92,7 @@ __gshared CLCommandQueue g_clCommandQueue;
 const bool UseRenderBuffer = false;
 
 static if(UseRenderBuffer) {
-__gshared CLBufferRenderGL g_clDepthBuffer; //Depth buffer after renderinrerer
+__gshared CLBufferRenderGL g_clDepthBuffer; //Depth buffer after renderinrerer. really contains positions though.
 } else {
 __gshared CLImage2DGL g_clDepthBuffer; //Result from opencl raycasting yeah!
 }
@@ -161,7 +161,7 @@ void initFBO() {
         glError();
         glBindRenderbuffer(GL_RENDERBUFFER, g_FBODepthBuffer);
         glError();
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_R32F, renderSettings.windowWidth, renderSettings.windowHeight);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA32F, renderSettings.windowWidth, renderSettings.windowHeight);
         glError();
         glBindRenderbuffer(GL_RENDERBUFFER, 0);
         glError();
@@ -182,8 +182,8 @@ void initFBO() {
         glError();
         glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_FALSE); // automatic mipmap
         glError();
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, renderSettings.windowWidth, renderSettings.windowHeight, 0,
-                     derelict.opengl.gltypes.GL_RED, GL_FLOAT, null);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, renderSettings.windowWidth, renderSettings.windowHeight, 0,
+                     derelict.opengl.gltypes.GL_RGBA, GL_FLOAT, null);
         glError();
         glBindTexture(GL_TEXTURE_2D, 0);
 

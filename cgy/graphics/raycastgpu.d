@@ -54,7 +54,74 @@ static if(TileMemoryLocation == "texture") {
 }
 
 
+
 void initInteractiveComputeYourFather(){
+    auto content = readText("opencl/yourfather.cl");
+
+    string defines = "";
+
+    static if(TileMemoryLocation == "constant") {
+        defines ~= " -D TileStorageLocation=__constant";
+    } else static if (TileMemoryLocation == "global"){
+        defines ~= " -D TileStorageLocation=__global";
+    } else static if (TileMemoryLocation == "texture") {
+        defines ~= " -D UseTexture";
+    } else {
+        static assert(0, "No u");
+    }
+
+    static assert(SolidMap.sizeY == 128);
+    static assert(SolidMap.sizeZ == 32);
+    static if(PackInInt) {
+        static assert(SolidMap.sizeX == 4);
+        defines ~= " -D TileStorageType=uint -D TileStorageBitCount=32 -D SolidMapSize=4,128,32";
+
+    } else {
+        static assert(SolidMap.sizeX == 16);
+        defines ~= " -D TileStorageType=uchar -D TileStorageBitCount=8 -D SolidMapSize=16,128,32";
+    }
+
+    g_traceRaysProgram = g_clContext.createProgram(content);
+
+    try{
+        g_traceRaysProgram.build("-w -Werror " ~ defines);
+    }catch(Throwable t){
+    }
+
+    string errors = g_traceRaysProgram.buildLog(g_clContext.devices[0]);
+    writeln(errors);
+    if(errors.length > 2) {
+        MessageBox(null, toStringz("!"~errors~"!?!"), "", 0);
+    }
+
+    g_cameraBuffer = CLBuffer(g_clContext, CL_MEM_READ_ONLY, CLCamera.sizeof, null);
+
+    g_kernel = CLKernel(g_traceRaysProgram, "castRays");
+
+    static if(TileMemoryLocation == "texture") {
+        static if(PackInInt) {
+            auto format = cl_image_format(CL_R, CL_UNSIGNED_INT32);
+        } else {
+            auto format = cl_image_format(CL_R, CL_UNSIGNED_INT8);
+        }
+        g_tileBuffer = CLImage3D(g_clContext,
+                                    CL_MEM_READ_ONLY,
+                                    format,
+                                    SolidMap.sizeX, SolidMap.sizeY, SolidMap.sizeZ,
+                                    0, 0,
+                                    null
+                                    );
+    } else {
+        g_tileBuffer = CLBuffer(g_clContext, CL_MEM_READ_ONLY, SolidMap.sizeof, null);
+    }
+}
+
+
+
+void deinitInteractiveComputeYourFather(){
+}
+
+void reloadOpenCl() {
     auto content = readText("opencl/yourfather.cl");
 
     string defines = "";
@@ -91,32 +158,9 @@ void initInteractiveComputeYourFather(){
     if(errors.length > 2) {
         MessageBox(null, toStringz("!"~errors~"!?!"), "", 0);
     }
-
-    g_cameraBuffer = CLBuffer(g_clContext, CL_MEM_READ_ONLY, CLCamera.sizeof, null);
-
     g_kernel = CLKernel(g_traceRaysProgram, "castRays");
-
-    static if(TileMemoryLocation == "texture") {
-        static if(PackInInt) {
-            auto format = cl_image_format(CL_R, CL_UNSIGNED_INT32);
-        } else {
-            auto format = cl_image_format(CL_R, CL_UNSIGNED_INT8);
-        }
-        g_tileBuffer = CLImage3D(g_clContext,
-                                    CL_MEM_READ_ONLY,
-                                    format,
-                                    SolidMap.sizeX, SolidMap.sizeY, SolidMap.sizeZ,
-                                    0, 0,
-                                    null
-                                    );
-    } else {
-        g_tileBuffer = CLBuffer(g_clContext, CL_MEM_READ_ONLY, tileMap.sizeof, null);
-    }
-
-
 }
-void deinitInteractiveComputeYourFather(){
-}
+
 
 void interactiveComputeYourFather(World world, Camera camera) {
     vec3d upperLeft, toRight, toDown, dir, startPos;
@@ -140,9 +184,9 @@ void interactiveComputeYourFather(World world, Camera camera) {
     CLLight[] clLight;
     clLight.length = lights.length;
     for (int i = 0; i < lights.length; i++) {
-        clLight[i].position = [ lights[i].tilePos.value.X+0.1,
-        lights[i].tilePos.value.Y+0.1,
-        lights[i].tilePos.value.Z+0.1, 0];
+        clLight[i].position = [ lights[i].tilePos.value.X+0.5,
+            lights[i].tilePos.value.Y+0.5,
+            lights[i].tilePos.value.Z+0.5, 0];
         clLight[i].strength = lights[i].strength;
     }
 

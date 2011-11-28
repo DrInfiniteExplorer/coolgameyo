@@ -32,6 +32,7 @@ import world.floodfill;
 
 //TODO: Make fix this, or make testcase and report it if not done already.
 auto grTexCoordOffset = GRVertex.texcoord.offsetof;
+auto grNormalOffset = GRVertex.normal.offsetof;
 auto grLightOffset = GRVertex.light.offsetof;
 auto grSunLightOffset = GRVertex.sunLight.offsetof;
 
@@ -44,7 +45,7 @@ class Renderer {
 
     TileTextureAtlas atlas;
     
-    alias ShaderProgram!("campos", "offset", "VP", "atlas", "SkyColor") WorldShaderProgram;
+    alias ShaderProgram!("offset", "VP", "atlas", "SkyColor") WorldShaderProgram;
     alias ShaderProgram!("VP", "M", "color") DudeShaderProgram;
     alias ShaderProgram!("VP", "V", "color", "radius") LineShaderProgram;
 
@@ -68,9 +69,10 @@ class Renderer {
         worldShader.bindAttribLocation(0, "position");
         worldShader.bindAttribLocation(1, "texcoord");
         worldShader.bindAttribLocation(2, "light");
+        worldShader.bindAttribLocation(3, "sunLight");
+        worldShader.bindAttribLocation(4, "normal");
         worldShader.link();
         worldShader.offset = worldShader.getUniformLocation("offset");
-        worldShader.campos = worldShader.getUniformLocation("campos");
         worldShader.VP = worldShader.getUniformLocation("VP");
         worldShader.atlas = worldShader.getUniformLocation("atlas");
         worldShader.SkyColor = worldShader.getUniformLocation("SkyColor");
@@ -300,6 +302,9 @@ class Renderer {
         glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, GRVertex.sizeof, cast(void*)grSunLightOffset);
         glError();
 
+        glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, GRVertex.sizeof, cast(void*)grNormalOffset);
+        glError();
+
         glDrawArrays(GL_QUADS, 0, region.quadCount*4);
         glError();
     }
@@ -329,11 +334,11 @@ class Renderer {
         glError();
         glEnableVertexAttribArray(3);
         glError();
+        glEnableVertexAttribArray(4);
+        glError();
         atlas.use();
         auto transform = camera.getProjectionMatrix() * camera.getViewMatrix();
         worldShader.setUniform(worldShader.VP, transform);
-        vec3f campos = convert!float(camera.getPosition());
-        worldShader.setUniform(worldShader.campos, campos);
         vec3f SkyColor = CatmullRomSpline(world.getDayTime(), SkyColorDerp);
         worldShader.setUniform(worldShader.SkyColor, SkyColor);
         auto regions = geometryCreator.getRegions();
@@ -352,6 +357,8 @@ class Renderer {
         glDisableVertexAttribArray(2);
         glError();
         glDisableVertexAttribArray(3);
+        glError();
+        glDisableVertexAttribArray(4);
         glError();
         worldShader.use(false);
     }

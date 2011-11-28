@@ -35,6 +35,8 @@ import util.util;
 import util.rangefromto;
 import util.intersect;
 
+alias util.util.Direction Direction;
+
 struct GraphicsRegion
 {
     GraphRegionNum grNum;
@@ -46,6 +48,7 @@ struct GraphicsRegion
 struct GRVertex{
     vec3f vertex;
     vec3f texcoord;
+    float normal = 0;
     float light = 0;
     float sunLight = 0;
 };
@@ -191,7 +194,7 @@ class GeometryCreator : Module, WorldListener
     body{
         //Make floor triangles
         GRFace newFace;
-        void fixTex(ref GRFace f, const(Tile) t, bool side, bool upper){
+        void fixTex(ref GRFace f, const(Tile) t, bool side, bool upper, Direction normalDir){
             ushort tileId;
             if (side) {
                 tileId = world.tileTypeManager.byID(t.type).textures.side;
@@ -206,6 +209,7 @@ class GeometryCreator : Module, WorldListener
                 vert.texcoord = vert.texcoord * tileTexSize + tileTexCoord;
                 //vert.light = cast(float)t.lightValue / cast(float)MaxLightStrength;
                 vert.light = 0.f;
+                vert.normal = normalDir;
             }
         }
 
@@ -270,7 +274,7 @@ class GeometryCreator : Module, WorldListener
                 newFace.quad[1].texcoord.set(0, 1, 0);
                 newFace.quad[2].texcoord.set(1, 1, 0);
                 newFace.quad[3].texcoord.set(1, 0, 0);
-                fixTex(newFace, tile, true, false);
+                fixTex(newFace, tile, true, false, Direction.eastCount);
                 /*
                 if(0 == smoothMethod) {
                     newFace.quad[0].light = tileXp.lightValue/cast(float)MaxLightStrength;
@@ -333,7 +337,7 @@ class GeometryCreator : Module, WorldListener
                 newFace.quad[1].texcoord.set(0, 0, 0);
                 newFace.quad[2].texcoord.set(1, 0, 0);
                 newFace.quad[3].texcoord.set(1, 1, 0);
-                fixTex(newFace, tile, true, false);
+                fixTex(newFace, tile, true, false, Direction.westCount);
                 /*
                 if(0 == smoothMethod) {
                     newFace.quad[0].light = tileXn.lightValue/cast(float)MaxLightStrength;
@@ -371,7 +375,7 @@ class GeometryCreator : Module, WorldListener
                 newFace.quad[1].texcoord.set(0, 0, 0);
                 newFace.quad[2].texcoord.set(1, 0, 0);
                 newFace.quad[3].texcoord.set(1, 1, 0);
-                fixTex(newFace, tile, true, false);
+                fixTex(newFace, tile, true, false, Direction.northCount);
                 /*
                 if(0 == smoothMethod) {
                     newFace.quad[0].light = tileYp.lightValue/cast(float)MaxLightStrength;
@@ -410,7 +414,7 @@ class GeometryCreator : Module, WorldListener
                 newFace.quad[1].texcoord.set(0, 1, 0);
                 newFace.quad[2].texcoord.set(1, 1, 0);
                 newFace.quad[3].texcoord.set(1, 0, 0);
-                fixTex(newFace, tile, true, false);
+                fixTex(newFace, tile, true, false, Direction.southCount);
                 /*
                 if(0 == smoothMethod) {
                     newFace.quad[0].light = tileYn.lightValue/cast(float)MaxLightStrength;
@@ -448,7 +452,7 @@ class GeometryCreator : Module, WorldListener
                 newFace.quad[1].texcoord.set(0, 1, 0);
                 newFace.quad[2].texcoord.set(1, 1, 0);
                 newFace.quad[3].texcoord.set(1, 0, 0);
-                fixTex(newFace, tile, false, true);
+                fixTex(newFace, tile, false, true, Direction.upCount);
                 /*
                 if(0 == smoothMethod) {
                     newFace.quad[0].light = tileZp.lightValue/cast(float)MaxLightStrength;
@@ -484,7 +488,7 @@ class GeometryCreator : Module, WorldListener
                 newFace.quad[1].texcoord.set(0, 1, 0);
                 newFace.quad[2].texcoord.set(1, 1, 0);
                 newFace.quad[3].texcoord.set(1, 0, 0);
-                fixTex(newFace, tile, false, false);
+                fixTex(newFace, tile, false, false, Direction.downCount);
                 /*
                 if(0 == smoothMethod) {
                     newFace.quad[0].light = tileZn.lightValue/cast(float)MaxLightStrength;

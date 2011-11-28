@@ -92,16 +92,24 @@ T[6] neighbors(T)(T t) {
 }
 
 
-enum Direction{
-    north = 1<<0,
-    south = 1<<1,
-    west  = 1<<2,
-    east  = 1<<3,
-    up    = 1<<4,
-    down  = 1<<5,
+enum Direction{ //DERP DERP POLLUTING STUFF YEAH!
+    eastCount=0,
+    westCount=1,
+    northCount=2,
+    southCount=3,
+    upCount=4,
+    downCount=5,
+    allCount=6,
+
+    north = 1<<northCount,
+    south = 1<<southCount,
+    west  = 1<<westCount,
+    east  = 1<<eastCount,
+    up    = 1<<upCount,
+    down  = 1<<downCount,
+
     all   = north | up | west | down | south | east,
 }
-
 
 
 void setThreadName(string threadName) {
