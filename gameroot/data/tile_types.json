@@ -18,12 +18,12 @@
 	"strength":10,
 	"tintFromMaterial":1,
 	"tintColor":{ "X":255, "Y":255, "Z":255 },
-	"texturePathTop":"textures/stone.png",
-	"texturePathSides":"textures/stone.png",
-	"texturePathBottom":"textures/stone.png",
-	"textureCoordTop":{ "X":0, "Y":0 },
-	"textureCoordSides":{ "X":0, "Y":0 },
-	"textureCoordBottom":{ "X":0, "Y":0 }
+	"texturePathTop":"textures/001.png",
+	"texturePathSides":"textures/001.png",
+	"texturePathBottom":"textures/001.png",
+	"textureCoordTop":{ "X":16, "Y":112 },
+	"textureCoordSides":{ "X":16, "Y":112 },
+	"textureCoordBottom":{ "X":16, "Y":112 }
   },
   "snow":{
     "displayName":"Snow",
@@ -50,5 +50,44 @@
 	"textureCoordTop":{ "X":16, "Y":0 },
 	"textureCoordSides":{ "X":16, "Y":16 },
 	"textureCoordBottom":{ "X":16, "Y":32 }
+  },
+  "birchtree":{
+    "displayName":"Tree",
+    "material":"jag",
+	"strength":10,
+	"tintFromMaterial":0,
+	"tintColor":{ "X":255, "Y":255, "Z":255 },
+	"texturePathTop":"textures/001.png",
+	"texturePathSides":"textures/001.png",
+	"texturePathBottom":"textures/001.png",
+	"textureCoordTop":{ "X":16, "Y":64 },
+	"textureCoordSides":{ "X":16, "Y":48 },
+	"textureCoordBottom":{ "X":16, "Y":64 }
+  },
+  "birchleaf":{
+    "displayName":"Leaf",
+    "material":"Greensaker",
+	"strength":10,
+	"tintFromMaterial":0,
+	"tintColor":{ "X":255, "Y":255, "Z":255 },
+	"texturePathTop":"textures/001.png",
+	"texturePathSides":"textures/001.png",
+	"texturePathBottom":"textures/001.png",
+	"textureCoordTop":{ "X":16, "Y":80 },
+	"textureCoordSides":{ "X":16, "Y":80 },
+	"textureCoordBottom":{ "X":16, "Y":80 }
+  },
+  "smoothstone":{
+    "displayName":"Smooth Stone",
+    "material":"fungus mamma",
+	"strength":10,
+	"tintFromMaterial":1,
+	"tintColor":{ "X":255, "Y":255, "Z":255 },
+	"texturePathTop":"textures/001.png",
+	"texturePathSides":"textures/001.png",
+	"texturePathBottom":"textures/001.png",
+	"textureCoordTop":{ "X":16, "Y":96 },
+	"textureCoordSides":{ "X":16, "Y":96 },
+	"textureCoordBottom":{ "X":16, "Y":96 }
   },
 }

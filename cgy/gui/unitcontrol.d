@@ -191,6 +191,26 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
     
     void onKey(GuiEvent.KeyboardEvent k) {
         if (k.pressed) {
+            if (k.SdlSym == SDLK_F11) {
+                EntityPos topOfTheWorld2(TileXYPos xy) {
+                    auto top = world.getTopTilePos(xy);
+                    msg("top: ", top);
+                    auto ret = top.toEntityPos();
+                    ret.value.Z += 1;
+                    msg("ret: ", ret);
+
+                    return ret;
+                }
+                Tile tile = Tile(world.tileTypeManager.idByName("birchtree"), TileFlags.valid);
+                auto tilePos = topOfTheWorld2(TileXYPos(vec2i(3,2)));
+                world.unsafeSetTile(tilePos, tile);
+                tile = Tile(world.tileTypeManager.idByName("birchleaf"), TileFlags.valid);
+                tilePos = topOfTheWorld2(TileXYPos(vec2i(3,3)));
+                world.unsafeSetTile(tilePos, tile);
+                tile = Tile(world.tileTypeManager.idByName("smoothstone"), TileFlags.valid);
+                tilePos = topOfTheWorld2(TileXYPos(vec2i(3,4)));
+                world.unsafeSetTile(tilePos, tile);
+            }
             if (k.SdlSym == SDLK_F3) {
                 freeFlight = !freeFlight;
             }
