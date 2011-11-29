@@ -94,10 +94,6 @@ mixin template LightStorageMethods() {
         TilePos tilePos = light.position.tilePos();
         bool[BlockNum] modifiedBlocks;
 
-        aabbd aabb = tilePos.getAABB();
-        aabb.scale(vec3d(0.4));
-        addAABB(aabb, vec3f(0,0, 0.8));
-
         auto sectorNum = tilePos.getSectorNum;
         auto sector = getSector(sectorNum);
         enforce(sector !is null, "Cant add lights to sectors that dont exist you dummy!");
@@ -112,6 +108,24 @@ mixin template LightStorageMethods() {
     }
     void unsafeAddLight(LightSource light) {
         addLight(light);
+    }
+    void unsafeRemoveLight(LightSource light) {
+        TilePos tilePos = light.position.tilePos();
+        bool[BlockNum] modifiedBlocks;
+
+        auto sectorNum = tilePos.getSectorNum;
+        auto sector = getSector(sectorNum);
+        enforce(sector !is null, "Cant remove lights to sectors that dont exist you dummy!");
+        sector.removeLight(light);
+
+        LightPropagationData[] lightSources;
+        //unspreadLights(false, lightSources, toUnspread, modifiedBlocks);
+        unspreadLights(false, lightSources, [LightPropagationData(tilePos, light.strength)], modifiedBlocks);
+        spreadLights(false, lightSources, modifiedBlocks);
+        foreach(blockNum, trueVal ; modifiedBlocks) {
+            auto tilePos = blockNum.toTilePos();
+            notifyUpdateGeometry(tilePos);
+        }
     }
 
     void removeTile(TilePos tilePos) {
@@ -278,10 +292,6 @@ mixin template LightStorageMethodsOld() {
     private void addLight(LightSource light) {
         TilePos tp = UnitPos(light.position).tilePos();
 
-        aabbd aabb = tp.getAABB();
-        aabb.scale(vec3d(0.4));
-        addAABB(aabb, vec3f(0,0, 0.8));
-
         auto sectorNum = tp.getSectorNum;
         auto sector = getSector(sectorNum);
         enforce(sector !is null, "Cant add lights to sectors that dont exist you dummy!");
@@ -298,6 +308,7 @@ mixin template LightStorageMethodsOld() {
     void unsafeAddLight(LightSource light) {
         addLight(light);
     }
+    
 
     void recalculateAllLight(TilePos centre) {
         auto min = TilePos(centre.value-vec3i(MaxLightStrength, MaxLightStrength, MaxLightStrength));

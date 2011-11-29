@@ -13,11 +13,14 @@ import util.util;
 import world.world;
 import clan;
 import entitytypemanager;
+import light;
 
 shared int g_EntityCount = 0; //Global counter of entities. Make shared static variable in Game-class?
 
+
 Entity newEntity() {
     auto entity = new Entity;
+    // TODO: assign id in a non-idiotic way
     entity.entityId = g_EntityCount;
     g_EntityCount++;
     return entity;
@@ -39,43 +42,34 @@ class Entity {
 		bool isDropped = false;
 
         float entityWidth = 0.7;
-        float entityHeight = 1.5;        
+        float entityHeight = 1.5;
     }
     EntityData entityData;
     alias entityData this;
 
     EntityType type;
     Clan clan;
-    
+    LightSource light;
+
 	void deconstruct() {
 		entityData.isDropped = true;
 	}
 	
     Value toJSON() {
         Value val = encode(entityData);
-        if (clan !is null) {
-            val["clanId"] = Value(clan.clanId);
-        }
-/*        if (type !is null) {
-            val["unitTypeId"] = Value(type.name);
-        }*/
-        //Add ai
+        
+        val["entityTypeId"] = Value(type.id);
+        
         return val;
     }
     void fromJSON(Value val, EntityTypeManager entityTypeManager) {
         read(entityData, val);
-        if ("clanId" in val) {
-            int clanId;
-            read(clanId, val["clanId"]);
-            BREAKPOINT;
-        }
+        
         if ("entityTypeId" in val) {
             int entityTypeId;
             read(entityTypeId, val["entityTypeId"]);
 			type = entityTypeManager.byID(cast(ushort)entityTypeId);
-            //BREAKPOINT;
         }
-        //Add ai
     }
         
 	

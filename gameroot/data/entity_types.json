@@ -9,4 +9,11 @@
 	"tintFromMaterial":1,
 	"tintColor":{ "X":200, "Y":50, "Z":50 },
   },
+  "torch":{
+    "displayName":"Torch",
+	"tintFromMaterial":1,
+	"tintColor":{ "X":255, "Y":255, "Z":255 },
+	"lightStrength":15,
+	"lightTintColor":{ "X":204, "Y":204, "Z":0 },
+  },
 }

@@ -28,6 +28,8 @@ import util.intersect;
 import util.rangefromto;
 import util.util;
 import world.world;
+import entity;
+import entitytypemanager;
 
 
 
@@ -250,7 +252,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
 		else if (m.left && entitySelected) {
 			if (selectedEntity.isDropped) {
 				possesAI.unit.inventory.addToInventory(selectedEntity);
-				world.getSector(selectedEntity.pos.getSectorNum()).removeEntity(selectedEntity);
+				world.removeEntity(selectedEntity);
 			}
 			else {
 				selectedEntity.deconstruct();
@@ -271,12 +273,11 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
                 possesAI.changeTile(whereToPlace, copiedTile);
             }
         } else if(m.middle && tileSelected) {
-            vec3d pos = TilePos(selectedTilePos.value+selectedTileNormal).toEntityPos.value; // + 0.5 * convert!double(selectedTileNormal);
-            LightSource light = new LightSource;
-            light.position = UnitPos(pos);
-            light.tint.set(0.8, 0.8, 0);
-            light.strength = MaxLightStrength;
-            possesAI.addLight(light);
+            //vec3d pos = TilePos(selectedTilePos.value+selectedTileNormal).toEntityPos.value; // + 0.5 * convert!double(selectedTileNormal);
+            auto o = newEntity();
+            o.pos = TilePos(selectedTilePos.value+selectedTileNormal).toEntityPos;
+            o.type = world.entityTypeManager.byName("torch");
+            world.addEntity(o);
         }
 
     }
@@ -303,7 +304,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         if(keyMap[SDLK_SPACE]){
             if(possesAI.onGround){
                 //possesAI.fallSpeed = 4.5f;
-                possesAI.fallSpeed = 14.5f;
+                possesAI.fallSpeed = 5.0f;
             }
         }
         possesAI.move(right, fwd, 0.f, dTime);

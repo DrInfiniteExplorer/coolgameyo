@@ -89,7 +89,7 @@ void deinitOpenGL() {
 __gshared CLContext g_clContext;
 __gshared CLCommandQueue g_clCommandQueue;
 
-const bool UseRenderBuffer = false;
+const bool UseRenderBuffer = true;
 
 static if(UseRenderBuffer) {
 __gshared CLBufferRenderGL g_clDepthBuffer; //Depth buffer after renderinrerer. really contains positions though.

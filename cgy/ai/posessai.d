@@ -201,11 +201,7 @@ class FPSControlAI : UnitAI, CustomChange {
         tilesToChange[pos] = newTile;
     }        
 
-    LightSource[] lightsToAdd;
-    void addLight(LightSource light) {
-        lightsToAdd ~= light;
-    }
-    
+
     //Hax used: oldPosition, to make the world produce a delta-pos-value and load sectors
     void apply(World world) {
         world.unsafeMoveUnit(unit, *unitPos, 1);
@@ -214,11 +210,6 @@ class FPSControlAI : UnitAI, CustomChange {
             world.unsafeSetTile(tilePos, tile);
         }
         tilesToChange = null;
-
-        foreach(light ; lightsToAdd) {
-            world.unsafeAddLight(light);
-        }
-        lightsToAdd = null;
 
     }
 

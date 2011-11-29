@@ -25,9 +25,9 @@ class Inventory {
 			i++;
 		}
         if (inventory[i] is null) {
-		    /*if (i == inventory.length){
+		    if (i == inventory.length-1){
 			    inventory.length += 5;
-		    }*/
+		    }
 		    inventory[i] = entity;
 		
             if (listBox !is null) {

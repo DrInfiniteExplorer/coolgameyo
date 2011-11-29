@@ -22,6 +22,8 @@ struct EntityType {
 		vec3i tintColor;
 		bool droppable;
 		bool placeable;
+        ubyte lightStrength = 0;
+        vec3d lightTintColor;
 	}
 	
 	InnerEntityType serializableSettings;
@@ -46,7 +48,7 @@ class EntityTypeManager {
         mixin(LogTime!("EntityTypeManagerCreation"));
 		
 		
-		EntityType tempType;
+		//EntityType tempType;
 		if(!std.file.exists("data/entity_types.json")){
 			msg("Could not load entity types");
 			return;
@@ -55,6 +57,9 @@ class EntityTypeManager {
 		auto rootVal = json.parse(content);
 		enforce(rootVal.type == json.Value.Type.object, "rootval in entitytypejson not object roawoaowoawo: " ~ to!string(rootVal.type));
 		foreach(name, rsVal ; rootVal.pairs) {
+            EntityType tempType; // is is le working if this is here lololooo.
+            // problem is tree gets light, shrubbery dont. neither should.
+            // build expansion then defense it
 			json.read(tempType.serializableSettings, rsVal);
 			
 			tempType.name = name;

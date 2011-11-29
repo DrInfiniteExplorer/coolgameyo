@@ -224,7 +224,7 @@ class World {
         }
 
         auto sector = allocateSector(num);
-        if (sector.deserialize(entityTypeManager)) {
+        if (sector.deserialize(entityTypeManager, this)) {
             notifySectorLoad(num);
             notifyBuildGeometry(num);
         }
@@ -601,6 +601,7 @@ class World {
     }
 
     //TODO: Implement removeUnit?
+    // These should be named unsafeAddUnit, right?
     void addUnit(Unit* unit) {
         unitCount += 1;
         auto sectorNum = unit.pos.getSectorNum();
@@ -620,6 +621,27 @@ class World {
 
         sector.addEntity(entity);
         notifyAddEntity(sectorNum, entity);
+
+        addLightFromEntity(entity);
+    }
+    void removeEntity(Entity entity) {
+        auto sector = getSector(entity.pos.getSectorNum());
+        sector.removeEntity(entity);
+        if (entity.type.lightStrength > 0) {
+            unsafeRemoveLight(entity.light);
+        }
+
+        // TODO: do we have to release the memory perhaps?
+    }
+    void addLightFromEntity(Entity entity) {
+        if (entity.type.lightStrength > 0) {
+            LightSource light = new LightSource;
+            light.position = entity.pos;
+            light.tint.set(entity.type.lightTintColor);
+            light.strength = entity.type.lightStrength;
+            entity.light = light;
+            unsafeAddLight(light);
+        }
     }
 
     //We only create blocks when we floodfill; this the default for this parameter is henceforth "false"

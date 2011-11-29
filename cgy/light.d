@@ -9,8 +9,8 @@ const enum MaxLightStrength = 15;
 // without always going trough the world?
 //Another method would be to use a 'global' id to identify it with, or just its vec3i-position?
 class LightSource {
-    UnitPos position;
-    ubyte strength; //0-16
+    EntityPos position;
+    ubyte strength; //0-15
     vec3d tint;
     //Eventually add other stuff as well?
 }

@@ -15,6 +15,7 @@ import std.stdio;
 import entitytypemanager;
 import json;
 import light;
+import world.world;
 import world.block;
 import world.sizes;
 import worldgen.worldgen;
@@ -179,7 +180,7 @@ class Sector {
         std.file.write(folder ~ "entities.json", jsonString);
     }
     
-    bool deserialize(EntityTypeManager entityTypeManager) {
+    bool deserialize(EntityTypeManager entityTypeManager, World world) {
         string folder = text("saves/current/world/", sectorNum.value.X, ",", sectorNum.value.Y, "/", sectorNum.value.Z, "/");
         if (!exists(folder)) {
             return false;
@@ -224,9 +225,10 @@ class Sector {
 		}
         jsonRoot = json.parse(content);
         foreach (entityVal ; jsonRoot.elements) {
-            Entity entity = new Entity;
+            Entity entity = newEntity();
             entity.fromJSON(entityVal, entityTypeManager);
             entities.insert(entity);
+            world.addLightFromEntity(entity);
         }
         return true;
     }
@@ -336,6 +338,11 @@ class Sector {
     body{
         lights ~= light; 
     }
+
+    void removeLight(LightSource light) {
+        lights = remove(lights, countUntil!"a is b"(lights, light));
+    }
+
     LightSource[] getLightsWithin(TilePos min, TilePos max) {
         LightSource[] ret;
         foreach(light ; lights ) {

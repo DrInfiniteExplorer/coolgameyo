@@ -94,7 +94,8 @@ class Renderer {
         lineShader.radius = lineShader.getUniformLocation("radius");
 
         createDudeModel();
-
+        createEntityModel();
+        createTorchModel();
     }
     
     void destroy() {
@@ -114,6 +115,30 @@ class Renderer {
         glGenBuffers(1, &dudeVBO);
         glError();
         glBindBuffer(GL_ARRAY_BUFFER, dudeVBO);
+        glError();
+        glBufferData(GL_ARRAY_BUFFER, vertices.length*vec3f.sizeof, vertices.ptr, GL_STATIC_DRAW);
+        glError();
+    }
+    uint entityVBO;
+    void createEntityModel(){
+        vec3f[] vertices;
+        //Body centered at 0.5 z so main body centered aroung local origo
+        vertices ~= makeCube(vec3f(0.5, 0.5, 1), vec3f(0, 0, 1.0)); //Body, -.5, -.5, -1 -> .5, .5, 1
+        vertices ~= makeCube(vec3f(1, 1, 1), vec3f(0, 0, 0)); //Head, -1, -1, 1 -> 1, 1, 2.0
+        glGenBuffers(1, &entityVBO);
+        glError();
+        glBindBuffer(GL_ARRAY_BUFFER, entityVBO);
+        glError();
+        glBufferData(GL_ARRAY_BUFFER, vertices.length*vec3f.sizeof, vertices.ptr, GL_STATIC_DRAW);
+        glError();
+    }
+    uint torchVBO;
+    void createTorchModel(){
+        vec3f[] vertices;
+        vertices ~= makeCube(vec3f(0.2, 0.2, 0.6), vec3f(0, 0, 0.0));
+        glGenBuffers(1, &torchVBO);
+        glError();
+        glBindBuffer(GL_ARRAY_BUFFER, torchVBO);
         glError();
         glBufferData(GL_ARRAY_BUFFER, vertices.length*vec3f.sizeof, vertices.ptr, GL_STATIC_DRAW);
         glError();
@@ -383,7 +408,14 @@ class Renderer {
         dudeShader.setUniform(dudeShader.color, vec3f(entity.type.tintColor.X/255.f,
 													  entity.type.tintColor.Y/255.f,
 													  entity.type.tintColor.Z/255.f)); //Color :p
-        glBindBuffer(GL_ARRAY_BUFFER, dudeVBO);
+
+        // TODO: sry for extreme ugly hack... lazy and stuff
+        if (entity.type.name == "torch") {
+            glBindBuffer(GL_ARRAY_BUFFER, torchVBO);
+        }
+        else{
+            glBindBuffer(GL_ARRAY_BUFFER, entityVBO);
+        }
         glError();
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, vec3f.sizeof, null /* offset in vbo */);
         glError();
