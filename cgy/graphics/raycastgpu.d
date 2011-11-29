@@ -23,12 +23,16 @@ import light;
 import world.ambient;
 import settings;
 import statistics;
+import util.math;
+import util.rangefromto;
 import util.util;
 import world.world;
 
 //enum TileMemoryLocation = "global";
 //enum TileMemoryLocation = "constant";
 enum TileMemoryLocation = "texture";
+
+enum MaxLightTraceDistance = 100;
 
 struct CLCamera {
     float[4] position;
@@ -107,12 +111,12 @@ void initInteractiveComputeYourFather(){
         g_tileBuffer = CLImage3D(g_clContext,
                                     CL_MEM_READ_ONLY,
                                     format,
-                                    SolidMap.sizeX, SolidMap.sizeY, SolidMap.sizeZ,
+                                    SolidMap.sizeX*3, SolidMap.sizeY*3, SolidMap.sizeZ*3, //*3*3*3
                                     0, 0,
                                     null
                                     );
     } else {
-        g_tileBuffer = CLBuffer(g_clContext, CL_MEM_READ_ONLY, SolidMap.sizeof, null);
+        g_tileBuffer = CLBuffer(g_clContext, CL_MEM_READ_ONLY, SolidMap.sizeof*27, null);
     }
 }
 
@@ -162,6 +166,31 @@ void reloadOpenCl() {
 }
 
 
+void uploadTileData(World world, Camera camera) {
+    auto sectorNum = UnitPos(camera.getPosition).getSectorNum();
+    foreach(num ; RangeFromTo(sectorNum.value - vec3i(1,1,1), sectorNum.value + vec3i(1,1,1))){
+        SolidMap* tileMap = world.getSolidMap(SectorNum(num).toTilePos());
+        if(tileMap is null) {
+            continue;
+        }
+        vec3i rel = vec3i(
+                          posMod(num.X, 3),
+                          posMod(num.Y, 3),
+                          posMod(num.Z, 3)
+                          );        
+        static if(TileMemoryLocation == "texture") {
+            rel *= vec3i(SolidMap.sizeX, SolidMap.sizeY, SolidMap.sizeZ);
+            const size_t[3] origin = [rel.X,rel.Y,rel.Z];
+            const size_t[3] region = [SolidMap.sizeX, SolidMap.sizeY, SolidMap.sizeZ];
+            g_clCommandQueue.enqueueWriteImage(g_tileBuffer, CL_TRUE, origin, region, tileMap.data.ptr);
+        } else {
+            int idx = rel.X + 3*rel.Y + 9*rel.Z;
+            g_clCommandQueue.enqueueWriteBuffer(g_tileBuffer, CL_TRUE, idx*SolidMap.sizeof, tileMap.data.sizeof, tileMap.data.ptr);
+        }
+    }
+}
+
+
 void interactiveComputeYourFather(World world, Camera camera) {
     vec3d upperLeft, toRight, toDown, dir, startPos;
     startPos = camera.getPosition();
@@ -176,31 +205,25 @@ void interactiveComputeYourFather(World world, Camera camera) {
     g_clCommandQueue.enqueueWriteBuffer(g_cameraBuffer, CL_TRUE, 0, clCamera.sizeof, &clCamera);
 
 
-    World.LightPropagationData[] lights;
-    world.getLightsWithin(TilePos(vec3i(-100, -100, -100)), TilePos(vec3i(100, 100, 100)), lights);
+    LightSource[] lights;
+
+    //World.LightPropagationData[] lights;
+    lights = world.getLightsInRadius(UnitPos(startPos), MaxLightTraceDistance);
+//    world.getLightsWithin(TilePos(vec3i(-100, -100, -100)), TilePos(vec3i(100, 100, 100)), lights);
     if(lights.length == 0) {
         return;
     }
     CLLight[] clLight;
     clLight.length = lights.length;
     for (int i = 0; i < lights.length; i++) {
-        clLight[i].position = [ lights[i].tilePos.value.X+0.5,
-            lights[i].tilePos.value.Y+0.5,
-            lights[i].tilePos.value.Z+0.5, 0];
+        clLight[i].position = [
+            lights[i].position.value.X,
+            lights[i].position.value.Y,
+            lights[i].position.value.Z, 0];
         clLight[i].strength = lights[i].strength;
     }
 
-    SolidMap* tileMap = world.getSolidMap(UnitPos(camera.getPosition).tilePos);
-    if(tileMap is null) {
-        return;
-    }
-    static if(TileMemoryLocation == "texture") {
-        const size_t[3] origin = [0,0,0];
-        const size_t[3] region = [SolidMap.sizeX, SolidMap.sizeY, SolidMap.sizeZ];
-        g_clCommandQueue.enqueueWriteImage(g_tileBuffer, CL_TRUE, origin, region, tileMap.data.ptr);
-    } else {
-        g_clCommandQueue.enqueueWriteBuffer(g_tileBuffer, CL_TRUE, 0, tileMap.data.sizeof, tileMap.data.ptr);
-    }
+    uploadTileData(world, camera);
 
     //Need to create often. Not really, could reuse and make code to recognize and such!
     auto lightBuffer = CLBuffer(g_clContext, CL_MEM_READ_ONLY, clLight.length * clLight[0].sizeof + int.sizeof, null);

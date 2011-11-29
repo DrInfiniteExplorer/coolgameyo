@@ -63,11 +63,19 @@ int4 getSectorRel(int4 tilePos) {
     //return tilePos - getSectorNum(tilePos)*sectorSize;
 }
 
+//Gets "27 sectors" relative position
+int4 getSectorRel27(int4 tilePos) {
+    const int4 b = sectorSize*(int4)(3,3,3,0);
+    return ((tilePos % b) + b) % b;
+    //return tilePos - getSectorNum(tilePos)*sectorSize;
+}
+
+
 #ifdef UseTexture
 bool isSolid(int4 tilePos,
     __read_only image3d_t tileMap
     ) {
-    int4 rel = getSectorRel(tilePos);
+    int4 rel = getSectorRel27(tilePos);
     int bit = rel.x%TileStorageBitCount;
     int4 pos = (int4)(rel.x/TileStorageBitCount, rel.y, rel.z, 0);
 
@@ -259,11 +267,11 @@ float calculateLightInPoint(
     
 	for (i = 0; i < nrOfLights; i++) {
 		lightPos = getTilePos(lights[i].position);
-		tilePos  = convert_int4(daPoint);
+		tilePos  = getTilePos(daPoint);
 		
 		if (equals(tilePos, lightPos)) {
 			// *7 does it so it is 0-240 for 2 lights (16*15=240)
-			lightValue += ((MAXLIGHTDIST-distance(daPoint, lights[i].position))*7);
+            lightValue += 6*clamp(MAXLIGHTDIST/(distance(daPoint, lights[i].position)+0.1f), 0.f, (float)MAXLIGHTDIST);
 		}
 		else {
 			rayDir = lights[i].position-daPoint;
@@ -274,7 +282,7 @@ float calculateLightInPoint(
             if(dot(rayDir, convert_float4(normalDir)) <= 0) { //Surface is hidden, ignore
                 continue;
             }
-			dir      = convert_int4(sign(rayDir));
+			dir = convert_int4(sign(rayDir));
             
 			
 			tDelta.x = fabs(1.f / rayDir.x);
@@ -289,7 +297,8 @@ float calculateLightInPoint(
 			while(time < MAXLIGHTDIST && !isSolid(tilePos, solidMap)) {
 				if (equals(tilePos, lightPos)) {
 					// *7 does it so it is 0-240 for 2 lights (16*15=240)
-					lightValue += (MAXLIGHTDIST-time)*7;
+//					lightValue += (MAXLIGHTDIST-time)*7;
+                    lightValue += 6*clamp(MAXLIGHTDIST/(time+0.1f), 0.f, (float)MAXLIGHTDIST);
 					break;
 				}
 				
@@ -329,11 +338,12 @@ __kernel void castRays(
 	getDaPoint2(camera, solidMap, depth, &daPoint);
 
 /*
+    daPoint.w=0;
     vec4f daPoint2;
 	getDaPoint(camera, solidMap, &daPoint2);
-    write_imagef(output, (int2)(x,y), (float4)(0.f, 0.f, length(daPoint-daPoint2)/3.f ,1.0));
+    write_imagef(output, (int2)(x,camera->height-1-y), (float4)(0.f, 0.f, length(daPoint-daPoint2)/3.f ,1.0));
     return;
-*/	
+//*/	
 
 	int nrOfLights=_lights[0];
 	__constant struct Light *lights = (__constant struct Light*)(&_lights[1]);
