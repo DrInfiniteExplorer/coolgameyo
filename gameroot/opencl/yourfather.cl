@@ -1,6 +1,14 @@
 
 //#define UseTexture
 
+#ifndef MaxLightTraceDistance
+#define MaxLightTraceDistance 100.f
+#endif
+
+#ifndef FadeLightTraceDistance
+#define FadeLightTraceDistance 90.f
+#endif
+
 #ifndef TileStorageLocation
 #define TileStorageLocation texture
 #endif
@@ -45,7 +53,7 @@ struct Camera {
 
 struct Light {
 	vec4f position;
-	int strength;
+	float strength;
 };
 
 __constant int4 sectorSize = (int4)(128, 128, 32, 1); //1 to prevent division with 0 :p
@@ -268,10 +276,14 @@ float calculateLightInPoint(
 	for (i = 0; i < nrOfLights; i++) {
 		lightPos = getTilePos(lights[i].position);
 		tilePos  = getTilePos(daPoint);
+        float strength = lights[i].strength;
 		
 		if (equals(tilePos, lightPos)) {
 			// *7 does it so it is 0-240 for 2 lights (16*15=240)
-            lightValue += 6*clamp(MAXLIGHTDIST/(distance(daPoint, lights[i].position)+0.1f), 0.f, (float)MAXLIGHTDIST);
+            lightValue += clamp(
+                strength/(distance(daPoint, strength)+0.1f) - 0.2f,
+                0.f,
+                strength);
 		}
 		else {
 			rayDir = lights[i].position-daPoint;
@@ -298,9 +310,12 @@ float calculateLightInPoint(
 				if (equals(tilePos, lightPos)) {
 					// *7 does it so it is 0-240 for 2 lights (16*15=240)
 //					lightValue += (MAXLIGHTDIST-time)*7;
-                    lightValue += 6*clamp(MAXLIGHTDIST/(time+0.1f), 0.f, (float)MAXLIGHTDIST);
-					break;
-				}
+                    lightValue += clamp(
+                        strength/time - 0.2f,
+                        0.f,
+                        strength);
+                            break;
+                        }
 				
 				stepIter(dir, &tilePos, &tMax, tDelta, &time);
 			}

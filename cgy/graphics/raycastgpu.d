@@ -32,7 +32,9 @@ import world.world;
 //enum TileMemoryLocation = "constant";
 enum TileMemoryLocation = "texture";
 
-enum MaxLightTraceDistance = 100;
+enum MaxLightTraceDistance = 100.f;
+enum FadeLightTraceDistance = 90.f;   //Start fading lightstrength at this distance,
+                                    //so it is 0 at MaxLightTraceDistance
 
 struct CLCamera {
     float[4] position;
@@ -45,7 +47,7 @@ struct CLCamera {
 
 struct CLLight {
     float[4] position;
-    int[4] strength;
+    float[4] strength;
 };
 
 __gshared CLProgram g_traceRaysProgram;
@@ -63,6 +65,8 @@ void initInteractiveComputeYourFather(){
     auto content = readText("opencl/yourfather.cl");
 
     string defines = "";
+    defines ~= " -D MaxLightTraceDistance=" ~ to!string(MaxLightTraceDistance);
+    defines ~= " -D FadeLightTraceDistance=" ~ to!string(FadeLightTraceDistance);
 
     static if(TileMemoryLocation == "constant") {
         defines ~= " -D TileStorageLocation=__constant";
@@ -220,7 +224,14 @@ void interactiveComputeYourFather(World world, Camera camera) {
             lights[i].position.value.X,
             lights[i].position.value.Y,
             lights[i].position.value.Z, 0];
-        clLight[i].strength = lights[i].strength;
+        float dist = lights[i].position.value.getDistanceFrom(startPos);
+        if(dist > FadeLightTraceDistance) {
+            float range = (MaxLightTraceDistance - FadeLightTraceDistance);
+            float ratio = 1.f - (dist - FadeLightTraceDistance) / range;
+            clLight[i].strength = (cast(float)lights[i].strength) * ratio;;
+        } else {
+            clLight[i].strength = lights[i].strength;
+        }
     }
 
     uploadTileData(world, camera);
