@@ -224,9 +224,9 @@ void initFBO() {
     glError();
     glBindTexture(GL_TEXTURE_2D, g_ResultTexture);
     glError();
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glError();
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glError();
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glError();
@@ -234,7 +234,9 @@ void initFBO() {
     glError();
     glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_FALSE); // automatic mipmap
     glError();
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, renderSettings.windowWidth, renderSettings.windowHeight, 0,
+    int resultWidth = renderSettings.windowWidth / (renderSettings.raycastAll ? 1 : 2);
+    int resultHeight = renderSettings.windowHeight / (renderSettings.raycastAll ? 1 : 2);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, resultWidth, resultHeight, 0,
                  GL_RGBA, GL_UNSIGNED_BYTE, null);
     glError();
     glBindTexture(GL_TEXTURE_2D, 0);

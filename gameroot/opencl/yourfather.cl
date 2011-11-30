@@ -49,6 +49,8 @@ struct Camera {
     vec4f toDown;
     int width;
     int height;
+    int windowWidth;
+    int windowHeight;
 };
 
 struct Light {
@@ -219,8 +221,11 @@ const void getDaPoint2(
 ) {
 	int x = get_global_id(0);
     int y = get_global_id(1);
-
+#ifdef RayCastAll
     vec4f pos = read_imagef(depth, depthImageSampler, (int2)(x,camera->height-y-1));
+#else
+    vec4f pos = read_imagef(depth, depthImageSampler, (int2)(2*x,2*(camera->height-y-1)));
+#endif
 	*daPoint = pos;
 }
 
@@ -281,13 +286,13 @@ float calculateLightInPoint(
 		if (equals(tilePos, lightPos)) {
 			// *7 does it so it is 0-240 for 2 lights (16*15=240)
             lightValue += clamp(
-                strength/(distance(daPoint, strength)+0.1f) - 0.2f,
+                strength/distance(daPoint, lights[i].position) - 0.2f,
                 0.f,
                 strength);
 		}
 		else {
 			rayDir = lights[i].position-daPoint;
-            if(dot(rayDir, rayDir) > MAXLIGHTDIST*MAXLIGHTDIST) {
+            if(dot(rayDir, rayDir) > strength*strength) {
                 continue;
             }
             rayDir =normalize(rayDir);
@@ -376,7 +381,6 @@ __kernel void castRays(
     //write_imageui(output, (int2)(x,y), (uint4)(r,g,b,255));
     //write_imageui(output, (int2)(x,y), (uint4)(65535, 0, 0 ,255));
     write_imagef(output, (int2)(x,camera->height-1-y), (float4)(r/255, g/255.f, b/255.f ,1.0));
-
     
     int4 checkPosition = (int4)(3, 4, 5, 0);
     //outMap[get_global_id(0) + (camera->height-1-get_global_id(1)) * camera->width] = isSolid(checkPosition, solidMap) ? 0xFFFFFFFF : 0x0;

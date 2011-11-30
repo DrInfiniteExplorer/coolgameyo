@@ -43,6 +43,8 @@ struct CLCamera {
     float[4] toDown;
     int width;
     int height;
+    int windowWidth;
+    int windowHeight;
 };
 
 struct CLLight {
@@ -67,6 +69,10 @@ void initInteractiveComputeYourFather(){
     string defines = "";
     defines ~= " -D MaxLightTraceDistance=" ~ to!string(MaxLightTraceDistance);
     defines ~= " -D FadeLightTraceDistance=" ~ to!string(FadeLightTraceDistance);
+
+    if(renderSettings.raycastAll) {
+        defines ~= " -D RayCastAll";
+    }
 
     static if(TileMemoryLocation == "constant") {
         defines ~= " -D TileStorageLocation=__constant";
@@ -120,7 +126,7 @@ void initInteractiveComputeYourFather(){
                                     null
                                     );
     } else {
-        g_tileBuffer = CLBuffer(g_clContext, CL_MEM_READ_ONLY, SolidMap.sizeof*27, null);
+        g_tileBuffer = CLBuffer(g_clContext, CL_MEM_READ_ONLY, SolidMap.data.sizeof*27, null);
     }
 }
 
@@ -169,19 +175,37 @@ void reloadOpenCl() {
     g_kernel = CLKernel(g_traceRaysProgram, "castRays");
 }
 
-
+static SectorNum[3][3][3] oldSectorNum;
 void uploadTileData(World world, Camera camera) {
-    auto sectorNum = UnitPos(camera.getPosition).getSectorNum();
-    foreach(num ; RangeFromTo(sectorNum.value - vec3i(1,1,1), sectorNum.value + vec3i(1,1,1))){
-        SolidMap* tileMap = world.getSolidMap(SectorNum(num).toTilePos());
+    SectorNum startNum = UnitPos(camera.getPosition).getSectorNum();
+    foreach(num ; RangeFromTo(startNum.value - vec3i(1,1,1), startNum.value + vec3i(1,1,1))){
+        SectorNum sectorNum = SectorNum(num);
+        SolidMap* tileMap = world.getSolidMap(sectorNum.toTilePos());
         if(tileMap is null) {
             continue;
         }
+        bool dirty = tileMap.dirty;
+
         vec3i rel = vec3i(
                           posMod(num.X, 3),
                           posMod(num.Y, 3),
                           posMod(num.Z, 3)
-                          );        
+                          );
+
+        bool sameSector = oldSectorNum
+               [rel.X]
+               [rel.Y]
+               [rel.Z] == sectorNum;
+        if(!dirty && sameSector) { //If not dirty and same sector
+            continue;
+        }
+        writeln("Uploading sector data! ", to!string(sectorNum));
+        tileMap.dirty = false;
+        oldSectorNum
+        [rel.X]
+        [rel.Y]
+        [rel.Z] = sectorNum;
+
         static if(TileMemoryLocation == "texture") {
             rel *= vec3i(SolidMap.sizeX, SolidMap.sizeY, SolidMap.sizeZ);
             const size_t[3] origin = [rel.X,rel.Y,rel.Z];
@@ -189,7 +213,7 @@ void uploadTileData(World world, Camera camera) {
             g_clCommandQueue.enqueueWriteImage(g_tileBuffer, CL_TRUE, origin, region, tileMap.data.ptr);
         } else {
             int idx = rel.X + 3*rel.Y + 9*rel.Z;
-            g_clCommandQueue.enqueueWriteBuffer(g_tileBuffer, CL_TRUE, idx*SolidMap.sizeof, tileMap.data.sizeof, tileMap.data.ptr);
+            g_clCommandQueue.enqueueWriteBuffer(g_tileBuffer, CL_TRUE, idx*SolidMap.data.sizeof, tileMap.data.sizeof, tileMap.data.ptr);
         }
     }
 }
@@ -198,14 +222,19 @@ void uploadTileData(World world, Camera camera) {
 void interactiveComputeYourFather(World world, Camera camera) {
     vec3d upperLeft, toRight, toDown, dir, startPos;
     startPos = camera.getPosition();
+    int width = renderSettings.windowWidth / (renderSettings.raycastAll ? 1 : 2);
+    int height = renderSettings.windowHeight / (renderSettings.raycastAll ? 1 : 2);
+
     camera.getRayParameters(upperLeft, toRight, toDown);
     CLCamera clCamera;
     clCamera.position   = [startPos.X, startPos.Y, startPos.Z, 0];
     clCamera.upperLeft  = [upperLeft.X, upperLeft.Y, upperLeft.Z, 0];
     clCamera.toRight    = [toRight.X, toRight.Y, toRight.Z, 0];
     clCamera.toDown     = [toDown.X, toDown.Y, toDown.Z, 0];
-    clCamera.width = renderSettings.windowWidth;
-    clCamera.height= renderSettings.windowHeight;
+    clCamera.width = width;
+    clCamera.height= height;
+    clCamera.windowWidth = renderSettings.windowWidth;
+    clCamera.windowHeight= renderSettings.windowHeight;
     g_clCommandQueue.enqueueWriteBuffer(g_cameraBuffer, CL_TRUE, 0, clCamera.sizeof, &clCamera);
 
 
@@ -244,7 +273,7 @@ void interactiveComputeYourFather(World world, Camera camera) {
 
     g_kernel.setArgs(g_cameraBuffer, lightBuffer, g_tileBuffer, g_clDepthBuffer, g_clResultTexture);
 
-    auto range	= NDRange(renderSettings.windowWidth, renderSettings.windowHeight);
+    auto range	= NDRange(width, height);
 
 	glFinish();
 	g_clCommandQueue.enqueueAcquireGLObjects(g_clRayCastMemories);

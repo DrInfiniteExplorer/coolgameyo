@@ -43,6 +43,7 @@ struct SolidMap {
     const int sizeY = SectorSize.y;
     const int sizeZ = SectorSize.z;
     StorageType[sizeX][sizeY][sizeZ] data;
+    bool dirty = false;
 
     bool set(vec3i idx, bool val) {
         int x   = idx.X/BitCount;
@@ -55,6 +56,7 @@ struct SolidMap {
         bool oldVal = (value & bitMask) != 0;
         setFlag(value, bitMask, val);
         data[z][y][x] = value;
+        dirty |= (oldVal != val);
         return oldVal;
     }
     bool get(vec3i idx) const {
@@ -67,13 +69,16 @@ struct SolidMap {
     }
 
     void clear() {
+        dirty=true;
         (&data[0][0][0])[0..(data.sizeof / data[0][0][0].sizeof)] = 0;
     }
     void fill() {
+        dirty=true;
         (&data[0][0][0])[0..(data.sizeof / data[0][0][0].sizeof)] = 0xFF;
     }
 
     void updateBlock(Block b) {
+        dirty=true;
         auto blockNum = b.blockNum;
         auto relNum = blockNum.rel();
         auto blockTilePos = blockNum.toTilePos();
@@ -102,7 +107,7 @@ struct SolidMap {
     }
 
 }
-static assert(SolidMap.sizeof == 65536); //64k yeah :)
+static assert(SolidMap.data.sizeof == 65536); //64k yeah :)
 
 class Sector {
 

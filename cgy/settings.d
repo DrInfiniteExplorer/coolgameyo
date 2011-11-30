@@ -19,17 +19,19 @@ struct RenderSettings {
                               // and implementation limit sometime
         bool renderWireframe;
         bool renderInvalidTiles = false;
-        int smoothSetting = 2; // 0 = flat, 1 = smooth + AO, 2 = smooth - AO
+        int smoothSetting = 1; // 0 = flat, 1 = smooth + AO, 2 = smooth - AO
         /* Derp derp derp */
 
         int pixelsPerTile = 16;
 
         int windowWidth = 800;
         int windowHeight = 600;
+
+        bool raycastAll = false; //Says wether or not to raycast all pixels, or just 1/4 of them.
         
         float fieldOfView = 90.f;
         float aspectRatio = 4.f / 3.f; //Width per height
-        float nearPlane = 0.5f;
+        float nearPlane = 0.45f;
         float farPlane = 1000.f;
     }
 	
