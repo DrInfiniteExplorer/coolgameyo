@@ -15,14 +15,13 @@ import clan;
 import entitytypemanager;
 import light;
 
-shared int g_EntityCount = 0; //Global counter of entities. Make shared static variable in Game-class?
+shared int g_EntityIdCounter = 0; // To know what the id for the next entity will be
 
 
 Entity newEntity() {
     auto entity = new Entity;
-    // TODO: assign id in a non-idiotic way
-    entity.entityId = g_EntityCount;
-    g_EntityCount++;
+    entity.entityId = g_EntityIdCounter;
+    g_EntityIdCounter++;
     return entity;
 }
 

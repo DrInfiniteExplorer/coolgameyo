@@ -43,7 +43,7 @@ struct TileType {
 	// These settings are generated in the program, not from settings file
     TileTextureID textures;
 	string name;
-    ushort id;
+    ushort id = 0;
     bool transparent = false;
 }
 
@@ -53,7 +53,7 @@ class TileTypeManager {
     ushort[string] _byName;
 
     invariant() {
-        assert (types.length == _byName.length);
+        //assert (types.length == _byName.length); // because of id definition file, types.length can be bigger than _byName.length
         assert (types.length < ushort.max);
     }
 
@@ -68,6 +68,10 @@ class TileTypeManager {
         add(air);
 		atlas.addTile("textures/001.png", vec2i(0, 0)); // Invalid tile texture
 		
+        // Loads the tile type id configuration
+        Value idRootVal;
+        bool hasTypeIdConfFile = loadJSONFile("saves/current/tiletypeidconfiguration.json", &idRootVal);
+
 		TileType tempType;
 		if(!std.file.exists("data/tile_types.json")){
 			msg("Could not load tile types");
@@ -92,8 +96,33 @@ class TileTypeManager {
 					tempType.tintColor);
 			
 			tempType.name = name;
-			add(tempType);
+            if ( hasTypeIdConfFile == true && tempType.name in idRootVal) {
+                ushort id;
+                read(id, idRootVal[tempType.name]);
+                enforce(id > 1, "Some tile type wants to hijack the invalid or air tile type");
+			    add(tempType, id, true);
+            }
+            else {
+                add(tempType);
+            }
 		}
+
+        // This should be done with some fancy json function...
+        // Saves the tile type id configuration
+        string jsonString = "{\n";
+        for (int i = 0; i < types.length; i++) {
+            // don't save invalid or air
+            if (types[i].id > 1) {
+                jsonString ~= "\"";
+                jsonString ~= types[i].name;
+                jsonString ~= "\":";
+                jsonString ~= to!string(types[i].id);
+                jsonString ~= ",\n";
+            }
+        }
+        jsonString~="}";
+        util.filesystem.mkdir("saves/current");
+        std.file.write("saves/current/tiletypeidconfiguration.json", jsonString);
     }
 
     TileType byID(ushort id) {
@@ -106,15 +135,45 @@ class TileTypeManager {
         return *enforce(name in _byName, "no tile type by name '" ~ name ~ "'");
     }
 
-    ushort add(TileType t) {
-        enforce(!(t.name in _byName));
+    // Adds tile to the tile list. If we want to we can force an id.
+    ushort add(TileType tile, ushort id = 0, bool isSendingId = false) {
+        enforce(!(tile.name in _byName));
 		
-        t.id = to!ushort(types.length);
+        if (isSendingId) {
+            tile.id = id;
+            if (tile.id >= types.length) {
+                types.length = tile.id+1;
+            }
+            // If the forced id spot is occupied, rearrange types[]
+            if (types[tile.id].id != 0) {
+                auto intrudingBastard = types[tile.id];
+                ushort newPlace = 0;
+                for (ushort i = 1; i < types.length; i++) {
+                    if (types[i].id == 0) {
+                        newPlace = i;
+                        break;
+                    }
+                }
+                if (newPlace != 0) {
+                    intrudingBastard.id = newPlace;
+                }
+                else {
+                    intrudingBastard.id = to!ushort(types.length);
+                    types ~= intrudingBastard;
+                }
+                _byName[intrudingBastard.name] = intrudingBastard.id;
+                types[intrudingBastard.id] = intrudingBastard;
+            }
+            types[tile.id] = tile;
+		}
+        else {
+            tile.id = to!ushort(types.length);
+            types ~= tile;
+        }
+        
+        _byName[tile.name] = tile.id;
 		
-        types ~= t;
-        _byName[t.name] = t.id;
-		
-        return t.id;
+        return tile.id;
     }
 }
 

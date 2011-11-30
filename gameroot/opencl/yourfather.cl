@@ -37,7 +37,7 @@
 //  #pragma OPENCL EXTENSION cl_khr_fp64 : enable
 typedef float4 vec4f;
 
-#define MAXLIGHTDIST 8
+#define MAXLIGHTDIST 15
 
 const sampler_t tileImageSampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_REPEAT | CLK_FILTER_NEAREST;
 const sampler_t depthImageSampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_REPEAT | CLK_FILTER_NEAREST;
@@ -311,21 +311,23 @@ float calculateLightInPoint(
 			tMax.z = initStuff(daPoint.z, rayDir.z, tDelta.z);
 			
 			stepIter(dir, &tilePos, &tMax, tDelta, &time);
-			while(time < MAXLIGHTDIST && !isSolid(tilePos, solidMap)) {
+			while(time < strength && !isSolid(tilePos, solidMap)) {
 				if (equals(tilePos, lightPos)) {
 					// *7 does it so it is 0-240 for 2 lights (16*15=240)
-//					lightValue += (MAXLIGHTDIST-time)*7;
+					//lightValue += (MAXLIGHTDIST - time);
                     lightValue += clamp(
                         strength/time - 0.2f,
                         0.f,
                         strength);
-                            break;
-                        }
+                    break;
+					
+                }
 				
 				stepIter(dir, &tilePos, &tMax, tDelta, &time);
 			}
 		}
 	}
+	lightValue = lightValue * 7;
 	if (lightValue > 255) lightValue = 255;
 	return lightValue;
 }

@@ -347,6 +347,17 @@ Value encode(T)(T t) {
     }
 }
 
+// Loads the root Value and saves into value.
+// Returns true if the file exists, false otherwise
+bool loadJSONFile(string path, Value* value) {
+    if (std.file.exists(path)) {
+        string idContent = readText(path);
+        *value = json.parse(idContent);
+        return true;
+    }
+    return false;
+}
+
 // lat sta!
 // den som andrar detta far stryk!
 string prettyfyJSON(string text){
