@@ -70,9 +70,7 @@ void initInteractiveComputeYourFather(){
     defines ~= " -D MaxLightTraceDistance=" ~ to!string(MaxLightTraceDistance);
     defines ~= " -D FadeLightTraceDistance=" ~ to!string(FadeLightTraceDistance);
 
-    if(renderSettings.raycastAll) {
-        defines ~= " -D RayCastAll";
-    }
+    defines ~= " -D RayCastPixelSkip="~to!string(renderSettings.raycastPixelSkip);
 
     static if(TileMemoryLocation == "constant") {
         defines ~= " -D TileStorageLocation=__constant";
@@ -222,8 +220,8 @@ void uploadTileData(World world, Camera camera) {
 void interactiveComputeYourFather(World world, Camera camera) {
     vec3d upperLeft, toRight, toDown, dir, startPos;
     startPos = camera.getPosition();
-    int width = renderSettings.windowWidth / (renderSettings.raycastAll ? 1 : 2);
-    int height = renderSettings.windowHeight / (renderSettings.raycastAll ? 1 : 2);
+    int width = renderSettings.windowWidth / renderSettings.raycastPixelSkip;
+    int height = renderSettings.windowHeight / renderSettings.raycastPixelSkip;
 
     camera.getRayParameters(upperLeft, toRight, toDown);
     CLCamera clCamera;

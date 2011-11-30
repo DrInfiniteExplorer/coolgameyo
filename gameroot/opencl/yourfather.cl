@@ -1,6 +1,10 @@
 
 //#define UseTexture
 
+//#ifndef RayCastPixelSkip
+//#define RayCastPixelSkip 3
+//#endif
+
 #ifndef MaxLightTraceDistance
 #define MaxLightTraceDistance 100.f
 #endif
@@ -28,6 +32,7 @@
 #ifndef TileStorageBitCount
 #define TileStorageBitCount 32
 #endif
+
 
 // TileStorageLocation passed as define from host
 // TileStorageType passed as define from host
@@ -221,10 +226,10 @@ const void getDaPoint2(
 ) {
 	int x = get_global_id(0);
     int y = get_global_id(1);
-#ifdef RayCastAll
+#if RayCastPixelSkip<2
     vec4f pos = read_imagef(depth, depthImageSampler, (int2)(x,camera->height-y-1));
 #else
-    vec4f pos = read_imagef(depth, depthImageSampler, (int2)(2*x,2*(camera->height-y-1)));
+    vec4f pos = read_imagef(depth, depthImageSampler, (int2)(RayCastPixelSkip*x,RayCastPixelSkip*(camera->height-y-1)));
 #endif
 	*daPoint = pos;
 }

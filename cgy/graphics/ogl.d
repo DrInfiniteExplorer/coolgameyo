@@ -234,8 +234,8 @@ void initFBO() {
     glError();
     glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_FALSE); // automatic mipmap
     glError();
-    int resultWidth = renderSettings.windowWidth / (renderSettings.raycastAll ? 1 : 2);
-    int resultHeight = renderSettings.windowHeight / (renderSettings.raycastAll ? 1 : 2);
+    int resultWidth = renderSettings.windowWidth / renderSettings.raycastPixelSkip;
+    int resultHeight = renderSettings.windowHeight / renderSettings.raycastPixelSkip;
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, resultWidth, resultHeight, 0,
                  GL_RGBA, GL_UNSIGNED_BYTE, null);
     glError();
