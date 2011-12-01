@@ -34,7 +34,7 @@ enum TileMemoryLocation = "texture";
 
 enum MaxLightTraceDistance = 100.f;
 enum FadeLightTraceDistance = 90.f;   //Start fading lightstrength at this distance,
-                                    //so it is 0 at MaxLightTraceDistance
+//so it is 0 at MaxLightTraceDistance
 
 struct CLCamera {
     float[4] position;
@@ -76,12 +76,12 @@ void initInteractiveComputeYourFather(){
             auto format = cl_image_format(CL_R, CL_UNSIGNED_INT8);
         }
         g_tileBuffer = CLImage3D(g_clContext,
-                                    CL_MEM_READ_ONLY,
-                                    format,
-                                    SolidMap.sizeX*3, SolidMap.sizeY*3, SolidMap.sizeZ*3, //*3*3*3
-                                    0, 0,
-                                    null
-                                    );
+                CL_MEM_READ_ONLY,
+                format,
+                SolidMap.sizeX*3, SolidMap.sizeY*3, SolidMap.sizeZ*3, //*3*3*3
+                0, 0,
+                null
+                );
     } else {
         g_tileBuffer = CLBuffer(g_clContext, CL_MEM_READ_ONLY, SolidMap.data.sizeof*27, null);
     }
@@ -150,24 +150,24 @@ void uploadTileData(World world, Camera camera) {
         bool dirty = tileMap.dirty;
 
         vec3i rel = vec3i(
-                          posMod(num.X, 3),
-                          posMod(num.Y, 3),
-                          posMod(num.Z, 3)
-                          );
+                posMod(num.X, 3),
+                posMod(num.Y, 3),
+                posMod(num.Z, 3)
+                );
 
         bool sameSector = oldSectorNum
-               [rel.X]
-               [rel.Y]
-               [rel.Z] == sectorNum;
+            [rel.X]
+            [rel.Y]
+            [rel.Z] == sectorNum;
         if(!dirty && sameSector) { //If not dirty and same sector
             continue;
         }
         writeln("Uploading sector data! ", to!string(sectorNum));
         tileMap.dirty = false;
         oldSectorNum
-        [rel.X]
-        [rel.Y]
-        [rel.Z] = sectorNum;
+            [rel.X]
+            [rel.Y]
+            [rel.Z] = sectorNum;
 
         static if(TileMemoryLocation == "texture") {
             rel *= vec3i(SolidMap.sizeX, SolidMap.sizeY, SolidMap.sizeZ);
@@ -205,7 +205,7 @@ void interactiveComputeYourFather(World world, Camera camera) {
 
     //World.LightPropagationData[] lights;
     lights = world.getLightsInRadius(UnitPos(startPos), MaxLightTraceDistance);
-//    world.getLightsWithin(TilePos(vec3i(-100, -100, -100)), TilePos(vec3i(100, 100, 100)), lights);
+    //    world.getLightsWithin(TilePos(vec3i(-100, -100, -100)), TilePos(vec3i(100, 100, 100)), lights);
     if(lights.length == 0) {
         return;
     }
@@ -238,8 +238,8 @@ void interactiveComputeYourFather(World world, Camera camera) {
 
     auto range	= NDRange(width, height);
 
-	glFinish();
-	g_clCommandQueue.enqueueAcquireGLObjects(g_clRayCastMemories);
+    glFinish();
+    g_clCommandQueue.enqueueAcquireGLObjects(g_clRayCastMemories);
     {
         //mixin(Time!("writeln(\"Takes time: \", usecs/1000);"));
         CLEvent execEvent = g_clCommandQueue.enqueueNDRangeKernel(g_kernel, range);
@@ -247,8 +247,8 @@ void interactiveComputeYourFather(World world, Camera camera) {
         // wait for the kernel to be executed
         execEvent.wait();
     }
-	g_clCommandQueue.enqueueReleaseGLObjects(g_clRayCastMemories);
-	g_clCommandQueue.finish();
+    g_clCommandQueue.enqueueReleaseGLObjects(g_clRayCastMemories);
+    g_clCommandQueue.finish();
 
 
 }
