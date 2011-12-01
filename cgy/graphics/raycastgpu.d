@@ -67,8 +67,6 @@ void initInteractiveComputeYourFather(){
     reloadOpenCl();
     g_cameraBuffer = CLBuffer(g_clContext, CL_MEM_READ_ONLY, CLCamera.sizeof, null);
 
-    g_kernel = CLKernel(g_traceRaysProgram, "castRays");
-
     static if(TileMemoryLocation == "texture") {
         static if(PackInInt) {
             auto format = cl_image_format(CL_R, CL_UNSIGNED_INT32);
@@ -135,6 +133,7 @@ void reloadOpenCl() {
     if(errors.length > 2) {
         MessageBox(null, toStringz("!"~errors~"!?!"), "", 0);
     }
+    g_kernel = CLKernel(g_traceRaysProgram, "castRays");
 }
 
 static SectorNum[3][3][3] oldSectorNum;
