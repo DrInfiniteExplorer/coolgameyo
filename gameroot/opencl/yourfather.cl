@@ -271,7 +271,7 @@ float calculateLightInPoint(
 	vec4f tDelta;
 	vec4f tMax;
 	float time;
-	int c;
+
     vec4f normalDir;
     int normalIndex = (int)daPoint.w;
     daPoint.w = 0;
@@ -283,7 +283,7 @@ float calculateLightInPoint(
         case 4: normalDir = normalDirections[4]; break;
         case 5: normalDir = normalDirections[5]; break;        
     }
-    daPoint += normalDir * 0.01;
+    daPoint += normalDir * 0.01f;
 
     //if( dot(normalDirections[4], normalDirections[4]) > 0) return 0x00FF;
     //wtf varför går det inte att slå upp normaldirection :(
@@ -375,7 +375,7 @@ __kernel void castRays(
 	getDaPoint(camera, solidMap, &daPoint2);
     write_imagef(output, (int2)(x,camera->height-1-y), (float4)(0.f, 0.f, length(daPoint-daPoint2)/3.f ,1.0));
     return;
-//*/	
+// */	
 
 	int nrOfLights=_lights[0];
 	__constant struct Light *lights = (__constant struct Light*)(&_lights[1]);
