@@ -64,7 +64,7 @@ struct Light {
 };
 
 __constant int4 sectorSize = (int4)(128, 128, 32, 1); //1 to prevent division with 0 :p
-__constant int4 sectorSizef = (float4)(128.f, 128.f, 32.f, 1.f); //1 to prevent division with 0 :p
+__constant float4 sectorSizef = (float4)(128.f, 128.f, 32.f, 1.f); //1 to prevent division with 0 :p
 __constant int4 solidMapSize = (int4)(SolidMapSize, 1);
 
 int4 getSectorNum(int4 tilePos) {
@@ -219,7 +219,7 @@ __constant vec4f normalDirections[6] = {
     (vec4f)( 0, 0,-1, 0)
 };
 
-const void getDaPoint2(
+void getDaPoint2(
 	__constant struct Camera* camera,
 #ifdef UseTexture
     __read_only image3d_t solidMap,
@@ -396,7 +396,12 @@ __kernel void castRays(
     int b = (val      ) & 0xFF;
     //write_imageui(output, (int2)(x,y), (uint4)(r,g,b,255));
     //write_imageui(output, (int2)(x,y), (uint4)(65535, 0, 0 ,255));
+<<<<<<< HEAD
     write_imagef(output, (int2)(x,camera->height-1-y), (float4)(r/255.f, g/255.f, b/255.f ,1.0));
+=======
+    write_imagef(output, (int2)(x,camera->height-1-y), (float4)(r/255, g/255.f, b/255.f ,1.0f));
+
+>>>>>>> .f
     
     int4 checkPosition = (int4)(3, 4, 5, 0);
     //outMap[get_global_id(0) + (camera->height-1-get_global_id(1)) * camera->width] = isSolid(checkPosition, solidMap) ? 0xFFFFFFFF : 0x0;
