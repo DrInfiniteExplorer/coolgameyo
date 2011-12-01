@@ -27,6 +27,7 @@ struct RenderSettings {
         int windowWidth = 800;
         int windowHeight = 600;
 
+        //When 0, dont raycast at all!
         int raycastPixelSkip = 3; //Says wether or not to raycast all pixels, or just 1/4 of them.
         
         float fieldOfView = 90.f;

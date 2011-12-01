@@ -32,7 +32,8 @@ class OptionMenu : GuiElementWindow {
     GuiElementCheckBox renderinvalid;
     GuiElementSlider!float sensX, sensY;
     GuiElementComboBox smoothSetting;
-    
+    GuiElementComboBox raycastSetting;
+
     MainMenu main;
     this(MainMenu m) {
         main = m;
@@ -66,7 +67,18 @@ class OptionMenu : GuiElementWindow {
         smoothSetting.addItem("Plol shading");
         smoothSetting.selectItem(renderSettings.smoothSetting);
 
-        auto butt = new GuiElementButton(this, Rectd(vec2d(0.1, smoothSetting.bottomOf + 0.05), vec2d(0.3, 0.10)), "Back", &onBack);
+        auto raycastText = new GuiElementText(this, vec2d(0.1, smoothSetting.bottomOf+0.05), "Raycast every # of pixels");
+        raycastSetting = new GuiElementComboBox(this, Rectd(raycastText.rightOf+0.05, smoothSetting.bottomOf+0.05, 0.3, 0.05), &onRayCastChange);
+        raycastSetting.addItem("0");
+        raycastSetting.addItem("1");
+        raycastSetting.addItem("2");
+        raycastSetting.addItem("3");
+        raycastSetting.addItem("4");
+        raycastSetting.addItem("5");
+        raycastSetting.selectItem(renderSettings.raycastPixelSkip);
+
+
+        auto butt = new GuiElementButton(this, Rectd(vec2d(0.1, raycastSetting.bottomOf + 0.05), vec2d(0.3, 0.10)), "Back", &onBack);
         
         smoothSetting.bringToFront;
   
@@ -119,6 +131,12 @@ class OptionMenu : GuiElementWindow {
     void onSmoothChange(int selectedIndex) {
         renderSettings.smoothSetting = selectedIndex;
     }
+
+    void onRayCastChange(int selectedIndex) {
+        renderSettings.raycastPixelSkip = selectedIndex;
+    }
+
+    
 }
 
      

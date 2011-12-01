@@ -92,7 +92,6 @@ void initInteractiveComputeYourFather(){
 void deinitInteractiveComputeYourFather(){
 }
 
-
 void reloadOpenCl() {
     auto content = readText("opencl/yourfather.cl");
 

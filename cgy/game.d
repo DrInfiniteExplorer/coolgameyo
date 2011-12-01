@@ -61,8 +61,8 @@ class Game{
     private Scheduler           scheduler;
     private TileTextureAtlas    atlas;
     private TileTypeManager     tileTypeManager;
-	private EntityTypeManager   entityTypeManager;
-	private UnitTypeManager     unitTypeManager;
+    private EntityTypeManager   entityTypeManager;
+    private UnitTypeManager     unitTypeManager;
     private PathModule          pathModule;
     private AIModule            aiModule;
     
@@ -109,8 +109,8 @@ class Game{
             //TODO: Find out what the above comment indicates.
         }
         tileTypeManager = new TileTypeManager(atlas);
-		entityTypeManager = new EntityTypeManager();
-		unitTypeManager = new UnitTypeManager();
+        entityTypeManager = new EntityTypeManager();
+        unitTypeManager = new UnitTypeManager();
         world = new World(worldParams, tileTypeManager, entityTypeManager, unitTypeManager);
         assert (isWorker, "otherwise wont work lol (maybe)");
 
@@ -160,14 +160,14 @@ class Game{
             auto ret = top.toUnitPos();
             ret.value.Z += 1;
             msg("ret: ", ret);
-			
+            
             return ret;
         }
 
         auto xy = TileXYPos(vec2i(3,-20));
         auto u = newUnit();
         u.pos = topOfTheWorld(xy);
-		u.type = world.unitTypeManager.byName("elf");
+        u.type = world.unitTypeManager.byName("elf");
         //u.pos.value.Z += 1;
         world.addUnit(u);
         
@@ -176,7 +176,7 @@ class Game{
         auto uu = newUnit();
         auto xyy = TileXYPos(vec2i(3,3));
         uu.pos = topOfTheWorld(xyy);
-		uu.type = world.unitTypeManager.byName("dwarf");
+        uu.type = world.unitTypeManager.byName("dwarf");
         world.addUnit(uu);
         //auto goal = UnitPos(u.pos.value + vec3d(-30, 0, 0));
         auto goal = uu.pos;
@@ -187,28 +187,28 @@ class Game{
         //u.ai = new DwarfAI(u);
         
         activeUnit = uu;
-		
-		
-		EntityPos topOfTheWorld2(TileXYPos xy) {
+        
+        
+        EntityPos topOfTheWorld2(TileXYPos xy) {
             auto top = world.getTopTilePos(xy);
             msg("top: ", top);
             auto ret = top.toEntityPos();
             ret.value.Z += 1;
             msg("ret: ", ret);
-			
+            
             return ret;
         }
-		
-		xy = TileXYPos(vec2i(1,5));
+        
+        xy = TileXYPos(vec2i(1,5));
         auto o = newEntity();
         o.pos = topOfTheWorld2(xy);
-		o.type = world.entityTypeManager.byName("tree");
+        o.type = world.entityTypeManager.byName("tree");
         world.addEntity(o);
         msg("o.pos == ", o.pos);
         xy = TileXYPos(vec2i(5,1));
         o = newEntity();
         o.pos = topOfTheWorld2(xy);
-		o.type = world.entityTypeManager.byName("shrubbery");
+        o.type = world.entityTypeManager.byName("shrubbery");
         world.addEntity(o);
         msg("o.pos == ", o.pos);
     }
@@ -245,16 +245,16 @@ class Game{
         }
         initCallback = onDone;
         static void newGameThreadStarter(shared Game g, shared WorldGenParams p) {
-			try {
-				Game game = cast(Game)g;
-				game.newGameThread(cast(WorldGenParams)p);
-			} catch (Throwable o) {
-				msg("Thread exception!\n", o.toString());
-				version(Windows) {
-					MessageBoxA(null, cast(char *)toStringz(o.toString()),
-							"Error", MB_OK | MB_ICONEXCLAMATION);
-				}
-			}
+            try {
+                Game game = cast(Game)g;
+                game.newGameThread(cast(WorldGenParams)p);
+            } catch (Throwable o) {
+                msg("Thread exception!\n", o.toString());
+                version(Windows) {
+                    MessageBoxA(null, cast(char *)toStringz(o.toString()),
+                            "Error", MB_OK | MB_ICONEXCLAMATION);
+                }
+            }
         }        
         spawn(&newGameThreadStarter, cast(shared)this, cast(shared)worldParams);
     }
@@ -271,13 +271,13 @@ class Game{
             try{
                 Game game = cast(Game)g;
                 game.loadGameThread(cast(string)s);
-			} catch (Throwable o) {
-				msg("Thread exception!\n", o.toString());
-				version(Windows) {
-					MessageBoxA(null, cast(char *)toStringz(o.toString()),
-							"Error", MB_OK | MB_ICONEXCLAMATION);
-				}
-			}
+            } catch (Throwable o) {
+                msg("Thread exception!\n", o.toString());
+                version(Windows) {
+                    MessageBoxA(null, cast(char *)toStringz(o.toString()),
+                            "Error", MB_OK | MB_ICONEXCLAMATION);
+                }
+            }
         }        
         spawn(&loadGameThreadStarter, cast(shared)this, cast(shared)name);
     }
@@ -325,7 +325,7 @@ class Game{
                 "unitCount" : unitCount,
             ]);
             auto jsonString = to!string(jsonRoot);	
-	        jsonString = json.prettyfyJSON(jsonString);
+            jsonString = json.prettyfyJSON(jsonString);
         
             std.file.write("saves/current/game.json", jsonString);
         }
