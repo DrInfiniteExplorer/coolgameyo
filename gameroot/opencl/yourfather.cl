@@ -1,9 +1,9 @@
 
 //#define UseTexture
 
-//#ifndef RayCastPixelSkip
-//#define RayCastPixelSkip 3
-//#endif
+#ifndef RayCastPixelSkip
+#define RayCastPixelSkip 1
+#endif
 
 #ifndef MaxLightTraceDistance
 #define MaxLightTraceDistance 100.f
@@ -396,12 +396,7 @@ __kernel void castRays(
     int b = (val      ) & 0xFF;
     //write_imageui(output, (int2)(x,y), (uint4)(r,g,b,255));
     //write_imageui(output, (int2)(x,y), (uint4)(65535, 0, 0 ,255));
-<<<<<<< HEAD
-    write_imagef(output, (int2)(x,camera->height-1-y), (float4)(r/255.f, g/255.f, b/255.f ,1.0));
-=======
-    write_imagef(output, (int2)(x,camera->height-1-y), (float4)(r/255, g/255.f, b/255.f ,1.0f));
-
->>>>>>> .f
+    write_imagef(output, (int2)(x,camera->height-1-y), (float4)(r/255.f, g/255.f, b/255.f ,1.0f));
     
     int4 checkPosition = (int4)(3, 4, 5, 0);
     //outMap[get_global_id(0) + (camera->height-1-get_global_id(1)) * camera->width] = isSolid(checkPosition, solidMap) ? 0xFFFFFFFF : 0x0;

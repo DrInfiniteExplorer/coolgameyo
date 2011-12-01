@@ -118,9 +118,12 @@ void initOCL() {
 
     g_clRayCastOutput = CLImage2DGL(g_clContext, CL_MEM_WRITE_ONLY, GL_TEXTURE_2D, 0, g_rayCastOutput);
 
+    /*
     CLMemory derp1 = g_clDepthBuffer;
     CLMemory derp2 = g_clRayCastOutput;
     g_clRayCastMemories = CLMemories([derp1, derp2]);
+    */
+    g_clRayCastMemories = CLMemories([g_clDepthBuffer, g_clRayCastOutput]);
 
     initInteractiveComputeYourFather();
 
@@ -152,7 +155,7 @@ void initFBO() {
     glBindRenderbuffer(GL_RENDERBUFFER, depth);
     glError();
     glRenderbufferStorage(GL_RENDERBUFFER, 
-            GL_DEPTH_COMPONENT32F,
+            GL_DEPTH_COMPONENT,
             renderSettings.windowWidth, renderSettings.windowHeight);
     glError();
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
@@ -279,7 +282,7 @@ void deinitFBO() {
     glBindFramebuffer(GL_FRAMEBUFFER, g_FBO);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, 0);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
-    glDeleteRenderbuffers(1, &g_FBODepthBuffer);
+    glDeleteRenderbuffers(1, &g_FBODepthBuffer); glError(); //Later implement static if around this.
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glDeleteFramebuffers(1, &g_FBO);

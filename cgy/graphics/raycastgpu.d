@@ -135,7 +135,6 @@ void reloadOpenCl() {
     if(errors.length > 2) {
         MessageBox(null, toStringz("!"~errors~"!?!"), "", 0);
     }
-    g_kernel = CLKernel(g_traceRaysProgram, "castRays");
 }
 
 static SectorNum[3][3][3] oldSectorNum;
