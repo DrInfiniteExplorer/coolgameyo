@@ -64,48 +64,7 @@ static if(TileMemoryLocation == "texture") {
 
 
 void initInteractiveComputeYourFather(){
-    auto content = readText("opencl/yourfather.cl");
-
-    string defines = "";
-    defines ~= " -D MaxLightTraceDistance=" ~ to!string(MaxLightTraceDistance);
-    defines ~= " -D FadeLightTraceDistance=" ~ to!string(FadeLightTraceDistance);
-
-    defines ~= " -D RayCastPixelSkip="~to!string(renderSettings.raycastPixelSkip);
-
-    static if(TileMemoryLocation == "constant") {
-        defines ~= " -D TileStorageLocation=__constant";
-    } else static if (TileMemoryLocation == "global"){
-        defines ~= " -D TileStorageLocation=__global";
-    } else static if (TileMemoryLocation == "texture") {
-        defines ~= " -D UseTexture";
-    } else {
-        static assert(0, "No u");
-    }
-
-    static assert(SolidMap.sizeY == 128);
-    static assert(SolidMap.sizeZ == 32);
-    static if(PackInInt) {
-        static assert(SolidMap.sizeX == 4);
-        defines ~= " -D TileStorageType=uint -D TileStorageBitCount=32 -D SolidMapSize=4,128,32";
-
-    } else {
-        static assert(SolidMap.sizeX == 16);
-        defines ~= " -D TileStorageType=uchar -D TileStorageBitCount=8 -D SolidMapSize=16,128,32";
-    }
-
-    g_traceRaysProgram = g_clContext.createProgram(content);
-
-    try{
-        g_traceRaysProgram.build("-w -Werror " ~ defines);
-    }catch(Throwable t){
-    }
-
-    string errors = g_traceRaysProgram.buildLog(g_clContext.devices[0]);
-    writeln(errors);
-    if(errors.length > 2) {
-        MessageBox(null, toStringz("!"~errors~"!?!"), "", 0);
-    }
-
+    reloadOpenCl();
     g_cameraBuffer = CLBuffer(g_clContext, CL_MEM_READ_ONLY, CLCamera.sizeof, null);
 
     g_kernel = CLKernel(g_traceRaysProgram, "castRays");
@@ -133,10 +92,17 @@ void initInteractiveComputeYourFather(){
 void deinitInteractiveComputeYourFather(){
 }
 
+
 void reloadOpenCl() {
     auto content = readText("opencl/yourfather.cl");
 
     string defines = "";
+    defines ~= " -D MaxLightTraceDistance=" ~ to!string(MaxLightTraceDistance);
+    defines ~= " -D FadeLightTraceDistance=" ~ to!string(FadeLightTraceDistance);
+
+    defines ~= " -D RayCastPixelSkip="~to!string(renderSettings.raycastPixelSkip);
+
+
 
     static if(TileMemoryLocation == "constant") {
         defines ~= " -D TileStorageLocation=__constant";
@@ -269,7 +235,7 @@ void interactiveComputeYourFather(World world, Camera camera) {
     g_clCommandQueue.enqueueWriteBuffer(lightBuffer, CL_TRUE, 0, cnt.sizeof, &cnt);
     g_clCommandQueue.enqueueWriteBuffer(lightBuffer, CL_TRUE, cnt.sizeof, clLight.length * clLight[0].sizeof, clLight.ptr);
 
-    g_kernel.setArgs(g_cameraBuffer, lightBuffer, g_tileBuffer, g_clDepthBuffer, g_clResultTexture);
+    g_kernel.setArgs(g_cameraBuffer, lightBuffer, g_tileBuffer, g_clDepthBuffer, g_clRayCastOutput);
 
     auto range	= NDRange(width, height);
 

@@ -36,7 +36,7 @@ import entitytypemanager;
 class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{ 
     
     private GuiSystem guiSystem;
-    private GuiElementText fpsText, tickText, frameTimeText, tickTimeText, position, tileInfo, timeInfo;
+    private GuiElementText fpsText, tickText, frameTimeText, tickTimeText, position, tileInfo, timeInfo, renderMethodInfo;
     private StatisticsWindow statistics;
 	private InventoryWindow inventoryWindow;
 
@@ -136,6 +136,15 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
             DUHGnwaps();
         }
     }
+
+    enum renderMethods=[
+        "A*(M+R)",
+        "A*M",
+        "A*R",
+        "A",
+        "M",
+        "R"
+    ];
     
     void updateHUD() {
         //We plus one microsecond to avoid division by 0.
@@ -155,6 +164,8 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
 
         tileInfo.setText(text(selectedTile.describe(), "; ", selectedDistance));
         timeInfo.setText(world.getDayTimeString());
+
+        renderMethodInfo.setText(renderMethods[renderSettings.renderTrueWorld]);
     }
     
     void spawnHUD() {
@@ -163,6 +174,8 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         
         frameTimeText = new GuiElementText(guiSystem, vec2d(0.2, 0), "Frame time counter", false);
         tickTimeText = new GuiElementText(guiSystem, vec2d(0.2, frameTimeText.getRelativeRect.getBottom()), "Tick time counter", false);
+
+        renderMethodInfo = new GuiElementText(guiSystem, vec2d(0.4, 0), "Render method", false);
         
         position = new GuiElementText(guiSystem, vec2d(0, tickText.getRelativeRect.getBottom()), "Position", false);
         tileInfo = new GuiElementText(guiSystem, vec2d(0, position.getRelativeRect.getBottom()), "TileInfo", false);
@@ -182,6 +195,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         position.destroy(); position = null;
         tileInfo.destroy(); tileInfo = null;
         timeInfo.destroy(); timeInfo = null;
+        renderMethodInfo.destroy(); renderMethodInfo = null;
         guiSystem.removeHotkey(SDLK_F1);
         if(statistics !is null) {
             statistics.destroy();
@@ -219,10 +233,13 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
             }
 
             if (k.SdlSym == SDLK_F6) {
-                renderSettings.renderTrueWorld = true;
+                renderSettings.renderTrueWorld--;
+                if(renderSettings.renderTrueWorld < 0) {
+                    renderSettings.renderTrueWorld = 5;
+                }
             }
             if (k.SdlSym == SDLK_F7) {
-                renderSettings.renderTrueWorld = false;
+                renderSettings.renderTrueWorld = (renderSettings.renderTrueWorld+1)%6;
             }
             if (k.SdlSym == SDLK_F8) {
                 reloadOpenCl();

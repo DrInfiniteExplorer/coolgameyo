@@ -358,6 +358,7 @@
    </Folder>
    <File path="..\gameroot\shaders\fontShader.frag" />
    <File path="..\gameroot\shaders\fontShader.vert" />
+   <File path="..\gameroot\shaders\lightMixer.frag" />
    <File path="..\gameroot\shaders\lineShader.frag" />
    <File path="..\gameroot\shaders\lineShader.vert" />
    <File path="..\gameroot\shaders\quadShader.frag" />

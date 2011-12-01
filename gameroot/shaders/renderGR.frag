@@ -13,10 +13,11 @@ smooth in vec3 worldPosition;
 flat in int worldNormal;
 
 layout(location = 0) out vec4 frag_color;
-layout(location = 1) out vec4 depth;
+layout(location = 1) out vec4 light;
+layout(location = 2) out vec4 depth;
 void main() {
-   vec4 color = texture(atlas, tex_texcoord);
-   frag_color = vec4(color.rgb * max(vec3(lightStrength), SkyColor * sunLightStrength), 1.0);
+   frag_color = texture(atlas, tex_texcoord);
+   light = vec4(max(vec3(lightStrength), SkyColor * sunLightStrength), 1.0);
    depth = vec4(worldPosition, float(worldNormal));
 }
 

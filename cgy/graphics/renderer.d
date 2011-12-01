@@ -48,10 +48,12 @@ class Renderer {
     alias ShaderProgram!("offset", "VP", "atlas", "SkyColor") WorldShaderProgram;
     alias ShaderProgram!("VP", "M", "color") DudeShaderProgram;
     alias ShaderProgram!("VP", "V", "color", "radius") LineShaderProgram;
+    alias ShaderProgram!("albedo", "minecraft", "raycast", "method") LightMixerShaderProgram;
 
     WorldShaderProgram worldShader;
     DudeShaderProgram dudeShader;
     LineShaderProgram lineShader;
+    LightMixerShaderProgram lightMixShader;
     
     vec3d*[Unit*] specialUnits;
     
@@ -92,6 +94,23 @@ class Renderer {
         lineShader.V = lineShader.getUniformLocation("V");
         lineShader.color = lineShader.getUniformLocation("color");
         lineShader.radius = lineShader.getUniformLocation("radius");
+
+        lightMixShader = new LightMixerShaderProgram("shaders/quadShader.vert", "shaders/lightMixer.frag");
+        lightMixShader.bindAttribLocation(0, "vertex");
+        lightMixShader.link();
+        lightMixShader.albedo = lightMixShader.getUniformLocation("albedoTex");
+        lightMixShader.minecraft = lightMixShader.getUniformLocation("minecraftLightTex");
+        lightMixShader.raycast = lightMixShader.getUniformLocation("raycastLightTex");
+        lightMixShader.method = lightMixShader.getUniformLocation("method");
+        lightMixShader.use();
+        lightMixShader.setUniform(lightMixShader.albedo, 3);
+        lightMixShader.setUniform(lightMixShader.minecraft, 4);
+        lightMixShader.setUniform(lightMixShader.raycast, 5);
+        lightMixShader.use(false);
+
+
+
+
 
         createDudeModel();
         createEntityModel();
@@ -265,15 +284,35 @@ class Renderer {
 
 
     void castShadowRays() {
-        if(renderSettings.renderTrueWorld) return;
+        if(renderSettings.renderTrueWorld == 1 || 
+           renderSettings.renderTrueWorld == 3 || 
+           renderSettings.renderTrueWorld == 4) return;
         interactiveComputeYourFather(world, camera);
     }
 
     void finishHim() {
 
-        //g_FBOTexture
-        //g_ResultTexture
-        renderQuad(renderSettings.renderTrueWorld ? g_FBOTexture : g_ResultTexture);
+        glActiveTexture(GL_TEXTURE3);
+        glError();
+        glBindTexture(GL_TEXTURE_2D, g_albedoTexture);
+        glError();
+
+        glActiveTexture(GL_TEXTURE4);
+        glError();
+        glBindTexture(GL_TEXTURE_2D, g_lightTexture);
+        glError();
+
+        glActiveTexture(GL_TEXTURE5);
+        glError();
+        glBindTexture(GL_TEXTURE_2D, g_rayCastOutput);
+        glError();
+
+        //
+
+        lightMixShader.use();
+        lightMixShader.setUniform(lightMixShader.method, renderSettings.renderTrueWorld);
+        renderQuad();
+        lightMixShader.use(false);
 
         //Render stuff, make things.
     }

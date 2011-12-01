@@ -96,7 +96,7 @@ __gshared CLBufferRenderGL g_clDepthBuffer; //Depth buffer after renderinrerer. 
 } else {
 __gshared CLImage2DGL g_clDepthBuffer; //Result from opencl raycasting yeah!
 }
-__gshared CLImage2DGL g_clResultTexture; //Result from opencl raycasting yeah!
+__gshared CLImage2DGL g_clRayCastOutput; //Result from opencl raycasting yeah!
 __gshared CLMemories g_clRayCastMemories;
 
 void initOCL() {
@@ -116,9 +116,9 @@ void initOCL() {
         g_clDepthBuffer = CLImage2DGL(g_clContext, CL_MEM_READ_ONLY, GL_TEXTURE_2D, 0, g_FBODepthBuffer);
     }
 
-    g_clResultTexture = CLImage2DGL(g_clContext, CL_MEM_WRITE_ONLY, GL_TEXTURE_2D, 0, g_ResultTexture);
+    g_clRayCastOutput = CLImage2DGL(g_clContext, CL_MEM_WRITE_ONLY, GL_TEXTURE_2D, 0, g_rayCastOutput);
 
-    g_clRayCastMemories = CLMemories([g_clDepthBuffer, g_clResultTexture]);
+    g_clRayCastMemories = CLMemories([g_clDepthBuffer, g_clRayCastOutput]);
 
     initInteractiveComputeYourFather();
 
@@ -130,16 +130,17 @@ void deinitOCL() {
 
 __gshared uint g_FBO;
 __gshared uint g_FBODepthBuffer;
-__gshared uint g_FBOTexture;
-__gshared uint g_ResultTexture;
+__gshared uint g_albedoTexture;
+__gshared uint g_lightTexture;
+__gshared uint g_rayCastOutput;
 void initFBO() {
 
     glGenFramebuffers(1, &g_FBO);
     glError();
     glBindFramebuffer(GL_FRAMEBUFFER, g_FBO);
     glError();
-    uint[2] buffers = [ GL_COLOR_ATTACHMENT0_EXT, GL_COLOR_ATTACHMENT1_EXT ];
-    glDrawBuffers(2, buffers.ptr);
+    uint[3] buffers = [ GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 ];
+    glDrawBuffers(3, buffers.ptr);
     glError();
 
 
@@ -155,6 +156,49 @@ void initFBO() {
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth);
     glError();
 
+    glGenTextures(1, &g_albedoTexture);
+    glError();
+    glBindTexture(GL_TEXTURE_2D, g_albedoTexture);
+    glError();
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glError();
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glError();
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glError();
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glError();
+    glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_FALSE); // automatic mipmap
+    glError();
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, renderSettings.windowWidth, renderSettings.windowHeight, 0,
+                 GL_RGBA, GL_UNSIGNED_BYTE, null);
+    glError();
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, g_albedoTexture, 0);
+    glError();
+
+    glGenTextures(1, &g_lightTexture);
+    glError();
+    glBindTexture(GL_TEXTURE_2D, g_lightTexture);
+    glError();
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glError();
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glError();
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glError();
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glError();
+    glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_FALSE); // automatic mipmap
+    glError();
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, renderSettings.windowWidth, renderSettings.windowHeight, 0,
+                 GL_RGBA, GL_UNSIGNED_BYTE, null);
+    glError();
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, g_lightTexture, 0);
+    glError();
 
     static if(UseRenderBuffer) {
         glGenRenderbuffers(1, &g_FBODepthBuffer);
@@ -165,7 +209,7 @@ void initFBO() {
         glError();
         glBindRenderbuffer(GL_RENDERBUFFER, 0);
         glError();
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_RENDERBUFFER, g_FBODepthBuffer);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_RENDERBUFFER, g_FBODepthBuffer);
         glError();
     } else {
         glGenTextures(1, &g_FBODepthBuffer);
@@ -187,31 +231,10 @@ void initFBO() {
         glError();
         glBindTexture(GL_TEXTURE_2D, 0);
 
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, g_FBODepthBuffer, 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, g_FBODepthBuffer, 0);
         glError();
     }
 
-    glGenTextures(1, &g_FBOTexture);
-    glError();
-    glBindTexture(GL_TEXTURE_2D, g_FBOTexture);
-    glError();
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glError();
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glError();
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glError();
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glError();
-    glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_FALSE); // automatic mipmap
-    glError();
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, renderSettings.windowWidth, renderSettings.windowHeight, 0,
-                 GL_RGBA, GL_UNSIGNED_BYTE, null);
-    glError();
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, g_FBOTexture, 0);
-    glError();
 
     auto error = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     glError();
@@ -220,9 +243,9 @@ void initFBO() {
         BREAKPOINT;
     }
 
-    glGenTextures(1, &g_ResultTexture);
+    glGenTextures(1, &g_rayCastOutput);
     glError();
-    glBindTexture(GL_TEXTURE_2D, g_ResultTexture);
+    glBindTexture(GL_TEXTURE_2D, g_rayCastOutput);
     glError();
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glError();
@@ -259,9 +282,7 @@ void deinitFBO() {
 }
 
 
-alias ShaderProgram!("texture") QuadShaderProgram;
 __gshared uint g_quadVBO;
-__gshared QuadShaderProgram g_quadShader;
 void initQuad(){
     vec3f[4] quad = [
         vec3f(-1, 1, 0),
@@ -276,33 +297,18 @@ void initQuad(){
     glBufferData(GL_ARRAY_BUFFER, quad.sizeof, quad.ptr, GL_STATIC_DRAW);
     glError();
 
-    g_quadShader = new QuadShaderProgram("shaders/quadShader.vert", "shaders/quadShader.frag");
 
-    g_quadShader.bindAttribLocation(0, "vertex");
-    g_quadShader.link();
-    g_quadShader.texture = g_quadShader.getUniformLocation("texture");
-    g_quadShader.use();
-    g_quadShader.setUniform(g_quadShader.texture, 3);
-    g_quadShader.use(false);
 
 
 }
 
-void renderQuad(uint texture) {
+void renderQuad() {
     glBindBuffer(GL_ARRAY_BUFFER, g_quadVBO);
     glError();
     glEnableVertexAttribArray(0);
     glError();
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, vec3f.sizeof, null /* offset in vbo */);
     glError();
-
-    glActiveTexture(GL_TEXTURE3);
-    glError();
-    //g_FBOTexture
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glError();
-
-    g_quadShader.use();
     
     glDisable(GL_DEPTH_TEST);
 
@@ -310,9 +316,6 @@ void renderQuad(uint texture) {
     glError();
 
     glEnable(GL_DEPTH_TEST);        
-
-    
-    g_quadShader.use(false);
 
     glDisableVertexAttribArray(0);
     glError();
