@@ -266,7 +266,7 @@ class Main {
             long diff = now-then;
             float deltaT = to!float(diff) / 1_000_000.f;            
             then = now;
-            if(game) {
+            if (game) {
                 game.render(diff);
             }
             guiSystem.tick(deltaT); //Eventually add deltatime and such as well :)
@@ -280,8 +280,10 @@ class Main {
                 SDL_WM_SetCaption( toStringz(str), "Herp");
             }
 
-            ulong time_left_on_tick = 1; // TODO: FIX :D
-            game.updateNetwork(time_left_on_tick);
+            if (game) {
+                ulong time_left_on_tick = 1; // TODO: FIX :D
+                game.updateNetwork(time_left_on_tick);
+            }
         }
         msg("Main thread got exited? :S");
         BREAKPOINT(!exit);        

@@ -42,6 +42,7 @@ import util.filesystem;
 import world.world;
 import worldgen.worldgen;
 
+import std.socket;
 import clientnetworking;
 
 import settings;
