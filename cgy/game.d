@@ -42,6 +42,8 @@ import util.filesystem;
 import world.world;
 import worldgen.worldgen;
 
+import clientnetworking;
+
 import settings;
 
 string SDLError() { return to!string(SDL_GetError()); }
@@ -65,10 +67,10 @@ class Game{
     private UnitTypeManager     unitTypeManager;
     private PathModule          pathModule;
     private AIModule            aiModule;
-    
+
     private Unit*               activeUnit; //TODO: Find out when this unit dies, and tell people.
-    
-    
+
+
 
     this(bool serv, bool clie, bool work) {
         //TODO: Move world-creation etc out of here, and put in init-function instead.
@@ -78,12 +80,12 @@ class Game{
         isClient = clie;
         isWorker = work;
     }
-    
+
     private bool destroyed;
     ~this() {
         BREAK_IF(!destroyed);
     }
-    
+
     void destroy() {
         //Wait until done.
         scheduler.exit();
@@ -99,8 +101,8 @@ class Game{
 
         destroyed = true;
     }
-    
-    
+
+
     //This and finishInit are run in the thread which becomes the scheduler thread
     private void init(WorldGenParams worldParams) {
         mixin(LogTime!("GameInit"));
@@ -119,7 +121,7 @@ class Game{
         aiModule = new AIModule(pathModule, world);
         scheduler.registerModule(pathModule);
         scheduler.registerModule(aiModule);
-        
+
         if (isClient) {
             camera = new Camera();
             //The renderer also needs to be created in the main thread, it loads shaders and stuff.
@@ -130,7 +132,7 @@ class Game{
             scheduler.registerModule(geometryCreator);
             geometryCreator.setCamera(camera);
         }
-        
+
     }
     //This and init are run in the thread which becomes the scheduler thread
     private void finishInit() {
@@ -139,7 +141,7 @@ class Game{
         send(mainThreadTid, "finishInit"); //This will be detected by the main loop, which calls game.loadDone
         scheduler.start();        
     }
-    
+
     //This is called when the main thread is notified that the loading thread is done loading. We upload gpu stuff here.
     void loadDone() {
         if (isClient) {
@@ -149,18 +151,17 @@ class Game{
         }            
         initCallback(); //Call the registered 'tell me when your finished starting the game'-callback here.
     }
-    
+
     void populateWorld() {
-        
+
         g_UnitCount = 0;
-        
+
         UnitPos topOfTheWorld(TileXYPos xy) {
             auto top = world.getTopTilePos(xy);
             msg("top: ", top);
             auto ret = top.toUnitPos();
             ret.value.Z += 1;
             msg("ret: ", ret);
-            
             return ret;
         }
 
@@ -170,7 +171,7 @@ class Game{
         u.type = world.unitTypeManager.byName("elf");
         //u.pos.value.Z += 1;
         world.addUnit(u);
-        
+
         msg("u.pos == ", u.pos);
 
         auto uu = newUnit();
@@ -185,20 +186,20 @@ class Game{
         //goal.value.Z += 1;
         //addAABB(goal.tilePos.getAABB());
         //u.ai = new DwarfAI(u);
-        
+
         activeUnit = uu;
-        
-        
+
+
         EntityPos topOfTheWorld2(TileXYPos xy) {
             auto top = world.getTopTilePos(xy);
             msg("top: ", top);
             auto ret = top.toEntityPos();
             ret.value.Z += 1;
             msg("ret: ", ret);
-            
+
             return ret;
         }
-        
+
         xy = TileXYPos(vec2i(1,5));
         auto o = newEntity();
         o.pos = topOfTheWorld2(xy);
@@ -235,7 +236,7 @@ class Game{
         deserialize();
         finishInit();        
     }
-    
+
     //TODO: Move to better place
     void delegate() initCallback = null;
 
@@ -265,7 +266,7 @@ class Game{
         }
         //Need to implement a recursive copy function, in util, perhaps?
         util.filesystem.copy(saveDir, "saves/current");
-        
+
         initCallback = onDone;
         static void loadGameThreadStarter(shared Game g, shared string s) {
             try{
@@ -281,10 +282,10 @@ class Game{
         }        
         spawn(&loadGameThreadStarter, cast(shared)this, cast(shared)name);
     }
-    
+
     //Called in loading thread.
     private void deserialize() {
-        
+
         world.deserialize();
 
         auto content = readText("saves/current/game.json");
@@ -297,12 +298,12 @@ class Game{
         if("unitCount" in rootVal){
             unitCount = to!int(rootVal["unitCount"].num);
         }
-        
+
         g_UnitCount = unitCount;
         activeUnit = world.getUnitFromId(activeUnitId);
-        
+
     }
-    
+
     void serializeAll(void delegate() andThen) {
         void serialize() {
             //private World           world; Tas hand om av scheduler.
@@ -312,66 +313,66 @@ class Game{
 
             //Spara position för kameran?
             //private Camera              camera;
-        
+
             //Behöver inte sparas. Eller? Kan göra det, för snabb laddning av atlas, och flera 'moddar' igång samtidigt.
             //private TileTextureAtlas    atlas;
             //private TileTypeManager     tileTypeManager;    
-    
+
             //private Unit*               activeUnit; //TODO: Find out when this unit dies, and tell people.
             auto activeUnit = Value(activeUnit.unitId);
             auto unitCount = Value(g_UnitCount);
             auto jsonRoot = Value([
-                "activeUnit" : activeUnit,
-                "unitCount" : unitCount,
-            ]);
-            auto jsonString = to!string(jsonRoot);	
+                    "activeUnit" : activeUnit,
+                    "unitCount" : unitCount,
+                    ]);
+            auto jsonString = to!string(jsonRoot);    
             jsonString = json.prettyfyJSON(jsonString);
-        
+
             std.file.write("saves/current/game.json", jsonString);
         }
         //Takes care of world and tasks.        
         util.filesystem.mkdir("saves/current");
         scheduler.startSerialize({
-            writeln("WOHOO!");
-            serialize();
-            if (andThen !is null) {
+                writeln("WOHOO!");
+                serialize();
+                if (andThen !is null) {
                 andThen();
-            }
-        });
+                }
+                });
     }
-    
+
     void saveGame(string name, void delegate() onDone)
-    in{
-        enforce( name != "current", "Invalid save name: " ~ name);
-    }
+        in{
+            enforce( name != "current", "Invalid save name: " ~ name);
+        }
     body{
         serializeAll({
-            string saveDir = "saves/" ~ name;
-            if (exists(saveDir)) {
+                string saveDir = "saves/" ~ name;
+                if (exists(saveDir)) {
                 rmdirRecurse(saveDir);
-            }
-            //Need to implement a recursive copy function, in util, perhaps?
-            util.filesystem.copy("saves/current", saveDir);
-            onDone();
-        });
+                }
+                //Need to implement a recursive copy function, in util, perhaps?
+                util.filesystem.copy("saves/current", saveDir);
+                onDone();
+                });
     }
-    
+
     Camera getCamera() {
         return camera;
     }
-    
+
     Unit* getActiveUnit() {
         return activeUnit;
     }
-    
+
     World getWorld() {
         return world;
     }
-    
+
     Renderer getRenderer() {
         return renderer;
     }
-    
+
     Scheduler getScheduler() {
         return scheduler;
     }
@@ -380,11 +381,8 @@ class Game{
         if(renderer is null) return;
         renderer.render(usecs);
     }
+
+    mixin NetworkCode; // from clientnetworking.d
 }
-
-
-
-
-
 
 

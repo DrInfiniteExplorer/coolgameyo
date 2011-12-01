@@ -375,15 +375,17 @@ class Renderer {
 
     immutable vec3f NightBlue = vec3f(0.0, 0.0, 0.2);
     immutable vec3f SunLighty = vec3f(1.0, 1.0, 1.0);
+    immutable vec3f SunSet    = vec3f(0.9, 0.9, 0.7);
+    immutable vec3f SunSetter = vec3f(0.4, 0.4, 0.5);
     immutable vec3f[] SkyColorDerp = [
         NightBlue,
         NightBlue,
-        NightBlue,
+        SunSet,
         SunLighty,
         SunLighty,
         SunLighty,
-        SunLighty,
-        NightBlue,
+        SunSet,
+        SunSetter,
         NightBlue,
     ];
 

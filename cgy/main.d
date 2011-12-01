@@ -279,7 +279,9 @@ class Main {
                 auto str = "CoolGameYo! ~ " ~ getMemoryUsage();
                 SDL_WM_SetCaption( toStringz(str), "Herp");
             }
-            
+
+            ulong time_left_on_tick = 1; // TODO: FIX :D
+            game.updateNetwork(time_left_on_tick);
         }
         msg("Main thread got exited? :S");
         BREAKPOINT(!exit);        
