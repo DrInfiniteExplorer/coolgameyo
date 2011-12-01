@@ -44,8 +44,8 @@ typedef float4 vec4f;
 
 #define MAXLIGHTDIST 15
 
-const sampler_t tileImageSampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_REPEAT | CLK_FILTER_NEAREST;
-const sampler_t depthImageSampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_REPEAT | CLK_FILTER_NEAREST;
+__constant sampler_t tileImageSampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_REPEAT | CLK_FILTER_NEAREST;
+__constant sampler_t depthImageSampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_REPEAT | CLK_FILTER_NEAREST;
 
 struct Camera {
     vec4f position;
@@ -64,11 +64,12 @@ struct Light {
 };
 
 __constant int4 sectorSize = (int4)(128, 128, 32, 1); //1 to prevent division with 0 :p
+__constant int4 sectorSizef = (float4)(128.f, 128.f, 32.f, 1.f); //1 to prevent division with 0 :p
 __constant int4 solidMapSize = (int4)(SolidMapSize, 1);
 
 int4 getSectorNum(int4 tilePos) {
     float4 temp = convert_float4(tilePos);
-    temp = temp / sectorSize;
+    temp = temp / sectorSizef;
     return convert_int4(floor(temp));
 }
 
@@ -146,27 +147,31 @@ tDelta - tid att aka over en tile (alltid positiv)
 dir - den faktiska riktningen vi aker i
 */
 void stepIter(const int4 dir, int4* tilePos, float4* tMax, const float4 tDelta, float *tMin) {
-    *tMin = min(tMax->x, min(tMax->y, tMax->z));
-    if(tMax->x < tMax->y) {
-        if(tMax->x < tMax->z) {
-            tilePos->x += dir.x;
-            tMax->x += tDelta.x;
+    float4 _tMax = *tMax;
+    int4 _tilePos = *tilePos;
+    *tMin = min(_tMax.x, min(_tMax.y, _tMax.z));
+    if(_tMax.x < _tMax.y) {
+        if(_tMax.x < _tMax.z) {
+            _tilePos.x += dir.x;
+            _tMax.x += tDelta.x;
         } else {
-            tilePos->z += dir.z;
-            tMax->z += tDelta.z;
+            _tilePos.z += dir.z;
+            _tMax.z += tDelta.z;
         }
     } else {
-        if(tMax->y < tMax->z) {
-            tilePos->y += dir.y;
-            tMax->y += tDelta.y;
+        if(_tMax.y < _tMax.z) {
+            _tilePos.y += dir.y;
+            _tMax.y += tDelta.y;
         } else {
-            tilePos->z += dir.z;
-            tMax->z += tDelta.z;
+            _tilePos.z += dir.z;
+            _tMax.z += tDelta.z;
         }
     }
+    *tMax = _tMax;
+    *tilePos = _tilePos;
 }
 
-const void getDaPoint(
+void getDaPoint(
 	__constant struct Camera* camera,
 #ifdef UseTexture
     __read_only image3d_t solidMap,
@@ -202,7 +207,7 @@ const void getDaPoint(
         stepIter(dir, &tilePos, &tMax, tDelta, &time);
     }
 	
-	*daPoint = camera->position + rayDir * time*0.99999;
+	*daPoint = camera->position + rayDir * time*0.99999f;
 }
 
 __constant vec4f normalDirections[6] = {

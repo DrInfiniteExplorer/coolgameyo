@@ -118,7 +118,9 @@ void initOCL() {
 
     g_clRayCastOutput = CLImage2DGL(g_clContext, CL_MEM_WRITE_ONLY, GL_TEXTURE_2D, 0, g_rayCastOutput);
 
-    g_clRayCastMemories = CLMemories([g_clDepthBuffer, g_clRayCastOutput]);
+    CLMemory derp1 = g_clDepthBuffer;
+    CLMemory derp2 = g_clRayCastOutput;
+    g_clRayCastMemories = CLMemories([derp1, derp2]);
 
     initInteractiveComputeYourFather();
 
@@ -149,7 +151,9 @@ void initFBO() {
     glError();
     glBindRenderbuffer(GL_RENDERBUFFER, depth);
     glError();
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, renderSettings.windowWidth, renderSettings.windowHeight);
+    glRenderbufferStorage(GL_RENDERBUFFER, 
+            GL_DEPTH_COMPONENT32F,
+            renderSettings.windowWidth, renderSettings.windowHeight);
     glError();
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
     glError();
