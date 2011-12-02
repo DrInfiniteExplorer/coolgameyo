@@ -172,16 +172,14 @@ class Sector {
             return encode(*unit);
         }
         Value jsonRoot = Value(array(map!derp(array(units))));
-        auto jsonString = to!string(jsonRoot);	
-	    jsonString = json.prettyfyJSON(jsonString);
+	    auto jsonString = json.prettifyJSON(jsonRoot);
         std.file.write(folder ~ "units.json", jsonString);
 
         Value darp(Entity entity) {
             return encode(entity);
         }
         jsonRoot = Value(array(map!darp(array(entities))));
-        jsonString = to!string(jsonRoot);	
-	    jsonString = json.prettyfyJSON(jsonString);
+	    jsonString = json.prettifyJSON(jsonRoot);
         std.file.write(folder ~ "entities.json", jsonString);
     }
     

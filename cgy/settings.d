@@ -108,7 +108,7 @@ void saveSettings(){
     auto jsonRoot = json.Value(values);
     auto jsonString = to!string(jsonRoot);
 	
-	jsonString = json.prettyfyJSON(jsonString);
+	jsonString = json.prettifyJSON(jsonString);
 	
     std.file.write("settings.json", jsonString);
 }

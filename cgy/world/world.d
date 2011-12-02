@@ -158,8 +158,7 @@ class World {
             "activeSectors" : activeSectors
         ]);
 
-        auto jsonString = to!string(jsonRoot);	
-	    jsonString = json.prettyfyJSON(jsonString);
+	    auto jsonString = json.prettifyJSON(jsonRoot);
         util.filesystem.mkdir("saves/current/world/");
         std.file.write("saves/current/world/world.json", jsonString);
 

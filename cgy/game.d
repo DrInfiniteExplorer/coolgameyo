@@ -326,8 +326,7 @@ class Game{
                     "activeUnit" : activeUnit,
                     "unitCount" : unitCount,
                     ]);
-            auto jsonString = to!string(jsonRoot);    
-            jsonString = json.prettyfyJSON(jsonString);
+            auto jsonString = json.prettifyJSON(jsonRoot);
 
             std.file.write("saves/current/game.json", jsonString);
         }

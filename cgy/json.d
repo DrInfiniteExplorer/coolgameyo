@@ -360,7 +360,10 @@ bool loadJSONFile(string path, Value* value) {
 
 // lat sta!
 // den som andrar detta far stryk!
-string prettyfyJSON(string text){
+string prettifyJSON(Value val){
+    return prettifyJSON(to!string(val));
+}
+string prettifyJSON(string text){
 	int tabs = 0;
 	text = std.array.replace(text, "," ,",\n");
 	text = std.array.replace(text, "{" ,"{\n");

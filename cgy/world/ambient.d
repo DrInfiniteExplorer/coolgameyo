@@ -18,6 +18,7 @@ mixin template LightStorageMethods() {
             setTileLightVal(tilePos, 0, sunLight);
 
             foreach(newTilePos ; neighbors(data.tilePos)) {
+                modifiedBlocks[newTilePos.getBlockNum()] = true;
                 auto tile = getTile(newTilePos);
                 if(!tile.isAir) continue;
                 byte neighborLightValue = tile.getLight(sunLight);
@@ -46,6 +47,7 @@ mixin template LightStorageMethods() {
             setTileLightVal(tilePos, lightStrength, sunLight);
             byte spreadLightStrength = cast(byte)(lightStrength-1);
             foreach(newTilePos ; neighbors(source.tilePos)) {
+                modifiedBlocks[newTilePos.getBlockNum()] = true;
                 Tile tile = getTile(newTilePos);
                 if( !tile.isAir) continue;
                 byte neighborLightValue = tile.getLight(sunLight);

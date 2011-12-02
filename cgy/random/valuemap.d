@@ -17,6 +17,14 @@ class ValueMap2D(StorageType, bool Wrap = true) : ValueSource {
     StorageType[] randMap;
     uint sizeX, sizeY;
         
+
+    void alloc(uint _sizeX, uint _sizeY) {
+        sizeX = _sizeX;
+        sizeY = _sizeY;
+        auto mul = sizeX * sizeY;
+        randMap.length = mul;
+    }
+
     //Gets values 0.._sizeX, 0.._sizeY from source and puts in place.
     void fill(Source)(Source source, uint _sizeX, uint _sizeY) {
         sizeX = _sizeX;
@@ -114,6 +122,10 @@ class ValueMap2D(StorageType, bool Wrap = true) : ValueSource {
     }
 
     void saveBin(string filename) {
+        std.file.write(filename, randMap);
+    }
+    void loadBin(string filename) {
+        randMap = cast(StorageType[])std.file.read(filename);
         std.file.write(filename, randMap);
     }
 };

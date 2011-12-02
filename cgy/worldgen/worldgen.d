@@ -1,8 +1,14 @@
 module worldgen.worldgen;
 
-import std.math, std.conv, std.random, std.algorithm;
+import std.algorithm;
 import std.c.process;
+import std.conv;
+import std.file;
+import std.math;
+import std.random;
 import std.stdio;
+
+import json;
 
 import light;
 
@@ -31,7 +37,7 @@ struct WorldGenParams {
     uint worldDiameter = 16; //Measures diameter of world, in number of sectors.
 
     double worldMin = -50;
-    double worldMax = 150;
+    double worldMax = 450;
 
     uint heightmapSamplesInWorld() const @property {
         return worldDiameter * SectorSize.x / HeightMapSampleDistance;
@@ -54,8 +60,13 @@ final class WorldGenerator {
     }
     
     void serialize() {
-        mkdir("saves/current/worldgen");
-        worldHeightMapImg.saveBin("saves/current/worldgen/heightmap.bin");
+        auto folder = "saves/current/worldgen";
+        util.filesystem.mkdir(folder);
+        worldHeightMapImg.saveBin(folder ~ "/heightmap.bin");
+        auto jsonRoot = encode(params);
+        std.file.write(folder ~ "/params.json", prettifyJSON(jsonRoot));
+
+
 
         /*
         double[4] colorize(double t) {
@@ -79,7 +90,13 @@ final class WorldGenerator {
 
     }
     void deserialize() {
+        auto folder = "saves/current/worldgen";
+        auto content = readText(folder ~ "/params.json");
+        json.read(params, content);
 
+        worldHeightMapImg = new ValueMap2D!double;
+        worldHeightMapImg.alloc(params.heightmapSamplesInWorld, params.heightmapSamplesInWorld);
+        worldHeightMapImg.loadBin(folder ~ "/heightmap.bin");
     }
 
     void init(WorldGenParams params, TileTypeManager tileTypeManager) {
@@ -104,38 +121,6 @@ final class WorldGenerator {
         auto conicalGradient = new ConicalGradientField(vec3d(0, 0, -1), vec3d(0, 0, params.worldMax), (params.worldMax-params.worldMin)/(0.5*params.worldDiameter*SectorSize.x));
         //worldHeightMap = new AddSources(worldHeightMap, conicalGradient);
         //worldHeightMap = conicalGradient;
-
-
-/*
-        wierdnessMap = new GradientNoise01!()(params.worldSize, randSource);     // [0, 1]
-        temperatureMap = new GradientNoise01!()(params.worldSize, randSource);   // [-20, 50]
-        temperatureMap = new ModMultAdd!(70, -20)(temperatureMap);
-        humidityMap = new GradientNoise01!()(params.worldSize, randSource);      // [0, 100]
-        humidityMap = new ModMultAdd!(100, 0)(humidityMap);
-*/
-        /*
-        static double derp(double t) {
-            return t^^2;
-        }
-        //auto asd = new Filter!(derp)(vegetationMap);
-        ValueSource asd = new MultMultMult(vegetationMap, new ModScaleOffset(vegetationMap, vec3d(1,1,1), vec3d(10000, -2313, 873927)));
-        asd = new Filter!(derp)(asd);
-        vegetationMap = new Fractal!4(
-                [asd, vegetationMap, vegetationMap, vegetationMap],
-                [80_000, 14533.0, 167.187345, 59.1123142],
-                [130.0, 30, 25.0, 15.0]
-            );
-        */
-        
-        //vegetationMap = new GradientNoise!()(params.worldSize, randSource);    // [0, 100]
-        
-        //tmp.fill(vegetationMap, params.worldSize, params.worldSize, 0, 0, params.worldSize*SectorSize.x, params.worldSize * SectorSize.y);
-        //vegetationMap = new BicubeInterpolation(tmp);
-        //vegetationMap = new CosInterpolation(tmp);
-        //vegetationMap = new BicubeInterpolation(vegetationMap);
-        //vegetationMap = tmp; //Uncomment this to see the 'raw' bitmap of vegetation :)
-        //auto scale = to!double(params.worldSize) / (SectorSize.x * params.worldSize);
-        //vegetationMap = new ModScaleOffset(vegetationMap, vec3d(scale), vec3d(params.worldSize/2, params.worldSize/2, 0));
     }
 
     bool isInsideWorld(TilePos pos) {

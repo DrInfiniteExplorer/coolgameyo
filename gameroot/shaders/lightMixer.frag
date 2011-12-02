@@ -17,7 +17,7 @@ void main() {
    vec4 raycastLight = texture2D(raycastLightTex, texcoord);
    vec4 color;
    if(method == 0) {
-        color = albedo * (minecraftLight + raycastLight);
+        color = albedo * clamp(minecraftLight + raycastLight, 0.0, 1.0);
    } else if (method == 1) {
         color = albedo * minecraftLight;
    } else if (method == 2) {

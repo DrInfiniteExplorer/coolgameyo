@@ -121,8 +121,7 @@ class PathModule : Module {
         values["activeStates"] = serializeActiveStates();
         values["toRemoveIndices"] = Value(array(map!((uint a){ return Value(a);})(toRemoveIndices)));
         Value jsonRoot = Value(values);
-        auto jsonString = to!string(jsonRoot);	
-	    jsonString = json.prettyfyJSON(jsonString);
+	    auto jsonString = json.prettifyJSON(jsonRoot);
         
         mkdir("saves/current/modules/path");
         std.file.write("saves/current/modules/path/states.json", jsonString);
