@@ -10,15 +10,18 @@ import std.stdio;
 import derelict.sdl.sdl;
 
 import ai.posessai;
+import json;
 import game;
 import graphics.camera;
 import graphics.debugging;
+import graphics.ogl;
 import graphics.renderer;
 import graphics.raycastgpu;
 import gui.all;
 import gui.statistics;
 import gui.inventorywindow;
 import light;
+import random.catmullrom;
 import scheduler;
 import settings;
 import statistics;
@@ -67,6 +70,16 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
     private bool entitySelected;
     
     private Tile copiedTile;
+
+    struct CamDemoPoints {
+        vec3d[] camPos;
+        vec3d[] camTargetDir;
+    };
+
+    private CamDemoPoints camDemoPoints;
+    private bool runCamDemo=false;
+    private float camDemoTime = 0.f;
+    private int camDemoLine;
     
     this(Game g, GuiSystem s) {
         guiSystem = s;
@@ -83,6 +96,11 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
 
 		inventoryWindow = new InventoryWindow(guiSystem, this, &possesAI.unit.inventory);
 		guiSystem.addHotkey(SDLK_i, &(inventoryWindow.onOpenInventory));
+
+        Value jsonRoot;
+        if(loadJSONFile("saves/current/camdemo.json", &jsonRoot)) {
+            json.read(camDemoPoints, jsonRoot);
+        }
     }
     
     private bool destroyed;
@@ -90,6 +108,10 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         BREAK_IF(!destroyed);
     }    
     void destroy(){
+
+        auto jsonRoot = encode(camDemoPoints);
+        std.file.write("saves/current/camdemo.json", prettifyJSON(jsonRoot));
+
         if( statistics !is null) {
             statistics.destroy();
         }
@@ -166,6 +188,8 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         timeInfo.setText(world.getDayTimeString());
 
         renderMethodInfo.setText(renderMethods[renderSettings.renderTrueWorld]);
+
+        renderDemoPath();
     }
     
     void spawnHUD() {
@@ -205,6 +229,46 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
     
     void onKey(GuiEvent.KeyboardEvent k) {
         if (k.pressed) {
+            if (k.SdlSym == SDLK_F2) {
+                useMouse = !useMouse;
+            }
+            if (k.SdlSym == SDLK_F3) {
+                freeFlight = !freeFlight;
+            }
+
+            if (k.SdlSym == SDLK_F6) {
+                renderSettings.renderTrueWorld--;
+                if(renderSettings.renderTrueWorld < 0) {
+                    renderSettings.renderTrueWorld = 5;
+                }
+            }
+            if (k.SdlSym == SDLK_F7) {
+                renderSettings.renderTrueWorld = (renderSettings.renderTrueWorld+1)%6;
+            }
+            if (k.SdlSym == SDLK_F8) {
+                reloadOpenCl();
+            }
+            if (k.SdlSym == SDLK_F9) {
+                if(camDemoPoints.camPos.length < 4) {
+                    camDemoPoints.camPos ~= camera.getPosition();
+                    camDemoPoints.camTargetDir ~= camera.getTargetDir();
+                    camDemoPoints.camPos ~= camera.getPosition();
+                    camDemoPoints.camTargetDir ~= camera.getTargetDir();
+                } else {
+                    camDemoPoints.camPos[$-1] = camera.getPosition();
+                    camDemoPoints.camTargetDir[$-1] = camera.getTargetDir();
+                    camDemoPoints.camPos ~= camera.getPosition();
+                    camDemoPoints.camTargetDir ~= camera.getTargetDir();
+                }
+                renderDemoPath();
+            }
+            if (k.SdlSym == SDLK_F10) {
+                if(camDemoPoints.camPos.length < 4) {
+                    return;
+                }
+                runCamDemo = true;
+                camDemoTime = 0;
+            }
             if (k.SdlSym == SDLK_F11) {
                 EntityPos topOfTheWorld2(TileXYPos xy) {
                     auto top = world.getTopTilePos(xy);
@@ -225,47 +289,40 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
                 tilePos = topOfTheWorld2(TileXYPos(vec2i(3,4)));
                 world.unsafeSetTile(tilePos, tile);
             }
-            if (k.SdlSym == SDLK_F3) {
-                freeFlight = !freeFlight;
-            }
-            if (k.SdlSym == SDLK_F2) {
-                useMouse = !useMouse;
-            }
 
-            if (k.SdlSym == SDLK_F6) {
-                renderSettings.renderTrueWorld--;
-                if(renderSettings.renderTrueWorld < 0) {
-                    renderSettings.renderTrueWorld = 5;
-                }
-            }
-            if (k.SdlSym == SDLK_F7) {
-                renderSettings.renderTrueWorld = (renderSettings.renderTrueWorld+1)%6;
-            }
-            if (k.SdlSym == SDLK_F8) {
-                reloadOpenCl();
-            }
-
-            if (k.SdlSym == SDLK_k) {
-                mixin(Time!q{
-                    writeln(cnt, "; ", usecs/1000);
-                });
-                int cnt=0;
-                Tile tile;
-                foreach(pos; RangeFromTo(vec3i(-SectorSize.x, -SectorSize.y, -SectorSize.z), vec3i(SectorSize.x, SectorSize.y, SectorSize.z))) {
-                    tile = world.getTile(TilePos(pos));
-                    cnt += cast(int)(!tile.isAir() && tile.valid);
-                }
-            }
-            if (k.SdlSym == SDLK_l) {
-                mixin(Time!q{
-                    writeln(cnt, "; ", usecs/1000);
-                });
-                int cnt=0;
-                foreach(pos; RangeFromTo(vec3i(-SectorSize.x, -SectorSize.y, -SectorSize.z), vec3i(SectorSize.x, SectorSize.y, SectorSize.z))) {
-                    cnt += cast(int)world.isSolid(TilePos(pos));
-                }
-            }
         }
+    }
+
+    void updateCamDemo(float dTime) {
+        vec3d camPos = CatmullRomSpline(camDemoTime, camDemoPoints.camPos);
+        vec3d camTargetDir = CatmullRomSpline(camDemoTime, camDemoPoints.camTargetDir);
+        camDemoTime += dTime * 0.5f / cast(float)camDemoPoints.camPos.length;
+
+        camera.setPosition(camPos);
+        camera.setTargetDir(camTargetDir);
+
+        if(camDemoTime > 1.f) {
+            runCamDemo = false;
+        }
+    }
+
+    void renderDemoPath() {
+        float time;
+        int len = camDemoPoints.camPos.length*4;
+        if(len < 16) {
+            return;
+        }
+        vec3d[] camPoses;
+        foreach(idx ; 0 .. len) {
+            time = cast(float)idx / cast(float)len;
+            auto pos = CatmullRomSpline(time, camDemoPoints.camPos);
+            auto dir = CatmullRomSpline(time, camDemoPoints.camTargetDir);
+            camPoses ~= pos;
+            camPoses ~= pos+dir;
+            camPoses ~= pos;
+        }
+        removeLine(camDemoLine);
+        camDemoLine = addLine(camPoses, vec3f(1.0, 0.0, 0.0));
     }
 
     void mouseMove(GuiEvent e){
@@ -276,7 +333,9 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         auto diffY = y - middleY;
         if((diffX != 0 || diffY != 0) && useMouse){
                 SDL_WarpMouse(middleX, middleY);
-                    camera.mouseMove( diffX,  diffY);
+            if(!runCamDemo) {
+                camera.mouseMove( diffX,  diffY);
+            }
         }
         mousecoords.set(x, y);
     }    
@@ -320,6 +379,11 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
     }
     
     void tick(float dTime) {
+        if(runCamDemo) {
+            updateCamDemo(dTime);
+            updateHUD();
+            return;
+        }
         if (freeFlight ) {
             updateCamera();
         } else {
