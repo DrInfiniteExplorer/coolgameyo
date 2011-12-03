@@ -98,7 +98,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
 		guiSystem.addHotkey(SDLK_i, &(inventoryWindow.onOpenInventory));
 
         Value jsonRoot;
-        if(loadJSONFile("saves/current/camdemo.json", &jsonRoot)) {
+        if(loadJSONFile("saves/camdemo.json", &jsonRoot)) {
             json.read(camDemoPoints, jsonRoot);
         }
     }
@@ -110,7 +110,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
     void destroy(){
 
         auto jsonRoot = encode(camDemoPoints);
-        std.file.write("saves/current/camdemo.json", prettifyJSON(jsonRoot));
+        std.file.write("saves/camdemo.json", prettifyJSON(jsonRoot));
 
         if( statistics !is null) {
             statistics.destroy();

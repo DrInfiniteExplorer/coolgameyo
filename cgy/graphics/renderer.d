@@ -15,6 +15,7 @@ import graphics.debugging;
 import graphics.misc;
 import graphics.ogl;
 import graphics.raycastgpu;
+import graphics.renderconstants;
 import graphics.shader;
 import graphics.texture;
 import graphics.geometrycreator;
@@ -374,22 +375,6 @@ class Renderer {
         glError();
     }
 
-    immutable vec3f NightBlue = vec3f(0.0, 0.0, 0.2);
-    immutable vec3f SunLighty = vec3f(1.0, 1.0, 1.0);
-    immutable vec3f SunSet    = vec3f(0.9, 0.9, 0.7);
-    immutable vec3f SunSetter = vec3f(0.4, 0.4, 0.5);
-    immutable vec3f[] SkyColorDerp = [
-        NightBlue,
-        NightBlue,
-        SunSet,
-        SunLighty,
-        SunLighty,
-        SunLighty,
-        SunSet,
-        SunSetter,
-        NightBlue,
-    ];
-
     void renderWorld(Camera camera)
     {
         worldShader.use();
@@ -406,8 +391,10 @@ class Renderer {
         atlas.use();
         auto transform = camera.getProjectionMatrix() * camera.getViewMatrix();
         worldShader.setUniform(worldShader.VP, transform);
-        vec3f SkyColor = CatmullRomSpline(world.getDayTime(), SkyColorDerp);
+
+        vec3f SkyColor = CatmullRomSpline(world.getDayTime(), SkyColors);
         worldShader.setUniform(worldShader.SkyColor, SkyColor);
+
         auto regions = geometryCreator.getRegions();
         foreach(region ; regions){
             if(region.VBO && camera.inFrustum(region.grNum.getAABB())){

@@ -45,7 +45,7 @@ class GuiElementListBox : public GuiElement {
     public int getSelectedItemIndex() {
         return selectedIndex;
     }
-    public string getText(int index) {
+    public string getItemText(int index) {
         return rows[index].text.getText();
     }
 
@@ -65,11 +65,14 @@ class GuiElementListBox : public GuiElement {
             selectionChangedCallback(index);
         }
     }
-    public void setText(int index, string text) {
+    public void setText(string text, int index) {
         rows[index].text.setText(text);
     }
 
     public void addItem(string str, int index) {
+        if(index < 0) {
+            index = nrOfItems;
+        }
         if (index > nrOfItems) {
             index = nrOfItems;
         }
@@ -80,9 +83,12 @@ class GuiElementListBox : public GuiElement {
         for (int i = nrOfItems; i > index; i--) {
             rows[i] = rows[i-1];
         }
+
         rows[index].text = new GuiElementText(this, vec2d(0, 0), str);
-        updateRowTextPos(index);
         nrOfItems++;
+        foreach(idx ; index .. nrOfItems) {
+            updateRowTextPos(idx);
+        }
     }
 	public void addItem(string str) {
         addItem(str, nrOfItems);
@@ -95,10 +101,22 @@ class GuiElementListBox : public GuiElement {
         else if (index == selectedIndex) {
             selectedIndex = -1;
         }
+        rows[index].text.destroy();
+        nrOfItems--;
         for (int a = index; a < nrOfItems; a++){
             rows[a] = rows[a+1];
+            updateRowTextPos(a);
         }
-        nrOfItems--;
+    }
+
+    public void clear() {
+        while(nrOfItems != 0) {
+            removeItem(nrOfItems-1);
+        }
+    }
+
+    public int getItemCount() const {
+        return nrOfItems;
     }
     
 

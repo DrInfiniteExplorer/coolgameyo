@@ -24,7 +24,7 @@ immutable(char[]) fixRect = "
     auto start = (vec2f(offset, offset) + convert!float(r.start)) / screenSize;
     start.Y = 1.0 - start.Y;
     auto size = convert!float(r.size) / screenSize;
-    size.Y = - size.Y;
+    start.Y -= size.Y;
     auto x = vec2f(size.X, 0);
     auto y = vec2f(0, size.Y);
     ";
@@ -39,7 +39,7 @@ struct Lines{
     void makeGraph(T)(Recti r, const(T[]) values, T min, T max) {
         enum offset = 0;
         mixin(fixRect);
-        double dx = 1.0 / to!(double)(values.length);
+        double dx = 1.0 / to!(double)(values.length-1);
         vertices.length = values.length;
 
         double b = to!double(max - min);

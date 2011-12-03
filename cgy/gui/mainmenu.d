@@ -14,6 +14,7 @@ import gui.loadscreen;
 import gui.newgamemenu;
 import gui.optionmenu;
 import gui.randommenu;
+import gui.splineedit;
 import gui.printscreenmenu;
 import gui.worldview;
 import gui.unitcontrol;
@@ -46,8 +47,9 @@ class MainMenu : GuiElementWindow {
         
         loadGameButton = new GuiElementButton(this, Rectd(vec2d(randomButt.getRelativeRect().getRight()+0.05, 0.6), vec2d(0.3, 0.2)), "Load game", &onLoadGame);
         auto viewButt = new GuiElementButton(this, Rectd(vec2d(loadGameButton.getRelativeRect().getRight(), 0.6), vec2d(0.3, 0.2)), "World View", &onWorldView);
-        //        auto cb = new GuiElementCheckBox(this, Rectd(vec2d(0.10, 0.6), vec2d(0.3, 0.2)), "CHECKBOX", null);
-//*/
+
+        new GuiElementButton(this, Rectd(viewButt.leftOf, viewButt.bottomOf, viewButt.widthOf, viewButt.heightOf), "Color spline editor", &onColorSplineEdit);
+
         main = m;
         loadScreen = new LoadScreen(guiSystem);
 
@@ -125,6 +127,10 @@ class MainMenu : GuiElementWindow {
     void onWorldView() {
         setVisible(false);
         new WorldViewMenu(this);
+    }
+    void onColorSplineEdit() {
+        setVisible(false);
+        new SplineEditor(this);
     }
     
     void onStartNewGame() {

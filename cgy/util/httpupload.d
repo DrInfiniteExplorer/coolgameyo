@@ -4,11 +4,11 @@ module util.httpupload;
 
 
 import std.conv;
+import std.regex;
 import std.stdio;
 import std.socket;
 import std.socketstream;
 import std.stream;
-import std.regex;
 
 
 string sendFile(string host, int port, string path, string name, string filename, char[] data, string returnWhat=null, string mime="application/octet-stream") {

@@ -292,6 +292,7 @@
    <File path="graphics\ogl.d" />
    <File path="graphics\raycastcpu.d" />
    <File path="graphics\raycastgpu.d" />
+   <File path="graphics\renderconstants.d" />
    <File path="graphics\renderer.d" />
    <File path="graphics\shader.d" />
    <File path="graphics\texture.d" />
@@ -320,6 +321,7 @@
    <File path="gui\optionmenu.d" />
    <File path="gui\printscreenmenu.d" />
    <File path="gui\randommenu.d" />
+   <File path="gui\splineedit.d" />
    <File path="gui\statistics.d" />
    <File path="gui\unitcontrol.d" />
    <File path="gui\worldview.d" />

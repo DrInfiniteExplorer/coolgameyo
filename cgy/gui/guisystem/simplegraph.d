@@ -18,6 +18,7 @@ class GuiElementSimpleGraph(Type) : public GuiElement {
     private uint length;
     private Type min, max;
     private bool transparent;
+    private vec3f color = vec3f(1.0f, 0.0f, 0.0f);
 
     this(GuiElement parent, Rectd relative, bool transparent) {
         super(parent);
@@ -54,6 +55,9 @@ class GuiElementSimpleGraph(Type) : public GuiElement {
     void setTransparent(bool trans) {
         transparent = trans;
     }
+    void setColor(vec3f color) {
+        this.color = color;
+    }
 
     override void render() {
         //Render background, etc, etc.
@@ -61,7 +65,7 @@ class GuiElementSimpleGraph(Type) : public GuiElement {
             renderRect(absoluteRect, vec3f(0.75, 0.75, 0.75));
         }
         renderOutlineRect(absoluteRect, vec3f(0, 0, 0));
-        renderLines(lines, vec3f(1.0, 0, 0));
+        renderLines(lines, color);
         super.render();
     }
 }
