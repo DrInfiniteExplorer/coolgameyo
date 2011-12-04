@@ -5,7 +5,7 @@ module ai.movetoai;
 import std.conv;
 import std.math;
 
-import changelist;
+import changes.changelist;
 import unit;
 
 import world.world;

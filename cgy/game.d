@@ -26,7 +26,7 @@ import graphics.debugging;
 
 import json;
 import ai.patrolai;
-//import changelist;
+//import changes.changelist;
 import graphics.geometrycreator;
 import modules.ai;
 import modules.path;
@@ -213,7 +213,7 @@ class Game{
         o.type = world.entityTypeManager.byName("shrubbery");
         world.addEntity(o);
         msg("o.pos == ", o.pos);
-    }
+    } 
 
     void newGameThread(WorldGenParams worldParams) {
         init(worldParams);

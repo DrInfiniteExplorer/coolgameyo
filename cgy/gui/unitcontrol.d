@@ -31,7 +31,7 @@ import util.intersect;
 import util.rangefromto;
 import util.util;
 import world.world;
-import entity;
+import entities.entity;
 import entitytypemanager;
 
 

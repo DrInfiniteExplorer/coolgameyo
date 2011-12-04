@@ -16,7 +16,7 @@ import std.range;
 
 version(Windows) import std.c.windows.windows;
 
-public import changelist;
+public import changes.changelist;
 import statistics;
 
 import world.time;

@@ -7,7 +7,7 @@ import std.array;
 import std.conv;
 import std.math;
 
-import changelist;
+import changes.changelist;
 import graphics.debugging;
 import modules.path;
 import unit;

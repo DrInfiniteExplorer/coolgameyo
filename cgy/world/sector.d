@@ -21,7 +21,7 @@ import world.sizes;
 import worldgen.worldgen;
 import pos;
 import unit;
-import entity;
+import entities.entity;
 import util.util;
 import util.intersect;
 import util.filesystem;

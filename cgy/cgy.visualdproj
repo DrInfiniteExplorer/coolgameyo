@@ -276,6 +276,13 @@
    <File path="ai\patrolai.d" />
    <File path="ai\posessai.d" />
   </Folder>
+  <Folder name="entities">
+   <File path="entities\entity.d" />
+   <File path="entities\torch.d" />
+  </Folder>
+  <Folder name="changes">
+   <File path="changes\changelist.d" />
+  </Folder>
   <Folder name="graphics">
    <Folder name="_2d">
     <File path="graphics\_2d\image.d" />
@@ -409,10 +416,8 @@
   <Folder name="worldgen">
    <File path="worldgen\worldgen.d" />
   </Folder>
-  <File path="changelist.d" />
   <File path="clan.d" />
   <File path="clientnetworking.d" />
-  <File path="entity.d" />
   <File path="entitytypemanager.d" />
   <File path="game.d" />
   <File path="inventory.d" />

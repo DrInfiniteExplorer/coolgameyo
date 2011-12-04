@@ -5,7 +5,7 @@ import std.exception;
 import std.stdio;
 
 import json;
-import changelist;
+import changes.changelist;
 import pos;
 import stolen.aabbox3d;
 

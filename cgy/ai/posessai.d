@@ -7,7 +7,7 @@ import std.exception;
 import std.math;
 import std.stdio;
 
-import changelist;
+import changes.changelist;
 import graphics.renderer;
 import light;
 import unit;

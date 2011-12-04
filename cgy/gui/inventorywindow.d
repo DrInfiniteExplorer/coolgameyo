@@ -21,7 +21,7 @@ import settings;
 import statistics;
 import util.util;
 import util.rect;
-import entity;
+import entities.entity;
 import inventory;
 
 class InventoryWindow : GuiElementWindow {

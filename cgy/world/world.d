@@ -21,7 +21,7 @@ import entitytypemanager;
 import unittypemanager;
 import worldgen.worldgen;
 public import unit;
-public import entity;
+public import entities.entity;
 
 import scheduler;
 import statistics;

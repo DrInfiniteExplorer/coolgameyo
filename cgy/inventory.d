@@ -9,7 +9,7 @@ import json;
 import util.util;
 import world.world;
 import clan;
-import entity;
+import entities.entity;
 
 class Inventory {
 	Entity[] inventory;
