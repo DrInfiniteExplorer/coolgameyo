@@ -458,12 +458,14 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
 	void rayPickEntity() {
 		vec3d start, dir;
         camera.getRayFromScreenCoords(mousecoords, start, dir);
-		double prevDist;
+		double prevDist, dist;
 		entitySelected = false;
 		foreach(entity ; world.getEntities()) {
-			if (entity.aabb.intersectsWithLine(start, dir) &&
-				(!entitySelected || prevDist > entity.pos.value.getDistanceFromSQ(camera.position))) {
-					prevDist = entity.pos.value.getDistanceFromSQ(camera.position);
+            dist = entity.pos.value.getDistanceFromSQ(camera.position);
+			if (entity.aabb.intersectsWithLine(start, dir) && dist>0.5f &&
+                dir.dotProduct(entity.pos.value-camera.position) > 0 &&
+				(!entitySelected || prevDist > dist)) {
+					prevDist = dist;
 					selectedEntity = entity;
 					entitySelected = true;
 			}

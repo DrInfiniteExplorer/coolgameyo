@@ -13,7 +13,7 @@
     "displayName":"Torch",
 	"tintFromMaterial":1,
 	"tintColor":{ "X":255, "Y":255, "Z":255 },
-	"lightStrength":15,
-	"lightTintColor":{ "X":204, "Y":204, "Z":0 },
+	"lightStrength":10,
+	"lightTintColor":{ "X":255, "Y":145, "Z":45 },
   },
 }

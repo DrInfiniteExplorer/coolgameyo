@@ -125,7 +125,7 @@ struct Unit {
         if(v is null){
             v = &this.pos.value;
         }
-        auto minPos = (*v)  - vec3d(this.unitWidth * 0.5, this.unitWidth*0.5, 0);
+        auto minPos = (*v)  - vec3d(this.unitWidth * 0.5, this.unitWidth*0.5, 0.5); // Unitpos is from center of tile
         auto maxPos = minPos + vec3d(this.unitWidth, this.unitWidth, this.unitHeight);
         return aabbox3d!double(minPos, maxPos);
     }

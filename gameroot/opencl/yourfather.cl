@@ -326,7 +326,7 @@ float calculateLightInPoint(
 					// *7 does it so it is 0-240 for 2 lights (16*15=240)
 					//lightValue += (MAXLIGHTDIST - time);
                     lightValue += clamp(
-                        strength/time - 0.2f,
+                        strength/distance(daPoint, lights[i].position) - 0.2f,
                         0.f,
                         strength);
                     break;
@@ -337,8 +337,7 @@ float calculateLightInPoint(
 			}
 		}
 	}
-	lightValue = lightValue * 7;
-	if (lightValue > 255) lightValue = 255;
+	lightValue = clamp(lightValue * 7.f, 0.f, 255.f);
 	return lightValue;
 }
 

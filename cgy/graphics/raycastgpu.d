@@ -55,6 +55,7 @@ struct CLLight {
 __gshared CLProgram g_traceRaysProgram;
 __gshared CLKernel g_kernel;
 __gshared CLBuffer g_cameraBuffer;
+__gshared CLBuffer lightBuffer;
 static if(TileMemoryLocation == "texture") {
     __gshared CLImage3D g_tileBuffer;
 } else {
@@ -83,6 +84,7 @@ void initInteractiveComputeYourFather(){
     } else {
         g_tileBuffer = CLBuffer(g_clContext, CL_MEM_READ_ONLY, SolidMap.data.sizeof*27, null);
     }
+    startTime = Clock.currTime();
 }
 
 
@@ -180,7 +182,14 @@ void uploadTileData(World world, Camera camera) {
 }
 
 
+SysTime startTime;
+
 void interactiveComputeYourFather(World world, Camera camera) {
+    Duration duration = Clock.currTime() - startTime;
+    long currentTime = duration.total!"msecs"();
+
+
+
     vec3d upperLeft, toRight, toDown, dir, startPos;
     startPos = camera.getPosition();
     int width = renderSettings.windowWidth / renderSettings.raycastPixelSkip;
@@ -210,24 +219,33 @@ void interactiveComputeYourFather(World world, Camera camera) {
     CLLight[] clLight;
     clLight.length = lights.length;
     for (int i = 0; i < lights.length; i++) {
+        long currentTimePosition = currentTime+ cast(long)((lights[i].position.value.X + lights[i].position.value.Y)*1000);
+
         clLight[i].position = [
-            lights[i].position.value.X,
-            lights[i].position.value.Y,
-            lights[i].position.value.Z, 0];
+            lights[i].position.value.X + 0.05f * sin(currentTimePosition/300.f)^^3,
+            lights[i].position.value.Y + 0.05f * cos(currentTimePosition/500.f)^^3,
+            lights[i].position.value.Z + 0.05f * sin(currentTimePosition/700.f)^^3, 0];
+        
+        float asdf = sin(cast(float)(currentTimePosition)/400.f);
+        float fdsa = sin(cast(float)(currentTimePosition)/100.f);
+        float flickerRatio =
+                        ((abs(asdf) * 0.4f + 0.6f) +
+                         (abs(fdsa) * 0.2f + 0.8f)) / 2.f;
+        
         float dist = lights[i].position.value.getDistanceFrom(startPos);
         if(dist > FadeLightTraceDistance) {
             float range = (MaxLightTraceDistance - FadeLightTraceDistance);
-            float ratio = 1.f - (dist - FadeLightTraceDistance) / range;
-            clLight[i].strength = (cast(float)lights[i].strength) * ratio;;
+            float fadeRatio = 1.f - (dist - FadeLightTraceDistance) / range;
+            clLight[i].strength = (cast(float)lights[i].strength) * fadeRatio * flickerRatio;
         } else {
-            clLight[i].strength = lights[i].strength;
+            clLight[i].strength = lights[i].strength * flickerRatio;
         }
     }
 
     uploadTileData(world, camera);
 
     //Need to create often. Not really, could reuse and make code to recognize and such!
-    auto lightBuffer = CLBuffer(g_clContext, CL_MEM_READ_ONLY, clLight.length * clLight[0].sizeof + int.sizeof, null);
+    lightBuffer = CLBuffer(g_clContext, CL_MEM_READ_ONLY, clLight.length * clLight[0].sizeof + int.sizeof, null);
     int cnt = clLight.length;
     g_clCommandQueue.enqueueWriteBuffer(lightBuffer, CL_TRUE, 0, cnt.sizeof, &cnt);
     g_clCommandQueue.enqueueWriteBuffer(lightBuffer, CL_TRUE, cnt.sizeof, clLight.length * clLight[0].sizeof, clLight.ptr);
