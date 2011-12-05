@@ -40,8 +40,8 @@ class Entity {
         float rotation = 0; //radians
 		bool isDropped = false;
 
-        float entityWidth = 0.7;
-        float entityHeight = 1.5;
+        float entityWidth = 1.0;
+        float entityHeight = 1.0;
     }
     EntityData entityData;
     alias entityData this;
@@ -85,7 +85,7 @@ class Entity {
         if(v is null){
             v = &entityData.pos.value;
         }
-        auto minPos = (*v)  - vec3d(entityData.entityWidth * 0.5, entityData.entityWidth*0.5, 0);
+        auto minPos = (*v)  - vec3d(entityData.entityWidth * 0.5, entityData.entityWidth*0.5, 0.5); // Unitpos is from center of tile
         auto maxPos = minPos + vec3d(entityData.entityWidth, entityData.entityWidth, entityData.entityHeight);
         return aabbox3d!double(minPos, maxPos);
     }
