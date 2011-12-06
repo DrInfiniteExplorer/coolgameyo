@@ -1,5 +1,5 @@
 
-//#define UseTexture
+#define UseTexture
 
 #ifndef RayCastPixelSkip
 #define RayCastPixelSkip 1
@@ -60,7 +60,7 @@ struct Camera {
 
 struct Light {
 	vec4f position;
-	float strength;
+	vec4f strengthAndColor;
 };
 
 __constant int4 sectorSize = (int4)(128, 128, 32, 1); //1 to prevent division with 0 :p
@@ -249,7 +249,7 @@ bool equals(int4 a, int4 b) {
 			a.w==b.w;
 }
 
-float calculateLightInPoint(
+float3 calculateLightInPoint(
 	vec4f daPoint,
 	__constant struct Light* lights,
 	const int nrOfLights,
@@ -262,7 +262,8 @@ float calculateLightInPoint(
 ) {
     
     
-	float lightValue = 0.f;
+	float3 lightValue = {0.f, 0.f, 0.f};
+    float3 color;
 	int i;
 	vec4f rayDir;
 	int4 lightPos;
@@ -291,11 +292,14 @@ float calculateLightInPoint(
 	for (i = 0; i < nrOfLights; i++) {
 		lightPos = getTilePos(lights[i].position);
 		tilePos  = getTilePos(daPoint);
-        float strength = lights[i].strength;
+        float strength = lights[i].strengthAndColor.x;
+        color.x = lights[i].strengthAndColor.y;
+        color.y = lights[i].strengthAndColor.z;
+        color.z = lights[i].strengthAndColor.w;
 		
 		if (equals(tilePos, lightPos)) {
 			// *7 does it so it is 0-240 for 2 lights (16*15=240)
-            lightValue += clamp(
+            lightValue += color * clamp(
                 strength/distance(daPoint, lights[i].position) - 0.2f,
                 0.f,
                 strength);
@@ -325,7 +329,7 @@ float calculateLightInPoint(
 				if (equals(tilePos, lightPos)) {
 					// *7 does it so it is 0-240 for 2 lights (16*15=240)
 					//lightValue += (MAXLIGHTDIST - time);
-                    lightValue += clamp(
+                    lightValue += color * clamp(
                         strength/distance(daPoint, lights[i].position) - 0.2f,
                         0.f,
                         strength);
@@ -357,6 +361,9 @@ __kernel void castRays(
 	int x = get_global_id(0);
     int y = get_global_id(1);
     
+
+//    write_imagef(output, (int2)(x,camera->height-1-y), (float4)((float)sizeof(struct Light)/255.f, 0.f, 0.f, 0.f));
+//    return;
     
 
 /*
@@ -380,7 +387,7 @@ __kernel void castRays(
 	__constant struct Light *lights = (__constant struct Light*)(&_lights[1]);
 
 
-	int val = (int)calculateLightInPoint(daPoint, lights, nrOfLights, solidMap, depth);
+	float3 val = calculateLightInPoint(daPoint, lights, nrOfLights, solidMap, depth);
 	
     //int val = 16777215 -  (int)((((float)daPoint.x) / 300.f) * (16777215.f)); 
     //int val = (int)((((float)time) / 150.f) * (255)); 
@@ -390,9 +397,9 @@ __kernel void castRays(
 //    int g = (val >> 8 ) & 0xFF;
 //    int b = (val      ) & 0xFF;
 
-    int r = (val      ) & 0xFF;
-    int g = (val      ) & 0xFF;
-    int b = (val      ) & 0xFF;
+    int r = ((int)val.x) & 0xFF;
+    int g = ((int)val.y) & 0xFF;
+    int b = ((int)val.z) & 0xFF;
     //write_imageui(output, (int2)(x,y), (uint4)(r,g,b,255));
     //write_imageui(output, (int2)(x,y), (uint4)(65535, 0, 0 ,255));
     write_imagef(output, (int2)(x,camera->height-1-y), (float4)(r/255.f, g/255.f, b/255.f ,1.0f));

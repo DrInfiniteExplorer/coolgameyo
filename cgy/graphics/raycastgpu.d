@@ -49,13 +49,16 @@ struct CLCamera {
 
 struct CLLight {
     float[4] position;
-    float[4] strength;
+    float strength;
+    float[3] color;
 };
+
+static assert(CLLight.sizeof == 32, "Error, will not match opencl size!");
 
 __gshared CLProgram g_traceRaysProgram;
 __gshared CLKernel g_kernel;
 __gshared CLBuffer g_cameraBuffer;
-__gshared CLBuffer lightBuffer;
+//__gshared CLBuffer lightBuffer;
 static if(TileMemoryLocation == "texture") {
     __gshared CLImage3D g_tileBuffer;
 } else {
@@ -209,10 +212,7 @@ void interactiveComputeYourFather(World world, Camera camera) {
 
 
     LightSource[] lights;
-
-    //World.LightPropagationData[] lights;
     lights = world.getLightsInRadius(UnitPos(startPos), MaxLightTraceDistance);
-    //    world.getLightsWithin(TilePos(vec3i(-100, -100, -100)), TilePos(vec3i(100, 100, 100)), lights);
     if(lights.length == 0) {
         return;
     }
@@ -240,19 +240,34 @@ void interactiveComputeYourFather(World world, Camera camera) {
         } else {
             clLight[i].strength = lights[i].strength * flickerRatio;
         }
+        clLight[i].color[0] = lights[i].tint.X / 255.f;
+        clLight[i].color[1] = lights[i].tint.Y / 255.f;
+        clLight[i].color[2] = lights[i].tint.Z / 255.f;
     }
 
     uploadTileData(world, camera);
 
     //Need to create often. Not really, could reuse and make code to recognize and such!
-    lightBuffer = CLBuffer(g_clContext, CL_MEM_READ_ONLY, clLight.length * clLight[0].sizeof + int.sizeof, null);
     int cnt = clLight.length;
+    static assert(cnt.sizeof == 4);
+    auto lightBuffer = CLBuffer(g_clContext, CL_MEM_READ_ONLY, clLight.length * clLight[0].sizeof + 4, null);
     g_clCommandQueue.enqueueWriteBuffer(lightBuffer, CL_TRUE, 0, cnt.sizeof, &cnt);
-    g_clCommandQueue.enqueueWriteBuffer(lightBuffer, CL_TRUE, cnt.sizeof, clLight.length * clLight[0].sizeof, clLight.ptr);
-
+    g_clCommandQueue.enqueueWriteBuffer(lightBuffer, CL_TRUE, 4, clLight.length * clLight[0].sizeof, clLight.ptr);
+ 
     g_kernel.setArgs(g_cameraBuffer, lightBuffer, g_tileBuffer, g_clDepthBuffer, g_clRayCastOutput);
 
-    auto range	= NDRange(width, height);
+/*
+    writeln("g_kernel" ~ to!string(g_kernel));
+    writeln("g_cameraBuffer" ~ to!string(g_cameraBuffer));
+    writeln("lightBuffer" ~ to!string(lightBuffer));
+    writeln("g_tileBuffer" ~ to!string(g_tileBuffer));
+    writeln("g_clDepthBuffer" ~ to!string(g_clDepthBuffer ));
+    writeln("g_clRayCastOutput" ~ to!string(g_clRayCastOutput));
+    The reference count for depthbuffer & output never decreases.
+*/
+
+
+    auto range	= NDRange(width, height); 
 
     glFinish();
     g_clCommandQueue.enqueueAcquireGLObjects(g_clRayCastMemories);
