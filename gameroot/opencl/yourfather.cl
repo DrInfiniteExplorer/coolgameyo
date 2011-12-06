@@ -249,7 +249,7 @@ bool equals(int4 a, int4 b) {
 			a.w==b.w;
 }
 
-float3 calculateLightInPoint(
+float4 calculateLightInPoint(
 	vec4f daPoint,
 	__constant struct Light* lights,
 	const int nrOfLights,
@@ -262,8 +262,8 @@ float3 calculateLightInPoint(
 ) {
     
     
-	float3 lightValue = {0.f, 0.f, 0.f};
-    float3 color;
+	float4 lightValue = {0.f, 0.f, 0.f, 0.f};
+    float4 color;
 	int i;
 	vec4f rayDir;
 	int4 lightPos;
@@ -387,7 +387,7 @@ __kernel void castRays(
 	__constant struct Light *lights = (__constant struct Light*)(&_lights[1]);
 
 
-	float3 val = calculateLightInPoint(daPoint, lights, nrOfLights, solidMap, depth);
+	float4 val = calculateLightInPoint(daPoint, lights, nrOfLights, solidMap, depth);
 	
     //int val = 16777215 -  (int)((((float)daPoint.x) / 300.f) * (16777215.f)); 
     //int val = (int)((((float)time) / 150.f) * (255)); 
@@ -397,12 +397,9 @@ __kernel void castRays(
 //    int g = (val >> 8 ) & 0xFF;
 //    int b = (val      ) & 0xFF;
 
-    int r = ((int)val.x) & 0xFF;
-    int g = ((int)val.y) & 0xFF;
-    int b = ((int)val.z) & 0xFF;
     //write_imageui(output, (int2)(x,y), (uint4)(r,g,b,255));
     //write_imageui(output, (int2)(x,y), (uint4)(65535, 0, 0 ,255));
-    write_imagef(output, (int2)(x,camera->height-1-y), (float4)(r/255.f, g/255.f, b/255.f ,1.0f));
+    write_imagef(output, (int2)(x,camera->height-1-y), (float4)(val.x/255.f, val.y/255.f, val.z/255.f ,val.w/255.f));
     
     int4 checkPosition = (int4)(3, 4, 5, 0);
     //outMap[get_global_id(0) + (camera->height-1-get_global_id(1)) * camera->width] = isSolid(checkPosition, solidMap) ? 0xFFFFFFFF : 0x0;

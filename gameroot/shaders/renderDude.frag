@@ -7,14 +7,16 @@ uniform vec3 color;
 
 uniform sampler2DArray textureAtlas;
 
-in float Depth;
+smooth in vec3 worldPosition;
+
 layout(location = 0) out vec4 frag_color;
-layout(location = 1) out float depth;
+layout(location = 1) out vec4 light;
+layout(location = 2) out vec4 depth;
 
 void main() {
 
    frag_color = vec4(color, 0.0);
-   depth = Depth;
+   depth = vec4(worldPosition, float(0));
 } 
 
 
