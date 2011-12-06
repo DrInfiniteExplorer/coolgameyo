@@ -276,12 +276,13 @@
    <File path="ai\patrolai.d" />
    <File path="ai\posessai.d" />
   </Folder>
+  <Folder name="changes">
+   <File path="changes\changelist.d" />
+   <File path="changes\createentity.d" />
+  </Folder>
   <Folder name="entities">
    <File path="entities\entity.d" />
    <File path="entities\torch.d" />
-  </Folder>
-  <Folder name="changes">
-   <File path="changes\changelist.d" />
   </Folder>
   <Folder name="graphics">
    <Folder name="_2d">
