@@ -15,6 +15,12 @@ module json;
 import std.range, std.algorithm, std.stdio, std.exception, std.conv;
 import std.file, std.traits;
 
+class JsonException : Exception {
+    this(string s) {
+        super(s);
+    }
+}
+
 struct Value {
     enum Type : ubyte { string, number, object, array, bool_, null_, } 
 
@@ -29,11 +35,14 @@ struct Value {
     }
 
     bool opIn_r(string name) {
-        enforce (type == Type.object);
+        enforce (type == Type.object, new JsonException(text(
+                    "Attempted to opIn_r a non-object (", this, ")")));
         return !!(name in pairs); //TODO: WTF is !! ????
     }
     ref Value opIndex(string name) {
-        enforce (type == Type.object);
+        enforce (type == Type.object, new JsonException(text(
+                    "Attempted to index a non-object with string (",
+                    this, ")")));
         return pairs[name];
     }
     ref Value opIndex(size_t index) {
@@ -43,15 +52,15 @@ struct Value {
     string str() @property const {
         if (type == Type.string) return str_;
         if (type == Type.null_) return null;
-        enforce(0, "Not a string or null");
+        enforce(0, new JsonException("Not a string or null"));
         return "";
     }
     real num() @property const {
-        enforce (type == Type.number);
+        enforce (type == Type.number, new JsonException("Not a number"));
         return num_;
     }
     bool boolVal() @property const {
-        enforce (type == Type.bool_); 
+        enforce (type == Type.bool_, new JsonException("Not a bool")); 
         return boolval;
     }
 
@@ -183,7 +192,9 @@ static:
                 case '0': .. case '9':
                           return Token(eatReal(s, false, c-'0'));
                 default:
-                          assert (false, text("invalid json, no case for ", c));
+                          enforce(false, new JsonException(
+                                      text("invalid json, no case for ", c)));
+                          assert (0);
             }
         }
     }
@@ -207,7 +218,8 @@ static:
         }
         void skip(Tag tag) {
             enforce(front.tag == tag,
-                    text("Expected ", tag, ", found ", front.tag));
+                    new JsonException(
+                        text("Expected ", tag, ", found ", front.tag)));
             popFront();
         }
         this(string data) {
@@ -229,7 +241,8 @@ static:
             case Tag.false_: i.popFront(); return Value(false);
             case Tag.null_: i.popFront(); return Value.nullValue();
             default:
-                enforce(0, "json.d parseValue got to default case, error!");
+                enforce(0, new JsonException(
+                            "json.d parseValue got to default case, error!"));
                 return Value(false);
         }
     }
@@ -238,7 +251,7 @@ static:
         i.skip(Tag.lmus);
         Value[string] blep;
         while (i.front.tag != Tag.rmus) {
-            enforce(i.front.tag == Tag.string);
+            enforce(i.front.tag == Tag.string, new JsonException("derp"));
             string s = i.front.str;
             i.popFront();
             //msg("parsed ", s);
