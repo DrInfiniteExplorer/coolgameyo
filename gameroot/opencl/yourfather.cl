@@ -300,7 +300,7 @@ float4 calculateLightInPoint(
 		if (equals(tilePos, lightPos)) {
 			// *7 does it so it is 0-240 for 2 lights (16*15=240)
             lightValue += color * clamp(
-                strength/distance(daPoint, lights[i].position) - 0.2f,
+                strength-distance(daPoint, lights[i].position) - 0.2f,
                 0.f,
                 strength);
 		}
@@ -330,7 +330,7 @@ float4 calculateLightInPoint(
 					// *7 does it so it is 0-240 for 2 lights (16*15=240)
 					//lightValue += (MAXLIGHTDIST - time);
                     lightValue += color * clamp(
-                        strength/distance(daPoint, lights[i].position) - 0.2f,
+                        strength-distance(daPoint, lights[i].position) - 0.2f,
                         0.f,
                         strength);
                     break;

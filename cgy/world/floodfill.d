@@ -4,7 +4,7 @@ module world.floodfill;
 
 mixin template FloodFill() {
 
-    void floodFillSome(int max=100) {// 10 lol
+    void floodFillSome(int max=1000000) {// 10 lol
         //100 for 10 was plain slow and horrible!!
         //auto sw = StopWatch(AutoStart.yes);
 
