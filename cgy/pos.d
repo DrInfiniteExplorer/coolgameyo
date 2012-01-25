@@ -60,8 +60,8 @@ struct UnitPos {
 
 struct EntityPos {
     vec3d value;
-	// ToDo: fix so that the hoalls reada pao the side of the tile.
-	
+    // ToDo: fix so that the hoalls reada pao the side of the tile.
+    
     TilePos tilePos() const @property {
         return TilePos(
             getTilePos(value)
@@ -70,7 +70,7 @@ struct EntityPos {
     alias tilePos this;
 
     mixin ToStringMethod3D;
-	mixin SerializeValue;
+    mixin SerializeValue;
 }
 
 struct SectorNum {
@@ -120,7 +120,7 @@ struct BlockNum {
         return aabbox3d!double(minPos, maxPos);
     }
 
-	// Relative index
+    // Relative index
     vec3i rel() const
     out(x){
         assert(0 <= x.X);
@@ -228,12 +228,11 @@ struct TilePos {
                              value.Z + 0.5));
 
     }
-	
-	EntityPos toEntityPos() const{
+    
+    EntityPos toEntityPos() const{
         return EntityPos(vec3d(value.X + 0.5,
                              value.Y + 0.5,
                              value.Z + 0.5));
-
     }
 
     TileXYPos toTileXYPos() const{
@@ -247,7 +246,7 @@ struct TilePos {
     }
 
 
-	// Relative index
+    // Relative index
     vec3i rel() const
     out(x){
         assert(x.X >= 0, "rel.X < 0!!! :(");
