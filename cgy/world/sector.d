@@ -8,7 +8,7 @@ import std.algorithm;
 import std.conv;
 import std.container;
 import std.exception;
-import std.file;
+//import std.file;
 import std.range;
 import std.stdio;
 
@@ -120,14 +120,12 @@ class Sector {
     private SolidMap solidMap;
 
 
-    RedBlackTree!(Unit*) units; //TODO: how to make this private without breaking stuff derp? :S
+    RedBlackTree!(Unit) units; //TODO: how to make this private without breaking stuff derp? :S
 	RedBlackTree!(Entity) entities;
-    private int activityCount;
 
     invariant(){
         BREAK_IF(sectorNum.toTilePos() != pos);
         BREAK_IF(pos.getSectorNum() != sectorNum);
-        BREAK_IF(activityCount < 0);
     }
 
     this(SectorNum sectorNum_) {
@@ -165,13 +163,7 @@ class Sector {
         }
         file.close();
         
-        int asd[] = [activityCount];
-        std.file.write(folder ~ "activityCount", asd);
-        
-        Value derp(Unit* unit) {
-            return encode(*unit);
-        }
-        Value jsonRoot = Value(array(map!derp(array(units))));
+        Value jsonRoot = encode(array(map!q{a.unitId}(array(units))));
 	    auto jsonString = json.prettifyJSON(jsonRoot);
         std.file.write(folder ~ "units.json", jsonString);
 
@@ -185,7 +177,7 @@ class Sector {
     
     bool deserialize(EntityTypeManager entityTypeManager, World world) {
         string folder = text("saves/current/world/", sectorNum.value.X, ",", sectorNum.value.Y, "/", sectorNum.value.Z, "/");
-        if (!exists(folder)) {
+        if (!std.file.exists(folder)) {
             return false;
         }
         auto file = std.stdio.File(folder ~ "blocks.bin", "rb");
@@ -207,16 +199,16 @@ class Sector {
             solidMap.updateBlock(block);
         }
         file.close();
-        
-        int asd[] = cast(int[])std.file.read(folder ~ "activityCount");
-        activityCount = asd[0];
-        
+                
         auto content = readText(folder ~ "units.json");
         auto jsonRoot = json.parse(content);
         foreach (unitVal ; jsonRoot.elements) {
-            Unit* unit = new Unit;
-            unit.fromJSON(unitVal);
-            units.insert(unit);
+//            Unit unit = new Unit;
+//            unit.fromJSON(unitVal);
+//            units.insert(unit);
+            int unitId;
+            json.read(unitId, unitVal);
+            addUnit(world.getUnitById(unitId));
         }
         
 		// Todo: remove this whenever everyone has renamed their saves
@@ -312,13 +304,13 @@ class Sector {
     }
 
     //TODO: Add more unit-interfacing etc.
-    void addUnit(Unit* u) {
+    void addUnit(Unit u) {
         units.insert(u);
     }
 	void addEntity(Entity o) {
         entities.insert(o);
     }
-	void removeUnit(Unit* u) {
+	void removeUnit(Unit u) {
         units.removeKey(u);
     }
 	void removeEntity(Entity o) {
@@ -327,10 +319,6 @@ class Sector {
     
     SectorNum getSectorNum() const @property { return sectorNum; }
     
-    int activity() const @property { return activityCount; }
-    void increaseActivity() { activityCount += 1; }
-    void decreaseActivity() { activityCount -= 1; }
-
     LightSource[] lights;
     void addLight(LightSource light)
     in{

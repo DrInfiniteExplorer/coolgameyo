@@ -13,6 +13,7 @@ smooth in vec3 worldPosition;
 layout(location = 0) out vec4 frag_color;
 layout(location = 1) out vec4 light;
 layout(location = 2) out vec4 depth;
+
 void main() {
    float dist = length(viewPos);
    float tmp = 1.0 - dist/radius;

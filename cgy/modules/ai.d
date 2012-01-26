@@ -18,7 +18,7 @@ import util.filesystem;
 class AIModule : Module, WorldListener {
 
     static struct UnitState {
-        Unit* unit;
+        Unit unit;
         int restTime;
     }
     
@@ -34,7 +34,7 @@ class AIModule : Module, WorldListener {
     PathModule pathmodule;
     World world;
 
-    UnitState[Unit*] states;
+    UnitState[Unit] states;
 
     this(PathModule pathmodule_, World w) {
         pathmodule = pathmodule_;
@@ -86,14 +86,14 @@ class AIModule : Module, WorldListener {
         }
     }
 
-    void addUnit(Unit* unit) {
+    void addUnit(Unit unit) {
         states[unit] = UnitState(unit);
     }
-    void removeUnit(Unit* unit) {
+    void removeUnit(Unit unit) {
         states.remove(unit);
     }
 
-    override void onAddUnit(SectorNum num, Unit* unit) {
+    override void onAddUnit(SectorNum num, Unit unit) {
         addUnit(unit);
     }
 	void onAddEntity(SectorNum, Entity) { }

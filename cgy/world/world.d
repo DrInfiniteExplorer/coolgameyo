@@ -7,13 +7,15 @@ import std.stdio;
 import std.container;
 import std.conv;
 import std.exception;
-import std.file;
+//import std.file;
 import std.math;
 import std.typecons;
 
 import graphics.camera;
 import graphics.debugging;
 
+
+import clan;
 import json;
 import light;
 import tiletypemanager;
@@ -40,13 +42,14 @@ import util.filesystem;
 import world.activity;
 import world.ambient;
 import world.floodfill;
+import world.population;
 import world.time;
 
 
 // TODO: Refactor so these send world as first parameter,
 // and remove the world member from listeners
 interface WorldListener {
-    void onAddUnit(SectorNum sectorNum, Unit* unit);
+    void onAddUnit(SectorNum sectorNum, Unit unit);
 	void onAddEntity(SectorNum sectorNum, Entity entity);
     void onSectorLoad(SectorNum sectorNum);
     void onSectorUnload(SectorNum sectorNum);
@@ -101,9 +104,6 @@ class World {
     WorldGenerator worldGen;
     bool isServer;  //TODO: How, exactly, does the world function differently if it actually is a server? Find out!
 
-    int unitCount;  //TODO: Is used?
-	int entityCount;  //TODO: Is used?
-
     WorldListener[] listeners;
 
     TileTypeManager tileTypeManager;
@@ -145,22 +145,21 @@ class World {
         auto toFlood = encode(array(toFloodFill));
         auto floodSect = encode(floodingSectors);
 
-        SectorNum[] actives;
-        foreach(sector ; sectorList) {
-            if (sector.activity > 0) {
-                actives ~= sector.getSectorNum;
-            }
-        }
-        auto activeSectors = Value(array(map!encode(actives)));
+        auto activeSectors = encode(activeSectors);
         auto jsonRoot = Value([
             "toFlood" : toFlood,
             "floodSect" : floodSect,
-            "activeSectors" : activeSectors
+            "activeSectors" : activeSectors,
+            "g_UnitCount" : encode(g_UnitCount),
+            "g_EntityCount" : encode(g_EntityCount),
+            "g_ClanCount" : encode(g_ClanCount),
         ]);
 
 	    auto jsonString = json.prettifyJSON(jsonRoot);
         util.filesystem.mkdir("saves/current/world/");
         std.file.write("saves/current/world/world.json", jsonString);
+
+        serializeClans();
 
         void serializeSectorXY(SectorXYNum xy, SectorXY sectorxy) {
             string folder = text("saves/current/world/", xy.value.X, ",", xy.value.Y, "/");
@@ -184,13 +183,17 @@ class World {
         auto content = readText("saves/current/world/world.json");
         auto jsonRoot = json.parse(content);
         uint activeUnitId;
-        uint unitCount;
         toFloodFill = new typeof(toFloodFill);
         json.read(toFloodFill, jsonRoot["toFlood"]);
         json.read(floodingSectors, jsonRoot["floodSect"]);
-        SectorNum[] actives;
-        json.read(actives, jsonRoot["activeSectors"]);
-        foreach(sectorNum ; actives) {
+        json.read(activeSectors, jsonRoot["activeSectors"]);
+        json.read(g_UnitCount, jsonRoot["g_UnitCount"]);
+        json.read(g_EntityCount, jsonRoot["g_EntityCount"]);
+        json.read(g_ClanCount, jsonRoot["g_ClanCount"]);
+
+        deserializeClans();
+
+        foreach(sectorNum, clanCount ; activeSectors) {
             loadSector(sectorNum);
         }
 
@@ -206,7 +209,7 @@ class World {
         void loadSectorXY(SectorXYNum xy) {
             SectorXY* xyPtr = getSectorXY(xy, false);
             string folder = text("saves/current/world/", xy.value.X, ",", xy.value.Y, "/");
-            if (exists(folder ~ "heightmap.bin")) {
+            if (util.filesystem.exists(folder ~ "heightmap.bin")) {
                 Heightmap heightmap = new Heightmap;            
                 heightmap.heightmap = cast(int[128][])std.file.read(folder ~ "heightmap.bin");
                 xyPtr.heightmap = heightmap;
@@ -432,10 +435,10 @@ class World {
     // I'd rather not have this in world //plol
     //TODO: Add code to cull sectors
     //TODO: Make better interface than appending to a dynamic list?
-    Unit*[] getVisibleUnits(Camera camera){
+    Unit[] getVisibleUnits(Camera camera){
         // this should be array(filter!(camera.inFrustum)(getUnits()));
         // but that doesn't seem to work :(
-        Unit*[] units;
+        Unit[] units;
         foreach(unit; getUnits()){
             if(camera.inFrustum(unit)){
                 units ~= unit;
@@ -461,7 +464,7 @@ class World {
         Sector[] sectors;
         typeof(Sector.init.units[]) currentUnitRange;
 
-        Unit* front() @property {
+        Unit front() @property {
             return currentUnitRange.front;
         }
         void popFront() {
@@ -493,7 +496,7 @@ class World {
         return ret;
     }
 
-    Unit* getUnitFromId(uint id) {
+    Unit getUnitFromId(uint id) {
         foreach(unit ; getUnits()) {
             if (unit.unitId == id) {
                 return unit;
@@ -582,10 +585,12 @@ class World {
         }
 
         updateTime();
+
+        handleSectorTimeout();
     }
 
     // ONLY CALLED FROM CHANGELIST (And some CustomChange-implementations )
-    void unsafeMoveUnit(Unit* unit, vec3d destination, uint ticksToArrive){
+    void unsafeMoveUnit(Unit unit, vec3d destination, uint ticksToArrive){
         unit.destination = UnitPos(destination);
         unit.ticksToArrive = ticksToArrive;
         //Maybe add to list of moving units? Maybe all units are moving?
@@ -593,27 +598,37 @@ class World {
     }
 
 
-    private void moveUnit(Unit* unit, UnitPos newPos) {
-        moveActivity(unit.pos, newPos);
+    private void moveUnit(Unit unit, UnitPos newPos) {
+        auto clan = unit.clan;
+        auto oldPos = unit.pos;
+        if(clan.unitMoveActivity(unit.pos, newPos)) {
+
+            //Update the boolean map the world has of activities.
+            updateActivity(oldPos, newPos);
+        }
 
         unit.pos = newPos;
     }
 
     //TODO: Implement removeUnit?
     // These should be named unsafeAddUnit, right?
-    void addUnit(Unit* unit) {
-        unitCount += 1;
-        auto sectorNum = unit.pos.getSectorNum();
+    void addUnit(Unit unit) {
+        enforce(unit.clan !is null);
+        
+        //Update boolean activity map
+        updateActivity(unit.pos, unit.pos);
 
-        increaseActivity(unit.pos);
+        //Eventually make the clan the main unit storage place.
+        //And just use units in sectors for cross-referencing.
+        auto sectorNum = unit.pos.getSectorNum();
         getSector(sectorNum).addUnit(unit);
+
 
         notifyAddUnit(sectorNum, unit);
     }
 	void addEntity(Entity entity) {
-        entityCount += 1;
-        auto sectorNum = entity.pos.getSectorNum();
 
+        auto sectorNum = entity.pos.getSectorNum();
         auto sector = getSector(sectorNum);
 
         enforce(sector !is null, "Cant add entities to sectors that dont exist");
@@ -838,7 +853,7 @@ class World {
         listeners.length -= 1;
     }
 
-    void notifyAddUnit(SectorNum sectorNum, Unit* unit) {
+    void notifyAddUnit(SectorNum sectorNum, Unit unit) {
         foreach (listener; listeners) {
             listener.onAddUnit(sectorNum, unit);
         }
@@ -848,6 +863,7 @@ class World {
             listener.onAddEntity(sectorNum, entity);
         }
     }
+
     void notifySectorLoad(SectorNum sectorNum) {
         foreach (listener; listeners) {
             listener.onSectorLoad(sectorNum);
@@ -858,11 +874,13 @@ class World {
             listener.onSectorUnload(sectorNum);
         }
     }
+
     void notifyTileChange(TilePos tilePos) {
         foreach (listener; listeners) {
             listener.onTileChange(tilePos);
         }
     }
+
     void notifyBuildGeometry(SectorNum sectorNum) {
         foreach (listener; listeners) {
             listener.onBuildGeometry(sectorNum);
@@ -875,6 +893,7 @@ class World {
     }
 
 
+    mixin WorldPopulationMixin;
     mixin WorldTimeClockCode;
     mixin LightStorageMethods;
     mixin ActivityHandlerMethods;

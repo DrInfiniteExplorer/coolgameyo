@@ -5,23 +5,143 @@ module world.activity;
 import std.algorithm;
 
 
+import graphics.debugging;
 
 import pos;
 import util.rangefromto;
 import util.util;
 
 import world.sizes;
-
+import world.time;
 
 debug{
-    auto activitySize = vec3i(1,1,1);
-} else {
     auto activitySize = vec3i(3,3,3);
+} else {
+    auto activitySize = vec3i(5,5,5);
 }
 
+enum SectorTimeoutTicks = TICKS_PER_SECOND * 45;
 
 
 private mixin template ActivityHandlerMethods() {
+
+    int[SectorNum] activeSectors; //Number of clans active in sector X.
+
+    ulong[SectorNum] sectorTimeout; //Tick when sector X is scheduled for serializing to harddisk
+
+    //Called after every unit movement, otherwise floodfill errors.
+    void updateActivity(UnitPos from, UnitPos pos) {
+
+
+        auto centerSectorNum = pos.getSectorNum();
+        auto sector = getSector(centerSectorNum);
+        if(sector is null) {
+            sector = loadSector(centerSectorNum);
+        }
+        if(sector is null) {
+            sector = allocateSector(centerSectorNum);
+        }
+        if(centerSectorNum !in activeSectors) {
+            addFloodFillPos(pos);
+        } else {
+            enforce(activeSectors[centerSectorNum] > 0, "error of derpy magnitude somewhere");
+        }
+
+        bool[SectorNum] relevantSectors;
+        foreach(sectorNum ; activityRange(centerSectorNum)) {
+            relevantSectors[sectorNum] = true;
+        }
+        foreach(sectorNum ; activityRange(from.getSectorNum())) {
+            relevantSectors[sectorNum] = true;
+        }
+
+
+
+        int[SectorNum] changeMap;
+        foreach(sectorNum, unrelevant ; relevantSectors) {
+            int count = 0;
+            int oldCount = sectorNum in activeSectors ? activeSectors[sectorNum] : 0;
+            foreach(clan ; clans) {
+                count += cast(int)clan.activeSector(sectorNum);
+            }
+            activeSectors[sectorNum] = count;
+            if(count && !oldCount) {
+                changeMap[sectorNum] = 1;
+            }
+            if(oldCount && !count) {
+                changeMap[sectorNum] = -1;
+            }
+        }
+
+        //Get / load / allocate 'this' sector?
+
+        foreach(sectorNum, value ; changeMap) {
+            if(value == 1) {
+                //Added sector
+                //Check if lies in TimeOut-queueueue, then readd?
+
+                if(sectorNum in sectorTimeout) {
+                    msg("Removeing sector from offload queueuue");
+                    sectorTimeout.remove(sectorNum);
+                    continue;
+                }
+
+                auto sector = getSector(sectorNum);
+                if(sector is null) {
+                    sector = loadSector(sectorNum);
+                }
+
+                floodingSectors ~= sectorNum;
+
+                //This line is implicit in loadSector. Find and kill and comment instances of this code (derp)!
+                if(sector is null) {
+                    sector = allocateSector(sectorNum);
+                }
+                foreach(neighborSectorNum ; neighbors(sectorNum)) {
+                    //If is active sector and wasn't added/removed
+                    // then floodfill from that place.
+                    if(neighborSectorNum in activeSectors && activeSectors[neighborSectorNum] != 0 && neighborSectorNum !in changeMap) {
+                        addFloodFillWall(sectorNum, neighborSectorNum);
+                    }
+                }
+
+            } else {
+                sectorTimeout[sectorNum] = worldTime + SectorTimeoutTicks;
+                msg("Queueing sector for offload");
+                addAABB(sectorNum.getAABB);
+                //Removed sector
+
+            }
+        }
+
+    }
+
+    void handleSectorTimeout() {
+        SectorNum[] removed;
+        foreach(sectorNum, timeout; sectorTimeout) {
+            if(timeout < worldTime) {
+                msg("Removing sector");
+                enforce(sectorNum in activeSectors && activeSectors[sectorNum] == 0, "Error; Sector to timeout not in list or not 0!");
+
+                notifySectorUnload(sectorNum);
+
+                SectorXY* sectorXY;
+                auto sector = getSector(sectorNum, &sectorXY);
+                enforce(sector !is null, "Trying to remove a non-existent sector derp!");
+                sector.serialize();
+                sectorXY.sectors.remove(sectorNum.value.Z);
+                if(sectorXY.sectors.length < 1) {
+                    sectorsXY.remove(SectorXYNum(vec2i(sectorNum.value.X, sectorNum.value.Y)));
+                }
+                removed ~= sectorNum;
+            }
+        }
+        foreach(sectorNum ; removed) {
+            sectorTimeout.remove(sectorNum);
+        }
+    }
+
+/*
 
     void increaseActivity(UnitPos activityLoc) {
         auto sectorNum = activityLoc.getSectorNum();
@@ -79,7 +199,7 @@ private mixin template ActivityHandlerMethods() {
     void decreaseActivity(UnitPos activityLoc) {
         assert (0);
     }
-
+*/
 
     void addFloodFillPos(TilePos pos) {
         if( toFloodFill.insert(pos.getBlockNum())) {

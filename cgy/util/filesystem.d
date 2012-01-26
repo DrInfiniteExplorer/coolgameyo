@@ -8,6 +8,14 @@ import std.string;
 
 import util.util;
 
+bool exists(string path) {
+    return std.file.exists(path);
+}
+
+string readText(string path) {
+    return std.file.readText(path);
+}
+
 void mkdir(string path) {
     if (exists(path)) {
         enforce(isDir(path), "Non-filder with name exists:" ~path);

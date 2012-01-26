@@ -11,8 +11,8 @@ import std.socketstream;
 import std.stream;
 
 
-string sendFile(string host, int port, string path, string name, string filename, char[] data, string returnWhat=null, string mime="application/octet-stream") {
-    Socket sock = new TcpSocket(new InternetAddress("luben.se", 80));
+string sendFile(string host, ushort port, string path, string name, string filename, char[] data, string returnWhat=null, string mime="application/octet-stream") {
+    Socket sock = new TcpSocket(new InternetAddress(host, port));
     scope(exit) sock.close();
     Stream ss   = new SocketStream(sock);
 

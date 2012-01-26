@@ -21,7 +21,7 @@ class Camera{
     }
 
     matrix4 getProjectionMatrix(){
-        float FOV_Radians = degToRad(renderSettings.fieldOfView);
+        float FOV_Radians = degToRad(cast(float)renderSettings.fieldOfView);
         float aspect = renderSettings.aspectRatio;
         float _near = renderSettings.nearPlane;
         float _far = renderSettings.farPlane;

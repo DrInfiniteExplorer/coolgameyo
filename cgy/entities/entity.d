@@ -15,13 +15,13 @@ import clan;
 import entitytypemanager;
 import light;
 
-shared int g_EntityIdCounter = 0; // To know what the id for the next entity will be
+shared int g_EntityCount = 0; // To know what the id for the next entity will be
 
 
 Entity newEntity() {
     auto entity = new Entity;
-    entity.entityId = g_EntityIdCounter;
-    g_EntityIdCounter++;
+    entity.entityId = g_EntityCount;
+    g_EntityCount++;
     return entity;
 }
 

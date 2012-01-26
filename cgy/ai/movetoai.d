@@ -13,12 +13,12 @@ import world.world;
 
 class MoveToAI : UnitAI {
 
-    Unit* unit;
-    Unit* target;
+    Unit unit;
+    Unit target;
     float speed;
-    void delegate(Unit*) done;
+    void delegate(Unit) done;
     bool removeOnArrive;
-    this(Unit* u, Unit* targetUnit, float speed, void delegate(Unit*) done = null, bool removeOnArrive=true){
+    this(Unit u, Unit targetUnit, float speed, void delegate(Unit) done = null, bool removeOnArrive=true){
         unit = u;
         target = targetUnit;
         this.speed = speed;

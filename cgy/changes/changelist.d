@@ -49,17 +49,17 @@ private struct ChangeArray(T) {
 
 final class ChangeList {
     static struct MoveChange {
-        Unit *unit;
+        Unit unit;
         vec3d destination;
         uint ticksToArrive;
     };
     ChangeArray!MoveChange moveChanges;
     ChangeArray!CustomChange customChanges;
     
-    void addMovement(Unit* unit, UnitPos destination, uint ticksToArrive) {
+    void addMovement(Unit unit, UnitPos destination, uint ticksToArrive) {
         addMovement(unit, destination.value, ticksToArrive);
     }
-    void addMovement(Unit* unit, vec3d destination, uint ticksToArrive) {
+    void addMovement(Unit unit, vec3d destination, uint ticksToArrive) {
         moveChanges.insert(MoveChange(unit, destination, ticksToArrive));
     }
     void applyMovement(World world) {

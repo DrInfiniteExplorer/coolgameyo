@@ -56,7 +56,7 @@ class Renderer {
     LineShaderProgram lineShader;
     LightMixerShaderProgram lightMixShader;
     
-    vec3d*[Unit*] specialUnits;
+    vec3d*[Unit] specialUnits;
     
     this(World w, Scheduler s, Camera c, GeometryCreator g)
     {
@@ -220,7 +220,7 @@ class Renderer {
     
         
 
-    void renderDude(Unit* unit, float tickTimeSoFar){
+    void renderDude(Unit unit, float tickTimeSoFar){
         auto M = matrix4();
         vec3d unitPos;
         vec3d **p = unit in specialUnits;
@@ -254,10 +254,10 @@ class Renderer {
         }
     }
     
-    void normalUnit(Unit *unit) {
+    void normalUnit(Unit unit) {
         specialUnits[unit] = null;
     }
-    vec3d* specialUnit(Unit *unit, vec3d pos) {
+    vec3d* specialUnit(Unit unit, vec3d pos) {
         auto p = new vec3d(pos);
         specialUnits[unit] = p;
         return p;

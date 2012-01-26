@@ -18,7 +18,7 @@ import world.world;
 
 class PatrolAI : UnitAI {
 
-    Unit* unit;
+    Unit unit;
     UnitPos a, b;
     Path path;
     PathModule pathModule;
@@ -26,7 +26,7 @@ class PatrolAI : UnitAI {
     int lineId;
     bool toa, walking;
 
-    this(Unit* u, UnitPos p, PathModule m) {
+    this(Unit u, UnitPos p, PathModule m) {
         unit = u;
         a = u.pos;
         b = p;

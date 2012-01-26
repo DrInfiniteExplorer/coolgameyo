@@ -49,7 +49,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
     private World world;
     private FPSControlAI possesAI;
     private Camera camera;
-    private Unit* unit;
+    private Unit unit;
 
     private bool[SDLK_LAST]   keyMap;    
     private bool _3rdPerson;
@@ -122,7 +122,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         destroyed = true;
     }
     
-    void setControlledUnit(Unit* u) {
+    void setControlledUnit(Unit u) {
         if (unit) {
             auto ai = unit.ai;
             enforce(ai, "Controlled / possessed unit does not have ai? :S");

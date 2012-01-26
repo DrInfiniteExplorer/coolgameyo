@@ -62,7 +62,7 @@ struct EntityPos {
     vec3d value;
     // ToDo: fix so that the hoalls reada pao the side of the tile.
     
-    TilePos tilePos() const @property {
+    TilePos    tilePos() const @property {
         return TilePos(
             getTilePos(value)
         );

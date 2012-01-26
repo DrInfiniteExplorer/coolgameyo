@@ -42,7 +42,7 @@ struct Demand {
     alias current this;
 }
 
-Unit* newUnit() {
+Unit newUnit() {
     auto unit = new Unit;
     unit.unitId = g_UnitCount;
     g_UnitCount++;
@@ -50,7 +50,7 @@ Unit* newUnit() {
     return unit;
 }
 
-struct Unit {
+class Unit {
 
     bool opEquals(ref const(Unit) u) const {
         assert (0, "Implement Unit.opEquals or find where it's called and make not called!");
@@ -96,9 +96,11 @@ struct Unit {
     void fromJSON(Value val) {
         read(unitData, val);
         if ("clanId" in val) {
-            int clanId;
-            read(clanId, val["clanId"]);
-            BREAKPOINT;
+            //int clanId;
+            //read(clanId, val["clanId"]);
+            //BREAKPOINT;
+            //Since units are stored with their clan, and deserialized by their clan, we dont need
+            //to care about a units serialized clanid. :)
         }
         if ("unitTypeId" in val) {
             int unitTypeId;

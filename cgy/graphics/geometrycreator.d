@@ -686,7 +686,7 @@ class GeometryCreator : Module, WorldListener
         return world.hasContent(minTilePos, maxTilePos);
     }
 
-    void onAddUnit(SectorNum, Unit*) { }
+    void onAddUnit(SectorNum, Unit) { }
 	void onAddEntity(SectorNum, Entity) { }
 
     void onBuildGeometry(SectorNum sectorNum)
@@ -722,17 +722,23 @@ class GeometryCreator : Module, WorldListener
     {
         auto sectorAABB = sectorNum.getAABB();
         {
+            GraphRegionNum[] toRemove;
             regionMutex.lock();
             scope(exit) regionMutex.unlock();
             foreach(region ; regions){
                 if(intersectsExclusive(sectorAABB, region.grNum.getAABB())){
-                    msg("Unload stuff oh yeah!!");
-                    msg("Perhaps.. Should we.. Maybe.. Stora data on disk? We'll see how things turn out.");
+                    toRemove ~= region.grNum;
+                    //msg("Unload stuff oh yeah!!");
+                    //msg("Perhaps.. Should we.. Maybe.. Stora data on disk? We'll see how things turn out.");
                     //How to do stuff, et c?
+
                 }
             }
+            foreach(grNum ; toRemove) {
+                glDeleteBuffers(1, &regions[grNum].VBO);
+                regions.remove(grNum);
+            }
         }
-        enforce("Implement");
     }
     void onUpdateGeometry(TilePos tilePos)
     {

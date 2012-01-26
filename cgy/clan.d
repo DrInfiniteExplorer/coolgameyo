@@ -1,21 +1,28 @@
 module clan;
 
+import std.algorithm;
 import std.array;
+import std.conv;
+import std.exception;
 
-
+import json;
 import unit;
+import util.filesystem;
 import world.world;
+import world.activity;
+
+shared int g_ClanCount = 0; //Unique clan id.
 
 // replace with struct if we decide we need type safety? :P
 static union Target {
     UnitPos pos;
     TilePos tilePos;
-    Unit* unit;
+    Unit unit;
     void* obj;    //TODO: Replace with proper type :D
 }
 Target target(UnitPos t) { Target ret; ret.pos = t; return ret; }
 Target target(TilePos t) { Target ret; ret.tilePos = t; return ret; }
-Target target(Unit* t) { Target ret; ret.unit = t; return ret; }
+Target target(Unit t) { Target ret; ret.unit = t; return ret; }
 
 struct Mission {
     /*
@@ -62,6 +69,11 @@ struct Mission {
     }
 }
 
+Clan newClan() {
+    Clan clan = new Clan;
+    clan.clanId = g_ClanCount++;
+    return clan;
+}
 
 class Clan {
     uint clanId;
@@ -78,4 +90,89 @@ class Clan {
     void insertMinePos(TilePos pos) {
         toMine ~= pos;
     }
+
+    Unit[int] clanMembers;
+
+    int[SectorNum] activityMap;
+
+
+    void addUnit(Unit unit) {
+        unit.clan = this;
+        clanMembers[unit.unitId] = unit;
+        auto centerSectorNum = unit.pos.getSectorNum();
+        increaseActivity(centerSectorNum);
+    }
+
+    bool activeSector(SectorNum sectorNum) {
+        return sectorNum in activityMap ? activityMap[sectorNum] != 0 : 0;
+    }
+
+    private void increaseActivity(SectorNum centralSectorNum) {
+        foreach(sectorNum ; activityRange(centralSectorNum)) {
+            if(sectorNum in activityMap) {
+                activityMap[sectorNum] += 1;
+            } else {
+                activityMap[sectorNum] = 1;
+            }
+            
+        }
+    }
+
+    private void decreaseActivity(SectorNum centralSectorNum) {
+        foreach(sectorNum ; activityRange(centralSectorNum)) {
+            activityMap[sectorNum] -= 1;
+            if(activityMap[sectorNum] < 1) {
+                activityMap.remove(sectorNum);
+            }
+        }
+    }
+
+    bool unitMoveActivity(UnitPos from, UnitPos to) {
+        auto a = from.getSectorNum();
+        auto b = to.getSectorNum();
+        if (a == b) {
+            return false;
+        }
+
+        increaseActivity(b);
+        decreaseActivity(a);
+        return true;
+    }
+
+    Unit getUnitById(int unitId) {
+        Unit* unitPtr = unitId in clanMembers;
+        if(unitPtr is null) return null;
+        return *unitPtr;
+    }
+
+    void serialize() {
+        auto folder = "saves/current/world/clans/" ~ to!string(clanId) ~"/";
+        util.filesystem.mkdir(folder);
+
+        Value darp(Unit unit) {
+            return encode(unit);
+        }
+        auto clanMembers = Value(array(map!darp(array(clanMembers))));
+	    auto jsonString = json.prettifyJSON(clanMembers);
+        std.file.write(folder ~ "members.json", jsonString);
+
+    }
+
+    void deserialize(int _clanId) {
+        clanId = _clanId;
+        auto folder = "saves/current/world/clans/" ~ to!string(clanId) ~"/";
+        enforce(exists(folder), "Folder does not exist!" ~ folder);
+
+        auto content = readText(folder ~ "members.json");
+        auto members = json.parse(content);
+
+        foreach (unitVal ; members.elements) {
+            Unit unit = new Unit;
+            unit.fromJSON(unitVal);
+            addUnit(unit);
+        }
+
+    }
+
+
 }

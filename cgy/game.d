@@ -8,7 +8,7 @@ import std.array;
 import std.concurrency;
 import std.conv;
 import std.exception;
-import std.file;
+//import std.file;
 import std.stdio;
 import std.string;
 
@@ -24,6 +24,7 @@ import graphics.texture;
 
 import graphics.debugging;
 
+import clan;
 import json;
 import ai.patrolai;
 //import changes.changelist;
@@ -69,7 +70,7 @@ class Game{
     private PathModule          pathModule;
     private AIModule            aiModule;
 
-    private Unit*               activeUnit; //TODO: Find out when this unit dies, and tell people.
+    private Unit               activeUnit; //TODO: Find out when this unit dies, and tell people.
 
 
 
@@ -166,11 +167,17 @@ class Game{
             return ret;
         }
 
+        auto clan = newClan();
+        world.addClan(clan);
+
         auto xy = TileXYPos(vec2i(3,-20));
         auto u = newUnit();
         u.pos = topOfTheWorld(xy);
         u.type = world.unitTypeManager.byName("elf");
         //u.pos.value.Z += 1;
+
+        clan.addUnit(u);
+
         world.addUnit(u);
 
         msg("u.pos == ", u.pos);
@@ -179,6 +186,10 @@ class Game{
         auto xyy = TileXYPos(vec2i(3,3));
         uu.pos = topOfTheWorld(xyy);
         uu.type = world.unitTypeManager.byName("dwarf");
+
+        clan.addUnit(uu);
+
+
         world.addUnit(uu);
         //auto goal = UnitPos(u.pos.value + vec3d(-30, 0, 0));
         auto goal = uu.pos;
@@ -243,7 +254,7 @@ class Game{
 
     void newGame(WorldGenParams worldParams, void delegate() onDone) {
         if (exists("saves/current")) {
-            rmdirRecurse("saves/current");
+            rmdir("saves/current");
         }
         initCallback = onDone;
         static void newGameThreadStarter(shared Game g, shared WorldGenParams p) {
@@ -263,7 +274,7 @@ class Game{
     void loadGame(string name, void delegate() onDone) {
         string saveDir = "saves/" ~ name;
         if (exists("saves/current")) {
-            rmdirRecurse("saves/current");
+            rmdir("saves/current");
         }
         //Need to implement a recursive copy function, in util, perhaps?
         util.filesystem.copy(saveDir, "saves/current");
@@ -319,7 +330,7 @@ class Game{
             //private TileTextureAtlas    atlas;
             //private TileTypeManager     tileTypeManager;    
 
-            //private Unit*               activeUnit; //TODO: Find out when this unit dies, and tell people.
+            //private Unit               activeUnit; //TODO: Find out when this unit dies, and tell people.
             auto activeUnit = Value(activeUnit.unitId);
             auto unitCount = Value(g_UnitCount);
             auto jsonRoot = Value([
@@ -349,7 +360,7 @@ class Game{
         serializeAll({
                 string saveDir = "saves/" ~ name;
                 if (exists(saveDir)) {
-                rmdirRecurse(saveDir);
+                    rmdir(saveDir);
                 }
                 //Need to implement a recursive copy function, in util, perhaps?
                 util.filesystem.copy("saves/current", saveDir);
@@ -361,7 +372,7 @@ class Game{
         return camera;
     }
 
-    Unit* getActiveUnit() {
+    Unit getActiveUnit() {
         return activeUnit;
     }
 

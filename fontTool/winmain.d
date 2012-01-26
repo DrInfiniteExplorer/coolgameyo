@@ -260,8 +260,9 @@ int myWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int
     SelectObject(memDC, oldFont);
     DeleteObject(font);
     DeleteObject(bitmap);
-    ReleaseDC(NULL, memDC);
-    ReleaseDC(NULL, screenDC);
+    HANDLE nul = null;
+    ReleaseDC(nul, memDC);
+    ReleaseDC(nul, screenDC);
 
 //    DerelictILUT.unload();
     DerelictIL.unload();

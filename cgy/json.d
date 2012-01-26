@@ -304,6 +304,12 @@ void read(T)(ref T t, Value val) {
             t ~= read!U(e);
         }
         //return us;
+    } else static if (is (T U : U[V], V)) { //Map of things
+        foreach(e; val.elements) {
+            auto key = read!V(e[0]);
+            auto value = read!U(e[1]);
+            t[key] = value;
+        }
     } else static if (__traits(compiles, t.fromJSON(val))) {
         t.fromJSON(val);
     } else static if (__traits(compiles, T.insert)) {
@@ -341,7 +347,18 @@ Value encode(T)(T t) {
     static if (isNumeric!T || is (T : string) || is (T : bool)) { //Normal primitive
         return Value(t);
     } else static if (is (T U : U[])) { //Array of things
+
         return Value(array(map!(encode!U)(t)));
+
+    } else static if (is (T U : U[V], V)) { //Map of things
+
+        Value ret[];
+        foreach(key, value ; t) {
+            ret ~= Value([encode(key), encode(value)]);
+        }
+        return Value(ret);
+
+
     } else static if (__traits(compiles, t.toJSON())) { //Has method to serialize
         return t.toJSON();
     } else static if (is (T == struct)) {

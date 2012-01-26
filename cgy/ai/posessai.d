@@ -17,7 +17,7 @@ import util.rangefromto;
 import world.world;
 
 class FPSControlAI : UnitAI, CustomChange {
-    Unit* unit;
+    Unit unit;
 
     UnitAI oldAi;
     //vec3d velocity;
@@ -40,7 +40,7 @@ class FPSControlAI : UnitAI, CustomChange {
         destroyed = true;
     }
 
-    void setUnit(Unit* u){
+    void setUnit(Unit u){
         if (u is unit) {
             return;
         }
