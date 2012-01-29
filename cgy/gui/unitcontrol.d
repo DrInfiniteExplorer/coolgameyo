@@ -397,7 +397,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         double right = 0;
         double fwd = 0;
         //enum speed = 4.0;
-        enum speed = 4.0;
+        enum speed = 12.0;
         if(keyMap[SDLK_a]){ right-=speed; }
         if(keyMap[SDLK_d]){ right+=speed; }
         if(keyMap[SDLK_w]){ fwd+=speed; }

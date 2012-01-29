@@ -44,6 +44,15 @@ struct Block {
     byte sunLightVal;
     bool sparseTileTransparent() @property { return sparseTileType == TileTypeAir; }
 
+    void destroy() {
+
+        if(valid && !sparse) {
+            free(this);
+            tiles = null;
+            flags = BlockFlags.none;
+        }
+    }
+
     invariant()
     {
         auto valid = flags & BlockFlags.valid;
@@ -158,11 +167,10 @@ struct Block {
             read(sunLightVal.sizeof, cast(ubyte*)&sunLightVal);
         } else {
             auto block = alloc();
-            block.flags = flags;
-            block.blockNum = blockNum;
+            tiles = block.tiles;
             static assert(BlockSize.x * BlockSize.y * BlockSize.z * Tile.sizeof == (*tiles).sizeof);
             read((*tiles).sizeof, cast(ubyte*)block.tiles.ptr);
-            this = block;
+            block.tiles = null;
         }
     }
 
@@ -212,7 +220,7 @@ struct Block {
 
             //static assert (T.sizeof == 4096);
 
-            enum dataSize = 128;
+            enum dataSize = 128; //dataSize = number of T's to allocate
 
             AllocationBlock* next;
 
@@ -232,6 +240,7 @@ struct Block {
                     // IT IS OUR BLOB!!!!!
                     allocmap[diff] = false;
                 } else {
+                    BREAK_IF(next is null);
                     assert (next, "We have our buddie's blob, "~
                             "but our buddy is dead. Gosh darned it!");
                     next.returnMem(mem);

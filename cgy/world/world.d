@@ -98,7 +98,7 @@ class World {
     HeightmapTasks heightmapTasks;
 
     SectorXY[SectorXYNum] sectorsXY;
-    Sector[] sectorList;
+    Sector[SectorNum] sectorList;
 
     WorldGenParams worldGenParams;
     WorldGenerator worldGen;
@@ -362,7 +362,7 @@ class World {
 
         assert (z !in xyPtr.sectors);
         xyPtr.sectors[z] = sector;
-        sectorList ~= sector;
+        sectorList[sectorNum] = sector;
 
         if (xy !is null) {
             *xy = xyPtr;
@@ -456,7 +456,7 @@ class World {
         return entities;
     }
 
-    private Sector[] getSectors() {
+    private Sector[SectorNum] getSectors() {
         return sectorList;
     }
 
@@ -488,7 +488,7 @@ class World {
     // Returns a range with all the units in the world
     UnitRange getUnits() {
         UnitRange ret;
-        ret.sectors = getSectors();
+        ret.sectors = getSectors().values;
         if (!ret.sectors.empty) {
             ret.currentUnitRange = ret.sectors.front.units[];
         }
@@ -534,7 +534,7 @@ class World {
     // Returns a range with all the entities in the world
     EntityRange getEntities() {
         EntityRange ret;
-        ret.sectors = getSectors();
+        ret.sectors = getSectors().values;
         if (!ret.sectors.empty) {
             ret.currentEntityRange = ret.sectors.front.entities[];
         }

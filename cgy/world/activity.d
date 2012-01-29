@@ -20,7 +20,7 @@ debug{
     auto activitySize = vec3i(5,5,5);
 }
 
-enum SectorTimeoutTicks = TICKS_PER_SECOND * 45;
+enum SectorTimeoutTicks = TICKS_PER_SECOND * 15;
 
 
 private mixin template ActivityHandlerMethods() {
@@ -133,7 +133,10 @@ private mixin template ActivityHandlerMethods() {
                 if(sectorXY.sectors.length < 1) {
                     sectorsXY.remove(SectorXYNum(vec2i(sectorNum.value.X, sectorNum.value.Y)));
                 }
+                sectorList.remove(sectorNum);
                 removed ~= sectorNum;
+                sector.destroy();
+
             }
         }
         foreach(sectorNum ; removed) {

@@ -120,6 +120,8 @@ class Sector {
     private SolidMap solidMap;
 
 
+    //These are just cross-references.
+    //At the moment they are not updated when units change sectors :P
     RedBlackTree!(Unit) units; //TODO: how to make this private without breaking stuff derp? :S
 	RedBlackTree!(Entity) entities;
 
@@ -134,6 +136,22 @@ class Sector {
         units = new typeof(units);
 		entities = new typeof(entities);
         solidMap.clear;
+    }
+
+
+    bool destroyed = false;
+    ~this() {
+        //BREAK_IF(!destroyed);
+        msg("Sector destructor called: ", sectorNum);
+    }
+
+    void destroy() {
+        msg("Destroying sector ", sectorNum);
+        foreach(block ; (&blocks[0][0][0])[0 .. BlocksPerSector.total]) {
+            block.destroy();
+        }
+        destroyed = true;
+        msg("Done destroying");
     }
 
     const(Block)[] getBlocks() const {
@@ -195,8 +213,10 @@ class Sector {
             Block block;
             block.deserialize(&read);
             auto num = block.blockNum.rel();
+            enforce(blocks[num.X][num.Y][num.Z].tiles is null, "DERP!");
             blocks[num.X][num.Y][num.Z] = block;
             solidMap.updateBlock(block);
+            block.tiles = null;
         }
         file.close();
                 

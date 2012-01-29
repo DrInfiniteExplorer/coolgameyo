@@ -185,7 +185,7 @@ class GeometryCreator : Module, WorldListener
         camera = cam;
     }
 
-    void buildGeometry(TilePos min, TilePos max, ref GRFace[]faceList)
+    void buildGeometry(TilePos min, TilePos max, ref GRFace[] faceList)
     in{
         assert(min.value.X < max.value.X);
         assert(min.value.Y < max.value.Y);
@@ -531,7 +531,9 @@ class GeometryCreator : Module, WorldListener
                 foreach(num; dirtyRegions){
                     regionMutex.lock();
                     scope(exit) regionMutex.unlock();
-                    buildVBO(regions[num]);
+                    if(!buildVBO(regions[num])) {
+                        regions.remove(num);
+                    }
                 }
                 dirtyRegions.length = 0;
             }
@@ -540,12 +542,16 @@ class GeometryCreator : Module, WorldListener
         return regions;
     }
 
-    void buildVBO(ref GraphicsRegion region){
+    //Returns wether or not a vbo was actually made.
+    //Only called from getRegions
+    //Works on a reference to a graphregion in the regions-array
+    private bool buildVBO(ref GraphicsRegion region){
         auto primitiveCount = region.faces.length;
         auto geometrySize = primitiveCount * GRFace.sizeof;
         region.quadCount = primitiveCount;
 
-        scope(exit) region.faces.length = 0;
+        //scope(exit) region.faces.length = 0;
+        scope(exit) region.faces = null;
         if(region.VBO){
             //See if VBO is reusable.
             int bufferSize;
@@ -555,7 +561,7 @@ class GeometryCreator : Module, WorldListener
             double ratio = to!double(geometrySize)/to!double(bufferSize);
             if(minReUseRatio <= ratio && ratio <= 1){
                 glBufferSubData(GL_ARRAY_BUFFER, 0, geometrySize, region.faces.ptr);
-                return;
+                return true;
             }else{
                 //Delete old vbo
                 glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -568,9 +574,11 @@ class GeometryCreator : Module, WorldListener
             glBindBuffer(GL_ARRAY_BUFFER, region.VBO);
             glBufferData(GL_ARRAY_BUFFER, geometrySize, region.faces.ptr, GL_STATIC_DRAW);
         } else {
-            msg("GOT NOTHING FROM GRAPHREGION! >:( ", region.grNum);
+            //msg("GOT NOTHING FROM GRAPHREGION! >:( ", region.grNum);
+            //addAABB(region.grNum.getAABB());
+            return false;
         }
-        //addAABB(region.grNum.getAABB());
+        return true;
     }
 
     void buildGraphicsRegion(GraphicsRegion region){

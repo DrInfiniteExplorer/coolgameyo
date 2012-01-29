@@ -110,7 +110,7 @@ mixin template FloodFill() {
                 notifySectorLoad(sectorNum);
                 writeln("spreadSunLight(sectorNum);");
             }
-            floodingSectors.length = 0;
+            floodingSectors = null;
             //floodingSectors.assumeSafeAppend(); // yeaaaaahhhh~~~
         }
         //msg("allBlocks");
