@@ -64,7 +64,12 @@ private mixin template ActivityHandlerMethods() {
             foreach(clan ; clans) {
                 count += cast(int)clan.activeSector(sectorNum);
             }
-            activeSectors[sectorNum] = count;
+
+            if(count) {
+                activeSectors[sectorNum] = count;
+            } else if(oldCount) {
+                activeSectors.remove(sectorNum);
+            }
             if(count && !oldCount) {
                 changeMap[sectorNum] = 1;
             }
@@ -121,7 +126,6 @@ private mixin template ActivityHandlerMethods() {
         foreach(sectorNum, timeout; sectorTimeout) {
             if(timeout < worldTime) {
                 msg("Removing sector");
-                enforce(sectorNum in activeSectors && activeSectors[sectorNum] == 0, "Error; Sector to timeout not in list or not 0!");
 
                 notifySectorUnload(sectorNum);
 

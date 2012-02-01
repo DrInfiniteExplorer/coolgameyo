@@ -18,7 +18,7 @@ import graphics.raycastgpu;
 import graphics.renderconstants;
 import graphics.shader;
 import graphics.texture;
-import graphics.geometrycreator;
+import graphics.tilerenderer;
 
 import modules.module_;
 import random.catmullrom;
@@ -27,60 +27,38 @@ import settings;
 import statistics;
 import unit;
 import util.util;
-import world.world;
-import world.floodfill;
 
 
-//TODO: Make fix this, or make testcase and report it if not done already.
-auto grTexCoordOffset = GRVertex.texcoord.offsetof;
-auto grNormalOffset = GRVertex.normal.offsetof;
-auto grLightOffset = GRVertex.light.offsetof;
-auto grSunLightOffset = GRVertex.sunLight.offsetof;
 
 class Renderer {
     //TODO: Leave comment on what these members are use for in this class
-    World world;
-    Scheduler scheduler;
-    GeometryCreator geometryCreator;
-    Camera camera;
-
+    //Scheduler scheduler;
+    TileRenderer tileRenderer;
     TileTextureAtlas atlas;
+    Camera camera;
     
-    alias ShaderProgram!("offset", "VP", "atlas", "SkyColor") WorldShaderProgram;
     alias ShaderProgram!("VP", "M", "color") DudeShaderProgram;
     alias ShaderProgram!("VP", "V", "color", "radius") LineShaderProgram;
     alias ShaderProgram!("albedo", "minecraft", "raycast", "method") LightMixerShaderProgram;
 
-    WorldShaderProgram worldShader;
     DudeShaderProgram dudeShader;
     LineShaderProgram lineShader;
     LightMixerShaderProgram lightMixShader;
     
     vec3d*[Unit] specialUnits;
     
-    this(World w, Scheduler s, Camera c, GeometryCreator g)
+    this(Camera c, TileTextureAtlas _atlas, TileRenderer _tileRenderer)
     {
         mixin(LogTime!("RendererInit"));
-        world = w;
-        scheduler = s;
         camera = c;        
-        geometryCreator = g;
+        tileRenderer = _tileRenderer;
+        atlas = _atlas;
 
-        //Would be kewl if with templates and compile-time one could specify uniform names / attrib slot names
-        //that with help of shaders where made into member variables / compile-time-lookup(attrib slot names)
-        worldShader = new WorldShaderProgram("shaders/renderGR.vert", "shaders/renderGR.frag");
-        worldShader.bindAttribLocation(0, "position");
-        worldShader.bindAttribLocation(1, "texcoord");
-        worldShader.bindAttribLocation(2, "light");
-        worldShader.bindAttribLocation(3, "sunLight");
-        worldShader.bindAttribLocation(4, "normal");
-        worldShader.link();
-        worldShader.offset = worldShader.getUniformLocation("offset");
-        worldShader.VP = worldShader.getUniformLocation("VP");
-        worldShader.atlas = worldShader.getUniformLocation("atlas");
-        worldShader.SkyColor = worldShader.getUniformLocation("SkyColor");
-        worldShader.use();
-        worldShader.setUniform(worldShader.atlas, 0); //Texture atlas will always reside in texture unit 0 yeaaaah
+    }
+
+    bool initialized = false;
+
+    void init() {
 
         dudeShader = new DudeShaderProgram("shaders/renderDude.vert", "shaders/renderDude.frag");
         dudeShader.bindAttribLocation(0, "position");
@@ -110,17 +88,18 @@ class Renderer {
         lightMixShader.use(false);
 
 
-
-
-
         createDudeModel();
         createEntityModel();
         createTorchModel();
+
+        tileRenderer.init();
+        atlas.upload();
+
+        initialized = true;
     }
     
     void destroy() {
-        geometryCreator.destroy();
-        worldShader.destroy();
+        tileRenderer.destroy();
         dudeShader.destroy();
         lineShader.destroy();
     }
@@ -274,10 +253,13 @@ class Renderer {
         dudeShader.setUniform(dudeShader.VP, vp);
         glEnableVertexAttribArray(0);
         glError();
-        auto dudes = world.getVisibleUnits(camera);
+        pragma(msg, "Implment scene graph");
+        auto dudes = []; //world.getVisibleUnits(camera);
+        /*
         foreach(dude ; dudes) {
             renderDude(dude, tickTimeSoFar);
         }
+        */
         glDisableVertexAttribArray(0);
         dudeShader.use(false);
         glError();
@@ -289,7 +271,8 @@ class Renderer {
         if(renderSettings.renderTrueWorld == 1 || 
            renderSettings.renderTrueWorld == 3 || 
            renderSettings.renderTrueWorld == 4) return;
-        interactiveComputeYourFather(world, camera);
+        pragma(msg, "refactor raycasting");
+        //interactiveComputeYourFather(world, camera);
     }
 
     void finishHim() {
@@ -319,8 +302,9 @@ class Renderer {
         //Render stuff, make things.
     }
     
-    void render(long usecs)
+    void render(long usecs, double timeOfDay)
     {
+        if(!initialized) return;
         
         g_Statistics.addFPS(usecs);
 
@@ -335,7 +319,12 @@ class Renderer {
         glError();
 
         setWireframe(renderSettings.renderWireframe);
-        renderWorld(camera);
+
+        vec3f skyColor = CatmullRomSpline(timeOfDay, SkyColors);
+
+        atlas.use();
+        tileRenderer.render(camera, skyColor);
+
         renderDudes(camera, 0.f);
 		renderEntities(camera, 0.f);
         renderDebug(camera);
@@ -349,75 +338,6 @@ class Renderer {
         setWireframe(false);
   }
 
-    void renderGraphicsRegion(const GraphicsRegion region){
-        //TODO: Do the pos-camerapos before converting to float, etc
-        auto pos = region.grNum.min().value;
-        worldShader.setUniform(worldShader.offset, pos);
-
-        glBindBuffer(GL_ARRAY_BUFFER, region.VBO);
-        glError();
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, GRVertex.sizeof, null /* offset in vbo */);
-        glError();
-
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, GRVertex.sizeof, cast(void*)grTexCoordOffset);
-        glError();
-
-        glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, GRVertex.sizeof, cast(void*)grLightOffset);
-        glError();
-
-        glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, GRVertex.sizeof, cast(void*)grSunLightOffset);
-        glError();
-
-        glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, GRVertex.sizeof, cast(void*)grNormalOffset);
-        glError();
-
-        glDrawArrays(GL_QUADS, 0, region.quadCount*4);
-        glError();
-    }
-
-    void renderWorld(Camera camera)
-    {
-        worldShader.use();
-        glEnableVertexAttribArray(0);
-        glError();
-        glEnableVertexAttribArray(1);
-        glError();
-        glEnableVertexAttribArray(2);
-        glError();
-        glEnableVertexAttribArray(3);
-        glError();
-        glEnableVertexAttribArray(4);
-        glError();
-        atlas.use();
-        auto transform = camera.getProjectionMatrix() * camera.getViewMatrix();
-        worldShader.setUniform(worldShader.VP, transform);
-
-        vec3f SkyColor = CatmullRomSpline(world.getDayTime(), SkyColors);
-        worldShader.setUniform(worldShader.SkyColor, SkyColor);
-
-        auto regions = geometryCreator.getRegions();
-        foreach(region ; regions){
-            if(region.VBO && camera.inFrustum(region.grNum.getAABB())){
-                renderGraphicsRegion(region);
-            }
-        }
-        //Get list of vbo's
-        //Do culling    
-        //Render vbo's.
-        glDisableVertexAttribArray(0);
-        glError();
-        glDisableVertexAttribArray(1);
-        glError();
-        glDisableVertexAttribArray(2);
-        glError();
-        glDisableVertexAttribArray(3);
-        glError();
-        glDisableVertexAttribArray(4);
-        glError();
-        worldShader.use(false);
-    }
-	
-	
 	
 	void renderEntity(Entity entity, float tickTimeSoFar){
         auto M = matrix4();
@@ -474,10 +394,12 @@ class Renderer {
         dudeShader.setUniform(dudeShader.VP, vp);
         glEnableVertexAttribArray(0);
         glError();
-        auto entities = world.getVisibleEntities(camera);
+        auto entities = []; //Implement scenegraph world.getVisibleEntities(camera);
+        /*
         foreach(entity ; entities) {
             renderEntity(entity, tickTimeSoFar);
         }
+        */
         glDisableVertexAttribArray(0);
         dudeShader.use(false);
         glError();

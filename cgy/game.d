@@ -28,7 +28,8 @@ import clan;
 import json;
 import ai.patrolai;
 //import changes.changelist;
-import graphics.geometrycreator;
+import graphics.tilegeometry;
+import graphics.tilerenderer;
 import modules.ai;
 import modules.path;
 import pos;
@@ -61,7 +62,7 @@ class Game{
 
     private Camera              camera;
     private Renderer            renderer;
-    private GeometryCreator     geometryCreator;
+    private TileGeometry        tileGeometry;
     private Scheduler           scheduler;
     private TileTextureAtlas    atlas;
     private TileTypeManager     tileTypeManager;
@@ -96,7 +97,8 @@ class Game{
             core.thread.Thread.sleep(dur!"seconds"(1));
         }
 
-        atlas.destroy();
+        tileGeometry.destroy();
+        msg("Move atlas.destroy(); to renderer.destroy");
         renderer.destroy();
         world.destroy();
         aiModule.destroy();
@@ -130,9 +132,12 @@ class Game{
             //Mainly all in this block of code actually :)
             camera.setPosition(vec3d(-2, -2, 20));
             camera.setTarget(vec3d(0, 0, 20));
-            geometryCreator = new GeometryCreator(world);
-            scheduler.registerModule(geometryCreator);
-            geometryCreator.setCamera(camera);
+            //geometryCreator = new GeometryCreator(world);
+            auto tileRenderer = new TileRenderer();
+            tileGeometry = new TileGeometry(world, tileRenderer);
+            renderer = new Renderer(camera, atlas, tileRenderer);
+            scheduler.registerModule(tileGeometry);
+            tileGeometry.setCamera(camera);
         }
 
     }
@@ -147,9 +152,8 @@ class Game{
     //This is called when the main thread is notified that the loading thread is done loading. We upload gpu stuff here.
     void loadDone() {
         if (isClient) {
-            renderer = new Renderer(world, scheduler, camera, geometryCreator);
-            renderer.atlas = atlas;
-            atlas.upload(); //About 0 ms
+            renderer.init();
+            msg("move atlas.upload(); //About 0 ms to renderer.init");
         }            
         initCallback(); //Call the registered 'tell me when your finished starting the game'-callback here.
     }
@@ -390,7 +394,7 @@ class Game{
 
     void render(long usecs) {
         if(renderer is null) return;
-        renderer.render(usecs);
+        renderer.render(usecs, world.getDayTime());
     }
 
     mixin NetworkCode; // from clientnetworking.d

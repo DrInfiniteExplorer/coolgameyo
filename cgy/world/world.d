@@ -194,7 +194,11 @@ class World {
         deserializeClans();
 
         foreach(sectorNum, clanCount ; activeSectors) {
-            loadSector(sectorNum);
+            if(!clanCount) {
+                msg("Error, nonexistent clancount for sector, ignoring. ", sectorNum);
+            } else {
+                loadSector(sectorNum);
+            }
         }
 
     }
@@ -424,12 +428,6 @@ class World {
         //getBlockLastBlockNum = blockNum;
         //getBlockLastBlock = block;
         return block;
-    }
-
-    private void setBlock(BlockNum blockNum, Block newBlock) {
-        enforce(0, "Deprecated. see Sector.setBlock.");
-        auto sector = getSector(blockNum.getSectorNum());
-        sector.setBlock(blockNum, newBlock);
     }
 
     // I'd rather not have this in world //plol
@@ -865,6 +863,10 @@ class World {
     }
 
     void notifySectorLoad(SectorNum sectorNum) {
+        if(sectorNum !in activeSectors) {
+            msg("Sector no longer of interest after floodfill.");
+            return;
+        }
         foreach (listener; listeners) {
             listener.onSectorLoad(sectorNum);
         }

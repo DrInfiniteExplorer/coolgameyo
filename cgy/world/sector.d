@@ -142,12 +142,12 @@ class Sector {
     bool destroyed = false;
     ~this() {
         //BREAK_IF(!destroyed);
-        msg("Sector destructor called: ", sectorNum);
+        msg("Sector destructor called: "); //, sectorNum);
     }
 
     void destroy() {
         msg("Destroying sector ", sectorNum);
-        foreach(block ; (&blocks[0][0][0])[0 .. BlocksPerSector.total]) {
+        foreach(ref block ; (&blocks[0][0][0])[0 .. BlocksPerSector.total]) {
             block.destroy();
         }
         destroyed = true;

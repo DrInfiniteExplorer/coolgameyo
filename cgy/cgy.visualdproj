@@ -293,7 +293,6 @@
    <File path="graphics\camera.d" />
    <File path="graphics\debugging.d" />
    <File path="graphics\font.d" />
-   <File path="graphics\geometrycreator.d" />
    <File path="graphics\image.d" />
    <File path="graphics\misc.d" />
    <File path="graphics\obj.d" />
@@ -304,6 +303,8 @@
    <File path="graphics\renderer.d" />
    <File path="graphics\shader.d" />
    <File path="graphics\texture.d" />
+   <File path="graphics\tilegeometry.d" />
+   <File path="graphics\tilerenderer.d" />
   </Folder>
   <Folder name="gui">
    <Folder name="guisystem">

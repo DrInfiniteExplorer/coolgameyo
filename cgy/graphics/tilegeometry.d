@@ -1,4 +1,4 @@
-module graphics.geometrycreator;
+module graphics.tilegeometry;
 
 pragma(msg, "> geometrycreator.d");        
 
@@ -22,6 +22,7 @@ import derelict.opengl.glext;
 import graphics.camera;
 import graphics.debugging;
 import graphics.renderer;
+import graphics.tilerenderer;
 import light;
 import modules.module_;
 import pos;
@@ -37,11 +38,8 @@ import util.intersect;
 
 alias util.util.Direction Direction;
 
-struct GraphicsRegion
+struct TileFaces
 {
-    GraphRegionNum grNum;
-    uint VBO = 0;
-    uint quadCount = 0;
     GRFace[] faces;
 }
 
@@ -71,13 +69,10 @@ static const(string) FixLighting_get(int num, int dir, int which) {
     div = (which/3) -1;
     mod = (which%3) -1;
     if(num == 0) { //X
-        //return format("%d, %d, %d", dir, which/3, mod);
         return text(map[dir], ", ", map[div], ", ", map[mod]);
     } else if(num == 1) { //Y
-        //return format("%d, %d, %d", div, dir, mod);
         return text(map[div], ", ", map[dir], ", ", map[mod]);
     } else if(num == 2) { //Z
-        //return format("%d, %d, %d", div, mod, dir);
         return text(map[div], ", ", map[mod], ", ", map[dir]);
     }
     assert(0);
@@ -146,46 +141,32 @@ template FixLighting(const string A, const int num, const int dir, const string 
 }
 
 
-class GeometryCreator : Module, WorldListener
+class TileGeometry : Module, WorldListener
 {
     GraphRegionNum[] regionsToUpdate; //Only used in taskFunc and where we populate it, mutually exclusive locations.
-    GraphicsRegion[GraphRegionNum] regions; //Accessed from getRegions and from taskFunc, could collide.
-    GraphRegionNum[] dirtyRegions; //Can be updated by worker thread; Is read&cleared in render thread.
-    Mutex dirtyMutex;
-    Mutex regionMutex;
     Mutex updateMutex;
 
-    World world;
     Camera camera;
-    double minReUseRatio;
+    TileRenderer tileRenderer;
+    World world;
 
-    this(World w)
+    this(World w, TileRenderer _tileRenderer)
     {
         world = w;
+        tileRenderer = _tileRenderer;
         world.addListener(this);
-        minReUseRatio = 0.95;
-        regionMutex = new Mutex;
-        dirtyMutex = new Mutex;
         updateMutex = new Mutex;
     }
     
     void destroy() {
         world.removeListener(this);
-        removeAllVBOs();
-    }
-
-    void removeAllVBOs(){
-        foreach(region ; regions){
-            glDeleteBuffers(1, &region.VBO);
-        }
-        regions = null;
     }
 
     void setCamera(Camera cam) {
         camera = cam;
     }
 
-    void buildGeometry(TilePos min, TilePos max, ref GRFace[] faceList)
+    TileFaces buildGeometry(TilePos min, TilePos max)
     in{
         assert(min.value.X < max.value.X);
         assert(min.value.Y < max.value.Y);
@@ -193,6 +174,10 @@ class GeometryCreator : Module, WorldListener
     }
     body{
         //Make floor triangles
+
+        TileFaces tileFaces;
+        GRFace[] faceList;
+
         GRFace newFace;
         void fixTex(ref GRFace f, const(Tile) t, bool side, bool upper, Direction normalDir){
             ushort tileId;
@@ -275,53 +260,6 @@ class GeometryCreator : Module, WorldListener
                 newFace.quad[2].texcoord.set(1, 1, 0);
                 newFace.quad[3].texcoord.set(1, 0, 0);
                 fixTex(newFace, tile, true, false, Direction.eastCount);
-                /*
-                if(0 == smoothMethod) {
-                    newFace.quad[0].light = tileXp.lightValue/cast(float)MaxLightStrength;
-                    newFace.quad[1].light = tileXp.lightValue/cast(float)MaxLightStrength;
-                    newFace.quad[2].light = tileXp.lightValue/cast(float)MaxLightStrength;
-                    newFace.quad[3].light = tileXp.lightValue/cast(float)MaxLightStrength;
-                } else if ( 1 == smoothMethod) {
-                    float v00 = world.getTile(TilePos(pos+vec3i(1,-1,-1)), false).lightValue;
-                    float v01 = world.getTile(TilePos(pos+vec3i(1,-1, 0)), false).lightValue;
-                    float v02 = world.getTile(TilePos(pos+vec3i(1,-1, 1)), false).lightValue;
-                    float v10 = world.getTile(TilePos(pos+vec3i(1, 0,-1)), false).lightValue;
-                    float v11 = tileXp.lightValue;
-                    float v12 = world.getTile(TilePos(pos+vec3i(1, 0, 1)), false).lightValue;
-                    float v20 = world.getTile(TilePos(pos+vec3i(1, 1,-1)), false).lightValue;
-                    float v21 = world.getTile(TilePos(pos+vec3i(1, 1, 0)), false).lightValue;
-                    float v22 = world.getTile(TilePos(pos+vec3i(1, 1, 1)), false).lightValue;
-
-                    newFace.quad[0].light = (v02+v01+v12+v11)/(4.0*MaxLightStrength);
-                    newFace.quad[1].light = (v01+v00+v11+v10)/(4.0*MaxLightStrength);
-                    newFace.quad[2].light = (v11+v10+v21+v20)/(4.0*MaxLightStrength);
-                    newFace.quad[3].light = (v12+v11+v22+v21)/(4.0*MaxLightStrength);
-                } else if ( 2 == smoothMethod) {
-                    auto t00= world.getTile(TilePos(pos+vec3i(1,-1,-1)), false);
-                    auto t01= world.getTile(TilePos(pos+vec3i(1,-1, 0)), false);
-                    auto t02= world.getTile(TilePos(pos+vec3i(1,-1, 1)), false);
-                    auto t10= world.getTile(TilePos(pos+vec3i(1, 0,-1)), false);
-                    auto t11= tileXp;
-                    auto t12= world.getTile(TilePos(pos+vec3i(1, 0, 1)), false);
-                    auto t20= world.getTile(TilePos(pos+vec3i(1, 1,-1)), false);
-                    auto t21= world.getTile(TilePos(pos+vec3i(1, 1, 0)), false);
-                    auto t22= world.getTile(TilePos(pos+vec3i(1, 1, 1)), false);
-
-                    float v00 = t00.isAir ? t00.lightValue : 0;
-                    float v01 = t01.isAir ? t01.lightValue : 0;
-                    float v02 = t02.isAir ? t02.lightValue : 0;
-                    float v10 = t10.isAir ? t10.lightValue : 0;
-                    float v11 = t11.isAir ? t11.lightValue : 0;
-                    float v12 = t12.isAir ? t12.lightValue : 0;
-                    float v20 = t20.isAir ? t20.lightValue : 0;
-                    float v21 = t21.isAir ? t21.lightValue : 0;
-                    float v22 = t22.isAir ? t22.lightValue : 0;
-
-                    newFace.quad[0].light = (v02+v01+v12+v11)/(count(t02.isAir, t01.isAir, t12.isAir)*MaxLightStrength);
-                    newFace.quad[1].light = (v01+v00+v11+v10)/(count(t01.isAir, t00.isAir, t10.isAir)*MaxLightStrength);
-                    newFace.quad[2].light = (v11+v10+v21+v20)/(count(t10.isAir, t21.isAir, t20.isAir)*MaxLightStrength);
-                    newFace.quad[3].light = (v12+v11+v22+v21)/(count(t12.isAir, t22.isAir, t21.isAir)*MaxLightStrength);
-                }*/
 
                 mixin(FixLighting!("Xp", 0, 1, "UH", "LH", "LF", "UF", true));
                 mixin(FixLighting!("Xp", 0, 1, "UH", "LH", "LF", "UF", false));
@@ -338,29 +276,7 @@ class GeometryCreator : Module, WorldListener
                 newFace.quad[2].texcoord.set(1, 0, 0);
                 newFace.quad[3].texcoord.set(1, 1, 0);
                 fixTex(newFace, tile, true, false, Direction.westCount);
-                /*
-                if(0 == smoothMethod) {
-                    newFace.quad[0].light = tileXn.lightValue/cast(float)MaxLightStrength;
-                    newFace.quad[1].light = tileXn.lightValue/cast(float)MaxLightStrength;
-                    newFace.quad[2].light = tileXn.lightValue/cast(float)MaxLightStrength;
-                    newFace.quad[3].light = tileXn.lightValue/cast(float)MaxLightStrength;
-                } else if ( 1 == smoothMethod) {
 
-                    float v00 = world.getTile(TilePos(pos+vec3i(-1,-1,-1)), false).lightValue;
-                    float v01 = world.getTile(TilePos(pos+vec3i(-1,-1, 0)), false).lightValue;
-                    float v02 = world.getTile(TilePos(pos+vec3i(-1,-1, 1)), false).lightValue;
-                    float v10 = world.getTile(TilePos(pos+vec3i(-1, 0,-1)), false).lightValue;
-                    float v11 = tileXn.lightValue;
-                    float v12 = world.getTile(TilePos(pos+vec3i(-1, 0, 1)), false).lightValue;
-                    float v20 = world.getTile(TilePos(pos+vec3i(-1, 1,-1)), false).lightValue;
-                    float v21 = world.getTile(TilePos(pos+vec3i(-1, 1, 0)), false).lightValue;
-                    float v22 = world.getTile(TilePos(pos+vec3i(-1, 1, 1)), false).lightValue;
-
-                    newFace.quad[0].light = (v01+v00+v11+v10)/(4.0*MaxLightStrength);
-                    newFace.quad[1].light = (v02+v01+v12+v11)/(4.0*MaxLightStrength);
-                    newFace.quad[2].light = (v12+v11+v22+v21)/(4.0*MaxLightStrength);
-                    newFace.quad[3].light = (v11+v10+v21+v20)/(4.0*MaxLightStrength);
-                }*/
                 mixin(FixLighting!("Xn", 0,-1, "LH", "UH", "UF", "LF", true));
                 mixin(FixLighting!("Xn", 0,-1, "LH", "UH", "UF", "LF", false));
 
@@ -376,30 +292,7 @@ class GeometryCreator : Module, WorldListener
                 newFace.quad[2].texcoord.set(1, 0, 0);
                 newFace.quad[3].texcoord.set(1, 1, 0);
                 fixTex(newFace, tile, true, false, Direction.northCount);
-                /*
-                if(0 == smoothMethod) {
-                    newFace.quad[0].light = tileYp.lightValue/cast(float)MaxLightStrength;
-                    newFace.quad[1].light = tileYp.lightValue/cast(float)MaxLightStrength;
-                    newFace.quad[2].light = tileYp.lightValue/cast(float)MaxLightStrength;
-                    newFace.quad[3].light = tileYp.lightValue/cast(float)MaxLightStrength;
-                } else if ( 1 == smoothMethod) {
 
-                    float v00 = world.getTile(TilePos(pos+vec3i(-1, 1,-1)), false).lightValue;
-                    float v01 = world.getTile(TilePos(pos+vec3i(-1, 1, 0)), false).lightValue;
-                    float v02 = world.getTile(TilePos(pos+vec3i(-1, 1, 1)), false).lightValue;
-                    float v10 = world.getTile(TilePos(pos+vec3i( 0, 1,-1)), false).lightValue;
-                    float v11 = tileYp.lightValue;
-                    float v12 = world.getTile(TilePos(pos+vec3i( 0, 1, 1)), false).lightValue;
-                    float v20 = world.getTile(TilePos(pos+vec3i( 1, 1,-1)), false).lightValue;
-                    float v21 = world.getTile(TilePos(pos+vec3i( 1, 1, 0)), false).lightValue;
-                    float v22 = world.getTile(TilePos(pos+vec3i( 1, 1, 1)), false).lightValue;
-
-                    newFace.quad[0].light = (v01+v00+v11+v10)/(4.0*MaxLightStrength);
-                    newFace.quad[1].light = (v02+v01+v12+v11)/(4.0*MaxLightStrength);
-                    newFace.quad[2].light = (v12+v11+v22+v21)/(4.0*MaxLightStrength);
-                    newFace.quad[3].light = (v11+v10+v21+v20)/(4.0*MaxLightStrength);
-                }
-                */
                 mixin(FixLighting!("Yp", 1, 1, "LH", "UH", "UF", "LF", true));
                 mixin(FixLighting!("Yp", 1, 1, "LH", "UH", "UF", "LF", false));
 
@@ -415,29 +308,7 @@ class GeometryCreator : Module, WorldListener
                 newFace.quad[2].texcoord.set(1, 1, 0);
                 newFace.quad[3].texcoord.set(1, 0, 0);
                 fixTex(newFace, tile, true, false, Direction.southCount);
-                /*
-                if(0 == smoothMethod) {
-                    newFace.quad[0].light = tileYn.lightValue/cast(float)MaxLightStrength;
-                    newFace.quad[1].light = tileYn.lightValue/cast(float)MaxLightStrength;
-                    newFace.quad[2].light = tileYn.lightValue/cast(float)MaxLightStrength;
-                    newFace.quad[3].light = tileYn.lightValue/cast(float)MaxLightStrength;
-                } else if ( 1 == smoothMethod) {
 
-                    float v00 = world.getTile(TilePos(pos+vec3i(-1,-1,-1)), false).lightValue;
-                    float v01 = world.getTile(TilePos(pos+vec3i(-1,-1, 0)), false).lightValue;
-                    float v02 = world.getTile(TilePos(pos+vec3i(-1,-1, 1)), false).lightValue;
-                    float v10 = world.getTile(TilePos(pos+vec3i( 0,-1,-1)), false).lightValue;
-                    float v11 = tileYn.lightValue;
-                    float v12 = world.getTile(TilePos(pos+vec3i( 0,-1, 1)), false).lightValue;
-                    float v20 = world.getTile(TilePos(pos+vec3i( 1,-1,-1)), false).lightValue;
-                    float v21 = world.getTile(TilePos(pos+vec3i( 1,-1, 0)), false).lightValue;
-                    float v22 = world.getTile(TilePos(pos+vec3i( 1,-1, 1)), false).lightValue;
-                
-                    newFace.quad[0].light = (v02+v01+v12+v11)/(4.0*MaxLightStrength);
-                    newFace.quad[1].light = (v01+v00+v11+v10)/(4.0*MaxLightStrength);
-                    newFace.quad[2].light = (v11+v10+v21+v20)/(4.0*MaxLightStrength);
-                    newFace.quad[3].light = (v12+v11+v22+v21)/(4.0*MaxLightStrength);
-                }*/
                 mixin(FixLighting!("Yn", 1,-1, "UH", "LH", "LF", "UF", true));
                 mixin(FixLighting!("Yn", 1,-1, "UH", "LH", "LF", "UF", false));
 
@@ -453,27 +324,7 @@ class GeometryCreator : Module, WorldListener
                 newFace.quad[2].texcoord.set(1, 1, 0);
                 newFace.quad[3].texcoord.set(1, 0, 0);
                 fixTex(newFace, tile, false, true, Direction.upCount);
-                /*
-                if(0 == smoothMethod) {
-                    newFace.quad[0].light = tileZp.lightValue/cast(float)MaxLightStrength;
-                    newFace.quad[1].light = tileZp.lightValue/cast(float)MaxLightStrength;
-                    newFace.quad[2].light = tileZp.lightValue/cast(float)MaxLightStrength;
-                    newFace.quad[3].light = tileZp.lightValue/cast(float)MaxLightStrength;
-                } else if ( 1 == smoothMethod) {
-                    float v00 = world.getTile(TilePos(pos+vec3i(-1,-1, 1)), false).lightValue;
-                    float v01 = world.getTile(TilePos(pos+vec3i(-1, 0, 1)), false).lightValue;
-                    float v02 = world.getTile(TilePos(pos+vec3i(-1, 1, 1)), false).lightValue;
-                    float v10 = world.getTile(TilePos(pos+vec3i( 0,-1, 1)), false).lightValue;
-                    float v11 = tileZp.lightValue;
-                    float v12 = world.getTile(TilePos(pos+vec3i( 0, 1, 1)), false).lightValue;
-                    float v20 = world.getTile(TilePos(pos+vec3i( 1,-1, 1)), false).lightValue;
-                    float v21 = world.getTile(TilePos(pos+vec3i( 1, 0, 1)), false).lightValue;
-                    float v22 = world.getTile(TilePos(pos+vec3i( 1, 1, 1)), false).lightValue;
-                    newFace.quad[0].light = (v02+v01+v12+v11)/(4.0*MaxLightStrength);
-                    newFace.quad[1].light = (v01+v00+v11+v10)/(4.0*MaxLightStrength);
-                    newFace.quad[2].light = (v11+v10+v21+v20)/(4.0*MaxLightStrength);
-                    newFace.quad[3].light = (v12+v11+v22+v21)/(4.0*MaxLightStrength);
-                }*/
+
                 mixin(FixLighting!("Zp", 2, 1, "UH", "LH", "LF", "UF", true));
                 mixin(FixLighting!("Zp", 2, 1, "UH", "LH", "LF", "UF", false));
 
@@ -489,145 +340,38 @@ class GeometryCreator : Module, WorldListener
                 newFace.quad[2].texcoord.set(1, 1, 0);
                 newFace.quad[3].texcoord.set(1, 0, 0);
                 fixTex(newFace, tile, false, false, Direction.downCount);
-                /*
-                if(0 == smoothMethod) {
-                    newFace.quad[0].light = tileZn.lightValue/cast(float)MaxLightStrength;
-                    newFace.quad[1].light = tileZn.lightValue/cast(float)MaxLightStrength;
-                    newFace.quad[2].light = tileZn.lightValue/cast(float)MaxLightStrength;
-                    newFace.quad[3].light = tileZn.lightValue/cast(float)MaxLightStrength;
-                } else if ( 1 == smoothMethod) {
-                    float v00 = world.getTile(TilePos(pos+vec3i(-1,-1,-1)), false).lightValue;
-                    float v01 = world.getTile(TilePos(pos+vec3i(-1, 0,-1)), false).lightValue;
-                    float v02 = world.getTile(TilePos(pos+vec3i(-1, 1,-1)), false).lightValue;
-                    float v10 = world.getTile(TilePos(pos+vec3i( 0,-1,-1)), false).lightValue;
-                    float v11 = tileZn.lightValue;
-                    float v12 = world.getTile(TilePos(pos+vec3i( 0, 1,-1)), false).lightValue;
-                    float v20 = world.getTile(TilePos(pos+vec3i( 1,-1,-1)), false).lightValue;
-                    float v21 = world.getTile(TilePos(pos+vec3i( 1, 0,-1)), false).lightValue;
-                    float v22 = world.getTile(TilePos(pos+vec3i( 1, 1,-1)), false).lightValue;
-                    newFace.quad[0].light = (v01+v00+v11+v10)/(4.0*MaxLightStrength);
-                    newFace.quad[1].light = (v02+v01+v12+v11)/(4.0*MaxLightStrength);
-                    newFace.quad[2].light = (v12+v11+v22+v21)/(4.0*MaxLightStrength);
-                    newFace.quad[3].light = (v11+v10+v21+v20)/(4.0*MaxLightStrength);
-                }
-                */
+
                 mixin(FixLighting!("Zn", 2,-1, "LH", "UH", "UF", "LF", true));
                 mixin(FixLighting!("Zn", 2,-1, "LH", "UH", "UF", "LF", false));
                 faceList ~= newFace;
             }
         }
+        tileFaces.faces = faceList;
+        return tileFaces;
     }
     
     
-
-
-
-    const(GraphicsRegion)[GraphRegionNum] getRegions(){
-        {
-            dirtyMutex.lock();
-            scope(exit) dirtyMutex.unlock();
-            if(dirtyRegions.length) {
-                mixin(LogTime!("GRUploadTime"));
-                foreach(num; dirtyRegions){
-                    regionMutex.lock();
-                    scope(exit) regionMutex.unlock();
-                    if(!buildVBO(regions[num])) {
-                        regions.remove(num);
-                    }
-                }
-                dirtyRegions.length = 0;
-            }
-        }
-
-        return regions;
-    }
-
-    //Returns wether or not a vbo was actually made.
-    //Only called from getRegions
-    //Works on a reference to a graphregion in the regions-array
-    private bool buildVBO(ref GraphicsRegion region){
-        auto primitiveCount = region.faces.length;
-        auto geometrySize = primitiveCount * GRFace.sizeof;
-        region.quadCount = primitiveCount;
-
-        //scope(exit) region.faces.length = 0;
-        scope(exit) region.faces = null;
-        if(region.VBO){
-            //See if VBO is reusable.
-            int bufferSize;
-            glBindBuffer(GL_ARRAY_BUFFER, region.VBO);
-            glGetBufferParameteriv(GL_ARRAY_BUFFER_ARB, GL_BUFFER_SIZE_ARB, &bufferSize);
-
-            double ratio = to!double(geometrySize)/to!double(bufferSize);
-            if(minReUseRatio <= ratio && ratio <= 1){
-                glBufferSubData(GL_ARRAY_BUFFER, 0, geometrySize, region.faces.ptr);
-                return true;
-            }else{
-                //Delete old vbo
-                glBindBuffer(GL_ARRAY_BUFFER, 0);
-                glDeleteBuffers(1, &region.VBO);
-                region.VBO = 0; //For all it's worth. Will create new one just below. :P
-            }
-        }
-        if(geometrySize > 0){
-            glGenBuffers(1, &region.VBO);
-            glBindBuffer(GL_ARRAY_BUFFER, region.VBO);
-            glBufferData(GL_ARRAY_BUFFER, geometrySize, region.faces.ptr, GL_STATIC_DRAW);
-        } else {
-            //msg("GOT NOTHING FROM GRAPHREGION! >:( ", region.grNum);
-            //addAABB(region.grNum.getAABB());
-            return false;
-        }
-        return true;
-    }
-
-    void buildGraphicsRegion(GraphicsRegion region){
+    void buildGraphicsRegion(GraphRegionNum grNum){
         mixin(LogTime!("BuildGeometry"));        
         g_Statistics.GraphRegionsProgress(1);
-        
-        auto min = region.grNum.min();
-        auto max = region.grNum.max();
-        buildGeometry(min, max, region.faces);
-        /*buildGeometryX(min, max, region.faces);
-        buildGeometryY(min, max, region.faces);
-        //Floor
-        buildGeometryZ(min, max, region.faces);
-        */
+
+        auto min = grNum.min();
+        auto max = grNum.max();
+        auto tileFaces = buildGeometry(min, max);
+
         //TODO: Fix so that this is not needed anylonger.
-        foreach(ref face ; region.faces) {
+        foreach(ref face ; tileFaces.faces) {
             foreach(ref vert ; face.quad) {
                 vert.vertex -= util.util.convert!float(min.value);
             }
         }
 
-        //Ordering the other way around caused race condition where the render-thread tried to build num X before it's data had been set.
-        {
-            regionMutex.lock();
-            scope(exit) regionMutex.unlock();
-            regions[region.grNum] = region;
-        }
-        {
-            dirtyMutex.lock();
-            scope(exit) dirtyMutex.unlock();
-            dirtyRegions ~= region.grNum;
-        }
+        tileRenderer.updateGeometry(grNum, tileFaces);
     }
 
-    void taskFunc(const(World) world, GraphRegionNum num) {
+    void taskFunc(const(World) world, GraphRegionNum grNum) {
         //TODO: Maybe move geometry-building-timing to here?
-        GraphicsRegion reg;
-        reg.grNum = num;
-        {
-            regionMutex.lock();
-            scope(exit) regionMutex.unlock();
-            if(num in regions) {
-                reg = regions[num];
-                if(reg.faces.length > 0){ //If was duplicate and/or quickly reinserted, but not yet rendered, do not blargh the blargh again
-                    return;
-                }
-            }
-        }
-        buildGraphicsRegion(reg);
+        buildGraphicsRegion(grNum);
     }
 
    
@@ -728,25 +472,7 @@ class GeometryCreator : Module, WorldListener
     
     void onSectorUnload(SectorNum sectorNum)
     {
-        auto sectorAABB = sectorNum.getAABB();
-        {
-            GraphRegionNum[] toRemove;
-            regionMutex.lock();
-            scope(exit) regionMutex.unlock();
-            foreach(region ; regions){
-                if(intersectsExclusive(sectorAABB, region.grNum.getAABB())){
-                    toRemove ~= region.grNum;
-                    //msg("Unload stuff oh yeah!!");
-                    //msg("Perhaps.. Should we.. Maybe.. Stora data on disk? We'll see how things turn out.");
-                    //How to do stuff, et c?
-
-                }
-            }
-            foreach(grNum ; toRemove) {
-                glDeleteBuffers(1, &regions[grNum].VBO);
-                regions.remove(grNum);
-            }
-        }
+        tileRenderer.removeSector(sectorNum);
     }
     void onUpdateGeometry(TilePos tilePos)
     {
