@@ -3,6 +3,7 @@
 module graphics.tilerenderer;
 
 import std.conv;
+import std.math;
 
 import graphics.camera;
 import graphics.ogl;
@@ -10,15 +11,15 @@ import graphics.shader;
 import graphics.tilegeometry;
 
 import pos;
+import util.rangefromto;
 import util.util;
+import world.sizes;
 
 //TODO: Make fix this, or make testcase and report it if not done already.
 auto grTexCoordOffset = GRVertex.texcoord.offsetof;
 auto grNormalOffset = GRVertex.normal.offsetof;
 auto grLightOffset = GRVertex.light.offsetof;
 auto grSunLightOffset = GRVertex.sunLight.offsetof;
-
-
 
 class TileRenderer {
 
@@ -86,6 +87,22 @@ class TileRenderer {
     }
 
     void removeSector(SectorNum sectorNum) {
+
+        GraphRegionNum[] remove;
+        auto min = sectorNum.toTilePos().getGraphRegionNum().value;
+        auto max = TilePos(SectorNum(sectorNum.value+vec3i(1,1,1)).toTilePos().value-vec3i(1,1,1)).getGraphRegionNum().value;
+
+        foreach(pos ; RangeFromTo(min, max)) {
+            remove ~= GraphRegionNum(pos);
+        }
+
+        if(remove.length) {
+            synchronized(toRemoveMutex) {
+                toRemove ~= remove;
+                remove = null;
+            }
+        }
+
         msg("Implement removeSector");
     }
 
@@ -146,7 +163,8 @@ class TileRenderer {
             //Lock & scopeexit
             synchronized(toRemoveMutex) {
                 foreach(grNum ; toRemove) {
-                    RenderInfo renderInfo = vertexBuffers[grNum];
+                    RenderInfo *renderInfo = grNum in vertexBuffers;
+                    if(renderInfo is null) continue;
                     glBindBuffer(GL_ARRAY_BUFFER, 0);
                     glDeleteBuffers(1, &renderInfo.vbo);
                     vertexBuffers.remove(grNum);

@@ -194,6 +194,7 @@ class World {
         deserializeClans();
 
         foreach(sectorNum, clanCount ; activeSectors) {
+            if(getSector(sectorNum) !is null) continue;
             if(!clanCount) {
                 msg("Error, nonexistent clancount for sector, ignoring. ", sectorNum);
             } else {

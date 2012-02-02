@@ -69,16 +69,18 @@ struct Mission {
     }
 }
 
-Clan newClan() {
-    Clan clan = new Clan;
+Clan newClan(World world) {
+    Clan clan = new Clan(world);
     clan.clanId = g_ClanCount++;
     return clan;
 }
 
 class Clan {
+
     uint clanId;
-    
+
     TilePos[] toMine;
+
 
     Mission getMission() {
         if (toMine.empty) return Mission(Mission.Type.nothing);
@@ -94,13 +96,19 @@ class Clan {
     Unit[int] clanMembers;
 
     int[SectorNum] activityMap;
+    World world;
 
+    this(World _world) {
+        world = _world;
+        world.addClan(this);
+    }
 
     void addUnit(Unit unit) {
         unit.clan = this;
         clanMembers[unit.unitId] = unit;
         auto centerSectorNum = unit.pos.getSectorNum();
         increaseActivity(centerSectorNum);
+        world.addUnit(unit);
     }
 
     bool activeSector(SectorNum sectorNum) {

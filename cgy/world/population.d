@@ -50,9 +50,8 @@ private mixin template WorldPopulationMixin() {
         json.read(clanList, jsonRoot["clanList"]);
 
         foreach(clanId ; clanList) {
-            auto clan = new Clan;
+            auto clan = new Clan(this);
             clan.deserialize(clanId);
-            addClan(clan);
         }
     }
 

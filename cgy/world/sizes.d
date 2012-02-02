@@ -1,6 +1,7 @@
 
 module world.sizes;
 
+import std.math;
 
 enum BlockSize {
     x = 8,
@@ -33,7 +34,11 @@ enum GraphRegionSize {
     x = BlockSize.x*2,
     y = BlockSize.y*2,
     z = BlockSize.z*2,
-    total = x*y*z
+    total = x*y*z,
 }
+
+static assert(SectorSize.x % GraphRegionSize.x == 0, "Sector not evenly divisible by graph regions!");
+static assert(SectorSize.y % GraphRegionSize.y == 0, "Sector not evenly divisible by graph regions!");
+static assert(SectorSize.z % GraphRegionSize.z == 0, "Sector not evenly divisible by graph regions!");
 
 enum HeightMapSampleDistance = SectorSize.x / 4; // samples per sector

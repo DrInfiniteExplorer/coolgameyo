@@ -171,8 +171,7 @@ class Game{
             return ret;
         }
 
-        auto clan = newClan();
-        world.addClan(clan);
+        auto clan = newClan(world);
 
         auto xy = TileXYPos(vec2i(3,-20));
         auto u = newUnit();
@@ -182,7 +181,7 @@ class Game{
 
         clan.addUnit(u);
 
-        world.addUnit(u);
+        //world.addUnit(u);
 
         msg("u.pos == ", u.pos);
 
@@ -194,7 +193,7 @@ class Game{
         clan.addUnit(uu);
 
 
-        world.addUnit(uu);
+        //world.addUnit(uu);
         //auto goal = UnitPos(u.pos.value + vec3d(-30, 0, 0));
         auto goal = uu.pos;
         //NO AI FOR NO PATHABLENESS WITH NEW RANDOMMAPNESS

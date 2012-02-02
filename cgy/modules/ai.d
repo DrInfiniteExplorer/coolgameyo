@@ -99,14 +99,8 @@ class AIModule : Module, WorldListener {
 	void onAddEntity(SectorNum, Entity) { }
 	
     override void onSectorLoad(SectorNum num) {
-        foreach (unit; world.getSector(num).units) {
-            addUnit(unit);
-        }
     }
     override void onSectorUnload(SectorNum num) {
-        foreach (unit; world.getSector(num).units) {
-            removeUnit(unit);
-        }
     }
     override void onTileChange(TilePos) { }
     void onUpdateGeometry(TilePos tilePos) {

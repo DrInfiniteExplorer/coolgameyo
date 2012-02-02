@@ -122,8 +122,8 @@ class Sector {
 
     //These are just cross-references.
     //At the moment they are not updated when units change sectors :P
-    RedBlackTree!(Unit) units; //TODO: how to make this private without breaking stuff derp? :S
-	RedBlackTree!(Entity) entities;
+    Unit[] units; //TODO: how to make this private without breaking stuff derp? :S
+	Entity[] entities;
 
     invariant(){
         BREAK_IF(sectorNum.toTilePos() != pos);
@@ -133,8 +133,6 @@ class Sector {
     this(SectorNum sectorNum_) {
         sectorNum = sectorNum_;
         pos = sectorNum.toTilePos();
-        units = new typeof(units);
-		entities = new typeof(entities);
         solidMap.clear;
     }
 
@@ -240,10 +238,10 @@ class Sector {
 		}
         jsonRoot = json.parse(content);
         foreach (entityVal ; jsonRoot.elements) {
-            Entity entity = newEntity();
-            entity.fromJSON(entityVal, entityTypeManager);
-            entities.insert(entity);
-            world.addLightFromEntity(entity);
+            //Entity entity = newEntity();
+            //entity.fromJSON(entityVal, entityTypeManager);
+            //addEntity(entity);
+            //world.addLightFromEntity(entity);
         }
         return true;
     }
@@ -325,16 +323,18 @@ class Sector {
 
     //TODO: Add more unit-interfacing etc.
     void addUnit(Unit u) {
-        units.insert(u);
+        units ~= u ;
     }
 	void addEntity(Entity o) {
-        entities.insert(o);
+        entities ~= o;
     }
 	void removeUnit(Unit u) {
-        units.removeKey(u);
+        bool pred(Unit a) { return a == u; }
+        units = remove!pred(units);
     }
 	void removeEntity(Entity o) {
-        entities.removeKey(o);
+        bool pred(Entity a) { return a == o; }
+        entities = remove!pred(entities);
     }
     
     SectorNum getSectorNum() const @property { return sectorNum; }
