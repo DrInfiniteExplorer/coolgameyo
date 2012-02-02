@@ -133,13 +133,14 @@ private mixin template ActivityHandlerMethods() {
                 auto sector = getSector(sectorNum, &sectorXY);
                 enforce(sector !is null, "Trying to remove a non-existent sector derp!");
                 sector.serialize();
-                sectorXY.sectors.remove(sectorNum.value.Z);
-                if(sectorXY.sectors.length < 1) {
-                    sectorsXY.remove(SectorXYNum(vec2i(sectorNum.value.X, sectorNum.value.Y)));
+                sector = null;
+                auto xy = SectorXYNum(sectorNum);
+                if(removeSector(sectorNum)) {
+                    serializeHeightmap(xy, sectorXY);
+                    sectorsXY.remove(xy);
                 }
-                sectorList.remove(sectorNum);
+
                 removed ~= sectorNum;
-                sector.destroy();
 
             }
         }

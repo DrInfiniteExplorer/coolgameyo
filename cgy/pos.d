@@ -317,6 +317,13 @@ struct GraphRegionNum{
 struct SectorXYNum {
     vec2i value;
 
+    this(vec2i v) {
+        value = v;
+    }
+    this(SectorNum num) {
+        value.set(num.value.X, num.value.Y);
+    }
+
     TileXYPos getTileXYPos() const {
         return TileXYPos(vec2i(
                     value.X * SectorSize.x,

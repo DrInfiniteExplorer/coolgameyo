@@ -161,19 +161,21 @@ class World {
 
         serializeClans();
 
-        void serializeSectorXY(SectorXYNum xy, SectorXY sectorxy) {
-            string folder = text("saves/current/world/", xy.value.X, ",", xy.value.Y, "/");
-            util.filesystem.mkdir(folder);
-            if (sectorxy.heightmap !is null) {
-                std.file.write(folder ~ "heightmap.bin", sectorxy.heightmap.heightmap);
-            }
-            foreach( sector ; sectorxy.sectors) {
+
+        foreach(xy, sectorXY ; sectorsXY) {
+            serializeHeightmap(xy, &sectorXY);
+            foreach(sector ; sectorXY.sectors) {
                 sector.serialize();
             }
         }
 
-        foreach( xy, sectorxy ; sectorsXY) {
-            serializeSectorXY(xy, sectorxy);
+    }
+
+    void serializeHeightmap(SectorXYNum xy, SectorXY* sectorXY) {
+        string folder = text("saves/current/world/", xy.value.X, ",", xy.value.Y, "/");
+        util.filesystem.mkdir(folder);
+        if (sectorXY.heightmap !is null) {
+            std.file.write(folder ~ "heightmap.bin", sectorXY.heightmap.heightmap);
         }
     }
 
@@ -202,6 +204,18 @@ class World {
             }
         }
 
+    }
+
+    bool removeSector(SectorNum sectorNum) {
+        auto xy = SectorXYNum(sectorNum);
+        SectorXY* sectorXY;
+        auto sector = getSector(sectorNum, &sectorXY);
+        sector.destroy();
+
+        enforce(sectorNum.value.Z in sectorXY.sectors, "Terp yerp lerp");
+        sectorXY.sectors.remove(sectorNum.value.Z);
+        sectorList.remove(sectorNum);
+        return sectorXY.sectors.length == 0;
     }
 
 
