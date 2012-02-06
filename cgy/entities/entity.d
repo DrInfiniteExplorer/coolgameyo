@@ -15,7 +15,11 @@ import clan;
 import entitytypemanager;
 import light;
 
-shared int g_EntityCount = 0; // To know what the id for the next entity will be
+
+import entities.growable;
+import entities.placeable;
+import entities.workshop;
+
 
 
 Entity newEntity() {
@@ -30,15 +34,16 @@ class Entity {
     bool opEquals(ref const(Entity) o) const {
         assert (0, "Implement Entity.opEquals or find where it's called and make not called!");
     }
-	int opCmp(ref const(Entity) other) const {
-		return cast(int)sgn(cast(long)entityData.entityId - cast(long)other.entityId);
-	}
+    int opCmp(ref const(Entity) other) const {
+        return cast(int)sgn(cast(long)entityData.entityId
+                - cast(long)other.entityId);
+    }
 
     struct EntityData {
         int entityId;
         EntityPos pos;
         float rotation = 0; //radians
-		bool isDropped = false;
+        bool isDropped = false;
 
         float entityWidth = 1.0;
         float entityHeight = 1.0;
@@ -50,31 +55,40 @@ class Entity {
     Clan clan;
     LightSource light;
 
-	void deconstruct() {
-		entityData.isDropped = true;
-	}
-	
+    // these need serairarleinzlaeniton IN SOME WAY
+    Workshop* workshop;
+    Placeable* placeable;
+    Growable* growable;
+
+    bool shouldTick() const @property {
+        return workshop != null || growable != null;
+    }
+
+    void deconstruct() {
+        entityData.isDropped = true;
+    }
+
     Value toJSON() {
         Value val = encode(entityData);
-        
+
         val["entityTypeId"] = Value(type.id);
-        
+
         return val;
     }
     void fromJSON(Value val, EntityTypeManager entityTypeManager) {
         read(entityData, val);
-        
+
         if ("entityTypeId" in val) {
             int entityTypeId;
             read(entityTypeId, val["entityTypeId"]);
-			type = entityTypeManager.byID(cast(ushort)entityTypeId);
+            type = entityTypeManager.byID(cast(ushort)entityTypeId);
         }
     }
-        
-	
+
+
 
     int tick(ChangeList changeList) {
-        
+
         return 1;
     }
 

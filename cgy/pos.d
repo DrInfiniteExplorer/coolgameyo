@@ -226,7 +226,6 @@ struct TilePos {
         return UnitPos(vec3d(value.X + 0.5,
                              value.Y + 0.5,
                              value.Z + 0.5));
-
     }
     
     EntityPos toEntityPos() const{
@@ -304,7 +303,7 @@ struct GraphRegionNum{
                              ));
     }
     alias min toTilePos;
-    aabbox3d!double getAABB() const{
+    aabbox3d!double getAABB() const {
         auto minPos = util.util.convert!double(min().value);
         auto maxPos = util.util.convert!double(max().value);
         return aabbox3d!double(minPos, maxPos);

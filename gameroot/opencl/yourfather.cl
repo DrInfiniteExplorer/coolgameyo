@@ -1,5 +1,7 @@
 
+#ifndef UseTexture
 #define UseTexture
+#endif
 
 #ifndef RayCastPixelSkip
 #define RayCastPixelSkip 1

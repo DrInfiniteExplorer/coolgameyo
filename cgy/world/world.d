@@ -50,7 +50,7 @@ import world.time;
 // and remove the world member from listeners
 interface WorldListener {
     void onAddUnit(SectorNum sectorNum, Unit unit);
-	void onAddEntity(SectorNum sectorNum, Entity entity);
+    void onAddEntity(SectorNum sectorNum, Entity entity);
     void onSectorLoad(SectorNum sectorNum);
     void onSectorUnload(SectorNum sectorNum);
     void onTileChange(TilePos tilePos);
@@ -104,22 +104,24 @@ class World {
     WorldGenerator worldGen;
     bool isServer;  //TODO: How, exactly, does the world function differently if it actually is a server? Find out!
 
-    WorldListener[] listeners;
+    <<<<<<< HEAD
+        =======
+        int unitCount;  //TODO: Is used?
+    int entityCount;  //TODO: Is used?
+
+    >>>>>>> SOME THINGS INCLUDING ENTITY CODE
+        WorldListener[] listeners;
 
     TileTypeManager tileTypeManager;
-	EntityTypeManager entityTypeManager;
-	UnitTypeManager unitTypeManager;
-
-    private alias RedBlackTree!(BlockNum, q{a.value < b.value}) WorkSet;
-    WorkSet toFloodFill;
-    SectorNum[] floodingSectors;
+    EntityTypeManager entityTypeManager;
+    UnitTypeManager unitTypeManager;
 
     this(WorldGenParams params, TileTypeManager tilesys, EntityTypeManager entitysys, UnitTypeManager unitsys) {
         isServer = true;
         tileTypeManager = tilesys;
         worldGen = new WorldGenerator;
-		entityTypeManager = entitysys;
-		unitTypeManager = unitsys;
+        entityTypeManager = entitysys;
+        unitTypeManager = unitsys;
         worldGenParams = params;
         worldGen.init(worldGenParams, tilesys);
 
@@ -147,15 +149,15 @@ class World {
 
         auto activeSectors = encode(activeSectors);
         auto jsonRoot = Value([
-            "toFlood" : toFlood,
-            "floodSect" : floodSect,
-            "activeSectors" : activeSectors,
-            "g_UnitCount" : encode(g_UnitCount),
-            "g_EntityCount" : encode(g_EntityCount),
-            "g_ClanCount" : encode(g_ClanCount),
-        ]);
+                "toFlood" : toFlood,
+                "floodSect" : floodSect,
+                "activeSectors" : activeSectors,
+                "g_UnitCount" : encode(g_UnitCount),
+                "g_EntityCount" : encode(g_EntityCount),
+                "g_ClanCount" : encode(g_ClanCount),
+                ]);
 
-	    auto jsonString = json.prettifyJSON(jsonRoot);
+        auto jsonString = json.prettifyJSON(jsonRoot);
         util.filesystem.mkdir("saves/current/world/");
         std.file.write("saves/current/world/world.json", jsonString);
 
@@ -221,9 +223,9 @@ class World {
 
     //Ensure that it only happens when no other code is running.
     Sector loadSector(SectorNum num)
-    in{
-        BREAK_IF(getSector(num) !is null);
-    }
+        in{
+            BREAK_IF(getSector(num) !is null);
+        }
     body{
         void loadSectorXY(SectorXYNum xy) {
             SectorXY* xyPtr = getSectorXY(xy, false);
@@ -269,14 +271,14 @@ class World {
             auto sectTp = sectorNum.toTilePos();
             auto sectToBlock = tp.value - sectTp.value;
             foreach(rel ; RangeFromTo (0, BlockSize.x-1,
-                                       0, BlockSize.y-1,
-                                       0, 0)) {
-                                           auto heightmapIndex = rel + sectToBlock;
-                                           if (tp.value.Z <= heightmap[heightmapIndex.X, heightmapIndex.Y]){
-                                               above = false;
-                                               break;
-                                           }
-                                       }
+                        0, BlockSize.y-1,
+                        0, 0)) {
+                auto heightmapIndex = rel + sectToBlock;
+                if (tp.value.Z <= heightmap[heightmapIndex.X, heightmapIndex.Y]){
+                    above = false;
+                    break;
+                }
+            }
             if (above) {
                 sector.makeAirBlock(blockNum);
                 return;
@@ -304,18 +306,18 @@ class World {
 
                 if(worldGen.isInsideWorld(TilePos(vec3i(posXY.value.X, posXY.value.Y, z)))) {
                     while (worldGen.getTile(TilePos(vec3i(
-                                                          posXY.value.X, posXY.value.Y, z))).type
-                           is TileTypeAir) {
-                               z -= 1;
-                               iterations++;
-                               if (iterations >= iterationLimit) {
-                                   state.x = x;
-                                   state.y = y;
-                                   state.z = z;
-                                   g_Statistics.HeightmapsProgress(done);
-                                   return;
-                               }
-                           }
+                                        posXY.value.X, posXY.value.Y, z))).type
+                            is TileTypeAir) {
+                        z -= 1;
+                        iterations++;
+                        if (iterations >= iterationLimit) {
+                            state.x = x;
+                            state.y = y;
+                            state.z = z;
+                            g_Statistics.HeightmapsProgress(done);
+                            return;
+                        }
+                    }
                 }
                 state.z = int.max;
                 state.heightmap[x, y] = z;
@@ -351,23 +353,23 @@ class World {
     // if the sectorXY does not contain anything in it's .sectors-AA, then adding anthing to
     // that copy of SectorXY will not affect what is stored in the sectorXY-list.
     SectorXY* getSectorXY(SectorXYNum xy, bool generateHeightmap = true)
-    body{
-        SectorXY* xyPtr = xy in sectorsXY; //One fast lookup. Ptr is only used these three lines.
-        if (xyPtr !is null) {
-            return xyPtr;
-        }
-        //We didnt have it. Create it, and a heightmap along with it!
-        SectorXY ret;
-        if (generateHeightmap) {
-            synchronized(heightmapTasks) {
-                heightmapTasks.list ~= new HeightmapTaskState(xy);
-                g_Statistics.HeightmapsNew(SectorSize.x * SectorSize.y);
+        body{
+            SectorXY* xyPtr = xy in sectorsXY; //One fast lookup. Ptr is only used these three lines.
+            if (xyPtr !is null) {
+                return xyPtr;
             }
-        }
+            //We didnt have it. Create it, and a heightmap along with it!
+            SectorXY ret;
+            if (generateHeightmap) {
+                synchronized(heightmapTasks) {
+                    heightmapTasks.list ~= new HeightmapTaskState(xy);
+                    g_Statistics.HeightmapsNew(SectorSize.x * SectorSize.y);
+                }
+            }
 
-        sectorsXY[xy] = ret; //Spara det vi skapar, yeah!
-        return &sectorsXY[xy]; //Return address of AAAARRRRGGGHHHH
-    }
+            sectorsXY[xy] = ret; //Spara det vi skapar, yeah!
+            return &sectorsXY[xy]; //Return address of AAAARRRRGGGHHHH
+        }
 
     Sector allocateSector(SectorNum sectorNum, SectorXY** xy = null) {
         auto xyNum = SectorXYNum(vec2i(sectorNum.value.X, sectorNum.value.Y));
@@ -423,10 +425,10 @@ class World {
     BlockNum getBlockLastBlockNum = BlockNum(vec3i(int.min));
     private Block* getBlock(BlockNum blockNum, bool generate=false) {
         /*
-        if (blockNum == getBlockLastBlockNum) {
-            return getBlockLastBlock;
-        }
-        */
+           if (blockNum == getBlockLastBlockNum) {
+           return getBlockLastBlock;
+           }
+         */
         auto sector = this.getSector(blockNum.getSectorNum());
         if (sector is null) return &INVALID_BLOCK;
 
@@ -459,7 +461,7 @@ class World {
         }
         return units;
     }
-	Entity[] getVisibleEntities(Camera camera){
+    Entity[] getVisibleEntities(Camera camera){
         Entity[] entities;
         foreach(entity; getEntities()){
             if(camera.inFrustum(entity)){
@@ -518,8 +520,8 @@ class World {
         return null;
     }
 
-	/////////////// Samma lika fast med entities
-	static struct EntityRange {
+    /////////////// Samma lika fast med entities
+    static struct EntityRange {
         Sector[] sectors;
         typeof(Sector.init.entities[]) currentEntityRange;
 
@@ -563,7 +565,7 @@ class World {
         }
         return null;
     }
-	///////////////// inge mer entity kod!
+    ///////////////// inge mer entity kod!
 
     void update(Scheduler scheduler){
         floodFillSome();
@@ -573,9 +575,9 @@ class World {
                 //Trixy trick below; if we dont do this, the value num will be shared by all pushed tasks.
                 (HeightmapTaskState state){
                     scheduler.push(asyncTask(
-                                             (const(World) world){
-                                                 generateHeightmapTaskFunc(state);
-                                             }));
+                                (const(World) world){
+                                generateHeightmapTaskFunc(state);
+                                }));
                 }(state);
             }        
         }
@@ -627,7 +629,7 @@ class World {
     // These should be named unsafeAddUnit, right?
     void addUnit(Unit unit) {
         enforce(unit.clan !is null);
-        
+
         //Update boolean activity map
         updateActivity(unit.pos, unit.pos);
 
@@ -639,281 +641,287 @@ class World {
 
         notifyAddUnit(sectorNum, unit);
     }
-	void addEntity(Entity entity) {
+    <<<<<<< HEAD
+        void addEntity(Entity entity) {
+            =======
+                void addEntity(Entity entity) {
+                    entityCount += 1;
+                    auto sectorNum = entity.pos.getSectorNum();
+                    >>>>>>> SOME THINGS INCLUDING ENTITY CODE
 
-        auto sectorNum = entity.pos.getSectorNum();
-        auto sector = getSector(sectorNum);
+                        auto sectorNum = entity.pos.getSectorNum();
+                    auto sector = getSector(sectorNum);
 
-        enforce(sector !is null, "Cant add entities to sectors that dont exist");
+                    enforce(sector !is null, "Cant add entities to sectors that dont exist");
 
-        sector.addEntity(entity);
-        notifyAddEntity(sectorNum, entity);
+                    sector.addEntity(entity);
+                    notifyAddEntity(sectorNum, entity);
 
-        addLightFromEntity(entity);
-    }
-    void removeEntity(Entity entity) {
-        auto sector = getSector(entity.pos.getSectorNum());
-        sector.removeEntity(entity);
-        if (entity.type.lightStrength > 0) {
-            unsafeRemoveLight(entity.light);
-        }
+                    addLightFromEntity(entity);
+                }
+            void removeEntity(Entity entity) {
+                auto sector = getSector(entity.pos.getSectorNum());
+                sector.removeEntity(entity);
+                if (entity.type.lightStrength > 0) {
+                    unsafeRemoveLight(entity.light);
+                }
 
-        // TODO: do we have to release the memory perhaps?
-    }
-    void addLightFromEntity(Entity entity) {
-        if (entity.type.lightStrength > 0) {
-            LightSource light = new LightSource;
-            light.position = entity.pos;
-            light.tint.set(entity.type.lightTintColor);
-            light.strength = entity.type.lightStrength;
-            entity.light = light;
-            unsafeAddLight(light);
-        }
-    }
-
-    //We only create blocks when we floodfill; this the default for this parameter is henceforth "false"
-
-    Tile getTile(TilePos tilePos, bool createBlock=false) {
-        auto block = getBlock(tilePos.getBlockNum(), createBlock);
-        if(!block.valid){
-            return INVALID_TILE;
-        }
-        return block.getTile(tilePos);
-    }
-
-    bool isSolid(TilePos tilePos) {
-        auto sectorNum = tilePos.getSectorNum();
-        auto sector = getSector(sectorNum);
-        if(sector is null) return false;
-        return sector.isSolid(tilePos);
-    }
-
-    //Returns number of iterations nexxxessarrry to intersect a non-air tile.
-    //Returns 0 on instant-found or none found.
-    //Returns -1 on invalid tile found
-    int intersectTile(vec3d start, vec3d dir, int tileIter, ref Tile outTile, ref TilePos outPos, ref vec3i Normal, double* intersectionTime = null) {
-        TilePos oldTilePos;
-        int cnt;
-        foreach(tilePos ; TileIterator(start, dir, tileIter, intersectionTime)) {
-            cnt++;
-            auto tile = getTile(tilePos, false);
-            if (tile.type == TileTypeInvalid) {
-                return -1;
+                // TODO: do we have to release the memory perhaps?
             }
-            scope(exit) oldTilePos = tilePos;
-            if (tile.type != TileTypeAir) {
-                outPos = tilePos;
-                Normal = oldTilePos.value - tilePos.value;
-                outTile = tile;
-                return cnt;
+            void addLightFromEntity(Entity entity) {
+                if (entity.type.lightStrength > 0) {
+                    LightSource light = new LightSource;
+                    light.position = entity.pos;
+                    light.tint.set(entity.type.lightTintColor);
+                    light.strength = entity.type.lightStrength;
+                    entity.light = light;
+                    unsafeAddLight(light);
+                }
             }
-        }
-        return 0;
-    }
 
-    bool rayCollides(vec3d start, vec3d end) {
-        auto dir = end - start;
-        auto len = dir.getLength();
-        dir.normalize();
-        int tileIter = cast(int)(ceil(abs(dir.X)) + ceil(abs(dir.Y)) + ceil(abs(dir.Z)));
-        double intersectionTime;
-        foreach(tilePos ; TileIterator(start, dir, tileIter, &intersectionTime)) {
-            if(intersectionTime > len) {
+            //We only create blocks when we floodfill; this the default for this parameter is henceforth "false"
+
+            Tile getTile(TilePos tilePos, bool createBlock=false) {
+                auto block = getBlock(tilePos.getBlockNum(), createBlock);
+                if(!block.valid){
+                    return INVALID_TILE;
+                }
+                return block.getTile(tilePos);
+            }
+
+            bool isSolid(TilePos tilePos) {
+                auto sectorNum = tilePos.getSectorNum();
+                auto sector = getSector(sectorNum);
+                if(sector is null) return false;
+                return sector.isSolid(tilePos);
+            }
+
+            //Returns number of iterations nexxxessarrry to intersect a non-air tile.
+            //Returns 0 on instant-found or none found.
+            //Returns -1 on invalid tile found
+            int intersectTile(vec3d start, vec3d dir, int tileIter, ref Tile outTile, ref TilePos outPos, ref vec3i Normal, double* intersectionTime = null) {
+                TilePos oldTilePos;
+                int cnt;
+                foreach(tilePos ; TileIterator(start, dir, tileIter, intersectionTime)) {
+                    cnt++;
+                    auto tile = getTile(tilePos, false);
+                    if (tile.type == TileTypeInvalid) {
+                        return -1;
+                    }
+                    scope(exit) oldTilePos = tilePos;
+                    if (tile.type != TileTypeAir) {
+                        outPos = tilePos;
+                        Normal = oldTilePos.value - tilePos.value;
+                        outTile = tile;
+                        return cnt;
+                    }
+                }
+                return 0;
+            }
+
+            bool rayCollides(vec3d start, vec3d end) {
+                auto dir = end - start;
+                auto len = dir.getLength();
+                dir.normalize();
+                int tileIter = cast(int)(ceil(abs(dir.X)) + ceil(abs(dir.Y)) + ceil(abs(dir.Z)));
+                double intersectionTime;
+                foreach(tilePos ; TileIterator(start, dir, tileIter, &intersectionTime)) {
+                    if(intersectionTime > len) {
+                        return false;
+                    }
+                    auto tile = getTile(tilePos, false);
+                    if (tile.type == TileTypeInvalid) {
+                        return true;
+                    }
+                    if (!tile.isAir) {
+                        return true;
+                    }
+                }
                 return false;
             }
-            auto tile = getTile(tilePos, false);
-            if (tile.type == TileTypeInvalid) {
-                return true;
-            }
-            if (!tile.isAir) {
-                return true;
-            }
-        }
-        return false;
-    }
 
-    private void setTileLightVal(TilePos tilePos, const byte newVal, bool isSunLight) {
-        //TODO: Make sure penis penis penis, penises.
-        //Durr, i mean, make sure to floodfill as well! :)
-        auto blockNum = tilePos.getBlockNum();
-        auto block = getBlock(blockNum, false); //Dont arbitrarily create blocks. Why would we set lightvals in blocks that dont exist?
-        if(!block.valid) {
-            return;
-        }
-        block.setTileLight(tilePos, newVal, isSunLight);
-
-        //notifyTileChange(tilePos);
-    }
-
-    void unsafeSetTile(TilePos pos, Tile tile) {
-        //TODO: Think of any reason for or against calling setTile directly here.
-        //Like, maybe store it up and do setting in world.update()?
-        setTile(pos, tile);
-    }
-
-    //Now only called from unsafeSetTile
-    private void setTile(TilePos tilePos, const Tile newTile) {
-        //TODO: Make sure penis penis penis, penises.
-        //Durr, i mean, make sure to floodfill as well! :)
-        auto sectorNum = tilePos.getSectorNum();
-        SectorXY* sectorXY;
-        auto sector = getSector(sectorNum, &sectorXY);
-
-        auto blockNum = tilePos.getBlockNum();
-        //auto block = getBlock(blockNum, true);
-        auto block = sector.getBlock(blockNum); //No blocks are generated here :)
-        BREAKPOINT(!block.valid);
-        auto oldTile = block.getTile(tilePos);
-        block.setTile(tilePos, newTile);
-        bool newSolid = !newTile.isAir();
-        bool oldSolid = sector.setSolid(tilePos, newSolid);
-
-        //Only works to not set blocknum again, if we already
-        // have a block of memory that block.tiles points to;
-        // since then we'd be writing into the correct memory.
-        // a block is really read-only, but block.tiles if
-        // present is read-write.
-        //Start floodfill, and updating of discovered areas
-        if (newTile.type is TileTypeAir) {
-            block.seen = false; //To enable floodfilling of area again.
-            addFloodFillPos(tilePos);
-        }
-
-
-        //Update heightmap
-//        auto sectorXY = getSectorXY(SectorXYNum(vec2i(sectorNum.value.X, sectorNum.value.Y)));
-        auto heightmap = sectorXY.heightmap;
-        auto sectRel = tilePos.sectorRel();
-        auto heightmapZ = heightmap[sectRel.X, sectRel.Y];
-        if (heightmapZ == tilePos.value.Z) {
-            if (newTile.type is TileTypeAir) {
-                auto pos = tilePos;
-                //Iterate down until find ground, set Z
-                while (getTile(pos, false).type is TileTypeAir) { //Create geometry if we need to
-                    pos.value.Z -= 1;
+            private void setTileLightVal(TilePos tilePos, const byte newVal, bool isSunLight) {
+                //TODO: Make sure penis penis penis, penises.
+                //Durr, i mean, make sure to floodfill as well! :)
+                auto blockNum = tilePos.getBlockNum();
+                auto block = getBlock(blockNum, false); //Dont arbitrarily create blocks. Why would we set lightvals in blocks that dont exist?
+                if(!block.valid) {
+                    return;
                 }
-                heightmap[sectRel.X, sectRel.Y] = pos.value.Z;
+                block.setTileLight(tilePos, newVal, isSunLight);
+
+                //notifyTileChange(tilePos);
             }
-        } else if (heightmapZ < tilePos.value.Z) {
-            if (newTile.type !is TileTypeAir) {
-                heightmap[sectRel.X, sectRel.Y] = tilePos.value.Z;
+
+            void unsafeSetTile(TilePos pos, Tile tile) {
+                //TODO: Think of any reason for or against calling setTile directly here.
+                //Like, maybe store it up and do setting in world.update()?
+                setTile(pos, tile);
             }
-        }
 
-        if(oldSolid && !newSolid) { //Added air
-            removeTile(tilePos);
-        } else if( !oldSolid && newSolid ){ //Removed air
-            addTile(tilePos, oldTile);
-        }
+            //Now only called from unsafeSetTile
+            private void setTile(TilePos tilePos, const Tile newTile) {
+                //TODO: Make sure penis penis penis, penises.
+                //Durr, i mean, make sure to floodfill as well! :)
+                auto sectorNum = tilePos.getSectorNum();
+                SectorXY* sectorXY;
+                auto sector = getSector(sectorNum, &sectorXY);
 
-        notifyTileChange(tilePos);
-    }
+                auto blockNum = tilePos.getBlockNum();
+                //auto block = getBlock(blockNum, true);
+                auto block = sector.getBlock(blockNum); //No blocks are generated here :)
+                BREAKPOINT(!block.valid);
+                auto oldTile = block.getTile(tilePos);
+                block.setTile(tilePos, newTile);
+                bool newSolid = !newTile.isAir();
+                bool oldSolid = sector.setSolid(tilePos, newSolid);
 
-    TilePos getTopTilePos(TileXYPos xy) {
-        auto rel = xy.sectorRel();
-        auto x = rel.X;
-        auto y = rel.Y;
+                //Only works to not set blocknum again, if we already
+                // have a block of memory that block.tiles points to;
+                // since then we'd be writing into the correct memory.
+                // a block is really read-only, but block.tiles if
+                // present is read-write.
+                //Start floodfill, and updating of discovered areas
+                if (newTile.type is TileTypeAir) {
+                    block.seen = false; //To enable floodfilling of area again.
+                    addFloodFillPos(tilePos);
+                }
 
-        auto t = xy.getSectorXYNum();
-        auto sectorXY = getSectorXY(t);
 
-        auto heightmap = sectorXY.heightmap;
-        if (heightmap is null ) {
-            int z = worldGen.maxZ(xy);
-            auto tp = TilePos(vec3i(xy.value.X, xy.value.Y, z));
-            if(!worldGen.isInsideWorld(tp)) {
-                return tp;
+                //Update heightmap
+                //        auto sectorXY = getSectorXY(SectorXYNum(vec2i(sectorNum.value.X, sectorNum.value.Y)));
+                auto heightmap = sectorXY.heightmap;
+                auto sectRel = tilePos.sectorRel();
+                auto heightmapZ = heightmap[sectRel.X, sectRel.Y];
+                if (heightmapZ == tilePos.value.Z) {
+                    if (newTile.type is TileTypeAir) {
+                        auto pos = tilePos;
+                        //Iterate down until find ground, set Z
+                        while (getTile(pos, false).type is TileTypeAir) { //Create geometry if we need to
+                            pos.value.Z -= 1;
+                        }
+                        heightmap[sectRel.X, sectRel.Y] = pos.value.Z;
+                    }
+                } else if (heightmapZ < tilePos.value.Z) {
+                    if (newTile.type !is TileTypeAir) {
+                        heightmap[sectRel.X, sectRel.Y] = tilePos.value.Z;
+                    }
+                }
+
+                if(oldSolid && !newSolid) { //Added air
+                    removeTile(tilePos);
+                } else if( !oldSolid && newSolid ){ //Removed air
+                    addTile(tilePos, oldTile);
+                }
+
+                notifyTileChange(tilePos);
             }
-            while (worldGen.getTile(TilePos(vec3i(
-                                                  xy.value.X, xy.value.Y, z))).type
-                   is TileTypeAir) {
-                       z -= 1;
-                   }
-            return TilePos(vec3i(xy.value.X, xy.value.Y, z));
-        }
-        assert(heightmap !is null, "heightmap == null! :(");
-        auto pos = vec3i(xy.value.X, xy.value.Y, heightmap[x, y]);
-        return TilePos(pos);
-    }
 
-    bool hasContent(TilePos min, TilePos max) {
-        auto sectorMin = min.getSectorNum();
-        auto sectorMax = max.getSectorNum();
-        foreach(rel ; RangeFromTo(sectorMin.value, sectorMax.value)) {
-            auto sectorNum = SectorNum(rel);
-            auto sectorStartTilePos = sectorNum.toTilePos();
-            auto sectorStopTilePos = TilePos(sectorStartTilePos.value + vec3i(SectorSize.x-1, SectorSize.y-1, SectorSize.z-1));
-            int minX = std.algorithm.max(sectorStartTilePos.value.X, min.value.X);
-            int minY = std.algorithm.max(sectorStartTilePos.value.Y, min.value.Y);
-            int minZ = std.algorithm.max(sectorStartTilePos.value.Z, min.value.Z);
+            TilePos getTopTilePos(TileXYPos xy) {
+                auto rel = xy.sectorRel();
+                auto x = rel.X;
+                auto y = rel.Y;
 
-            int maxX = std.algorithm.min(sectorStopTilePos.value.X, max.value.X);
-            int maxY = std.algorithm.min(sectorStopTilePos.value.Y, max.value.Y);
-            int maxZ = std.algorithm.min(sectorStopTilePos.value.Z, max.value.Z);
-            auto sector = getSector(sectorNum);
-            if (sector.hasContent(TilePos(vec3i(minX, minY, minZ)), TilePos(vec3i(maxX, maxY, maxZ)))) {
-                return true;
+                auto t = xy.getSectorXYNum();
+                auto sectorXY = getSectorXY(t);
+
+                auto heightmap = sectorXY.heightmap;
+                if (heightmap is null ) {
+                    int z = worldGen.maxZ(xy);
+                    auto tp = TilePos(vec3i(xy.value.X, xy.value.Y, z));
+                    if(!worldGen.isInsideWorld(tp)) {
+                        return tp;
+                    }
+                    while (worldGen.getTile(TilePos(vec3i(
+                                        xy.value.X, xy.value.Y, z))).type
+                            is TileTypeAir) {
+                        z -= 1;
+                    }
+                    return TilePos(vec3i(xy.value.X, xy.value.Y, z));
+                }
+                assert(heightmap !is null, "heightmap == null! :(");
+                auto pos = vec3i(xy.value.X, xy.value.Y, heightmap[x, y]);
+                return TilePos(pos);
             }
-        }
-        return false;
-    }
 
-    void addListener(WorldListener listener) {
-        listeners ~= listener;
-    }
-    void removeListener(WorldListener listener) {
-        remove(listeners, countUntil!q{a is b}(listeners, listener));
-        listeners.length -= 1;
-    }
+            bool hasContent(TilePos min, TilePos max) {
+                auto sectorMin = min.getSectorNum();
+                auto sectorMax = max.getSectorNum();
+                foreach(rel ; RangeFromTo(sectorMin.value, sectorMax.value)) {
+                    auto sectorNum = SectorNum(rel);
+                    auto sectorStartTilePos = sectorNum.toTilePos();
+                    auto sectorStopTilePos = TilePos(sectorStartTilePos.value + vec3i(SectorSize.x-1, SectorSize.y-1, SectorSize.z-1));
+                    int minX = std.algorithm.max(sectorStartTilePos.value.X, min.value.X);
+                    int minY = std.algorithm.max(sectorStartTilePos.value.Y, min.value.Y);
+                    int minZ = std.algorithm.max(sectorStartTilePos.value.Z, min.value.Z);
 
-    void notifyAddUnit(SectorNum sectorNum, Unit unit) {
-        foreach (listener; listeners) {
-            listener.onAddUnit(sectorNum, unit);
-        }
-    }
-	void notifyAddEntity(SectorNum sectorNum, Entity entity) {
-        foreach (listener; listeners) {
-            listener.onAddEntity(sectorNum, entity);
-        }
-    }
+                    int maxX = std.algorithm.min(sectorStopTilePos.value.X, max.value.X);
+                    int maxY = std.algorithm.min(sectorStopTilePos.value.Y, max.value.Y);
+                    int maxZ = std.algorithm.min(sectorStopTilePos.value.Z, max.value.Z);
+                    auto sector = getSector(sectorNum);
+                    if (sector.hasContent(TilePos(vec3i(minX, minY, minZ)), TilePos(vec3i(maxX, maxY, maxZ)))) {
+                        return true;
+                    }
+                }
+                return false;
+            }
 
-    void notifySectorLoad(SectorNum sectorNum) {
-        if(sectorNum !in activeSectors) {
-            msg("Sector no longer of interest after floodfill.");
-            return;
-        }
-        foreach (listener; listeners) {
-            listener.onSectorLoad(sectorNum);
-        }
-    }
-    void notifySectorUnload(SectorNum sectorNum) {
-        foreach (listener; listeners) {
-            listener.onSectorUnload(sectorNum);
-        }
-    }
+            void addListener(WorldListener listener) {
+                listeners ~= listener;
+            }
+            void removeListener(WorldListener listener) {
+                remove(listeners, countUntil!q{a is b}(listeners, listener));
+                listeners.length -= 1;
+            }
 
-    void notifyTileChange(TilePos tilePos) {
-        foreach (listener; listeners) {
-            listener.onTileChange(tilePos);
+            void notifyAddUnit(SectorNum sectorNum, Unit unit) {
+                foreach (listener; listeners) {
+                    listener.onAddUnit(sectorNum, unit);
+                }
+            }
+            void notifyAddEntity(SectorNum sectorNum, Entity entity) {
+                foreach (listener; listeners) {
+                    listener.onAddEntity(sectorNum, entity);
+                }
+            }
+
+            void notifySectorLoad(SectorNum sectorNum) {
+                if(sectorNum !in activeSectors) {
+                    msg("Sector no longer of interest after floodfill.");
+                    return;
+                }
+                foreach (listener; listeners) {
+                    listener.onSectorLoad(sectorNum);
+                }
+            }
+            void notifySectorUnload(SectorNum sectorNum) {
+                foreach (listener; listeners) {
+                    listener.onSectorUnload(sectorNum);
+                }
+            }
+
+            void notifyTileChange(TilePos tilePos) {
+                foreach (listener; listeners) {
+                    listener.onTileChange(tilePos);
+                }
+            }
+
+            void notifyBuildGeometry(SectorNum sectorNum) {
+                foreach (listener; listeners) {
+                    listener.onBuildGeometry(sectorNum);
+                }
+            }
+            void notifyUpdateGeometry(TilePos tilePos) {
+                foreach (listener; listeners) {
+                    listener.onUpdateGeometry(tilePos);
+                }
+            }
+
+
+            mixin WorldPopulationMixin;
+            mixin WorldTimeClockCode;
+            mixin LightStorageMethods;
+            mixin ActivityHandlerMethods;
+            mixin FloodFill;
+
         }
-    }
-
-    void notifyBuildGeometry(SectorNum sectorNum) {
-        foreach (listener; listeners) {
-            listener.onBuildGeometry(sectorNum);
-        }
-    }
-    void notifyUpdateGeometry(TilePos tilePos) {
-        foreach (listener; listeners) {
-            listener.onUpdateGeometry(tilePos);
-        }
-    }
-
-
-    mixin WorldPopulationMixin;
-    mixin WorldTimeClockCode;
-    mixin LightStorageMethods;
-    mixin ActivityHandlerMethods;
-    mixin FloodFill;
-
-}

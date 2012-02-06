@@ -6,6 +6,7 @@ import std.stdio;
 import unit;
 
 import util.util;
+import util.array;
 import world.world;
 
 // Only implemented by experimental or semi-hacky classes.
@@ -15,37 +16,8 @@ interface CustomChange {
     void apply(World world);
 }
 
-private struct ChangeArray(T) {
-    T[] ts;
+alias util.array.Array ChangeArray;
 
-    size_t _length; // messy due to not can use length in []
-    ref size_t length() @property { return _length; }
-
-    void initialize() {
-        ts.length = 1;
-        ts.length = ts.capacity;
-    }
-    void insert(T t) {
-        if (_length >= ts.length) {
-            write("resizing ", typeid(this), " from ", ts.length);
-            ts.length = (ts.length + 1) * 2 - 1; // 2^n-1 ---> 2^(n+1)-1
-            writeln(" to ", ts.length);
-            assert (ts.length == ts.capacity);
-        }
-        ts[_length] = t;
-        _length += 1;
-    }
-    void reset() {
-        // if (max length over last 10 ticks or whatever? < ts.length / 2) {
-        //     ts = new T[](ts.length/2 - 1); // drop reference to old array
-        // }
-        _length = 0;
-    }
-
-    T[] active() @property { return ts[0 .. _length]; }
-    T[] opSlice() { return active; }
-    alias active this;
-}
 
 final class ChangeList {
     static struct MoveChange {
@@ -70,8 +42,8 @@ final class ChangeList {
     }
     
     this() {
-        moveChanges.initialize();
-        customChanges.initialize();
+        moveChanges = new ChangeArray!MoveChange;
+        customChanges = new ChangeArray!CustomChange;
     }
     
     void addCustomChange(CustomChange change) {

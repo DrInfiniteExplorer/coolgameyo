@@ -1,8 +1,54 @@
-
-
 module world.floodfill;
 
+import util.array;
+
+final class DERP(T) {
+    bool[T] set;
+
+    int opApply(int delegate(ref T) yield) {
+        foreach (bn, _; set) {
+            if (yield(bn)) { return 1; }
+        }
+        return 0;
+    }
+
+    T removeAny() {
+        auto bn = {
+            foreach (bn, _; set) {
+                return bn;
+            }
+            assert (0);
+        }();
+
+        set.remove(bn);
+        return bn;
+    }
+
+    bool insert(T t) {
+        set[t] = true;
+        return true;
+    }
+
+    bool empty() const @property {
+        return set.length == 0;
+    }
+}
+
 mixin template FloodFill() {
+
+    // redblacktree on plols computer: 25783
+    //private alias RedBlackTree!(BlockNum, q{a.value < b.value}) WorkSet;
+
+    // array on plols computer: 25670
+    //private alias util.array.Array!BlockNum WorkSet;
+
+    // DERP on plols computer: 25670
+    private alias DERP!BlockNum WorkSet;
+
+    // WTF
+
+    WorkSet toFloodFill;
+    SectorNum[] floodingSectors;
 
     void floodFillSome(int max=100) {
         //100 for 10 was plain slow and horrible!!
