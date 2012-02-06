@@ -282,7 +282,10 @@
   </Folder>
   <Folder name="entities">
    <File path="entities\entity.d" />
+   <File path="entities\growable.d" />
+   <File path="entities\placeable.d" />
    <File path="entities\torch.d" />
+   <File path="entities\workshop.d" />
   </Folder>
   <Folder name="graphics">
    <Folder name="_2d">

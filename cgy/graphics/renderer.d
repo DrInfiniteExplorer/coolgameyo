@@ -134,8 +134,8 @@ class Renderer {
     uint torchVBO;
     void createTorchModel(){
         vec3f[] vertices;
-        vertices ~= makeCube(vec3f(0.2, 0.2, 0.6), vec3f(0, 0, 0.0));
-        vertices ~= makeCube(vec3f(0.2, 0.2, 0.6), vec3f(0, 0, 0.0));
+        vertices ~= makeCube(vec3f(0.2, 0.2, 0.4), vec3f(0, 0, 0.0));
+        vertices ~= makeCube(vec3f(0.2, 0.2, 0.4), vec3f(0, 0, 0.0));
         glGenBuffers(1, &torchVBO);
         glError();
         glBindBuffer(GL_ARRAY_BUFFER, torchVBO);

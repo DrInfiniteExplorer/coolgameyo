@@ -189,7 +189,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
 
         renderMethodInfo.setText(renderMethods[renderSettings.renderTrueWorld]);
 
-        renderDemoPath();
+        updateDemoPath();
     }
     
     void spawnHUD() {
@@ -260,7 +260,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
                     camDemoPoints.camPos ~= camera.getPosition();
                     camDemoPoints.camTargetDir ~= camera.getTargetDir();
                 }
-                renderDemoPath();
+                updateDemoPath();
             }
             if (k.SdlSym == SDLK_F10) {
                 if(camDemoPoints.camPos.length < 4) {
@@ -270,6 +270,22 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
                 camDemoTime = 0;
             }
             if (k.SdlSym == SDLK_F11) {
+                if (camDemoPoints.camPos.length == 4) {
+                    camDemoPoints.camPos.length -= 2;
+                    camDemoPoints.camTargetDir.length -= 2;
+                }
+                else if (camDemoPoints.camPos.length > 2) {
+                    camDemoPoints.camPos.length -= 1;
+                    camDemoPoints.camTargetDir.length -= 1;
+                    camDemoPoints.camPos[$-1] = camDemoPoints.camPos[$-2];
+                    camDemoPoints.camTargetDir[$-1] = camDemoPoints.camTargetDir[$-2];
+                }
+                else {
+                    camDemoPoints.camPos.length = 0;
+                    camDemoPoints.camTargetDir.length = 0;
+                }
+            }
+            if (k.SdlSym == SDLK_p) {
                 EntityPos topOfTheWorld2(TileXYPos xy) {
                     auto top = world.getTopTilePos(xy);
                     msg("top: ", top);
@@ -296,7 +312,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
     void updateCamDemo(float dTime) {
         vec3d camPos = CatmullRomSpline(camDemoTime, camDemoPoints.camPos);
         vec3d camTargetDir = CatmullRomSpline(camDemoTime, camDemoPoints.camTargetDir);
-        camDemoTime += dTime * 0.5f / cast(float)camDemoPoints.camPos.length;
+        camDemoTime += dTime * 0.4f / cast(float)camDemoPoints.camPos.length;
 
         camera.setPosition(camPos);
         camera.setTargetDir(camTargetDir);
@@ -306,7 +322,8 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         }
     }
 
-    void renderDemoPath() {
+    void updateDemoPath() {
+        return;
         float time;
         int len = camDemoPoints.camPos.length*4;
         if(len < 16) {
@@ -480,6 +497,9 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
 			selectedTilePos.toUnitPos().value.getDistanceFromSQ(camera.position)) { // fulhaxxs
 				tileSelected = false;
 			}
+        else {
+            entitySelected = false;
+        }
 	}
     
     
