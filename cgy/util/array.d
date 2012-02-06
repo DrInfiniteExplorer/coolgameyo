@@ -6,14 +6,13 @@ final class Array(T) {
     size_t p;
     ref size_t length() @property { return p; }
 
-    bool insert(T t) {
+    void insert(T t) {
         if (p >= ts.length) {
             ts.length = (ts.length + 1) * 2 - 1; // 2^n-1 ---> 2^(n+1)-1
             //assert (ts.length == ts.capacity);
         }
         ts[p] = t;
         p += 1;
-        return true;
     }
     void reset() { p = 0; }
     void nuke() { ts = null; p = 0; }

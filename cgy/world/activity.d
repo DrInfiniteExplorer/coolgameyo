@@ -14,11 +14,11 @@ import util.util;
 import world.sizes;
 import world.time;
 
-debug{
+//debug {
     auto activitySize = vec3i(3,3,3);
-} else {
-    auto activitySize = vec3i(5,5,5);
-}
+//} else {
+    //auto activitySize = vec3i(5,5,5);
+//}
 
 enum SectorTimeoutTicks = TICKS_PER_SECOND * 15;
 
@@ -210,9 +210,8 @@ private mixin template ActivityHandlerMethods() {
 */
 
     void addFloodFillPos(TilePos pos) {
-        if( toFloodFill.insert(pos.getBlockNum())) {
-            g_Statistics.FloodFillNew(1);
-        }
+        toFloodFill.insert(pos.getBlockNum());
+        g_Statistics.FloodFillNew(1);
         //Also clear seen-flag from neighbors.
         //Dont add them to floodfill; If we're unlucky we'll process these blocks
         //before the one which pos belongs to; and as such, if pos is a new air
@@ -229,9 +228,8 @@ private mixin template ActivityHandlerMethods() {
             auto block = getBlock(act, false); //Dont create blocks when expanding floodfill
             if(!block.valid) continue; //Skip invalid blocks; They cant be seen anyway.
             if (block.seen) { 
-                if( toFloodFill.insert(inact) ){
-                    g_Statistics.FloodFillNew(1);
-                }
+                toFloodFill.insert(inact);
+                g_Statistics.FloodFillNew(1);
             }
         }
     }

@@ -1,5 +1,7 @@
 module entities.workshop;
 
+import entities.entity;
+
 struct Recipy {
     Entity[] inputs;
     Entity[] outputs;

@@ -21,15 +21,17 @@ import entities.placeable;
 import entities.workshop;
 
 
+shared int g_entityCount;
+
 
 Entity newEntity() {
     auto entity = new Entity;
-    entity.entityId = g_EntityCount;
-    g_EntityCount++;
+    entity.entityId = g_entityCount;
+    g_entityCount++;
     return entity;
 }
 
-class Entity {
+final class Entity {
 
     bool opEquals(ref const(Entity) o) const {
         assert (0, "Implement Entity.opEquals or find where it's called and make not called!");
