@@ -1,28 +1,298 @@
 
 module worldgen.newgen;
 
-import std.exception;
-import std.math, std.conv, std.random, std.algorithm;
+import std.algorithm;
 import std.c.process;
+import std.conv;
+import std.exception;
+import std.math;
+import std.md5;
+import std.random;
 import std.stdio;
 import std.typecons;
 
 
 import graphics.texture;
 import graphics.debugging;
+import light;
 import pos;
-import random.random;
+import statistics;
 import tiletypemanager;
-import util;
-import world;
-import worldgen.worldgen;
+import util.math;
+import util.rangefromto;
+import util.util;
+import world.world;
+//import worldgen.worldgen;
+
+import random.valuemap;
+import random.random;
+import random.randsource;
 
 
-final class WorldGeneratorNew {
+struct WorldGenParams {
+    uint randomSeed = 880128;
+    uint worldDiameter = 16; //Measures diameter of world, in number of sectors.
+
+    double worldMin = -50;
+    double worldMax = 450;
+
+    uint heightmapSamplesInWorld() const @property {
+        return worldDiameter * SectorSize.x / HeightMapSampleDistance;
+    }
+}
+
+enum ptPerLayer = 400;
+
+
+/*
+
+layer5: 256 mil
+
+layer4: 64 mil
+
+layer3: 16 mil
+
+layer2: 4 mil
+
+layer1: 10km², 1mil
+
+*/
+
+alias ValueMap2D!(double, false) ValueMap;
+
+
+/* pos 0 not used */
+/* pt2tile-scale*/
+enum ptScale = [0, 32, 128, 512, 2048, 8192];
+/* map2tile-scale*/
+enum mapScale = [0, 12800, 51200, 204800, 819200, 3276800];
+
+enum halfWorldSize = vec3i(mapScale[5]/2, mapScale[5]/2, 0);
+enum halfWorldSize_xy = vec2i(mapScale[5]/2, mapScale[5]/2);
+
+//alias double[ptPerLayer][ptPerLayer] Map;
+
+class Feature {
+}
+
+class Map {
+    ValueMap heightMap;
+    ValueMap randomField;
+    Feature[] features;
+    int level;
+    vec2i mapNum;
+    int randomSeed;
+
+    this(int _level, vec2i _mapNum, int _randomSeed) {
+        level = _level;
+        mapNum = _mapNum;
+        randomSeed = _randomSeed;
+        heightMap = new ValueMap(ptPerLayer, ptPerLayer);
+        randomField = new ValueMap;
+
+        randomField.fill(new RandSourceUniform(randomSeed), ptPerLayer, ptPerLayer);
+    }
+    void setHeight(int x, int y, double value) {
+        heightMap.set(x,y, value);
+    }
+    double getHeight(int x, int y) {
+        return heightMap.get(x,y);
+    }
+
+    void addRandomHeight() {
+
+        foreach(pt ; RangeFromTo(0, ptPerLayer-1, 0, ptPerLayer-1, 0, 0)) {
+            auto x = pt.X;
+            auto y = pt.Y;
+            auto height = heightMap.get(x, y);
+            height += (randomField.get(x, y) + 1.0 ) * 0.5 * ptScale[level];
+            heightMap.set(x, y, height);
+        }
+    }
+
+
+}
+
+class LayerManager {
+
+    int maxLevel = 5;
+
+    Map layer5;
+    Map[vec2i][5] layers; /*index 0 is not used, only 1-4 because thats how things are planned out */
+    WorldGenParams params;
+
+    void init(WorldGenParams _params) {
+        params = _params;
+        generateTopLevel();
+    }
+
+    void generateTopLevel() {
+        layer5 = new Map(5, vec2i(0,0), params.randomSeed);
+
+        layer5.heightMap.fill(layer5.randomField, ptPerLayer, ptPerLayer);
+        foreach(ref val; layer5.heightMap.randMap) {
+            val = (val+1.0)*0.5 * 500;
+        }
+
+        //map.fillwithstuffandbecoolanddoneyeah();
+    }
+
+    int hash(int level, vec2i mapNum, Map parentMap) {
+        vec2i local = posModV(mapNum, ptPerLayer);
+
+
+        ubyte[16] digest;
+        MD5_CTX context;
+        context.start();
+        context.update([level]);
+        context.update([local]);
+        context.update([parentMap.randomField.get(local.X, local.Y)]);
+        context.finish(digest);
+        int* ptr = cast(int*)digest.ptr;
+        return ptr[0] ^ ptr[1] ^ ptr[2] ^ ptr[3];
+    }
+
+    Map getMap(int level, vec2i mapNum) {
+        if(level == 5) return layer5;
+        auto layer = layers[level];
+        if(mapNum in layer) {
+            return layer[mapNum];
+        }
+        writeln("Generating ", mapNum, " on level ", level);
+
+        //auto map = getMap(level+1, negDivV(num, 4));
+
+        auto parentMapNum = negDivV(mapNum, 4);
+        auto parentMap = getMap(level+1, parentMapNum);
+        auto mapSeed = hash(level, mapNum, parentMap);
+        auto map = new Map(level, mapNum, mapSeed);
+
+        /* Start by filling in the base from the previous map */
+
+
+        //The index where the current map begins, in the parents pt-grid
+        auto parentHeight = parentMap.heightMap;
+        auto local = posModV(mapNum, 4)*100;
+        double v00, v01, v10, v11;
+        double deltaX = 0.0;
+        double deltaY = 0.0;
+
+        double get(int x, int y) {
+            if(x < 0 || x >= 400 || y < 0 || y >= 400) {
+                auto localX = posMod(x, 400);
+                auto localY = posMod(y, 400);
+                auto neighborParentNum = parentMapNum + vec2i(x/400, y/400);
+                auto parentMap = getMap(level+1, neighborParentNum);
+                return parentMap.getHeight(localX, localY);
+            } else {
+                return parentHeight.get(x, y);
+            }
+        }
+
+        int parentY = local.Y;
+        int parentX;
+        foreach(y ; 0 .. ptPerLayer) {
+            parentX = local.X;
+            v00 = get(parentX, parentY);
+            v01 = get(parentX, parentY+1); //Will crash, eventually, and then we fix something.
+            v10 = get(parentX+1, parentY);
+            v11 = get(parentX+1, parentY+1);
+            deltaX = 0.0;
+            foreach(x ; 0 .. ptPerLayer) {
+                auto v_0 = lerp(v00, v10, deltaX);
+                auto v_1 = lerp(v01, v11, deltaX);
+                auto v = lerp(v_0, v_1, deltaY);
+                map.setHeight(x, y, v);
+
+                deltaX += 0.25;
+                if( (x & 3) == 3) {
+                    deltaX = 0.0;
+                    parentX +=1;
+                    v00 = v10;
+                    v01 = v11;
+                    v10 = get(parentX+1, parentY);
+                    v11 = get(parentX+1, parentY+1);
+                }
+            }
+            deltaY += 0.25;
+            if( (y & 3) == 3) {
+                deltaY = 0.0;
+                parentY += 1;
+            }
+        }
+
+        /* Add 'our own' randomness */
+
+        map.addRandomHeight();
+
+        /* Process the map, etc */
+
+        /* Add river-objects, cave-objects, etc */
+
+        /* postprocess the map */
+
+        /* Done! Add it to our known maps =) */
+
+        layers[level][mapNum] = map;
+        return map;
+    }
+
+    int cnt = 0;
+    double getValueInterpolated(int level, TileXYPos tilePos) {
+        //mixin(Time!("writeln(usecs, cnt);"));
+        //cnt += 1;
+
+        auto ptNum = negDivV(tilePos.value, ptScale[level]);
+        
+        //Tiles from 'base' of area to pt of interes
+        auto ptScale = ptScale[level];
+        int dx = tilePos.value.X - ptNum.X*ptScale;
+        int dy = tilePos.value.Y - ptNum.Y*ptScale;
+
+        double dtx = cast(double)dx / cast(double)ptScale;
+        double dty = cast(double)dy / cast(double)ptScale;
+
+        auto v00 = getValueRaw(level, ptNum*ptScale);
+        auto v01 = getValueRaw(level, (ptNum+vec2i(0,1))*ptScale);
+        auto v10 = getValueRaw(level, (ptNum+vec2i(1,0))*ptScale);
+        auto v11 = getValueRaw(level, (ptNum+vec2i(1,1))*ptScale);
+
+        auto v0 = lerp(v00, v01, dty);
+        auto v1 = lerp(v10, v11, dty);
+
+        auto v = lerp(v0, v1, dtx);
+
+        return v;
+
+        /* Figure out an interpolation-scheme */
+        /* Use values from getValueRaw and interpolate them */
+    }
+
+    double getValueRaw(int level, vec2i tilePos) {
+        auto mapNum = negDivV(tilePos, mapScale[level]);
+        auto map = getMap(level, mapNum);
+        auto ptNum = posModV(negDivV(tilePos, ptScale[level]), ptPerLayer);
+        return map.getHeight(ptNum.X, ptNum.Y);
+    }
+
+}
+
+
+
+
+final class WorldGenerator {
     TileTypeManager sys;
+    WorldGenParams params;
 
-    ValueSource heightmap;
-    //Uniform randoms -> stored in map -> coserpolate
+    LayerManager layerManager;
+
+
+    void init(WorldGenParams params, TileTypeManager tileTypeManager) {
+        this.params = params;
+        sys = tileTypeManager;
+        layerManager = new LayerManager;
+        layerManager.init(params);
+    }
 
     void serialize() {
         msg("Implement serializing worldgen");
@@ -30,36 +300,6 @@ final class WorldGeneratorNew {
     void deserialize() {
         msg("Implement deserializing worldgen");
     }
-    
-    ushort air, mud, rock, water;
-    
-    void init(WorldGenParams params, TileTypeManager tileTypeManager) {
-        sys = tileTypeManager;
-        air = sys.idByName("air");
-        mud = sys.idByName("mud");
-        rock = sys.idByName("rock");
-        water = sys.idByName("water");
-        
-        auto randSource = new RandSourceUniform(params.randomSeed);
-        auto worldSize = params.worldSize;
-        //heightmap = new GradientNoise2D!665(randSource);
-        //heightmap = new GradientField(vec3d(0,0,1), vec3d(0,0,0));
-        auto gradNoise = new GradientNoise2D!665(randSource);
-        heightmap = new Peturber(
-            new GradientField(vec3d(0,0,1), vec3d(0,0,0)),
-            null,
-            null,
-            new Fractal!3(
-                [gradNoise, gradNoise, gradNoise],
-                [1/90.1, 1.0/10, 1.0/3],
-                [15.0, 00, 0]
-            ),
-            vec3d(1, 1, 1));
-        
-        auto v = heightmap.getValue(10, 10, 2);
-        
-    }
-    
     
     
     bool destroyed = false;
@@ -72,39 +312,35 @@ final class WorldGeneratorNew {
     }
 
     Tile getTile(TilePos pos) {
-        auto v = heightmap.getValue(pos.value.X, pos.value.Y, pos.value.Z);
-        //writeln(pos, v);
-        Tile ret;
-
-        auto groundType = mud;
-        auto airType =  air;
-        
-        if (v > 0) { //Solid
-            ret = Tile(groundType, TileFlags.none, 0, 0);
-        } else {
-            ret = Tile(airType, TileFlags.none, 0, 0);
-            if (heightmap.getValue(pos.value.X, pos.value.Y, pos.value.Z-1) > 0) {
-                ret.pathable = true;
-            }
+        if(! isInsideWorld(pos)) {
+            return Tile(TileTypeAir, TileFlags.valid);
         }
-        
-        
-
-        /*
-        if (-0.5 <= d && d < 0.5) {
-            ret.pathable = true;
-            //addAABB(pos.getAABB());
+        pos.value += halfWorldSize;
+        auto z = layerManager.getValueInterpolated(1, TileXYPos(pos));
+        if(pos.value.Z > z) {
+            auto tile = Tile(TileTypeAir, TileFlags.valid);
+            tile.sunLightValue = MaxLightStrength;
+            return tile;
         }
-        */
-        ret.valid = true;
-
-        return ret;
+        return Tile(TileTypeAir+1, TileFlags.valid);
     }
-    int maxZ(const TileXYPos xypos) {
-        //auto v = foo(xypos.value.X, xypos.value.Y);
-        //auto vv = to!int(v);
-        //return vv;
-        return 16;
+
+    long worldRadius = mapScale[5]/2;
+    long worldRadiusSquare = ((cast(long)mapScale[5])/2) * ((cast(long)mapScale[5])/2);
+    bool isInsideWorld(TilePos pos) {
+        long dist = pos.value.X ^^ 2 + pos.value.Y ^^ 2;
+        long max = worldRadiusSquare;
+        return dist < max;
+    } 
+    int maxZ(TileXYPos xypos) {
+        xypos.value += halfWorldSize_xy;
+        auto z = layerManager.getValueInterpolated(1, xypos);
+        return cast(int)ceil(z);
+        //return 16;
+    }
+
+    double getHeight01(TilePos t) {
+        return cast(double)maxZ(TileXYPos(t)) / 500.0;
     }
 }
 

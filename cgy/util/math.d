@@ -1,6 +1,8 @@
 
 module util.math;
 
+import stolen.vector2d;
+import stolen.vector3d;
 
 /* Returns a/b rounded towards -inf instead of rounded towards 0 */
 int negDiv(const int a, const int b)
@@ -94,5 +96,20 @@ unittest {
     assert(posMod( 0, 8) == 0);
     assert(posMod( 7, 8) == 7);
     assert(posMod( 8, 8) == 0);
+}
+
+vector3d!(A) negDivV(A)(const vector3d!(A) wap, const A b){
+    //return vector3d!A(to!A(negDiv(wap.X, b)), to!A(negDiv(wap.Y,b)), to!A(negDiv(wap.Z, b)));
+    return vector3d!A(negDiv(wap.X, b), negDiv(wap.Y,b), negDiv(wap.Z, b));
+}
+vector2d!(A) negDivV(A)(const vector2d!(A) wap, const A b){
+    //return vector3d!A(to!A(negDiv(wap.X, b)), to!A(negDiv(wap.Y,b)), to!A(negDiv(wap.Z, b)));
+    return vector2d!A(negDiv(wap.X, b), negDiv(wap.Y,b));
+}
+vector3d!(A) posModV(A)(const vector3d!(A) wap, const A b){
+    return vector3d!A(posMod(wap.X, b), posMod(wap.Y,b), posMod(wap.Z, b));
+}
+vector2d!(A) posModV(A)(const vector2d!(A) wap, const A b){
+    return vector2d!A(posMod(wap.X, b), posMod(wap.Y,b));
 }
 

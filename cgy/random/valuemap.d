@@ -16,7 +16,13 @@ class ValueMap2D(StorageType, bool Wrap = true) : ValueSource {
     
     StorageType[] randMap;
     uint sizeX, sizeY;
-        
+
+    this() {
+    }
+    
+    this(uint sizeX, uint sizeY) {
+            alloc(sizeX, sizeY);
+    }
 
     void alloc(uint _sizeX, uint _sizeY) {
         sizeX = _sizeX;
@@ -66,11 +72,10 @@ class ValueMap2D(StorageType, bool Wrap = true) : ValueSource {
     }
 
     
-    StorageType getValue(double x, double y, double z) {
-        return getValue(x, y);
-    }
+    StorageType getValue(double x, double y, double z) { return 0; }
+    StorageType getValue(double x) { return 0; }
     StorageType getValue(double x, double y) {
-        //writeln(text(x, " ", y));
+                //writeln(text(x, " ", y));
         static if(Wrap) {
             x = posMod(to!int(x), sizeX);
             y = posMod(to!int(y), sizeY);
@@ -78,11 +83,14 @@ class ValueMap2D(StorageType, bool Wrap = true) : ValueSource {
         return randMap[to!uint(y) * sizeX + to!uint(x)];
     }
 
-    StorageType getValue(double x) {
-        static if(Wrap) {
-            x = posMod(to!int(x), sizeX * sizeY);
+    void set(int x, int y, StorageType value) {
+        randMap[x + y * sizeX] = value;
+    }
+    StorageType get(int x, int y) {
+        debug{
+            BREAK_IF(x < 0 || x >= sizeX || y < 0 || y >= sizeY);
         }
-        return randMap[to!uint(x)];
+        return randMap[x + y * sizeX];
     }
 
     

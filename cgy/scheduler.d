@@ -67,6 +67,7 @@ private Task syncTask() {
 private void workerFun(shared Scheduler ssched) {
     bool exit;
     try {
+        thread_attachThis();
         auto sched = cast(Scheduler)ssched; // fuck the type system!
         setThreadName("Fun-worker thread");
 

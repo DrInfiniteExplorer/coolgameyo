@@ -31,7 +31,8 @@ import statistics;
 import settings;
 import util.util;
 import util.memory;
-import worldgen.worldgen;
+//import worldgen.worldgen;
+import worldgen.newgen;
 
 version (Windows) {
 import std.c.windows.windows;

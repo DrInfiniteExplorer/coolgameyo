@@ -42,7 +42,8 @@ import unit;
 import util.util;
 import util.filesystem;
 import world.world;
-import worldgen.worldgen;
+//import worldgen.worldgen;
+import worldgen.newgen;
 
 import std.socket;
 import clientnetworking;

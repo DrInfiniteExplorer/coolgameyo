@@ -23,7 +23,8 @@ import random.randsource;
 import pos;
 import settings;
 import statistics;
-import worldgen.worldgen;
+//import worldgen.worldgen;
+import worldgen.newgen;
 import util.util;
 import util.rect;
 
@@ -187,7 +188,7 @@ class MapImage : GuiElementImage {
             }
             if (m.wheelDown && m.down) {
                 scale *= 1.1;
-                scale = min(scale, SectorSize.x * size * 2 / absoluteRect.getWidth);
+                scale = min(scale, 10000000.0);
                 updateMap();
             }
         }

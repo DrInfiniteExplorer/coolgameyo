@@ -21,7 +21,8 @@ import light;
 import tiletypemanager;
 import entitytypemanager;
 import unittypemanager;
-import worldgen.worldgen;
+//import worldgen.worldgen;
+import worldgen.newgen;
 public import unit;
 public import entities.entity;
 
@@ -640,8 +641,11 @@ class World {
     }
     void addEntity(Entity entity) {
         entityCount += 1;
+        //TODO: Make code, and make it work. Use unit as reference.
+
         auto sectorNum = entity.pos.getSectorNum();
         auto sector = getSector(sectorNum);
+        if(sector is null) return;
 
         enforce(sector !is null,
                 "Cant add entities to sectors that dont exist");
@@ -820,7 +824,7 @@ class World {
         auto heightmap = sectorXY.heightmap;
         if (heightmap is null ) {
             int z = worldGen.maxZ(xy);
-            auto tp = TilePos(vec3i(xy.value.X, xy.value.Y, z));
+            auto tp = TilePos(vec3i(xy.value.X, xy.value.Y, z));    
             if(!worldGen.isInsideWorld(tp)) {
                 return tp;
             }

@@ -35,6 +35,8 @@
   <preservePaths>0</preservePaths>
   <warnings>0</warnings>
   <infowarnings>0</infowarnings>
+  <checkProperty>0</checkProperty>
+  <genStackFrame>0</genStackFrame>
   <pic>0</pic>
   <cov>0</cov>
   <nofloat>0</nofloat>
@@ -88,6 +90,8 @@
   <debugattach>0</debugattach>
   <debugremote />
   <debugEngine>0</debugEngine>
+  <debugStdOutToOutputWindow>0</debugStdOutToOutputWindow>
+  <pauseAfterRunning>0</pauseAfterRunning>
   <filesToClean>*.obj;*.cmd;*.build;*.json;*.dep</filesToClean>
  </Config>
  <Config name="Release">
@@ -125,6 +129,8 @@
   <preservePaths>0</preservePaths>
   <warnings>1</warnings>
   <infowarnings>1</infowarnings>
+  <checkProperty>0</checkProperty>
+  <genStackFrame>0</genStackFrame>
   <pic>0</pic>
   <cov>0</cov>
   <nofloat>0</nofloat>
@@ -178,6 +184,8 @@
   <debugattach>0</debugattach>
   <debugremote />
   <debugEngine>0</debugEngine>
+  <debugStdOutToOutputWindow>0</debugStdOutToOutputWindow>
+  <pauseAfterRunning>0</pauseAfterRunning>
   <filesToClean>*.obj;*.cmd;*.build;*.json;*.dep</filesToClean>
  </Config>
  <Config name="Release_Release">
@@ -215,6 +223,8 @@
   <preservePaths>0</preservePaths>
   <warnings>1</warnings>
   <infowarnings>1</infowarnings>
+  <checkProperty>0</checkProperty>
+  <genStackFrame>0</genStackFrame>
   <pic>0</pic>
   <cov>0</cov>
   <nofloat>0</nofloat>
@@ -268,6 +278,8 @@
   <debugattach>0</debugattach>
   <debugremote />
   <debugEngine>0</debugEngine>
+  <debugStdOutToOutputWindow>0</debugStdOutToOutputWindow>
+  <pauseAfterRunning>0</pauseAfterRunning>
   <filesToClean>*.obj;*.cmd;*.build;*.json;*.dep</filesToClean>
  </Config>
  <Folder name="cgy">
@@ -396,6 +408,7 @@
    <File path="stolen\vector3d.d" />
   </Folder>
   <Folder name="util">
+   <File path="util\array.d" />
    <File path="util\filesystem.d" />
    <File path="util\httpupload.d" />
    <File path="util\intersect.d" />
@@ -420,6 +433,7 @@
    <File path="world\world.d" />
   </Folder>
   <Folder name="worldgen">
+   <File path="worldgen\newgen.d" />
    <File path="worldgen\worldgen.d" />
   </Folder>
   <File path="clan.d" />

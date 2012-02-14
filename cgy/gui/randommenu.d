@@ -18,7 +18,8 @@ import random.catmullrom;
 import random.permutation;
 import random.gradientnoise;
 import settings;
-import worldgen.worldgen;
+//import worldgen.worldgen;
+import worldgen.newgen;
 import util.util;
 import util.rect;
 

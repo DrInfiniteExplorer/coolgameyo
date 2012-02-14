@@ -22,6 +22,16 @@ interface ValueSource {
     double getValue(double x);
 }
 
+class ValueSourceProxy2D : ValueSource {
+    double delegate (double, double) func;
+    double getValue(double x, double y, double z) { return 0; }
+    double getValue(double x){ return 0;};
+    double getValue(double x, double y) {
+        return func(x,y);
+    }
+}
+
+
 double getValue(Source)(Source s, double x, double y) {
     static if(__traits(compiles, s.getValue(x, y))) {    
         return s.getValue(x, y);

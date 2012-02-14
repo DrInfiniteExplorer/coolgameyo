@@ -10,7 +10,8 @@ import main;
 import gui.mainmenu;
 import gui.all;
 import settings;
-import worldgen.worldgen;
+//import worldgen.worldgen;
+import worldgen.newgen;
 import util.util;
 import util.rect;
 

@@ -106,6 +106,7 @@ final class WorldGenerator {
 
         worldHeightMap = new OffsetGradientNoise!()(params.heightmapSamplesInWorld, randSource);   // [-500, 1500]
         auto fractalHeightMap = new HybridMultiFractal(worldHeightMap, 0.25, 2, 8, 0.6);
+
         fractalHeightMap.setBaseWavelength(1_000/HeightMapSampleDistance); // Hur många samples mellan varje "ursample". Storlek i sample mätt på grövsta formationerna.
         //worldHeightMap = fractalHeightMap;
         worldHeightMapImg = new ValueMap2D!double;

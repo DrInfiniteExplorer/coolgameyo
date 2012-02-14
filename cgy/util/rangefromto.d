@@ -14,6 +14,8 @@ struct RangeFromTo {
              min.Z, max.Z);
     }
 
+    //TODO: Recode this and all that uses this, so that it follows the convention of the one above which is more sensemakeing
+    // and more often used.
     this(int beginX, int endX,
             int beginY, int endY,
             int beginZ, int endZ)

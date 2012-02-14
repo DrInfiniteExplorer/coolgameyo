@@ -8,6 +8,7 @@
 module world.block;
 
 import std.algorithm;
+import std.exception;
 import std.stdio;
 
 import light;
@@ -15,7 +16,8 @@ import pos;
 import tiletypemanager : TileTypeAir;
 //import tiletypemanager;
 
-import worldgen.worldgen;
+//import worldgen.worldgen;
+import worldgen.newgen;
 import world.tile;
 import world.sizes;
 import util.memory;
@@ -47,6 +49,7 @@ struct Block {
     void destroy() {
 
         if(valid && !sparse) {
+            enforce(tiles !is null, "gerp blerpo");
             free(this);
             tiles = null;
             flags = BlockFlags.none;

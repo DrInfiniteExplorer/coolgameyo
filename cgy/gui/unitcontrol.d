@@ -323,6 +323,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
     }
 
     void updateDemoPath() {
+        /* commented out because dont want to get statement is not reachable-warning
         return;
         float time;
         int len = camDemoPoints.camPos.length*4;
@@ -340,6 +341,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         }
         removeLine(camDemoLine);
         camDemoLine = addLine(camPoses, vec3f(1.0, 0.0, 0.0));
+        */
     }
 
     void mouseMove(GuiEvent e){
