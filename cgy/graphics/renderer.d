@@ -161,7 +161,7 @@ class Renderer {
         glVertexAttribPointer(0, 3, GL_DOUBLE, GL_FALSE, vec3d.sizeof, edges.ptr);
         glError();
         lineShader.setUniform(lineShader.color, vec3f(0.8, 0.0, 0));
-        lineShader.setUniform(lineShader.radius, 100.f);
+        lineShader.setUniform(lineShader.radius, 100.0f);
         immutable ubyte[] indices = [0, 1, 0, 4, 0, 2, 2, 6, 2, 3, 5, 1, 5, 4, 6, 2, 6, 4, 6, 7, 7, 5, 7, 3];
         glDrawElements(GL_LINES, indices.length, GL_UNSIGNED_BYTE, indices.ptr);
         glError();
@@ -212,9 +212,10 @@ class Renderer {
         M.setTranslation(util.util.convert!float(unitPos));
         M.setRotationRadians(vec3f(0, 0, unit.rotation));
         dudeShader.setUniform(dudeShader.M, M);
-        dudeShader.setUniform(dudeShader.color, vec3f(unit.type.tintColor.X/255.f,
-													  unit.type.tintColor.Y/255.f,
-													  unit.type.tintColor.Z/255.f)); //Color :p
+        dudeShader.setUniform(dudeShader.color,
+                vec3f(unit.type.tintColor.X/255.0f,
+													  unit.type.tintColor.Y/255.0f,
+													  unit.type.tintColor.Z/255.0f)); //Color :p
         glBindBuffer(GL_ARRAY_BUFFER, dudeVBO);
         glError();
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, vec3f.sizeof, null /* offset in vbo */);
@@ -325,8 +326,8 @@ class Renderer {
         atlas.use();
         tileRenderer.render(camera, skyColor);
 
-        renderDudes(camera, 0.f);
-		renderEntities(camera, 0.f);
+        renderDudes(camera, 0.0f);
+		renderEntities(camera, 0.0f);
         renderDebug(camera);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glError();
@@ -354,9 +355,10 @@ class Renderer {
 			M.setScale(vec3f(0.2f, 0.2f, 0.2f));
 		}
         dudeShader.setUniform(dudeShader.M, M);
-        dudeShader.setUniform(dudeShader.color, vec3f(entity.type.tintColor.X/255.f,
-													  entity.type.tintColor.Y/255.f,
-													  entity.type.tintColor.Z/255.f)); //Color :p
+        dudeShader.setUniform(dudeShader.color,
+                vec3f(entity.type.tintColor.X/255.0f,
+													  entity.type.tintColor.Y/255.0f,
+													  entity.type.tintColor.Z/255.0f)); //Color :p
 
         // TODO: sry for extreme ugly hack... lazy and stuff
         if (entity.type.name == "torch") {

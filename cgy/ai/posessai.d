@@ -167,7 +167,7 @@ class FPSControlAI : UnitAI, CustomChange {
         immutable origo = vec3d(0, 0, 0);
 
         onGround = false;
-        fallSpeed -= 10.f * deltaT;
+        fallSpeed -= 10.0f * deltaT;
         auto dir = vec3d(fwd, -right, up + fallSpeed) * deltaT;
         dir.rotateXYBy(unit.rotation, origo);
         *unitPos = collideMove(*unitPos, dir);

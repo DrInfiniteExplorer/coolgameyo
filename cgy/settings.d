@@ -30,10 +30,10 @@ struct RenderSettings {
         //When 0, dont raycast at all!
         int raycastPixelSkip = 3; //Says wether or not to raycast all pixels, or just 1/4 of them.
         
-        float fieldOfView = 90.f;
-        float aspectRatio = 4.f / 3.f; //Width per height
+        float fieldOfView = 90f;
+        float aspectRatio = 4.0f / 3.0f; //Width per height
         float nearPlane = 0.45f;
-        float farPlane = 1000.f;
+        float farPlane = 1000.0f;
     }
 	
     InnerRenderSettings serializableSettings;
@@ -71,12 +71,12 @@ vec3f getTileCoords(uint tileNum){
     tmp.Y = (tileNum / TilesPerTexDim) % TilesPerTexDim;
     tmp.Z = tileNum / (TilesPerTexDim*TilesPerTexDim);        
     vec3f ret = util.util.convert!float(tmp);
-    float tileScale = 1.f / to!float(TilesPerTexDim);    
-    return ret * vec3f(tileScale, tileScale, 1.f);;
+    float tileScale = 1.0f / to!float(TilesPerTexDim);    
+    return ret * vec3f(tileScale, tileScale, 1.0f);;
 }
 vec3f getTileCoordSize(){
     float inv = to!float(renderSettings.pixelsPerTile) / to!float(renderSettings.maxTextureSize);
-    return vec3f(inv, inv, 0.f);
+    return vec3f(inv, inv, 0.0f);
 }
 
 

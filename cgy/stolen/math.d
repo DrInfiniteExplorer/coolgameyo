@@ -208,5 +208,5 @@ float fract ( float x )
 
 vector3df lerp(vector3df a, vector3df b, float t)
 {
-	return (a*(1.f-t)) + (b*t);
+	return (a*(1.0f-t)) + (b*t);
 }

@@ -33,9 +33,9 @@ struct TileIterator{
         dir.Y = travelDir.Y >= 0 ? 1 : -1;
         dir.Z = travelDir.Z >= 0 ? 1 : -1;
                 
-        tDelta.X = abs(1.f / travelDir.X);
-        tDelta.Y = abs(1.f / travelDir.Y);
-        tDelta.Z = abs(1.f / travelDir.Z);
+        tDelta.X = abs(1.0f / travelDir.X);
+        tDelta.Y = abs(1.0f / travelDir.Y);
+        tDelta.Z = abs(1.0f / travelDir.Z);
         
         //How long 'time' until next collision
         double inter(double start, int dir, double vel, double delta){

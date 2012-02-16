@@ -77,14 +77,14 @@ template SamplesPerSecond(const char[] name, const int samples) {
             if (val == 0) {
                 return float.infinity;
             }
-            return 1_000_000.f / to!float(val);
+            return 1_000_000.0f / to!float(val);
         }
         float get",name,"PSAverage() const {
             auto val = average",name,"();
             if (val == 0) {
                 return float.infinity;
             }
-            return 1_000_000.f / to!float(val);
+            return 1_000_000.0f / to!float(val);
         }"
     );
 }

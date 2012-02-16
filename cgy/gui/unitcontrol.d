@@ -317,7 +317,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         camera.setPosition(camPos);
         camera.setTargetDir(camTargetDir);
 
-        if(camDemoTime > 1.f) {
+        if(camDemoTime > 1.0f) {
             runCamDemo = false;
         }
     }
@@ -423,8 +423,8 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         if(keyMap[SDLK_s]){ fwd-=speed; }
         if(keyMap[SDLK_SPACE]){
             if(possesAI.onGround){
-                //possesAI.fallSpeed = 4.5f;
-                possesAI.fallSpeed = 5.0f;
+                possesAI.fallSpeed = 4.6666f;
+                //possesAI.fallSpeed = 5.0f;
             }
         }
         possesAI.move(right, fwd, 0.f, dTime);

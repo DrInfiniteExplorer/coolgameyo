@@ -26,7 +26,15 @@ class TileTextureAtlas{
     int maxTileCount;
 
     ubyte[] atlasData;
-    ushort[Tuple!(string, vec2i, vec3i)] tileMap;
+    static struct wtf {
+        Tuple!(string, vec2i, vec3i) data;
+        alias data this;
+
+        bool opEquals(ref const wtf o) const {
+            return data[0] == o[0] && data[1] == o[1] && data[2] == o[2];
+        }
+    }
+    ushort[wtf] tileMap;
 
     vec3i tileIndexFromNumber(int num){
         auto layer = num / tilesPerLayer;
@@ -114,7 +122,7 @@ class TileTextureAtlas{
     void upload(){
         mixin(LogTime!("AtlasUpload"));
         enforce(!texId, "texId != 0, error error error crying babies");
-        int tileCount = tileMap.length;
+        int tileCount = tileMap.length();
         enforce(tileCount <= maxTileCount, "Derp e ti derp! can't allocate space for all tiles!");
         int layerCount = (tileCount / tilesPerLayer) + tileCount%tilesPerLayer==0 ? 0 : 1;
         genTex();
@@ -169,7 +177,7 @@ class TileTextureAtlas{
         enforce(tileCount < 100000, "Might want to think about reworking the auto-generated tileIndexFromNumber to account for float precision?");
 
         auto index = tuple(filename, offset, tint);
-        ushort* valuePtr = (index in tileMap);
+        ushort* valuePtr = (wtf(index) in tileMap);
         if(valuePtr){
             return *valuePtr;
         }
@@ -181,7 +189,7 @@ class TileTextureAtlas{
 
         //glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, offsetX, offsetY, layer, tileSize.X, tileSize.Y, 1, GL_RGBA, GL_UNSIGNED_BYTE, img.imgData.ptr);
 
-        return tileMap[index] = tileCount;
+        return tileMap[wtf(index)] = tileCount;
     }
 
     void use(int textureUnit = 0){

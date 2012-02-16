@@ -115,7 +115,7 @@ public:
 		if (d < 0.0)
 			return false;
 
-		outdistance = v - sqrt ( d );
+		outdistance = v - sqrt (cast(real) d );
 		return true;
 	}
 

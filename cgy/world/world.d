@@ -80,7 +80,7 @@ class World {
         Sector[int] sectors;
     }
 
-    final class HeightmapTaskState {
+    static final class HeightmapTaskState {
         SectorXYNum pos;
         Heightmap heightmap;
         int x, y, z;
@@ -93,7 +93,7 @@ class World {
         }            
     }
 
-    final class HeightmapTasks {
+    static final class HeightmapTasks {
         HeightmapTaskState[] list;
     };
     HeightmapTasks heightmapTasks;
@@ -123,8 +123,9 @@ class World {
         worldGenParams = params;
         worldGen.init(worldGenParams, tilesys);
 
-        toFloodFill = new WorkSet;
         heightmapTasks = new HeightmapTasks;
+
+        initFloodfill();
     }
 
     void destroy() {
@@ -142,18 +143,16 @@ class World {
         //WorldListener[] listeners;
         //TileTypeManager tileTypeManager;
 
-        auto toFlood = encode(toFloodFill[]);
-        auto floodSect = encode(floodingSectors);
 
         auto activeSectors = encode(activeSectors);
         auto jsonRoot = Value([
-                "toFlood" : toFlood,
-                "floodSect" : floodSect,
                 "activeSectors" : activeSectors,
                 "g_UnitCount" : encode(g_UnitCount),
                 "g_entityCount" : encode(g_entityCount),
                 "g_ClanCount" : encode(g_ClanCount),
                 ]);
+
+        serializeFloodfill(jsonRoot);
 
         auto jsonString = json.prettifyJSON(jsonRoot);
         util.filesystem.mkdir("saves/current/world/");
@@ -185,9 +184,8 @@ class World {
         auto content = readText("saves/current/world/world.json");
         auto jsonRoot = json.parse(content);
         uint activeUnitId;
-        toFloodFill = new typeof(toFloodFill);
-        json.read(toFloodFill, jsonRoot["toFlood"]);
-        json.read(floodingSectors, jsonRoot["floodSect"]);
+
+        deserializeFloodfill(jsonRoot);
         json.read(activeSectors, jsonRoot["activeSectors"]);
         json.read(g_UnitCount, jsonRoot["g_UnitCount"]);
         json.read(g_entityCount, jsonRoot["g_entityCount"]);
@@ -350,24 +348,23 @@ class World {
     //If there is a sectorXY, then it is returned and all is well, EXCEPT for the fact that
     // if the sectorXY does not contain anything in it's .sectors-AA, then adding anthing to
     // that copy of SectorXY will not affect what is stored in the sectorXY-list.
-    SectorXY* getSectorXY(SectorXYNum xy, bool generateHeightmap = true)
-        body{
-            SectorXY* xyPtr = xy in sectorsXY; //One fast lookup. Ptr is only used these three lines.
-            if (xyPtr !is null) {
-                return xyPtr;
-            }
-            //We didnt have it. Create it, and a heightmap along with it!
-            SectorXY ret;
-            if (generateHeightmap) {
-                synchronized(heightmapTasks) {
-                    heightmapTasks.list ~= new HeightmapTaskState(xy);
-                    g_Statistics.HeightmapsNew(SectorSize.x * SectorSize.y);
-                }
-            }
-
-            sectorsXY[xy] = ret; //Spara det vi skapar, yeah!
-            return &sectorsXY[xy]; //Return address of AAAARRRRGGGHHHH
+    SectorXY* getSectorXY(SectorXYNum xy, bool generateHeightmap = true) {
+        SectorXY* xyPtr = xy in sectorsXY; //One fast lookup. Ptr is only used these three lines.
+        if (xyPtr !is null) {
+            return xyPtr;
         }
+        //We didnt have it. Create it, and a heightmap along with it!
+        SectorXY ret;
+        if (generateHeightmap) {
+            synchronized(heightmapTasks) {
+                heightmapTasks.list ~= new HeightmapTaskState(xy);
+                g_Statistics.HeightmapsNew(SectorSize.x * SectorSize.y);
+            }
+        }
+
+        sectorsXY[xy] = ret; //Spara det vi skapar, yeah!
+        return &sectorsXY[xy]; //Return address of AAAARRRRGGGHHHH
+    }
 
     Sector allocateSector(SectorNum sectorNum, SectorXY** xy = null) {
         auto xyNum = SectorXYNum(vec2i(sectorNum.value.X, sectorNum.value.Y));
@@ -820,6 +817,7 @@ class World {
 
         auto t = xy.getSectorXYNum();
         auto sectorXY = getSectorXY(t);
+
 
         auto heightmap = sectorXY.heightmap;
         if (heightmap is null ) {

@@ -11,12 +11,19 @@ struct AABBData{
     vec3f color;
     float radius;
     aabbd aabb;
+
+    bool opEquals(const AABBData o) const {
+        return color == o.color && radius == o.radius && aabb == o.aabb;
+    }
+    bool opEquals(shared const AABBData o) shared const {
+        return cast(AABBData)this == cast(AABBData)o;
+    }
 }
 
 shared AABBData[int] aabbList;
 shared int aabbCount=1;
 
-int addAABB(aabbd aabb, vec3f color=vec3f(1.f, 0.f, 0.f), float radius=100.f) {
+int addAABB(aabbd aabb, vec3f color=vec3f(1, 0, 0), float radius=100) {
     auto d = AABBData(color, radius, aabb);
     auto t = aabbCount;
     aabbList[t] = cast(shared(AABBData))d;
@@ -46,6 +53,13 @@ struct LineData{
     vec3d[] points;
     vec3f color;
     float radius;
+
+    bool opEquals(const LineData o) const {
+        return color == o.color && radius == o.radius && points == o.points;
+    }
+    bool opEquals(shared const LineData o) shared const {
+        return cast(LineData)this == cast(LineData)o;
+    }
 }
 
 shared LineData[int] lineList;

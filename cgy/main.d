@@ -265,7 +265,7 @@ class Main {
             
             long now = utime();
             long diff = now-then;
-            float deltaT = to!float(diff) / 1_000_000.f;            
+            float deltaT = to!float(diff) / 1_000_000.0f;            
             then = now;
             if (game) {
                 game.render(diff);

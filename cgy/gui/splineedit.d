@@ -106,7 +106,7 @@ class SplineEditor : GuiElementWindow {
             int r = to!int(m.captures[1]);
             int g = to!int(m.captures[2]);
             int b = to!int(m.captures[3]);
-            color.set(cast(float)r/255.f, cast(float)g/255.f, cast(float)b/255.f);
+            color.set(cast(float)r/255.0f, cast(float)g/255.0f, cast(float)b/255.0f);
             return true;
         }
         return false;
@@ -178,7 +178,7 @@ class SplineEditor : GuiElementWindow {
     void onLoadSky() {
         listBox.clear();
         foreach(color ; SkyColors) {
-            vec3i icol = util.util.convert!int(color*255.f);
+            vec3i icol = util.util.convert!int(color*255.0f);
             listBox.addItem(text(icol.X, ", ", icol.Y, ", ", icol.Z));
         }
         redraw();
@@ -205,7 +205,7 @@ class SplineEditor : GuiElementWindow {
             r ~= color.X;
             g ~= color.Y;
             b ~= color.Z;
-            vec3i icol = util.util.convert!int(color*255.f);
+            vec3i icol = util.util.convert!int(color*255.0f);
             img.setPixel(idx, 0, icol.X, icol.Y, icol.Z);
         }
         redGraph.setData(r, 0.0, 1.0);

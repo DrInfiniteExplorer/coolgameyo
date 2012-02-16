@@ -31,15 +31,15 @@ class Camera{
     }
 
     void getRayParameters(ref vec3d UpperLeft, ref vec3d _toRight, ref vec3d _toDown){
-        immutable vec3d _up = vec3d(0.f, 0.f, 1.f);
+        immutable vec3d _up = vec3d(0.0f, 0.0f, 1.0f);
         vec3d right = targetDir.crossProduct(_up).normalize();
         vec3d up = right.crossProduct(targetDir).normalize();
         auto dX = tan(degToRad(renderSettings.fieldOfView * 0.5f));
         auto leftmost = right * -dX;
-        auto toRight = 2.f * dX * right;
+        auto toRight = 2.0f * dX * right;
         auto dY =  dX / renderSettings.aspectRatio; //width / (width/height)
         auto upper = up * dY;
-        auto toDown = -2.f * dY * up;
+        auto toDown = -2.0f * dY * up;
 
         UpperLeft = targetDir + leftmost + upper;
         _toRight = toRight;
@@ -110,8 +110,8 @@ class Camera{
 		if(tmpRot.X > 180){
 			tmpRot.X -= 360;
 		}
-		if (tmpRot.X >= 89.f) tmpRot.X = 89.f;
-		else if (tmpRot.X <= -89.f) tmpRot.X = -89.f;
+		if (tmpRot.X >= 89.0f) tmpRot.X = 89.0f;
+		else if (tmpRot.X <= -89.0f) tmpRot.X = -89.0f;
         
         mat.setRotationDegrees(tmpRot);
         mat.transformVect(temp, vec3f(0.0f, 0.0f, 1.0f));

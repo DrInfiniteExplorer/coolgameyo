@@ -902,11 +902,11 @@ struct CMatrix4(T)
     {
 /*
         const double h = reciprocal(tan(fieldOfViewRadians*0.5));
-        assert(aspectRatio!=0.f); //divide by zero
+        assert(aspectRatio!=0.0f); //divide by zero
         const T w = h / aspectRatio;
 */        
         const double w = reciprocal(tan(fieldOfViewRadians*0.5));
-        assert(aspectRatio!=0.f); //divide by zero
+        assert(aspectRatio!=0.0f); //divide by zero
         const T h = w * aspectRatio; // 1/w * ratio = 1/(w / ratio)) = 1/with * 1/ratio = 1/width * 1/(height/width) = 1/width * width/height yay
 
         assert(zNear!=zFar); //divide by zero
@@ -967,7 +967,7 @@ struct CMatrix4(T)
     CMatrix4!(T) buildProjectionMatrixPerspectiveFovLH(float fieldOfViewRadians, float aspectRatio, float zNear, float zFar)
     {
       const double h = reciprocal(tan(fieldOfViewRadians*0.5));
-      assert(aspectRatio!=0.f); //divide by zero
+      assert(aspectRatio!=0.0f); //divide by zero
       const T w = cast(T)(h / aspectRatio);
 
       assert(zNear!=zFar); //divide by zero
@@ -997,8 +997,8 @@ struct CMatrix4(T)
     //! Builds a right-handed perspective projection matrix.
     CMatrix4!(T) buildProjectionMatrixPerspectiveRH(float widthOfViewVolume, float heightOfViewVolume, float zNear, float zFar)
     {
-      assert(widthOfViewVolume!=0.f); //divide by zero
-      assert(heightOfViewVolume!=0.f); //divide by zero
+      assert(widthOfViewVolume!=0.0f); //divide by zero
+      assert(heightOfViewVolume!=0.0f); //divide by zero
       assert(zNear!=zFar); //divide by zero
       M[0] = cast(T)(2*zNear/widthOfViewVolume);
       M[1] = 0;
@@ -1026,8 +1026,8 @@ struct CMatrix4(T)
     //! Builds a left-handed perspective projection matrix.
     CMatrix4!(T) buildProjectionMatrixPerspectiveLH(float widthOfViewVolume, float heightOfViewVolume, float zNear, float zFar)
     {
-      assert(widthOfViewVolume!=0.f); //divide by zero
-      assert(heightOfViewVolume!=0.f); //divide by zero
+      assert(widthOfViewVolume!=0.0f); //divide by zero
+      assert(heightOfViewVolume!=0.0f); //divide by zero
       assert(zNear!=zFar); //divide by zero
       M[0] = cast(T)(2*zNear/widthOfViewVolume);
       M[1] = 0;
@@ -1055,8 +1055,8 @@ struct CMatrix4(T)
     //! Builds a left-handed orthogonal projection matrix.
     CMatrix4!(T) buildProjectionMatrixOrthoLH(float widthOfViewVolume, float heightOfViewVolume, float zNear, float zFar)
     {
-      assert(widthOfViewVolume!=0.f); //divide by zero
-      assert(heightOfViewVolume!=0.f); //divide by zero
+      assert(widthOfViewVolume!=0.0f); //divide by zero
+      assert(heightOfViewVolume!=0.0f); //divide by zero
       assert(zNear!=zFar); //divide by zero
       M[0] = cast(T)(2/widthOfViewVolume);
       M[1] = 0;
@@ -1084,8 +1084,8 @@ struct CMatrix4(T)
     //! Builds a right-handed orthogonal projection matrix.
     CMatrix4!(T) buildProjectionMatrixOrthoRH(float widthOfViewVolume, float heightOfViewVolume, float zNear, float zFar)
     {
-      assert(widthOfViewVolume!=0.f); //divide by zero
-      assert(heightOfViewVolume!=0.f); //divide by zero
+      assert(widthOfViewVolume!=0.0f); //divide by zero
+      assert(heightOfViewVolume!=0.0f); //divide by zero
       assert(zNear!=zFar); //divide by zero
       M[0] = cast(T)(2/widthOfViewVolume);
       M[1] = 0;
@@ -1365,7 +1365,7 @@ struct CMatrix4(T)
       // cosinus angle
       float ca = from.dotProduct ( look );
 
-      vector3df vt = up * ( 1.f - ca );
+      vector3df vt = up * ( 1.0f - ca );
 
       M[0] = vt.X * up.X + ca;
       M[5] = vt.Y * up.Y + ca;

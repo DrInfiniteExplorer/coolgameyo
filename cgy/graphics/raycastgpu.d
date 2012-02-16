@@ -32,8 +32,8 @@ import world.world;
 //enum TileMemoryLocation = "constant";
 enum TileMemoryLocation = "texture";
 
-enum MaxLightTraceDistance = 100.f;
-enum FadeLightTraceDistance = 90.f;   //Start fading lightstrength at this distance,
+enum MaxLightTraceDistance = 100f;
+enum FadeLightTraceDistance = 90f;   //Start fading lightstrength at this distance,
 //so it is 0 at MaxLightTraceDistance
 
 struct CLCamera {
@@ -222,27 +222,27 @@ void interactiveComputeYourFather(World world, Camera camera) {
         long currentTimePosition = currentTime+ cast(long)((lights[i].position.value.X + lights[i].position.value.Y)*1000);
 
         clLight[i].position = [
-            lights[i].position.value.X + 0.05f * sin(currentTimePosition/300.f)^^3,
-            lights[i].position.value.Y + 0.05f * cos(currentTimePosition/500.f)^^3,
-            lights[i].position.value.Z + 0.05f * sin(currentTimePosition/700.f)^^3, 0];
+            lights[i].position.value.X + 0.05f * sin(currentTimePosition/300f)^^3,
+            lights[i].position.value.Y + 0.05f * cos(currentTimePosition/500f)^^3,
+            lights[i].position.value.Z + 0.05f * sin(currentTimePosition/700f)^^3, 0];
         
-        float asdf = sin(cast(float)(currentTimePosition)/400.f);
-        float fdsa = sin(cast(float)(currentTimePosition)/100.f);
+        float asdf = sin(cast(float)(currentTimePosition)/400f);
+        float fdsa = sin(cast(float)(currentTimePosition)/100f);
         float flickerRatio =
                         ((abs(asdf) * 0.4f + 0.6f) +
-                         (abs(fdsa) * 0.2f + 0.8f)) / 2.f;
+                         (abs(fdsa) * 0.2f + 0.8f)) / 2f;
         
         float dist = lights[i].position.value.getDistanceFrom(startPos);
         if(dist > FadeLightTraceDistance) {
             float range = (MaxLightTraceDistance - FadeLightTraceDistance);
-            float fadeRatio = 1.f - (dist - FadeLightTraceDistance) / range;
+            float fadeRatio = 1f - (dist - FadeLightTraceDistance) / range;
             clLight[i].strength = (cast(float)lights[i].strength) * fadeRatio * flickerRatio;
         } else {
             clLight[i].strength = lights[i].strength * flickerRatio;
         }
-        clLight[i].color[0] = lights[i].tint.X / 255.f;
-        clLight[i].color[1] = lights[i].tint.Y / 255.f;
-        clLight[i].color[2] = lights[i].tint.Z / 255.f;
+        clLight[i].color[0] = lights[i].tint.X / 255f;
+        clLight[i].color[1] = lights[i].tint.Y / 255f;
+        clLight[i].color[2] = lights[i].tint.Z / 255f;
     }
 
     uploadTileData(world, camera);

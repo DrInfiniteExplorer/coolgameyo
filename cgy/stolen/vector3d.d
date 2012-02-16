@@ -137,7 +137,7 @@ public:
   vector3d!(T) set(const vector3d!(T) p) {X=p.X; Y=p.Y; Z=p.Z;return this;}
 
   //! Get length of the vector.
-  T getLength() const { return cast (T) (sqrt( X*X + Y*Y + Z*Z )); }
+  T getLength() const { return cast (T) (sqrt(cast(real)( X*X + Y*Y + Z*Z ))); }
 
   //! Get squared length of the vector.
   /** This is useful because it is much faster than getLength().
@@ -334,7 +334,7 @@ public:
     if (angle.Y >= 360)
       angle.Y -= 360;
 
-    const double z1 = sqrt(X*X + Z*Z);
+    const double z1 = sqrt(cast(real)X*X + Z*Z);
 
     angle.X = cast(T)(atan2(cast(double)z1, cast(double)Y) * RADTODEG64 - 90.0);
 

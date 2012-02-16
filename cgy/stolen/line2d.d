@@ -73,11 +73,11 @@ public:
 		const float numeratorB = (end.X - start.X)*(start.Y - l.start.Y) -
 										(end.Y - start.Y)*(start.X -l.start.X); 
 
-		if(stolen.math.equals(commonDenominator, 0.f))
+		if(stolen.math.equals(commonDenominator, 0.0f))
 		{ 
 			// The lines are either coincident or parallel
 			// if both numerators are 0, the lines are coincident
-			if(stolen.math.equals(numeratorA, 0.f) && stolen.math.equals(numeratorB, 0.f))
+			if(stolen.math.equals(numeratorA, 0.0f) && stolen.math.equals(numeratorB, 0.0f))
 			{
 				// Try and find a common endpoint
 				if(l.start == start || l.end == start)
@@ -140,11 +140,11 @@ public:
 		// Get the point of intersection on this line, checking that
 		// it is within the line segment.
 		const float uA = numeratorA / commonDenominator;
-		if(uA < 0.f || uA > 1.f)
+		if(uA < 0.0f || uA > 1.0f)
 			return false; // Outside the line segment
 
 		const float uB = numeratorB / commonDenominator;
-		if(uB < 0.f || uB > 1.f)
+		if(uB < 0.0f || uB > 1.0f)
 			return false; // Outside the line segment
 
 		// Calculate the intersection point.

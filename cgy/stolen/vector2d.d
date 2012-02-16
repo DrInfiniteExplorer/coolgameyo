@@ -88,7 +88,7 @@ public:
 
 	//! Gets the length of the vector.
 	/** \return The length of the vector. */
-	T getLength() const { return cast(T) sqrt( X*X + Y*Y ); }
+	T getLength() const { return cast(T) sqrt(cast(real) X*X + Y*Y ); }
 
 	//! Get the squared length of this vector
 	/** This is useful because it is much faster than getLength().
