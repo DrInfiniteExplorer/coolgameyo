@@ -271,7 +271,7 @@ public:
 		m[12] = center.X;
 		m[13] = center.Y;
 		m[14] = center.Z;
-		m[15] = 1.f;
+		m[15] = 1.0f;
 
 		//dest.setDefinitelyIdentityMatrix ( matrix4::BIT_IS_NOT_IDENTITY );
 		dest.setDefinitelyIdentityMatrix ( false );	
@@ -334,10 +334,10 @@ public:
 		dest[10] = 1.0f - 2.0f*X*X - 2.0f*Y*Y;
 		dest[14] = 0.0f;
 
-		dest[3] = 0.f;
-		dest[7] = 0.f;
-		dest[11] = 0.f;
-		dest[15] = 1.f;
+		dest[3] = 0.0f;
+		dest[7] = 0.0f;
+		dest[11] = 0.0f;
+		dest[15] = 1.0f;
 		//dest.setDefinitelyIdentityMatrix ( matrix4::BIT_IS_NOT_IDENTITY );
 		dest.setDefinitelyIdentityMatrix ( false );	
 	}
@@ -448,10 +448,10 @@ public:
 	//! Set quaternion to identity
 	quaternion makeIdentity()
 	{
-		W = 1.f;
-		X = 0.f;
-		Y = 0.f;
-		Z = 0.f;
+		W = 1.0f;
+		X = 0.0f;
+		Y = 0.0f;
+		Z = 0.0f;
 		return this;	
 	}
 
@@ -472,18 +472,18 @@ public:
 		}
 		else if (d <= -1.0f) // exactly opposite
 		{
-			vector3df axis = vector3df(1.0f, 0.f, 0.f);
+			vector3df axis = vector3df(1.0f, 0.0f, 0.0f);
 			axis = axis.crossProduct(vector3df(X,Y,Z));
 			if (axis.getLength()==0)
 			{
-				axis.set(0.f,1.f,0.f);
+				axis.set(0.0f,1.0f,0.0f);
 				axis.crossProduct(vector3df(X,Y,Z));
 			}
 			return this.fromAngleAxis(PI, axis);
 		}
 
 		const float s = sqrt( (1+d)*2 ); // optimize inv_sqrt
-		const float invs = 1.f / s;
+		const float invs = 1.0f / s;
 		const vector3df c = v0.crossProduct(v1)*invs;
 		X = c.X;
 		Y = c.Y;

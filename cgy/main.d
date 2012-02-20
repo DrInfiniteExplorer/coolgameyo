@@ -15,6 +15,8 @@ import std.exception;
 import std.stdio;
 import std.string;
 
+import std.file;
+
 import derelict.sdl.sdl;
 import derelict.opengl.gl;
 import derelict.devil.il;
@@ -33,6 +35,9 @@ import util.util;
 import util.memory;
 //import worldgen.worldgen;
 import worldgen.newgen;
+
+
+import modelparser.md5parser;
 
 version (Windows) {
 import std.c.windows.windows;
