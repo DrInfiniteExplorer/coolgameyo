@@ -247,17 +247,14 @@ class Sector {
         return true;
     }
     
-
-    //TODO: What about if there already was a block there?
-    //   potential solution; use setBlock ?
     void generateBlock(BlockNum blockNum, WorldGenerator worldGen)
     in{
         assert(blockNum.getSectorNum() == sectorNum, "Trying to generate a block in the wrong sector!");
-        assert(blockNum.getSectorNum.toTilePos() == pos); //Good to have? In that case, add to other places like getBlock() as well.
+        assert(blockNum.getSectorNum.toTilePos() == pos);
         auto pos = blockNum.rel();
-//        auto block = blocks[pos.X][pos.Y][pos.Z];
-//        writeln("! ", block.tiles, " ", cast(int)block.flags, " ", block.blockNum, " ", block.sparseTileType);
-        assert(blocks[pos.X][pos.Y][pos.Z] == INVALID_BLOCK, text("Trying to generate a block which already contains stuff.", blockNum));
+        assert(blocks[pos.X][pos.Y][pos.Z] == INVALID_BLOCK, 
+                text("Trying to generate a block which already contains stuff.",
+                    blockNum));
     }
     body{
         auto pos = blockNum.rel();
@@ -270,7 +267,6 @@ class Sector {
         auto pos = blockNum.rel();
         auto airBlock = AirBlock(blockNum);
         blocks[pos.X][pos.Y][pos.Z] = airBlock;
-        //No need to update solidmap; will be clear from beginning, and only call this during worldgen anyway.
     }
 
     Block* getBlock(BlockNum blockNum)
@@ -291,9 +287,8 @@ class Sector {
         auto rel = blockNum.rel();
         auto currentBlock = blocks[rel.X][rel.Y][rel.Z];
         //TODO: Make comment detailing the logic behind this
-        //TODO: make use of block.isSame ?
         if(currentBlock.valid && !currentBlock.sparse){
-            if(currentBlock.tiles.ptr != newBlock.tiles.ptr){
+            if(currentBlock.tiles != newBlock.tiles){
                 msg("Make fix this");
                 //TODO: Make fix line below!
                 //enforce(0, "We want to free this memory i think...The current, that is.");
@@ -326,14 +321,14 @@ class Sector {
     void addUnit(Unit u) {
         units ~= u ;
     }
-	void addEntity(Entity o) {
+    void addEntity(Entity o) {
         entities ~= o;
     }
-	void removeUnit(Unit u) {
+    void removeUnit(Unit u) {
         bool pred(Unit a) { return a == u; }
         units = remove!pred(units);
     }
-	void removeEntity(Entity o) {
+    void removeEntity(Entity o) {
         bool pred(Entity a) { return a == o; }
         entities = remove!pred(entities);
     }

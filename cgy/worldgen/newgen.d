@@ -311,22 +311,73 @@ final class WorldGenerator {
         destroyed = true;
     }
 
+    Block fillBlock(Block block) {
+        block.seen = true;
+
+        auto tp0 = block.blockNum.toTilePos();
+
+        double[BlockSize.x][BlockSize.y] zs;
+        foreach (xy; RangeFromTo (0, BlockSize.x-1,
+                    0, BlockSize.y-1, 0, 0)) {
+            auto pos = tp0;
+            pos.value += xy;
+            zs[xy.Y][xy.X] = 
+                layerManager.getValueInterpolated(1, TileXYPos(pos));
+        }
+
+        bool homogenous = true;
+        bool first = true;
+        foreach (relPos; RangeFromTo (0, BlockSize.x-1,
+                    0, BlockSize.y-1, 0, BlockSize.z-1)) {
+            auto tp = tp0;
+            tp.value += relPos;
+            auto tile = getTile(tp, zs[relPos.Y][relPos.X]);
+            block.tiles.tiles[relPos.X][relPos.Y][relPos.Z] = tile;
+
+            if (first) {
+                first = false;
+                block.sparseTileType = tile.type;
+                block.sunLightVal = tile.sunLightValue;
+            }
+            if (block.sparseTileType != tile.type ||
+                block.sunLightVal != tile.sunLightValue) {
+                homogenous = false;
+            }
+        }
+        if (homogenous) {
+            Block.free(block);
+            block.tiles = null;
+            block.sparse = true;
+        }
+
+        return block;
+    }
+
     Tile getTile(TilePos pos) {
+        TileFlags flags = cast(TileFlags)(TileFlags.valid | TileFlags.seen);
         if(! isInsideWorld(pos)) {
-            return Tile(TileTypeAir, TileFlags.valid);
+            return Tile(TileTypeAir, flags);
+        }
+        return getTile(pos,
+                layerManager.getValueInterpolated(1, TileXYPos(pos)));
+    }
+
+    Tile getTile(TilePos pos, double z) {
+        TileFlags flags = cast(TileFlags)(TileFlags.valid | TileFlags.seen);
+        if(! isInsideWorld(pos)) {
+            return Tile(TileTypeAir, flags);
         }
         pos.value += halfWorldSize;
-        auto z = layerManager.getValueInterpolated(1, TileXYPos(pos));
         if(pos.value.Z > z) {
-            auto tile = Tile(TileTypeAir, TileFlags.valid);
+            auto tile = Tile(TileTypeAir, flags);
             tile.sunLightValue = MaxLightStrength;
             return tile;
         }
-        return Tile(TileTypeAir+1, TileFlags.valid);
+        return Tile(TileTypeAir+1, flags);
     }
 
     long worldRadius = mapScale[5]/2;
-    long worldRadiusSquare = ((cast(long)mapScale[5])/2) * ((cast(long)mapScale[5])/2);
+    long worldRadiusSquare = (cast(long)mapScale[5]/2) ^^2;
     bool isInsideWorld(TilePos pos) {
         long dist = pos.value.X ^^ 2 + pos.value.Y ^^ 2;
         long max = worldRadiusSquare;

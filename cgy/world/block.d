@@ -1,6 +1,5 @@
 
 //TODO: Remove block-sparse-transparency.
-//TODO: make komment for function isSame
 //TODO: Move code for block-allocator elsewhere
 //TODO: Make things private?
 
@@ -34,13 +33,17 @@ enum BlockFlags : ubyte {
     valid               = 1 << 7,
 }
 
+struct BlockTiles {
+    Tile[BlockSize.z][BlockSize.y][BlockSize.x] tiles;
+}
+
 struct Block {
 
-    Tile[BlockSize.z][BlockSize.y][BlockSize.x]* tiles = null;
+    BlockTiles* tiles = null;
 
     BlockFlags flags = BlockFlags.none;
 
-    BlockNum blockNum = BlockNum(vec3i(int.min, int.min, int.min));;
+    BlockNum blockNum = BlockNum(vec3i(int.min, int.min, int.min));
 
     ushort sparseTileType;
     byte sunLightVal;
@@ -56,38 +59,49 @@ struct Block {
         }
     }
 
-    invariant()
-    {
-        auto valid = flags & BlockFlags.valid;
-        auto sparse = flags & BlockFlags.sparse;
+    //invariant()
+    //{
+    //    auto valid = flags & BlockFlags.valid;
+    //    auto sparse = flags & BlockFlags.sparse;
+      
+    //    if (sparse) {
+    //        assert(valid, "Block is marked as sparse, but doesn't have valid flag");
+    //        assert(tiles is null, "Block is marked as sparse, but has tiles!");
+    //    } else if (valid) {
+    //        assert(tiles !is null, "Block is not sparse but valid, but doesn't have any tiles!");
+    //    } else {
+    //        assert(tiles is null, "Block is not valid, but has tiles!");
+    //    }
+    //}
+    // fuck the system
 
-        if (sparse) {
-            assert(valid, "Block is marked as sparse, but doesn't have valid flag");
-            assert(tiles is null, "Block is marked as sparse, but has tiles!");
-        } else if (valid) {
-            assert(tiles !is null, "Block is not sparse but valid, but doesn't have any tiles!");
-        } else {
-            assert(tiles is null, "Block is not valid, but has tiles!");
-        }
+    Tile sparseTile() {
+        Tile t;
+        t.type = sparseTileType;
+        t.flags = TileFlags.valid;
+        t.seen = seen;
+        t.sunLightValue = sunLightVal;
+        return t;
     }
 
-    Tile getTile(TilePos tilePos)
-    in{
+    Tile getTile(TilePos tilePos) {
         assert(tilePos.getBlockNum() == this.blockNum);
-    }
-    body{
         assert(valid);
-        if(sparse){
-            Tile t;
-            t.type = sparseTileType;
-            t.flags = TileFlags.valid;
-            t.seen = seen;
-            t.sunLightValue = sunLightVal;
-            return t;
+        if (sparse) {
+            return sparseTile();
         }
         auto pos = tilePos.rel();
-        return (*tiles)[pos.X][pos.Y][pos.Z];
+        return tiles.tiles[pos.X][pos.Y][pos.Z];
     }
+
+    void unsparsify() {
+        assert (sparse);
+        auto block = alloc();
+        tiles = block.tiles;
+        (&tiles.tiles[0][0][0])[0 .. BlockSize.total][] = sparseTile();
+        sparse = false;
+    }
+
 
     void setTile(TilePos pos, Tile tile)
     in{
@@ -97,19 +111,10 @@ struct Block {
         assert(valid);
         auto p = pos.rel();
 
-        if(sparse){ //If was sparse, populate with real tiles
-            auto block = alloc();
-            tiles = block.tiles;
-            setFlag(flags, BlockFlags.sparse, false);
-
-            Tile t;
-            t.type = sparseTileType;
-            t.flags = TileFlags.valid;
-            t.seen = seen;
-            t.sunLightValue = sunLightVal;
-            (*(cast(Tile[BlockSize.x*BlockSize.y*BlockSize.z]*)(tiles)))[] = t; //Fuck yeah!!!! ? :S:S:S
+        if (sparse) {
+            unsparsify();
         }
-        (*tiles)[p.X][p.Y][p.Z] = tile;
+        tiles.tiles[p.X][p.Y][p.Z] = tile;
     }
 
     void setTileLight(TilePos pos, const byte newVal, const bool isSunLight)
@@ -120,17 +125,11 @@ struct Block {
         assert(valid);
         auto p = pos.rel();
 
-        if(sparse){ //If was sparse, populate with real tiles
-            setTile(pos, getTile(pos)); //Make unsparse. This may seem retarded, but it'll prevent
-            //bugs that come from having make-unsparse-code in mukltiple places (already had at least one such :P)
+        if (sparse) {
+            unsparsify();
         }
 
-        (*tiles)[p.X][p.Y][p.Z].setLight(isSunLight, newVal);
-    }
-
-    bool isSame(const Block other) const {
-        //TODO: Need comment detailing the logic behind this.
-        return blockNum == other.blockNum && (sparse || tiles is other.tiles);
+        tiles.tiles[p.X][p.Y][p.Z].setLight(isSunLight, newVal);
     }
 
     bool valid() const @property { return (flags & BlockFlags.valid) != 0; }
@@ -158,7 +157,7 @@ struct Block {
             write(d);
         } else {
             BREAK_IF(tiles is null);            
-            write((&((*tiles)[0][0][0]))[0 .. BlockSize.x * BlockSize.y * BlockSize.z]);
+            write((&tiles.tiles[0][0][0])[0 .. BlockSize.total]);
         }
     }
     
@@ -171,55 +170,27 @@ struct Block {
         } else {
             auto block = alloc();
             tiles = block.tiles;
-            static assert(BlockSize.x * BlockSize.y * BlockSize.z * Tile.sizeof == (*tiles).sizeof);
-            read((*tiles).sizeof, cast(ubyte*)block.tiles.ptr);
+            static assert(BlockSize.total * Tile.sizeof == tiles.tiles.sizeof);
+            read(tiles.tiles.sizeof, cast(ubyte*)&block.tiles.tiles);
             block.tiles = null;
         }
     }
 
     static Block generateBlock(BlockNum blockNum, WorldGenerator worldgen) {
-        //msg("Generating block: ", blockNum);
         auto block = alloc();
         block.blockNum = blockNum;
-        
-        //BREAKPOINT(blockNum.value == vec3i(13, 32, 1));
 
-        bool homogenous = true;
-        bool first = true;
 
-        foreach (relPos; RangeFromTo (0, BlockSize.x-1,
-                    0, BlockSize.y-1, 0, BlockSize.z-1)) {
-            auto TP = blockNum.toTilePos();
-            TP.value += relPos;
-            auto tile = worldgen.getTile(TP);
-            (*block.tiles)[relPos.X][relPos.Y][relPos.Z] = tile;
-
-            if (first) {
-                first = false;
-                block.sparseTileType = tile.type;
-                block.sunLightVal = tile.sunLightValue;
-            }
-            if (block.sparseTileType != tile.type ||
-                block.sunLightVal != tile.sunLightValue) {
-                homogenous = false;
-            }
-        }
-        if (homogenous) {
-            free(block);
-            block.tiles = null;
-            setFlag(block.flags, BlockFlags.sparse, true);
-        }
-        return block;
+        return worldgen.fillBlock(block);
     }
 
 
     // allocation / freelist stuff
 
-    private static {
-        struct AllocationBlock {
-            alias Tile[BlockSize.z][BlockSize.y][BlockSize.x] T;
+    static {
+        private struct AllocationBlock {
             bool[] allocmap; // true = allocated, false = not
-            T[] data;
+            BlockTiles[] data;
 
             //static assert (T.sizeof == 4096);
 
@@ -227,7 +198,7 @@ struct Block {
 
             AllocationBlock* next;
 
-            T* getMem() {
+            BlockTiles* getMem() {
                 auto i = allocmap.countUntil(false);
                 if (i < 0) {
                     if (next is null) next = create();
@@ -237,7 +208,7 @@ struct Block {
                 allocmap[i] = true;
                 return &data[i];
             }
-            void returnMem(T* mem) {
+            void returnMem(BlockTiles* mem) {
                 auto diff = mem - data.ptr;
                 if (0 <= diff && diff < dataSize) {
                     // IT IS OUR BLOB!!!!!
@@ -253,9 +224,9 @@ struct Block {
             static AllocationBlock* create() {
                 auto alloc = new AllocationBlock;
                 alloc.allocmap = new bool[](dataSize);
-                auto blob = allocateBlob(dataSize, T.sizeof);
+                auto blob = allocateBlob(dataSize, BlockTiles.sizeof);
                 (cast(ubyte[])blob)[] = 0;
-                alloc.data = cast(T[])blob;
+                alloc.data = cast(BlockTiles[])blob;
                 return alloc;
             }
         }
@@ -287,8 +258,9 @@ Block INVALID_BLOCK = {
 };
 
 Block AirBlock(BlockNum blockNum) {
-    Block ret = Block();
-    ret.flags = cast(BlockFlags)(BlockFlags.valid | BlockFlags.sparse);
+    Block ret;
+    ret.flags = cast(BlockFlags)(
+            BlockFlags.valid | BlockFlags.sparse | BlockFlags.seen);
     ret.blockNum = blockNum;
     ret.sparseTileType = TileTypeAir;
     ret.sunLightVal = MaxLightStrength;

@@ -2,7 +2,7 @@ module world.floodfill;
 
 import util.array;
 
-mixin template FloodFill2() {
+mixin template FloodFill() {
     SectorNum[] floodingSectors;
     size_t current;
     RangeFromTo r;
@@ -57,50 +57,11 @@ mixin template FloodFill2() {
 
         auto block = getBlock(abs, true);
         assert (block.valid);
+        assert (block.seen);
 
         g_Statistics.FloodFillProgress(1);
 
-        if (block.seen) { return 1; }
-
-        bool anything_seen = false;
-
-        scope (exit) {
-            if (anything_seen) {
-                block.seen = true;
-            }
-        }
-
-        if (block.sparse) {
-            anything_seen = true;
-            return 1;
-        }
-
-        foreach (rel; RangeFromTo(
-                    0, BlockSize.x - 1,
-                    0, BlockSize.y - 1,
-                    0, BlockSize.z - 1)) {
-            auto tp = TilePos(abs.toTilePos().value + rel);
-            auto tile = block.getTile(tp);
-            scope (exit) {
-                if (tile.seen) {
-                    block.setTile(tp, tile);
-                }
-            }
-            //if (tile.isAir) {
-                tile.seen = true;
-                anything_seen = true;
-            //} else {
-            //    foreach (npos; neighbors(tp)) {
-            //        auto neighbor = getTile(npos, true);
-            //        if (neighbor.valid && neighbor.isAir) {
-            //            tile.seen = true;
-            //            anything_seen = true;
-            //            break;
-            //        }
-            //    }
-            //}
-        }
-        return 45;
+        return block.sparse ? 1 : 45;
     }
     void addFloodFillPos(TilePos pos) {
         floodingSectors ~= pos.getSectorNum();
@@ -112,7 +73,7 @@ mixin template FloodFill2() {
     }
 }
 
-mixin template FloodFill() {
+mixin template FloodFill2() {
 
     // redblacktree on plols computer: 25783
     //private alias RedBlackTree!(BlockNum, q{a.value < b.value}) WorkSet;
