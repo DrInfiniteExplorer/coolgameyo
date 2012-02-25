@@ -2,6 +2,7 @@ module modelparser.md5parser;
 
 import std.stdio, std.exception, std.range, std.regex, std.algorithm;
 import std.conv, std.string, std.file, std.typecons;
+import std.math;
 
 import util.util;
 import stolen.quaternion;
@@ -16,8 +17,8 @@ alias enforceEx!MD5ParserException md5enforce;
 
 final class Joint {
     string name;
-    Joint parent;
-    vec3d pos;
+    int parent;
+    vec3f pos;
     quaternion orientation;
 }
 
@@ -27,13 +28,13 @@ final class Vert {
 }
 
 final class Tri {
-    Vert[3] verts;
+    size_t[3] verts;
 }
 
 final class Weight {
-    Joint joint;
+    int jointId;
     float bias;
-    vec3d pos;
+    vec3f pos;
 }
 
 
@@ -55,8 +56,7 @@ final class MD5FileData {
 }
 
 
-
-MD5FileData parse(string data) {
+MD5FileData parseModel(string data) {
     auto lines = filter!(a => !a.empty)(
             map!(a => to!string(a.until("//")).strip())(data.split("\n")));
     string[][] tokens = array(map!(
@@ -130,30 +130,33 @@ Joint[] parseJoints(ref string[][] tokens, size_t numJoints) {
     md5enforce(tokens.length >= numJoints + 2);
 
     Joint[] ret;
-    int[] parent_indices;
+
     extract(tokens.front, "joints", "{");
     tokens.popFront();
-    foreach (line; tokens[0 .. numJoints]) {
-        Joint j = new Joint;
+    ret.length = numJoints;
+    foreach (idx, line; tokens[0 .. numJoints]) {
+        Joint *j = &ret[idx];
         string name;
         int parent_index;
         float x, y, z;
         float a, b, c;
-        extract(line, &name, &parent_index, 
+        extract(line, &name, &j.parent, 
                 "(", &j.pos.X, &j.pos.Y, &j.pos.Z, ")", 
                 "(", &j.orientation.X, &j.orientation.Y, &j.orientation.Z, ")");
         j.name = name[1 .. $-1];
 
-        // TODO: calculate_quad_w(j.orientation);
-
-        ret ~= j;
-        parent_indices ~= parent_index;
-    }
-
-    foreach (i, joint; ret) {
-        if (parent_indices[i] != -1) {
-            joint.parent = ret[parent_indices[i]];
+        auto tmp = 1.0f - 
+            j.orientation.X*j.orientation.X -
+            j.orientation.X*j.orientation.Y -
+            j.orientation.X*j.orientation.Z;
+        if(tmp <= 0.0f) {
+            j.orientation.W = 0.0f;
+        } else {
+            j.orientation.W = -sqrt(tmp);
         }
+
+
+        // TODO: calculate_quad_w(j.orientation);
     }
 
     tokens = tokens[numJoints .. $];
@@ -198,15 +201,9 @@ Mesh parseMesh(ref string[][] tokens, Joint[] joints) {
     extract(tokens.front, "numtris", &numtris);
     tokens.popFront();
 
+    m.tris.length = numtris;
     foreach (i; 0 .. numtris) {
-        Tri t = new Tri;
-        size_t[3] ks;
-        extract(tokens[i], "tri", to!string(i), &ks[0], &ks[1], &ks[2]);
-        t.verts[0] = m.verts[ks[0]];
-        t.verts[1] = m.verts[ks[1]];
-        t.verts[2] = m.verts[ks[2]];
-
-        m.tris ~= t;
+        extract(tokens[i], "tri", to!string(i), &m.tris[i].verts[0], &m.tris[i].verts[1], &m.tris[i].verts[2]);
     }
 
     tokens = tokens[numtris .. $];
@@ -224,7 +221,7 @@ Mesh parseMesh(ref string[][] tokens, Joint[] joints) {
         extract(tokens[i], "weight", to!string(i),
                 &joint_index, &w.bias, "(", &x, &y, &z, ")");
 
-        w.joint = joints[joint_index];
+        w.jointId = joint_index; //joints[joint_index];
 
         m.weights ~= w;
     }
