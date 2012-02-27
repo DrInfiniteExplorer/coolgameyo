@@ -315,6 +315,7 @@ final class WorldGenerator {
         block.seen = true;
 
         auto tp0 = block.blockNum.toTilePos();
+        tp0.value += halfWorldSize;
 
         double[BlockSize.x][BlockSize.y] zs;
         foreach (xy; RangeFromTo (0, BlockSize.x-1,
@@ -358,6 +359,7 @@ final class WorldGenerator {
         if(! isInsideWorld(pos)) {
             return Tile(TileTypeAir, flags);
         }
+        pos.value += halfWorldSize;
         return getTile(pos,
                 layerManager.getValueInterpolated(1, TileXYPos(pos)));
     }
