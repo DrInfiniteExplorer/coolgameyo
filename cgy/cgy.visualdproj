@@ -305,6 +305,9 @@
     <File path="graphics\_2d\line.d" />
     <File path="graphics\_2d\rect.d" />
    </Folder>
+   <Folder name="models">
+    <File path="graphics\models\md5model.d" />
+   </Folder>
    <File path="graphics\camera.d" />
    <File path="graphics\debugging.d" />
    <File path="graphics\font.d" />
@@ -350,6 +353,9 @@
    <File path="gui\unitcontrol.d" />
    <File path="gui\worldview.d" />
   </Folder>
+  <Folder name="modelparser">
+   <File path="modelparser\md5parser.d" />
+  </Folder>
   <Folder name="modules">
    <File path="modules\ai.d" />
    <File path="modules\module_.d" />
@@ -373,6 +379,10 @@
    <File path="random\valuemap.d" />
    <File path="random\xinterpolate.d" />
    <File path="random\xinterpolate4.d" />
+  </Folder>
+  <Folder name="scene">
+   <File path="scene\modelnode.d" />
+   <File path="scene\scenemanager.d" />
   </Folder>
   <Folder name="shaders">
    <Folder name="gui">
@@ -434,7 +444,6 @@
   </Folder>
   <Folder name="worldgen">
    <File path="worldgen\newgen.d" />
-   <File path="worldgen\worldgen.d" />
   </Folder>
   <File path="clan.d" />
   <File path="clientnetworking.d" />

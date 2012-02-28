@@ -16,6 +16,7 @@ import graphics.misc;
 import graphics.ogl;
 import graphics.raycastgpu;
 import graphics.renderconstants;
+import scene.scenemanager;
 import graphics.shader;
 import graphics.texture;
 import graphics.tilerenderer;
@@ -33,6 +34,7 @@ import util.util;
 class Renderer {
     //TODO: Leave comment on what these members are use for in this class
     //Scheduler scheduler;
+    SceneManager sceneManager;
     TileRenderer tileRenderer;
     TileTextureAtlas atlas;
     Camera camera;
@@ -47,12 +49,13 @@ class Renderer {
     
     vec3d*[Unit] specialUnits;
     
-    this(Camera c, TileTextureAtlas _atlas, TileRenderer _tileRenderer)
+    this(Camera c, TileTextureAtlas _atlas, TileRenderer _tileRenderer, SceneManager _sceneManager)
     {
         mixin(LogTime!("RendererInit"));
         camera = c;        
         tileRenderer = _tileRenderer;
         atlas = _atlas;
+        sceneManager = _sceneManager;
 
     }
 

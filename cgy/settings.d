@@ -72,7 +72,7 @@ vec3f getTileCoords(uint tileNum){
     tmp.Z = tileNum / (TilesPerTexDim*TilesPerTexDim);        
     vec3f ret = util.util.convert!float(tmp);
     float tileScale = 1.0f / to!float(TilesPerTexDim);    
-    return ret * vec3f(tileScale, tileScale, 1.0f);;
+    return ret * vec3f(tileScale, tileScale, 1.0f);
 }
 vec3f getTileCoordSize(){
     float inv = to!float(renderSettings.pixelsPerTile) / to!float(renderSettings.maxTextureSize);

@@ -16,6 +16,8 @@ struct UnitType {
 	static struct InnerUnitType {
 		string displayName;
 		vec3i tintColor;
+        string modelName;   //Model family
+        string skeletonName;//Skeleton family
 	}
 	
 	InnerUnitType serializableSettings;

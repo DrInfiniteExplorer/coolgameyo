@@ -14,6 +14,7 @@ import std.typecons;
 import graphics.camera;
 import graphics.debugging;
 
+import scene.scenemanager;
 
 import clan;
 import json;
@@ -101,7 +102,7 @@ class World {
     SectorXY[SectorXYNum] sectorsXY;
     Sector[SectorNum] sectorList;
 
-    WorldGenParams worldGenParams;
+    //WorldGenParams worldGenParams;
     WorldGenerator worldGen;
     bool isServer;  //TODO: How, exactly, does the world function differently if it actually is a server? Find out!
 
@@ -113,15 +114,17 @@ class World {
     TileTypeManager tileTypeManager;
     EntityTypeManager entityTypeManager;
     UnitTypeManager unitTypeManager;
+    SceneManager sceneManager;
 
-    this(WorldGenParams params, TileTypeManager tilesys, EntityTypeManager entitysys, UnitTypeManager unitsys) {
+    this(WorldGenParams params, TileTypeManager tilesys, EntityTypeManager entitysys, UnitTypeManager unitsys, SceneManager _sceneManager) {
         isServer = true;
         tileTypeManager = tilesys;
         worldGen = new WorldGenerator;
         entityTypeManager = entitysys;
         unitTypeManager = unitsys;
-        worldGenParams = params;
-        worldGen.init(worldGenParams, tilesys);
+        //worldGenParams = params;
+        sceneManager = _sceneManager;
+        worldGen.init(params, tilesys);
 
         heightmapTasks = new HeightmapTasks;
 
@@ -434,8 +437,9 @@ class World {
             //TODO: Pass sector as parameter, to make generateBlock not have to look it up itself?
             generateBlock(blockNum); //Somewhere in this, we make a new sector. Or an old one. Dont know yet.
             block = sector.getBlock(blockNum);
+
         }
-        BREAKPOINT(!block.valid);
+        BREAK_IF(!block.valid);
         assert (block.valid);
         //getBlockLastBlockNum = blockNum;
         //getBlockLastBlock = block;
@@ -624,6 +628,9 @@ class World {
     // These should be named unsafeAddUnit, right?
     void addUnit(Unit unit) {
         enforce(unit.clan !is null);
+
+        pragma(msg, "We should create link between scenegraph and unit here. Programmatic creation of units reach here, and loading & change-induced creation does as well");
+
 
         //Update boolean activity map
         updateActivity(unit.pos, unit.pos);

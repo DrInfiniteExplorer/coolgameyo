@@ -258,7 +258,7 @@ struct aabbox3d(T)
                     return false; //No intersection, thus none at all!
                 }
                 return true; //Intersects, allways.
-            };
+            }
             float startTime= (omin - max) / dir;
             float stopTime = (omax - min) / dir;
             if(startTime > stopTime) swap(startTime, stopTime);

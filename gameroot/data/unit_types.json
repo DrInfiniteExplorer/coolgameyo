@@ -2,9 +2,13 @@
   "dwarf":{
     "displayName":"Dwarf",
 	"tintColor":{ "X":150, "Y":0, "Z":100 },
+    "modelName":"Dwarf",
+    "skeletonName":"Dwarf",
   },
   "elf":{
     "displayName":"Hippie",
 	"tintColor":{ "X":0, "Y":150, "Z":0 },
+    "modelName":"Elf",
+    "skeletonName":"Elf",
   },
 }

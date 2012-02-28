@@ -126,7 +126,7 @@ void setThreadName(string threadName) {
            char* szName; // Pointer to name (in user addr space).
            uint dwThreadID; // Thread ID (-1=caller thread).
            uint dwFlags; // Reserved for future use, must be zero.
-        };
+        }
 
         //const char* name = toStringz(threadName);
         char* name = cast(char*)(threadName ~ "\0").ptr;

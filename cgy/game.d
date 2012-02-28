@@ -24,6 +24,8 @@ import graphics.texture;
 
 import graphics.debugging;
 
+import scene.scenemanager;
+
 import clan;
 import json;
 import ai.patrolai;
@@ -63,6 +65,7 @@ class Game{
 
     private Camera              camera;
     private Renderer            renderer;
+    private SceneManager        sceneManager;
     private TileGeometry        tileGeometry;
     private Scheduler           scheduler;
     private TileTextureAtlas    atlas;
@@ -103,6 +106,7 @@ class Game{
         renderer.destroy();
         world.destroy();
         aiModule.destroy();
+        sceneManager.destroy();
 
         destroyed = true;
     }
@@ -118,7 +122,8 @@ class Game{
         tileTypeManager = new TileTypeManager(atlas);
         entityTypeManager = new EntityTypeManager();
         unitTypeManager = new UnitTypeManager();
-        world = new World(worldParams, tileTypeManager, entityTypeManager, unitTypeManager);
+        sceneManager = new SceneManager();
+        world = new World(worldParams, tileTypeManager, entityTypeManager, unitTypeManager, sceneManager);
         assert (isWorker, "otherwise wont work lol (maybe)");
 
         scheduler = new Scheduler(world);
@@ -136,7 +141,7 @@ class Game{
             //geometryCreator = new GeometryCreator(world);
             auto tileRenderer = new TileRenderer();
             tileGeometry = new TileGeometry(world, tileRenderer);
-            renderer = new Renderer(camera, atlas, tileRenderer);
+            renderer = new Renderer(camera, atlas, tileRenderer, sceneManager);
             scheduler.registerModule(tileGeometry);
             tileGeometry.setCamera(camera);
         }

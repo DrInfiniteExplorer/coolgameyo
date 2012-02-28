@@ -12,10 +12,12 @@ bool exists(string path) {
     return std.file.exists(path);
 }
 
+//Reads a whole file as text
 string readText(string path) {
     return std.file.readText(path);
 }
 
+//Makes dir, recursively
 void mkdir(string path) {
     if (exists(path)) {
         enforce(isDir(path), "Non-filder with name exists:" ~path);
@@ -24,35 +26,31 @@ void mkdir(string path) {
     mkdirRecurse(path);
 }
 
+//Removes dir, recursively
 void rmdir(string path) {
     rmdirRecurse(path);
 }
 
-
+//Copies, recursively
 void copy(string from, string to)
 in{
     BREAK_IF(!exists(from));
 }
 body{
     if (isDir(from)) {
+
         mkdir(to);
-/*        
-        foreach(string item ; dirEntries(from, SpanMode.shallow)) {
-            item = item[max(lastIndexOf(item, "/")+1,
-                            lastIndexOf(item, "\\")+1) .. $];
-            auto too = to ~ "/" ~ item;
-            util.copy(from ~ "/" ~ item, too);
-        }
-*/
         dir(from, (string item){
             auto too = to ~ "/" ~ item;
             copy(from ~ "/" ~ item, too);
         });
+
     } else {
         std.file.copy(from, to);
     }
 }
 
+//Call cb with every item in the path
 void dir(string path, void delegate(string name) cb) {
     return dir(path, (string name){cb(name); return false;});
 }
