@@ -33,8 +33,8 @@
   <useInline>0</useInline>
   <release>0</release>
   <preservePaths>0</preservePaths>
-  <warnings>0</warnings>
-  <infowarnings>0</infowarnings>
+  <warnings>1</warnings>
+  <infowarnings>1</infowarnings>
   <checkProperty>0</checkProperty>
   <genStackFrame>0</genStackFrame>
   <pic>0</pic>
@@ -306,7 +306,7 @@
     <File path="graphics\_2d\rect.d" />
    </Folder>
    <Folder name="models">
-    <File path="graphics\models\md5model.d" />
+    <File path="graphics\models\cgymodel.d" />
    </Folder>
    <File path="graphics\camera.d" />
    <File path="graphics\debugging.d" />
@@ -354,7 +354,7 @@
    <File path="gui\worldview.d" />
   </Folder>
   <Folder name="modelparser">
-   <File path="modelparser\md5parser.d" />
+   <File path="modelparser\cgyparser.d" />
   </Folder>
   <Folder name="modules">
    <File path="modules\ai.d" />

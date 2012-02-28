@@ -37,7 +37,7 @@ import util.memory;
 import worldgen.newgen;
 
 
-import modelparser.md5parser;
+import modelparser.cgyparser;
 
 version (Windows) {
 import std.c.windows.windows;

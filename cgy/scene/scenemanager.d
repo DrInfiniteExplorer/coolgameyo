@@ -9,8 +9,9 @@ import std.exception;
 import scene.modelnode;
 
 import graphics.shader;
-import graphics.models.md5model;
-import modelparser.md5parser;
+import graphics.ogl;
+import graphics.models.cgymodel;
+import modelparser.cgyparser;
 
 import unit;
 import util.filesystem;
@@ -36,10 +37,90 @@ interface SceneNode {
 
 alias ShaderProgram!() SceneNodeShader;
 
+struct InstanceData {
+    vec3f pos;
+    vec3f rot;
+    uint animationIndex;
+    uint frameIndex;
+}
+
+class InstanceManager {
+    ModelNode[] nodes;
+    cgyMesh mesh;
+
+    this(cgyMesh _mesh) {
+        mesh = _mesh;
+        resizeInstanceVBO(32);
+    }
+
+    uint instanceVBO;
+    size_t instanceSize;
+    void resizeInstanceVBO(size_t size) {
+        //TODO: Copy old values when resizeing the buffer
+        //Shrink if size is less or equal to half of current
+        if(2 * size <= instanceSize) {
+            //Also copy current instance values before this!
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
+            glDeleteBuffers(1, &instanceVBO);
+            instanceVBO = 0;
+            instanceSize = size;
+        }
+        if(size > instanceSize) {
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
+            glDeleteBuffers(1, &instanceVBO);
+            instanceVBO = 0;
+            instanceSize = instanceSize + instanceSize/2;
+        }
+        if(instanceVBO == 0) {
+            glGenBuffers(1, &instanceVBO);
+            glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+            size_t size = InstanceData.sizeof * instanceSize;
+            glBufferData(GL_ARRAY_BUFFER, size, null, GL_DYNAMIC_DRAW);
+        }
+    }
+
+    void moveInstanceData(size_t from, size_t to) {
+        InstanceData data;
+        glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+        glGetBufferSubData(GL_ARRAY_BUFFER, InstanceData.sizeof * from, InstanceData.sizeof, &data);
+        glBufferSubData(GL_ARRAY_BUFFER, InstanceData.sizeof * to,   InstanceData.sizeof, &data);
+    }
+
+    void register(ModelNode modelNode) {
+        nodes ~= modelNode;
+        resizeInstanceVBO(nodes.length);
+        
+    }
+    void unregister(ModelNode modelNode) {
+        auto idx = countUntil(nodes, modelNode);
+        enforce(-1 != idx, "Error, trying to remove unexistant thing from InstanceManager");
+        moveInstanceData(nodes.length-1, idx);
+        resizeInstanceVBO(nodes.length-1);
+        nodes[idx] = nodes[$-1];
+        nodes.length = nodes.length - 1;
+    }
+
+    void render() {
+        
+        //Bind mesh data & textures
+        //Aquire instance-vbo's
+        //glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+        //foreach(instance ; modelList) {
+            //Populate instance-vbo's
+        //}
+        //Render instances
+        
+    }
+}
+
+//Rename to SkeletonGroup, because yeah?
 class Skeleton {
+
 
     SceneManager sceneManager;
     int[string] animations; //List of animationname-to-animationindex
+
+    InstanceManager[cgyMesh] meshInstanceManagers;
 
     this(SceneManager _sceneManager) {
         sceneManager = _sceneManager;
@@ -55,22 +136,28 @@ class Skeleton {
     }
 
 
-    ModelNode[][md5Mesh] modelNodes;
-
     void register(ModelNode modelNode) {
+        
         foreach(mesh ; modelNode.meshes) {
-            modelNodes[mesh] ~= modelNode;
+            InstanceManager *ptrManager = mesh in meshInstanceManagers;
+            if(ptrManager is null) {
+                auto im = new InstanceManager(mesh);
+                meshInstanceManagers[mesh] = im;
+                im.register(modelNode);
+                return;
+            }
+            ptrManager.register(modelNode);
         }
+        
     }
 
+
     void unregister(ModelNode modelNode) {
+        
         foreach(mesh ; modelNode.meshes) {
-            ModelNode[]* nodes = &modelNodes[mesh];
-            auto idx = countUntil(*nodes, modelNode);
-            enforce(-1 != idx, "Error, trying to remove unexistant thing from skeletonlist");
-            (*nodes)[idx] = (*nodes)[$-1];
-            (*nodes).length = (*nodes).length - 1;
+            meshInstanceManagers[mesh].unregister(modelNode);
         }
+        
     }
 
     void startAnimation(string animName, AnimationState animState) {
@@ -78,6 +165,15 @@ class Skeleton {
         animState.animationIndex = 0;
         if(animName in animations) {
             animState.animationIndex = animations[animName];
+        }
+    }
+
+
+
+    void render() {
+        
+        foreach(instanceManager; meshInstanceManagers) {
+            instanceManager.render();
         }
     }
 }
@@ -181,12 +277,12 @@ class SceneManager {
         return meshPartCount - 1;
     }
 
-    md5Model[string] models;
-    md5Model loadModel(string modelName) {
+    cgyModel[string] models;
+    cgyModel loadModel(string modelName) {
         if(modelName in models) {
             return models[modelName];
         }
-        md5Model model = new md5Model();
+        cgyModel model = new cgyModel();
 
         auto file = readText(modelName);
         auto meshData = parseModel(file);
@@ -234,10 +330,16 @@ class SceneManager {
     }
 
     void renderScene() {
+        /*
         foreach(typeList ; sceneNodes) {
             foreach(node ; typeList) {
                 node.render();
             }
+        }
+        */
+
+        foreach(skeleton ; skeletons) {
+            skeleton.render();
         }
     }
 

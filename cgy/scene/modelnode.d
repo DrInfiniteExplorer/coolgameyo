@@ -6,18 +6,18 @@ import util.util;
 
 import scene.scenemanager;
 
-import graphics.models.md5model;
+import graphics.models.cgymodel;
 
 
 class ModelNode : SceneNode {
     vec3d position;
 
-    md5Mesh meshes[];
+    cgyMesh meshes[];
     AnimationState animState;
 
     int snapJoint = -1;
 
-    this(md5Model model, AnimationState _animState) {
+    this(cgyModel model, AnimationState _animState) {
         meshes = model.meshes;
         animState = _animState;
     }

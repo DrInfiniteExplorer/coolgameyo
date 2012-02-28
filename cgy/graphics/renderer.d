@@ -329,14 +329,15 @@ class Renderer {
         atlas.use();
         tileRenderer.render(camera, skyColor);
 
-        renderDudes(camera, 0.0f);
-		renderEntities(camera, 0.0f);
+        sceneManager.renderScene();
+
+        //renderDudes(camera, 0.0f);
+		//renderEntities(camera, 0.0f);
         renderDebug(camera);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glError();
     
         castShadowRays();
-
         finishHim();
 
         setWireframe(false);

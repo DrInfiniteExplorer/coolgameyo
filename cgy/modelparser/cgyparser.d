@@ -1,4 +1,4 @@
-module modelparser.md5parser;
+module modelparser.cgyparser;
 
 import std.stdio, std.exception, std.range, std.regex, std.algorithm;
 import std.conv, std.string, std.file, std.typecons;
@@ -7,13 +7,13 @@ import std.math;
 import util.util;
 import stolen.quaternion;
 
-class MD5ParserException : Exception {
+class cgyParserException : Exception {
     this(string msg, string file, size_t line) {
         super(text(file, "(", line, "): ", msg));
     }
 }
 
-alias enforceEx!MD5ParserException md5enforce;
+alias enforceEx!cgyParserException cgyenforce;
 
 final class Joint {
     string name;
@@ -45,8 +45,8 @@ final class Mesh {
     Weight[] weights;
 }
 
-final class MD5FileData {
-    size_t MD5Version; // should be 10 :p
+final class cgyFileData {
+    size_t cgyVersion; // should be 10 :p
     string commandline;
 
     Joint[] joints;
@@ -56,7 +56,7 @@ final class MD5FileData {
 }
 
 
-MD5FileData parseModel(string data) {
+cgyFileData parseModel(string data) {
     auto lines = filter!(a => !a.empty)(
             map!(a => to!string(a.until("//")).strip())(data.split("\n")));
     string[][] tokens = array(map!(
@@ -66,7 +66,7 @@ MD5FileData parseModel(string data) {
         writeln(line);
     }
 
-    MD5FileData ret = new MD5FileData;
+    cgyFileData ret = new cgyFileData;
     auto nums = parseHeader(ret, tokens);
 
     size_t numJoints = nums[0];
@@ -81,35 +81,35 @@ MD5FileData parseModel(string data) {
 
     writeln("parsed joints");
 
-    md5enforce(numJoints == ret.joints.length);
+    cgyenforce(numJoints == ret.joints.length);
 
     while (canFindMesh(tokens)) {
         ret.meshes ~= parseMesh(tokens, ret.joints);
     }
     writeln("parsed meshes");
 
-    md5enforce(numMeshes == ret.meshes.length);
+    cgyenforce(numMeshes == ret.meshes.length);
     return ret;
 }
 
 void extract(Ts...)(string[] tokens, Ts ts) {
-    md5enforce(tokens.length == ts.length);
+    cgyenforce(tokens.length == ts.length);
     foreach (i, t; ts) {
         static if (is(typeof(t) T : T*)) {
             *t = to!T(tokens[i]);
         } else {
             static assert (is(typeof(t) == string));
-            md5enforce(tokens[i] == t, 
+            cgyenforce(tokens[i] == t, 
                     "Mismatch! (" ~ tokens[i] ~ " != " ~ t ~ ")");
         }
     }
 }
 
-Tuple!(size_t, size_t) parseHeader(MD5FileData ret, ref string[][] tokens) {
-    md5enforce(tokens.length > 4);
+Tuple!(size_t, size_t) parseHeader(cgyFileData ret, ref string[][] tokens) {
+    cgyenforce(tokens.length > 4);
 
-    extract(tokens[0], "MD5Version", "10");
-    ret.MD5Version = 10;
+    extract(tokens[0], "cgyVersion", "10");
+    ret.cgyVersion = 10;
 
     string commandline;
     extract(tokens[1], "commandline", &commandline);
@@ -127,7 +127,7 @@ Tuple!(size_t, size_t) parseHeader(MD5FileData ret, ref string[][] tokens) {
 
 
 Joint[] parseJoints(ref string[][] tokens, size_t numJoints) {
-    md5enforce(tokens.length >= numJoints + 2);
+    cgyenforce(tokens.length >= numJoints + 2);
 
     Joint[] ret;
 
@@ -167,7 +167,7 @@ Joint[] parseJoints(ref string[][] tokens, size_t numJoints) {
 }
 
 Mesh parseMesh(ref string[][] tokens, Joint[] joints) {
-    md5enforce(tokens.length >= 6);
+    cgyenforce(tokens.length >= 6);
     extract(tokens[0], "mesh", "{");
 
     Mesh m = new Mesh;

@@ -1,13 +1,13 @@
-module graphics.models.md5model;
+module graphics.models.cgymodel;
 
 import util.util;
 import stolen.quaternion;
 
 import graphics.ogl;
 
-import modelparser.md5parser;
+import modelparser.cgyparser;
 
-struct md5Vertex {
+struct cgyVertex {
     float st[2];
     vec3f pos;
     vec3f normal;
@@ -15,31 +15,31 @@ struct md5Vertex {
     float[4] weights;
 }
 
-struct md5Joint {
+struct cgyJoint {
     int parent;
     vec3f position;
     quaternion rotation;
 }
 
-struct md5Tri {
+struct cgyTri {
     uint idx[3];
 }
 
-struct md5Mesh {
-    md5Vertex[] vertices;
-    md5Tri[] triangles;
+struct cgyMesh {
+    cgyVertex[] vertices;
+    cgyTri[] triangles;
     uint meshVBO;
     uint idxVBO;
 }
 
-class md5Model {
+class cgyModel {
 
 
     string[] jointNames;
-    md5Joint[] joints;
-    md5Mesh[] meshes;
+    cgyJoint[] joints;
+    cgyMesh[] meshes;
 
-    void loadMesh(MD5FileData meshData) {
+    void loadMesh(cgyFileData meshData) {
 
         clearMeshes();
 
@@ -55,10 +55,10 @@ class md5Model {
         meshes.length = meshData.meshes.length;
 
         foreach(idx, mesh ; meshData.meshes) {
-            md5Mesh* meshPtr = &meshes[idx];
+            cgyMesh* meshPtr = &meshes[idx];
             meshPtr.vertices.length = mesh.verts.length;
             foreach(idx, vertex ; mesh.verts) {
-                md5Vertex* vert = &meshPtr.vertices[idx];
+                cgyVertex* vert = &meshPtr.vertices[idx];
                 vert.st[0] = vertex.s;
                 vert.st[1] = vertex.t;
                 vert.bones[] = 0;
@@ -81,7 +81,7 @@ class md5Model {
 
             meshPtr.triangles.length = mesh.tris.length;
             foreach(idx, triangle ; mesh.tris) {
-                md5Tri* tri = &meshPtr.triangles[idx];
+                cgyTri* tri = &meshPtr.triangles[idx];
                 tri.idx[] = triangle.verts[];
             }
         }
@@ -96,11 +96,11 @@ class md5Model {
         }
     }
 
-    void uploadMeshData(md5Mesh mesh) {
+    void uploadMeshData(cgyMesh mesh) {
         clearMesh(mesh); //No fancy partial uploading here!
         glGenBuffers(1, &mesh.meshVBO);
         glBindBuffer(GL_ARRAY_BUFFER, mesh.meshVBO);
-        auto geometrySize = mesh.vertices.length * md5Vertex.sizeof;
+        auto geometrySize = mesh.vertices.length * cgyVertex.sizeof;
         glBufferData(GL_ARRAY_BUFFER, geometrySize, mesh.vertices.ptr, GL_STATIC_DRAW);
 
         glGenBuffers(1, &mesh.idxVBO);
@@ -116,7 +116,7 @@ class md5Model {
         meshes = null;
 
     }
-    void clearMesh(md5Mesh mesh) {
+    void clearMesh(cgyMesh mesh) {
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
         glDeleteBuffers(1, &mesh.idxVBO);
@@ -140,11 +140,11 @@ class md5Model {
         char[4] bones;
         float[4] weights;
 */
-        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, md5Vertex.sizeof, null /* offset in vbo */); glError();
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, md5Vertex.sizeof, cast(void*)md5Vertex().pos.offsetof); glError();
-        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, md5Vertex.sizeof, cast(void*)md5Vertex().normal.offsetof); glError();
-        glVertexAttribPointer(3, 4, GL_UNSIGNED_BYTE, GL_FALSE, md5Vertex.sizeof, cast(void*)md5Vertex().bones.offsetof); glError();
-        glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, md5Vertex.sizeof, cast(void*)md5Vertex().weights.offsetof); glError();
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, cgyVertex.sizeof, null /* offset in vbo */); glError();
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, cgyVertex.sizeof, cast(void*)cgyVertex().pos.offsetof); glError();
+        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, cgyVertex.sizeof, cast(void*)cgyVertex().normal.offsetof); glError();
+        glVertexAttribPointer(3, 4, GL_UNSIGNED_BYTE, GL_FALSE, cgyVertex.sizeof, cast(void*)cgyVertex().bones.offsetof); glError();
+        glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, cgyVertex.sizeof, cast(void*)cgyVertex().weights.offsetof); glError();
 
         foreach(mesh ; meshes) {
             glBindBuffer(GL_ARRAY_BUFFER, mesh.meshVBO); glError();
