@@ -322,6 +322,7 @@ final class WorldGenerator {
                     0, BlockSize.y-1, 0, 0)) {
             auto pos = tp0;
             pos.value += xy;
+            pos.value += halfWorldSize;
             zs[xy.Y][xy.X] = 
                 layerManager.getValueInterpolated(1, TileXYPos(pos));
         }
@@ -355,13 +356,10 @@ final class WorldGenerator {
     }
 
     Tile getTile(TilePos pos) {
-        TileFlags flags = cast(TileFlags)(TileFlags.valid | TileFlags.seen);
-        if(! isInsideWorld(pos)) {
-            return Tile(TileTypeAir, flags);
-        }
-        pos.value += halfWorldSize;
+        auto p2 = pos; // HACK
+        p2.value += halfWorldSize;
         return getTile(pos,
-                layerManager.getValueInterpolated(1, TileXYPos(pos)));
+                layerManager.getValueInterpolated(1, TileXYPos(p2)));
     }
 
     Tile getTile(TilePos pos, double z) {
