@@ -1,7 +1,7 @@
 #version 150 core
 
 uniform mat4 VP;
-uniform ivec3 offset; 
+uniform vec3 offset; 
 
 in vec3 position;
 in vec3 texcoord;

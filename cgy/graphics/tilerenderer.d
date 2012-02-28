@@ -15,11 +15,6 @@ import util.rangefromto;
 import util.util;
 import world.sizes;
 
-//TODO: Make fix this, or make testcase and report it if not done already.
-auto grTexCoordOffset = GRVertex.texcoord.offsetof;
-auto grNormalOffset = GRVertex.normal.offsetof;
-auto grLightOffset = GRVertex.light.offsetof;
-auto grSunLightOffset = GRVertex.sunLight.offsetof;
 
 class TileRenderer {
 
@@ -185,24 +180,26 @@ class TileRenderer {
         glEnableVertexAttribArray(3); glError();
         glEnableVertexAttribArray(4); glError();
 
-        auto transform = camera.getProjectionMatrix() * camera.getViewMatrix();
+        auto transform = camera.getProjectionMatrix() * camera.getTargetMatrix();
         tileProgram.setUniform(tileProgram.VP, transform);
-
         tileProgram.setUniform(tileProgram.SkyColor, skyColor);
+
+        auto camPos = camera.getPosition();
 
         foreach(grNum, renderInfo ; vertexBuffers){
             if(camera.inFrustum(grNum.getAABB())){
 
                 //TODO: Do the pos-camerapos before converting to float, etc
-                auto pos = grNum.min().value;
-                tileProgram.setUniform(tileProgram.offset, pos);
+                auto dPos = convert!double(grNum.min().value);
+                auto fPos = convert!float(dPos - camPos);
+                tileProgram.setUniform(tileProgram.offset, fPos);
 
                 glBindBuffer(GL_ARRAY_BUFFER, renderInfo.vbo); glError();
                 glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, GRVertex.sizeof, null /* offset in vbo */); glError();
-                glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, GRVertex.sizeof, cast(void*)grTexCoordOffset); glError();
-                glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, GRVertex.sizeof, cast(void*)grLightOffset); glError();
-                glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, GRVertex.sizeof, cast(void*)grSunLightOffset); glError();
-                glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, GRVertex.sizeof, cast(void*)grNormalOffset); glError();
+                glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, GRVertex.sizeof, cast(void*)GRVertex().texcoord.offsetof); glError();
+                glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, GRVertex.sizeof, cast(void*)GRVertex().light.offsetof); glError();
+                glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, GRVertex.sizeof, cast(void*)GRVertex().sunLight.offsetof); glError();
+                glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, GRVertex.sizeof, cast(void*)GRVertex().normal.offsetof); glError();
                 glDrawArrays(GL_QUADS, 0, renderInfo.quadCount*4); glError();
             }
         }

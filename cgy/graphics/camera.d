@@ -64,12 +64,23 @@ class Camera{
         //and move blocks with that amount before sending them to ogl.
         matrix4 view;
         view.buildCameraLookAtMatrixRH(
-            convert!float(position),
-            convert!float(position+targetDir),
-            vec3f(0.0f, 0.0f, 1.0f)
-        );
+                                       convert!float(position),
+                                       convert!float(position+targetDir),
+                                       vec3f(0.0f, 0.0f, 1.0f)
+                                       );
         return view;
     }
+
+    matrix4 getTargetMatrix(){
+        matrix4 view;
+        view.buildCameraLookAtMatrixRH(
+                                       vec3f(0.0f, 0.0f, 0.0f),
+                                       convert!float(targetDir),
+                                       vec3f(0.0f, 0.0f, 1.0f)
+                                       );
+        return view;
+    }
+
 
     //Implement yaaargh
     bool inFrustum(T)(T t){
