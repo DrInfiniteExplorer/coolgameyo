@@ -14,7 +14,6 @@ import util.util;
 
 enum TileFlags : ushort {
     none        = 0,
-    seen        = 1 << 0,
     pathable    = 1 << 4,
     valid       = 1 << 15,
 }
@@ -60,9 +59,6 @@ struct Tile {
     bool valid() const @property { return (flags & TileFlags.valid) != 0; }
     void valid(bool val) @property { setFlag(flags, TileFlags.valid, val); }
 
-    bool seen() const @property { return (flags & TileFlags.seen) != 0; }
-    void seen(bool val) @property { setFlag(flags, TileFlags.seen, val); }
-
     bool sunlight() const @property { return sunLightValue == MaxLightStrength; }
 
     bool isAir() const @property { return type == TileTypeAir; }
@@ -72,7 +68,6 @@ struct Tile {
 
     string describe() const {
         string ret = "";
-        ret ~= seen ? "Seen, " : "Unseen, ";
         ret ~= pathable ? "Pathable, " : "Unpathable, ";
         ret ~= valid ? "Valid, " : "Invalid, ";
         ret ~= to!string(lightValue) ~ "," ~to!string(sunLightValue) ~ ",";

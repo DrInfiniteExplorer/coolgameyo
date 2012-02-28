@@ -312,17 +312,14 @@ final class WorldGenerator {
     }
 
     Block fillBlock(Block block) {
-        block.seen = true;
 
         auto tp0 = block.blockNum.toTilePos();
-        tp0.value += halfWorldSize;
 
         double[BlockSize.x][BlockSize.y] zs;
         foreach (xy; RangeFromTo (0, BlockSize.x-1,
                     0, BlockSize.y-1, 0, 0)) {
             auto pos = tp0;
             pos.value += xy;
-            pos.value += halfWorldSize;
             zs[xy.Y][xy.X] = 
                 layerManager.getValueInterpolated(1, TileXYPos(pos));
         }
@@ -356,18 +353,15 @@ final class WorldGenerator {
     }
 
     Tile getTile(TilePos pos) {
-        auto p2 = pos; // HACK
-        p2.value += halfWorldSize;
         return getTile(pos,
-                layerManager.getValueInterpolated(1, TileXYPos(p2)));
+                layerManager.getValueInterpolated(1, TileXYPos(pos)));
     }
 
     Tile getTile(TilePos pos, double z) {
-        TileFlags flags = cast(TileFlags)(TileFlags.valid | TileFlags.seen);
+        TileFlags flags = cast(TileFlags)(TileFlags.valid);
         if(! isInsideWorld(pos)) {
             return Tile(TileTypeAir, flags);
         }
-        pos.value += halfWorldSize;
         if(pos.value.Z > z) {
             auto tile = Tile(TileTypeAir, flags);
             tile.sunLightValue = MaxLightStrength;
@@ -384,10 +378,8 @@ final class WorldGenerator {
         return dist < max;
     } 
     int maxZ(TileXYPos xypos) {
-        xypos.value += halfWorldSize_xy;
         auto z = layerManager.getValueInterpolated(1, xypos);
         return cast(int)ceil(z);
-        //return 16;
     }
 
     double getHeight01(TilePos t) {

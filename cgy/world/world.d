@@ -769,18 +769,6 @@ class World {
         bool newSolid = !newTile.isAir();
         bool oldSolid = sector.setSolid(tilePos, newSolid);
 
-        //Only works to not set blocknum again, if we already
-        // have a block of memory that block.tiles points to;
-        // since then we'd be writing into the correct memory.
-        // a block is really read-only, but block.tiles if
-        // present is read-write.
-        //Start floodfill, and updating of discovered areas
-        if (newTile.type is TileTypeAir) {
-            block.seen = false; //To enable floodfilling of area again.
-            addFloodFillPos(tilePos);
-        }
-
-
         //Update heightmap
         //        auto sectorXY = getSectorXY(SectorXYNum(vec2i(sectorNum.value.X, sectorNum.value.Y)));
         auto heightmap = sectorXY.heightmap;

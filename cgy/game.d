@@ -175,6 +175,7 @@ class Game{
         auto clan = newClan(world);
 
         auto xy = TileXYPos(vec2i(3,-20));
+        xy.value += halfWorldSize_xy;
         auto u = newUnit();
         u.pos = topOfTheWorld(xy);
         u.type = world.unitTypeManager.byName("elf");
@@ -188,6 +189,7 @@ class Game{
 
         auto uu = newUnit();
         auto xyy = TileXYPos(vec2i(3,3));
+        xyy.value += halfWorldSize_xy;
         uu.pos = topOfTheWorld(xyy);
         uu.type = world.unitTypeManager.byName("dwarf");
 
@@ -217,12 +219,14 @@ class Game{
         }
 
         xy = TileXYPos(vec2i(1,5));
+        xy.value += halfWorldSize_xy;
         auto o = newEntity();
         o.pos = topOfTheWorld2(xy);
         o.type = world.entityTypeManager.byName("tree");
         world.addEntity(o);
         msg("o.pos == ", o.pos);
         xy = TileXYPos(vec2i(5,1));
+        xy.value += halfWorldSize_xy;
         o = newEntity();
         o.pos = topOfTheWorld2(xy);
         o.type = world.entityTypeManager.byName("shrubbery");

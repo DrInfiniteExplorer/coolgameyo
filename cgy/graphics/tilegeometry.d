@@ -216,9 +216,6 @@ class TileGeometry : Module, WorldListener
             if (tile.isAir) {
                 continue;
             }            
-            if (!tile.seen) {
-                continue;
-            }
             auto tileXp = world.getTile(TilePos(pos+vec3i(1,0,0)), false);
             auto tileXn = world.getTile(TilePos(pos-vec3i(1,0,0)), false);
             auto tileYp = world.getTile(TilePos(pos+vec3i(0,1,0)), false);

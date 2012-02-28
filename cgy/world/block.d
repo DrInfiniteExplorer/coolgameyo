@@ -28,7 +28,6 @@ import util.util;
 
 enum BlockFlags : ubyte {
     none                = 0,
-    seen                = 1 << 0,
     sparse              = 1 << 1,
     valid               = 1 << 7,
 }
@@ -79,7 +78,6 @@ struct Block {
         Tile t;
         t.type = sparseTileType;
         t.flags = TileFlags.valid;
-        t.seen = seen;
         t.sunLightValue = sunLightVal;
         return t;
     }
@@ -135,8 +133,6 @@ struct Block {
     bool valid() const @property { return (flags & BlockFlags.valid) != 0; }
     void valid(bool val) @property { setFlag(flags, BlockFlags.valid, val); }
 
-    bool seen() const @property { return (flags & BlockFlags.seen) != 0; }
-    void seen(bool val) @property { setFlag(flags, BlockFlags.seen, val); }
 
     bool sparse() const @property { return (flags & BlockFlags.sparse) != 0; }
     void sparse(bool val) @property { setFlag(flags, BlockFlags.sparse, val); }
@@ -260,7 +256,7 @@ Block INVALID_BLOCK = {
 Block AirBlock(BlockNum blockNum) {
     Block ret;
     ret.flags = cast(BlockFlags)(
-            BlockFlags.valid | BlockFlags.sparse | BlockFlags.seen);
+            BlockFlags.valid | BlockFlags.sparse);
     ret.blockNum = blockNum;
     ret.sparseTileType = TileTypeAir;
     ret.sunLightVal = MaxLightStrength;

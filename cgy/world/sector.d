@@ -278,26 +278,6 @@ class Sector {
         return &blocks[pos.X][pos.Y][pos.Z];
     }
 
-    void setBlock(BlockNum blockNum, Block newBlock)
-    in {
-        assert(blockNum.getSectorNum() == sectorNum, "Sector.setBlock: Trying to set a block that doesn't belong here!");
-    }
-    body {
-        enforce(false, "We dont support setting blocks anylonger. See http://luben.se/wiki/index.php?page=Tilerepresentation");
-        auto rel = blockNum.rel();
-        auto currentBlock = blocks[rel.X][rel.Y][rel.Z];
-        //TODO: Make comment detailing the logic behind this
-        if(currentBlock.valid && !currentBlock.sparse){
-            if(currentBlock.tiles != newBlock.tiles){
-                msg("Make fix this");
-                //TODO: Make fix line below!
-                //enforce(0, "We want to free this memory i think...The current, that is.");
-            }
-        }
-        blocks[rel.X][rel.Y][rel.Z] = newBlock;
-        solidMap.updateBlock(newBlock);
-    }
-
     bool hasContent(TilePos min, TilePos max) {
         auto relMin = min.sectorRel();
         auto relMax = max.sectorRel();
@@ -319,7 +299,7 @@ class Sector {
 
     //TODO: Add more unit-interfacing etc.
     void addUnit(Unit u) {
-        units ~= u ;
+        units ~= u;
     }
     void addEntity(Entity o) {
         entities ~= o;
@@ -336,13 +316,9 @@ class Sector {
     SectorNum getSectorNum() const @property { return sectorNum; }
     
     LightSource[] lights;
-    void addLight(LightSource light)
-    in{
-        foreach(l; lights) {
-            assert(l !is light, "Dont add the same light multiple times!");
-        }
-    }
-    body{
+    void addLight(LightSource light) {
+        assert (!lights.canFind!"a is b"(light),
+                "Dont add the same light multiple times!");
         lights ~= light; 
     }
 
