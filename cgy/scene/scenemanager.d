@@ -7,6 +7,7 @@ import std.conv;
 import scene.instancemanager;
 import scene.modelnode;
 
+import graphics.camera;
 import graphics.shader;
 import graphics.models.cgymodel;
 import modelparser.cgyparser;
@@ -33,7 +34,7 @@ interface SceneNode {
     void render();
 };
 
-alias ShaderProgram!() SceneNodeShader;
+alias ShaderProgram!("VP") SceneNodeShader;
 
 struct InstanceData {
     vec3f pos;
@@ -74,7 +75,7 @@ final class Skeleton {
                 meshInstanceManagers[mesh].register(modelNode);
                 return;
             }
-            auto im = new InstanceManager(mesh);
+            auto im = new InstanceManager(sceneManager, mesh);
             meshInstanceManagers[mesh] = im;
             im.register(modelNode);
         }
@@ -91,10 +92,10 @@ final class Skeleton {
     }
 
 
-    void render() {
+    void render(Camera camera) {
 
         foreach(instanceManager; meshInstanceManagers) {
-            instanceManager.render();
+            instanceManager.render(camera);
         }
     }
 
@@ -140,6 +141,7 @@ class UnitProxy {
         auto model  = sceneManager.loadModel(type.modelName);
 
         bodyModel = new ModelNode(model, animState);
+        bodyModel.setPosition(unit.pos.value);
 
         skeleton.startAnimation("idle", animState);
         skeleton.register(bodyModel);
@@ -209,11 +211,13 @@ final class SceneManager {
     }
 
     cgyModel[string] models;
+    cgyModel[] newModels;
     cgyModel loadModel(string modelName) {
         if(modelName in models) {
             return models[modelName];
         }
         cgyModel model = new cgyModel();
+        newModels ~= model;
 
         auto file = readText("models/" ~ modelName);
         auto meshData = parseModel(file);
@@ -232,7 +236,7 @@ final class SceneManager {
         //auto file = readText(skeletonName);
         //auto skeletonData = parse(file);
         //skeleton.loadSkeleton(skeletonData);
-        //skeletons[skeletonName] = skeleton;
+        skeletons[skeletonName] = skeleton;
         pragma(msg, "implement skeleton loading");
         return skeleton;
     }
@@ -247,10 +251,27 @@ final class SceneManager {
         shaders[shaderPath] = shader;
         return shader;
     }
-    SceneNodeShader loadShader(string shaderPath) {
+    private SceneNodeShader loadShader(string shaderPath) {
         auto vertexPath = shaderPath ~ ".vert";
         auto fragmentPath = shaderPath ~ ".frag";
         auto shader = new SceneNodeShader(vertexPath, fragmentPath);
+
+        shader.bindAttribLocation(0, "position");
+        shader.bindAttribLocation(1, "texcoord");
+        shader.bindAttribLocation(2, "normal");
+        shader.bindAttribLocation(3, "bones");
+        shader.bindAttribLocation(4, "weights");
+
+        shader.bindAttribLocation(5, "pos");
+        shader.bindAttribLocation(6, "rot");
+        shader.bindAttribLocation(7, "animationIndex");
+        shader.bindAttribLocation(8, "frameIndex");
+        shader.link();
+
+        shader.use();
+        shader.VP = shader.getUniformLocation("VP");
+        shader.use(false);
+
 
         /*
             code to detect which variables and things are used in the shader.
@@ -260,7 +281,7 @@ final class SceneManager {
         return shader;
     }
 
-    void renderScene() {
+    void renderScene(Camera camera) {
         /*
         foreach(typeList ; sceneNodes) {
             foreach(node ; typeList) {
@@ -268,9 +289,14 @@ final class SceneManager {
             }
         }
         */
+        
+        foreach(model ; newModels) {
+            model.prepare();
+        }
+        newModels.length = 0;
 
         foreach(skeleton ; skeletons) {
-            skeleton.render();
+            skeleton.render(camera);
         }
     }
 

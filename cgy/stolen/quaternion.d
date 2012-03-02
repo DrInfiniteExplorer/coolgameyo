@@ -4,6 +4,8 @@
 
 module stolen.quaternion;
 
+import std.conv;
+
 import stolen.vector3d;
 import stolen.matrix4;
 import stolen.math;
@@ -498,4 +500,13 @@ public:
 	float Y = 0;
 	float Z = 0;
 	float W = 0; // real part
+
+    string toString() {
+        return typeof(this).stringof ~
+            " (" ~ to!string(X)
+            ~ ", " ~ to!string(Y)
+            ~ ", " ~ to!string(Z)
+            ~ ", " ~ to!string(W) ~ ")";
+    }  
+
 };

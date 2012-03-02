@@ -329,7 +329,7 @@ class Renderer {
         atlas.use();
         tileRenderer.render(camera, skyColor);
 
-        sceneManager.renderScene();
+        sceneManager.renderScene(camera);
 
         //renderDudes(camera, 0.0f);
 		//renderEntities(camera, 0.0f);

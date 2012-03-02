@@ -23,31 +23,22 @@ final class Joint {
 }
 
 final class Vert {
+    vec3f pos;
     float s, t;
-    Weight[] weights;
+    int jointId[4];
+    float weight[4];
 }
 
 final class Tri {
     size_t[3] verts;
 }
 
-final class Weight {
-    int jointId;
-    float bias;
-    vec3f pos;
-    override int opCmp(Object oo) {
-        auto o = (cast(Weight)oo).bias;
-        if(o == bias) return 0;
-        return o > bias ? 1 : -1;
-    }
-}
 
 
 final class Mesh {
     string shader;
     Vert[] verts;
     Tri[] tris;
-    Weight[] weights;
 }
 
 final class cgyFileData {
@@ -144,17 +135,17 @@ Joint[] parseJoints(ref string[][] tokens, size_t numJoints) {
         ret[idx] = j;
         string name;
         int parent_index;
-        float x, y, z;
-        float a, b, c;
         extract(line, &name, &j.parent, 
                 "(", &j.pos.X, &j.pos.Y, &j.pos.Z, ")", 
                 "(", &j.orientation.X, &j.orientation.Y, &j.orientation.Z, ")");
         j.name = name[1 .. $-1];
 
+        writeln(j.pos);
+
         auto tmp = 1.0f - 
             j.orientation.X*j.orientation.X -
-            j.orientation.X*j.orientation.Y -
-            j.orientation.X*j.orientation.Z;
+            j.orientation.Y*j.orientation.Y -
+            j.orientation.Z*j.orientation.Z;
         if(tmp <= 0.0f) {
             j.orientation.W = 0.0f;
         } else {
@@ -193,7 +184,10 @@ Mesh parseMesh(ref string[][] tokens, Joint[] joints) {
 
         size_t index, length;
         extract(tokens[i], 
-                "vert", to!string(i), "(", &v.s, &v.t, ")", &index, &length);
+                "vert", to!string(i), &v.pos.X, &v.pos.Y, &v.pos.Z,
+                "(", &v.s, &v.t, ")",
+                "(", &v.jointId[0], &v.jointId[1], &v.jointId[2], &v.jointId[3],
+                &v.weight[0], &v.weight[1], &v.weight[2], &v.weight[3], ")");
 
 
         m.verts ~= v;
@@ -216,33 +210,8 @@ Mesh parseMesh(ref string[][] tokens, Joint[] joints) {
 
     tokens = tokens[numtris .. $];
 
-    size_t numweights;
-    extract(tokens.front, "numweights", &numweights);
-    tokens.popFront();
-
-    foreach (i; 0 .. numweights) {
-        Weight w = new Weight;
-
-        size_t joint_index;
-
-        float x,y,z;
-        extract(tokens[i], "weight", to!string(i),
-                &joint_index, &w.bias, "(", &x, &y, &z, ")");
-
-        w.jointId = joint_index; //joints[joint_index];
-
-        m.weights ~= w;
-    }
-
-    tokens = tokens[numweights .. $];
-
     extract(tokens.front, "}");
     tokens.popFront();
-
-    foreach (i, vert; m.verts) {
-        vert.weights = m.weights[vert_weight_indices[i]
-            .. vert_weight_indices[i] + vert_weight_lengths[i]];
-    }
 
     return m;
 }

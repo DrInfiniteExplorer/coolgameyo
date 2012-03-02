@@ -1,5 +1,7 @@
 module graphics.models.cgymodel;
 
+import std.stdio;
+
 import util.util;
 import stolen.quaternion;
 
@@ -8,8 +10,8 @@ import graphics.ogl;
 import modelparser.cgyparser;
 
 struct cgyVertex {
-    float st[2];
     vec3f pos;
+    float st[2];
     vec3f normal;
     ubyte[4] bones;
     float[4] weights;
@@ -30,6 +32,7 @@ final class CGYMesh {
     cgyTri[] triangles;
     uint meshVBO;
     uint idxVBO;
+    string shader = "shaders/models/scenenode";
 }
 
 final class cgyModel {
@@ -39,10 +42,23 @@ final class cgyModel {
     cgyJoint[] joints;
     CGYMesh[] meshes;
 
-    void loadMesh(cgyFileData meshData) {
-        return;
+    bool _clearMeshes = false;
+    bool _uploadMeshData = false;
 
+    this() {
+    }
+
+    bool destroyed = false;
+    ~this() {
+        BREAK_IF(!destroyed);
+    }
+
+    void destroy() {
         clearMeshes();
+        destroyed = true;
+    }
+
+    void loadMesh(cgyFileData meshData) {
 
         joints.length = meshData.joints.length;
         jointNames.length = meshData.joints.length;
@@ -50,6 +66,7 @@ final class cgyModel {
             jointNames[idx] = joint.name;
             joints[idx].parent = joint.parent;
             joints[idx].position = joint.pos.convert!float();
+            writeln(joints[idx].position, " ", joint.pos.convert!float());
             joints[idx].rotation = joint.orientation;
         }
 
@@ -62,31 +79,13 @@ final class cgyModel {
             newMesh.vertices.length = mesh.verts.length;
             foreach(idx, vertex ; mesh.verts) {
                 cgyVertex* vert = &newMesh.vertices[idx];
+                vert.pos = vertex.pos;
                 vert.st[0] = vertex.s;
                 vert.st[1] = vertex.t;
-                vert.bones[] = 0;
-                vert.weights[] = 0.0f;
-                vert.pos.set(0.0f, 0.0f, 0.0f);
-                float weightSum = 0.0f;
-                foreach(idx, weight ; vertex.weights) {
-
-                    vec3f unWeighted = 
-                        joints[weight.jointId].position +
-                        joints[weight.jointId].rotation * weight.pos;
-                    vert.pos += unWeighted * weight.bias;
-                    weightSum += weight.bias;
+                vert.weights[] = vertex.weight[];
+                foreach( i ; 0 .. 4) {
+                    vert.bones[i] = cast(ubyte)vertex.jointId[i];
                 }
-
-                if(vertex.weights.length > 4) {
-                    vertex.weights.sort;
-                }
-
-                foreach(idx, weight ; vertex.weights) {
-                    if(idx >= 4) continue; // Because if we try to assign to vertex.weights.length above, optlink crashes
-                    vert.bones[idx] = cast(char)weight.jointId;
-                    vert.weights[idx] = weight.bias / weightSum;
-                }
-
             }
 
 
@@ -97,7 +96,7 @@ final class cgyModel {
             }
         }
 
-        uploadMeshData();
+        _uploadMeshData = true;
 
     }
 
@@ -113,18 +112,19 @@ final class cgyModel {
         glBindBuffer(GL_ARRAY_BUFFER, mesh.meshVBO);
         auto geometrySize = mesh.vertices.length * cgyVertex.sizeof;
         glBufferData(GL_ARRAY_BUFFER, geometrySize, mesh.vertices.ptr, GL_STATIC_DRAW);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
 
         glGenBuffers(1, &mesh.idxVBO);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.idxVBO);
         auto idxSize = 3 * mesh.triangles.length * uint.sizeof;
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, idxSize, mesh.triangles.ptr, GL_STATIC_DRAW);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     }
 
     void clearMeshes() {
         foreach(idx, mesh ; meshes) {
             clearMesh(mesh);
         }
-        meshes = null;
 
     }
     void clearMesh(CGYMesh mesh) {
@@ -134,6 +134,13 @@ final class cgyModel {
         glDeleteBuffers(1, &mesh.meshVBO);
         mesh.idxVBO = 0;
         mesh.meshVBO = 0;
+    }
+
+    void prepare() {
+        if(_uploadMeshData) {
+            _uploadMeshData = false;
+            uploadMeshData();
+        }
     }
 
     /* Simple renderindation */

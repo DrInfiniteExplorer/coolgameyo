@@ -36,7 +36,7 @@ void removeAABB(int id) {
 }
 
 void renderAABBList(void delegate (vec3f color, float radius) set){
-    return;
+
     vec3d[8] edges;
     vec3f[8] fedges;
     immutable ubyte[] indices = [0, 1, 0, 4, 0, 2, 2, 6, 2, 3, 5, 1, 5, 4, 6, 2, 6, 4, 6, 7, 7, 5, 7, 3];
@@ -47,6 +47,7 @@ void renderAABBList(void delegate (vec3f color, float radius) set){
             fedges[idx] = v.convert!float; //Lol! Men om som innan att vi skickar doubles så kraschar det på lubens dator här :P
         }
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, vec3f.sizeof, fedges.ptr);
+        //glVertexAttribPointer(0, 3, GL_DOUBLE, GL_FALSE, vec3d.sizeof, edges.ptr);
         glError();
         set(cast(vec3f)data.color, data.radius);
         static assert(indices.length == 24, "Derp herp ,mnnbv");

@@ -330,7 +330,8 @@ void renderQuad() {
 }
 
 void glError(string file = __FILE__, int line = __LINE__){
-    debug{
+    //debug
+    {
         uint err = glGetError();
         string str;
         switch(err){
@@ -349,6 +350,7 @@ void glError(string file = __FILE__, int line = __LINE__){
             break;
         }
         auto derp = file ~ to!string(line) ~ "\n" ~str;
+        writeln(derp);
         assert(0, derp);
     }
 }

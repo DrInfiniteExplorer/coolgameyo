@@ -130,7 +130,7 @@
   <warnings>1</warnings>
   <infowarnings>1</infowarnings>
   <checkProperty>0</checkProperty>
-  <genStackFrame>0</genStackFrame>
+  <genStackFrame>1</genStackFrame>
   <pic>0</pic>
   <cov>0</cov>
   <nofloat>0</nofloat>
@@ -386,10 +386,6 @@
    <File path="scene\scenemanager.d" />
   </Folder>
   <Folder name="shaders">
-   <Folder name="models">
-    <File path="..\gameroot\shaders\models\scenenode.frag" />
-    <File path="..\gameroot\shaders\models\scenenode.vert" />
-   </Folder>
    <Folder name="gui">
     <File path="..\gameroot\shaders\gui\imageRectShader.frag" />
     <File path="..\gameroot\shaders\gui\imageRectShader.vert" />
@@ -397,6 +393,10 @@
     <File path="..\gameroot\shaders\gui\lineShader.vert" />
     <File path="..\gameroot\shaders\gui\rectShader.frag" />
     <File path="..\gameroot\shaders\gui\rectShader.vert" />
+   </Folder>
+   <Folder name="models">
+    <File path="..\gameroot\shaders\models\scenenode.frag" />
+    <File path="..\gameroot\shaders\models\scenenode.vert" />
    </Folder>
    <File path="..\gameroot\shaders\fontShader.frag" />
    <File path="..\gameroot\shaders\fontShader.vert" />

@@ -32,7 +32,7 @@ public:
   // operators
 
   vector3d!TTT convert(TTT)() const {
-      return vector3d!TTT(to!TTT(X), to!TTT(Y), to!TTT(Z));
+      return vector3d!TTT(cast(TTT)(X), cast(TTT)(Y), cast(TTT)(Z));
   }
 
   
