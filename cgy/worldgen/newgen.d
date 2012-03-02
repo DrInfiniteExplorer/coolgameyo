@@ -324,6 +324,8 @@ final class WorldGenerator {
                 layerManager.getValueInterpolated(1, TileXYPos(pos));
         }
 
+        block.hasAir = false;
+
         bool homogenous = true;
         bool first = true;
         foreach (relPos; RangeFromTo (0, BlockSize.x-1,
@@ -341,6 +343,9 @@ final class WorldGenerator {
             if (block.sparseTileType != tile.type ||
                 block.sunLightVal != tile.sunLightValue) {
                 homogenous = false;
+            }
+            if (tile.type == TileTypeAir) {
+                block.hasAir = true;
             }
         }
         if (homogenous) {

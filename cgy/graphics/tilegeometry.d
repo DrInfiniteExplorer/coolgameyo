@@ -429,10 +429,10 @@ class TileGeometry : Module, WorldListener
         }        
     }
 
-    bool hasContent(GraphRegionNum grNum) {
+    bool nearAirBorder(GraphRegionNum grNum) {
         auto minTilePos = grNum.min;
         auto maxTilePos = grNum.max();
-        return world.hasContent(minTilePos, maxTilePos);
+        return world.nearAirBorder(minTilePos, maxTilePos);
     }
 
     void onAddUnit(SectorNum, Unit) { }
@@ -454,7 +454,7 @@ class TileGeometry : Module, WorldListener
         GraphRegionNum[] newRegions;
         foreach(pos ; RangeFromTo (grNumMin.value, grNumMax.value)) {
             auto grNum = GraphRegionNum(pos);
-            if(hasContent(grNum)){
+            if(nearAirBorder(grNum)){
                 //msg("Has content;", grNum);
                 newRegions ~= grNum;
             }

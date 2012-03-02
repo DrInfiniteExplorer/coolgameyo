@@ -40,6 +40,7 @@ final class cgyModel {
     CGYMesh[] meshes;
 
     void loadMesh(cgyFileData meshData) {
+        return;
 
         clearMeshes();
 

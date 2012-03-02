@@ -834,10 +834,23 @@ class World {
         return TilePos(pos);
     }
 
+    bool nearAirBorder(TilePos min, TilePos max) {
+        min.value -= vec3i(1,1,1);
+        max.value += vec3i(1,1,1);
+        foreach (bn; RangeFromTo(
+                    min.getBlockNum().value,
+                    max.getBlockNum().value)) {
+            if (getBlock(BlockNum(bn)).hasAir) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     bool hasContent(TilePos min, TilePos max) {
         auto sectorMin = min.getSectorNum();
         auto sectorMax = max.getSectorNum();
-        foreach(rel ; RangeFromTo(sectorMin.value, sectorMax.value)) {
+        foreach (rel; RangeFromTo(sectorMin.value, sectorMax.value)) {
             auto sectorNum = SectorNum(rel);
             auto sectorStartTilePos = sectorNum.toTilePos();
             auto sectorStopTilePos = TilePos(sectorStartTilePos.value + vec3i(SectorSize.x-1, SectorSize.y-1, SectorSize.z-1));

@@ -93,7 +93,7 @@ struct SolidMap {
 
     bool hasContent(vec3i relMin, vec3i relMax) {
         //TODO: Optimize this with kewl functions that counts/finds first set bit.
-        foreach( pos ; RangeFromTo(relMin, relMax)) {
+        foreach (pos; RangeFromTo(relMin, relMax)) {
             if(get(pos)) {
                 return true;
             }

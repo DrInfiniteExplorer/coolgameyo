@@ -29,6 +29,7 @@ import util.util;
 enum BlockFlags : ubyte {
     none                = 0,
     sparse              = 1 << 1,
+    hasAir              = 1 << 2,
     valid               = 1 << 7,
 }
 
@@ -132,6 +133,9 @@ struct Block {
 
     bool valid() const @property { return (flags & BlockFlags.valid) != 0; }
     void valid(bool val) @property { setFlag(flags, BlockFlags.valid, val); }
+
+    bool hasAir() const @property { return (flags & BlockFlags.hasAir) != 0; }
+    void hasAir(bool val) @property { setFlag(flags, BlockFlags.hasAir, val); }
 
 
     bool sparse() const @property { return (flags & BlockFlags.sparse) != 0; }
