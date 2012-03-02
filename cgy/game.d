@@ -183,7 +183,7 @@ class Game{
         xy.value += halfWorldSize_xy;
         auto u = newUnit();
         u.pos = topOfTheWorld(xy);
-        u.type = world.unitTypeManager.byName("elf");
+        u.type = world.unitTypeManager.byName("dwarf");
         //u.pos.value.Z += 1;
 
         clan.addUnit(u);

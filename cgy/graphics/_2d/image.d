@@ -9,7 +9,7 @@ import graphics.shader;
 import settings;
 import util.util;
 import util.rect;
-alias util.util.convert convert;
+//alias util.util.convert convert;
 
 struct ImageRectVertex {
     vec2f pos;
@@ -17,19 +17,19 @@ struct ImageRectVertex {
 }
 
 
-immutable(char[]) fixRect = "
+immutable(char[]) fixRect = q{
     auto screenSize = vec2f(renderSettings.windowWidth-1, renderSettings.windowHeight-1);
-//    auto start = (vec2f(0.375, 0.375) + convert!float(r.start)) / screenSize;
-    auto start = (vec2f(offset, offset) + convert!float(r.start)) / screenSize;
-//    auto start = (convert!float(r.start)) / screenSize;
-//    auto start = (convert!float(r.start));
+//    auto start = (vec2f(0.375, 0.375) + r.start.convert!float()) / screenSize;
+    auto start = (vec2f(offset, offset) + r.start.convert!float()) / screenSize;
+//    auto start = (r.start.convert!float()) / screenSize;
+//    auto start = (r.start.convert!float());
     start.Y = 1.0 - start.Y;
-    auto size = convert!float(r.size) / screenSize;
-//    auto size = convert!float(r.size);
+    auto size = r.size.convert!float() / screenSize;
+//    auto size = r.size.convert!float();
     size.Y = - size.Y;
     auto x = vec2f(size.X, 0);
     auto y = vec2f(0, size.Y);
-    ";
+};
 
 struct ImageRectQuad{
     ImageRectVertex[4] vertices;

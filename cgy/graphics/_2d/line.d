@@ -21,9 +21,9 @@ struct LineVertex {
 
 immutable(char[]) fixRect = "
     auto screenSize = vec2f(renderSettings.windowWidth-1, renderSettings.windowHeight-1);
-    auto start = (vec2f(offset, offset) + convert!float(r.start)) / screenSize;
+    auto start = (vec2f(offset, offset) + r.start.convert!float()) / screenSize;
     start.Y = 1.0 - start.Y;
-    auto size = convert!float(r.size) / screenSize;
+    auto size = r.size.convert!float() / screenSize;
     start.Y -= size.Y;
     auto x = vec2f(size.X, 0);
     auto y = vec2f(0, size.Y);

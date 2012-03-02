@@ -7,6 +7,8 @@ module stolen.vector2d;
 import stolen.math;
 import stolen.vector3d;
 
+
+
 //! 2d vector template class with lots of operators and methods.
 /** As of Irrlicht 1.6, this class supercedes position2d, which should
 	be considered deprecated. */
@@ -22,6 +24,10 @@ public:
 
     vector3d!T vec3(T z = 0) const {
         return vector3d!T(X, Y, z);
+    }
+
+    vector2d!TTT convert(TTT)() const {
+        return vector2d!TTT(cast(TTT)(X), cast(TTT)(Y));
     }
 
 	// operators

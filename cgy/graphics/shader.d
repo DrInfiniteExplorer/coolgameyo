@@ -207,7 +207,7 @@ final class ShaderProgram(T...){
         glError();
     }
     void setUniform(uint location, vec2d vec){
-        setUniform(location, convert!float(vec));
+        setUniform(location, vec.convert!float());
     }
 
     void setUniform(uint location, matrix4 mat){

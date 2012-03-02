@@ -279,6 +279,12 @@ static:
 
 alias Parser.parseValue parse;
 
+template RealThing(T...) if(T.length == 1)
+{
+    enum bool RealThing = true;
+}
+
+
 T read(T)(string s) {
     T t;
     read!T(t, s);    
@@ -329,15 +335,19 @@ void read(T)(ref T t, Value val) {
 private void update(T)(T* t, string s) { return update!T(t, parse(s)); }
 private void update(T)(T* t, Value val) {
     foreach (m; __traits(allMembers, T)) {
-        alias typeof(__traits(getMember, *t, m)) M;
-        static if (isSomeFunction!(__traits(getMember, T, m))){
+        static if( !__traits(compiles, RealThing!(__traits(getMember, T, m)))) {
             continue;
         } else {
-            if (m !in val) continue;
-            static if (__traits(compiles, read!M(val[m]))){
-                read!M(__traits(getMember, *t, m), val[m]);
-            } else static if (is (M == struct)) {
-                update(&__traits(getMember, *t, m), val[m]);
+            alias typeof(__traits(getMember, *t, m)) M;
+            static if (isSomeFunction!(__traits(getMember, T, m))){
+                continue;
+            } else {
+                if (m !in val) continue;
+                static if (__traits(compiles, read!M(val[m]))){
+                    read!M(__traits(getMember, *t, m), val[m]);
+                } else static if (is (M == struct)) {
+                    update(&__traits(getMember, *t, m), val[m]);
+                }
             }
         }
     }    
@@ -364,7 +374,9 @@ Value encode(T)(T t) {
     } else static if (is (T == struct)) {
         Value[string] blep;
         foreach (m; __traits(allMembers, T)) { 
-            static if (isSomeFunction!(__traits(getMember, T, m))) {
+            static if (!__traits(compiles, RealThing!(__traits(getMember, T, m)))) {
+                continue;
+            } else static if (isSomeFunction!(__traits(getMember, T, m))) {
                 continue;
             } else {
                 blep[m] = encode(__traits(getMember, t, m));

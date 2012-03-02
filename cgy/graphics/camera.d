@@ -9,7 +9,6 @@ import stolen.all;
 import settings;
 import util.util;
 
-alias util.util.convert convert;
 
 class Camera{
     vec3d position;
@@ -64,8 +63,8 @@ class Camera{
         //and move blocks with that amount before sending them to ogl.
         matrix4 view;
         view.buildCameraLookAtMatrixRH(
-                                       convert!float(position),
-                                       convert!float(position+targetDir),
+                                       position.convert!float(),
+                                       (position+targetDir).convert!float(),
                                        vec3f(0.0f, 0.0f, 1.0f)
                                        );
         return view;
@@ -75,7 +74,7 @@ class Camera{
         matrix4 view;
         view.buildCameraLookAtMatrixRH(
                                        vec3f(0.0f, 0.0f, 0.0f),
-                                       convert!float(targetDir),
+                                       targetDir.convert!float(),
                                        vec3f(0.0f, 0.0f, 1.0f)
                                        );
         return view;
@@ -113,7 +112,7 @@ class Camera{
         degX = dy * controlSettings.mouseSensitivityY;
 
         swap(targetDir.Y, targetDir.Z);
-        auto temp = convert!float(targetDir);
+        auto temp = targetDir.convert!float();
         vec3f tmpRot = temp.getHorizontalAngle();
 
         tmpRot.X+=degX;
@@ -126,13 +125,13 @@ class Camera{
         
         mat.setRotationDegrees(tmpRot);
         mat.transformVect(temp, vec3f(0.0f, 0.0f, 1.0f));
-        targetDir = convert!double(temp);
+        targetDir = temp.convert!double();
         swap(targetDir.Y, targetDir.Z);
         targetDir.normalize();
     }
 
     void axisMove(double right, double forward, double up){
-        vec3d _fwd = convert!double(targetDir);
+        vec3d _fwd = targetDir.convert!double();
             vec3d _up = vec3d(0.0, 0.0, 1.0);
         vec3d _right = _fwd.crossProduct(_up).normalize();
         vec3d movement = _fwd*forward + _up*up + _right*right;

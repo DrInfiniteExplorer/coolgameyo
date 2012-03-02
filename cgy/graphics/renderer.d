@@ -212,7 +212,7 @@ class Renderer {
             unitPos = unit.pos.value; //TODO: Subtract the camera position from the unit before rendering
         }
         unitPos += tickTimeSoFar * unit.velocity;
-        M.setTranslation(util.util.convert!float(unitPos));
+        M.setTranslation(unitPos.convert!float());
         M.setRotationRadians(vec3f(0, 0, unit.rotation));
         dudeShader.setUniform(dudeShader.M, M);
         dudeShader.setUniform(dudeShader.color,
@@ -353,7 +353,7 @@ class Renderer {
         } else {*/
             entityPos = entity.pos.value; //TODO: Subtract the camera position from the unit before rendering
         //}
-        M.setTranslation(util.util.convert!float(entityPos));
+        M.setTranslation(entityPos.convert!float());
         M.setRotationRadians(vec3f(0, 0, entity.rotation));
 		if (entity.isDropped){
 			M.setScale(vec3f(0.2f, 0.2f, 0.2f));

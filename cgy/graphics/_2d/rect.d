@@ -9,7 +9,6 @@ import graphics.shader;
 import settings;
 import util.util;
 import util.rect;
-alias util.util.convert convert;
 
 struct RectVertex {
     vec2f pos;
@@ -19,9 +18,9 @@ struct RectVertex {
 
 immutable(char[]) fixRect = "
     auto screenSize = vec2f(renderSettings.windowWidth-1, renderSettings.windowHeight-1);
-    auto start = (vec2f(offset, offset) + convert!float(r.start)) / screenSize;
+    auto start = (vec2f(offset, offset) + r.start.convert!float()) / screenSize;
     start.Y = 1.0 - start.Y;
-    auto size = convert!float(r.size) / screenSize;
+    auto size = r.size.convert!float() / screenSize;
     size.Y = - size.Y;
     auto x = vec2f(size.X, 0);
     auto y = vec2f(0, size.Y);
@@ -175,10 +174,10 @@ void renderXXRect(Recti r, vec3f color, bool UL) {
 /*
 Rectd pixDiff(Rectd r, vec2i startOffset, vec2i stopOffset) {
     auto perPixel = vec2d(1.0 / renderSettings.windowWidth, 1.0 / renderSettings.windowHeight);
-    auto add = convert!double(startOffset) * perPixel;
+    auto add = startOffset.convert!double() * perPixel;
     return Rectd(
         r.start + add,
-        r.size + convert!double(stopOffset) * perPixel - add
+        r.size + stopOffset.convert!double() * perPixel - add
     );
 }
 */

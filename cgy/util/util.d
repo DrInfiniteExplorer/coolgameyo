@@ -40,13 +40,6 @@ alias vector3d!(double) vec3d;
 
 alias aabbox3d!double aabbd;
 
-vector3d!(A) convert(A,B)(const vector3d!(B) wap){
-    return vector3d!A(to!A(wap.X), to!A(wap.Y), to!A(wap.Z));
-}
-vector2d!(A) convert(A,B)(const vector2d!(B) wap){
-    return vector2d!A(to!A(wap.X), to!A(wap.Y));
-}
-
 vec3i getTilePos(T)(vector3d!T v){
     return vec3i(
         to!int(floor(v.X)),

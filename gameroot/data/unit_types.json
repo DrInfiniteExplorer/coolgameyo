@@ -2,8 +2,8 @@
   "dwarf":{
     "displayName":"Dwarf",
 	"tintColor":{ "X":150, "Y":0, "Z":100 },
-    "modelName":"Dwarf",
-    "skeletonName":"Dwarf",
+    "modelName":"dorf/dorf.cgymesh",
+    "skeletonName":"dorf/dorf.cgyanim",
   },
   "elf":{
     "displayName":"Hippie",

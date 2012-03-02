@@ -10,6 +10,7 @@ import derelict.devil.il;
 
 import graphics.ogl;
 import util.util;
+import util.rect;
 
 
 void ilError(string file = __FILE__, int line = __LINE__) {
@@ -191,7 +192,7 @@ struct Image {
         if(_color == vec3i(255, 255, 255)){
             return;
         }
-        auto color = util.util.convert!float(_color) * (1.0/255.0);
+        auto color = _color.convert!float() * (1.0/255.0);
         for(int i=0; i < imgData.length; i+=4){
             imgData[i+0] *= color.X;
             imgData[i+1] *= color.Y;

@@ -47,8 +47,8 @@ unittest{
     auto c = box(0, 0, 0, 1, 1, 1);
     foreach(p ; RangeFromTo (-1, 1, -1, 1, -1, 1)){
         auto d = c;
-        d.MinEdge += util.util.convert!double(p);
-        d.MaxEdge += util.util.convert!double(p);
+        d.MinEdge += p.convert!double();
+        d.MaxEdge += p.convert!double();
         bool bbb = p == vec3i(0,0,0);
         assert(intersectsExclusive(c, d) == bbb, "This should've been " ~ bbb);
         assert(intersectsExclusive(d, c) == bbb, "This should've been " ~ bbb);

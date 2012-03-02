@@ -180,7 +180,7 @@ class GuiElement {
         auto parentScreenRelative = parent.getScreenRelativeRect();
         
         auto screenRect = Rectd(vec2d(0,0), vec2d(renderSettings.windowWidth, renderSettings.windowHeight));
-        auto screenRelative = screenRect.getSubRectInv(util.rect.convert!double(r));
+        auto screenRelative = screenRect.getSubRectInv(convertR!double(r));
         relativeRect = parentScreenRelative.getSubRectInv(screenRelative);
         onMove();
     }
@@ -200,7 +200,7 @@ class GuiElement {
     Recti getAbsoluteRect() {
         auto screenRelative = getScreenRelativeRect();
         auto screenRect = Rectd(vec2d(0,0), vec2d(renderSettings.windowWidth, renderSettings.windowHeight));
-        absoluteRect = util.rect.convert!int(screenRect.getSubRect(screenRelative));
+        absoluteRect = convertR!int(screenRect.getSubRect(screenRelative));
         return absoluteRect;
     }
     

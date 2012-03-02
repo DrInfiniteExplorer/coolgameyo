@@ -359,7 +359,7 @@ class TileGeometry : Module, WorldListener
         //TODO: Fix so that this is not needed anylonger.
         foreach(ref face ; tileFaces.faces) {
             foreach(ref vert ; face.quad) {
-                vert.vertex -= util.util.convert!float(min.value);
+                vert.vertex -= min.value.convert!float();
             }
         }
 
@@ -397,9 +397,9 @@ class TileGeometry : Module, WorldListener
             const auto graphRegionAcross = sqrt(to!double(  GraphRegionSize.x*GraphRegionSize.x +
                                                             GraphRegionSize.y*GraphRegionSize.y +
                                                             GraphRegionSize.z*GraphRegionSize.z));
-            auto camDir = util.util.convert!double(camera.getTargetDir());
+            auto camDir = camera.getTargetDir().convert!double();
             auto camPos = camera.getPosition() - camDir * graphRegionAcross;
-            vec3d toBlock = util.util.convert!double(num.toTilePos().value) - camPos;
+            vec3d toBlock = num.toTilePos().value.convert!double - camPos;
             double distSQ = toBlock.getLengthSQ();
             if(camDir.dotProduct(toBlock) < 0) {
                 distSQ +=1000; //Stuff behind our backs are considered as important as stuff a kilometer ahead of us. ? :)

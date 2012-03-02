@@ -178,7 +178,7 @@ class SplineEditor : GuiElementWindow {
     void onLoadSky() {
         listBox.clear();
         foreach(color ; SkyColors) {
-            vec3i icol = util.util.convert!int(color*255.0f);
+            vec3i icol = (color*255.0f).convert!int();
             listBox.addItem(text(icol.X, ", ", icol.Y, ", ", icol.Z));
         }
         redraw();
@@ -205,7 +205,7 @@ class SplineEditor : GuiElementWindow {
             r ~= color.X;
             g ~= color.Y;
             b ~= color.Z;
-            vec3i icol = util.util.convert!int(color*255.0f);
+            vec3i icol = (color*255.0f).convert!int();
             img.setPixel(idx, 0, icol.X, icol.Y, icol.Z);
         }
         redGraph.setData(r, 0.0, 1.0);

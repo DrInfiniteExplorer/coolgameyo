@@ -359,7 +359,7 @@ mixin template LightStorageMethodsOld() {
         auto lights = getAffectingLights(min, max);
 
         foreach(light ; lights) {
-            auto startTile = TilePos(convert!int(light.position));
+            auto startTile = TilePos(light.position.convert!int());
             open.insert(LightPropagationData(startTile, light.strength));
         }
         while (!open.empty) {

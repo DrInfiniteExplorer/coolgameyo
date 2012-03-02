@@ -321,11 +321,11 @@ class Font {
         quad.v[2].texCoord.set(conf.glyphWidth, conf.glyphHeight);
         quad.v[3].texCoord.set(conf.glyphWidth, 0);
 
-        auto where = util.util.convert!float(lookup(ch)) *
+        auto where = lookup(ch).convert!float() *
             vec2f(conf.glyphWidth, conf.glyphHeight);
         auto invSize = vec2f(1.0/conf.textureWidth, 1.0/conf.textureHeight);
 
-        auto vertOffset = util.util.convert!float(offset) *
+        auto vertOffset = offset.convert!float() *
             vec2f(conf.glyphWidth, -conf.glyphHeight);
         foreach(ref vert ; quad.v){
             vert.vertPos += vertOffset;

@@ -1,5 +1,5 @@
 cgyVersion 10
-commandline "derp herp commandline?"
+commandline "derp_herp_commandline?"
 
 numJoints 8
 numMeshes 1

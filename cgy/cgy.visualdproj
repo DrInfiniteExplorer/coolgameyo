@@ -31,12 +31,12 @@
   <useSwitchError>0</useSwitchError>
   <useUnitTests>1</useUnitTests>
   <useInline>0</useInline>
-  <release>0</release>
+  <release>1</release>
   <preservePaths>0</preservePaths>
   <warnings>1</warnings>
   <infowarnings>1</infowarnings>
   <checkProperty>0</checkProperty>
-  <genStackFrame>0</genStackFrame>
+  <genStackFrame>1</genStackFrame>
   <pic>0</pic>
   <cov>0</cov>
   <nofloat>0</nofloat>
@@ -105,7 +105,7 @@
   <quiet>0</quiet>
   <verbose>0</verbose>
   <vtls>0</vtls>
-  <symdebug>2</symdebug>
+  <symdebug>1</symdebug>
   <optimize>1</optimize>
   <cpu>0</cpu>
   <isX86_64>0</isX86_64>
@@ -125,7 +125,7 @@
   <useSwitchError>0</useSwitchError>
   <useUnitTests>0</useUnitTests>
   <useInline>0</useInline>
-  <release>0</release>
+  <release>1</release>
   <preservePaths>0</preservePaths>
   <warnings>1</warnings>
   <infowarnings>1</infowarnings>
@@ -381,10 +381,15 @@
    <File path="random\xinterpolate4.d" />
   </Folder>
   <Folder name="scene">
+   <File path="scene\instancemanager.d" />
    <File path="scene\modelnode.d" />
    <File path="scene\scenemanager.d" />
   </Folder>
   <Folder name="shaders">
+   <Folder name="models">
+    <File path="..\gameroot\shaders\models\scenenode.frag" />
+    <File path="..\gameroot\shaders\models\scenenode.vert" />
+   </Folder>
    <Folder name="gui">
     <File path="..\gameroot\shaders\gui\imageRectShader.frag" />
     <File path="..\gameroot\shaders\gui\imageRectShader.vert" />

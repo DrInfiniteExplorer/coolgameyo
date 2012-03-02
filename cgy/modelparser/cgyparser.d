@@ -35,6 +35,11 @@ final class Weight {
     int jointId;
     float bias;
     vec3f pos;
+    override int opCmp(Object oo) {
+        auto o = (cast(Weight)oo).bias;
+        if(o == bias) return 0;
+        return o > bias ? 1 : -1;
+    }
 }
 
 
@@ -135,7 +140,8 @@ Joint[] parseJoints(ref string[][] tokens, size_t numJoints) {
     tokens.popFront();
     ret.length = numJoints;
     foreach (idx, line; tokens[0 .. numJoints]) {
-        Joint *j = &ret[idx];
+        Joint j = new Joint();
+        ret[idx] = j;
         string name;
         int parent_index;
         float x, y, z;
@@ -201,9 +207,11 @@ Mesh parseMesh(ref string[][] tokens, Joint[] joints) {
     extract(tokens.front, "numtris", &numtris);
     tokens.popFront();
 
-    m.tris.length = numtris;
+
     foreach (i; 0 .. numtris) {
-        extract(tokens[i], "tri", to!string(i), &m.tris[i].verts[0], &m.tris[i].verts[1], &m.tris[i].verts[2]);
+        Tri tri = new Tri();
+        extract(tokens[i], "tri", to!string(i), &tri.verts[0], &tri.verts[1], &tri.verts[2]);
+        m.tris ~= tri;
     }
 
     tokens = tokens[numtris .. $];

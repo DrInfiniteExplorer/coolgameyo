@@ -46,15 +46,15 @@ void computeYourMother(World world, Image img, Camera camera) {
                 /*/ 
                 //intersectionTime -= 0.05;
                 vec3d intersectionPoint = startPos + dir * intersectionTime;
-                intersectionPoint = intersectionPoint + convert!double(tileNormal)*0.01;
-                auto intersectionTilePos = TilePos(convert!int(intersectionPoint));
+                intersectionPoint = intersectionPoint + tileNormal.convert!double()*0.01;
+                auto intersectionTilePos = TilePos(intersectionPoint.convert!int());
                 auto lights = world.getAffectingLights(intersectionTilePos, intersectionTilePos);
                 double accumulatedLight = 0.0;
                 foreach(light ; lights) {
                     auto toLight = light.position.value-intersectionPoint;
                     auto distance = toLight.getLength();
                     int maxLightIter = cast(int)ceil(abs(toLight.X) + abs(toLight.Y) + abs(toLight.Z));
-                    double dotValue = toLight.dotProduct(convert!double(tileNormal));
+                    double dotValue = toLight.dotProduct(tileNormal.convert!double());
                     if(dotValue <= 0) {
                     }
                     if( !world.rayCollides(intersectionPoint, light.position.value)) {

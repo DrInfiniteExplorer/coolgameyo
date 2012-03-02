@@ -7,10 +7,10 @@ import stolen.vector2d;
 
 import util.util;
 
-Rect!A convert(A,B)(const Rect!B r) {
+Rect!A convertR(A,B)(const Rect!B r) {
     return Rect!A(
-        util.util.convert!A(r.start),
-        util.util.convert!A(r.size)
+        r.start.convert!A(),
+        r.size.convert!A()
     );
 }
 

@@ -70,7 +70,7 @@ vec3f getTileCoords(uint tileNum){
     tmp.X = tileNum % TilesPerTexDim;
     tmp.Y = (tileNum / TilesPerTexDim) % TilesPerTexDim;
     tmp.Z = tileNum / (TilesPerTexDim*TilesPerTexDim);        
-    vec3f ret = util.util.convert!float(tmp);
+    vec3f ret = tmp.convert!float();
     float tileScale = 1.0f / to!float(TilesPerTexDim);    
     return ret * vec3f(tileScale, tileScale, 1.0f);
 }

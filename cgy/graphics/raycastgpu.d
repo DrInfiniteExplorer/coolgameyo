@@ -72,11 +72,7 @@ void initInteractiveComputeYourFather(){
     g_cameraBuffer = CLBuffer(g_clContext, CL_MEM_READ_ONLY, CLCamera.sizeof, null);
 
     static if(TileMemoryLocation == "texture") {
-        static if(PackInInt) {
-            auto format = cl_image_format(CL_R, CL_UNSIGNED_INT32);
-        } else {
-            auto format = cl_image_format(CL_R, CL_UNSIGNED_INT8);
-        }
+        auto format = cl_image_format(CL_R, CL_UNSIGNED_INT32);
         g_tileBuffer = CLImage3D(g_clContext,
                 CL_MEM_READ_ONLY,
                 format,
@@ -118,14 +114,8 @@ void reloadOpenCl() {
 
     static assert(SolidMap.sizeY == 128);
     static assert(SolidMap.sizeZ == 32);
-    static if(PackInInt) {
-        static assert(SolidMap.sizeX == 4);
-        defines ~= " -D TileStorageType=uint -D TileStorageBitCount=32 -D SolidMapSize=4,128,32";
-
-    } else {
-        static assert(SolidMap.sizeX == 16);
-        defines ~= " -D TileStorageType=uchar -D TileStorageBitCount=8 -D SolidMapSize=16,128,32";
-    }
+    static assert(SolidMap.sizeX == 4);
+    defines ~= " -D TileStorageType=uint -D TileStorageBitCount=32 -D SolidMapSize=4,128,32";
 
     g_traceRaysProgram = g_clContext.createProgram(content);
 

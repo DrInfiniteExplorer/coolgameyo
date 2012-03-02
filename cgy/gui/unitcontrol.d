@@ -388,7 +388,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
                 possesAI.changeTile(whereToPlace, copiedTile);
             }
         } else if(m.middle && tileSelected) {
-            //vec3d pos = TilePos(selectedTilePos.value+selectedTileNormal).toEntityPos.value; // + 0.5 * convert!double(selectedTileNormal);
+            //vec3d pos = TilePos(selectedTilePos.value+selectedTileNormal).toEntityPos.value; // + 0.5 * selectedTileNormal.convert!double();
             auto o = newEntity();
             o.pos = TilePos(selectedTilePos.value+selectedTileNormal).toEntityPos;
             o.type = world.entityTypeManager.byName("torch");
@@ -432,7 +432,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         auto pos = possesAI.getUnitPos();
         auto dir = camera.getTargetDir();
         if(_3rdPerson) {
-            pos -= util.util.convert!double(dir) * 7.5;
+            pos -= dir.convert!double() * 7.5;
         } else {
             pos += vec3d(0, 0, 0.50); //Unit is 1.5 big now; unitpos is at 0.5 above feets
         }

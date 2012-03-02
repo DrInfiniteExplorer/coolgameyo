@@ -190,8 +190,8 @@ class TileRenderer {
             if(camera.inFrustum(grNum.getAABB())){
 
                 //TODO: Do the pos-camerapos before converting to float, etc
-                auto dPos = convert!double(grNum.min().value);
-                auto fPos = convert!float(dPos - camPos);
+                auto dPos = grNum.min().value.convert!double();
+                auto fPos = (dPos - camPos).convert!float();
                 tileProgram.setUniform(tileProgram.offset, fPos);
 
                 glBindBuffer(GL_ARRAY_BUFFER, renderInfo.vbo); glError();

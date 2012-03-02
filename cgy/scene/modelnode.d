@@ -12,7 +12,7 @@ import graphics.models.cgymodel;
 class ModelNode : SceneNode {
     vec3d position;
 
-    cgyMesh meshes[];
+    CGYMesh meshes[];
     AnimationState animState;
 
     int snapJoint = -1;

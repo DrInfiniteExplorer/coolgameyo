@@ -30,6 +30,11 @@ public:
   this(const vector3d!(T) other) {X = other.X; Y = other.Y; Z = other.Z;}
 
   // operators
+
+  vector3d!TTT convert(TTT)() const {
+      return vector3d!TTT(to!TTT(X), to!TTT(Y), to!TTT(Z));
+  }
+
   
   ref T opIndex(uint index)
   in{

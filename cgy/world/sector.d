@@ -30,14 +30,8 @@ import util.rangefromto;
 
 
 
-enum PackInInt = true;
-static if(PackInInt) {
-    enum BitCount = 32;
-    alias uint StorageType;
-} else {
-    enum BitCount = 8;
-    alias ubyte StorageType;
-}
+enum BitCount = 32;
+alias uint StorageType;
 
 struct SolidMap {
     const int sizeX = SectorSize.x / BitCount;

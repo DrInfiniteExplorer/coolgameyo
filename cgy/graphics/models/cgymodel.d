@@ -25,19 +25,19 @@ struct cgyTri {
     uint idx[3];
 }
 
-struct cgyMesh {
+final class CGYMesh {
     cgyVertex[] vertices;
     cgyTri[] triangles;
     uint meshVBO;
     uint idxVBO;
 }
 
-class cgyModel {
+final class cgyModel {
 
 
     string[] jointNames;
     cgyJoint[] joints;
-    cgyMesh[] meshes;
+    CGYMesh[] meshes;
 
     void loadMesh(cgyFileData meshData) {
 
@@ -48,17 +48,19 @@ class cgyModel {
         foreach(idx, joint ; meshData.joints) {
             jointNames[idx] = joint.name;
             joints[idx].parent = joint.parent;
-            joints[idx].position = convert!float(joint.pos);
+            joints[idx].position = joint.pos.convert!float();
             joints[idx].rotation = joint.orientation;
         }
 
         meshes.length = meshData.meshes.length;
 
         foreach(idx, mesh ; meshData.meshes) {
-            cgyMesh* meshPtr = &meshes[idx];
-            meshPtr.vertices.length = mesh.verts.length;
+            auto newMesh = new CGYMesh();
+            meshes[idx] = newMesh;
+
+            newMesh.vertices.length = mesh.verts.length;
             foreach(idx, vertex ; mesh.verts) {
-                cgyVertex* vert = &meshPtr.vertices[idx];
+                cgyVertex* vert = &newMesh.vertices[idx];
                 vert.st[0] = vertex.s;
                 vert.st[1] = vertex.t;
                 vert.bones[] = 0;
@@ -71,17 +73,25 @@ class cgyModel {
                         joints[weight.jointId].position +
                         joints[weight.jointId].rotation * weight.pos;
                     vert.pos += unWeighted * weight.bias;
-
-                    vert.bones[idx] = cast(char)weight.jointId;
-                    vert.weights[idx] = weight.bias;
                     weightSum += weight.bias;
                 }
+
+                if(vertex.weights.length > 4) {
+                    vertex.weights.sort;
+                }
+
+                foreach(idx, weight ; vertex.weights) {
+                    if(idx >= 4) continue; // Because if we try to assign to vertex.weights.length above, optlink crashes
+                    vert.bones[idx] = cast(char)weight.jointId;
+                    vert.weights[idx] = weight.bias / weightSum;
+                }
+
             }
 
 
-            meshPtr.triangles.length = mesh.tris.length;
+            newMesh.triangles.length = mesh.tris.length;
             foreach(idx, triangle ; mesh.tris) {
-                cgyTri* tri = &meshPtr.triangles[idx];
+                cgyTri* tri = &newMesh.triangles[idx];
                 tri.idx[] = triangle.verts[];
             }
         }
@@ -96,7 +106,7 @@ class cgyModel {
         }
     }
 
-    void uploadMeshData(cgyMesh mesh) {
+    void uploadMeshData(CGYMesh mesh) {
         clearMesh(mesh); //No fancy partial uploading here!
         glGenBuffers(1, &mesh.meshVBO);
         glBindBuffer(GL_ARRAY_BUFFER, mesh.meshVBO);
@@ -116,7 +126,7 @@ class cgyModel {
         meshes = null;
 
     }
-    void clearMesh(cgyMesh mesh) {
+    void clearMesh(CGYMesh mesh) {
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
         glDeleteBuffers(1, &mesh.idxVBO);

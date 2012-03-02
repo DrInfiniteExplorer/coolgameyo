@@ -2,14 +2,12 @@
 
 module scene.scenemanager;
 
-import std.algorithm;
 import std.conv;
-import std.exception;
 
+import scene.instancemanager;
 import scene.modelnode;
 
 import graphics.shader;
-import graphics.ogl;
 import graphics.models.cgymodel;
 import modelparser.cgyparser;
 
@@ -44,83 +42,16 @@ struct InstanceData {
     uint frameIndex;
 }
 
-class InstanceManager {
-    ModelNode[] nodes;
-    cgyMesh mesh;
 
-    this(cgyMesh _mesh) {
-        mesh = _mesh;
-        resizeInstanceVBO(32);
-    }
-
-    uint instanceVBO;
-    size_t instanceSize;
-    void resizeInstanceVBO(size_t size) {
-        //TODO: Copy old values when resizeing the buffer
-        //Shrink if size is less or equal to half of current
-        if(2 * size <= instanceSize) {
-            //Also copy current instance values before this!
-            glBindBuffer(GL_ARRAY_BUFFER, 0);
-            glDeleteBuffers(1, &instanceVBO);
-            instanceVBO = 0;
-            instanceSize = size;
-        }
-        if(size > instanceSize) {
-            glBindBuffer(GL_ARRAY_BUFFER, 0);
-            glDeleteBuffers(1, &instanceVBO);
-            instanceVBO = 0;
-            instanceSize = instanceSize + instanceSize/2;
-        }
-        if(instanceVBO == 0) {
-            glGenBuffers(1, &instanceVBO);
-            glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-            size_t size = InstanceData.sizeof * instanceSize;
-            glBufferData(GL_ARRAY_BUFFER, size, null, GL_DYNAMIC_DRAW);
-        }
-    }
-
-    void moveInstanceData(size_t from, size_t to) {
-        InstanceData data;
-        glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-        glGetBufferSubData(GL_ARRAY_BUFFER, InstanceData.sizeof * from, InstanceData.sizeof, &data);
-        glBufferSubData(GL_ARRAY_BUFFER, InstanceData.sizeof * to,   InstanceData.sizeof, &data);
-    }
-
-    void register(ModelNode modelNode) {
-        nodes ~= modelNode;
-        resizeInstanceVBO(nodes.length);
-        
-    }
-    void unregister(ModelNode modelNode) {
-        auto idx = countUntil(nodes, modelNode);
-        enforce(-1 != idx, "Error, trying to remove unexistant thing from InstanceManager");
-        moveInstanceData(nodes.length-1, idx);
-        resizeInstanceVBO(nodes.length-1);
-        nodes[idx] = nodes[$-1];
-        nodes.length = nodes.length - 1;
-    }
-
-    void render() {
-        
-        //Bind mesh data & textures
-        //Aquire instance-vbo's
-        //glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-        //foreach(instance ; modelList) {
-            //Populate instance-vbo's
-        //}
-        //Render instances
-        
-    }
-}
 
 //Rename to SkeletonGroup, because yeah?
-class Skeleton {
+final class Skeleton {
 
 
     SceneManager sceneManager;
     int[string] animations; //List of animationname-to-animationindex
 
-    InstanceManager[cgyMesh] meshInstanceManagers;
+    InstanceManager[CGYMesh] meshInstanceManagers;
 
     this(SceneManager _sceneManager) {
         sceneManager = _sceneManager;
@@ -139,14 +70,13 @@ class Skeleton {
     void register(ModelNode modelNode) {
         
         foreach(mesh ; modelNode.meshes) {
-            InstanceManager *ptrManager = mesh in meshInstanceManagers;
-            if(ptrManager is null) {
-                auto im = new InstanceManager(mesh);
-                meshInstanceManagers[mesh] = im;
-                im.register(modelNode);
+            if(mesh in meshInstanceManagers) {
+                meshInstanceManagers[mesh].register(modelNode);
                 return;
             }
-            ptrManager.register(modelNode);
+            auto im = new InstanceManager(mesh);
+            meshInstanceManagers[mesh] = im;
+            im.register(modelNode);
         }
         
     }
@@ -160,6 +90,14 @@ class Skeleton {
         
     }
 
+
+    void render() {
+
+        foreach(instanceManager; meshInstanceManagers) {
+            instanceManager.render();
+        }
+    }
+
     void startAnimation(string animName, AnimationState animState) {
         animState.frameIndex = 0;
         animState.animationIndex = 0;
@@ -169,13 +107,6 @@ class Skeleton {
     }
 
 
-
-    void render() {
-        
-        foreach(instanceManager; meshInstanceManagers) {
-            instanceManager.render();
-        }
-    }
 }
 
 final class AnimationState {
@@ -220,7 +151,7 @@ class UnitProxy {
     ModelNode bodyModel;
 }
 
-class SceneManager {
+final class SceneManager {
 
     SceneNode[][SceneNodeType.Count] sceneNodes;
 
@@ -284,7 +215,7 @@ class SceneManager {
         }
         cgyModel model = new cgyModel();
 
-        auto file = readText(modelName);
+        auto file = readText("models/" ~ modelName);
         auto meshData = parseModel(file);
         model.loadMesh(meshData);
         models[modelName] = model;
@@ -298,11 +229,11 @@ class SceneManager {
         }
         Skeleton skeleton = new Skeleton(this);
 
-        auto file = readText(skeletonName);
+        //auto file = readText(skeletonName);
         //auto skeletonData = parse(file);
         //skeleton.loadSkeleton(skeletonData);
         //skeletons[skeletonName] = skeleton;
-        enforce(0, "implement");
+        pragma(msg, "implement skeleton loading");
         return skeleton;
     }
 

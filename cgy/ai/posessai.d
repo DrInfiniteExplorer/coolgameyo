@@ -93,7 +93,7 @@ class FPSControlAI : UnitAI, CustomChange {
         ];
         foreach(idx ; 0 .. 3) {
             auto axis = dirs[idx];
-            auto daxis = convert!double(axis);
+            auto daxis = axis.convert!double();
             auto axisLength = daxis.dotProduct(dir); //The length we want to move along this axis, and direction.
             auto sign = axisLength > 0 ? 1.0 : -1.0;
             double axisPos = pos.dotProduct(daxis); //

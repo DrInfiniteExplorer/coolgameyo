@@ -629,7 +629,8 @@ class World {
     void addUnit(Unit unit) {
         enforce(unit.clan !is null);
 
-        pragma(msg, "We should create link between scenegraph and unit here. Programmatic creation of units reach here, and loading & change-induced creation does as well");
+        //pragma(msg, "We should create link between scenegraph and unit here. Programmatic creation of units reach here, and loading & change-induced creation does as well");
+        sceneManager.getProxy(unit);
 
 
         //Update boolean activity map

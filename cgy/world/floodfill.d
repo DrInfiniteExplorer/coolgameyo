@@ -27,7 +27,7 @@ mixin template FloodFill() {
         json.read(r, v["floodr"]);
     }
 
-    void floodFillSome(int max=100) {
+    void floodFillSome(int max=10_000) {
         int i = 0;
         while (i < max && current < floodingSectors.length) {
             i += fillOneBlock();

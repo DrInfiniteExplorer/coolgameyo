@@ -113,7 +113,7 @@ class MapImage : GuiElementImage {
             foreach(y ; 0 .. pixHeight) {
                 auto yy = y - halfHeight;
                 auto pos = vec3d(xx, yy, 0) * scale + viewPos.vec3;
-                auto p = util.util.convert!int(pos);
+                auto p = pos.convert!int();
 
                 auto val = getVal(TilePos(p)); 
                 if (val < min) min = val;
@@ -195,7 +195,7 @@ class MapImage : GuiElementImage {
         else if(e.type == GuiEventType.MouseMove) {
             auto m = e.mouseMove;
             if (dragging) {
-                viewPos -= util.util.convert!double(m.delta) * scale * 0.5;
+                viewPos -= m.delta.convert!double() * scale * 0.5;
                 updateMap();
             }
         }

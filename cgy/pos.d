@@ -89,7 +89,7 @@ struct SectorNum {
                     value.Z * SectorSize.z));
     }
     aabbox3d!double getAABB(){
-        auto minPos = util.util.convert!double(toTilePos().value);
+        auto minPos = toTilePos().value.convert!double();
         auto maxPos = minPos + vec3d(SectorSize.x, SectorSize.y, SectorSize.z);
         return aabbox3d!double(minPos, maxPos);
     }
@@ -115,7 +115,7 @@ struct BlockNum {
     }
 
     aabbox3d!double getAABB(){
-        auto minPos = util.util.convert!double(toTilePos().value);
+        auto minPos = toTilePos().value.convert!double();
         auto maxPos = minPos + vec3d(BlockSize.x, BlockSize.y, BlockSize.z);
         return aabbox3d!double(minPos, maxPos);
     }
@@ -239,7 +239,7 @@ struct TilePos {
     }
 
     aabbox3d!double getAABB(){
-        auto minPos = util.util.convert!double(value);
+        auto minPos = value.convert!double();
         auto maxPos = minPos + vec3d(1.0, 1.0, 1.0);
         return aabbox3d!double(minPos, maxPos);
     }
@@ -304,8 +304,8 @@ struct GraphRegionNum{
     }
     alias min toTilePos;
     aabbox3d!double getAABB() const {
-        auto minPos = util.util.convert!double(min().value);
-        auto maxPos = util.util.convert!double(max().value);
+        auto minPos = min().value.convert!double();
+        auto maxPos = max().value.convert!double();
         return aabbox3d!double(minPos, maxPos);
     }
 
