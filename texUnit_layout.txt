@@ -1,0 +1,8 @@
+0_ tiletextureatlas
+1_  font? make this into atlas fuck yeah, keep bound always
+2  image?
+3  mesh-texture
+4
+5   albedo
+6   ambientLight
+7   raycastLight
