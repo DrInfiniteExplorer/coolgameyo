@@ -11,13 +11,17 @@ import util.util;
 import world.tile;
 import statistics;
 
+struct UnitModelInfo {
+    string name;
+    string[][string] meshTextures;
+    string skeletonName;//Skeleton family
+}
 
 struct UnitType {
 	static struct InnerUnitType {
 		string displayName;
 		vec3i tintColor;
-        string modelName;   //Model family
-        string skeletonName;//Skeleton family
+        UnitModelInfo model;   //Model family
 	}
 	
 	InnerUnitType serializableSettings;

@@ -14,7 +14,8 @@ import util.rect;
 
 
 void ilError(string file = __FILE__, int line = __LINE__) {
-    debug {
+    //debug
+    {
         uint err = ilGetError();
         string str;
         switch(err){
@@ -61,7 +62,7 @@ struct Image {
 
         auto cString = toStringz(filename);
         if (ilLoad(IL_TYPE_UNKNOWN, cString) == IL_FALSE) {
-            assert(0, "error loading image " ~filename);
+            enforce(0, "error loading image " ~ filename);
         }
         ilError();
 

@@ -2,13 +2,29 @@
   "dwarf":{
     "displayName":"Dwarf",
 	"tintColor":{ "X":150, "Y":0, "Z":100 },
-    "modelName":"dorf/dorf.cgymesh",
-    "skeletonName":"dorf/dorf.cgyanim",
+    "model":{
+        "name":"dorf/dorf.cgymesh",
+        "skeletonName":"dorf/dorf.cgyanim",
+        "meshTextures":{
+            "body":[
+                "dorf/tex.png",
+                "dorf/tex2.png",
+            ],
+        },
+    },
   },
   "elf":{
     "displayName":"Hippie",
 	"tintColor":{ "X":0, "Y":150, "Z":0 },
-    "modelName":"Elf",
-    "skeletonName":"Elf",
+    "model":{
+        "name":"dorf/dorf.cgymesh",
+        "skeletonName":"dorf/dorf.cgyanim",
+        "meshTextures":{
+            "body":[
+                "dorf/tex.png",
+                "dorf/tex2.png",
+            ],
+        },
+    },
   },
 }

@@ -381,9 +381,12 @@
    <File path="random\xinterpolate4.d" />
   </Folder>
   <Folder name="scene">
+   <File path="scene\entityproxy.d" />
    <File path="scene\instancemanager.d" />
    <File path="scene\modelnode.d" />
    <File path="scene\scenemanager.d" />
+   <File path="scene\texturearray.d" />
+   <File path="scene\unitproxy.d" />
   </Folder>
   <Folder name="shaders">
    <Folder name="gui">

@@ -159,7 +159,7 @@ class TileTextureAtlas{
             dataPtr += 4*tileSize.X*tileSize.Y;
         }
 
-        atlasData.length=0;
+        atlasData = null;
         tileMap = null;
 
         if(renderSettings.glVersion >= 3.0){

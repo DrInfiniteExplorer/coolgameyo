@@ -12,13 +12,15 @@ import graphics.models.cgymodel;
 class ModelNode : SceneNode {
     vec3d position;
 
-    CGYMesh meshes[];
+    uint[] texIdx;
+    CGYMesh[] meshes;
     AnimationState animState;
 
     int snapJoint = -1;
 
     this(cgyModel model, AnimationState _animState) {
         meshes = model.meshes;
+        texIdx.length = meshes.length;
         animState = _animState;
     }
 
@@ -38,6 +40,9 @@ class ModelNode : SceneNode {
     vec3d getPosition() {
         return position;
     }
+    uint getTexIdx(int idx) const {
+        return texIdx[idx];
+    }
 
     SceneNodeType getType() {
         return SceneNodeType.Model;
@@ -49,6 +54,15 @@ class ModelNode : SceneNode {
     }
 
     void render() {
+    }
+
+    void setTexture(int meshId, SceneManager sceneManager, string texture) {
+        auto mesh = meshes[meshId];
+        if(mesh.texture is null) {
+            mesh.texture = sceneManager.loadArrayTexture(texture, texIdx[meshId]);
+        } else {
+            texIdx[meshId] = mesh.texture.loadImage(texture);
+        }
     }
 
 }

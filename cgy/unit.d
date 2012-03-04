@@ -70,6 +70,9 @@ class Unit {
         float unitWidth = 0.7;
         float unitHeight = 1.5;
         float stepHeight = 0.5;
+
+
+
     };
 	
     UnitData unitData;

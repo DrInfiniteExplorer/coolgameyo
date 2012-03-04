@@ -6,10 +6,13 @@ import std.conv;
 
 import scene.instancemanager;
 import scene.modelnode;
+import scene.unitproxy;
+import scene.texturearray;
 
 import graphics.camera;
-import graphics.shader;
+import graphics.image;
 import graphics.models.cgymodel;
+import graphics.shader;
 import modelparser.cgyparser;
 
 import unit;
@@ -34,13 +37,14 @@ interface SceneNode {
     void render();
 };
 
-alias ShaderProgram!("VP") SceneNodeShader;
+alias ShaderProgram!("VP", "texUnit") SceneNodeShader;
 
 struct InstanceData {
     vec3f pos;
     vec3f rot;
     uint animationIndex;
     uint frameIndex;
+    uint texIdx;
 }
 
 
@@ -115,43 +119,6 @@ final class AnimationState {
     uint frameIndex;
 }
 
-class UnitProxy {
-    SceneManager sceneManager;
-
-    this(SceneManager _sceneManager, Unit unit) {
-        sceneManager = _sceneManager;
-        animState = new AnimationState;
-        init(unit);
-    }
-    bool destroyed = false;
-    ~this() {
-        BREAK_IF(!destroyed);
-    }
-
-    void destroy() {
-
-        bodyModel.destroy();
-        destroyed = true;
-    }
-
-    void init(Unit unit) {
-        auto type = unit.type;
-
-        skeleton = sceneManager.loadSkeleton(type.skeletonName);
-        auto model  = sceneManager.loadModel(type.modelName);
-
-        bodyModel = new ModelNode(model, animState);
-        bodyModel.setPosition(unit.pos.value);
-
-        skeleton.startAnimation("idle", animState);
-        skeleton.register(bodyModel);
-    }
-
-    AnimationState animState;
-    Skeleton skeleton;
-
-    ModelNode bodyModel;
-}
 
 final class SceneManager {
 
@@ -266,10 +233,13 @@ final class SceneManager {
         shader.bindAttribLocation(6, "rot");
         shader.bindAttribLocation(7, "animationIndex");
         shader.bindAttribLocation(8, "frameIndex");
+        shader.bindAttribLocation(9, "texIdx");
         shader.link();
 
         shader.use();
         shader.VP = shader.getUniformLocation("VP");
+        shader.texUnit = shader.getUniformLocation("texUnit");
+        shader.setUniform(shader.texUnit, 3); //Hardcoded texture unit 3
         shader.use(false);
 
 
@@ -280,6 +250,22 @@ final class SceneManager {
 
         return shader;
     }
+
+    TextureArray[uint] textureArrays;
+    TextureArray loadArrayTexture(string texture, out uint arrayIdx) {
+        TextureArray ret;
+        Image image = Image(texture);
+        uint hash = 10_000 * image.imgWidth + image.imgHeight;
+        if(hash !in textureArrays) {
+            ret = new TextureArray();
+            textureArrays[hash] = ret;
+        } else {
+            ret = textureArrays[hash];
+        }
+        arrayIdx = ret.loadImage(texture, image);
+        return ret;
+    }
+
 
     void renderScene(Camera camera) {
         /*

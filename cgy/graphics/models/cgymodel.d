@@ -6,6 +6,7 @@ import util.util;
 import stolen.quaternion;
 
 import graphics.ogl;
+import scene.texturearray;
 
 import modelparser.cgyparser;
 
@@ -32,7 +33,9 @@ final class CGYMesh {
     cgyTri[] triangles;
     uint meshVBO;
     uint idxVBO;
+    TextureArray texture;
     string shader = "shaders/models/scenenode";
+    string name;
 }
 
 final class cgyModel {
@@ -75,6 +78,9 @@ final class cgyModel {
         foreach(idx, mesh ; meshData.meshes) {
             auto newMesh = new CGYMesh();
             meshes[idx] = newMesh;
+            //TODO: Fix thingy mahjingy
+            //newMesh.shader = mesh.shader;
+            newMesh.name = mesh.name;
 
             newMesh.vertices.length = mesh.verts.length;
             foreach(idx, vertex ; mesh.verts) {

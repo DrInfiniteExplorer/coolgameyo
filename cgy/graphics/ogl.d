@@ -63,6 +63,10 @@ void initOpenGL(bool client){
     enableVSync(renderSettings.enableVSync);
     glError();
 
+    int MaxVertexAttribs;
+    glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &MaxVertexAttribs);
+    writeln("Supports max " ~ to!string(MaxVertexAttribs) ~ " attribute slots");
+
     glClearColor(1.0, 0.7, 0.4, 0.0);
     glError();
 

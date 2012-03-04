@@ -4,23 +4,27 @@ uniform mat4 VP;
 
 
 in vec3 position;
-/*
 in vec2 texcoord;
+/*
 in vec3 normal;
 in uint bones;
 in vec4 weights;
 */
+
+
 in vec3 pos;
+in uint texIdx;
 /*
 in vec3 rot;
 in uint animationIndex;
 in uint frameIndex;
 */
 
-out vec2 tex_texcoord;
+
+out vec3 tex_texcoord;
    
 void main(){
-   tex_texcoord = position.xy;
+   tex_texcoord = vec3(texcoord, texIdx);
 
    vec3 Pos;
    //Animate vertex

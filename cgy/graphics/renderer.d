@@ -85,9 +85,9 @@ class Renderer {
         lightMixShader.raycast = lightMixShader.getUniformLocation("raycastLightTex");
         lightMixShader.method = lightMixShader.getUniformLocation("method");
         lightMixShader.use();
-        lightMixShader.setUniform(lightMixShader.albedo, 3);
-        lightMixShader.setUniform(lightMixShader.minecraft, 4);
-        lightMixShader.setUniform(lightMixShader.raycast, 5);
+        lightMixShader.setUniform(lightMixShader.albedo, 5);
+        lightMixShader.setUniform(lightMixShader.minecraft, 6);
+        lightMixShader.setUniform(lightMixShader.raycast, 7);
         lightMixShader.use(false);
 
 
@@ -281,17 +281,17 @@ class Renderer {
 
     void finishHim() {
 
-        glActiveTexture(GL_TEXTURE3);
+        glActiveTexture(GL_TEXTURE5);
         glError();
         glBindTexture(GL_TEXTURE_2D, g_albedoTexture);
         glError();
 
-        glActiveTexture(GL_TEXTURE4);
+        glActiveTexture(GL_TEXTURE6);
         glError();
         glBindTexture(GL_TEXTURE_2D, g_lightTexture);
         glError();
 
-        glActiveTexture(GL_TEXTURE5);
+        glActiveTexture(GL_TEXTURE7);
         glError();
         glBindTexture(GL_TEXTURE_2D, g_rayCastOutput);
         glError();

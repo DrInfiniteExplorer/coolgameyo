@@ -68,6 +68,8 @@ final class InstanceManager {
     void render(Camera camera) {
         foreach(idx, node ; nodes) {
             instanceData[idx].pos = (node.getPosition() - camera.getPosition()).convert!float;
+            instanceData[idx].texIdx = cast(ubyte)idx; //Because we need to think about proxies and how they access
+            //instance data, as well as how nodes access instancedata. Also meshes/models.
             dirty = true;
         }
         if(dirty) {
@@ -79,22 +81,23 @@ final class InstanceManager {
         if(shader is null) {
             shader = sceneManager.getShader(mesh.shader);
         }
+        mesh.texture.bind();
         glError();
         shader.use();
         auto transform = camera.getProjectionMatrix() * camera.getTargetMatrix();
         shader.setUniform(shader.VP, transform); 
 
         glEnableVertexAttribArray(0); glError();
-        /*
         glEnableVertexAttribArray(1); glError();
+        /*
         glEnableVertexAttribArray(2); glError();
         glEnableVertexAttribArray(3); glError();
         glEnableVertexAttribArray(4); glError();
         */
         glBindBuffer(GL_ARRAY_BUFFER, mesh.meshVBO);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, cgyVertex.sizeof, cast(void*)cgyVertex().pos.offsetof); glError();
-        /*
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, cgyVertex.sizeof, cast(void*)cgyVertex().st.offsetof); glError();
+        /*
         glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, cgyVertex.sizeof, cast(void*)cgyVertex().normal.offsetof); glError();
         glVertexAttribPointer(3, 1, GL_UNSIGNED_INT, GL_FALSE, cgyVertex.sizeof, cast(void*)cgyVertex().bones.offsetof); glError();
         glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, cgyVertex.sizeof, cast(void*)cgyVertex().weights.offsetof); glError();
@@ -105,12 +108,14 @@ final class InstanceManager {
         glBindBuffer(GL_ARRAY_BUFFER, instanceVBO); glError();
 
         glEnableVertexAttribArray(5); glError();
+        glEnableVertexAttribArray(9); glError();
         /*
         glEnableVertexAttribArray(6); glError();
         glEnableVertexAttribArray(7); glError();
         glEnableVertexAttribArray(8); glError();
         */
         glVertexAttribDivisor(5, 1); glError();
+        glVertexAttribDivisor(9, 1); glError();
         /*
         glVertexAttribDivisor(6, 1); glError();
         glVertexAttribDivisor(7, 1); glError();
@@ -118,6 +123,7 @@ final class InstanceManager {
 
         */
         glVertexAttribPointer(5, 3, GL_FLOAT, GL_FALSE, InstanceData.sizeof, cast(void*)InstanceData().pos.offsetof); glError();
+        glVertexAttribIPointer(9, 1, GL_UNSIGNED_INT, InstanceData.sizeof, cast(void*)InstanceData().texIdx.offsetof); glError();
         /*
         glVertexAttribPointer(6, 3, GL_FLOAT, GL_FALSE, InstanceData.sizeof, cast(void*)InstanceData().rot.offsetof); glError();
         glVertexAttribPointer(7, 1, GL_UNSIGNED_BYTE, GL_FALSE, InstanceData.sizeof, cast(void*)InstanceData().animationIndex.offsetof); glError();
@@ -128,15 +134,17 @@ final class InstanceManager {
         //glDrawElements(GL_TRIANGLES, 3*mesh.triangles.length, GL_UNSIGNED_INT, cast(void*)0);
 
         glVertexAttribDivisor(5, 0); glError();
+        glVertexAttribDivisor(9, 0); glError();
         /*
         glVertexAttribDivisor(6, 0); glError();
         glVertexAttribDivisor(7, 0); glError();
         glVertexAttribDivisor(8, 0); glError();
         */
         glDisableVertexAttribArray(0); glError();
-        glDisableVertexAttribArray(5); glError();
-        /*
         glDisableVertexAttribArray(1); glError();
+        glDisableVertexAttribArray(5); glError();
+        glDisableVertexAttribArray(9); glError();
+        /*
         glDisableVertexAttribArray(2); glError();
         glDisableVertexAttribArray(3); glError();
         glDisableVertexAttribArray(4); glError();

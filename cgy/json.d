@@ -310,7 +310,12 @@ void read(T)(ref T t, Value val) {
             t ~= read!U(e);
         }
         //return us;
-    } else static if (is (T U : U[V], V)) { //Map of things
+    } else static if (is (T U : U[string])) { //Map of things with string as key
+        foreach(key, value ; val.pairs) {            
+            t[key] = read!U(value);
+        }
+    } else static if (is (T U : U[V], V)) { //Map of things with ANYTHING! as key
+        //see comment in encode
         foreach(e; val.elements) {
             auto key = read!V(e[0]);
             auto value = read!U(e[1]);
@@ -359,9 +364,15 @@ Value encode(T)(T t) {
     } else static if (is (T U : U[])) { //Array of things
 
         return Value(array(map!(encode!U)(t)));
+    } else static if (is (T U : U[string])) { //Map of things with string as key
+        Value[string] ret;
+        foreach(key, value ; t) {
+            ret[key] = encode(value);
+        }
+        return Value(ret);
 
     } else static if (is (T U : U[V], V)) { //Map of things
-
+        //Yes it is encoded as an array of two-object arrays; all kind of things can now be keys.
         Value ret[];
         foreach(key, value ; t) {
             ret ~= Value([encode(key), encode(value)]);

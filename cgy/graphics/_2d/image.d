@@ -96,7 +96,7 @@ class ImageRectShader {
         //glDepthMask(0);
         imageProgram.use();
         //rect.start.Y = 1.0 - rect.start.Y;
-        imageProgram.setUniform(imageProgram.tex, 2); //TODO: Make not hardcoded to texunit 2.        
+        imageProgram.setUniform(imageProgram.tex, 2); //TODO: Make not hardcoded to texunit 2   .
         //TODO: Use rest of rect for clipping?
         glEnableVertexAttribArray(imageProgram.position);
         glError();

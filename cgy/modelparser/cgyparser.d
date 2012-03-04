@@ -37,6 +37,7 @@ final class Tri {
 
 final class Mesh {
     string shader;
+    string name;
     Vert[] verts;
     Tri[] tris;
 }
@@ -171,14 +172,18 @@ Mesh parseMesh(ref string[][] tokens, Joint[] joints) {
 
     size_t[] vert_weight_indices, vert_weight_lengths;
 
+    string name;
+    extract(tokens[1], "name", &name);
+    m.name = name[1 .. $-1];
+
     string shader;
-    extract(tokens[1], "shader", &shader);
+    extract(tokens[2], "shader", &shader);
     m.shader = shader[1 .. $-1];
 
     size_t numverts;
-    extract(tokens[2], "numverts", &numverts);
+    extract(tokens[3], "numverts", &numverts);
 
-    tokens = tokens[3 .. $];
+    tokens = tokens[4 .. $];
     foreach (i; 0 .. numverts) {
         Vert v = new Vert;
 
