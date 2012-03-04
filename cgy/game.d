@@ -8,7 +8,7 @@ import std.array;
 import std.concurrency;
 import std.conv;
 import std.exception;
-//import std.file;
+import std.math;
 import std.stdio;
 import std.string;
 
@@ -187,6 +187,23 @@ class Game{
         //u.pos.value.Z += 1;
 
         clan.addUnit(u);
+
+        foreach(idx ; 0 .. 1000) {
+            float ratio = cast(float)idx / 1000.0f;
+            float x = sin(ratio * 2 * 2 * PI);
+            float y = cos(ratio * 2 * 2 * PI);
+            float dist = 50 * ratio;
+            x *= dist;
+            y *= dist;
+            auto xy = TileXYPos(vec2i(cast(int)x, cast(int)y));
+            xy.value += halfWorldSize_xy;
+            auto u = newUnit();
+            u.pos = topOfTheWorld(xy);
+            u.type = world.unitTypeManager.byName("dwarf");
+            clan.addUnit(u);
+
+        }
+
 
         //world.addUnit(u);
 

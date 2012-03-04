@@ -59,9 +59,11 @@ cgyFileData parseModel(string data) {
     string[][] tokens = array(map!(
                 a => array(std.regex.splitter(a, regex(r"\s+"))))(lines));
 
+    /*
     foreach (line; tokens) {
         writeln(line);
     }
+    */
 
     cgyFileData ret = new cgyFileData;
     auto nums = parseHeader(ret, tokens);

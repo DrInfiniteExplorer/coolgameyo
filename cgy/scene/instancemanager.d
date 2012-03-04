@@ -68,7 +68,7 @@ final class InstanceManager {
     void render(Camera camera) {
         foreach(idx, node ; nodes) {
             instanceData[idx].pos = (node.getPosition() - camera.getPosition()).convert!float;
-            instanceData[idx].texIdx = cast(ubyte)idx; //Because we need to think about proxies and how they access
+            instanceData[idx].texIdx = idx%2; //Because we need to think about proxies and how they access
             //instance data, as well as how nodes access instancedata. Also meshes/models.
             dirty = true;
         }

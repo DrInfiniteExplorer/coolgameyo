@@ -51,6 +51,7 @@ final class TextureArray {
             imgCount += 1;
             toUpload ~= image;            
             dirty = true;
+            texToIdx[texture] = ret;
         }
 
         return ret;
@@ -93,7 +94,6 @@ final class TextureArray {
                 }
 
                 glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA8, width, height, capacity, 0, GL_RGBA, GL_UNSIGNED_BYTE, data.ptr);
-
                 glError();
             }
             glBindTexture(GL_TEXTURE_2D_ARRAY, textureId);
