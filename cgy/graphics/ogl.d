@@ -80,7 +80,12 @@ void initOpenGL(bool client){
 
     initQuad();
     initFBO();
-    initOCL();
+
+
+
+    //Refactor raycasting!!
+    //initOCL();
+
 
 }
 

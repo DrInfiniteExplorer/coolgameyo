@@ -5,12 +5,10 @@
     "model":{
         "name":"dorf/dorf.cgymesh",
         "skeletonName":"dorf/dorf.cgyanim",
-        "meshTextures":{
-            "body":[
-                "dorf/tex.png",
-                "dorf/tex2.png",
-            ],
-        },
+        "meshTextures":[
+            "dorf/tex.png",
+            "dorf/tex2.png",
+        ],
     },
   },
   "elf":{
@@ -19,12 +17,10 @@
     "model":{
         "name":"dorf/dorf.cgymesh",
         "skeletonName":"dorf/dorf.cgyanim",
-        "meshTextures":{
-            "body":[
-                "dorf/tex.png",
-                "dorf/tex2.png",
-            ],
-        },
+        "meshTextures":[
+            "dorf/tex.png",
+            "dorf/tex2.png",
+        ],
     },
   },
 }

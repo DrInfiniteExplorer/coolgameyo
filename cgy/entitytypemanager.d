@@ -14,6 +14,12 @@ import world.tile;
 import statistics;
 import util.util;
 
+struct EntityModelInfo {
+    string name;
+    string[] meshTextures;
+    string skeletonName;//Skeleton family
+}
+
 
 struct EntityType {
 	static struct InnerEntityType {
@@ -24,6 +30,8 @@ struct EntityType {
 		bool placeable;
         ubyte lightStrength = 0;
         vec3d lightTintColor;
+
+        EntityModelInfo model;   //Model family
 	}
 	
 	InnerEntityType serializableSettings;

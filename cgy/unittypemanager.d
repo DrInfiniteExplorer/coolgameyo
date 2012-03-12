@@ -13,7 +13,7 @@ import statistics;
 
 struct UnitModelInfo {
     string name;
-    string[][string] meshTextures;
+    string[] meshTextures;
     string skeletonName;//Skeleton family
 }
 

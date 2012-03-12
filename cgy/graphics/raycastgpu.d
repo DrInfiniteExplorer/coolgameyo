@@ -28,10 +28,6 @@ import util.rangefromto;
 import util.util;
 import world.world;
 
-//enum TileMemoryLocation = "global";
-//enum TileMemoryLocation = "constant";
-enum TileMemoryLocation = "texture";
-
 enum MaxLightTraceDistance = 100f;
 enum FadeLightTraceDistance = 90f;   //Start fading lightstrength at this distance,
 //so it is 0 at MaxLightTraceDistance
@@ -58,12 +54,7 @@ static assert(CLLight.sizeof == 32, "Error, will not match opencl size!");
 __gshared CLProgram g_traceRaysProgram;
 __gshared CLKernel g_kernel;
 __gshared CLBuffer g_cameraBuffer;
-//__gshared CLBuffer lightBuffer;
-static if(TileMemoryLocation == "texture") {
-    __gshared CLImage3D g_tileBuffer;
-} else {
-    __gshared CLBuffer g_tileBuffer;
-}
+__gshared CLImage3D g_tileBuffer;
 
 
 
@@ -71,18 +62,14 @@ void initInteractiveComputeYourFather(){
     reloadOpenCl();
     g_cameraBuffer = CLBuffer(g_clContext, CL_MEM_READ_ONLY, CLCamera.sizeof, null);
 
-    static if(TileMemoryLocation == "texture") {
-        auto format = cl_image_format(CL_R, CL_UNSIGNED_INT32);
-        g_tileBuffer = CLImage3D(g_clContext,
-                CL_MEM_READ_ONLY,
-                format,
-                SolidMap.sizeX*3, SolidMap.sizeY*3, SolidMap.sizeZ*3, //*3*3*3
-                0, 0,
-                null
-                );
-    } else {
-        g_tileBuffer = CLBuffer(g_clContext, CL_MEM_READ_ONLY, SolidMap.data.sizeof*27, null);
-    }
+    auto format = cl_image_format(CL_R, CL_UNSIGNED_INT32);
+    g_tileBuffer = CLImage3D(g_clContext,
+            CL_MEM_READ_ONLY,
+            format,
+            SolidMap.sizeX*3, SolidMap.sizeY*3, SolidMap.sizeZ*3, //*3*3*3
+            0, 0,
+            null
+            );
     startTime = Clock.currTime();
 }
 
@@ -95,27 +82,16 @@ void reloadOpenCl() {
     auto content = readText("opencl/yourfather.cl");
 
     string defines = "";
-    defines ~= " -D MaxLightTraceDistance=" ~ to!string(MaxLightTraceDistance);
-    defines ~= " -D FadeLightTraceDistance=" ~ to!string(FadeLightTraceDistance);
+    defines ~= " -D MaxLightTraceDistance=" ~ to!string(MaxLightTraceDistance) ~ ".0f";
+    defines ~= " -D FadeLightTraceDistance=" ~ to!string(FadeLightTraceDistance) ~ ".0f";
 
     defines ~= " -D RayCastPixelSkip="~to!string(renderSettings.raycastPixelSkip);
+    writeln(defines);
 
 
-
-    static if(TileMemoryLocation == "constant") {
-        defines ~= " -D TileStorageLocation=__constant";
-    } else static if (TileMemoryLocation == "global"){
-        defines ~= " -D TileStorageLocation=__global";
-    } else static if (TileMemoryLocation == "texture") {
-        defines ~= " -D UseTexture";
-    } else {
-        static assert(0, "No u");
-    }
-
+    static assert(SolidMap.sizeX == 4);
     static assert(SolidMap.sizeY == 128);
     static assert(SolidMap.sizeZ == 32);
-    static assert(SolidMap.sizeX == 4);
-    defines ~= " -D TileStorageType=uint -D TileStorageBitCount=32 -D SolidMapSize=4,128,32";
 
     g_traceRaysProgram = g_clContext.createProgram(content);
 
@@ -126,6 +102,7 @@ void reloadOpenCl() {
     string errors = g_traceRaysProgram.buildLog(g_clContext.devices[0]);
     writeln(errors);
     if(errors.length > 2) {
+        writeln(content[0 .. 256]);
         MessageBox(null, toStringz("!"~errors~"!?!"), "", 0);
     }
     g_kernel = CLKernel(g_traceRaysProgram, "castRays");
@@ -162,15 +139,10 @@ void uploadTileData(World world, Camera camera) {
             [rel.Y]
             [rel.Z] = sectorNum;
 
-        static if(TileMemoryLocation == "texture") {
-            rel *= vec3i(SolidMap.sizeX, SolidMap.sizeY, SolidMap.sizeZ);
-            const size_t[3] origin = [rel.X,rel.Y,rel.Z];
-            const size_t[3] region = [SolidMap.sizeX, SolidMap.sizeY, SolidMap.sizeZ];
-            g_clCommandQueue.enqueueWriteImage(g_tileBuffer, CL_TRUE, origin, region, tileMap.data.ptr);
-        } else {
-            int idx = rel.X + 3*rel.Y + 9*rel.Z;
-            g_clCommandQueue.enqueueWriteBuffer(g_tileBuffer, CL_TRUE, idx*SolidMap.data.sizeof, tileMap.data.sizeof, tileMap.data.ptr);
-        }
+        rel *= vec3i(SolidMap.sizeX, SolidMap.sizeY, SolidMap.sizeZ);
+        const size_t[3] origin = [rel.X,rel.Y,rel.Z];
+        const size_t[3] region = [SolidMap.sizeX, SolidMap.sizeY, SolidMap.sizeZ];
+        g_clCommandQueue.enqueueWriteImage(g_tileBuffer, CL_TRUE, origin, region, tileMap.data.ptr);
     }
 }
 

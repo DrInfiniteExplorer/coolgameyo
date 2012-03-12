@@ -3,16 +3,18 @@ module scene.instancemanager;
 
 import std.algorithm;
 import std.exception;
+import std.stdio;
 
 import scene.scenemanager;
-import scene.modelnode;
+import scene.meshnode;
 import graphics.camera;
 import graphics.models.cgymodel;
 
 import graphics.ogl;
 
 final class InstanceManager {
-    ModelNode[] nodes;
+
+    InstanceData**[] instancePtrArray;
     CGYMesh mesh;
     SceneManager sceneManager;
     SceneNodeShader shader;
@@ -48,33 +50,41 @@ final class InstanceManager {
         size_t size = InstanceData.sizeof * instanceData.length;
         glBindBuffer(GL_ARRAY_BUFFER, instanceVBO); glError();
         glBufferSubData(GL_ARRAY_BUFFER, 0, size, instanceData.ptr); glError();
-
+        
         dirty = false;
     }
 
-    void register(ModelNode modelNode) {
-        nodes ~= modelNode;
+    void register(InstanceData** ptrPtr) {
+        instancePtrArray ~= ptrPtr;
+        auto ptr = instanceData.ptr;
         instanceData.length = instanceData.length + 1;
+        if(ptr !is instanceData.ptr) {
+            foreach(idx, ptrPtr ; instancePtrArray) {
+                *ptrPtr = &instanceData[idx];
+            }
+        } else {
+            *ptrPtr = &instanceData[$-1];
+        }
     }
-    void unregister(ModelNode modelNode) {
-        auto idx = countUntil(nodes, modelNode);
+    void unregister(InstanceData** ptrPtr) {
+        auto idx = countUntil(instancePtrArray, ptrPtr);
         enforce(-1 != idx, "Error, trying to remove unexistant thing from InstanceManager");
-        nodes[idx] = nodes[$-1];
-        nodes.length = nodes.length - 1;
+        auto ptr = instanceData.ptr;
         instanceData[idx] = instanceData[$-1];
         instanceData.length = instanceData.length - 1;
+        instancePtrArray[idx] = instancePtrArray[$-1];
+        instancePtrArray.length = instancePtrArray.length - 1;
+
+        if(ptr !is instanceData.ptr) {
+            foreach(idx, ptrPtr ; instancePtrArray) {
+                *ptrPtr = &instanceData[idx];
+            }
+        }
     }
 
     void render(Camera camera) {
-        foreach(idx, node ; nodes) {
-            instanceData[idx].pos = (node.getPosition() - camera.getPosition()).convert!float;
-            instanceData[idx].texIdx = idx%2; //Because we need to think about proxies and how they access
-            //instance data, as well as how nodes access instancedata. Also meshes/models.
-            dirty = true;
-        }
-        if(dirty) {
-            uploadInstanceData();
-        }
+        uploadInstanceData();
+
         if(instanceVBO == 0) {
             return;
         }

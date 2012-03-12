@@ -5,7 +5,8 @@ module scene.scenemanager;
 import std.conv;
 
 import scene.instancemanager;
-import scene.modelnode;
+import scene.meshnode;
+import scene.entityproxy;
 import scene.unitproxy;
 import scene.texturearray;
 
@@ -14,6 +15,8 @@ import graphics.image;
 import graphics.models.cgymodel;
 import graphics.shader;
 import modelparser.cgyparser;
+
+import entities.entity;
 
 import unit;
 import util.filesystem;
@@ -40,7 +43,7 @@ interface SceneNode {
 alias ShaderProgram!("VP", "texUnit") SceneNodeShader;
 
 struct InstanceData {
-    vec3f pos;
+    vec3f pos;  //Updated to be camera-relative each frame in proxy.preRender
     vec3f rot;
     uint animationIndex;
     uint frameIndex;
@@ -72,27 +75,21 @@ final class Skeleton {
     }
 
 
-    void register(ModelNode modelNode) {
+    void register(CGYMesh mesh, InstanceData** ptrPtr) {
         
-        foreach(mesh ; modelNode.meshes) {
-            if(mesh in meshInstanceManagers) {
-                meshInstanceManagers[mesh].register(modelNode);
-                return;
-            }
-            auto im = new InstanceManager(sceneManager, mesh);
-            meshInstanceManagers[mesh] = im;
-            im.register(modelNode);
+        if(mesh in meshInstanceManagers) {
+            meshInstanceManagers[mesh].register(ptrPtr);
+            return;
         }
+        auto im = new InstanceManager(sceneManager, mesh);
+        meshInstanceManagers[mesh] = im;
+        im.register(ptrPtr);
         
     }
 
 
-    void unregister(ModelNode modelNode) {
-        
-        foreach(mesh ; modelNode.meshes) {
-            meshInstanceManagers[mesh].unregister(modelNode);
-        }
-        
+    void unregister(CGYMesh mesh, InstanceData** ptrPtr) {
+        meshInstanceManagers[mesh].unregister(ptrPtr);
     }
 
 
@@ -142,6 +139,9 @@ final class SceneManager {
 
 
 
+
+
+
     UnitProxy[uint] unitProxies;
     UnitProxy getProxy(Unit unit) {
         if(unit.unitId in unitProxies) {
@@ -157,6 +157,29 @@ final class SceneManager {
         unitProxies.remove(unit.unitId);
         proxy.destroy();
     }
+
+
+
+    EntityProxy[uint] entityProxies;
+    EntityProxy getProxy(Entity entity) {
+        if(entity.entityId in entityProxies) {
+            return entityProxies[entity.entityId];
+        }
+        auto proxy = new EntityProxy(this, entity);
+        entityProxies[entity.entityId] = proxy;
+        return proxy;
+    }
+    void removeProxy(Entity entity) {
+        EntityProxy* proxy = entity.entityId in entityProxies;
+        if(proxy is null) return;
+        entityProxies.remove(entity.entityId);
+        proxy.destroy();
+    }
+
+
+
+
+
 
 
 
@@ -280,6 +303,14 @@ final class SceneManager {
             model.prepare();
         }
         newModels.length = 0;
+
+        foreach(unitId, unitProxy ; unitProxies) {
+            unitProxy.preRender(camera);
+        }
+
+        foreach(entityId, entityProxy ; entityProxies) {
+            entityProxy.preRender(camera);
+        }
 
         foreach(skeleton ; skeletons) {
             skeleton.render(camera);

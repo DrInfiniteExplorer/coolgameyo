@@ -106,9 +106,6 @@ class World {
     WorldGenerator worldGen;
     bool isServer;  //TODO: How, exactly, does the world function differently if it actually is a server? Find out!
 
-    int unitCount;  //TODO: Is used?
-    int entityCount;  //TODO: Is used?
-
     WorldListener[] listeners;
 
     TileTypeManager tileTypeManager;
@@ -609,6 +606,8 @@ class World {
         unit.ticksToArrive = ticksToArrive;
         //Maybe add to list of moving units? Maybe all units are moving?
         //Consider this later. Related to comment in world.update
+        auto proxy = sceneManager.getProxy(unit);
+        proxy.setDestination(destination, ticksToArrive);
     }
 
 
@@ -645,8 +644,8 @@ class World {
         notifyAddUnit(sectorNum, unit);
     }
     void addEntity(Entity entity) {
-        entityCount += 1;
         //TODO: Make code, and make it work. Use unit as reference.
+        sceneManager.getProxy(entity);
 
         auto sectorNum = entity.pos.getSectorNum();
         auto sector = getSector(sectorNum);

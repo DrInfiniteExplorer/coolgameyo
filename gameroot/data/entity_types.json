@@ -3,11 +3,27 @@
     "displayName":"Pretty Tree",
 	"tintFromMaterial":1,
 	"tintColor":{ "X":50, "Y":200, "Z":50 },
+    "model":{
+        "name":"dorf/dorf.cgymesh",
+        "skeletonName":"dorf/dorf.cgyanim",
+        "meshTextures":[
+            "dorf/tex.png",
+            "dorf/tex2.png",
+        ],
+    },
   },
   "shrubbery":{
     "displayName":"SHRUBBERY!!!",
 	"tintFromMaterial":1,
 	"tintColor":{ "X":200, "Y":50, "Z":50 },
+    "model":{
+        "name":"dorf/dorf.cgymesh",
+        "skeletonName":"dorf/dorf.cgyanim",
+        "meshTextures":[
+            "dorf/tex.png",
+            "dorf/tex2.png",
+        ],
+    },
   },
   "torch":{
     "displayName":"Torch",
@@ -15,5 +31,13 @@
 	"tintColor":{ "X":255, "Y":255, "Z":255 },
 	"lightStrength":10,
 	"lightTintColor":{ "X":255, "Y":145, "Z":45 },
+    "model":{
+        "name":"dorf/dorf.cgymesh",
+        "skeletonName":"dorf/dorf.cgyanim",
+        "meshTextures":[
+            "dorf/tex.png",
+            "dorf/tex2.png",
+        ],
+    },
   },
 }
