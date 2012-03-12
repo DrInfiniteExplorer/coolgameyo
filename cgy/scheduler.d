@@ -3,6 +3,10 @@ module scheduler;
 import core.time;
 import core.thread;
 
+import core.sync.mutex;
+
+import std.cpuid;
+
 import std.algorithm;
 import std.exception;
 import std.c.stdlib;
@@ -49,33 +53,24 @@ Task syncTask(void delegate () run) {
     return Task(true, false, (const World, ChangeList changeList){ run(); });
 }
 
-private Task sleepyTask(long usecs) {
-    enforce(usecs > 0 && usecs <= 1000000*15, "sleepyTask called with bad usec count:" ~to!string(usecs)); //Valid time and not more than 15 secs
-    void asd(const World, ChangeList changeList){
-        //msg("worker sleeping ", usecs, " usecs");
-        Thread.sleep(dur!"usecs"(usecs));
-    }
-    return Task(false, false, &asd);
-}
-
 private Task syncTask() {
     return Task(true, true, null);
 }
 
+private void workerFun(shared Scheduler ssched, int id) {
+    workerID = id;
+    bool should_continue = true;
+    thread_attachThis();
+    auto sched = cast(Scheduler)ssched; // fuck the type system!
+    setThreadName("Fun-worker thread");
 
-// THIS WILL PROBABLY NEED SOME FLESHING OUT...!!!
-private void workerFun(shared Scheduler ssched) {
-    bool exit;
+    ChangeList changeList = new ChangeList;
+    Task task;
+
     try {
-
-        auto sched = cast(Scheduler)ssched; // fuck the type system!
-        setThreadName("Fun-worker thread");
-
-        ChangeList changeList = new ChangeList;
-        Task task;
-        while (!exit) {
-            exit = !sched.getTask(task, changeList);
-            if(!exit) {
+        while (should_continue) {
+            should_continue = sched.getTask(task, changeList);
+            if (should_continue) {
                 // try to receive message?
                 //If scheduler syncs, this list is applied to the world.
                 task.run(sched.world, changeList); //Fill changelist!!
@@ -88,14 +83,14 @@ private void workerFun(shared Scheduler ssched) {
                     "Error", MB_OK | MB_ICONEXCLAMATION);
         }
     }
-    if (!exit) {
+    if (should_continue) {
         MessageBoxA(null, "A worker thread exited prematurely. Emergency application crash!", "And the world was on fire!", 0);
         std.c.stdlib.exit(1);
     }
 }
 
 class Scheduler {
-    enum State { update, sync, forcedAsync, async }
+    enum State { update, sync, forcedAsync, async, wait }
     enum ASYNC_COUNT = 23;
 
     bool shouldSerialize;
@@ -113,28 +108,16 @@ class Scheduler {
 
     Tid[] workers;
 
+    int activeWorkers;
+
     long asyncLeft;
 
     long syncTime;
     long nextSync() @property const {
-        return syncTime + (dur!"seconds"(1) / TICKS_PER_SECOND).total!"usecs"; // total???
+        return syncTime + (dur!"seconds"(1) / TICKS_PER_SECOND).total!"usecs";
     }
 
-    private Task popAsync(ChangeList changeList) {
-        synchronized(this) {
-            if (async.empty) {
-                state = State.async;
-                auto usecs = nextSync - utime();
-                if(usecs > 0){
-                    return sleepyTask(usecs);
-                }
-                Task t;
-                getTask(t, changeList);
-                return t;
-            }
-            return async.removeAny();
-        }
-    }
+    Condition cond;
 
     this(World world_) {
         world = world_;
@@ -143,18 +126,23 @@ class Scheduler {
 
         sync.insert(syncTask());
 
-        state = State.update;
+        state = State.wait;
+
+        cond = new Condition(new Mutex(this));
     }
 
-    void start(int workerCount=1) {
-        workerCount--;
-        foreach (x; 0 .. workerCount) {
-            workers ~= spawn(&workerFun, cast(shared)this);
-        }
+    void start(int workerCount=core.cpuid.threadsPerCPU) {
+        msg("using ", workerCount, " workers");
+        activeWorkers = workerCount;
+
         workers ~= thisTid();
+        foreach (x; 1 .. workerCount) {
+            workers ~= spawn(&workerFun, cast(shared)this, x);
+        }
+
         syncTime = utime();
         tickWatch.start();
-        workerFun(cast(shared)this);
+        workerFun(cast(shared)this, 0);
     }
 
     void exit() {
@@ -207,85 +195,93 @@ class Scheduler {
         }
     }
 
-    //If we synchronize threads, changelist is used and stuff. Otherwise it is ignored.
     bool getTask(ref Task task, ChangeList changeList) {
-        synchronized(this) {
-            //msg("scheduler state: ", to!string(state));
-            switch (state) {
-                default:
-                case State.update:
-                    if(exiting) {
-                        if (workers.length > 1){
-                            bool pred(Tid t){
-                                return t == thisTid();
-                            }
-                            workers = remove!(pred)(workers);
-                            return false;
+        synchronized (this) {
+            return getTask_impl(task, changeList);
+        }
+    }
+
+    private bool getTask_impl(ref Task task, ChangeList changeList) {
+        switch (state) {
+            default:
+                assert (0);
+            case State.wait:
+                activeWorkers -= 1;
+
+                if (activeWorkers > 0) {
+                    if (exiting) {
+                        bool pred(Tid t) {
+                            return t == thisTid();
                         }
-                        //Close all but last thread here. Last threads exits a bit down, in update, after potential save.
-                    }
-                    if(workers.length > 1){
-                        //TODO: Wait for all workers here. Synchronize. Etc. :)
-                    }
-
-                    //msg("updating!");
-                    //TODO: Make threads wait and synchronize with each other before this phase!
-                    //Important! :)
-
-                    syncTime = utime();
-                    changeList.apply(world);
-                    world.update(this);
-                    foreach (mod; modules) {
-                        mod.update(world, this);
-                    }
-                    tickWatch.stop();
-                    g_Statistics.addTPS(tickWatch.peek().usecs);
-                    tickWatch.reset();
-                    tickWatch.start();
-
-                    if (shouldSerialize) {
-                        serialize();
-                    }
-                    
-                    if(exiting){
-                        workers.length = 0;
+                        workers = remove!(pred)(workers);
                         return false;
+                    } else {
+                        cond.wait();
+                        return getTask_impl(task, changeList);
                     }
-                    
-                    state = state.sync;
-                    goto case;
+                }
+                auto timeLeft = nextSync - utime();
+                if (timeLeft > 0) {
+                    Thread.sleep(dur!"usecs"(timeLeft));
+                }
+            case State.update:
+                assert (activeWorkers == 0);
+                activeWorkers = workers.length;
+                cond.notifyAll();
 
-                    // fallin through...~~~~
-                case State.sync:
-                    auto t = sync.removeAny();
+                syncTime = utime();
+                changeList.apply(world);
+                world.update(this);
+                foreach (mod; modules) {
+                    mod.update(world, this);
+                }
+                tickWatch.stop();
+                g_Statistics.addTPS(tickWatch.peek().usecs);
+                tickWatch.reset();
+                tickWatch.start();
 
-                    if (!t.syncsScheduler) {
-                        task = t;
-                        return true;
-                    }
+                if (shouldSerialize) {
+                    serialize();
+                }
 
-                    state = State.forcedAsync;
-                    asyncLeft = ASYNC_COUNT;
-                    sync.insert(syncTask());
-                    return getTask(task, changeList);
-                    
+                if(exiting){
+                    workers.length = 0;
+                    return false;
+                }
 
-                case State.forcedAsync:
-                    asyncLeft -= 1;
-                    if (asyncLeft == 0) {
-                        state = State.async;
-                    }
-                    task = popAsync(changeList);
+                state = state.sync;
+                return getTask_impl(task, changeList);
+
+            case State.sync:
+                auto t = sync.removeAny();
+
+                if (!t.syncsScheduler) {
+                    task = t;
                     return true;
+                }
 
-                case State.async:
-                    if (utime() > nextSync) {
-                        state = State.update;
-                        return getTask(task, changeList);
-                    }
-                    task = popAsync(changeList);
-                    return true;
-            }
+                state = State.forcedAsync;
+                asyncLeft = ASYNC_COUNT;
+                sync.insert(syncTask());
+                return getTask_impl(task, changeList);
+
+            case State.forcedAsync:
+                asyncLeft -= 1;
+                assert (asyncLeft >= 0);
+                if (asyncLeft == 0 || async.empty) {
+                    state = State.async;
+                    return getTask_impl(task, changeList);
+                }
+                task = async.removeAny();
+                return true;
+
+            case State.async:
+                if (utime() > nextSync || async.empty) {
+                    state = State.wait;
+                    return getTask_impl(task, changeList);
+                }
+                task = async.removeAny();
+                return true;
         }
     }
 

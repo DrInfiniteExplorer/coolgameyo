@@ -22,8 +22,10 @@ version (Posix) {
     import std.c.stdlib;
 }
 
+int workerID = -1; // thread local, set by scheduler
+
 void msg(string file=__FILE__, int line=__LINE__, T...)(T t) {
-    writeln(file, "(", line, "): ", t);
+    writeln(workerID, ": ", file, "(", line, "): ", t);
 }
 
 long utime() {
@@ -138,7 +140,8 @@ void setThreadName(string threadName) {
         }
         catch(Throwable o) //__except(EXCEPTION_EXECUTE_HANDLER)
         {
-            msg("asdasdasd");
+            // wtf is this shit
+            //msg("asdasdasd");
         }
     }
 }
