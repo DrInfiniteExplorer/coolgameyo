@@ -224,6 +224,7 @@ class Scheduler {
                 if (timeLeft > 0) {
                     Thread.sleep(dur!"usecs"(timeLeft));
                 }
+                goto case; //Switch case falltrough, explicit.
             case State.update:
                 assert (activeWorkers == 0);
                 activeWorkers = workers.length;
