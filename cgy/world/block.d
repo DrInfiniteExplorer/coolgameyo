@@ -188,6 +188,8 @@ struct Block {
     // allocation / freelist stuff
 
     static {
+        class Mutex {}
+        Mutex mutex;
         private struct AllocationBlock {
             bool[] allocmap; // true = allocated, false = not
             BlockTiles[] data;
@@ -230,23 +232,30 @@ struct Block {
                 return alloc;
             }
         }
-        AllocationBlock* freeblock;
+        __gshared AllocationBlock* freeblock;
 
         Block alloc() {
-            if (freeblock is null) {
-                freeblock = AllocationBlock.create();
+            if(mutex is null) {
+                mutex = new Mutex;
             }
+            synchronized(mutex) {
+                if (freeblock is null) {
+                    freeblock = AllocationBlock.create();
+                }
 
-            Block block;
-            block.tiles = freeblock.getMem();
-            setFlag(block.flags, BlockFlags.valid, true);
+                Block block;
+                block.tiles = freeblock.getMem();
+                setFlag(block.flags, BlockFlags.valid, true);
 
-            assert (block.valid);
+                assert (block.valid);
 
-            return block;
+                return block;
+            }
         }
         void free(Block block) {
-            freeblock.returnMem(block.tiles);
+            synchronized(mutex) {
+                freeblock.returnMem(block.tiles);
+            }
         }
     }
 }
