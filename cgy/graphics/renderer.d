@@ -21,6 +21,7 @@ import graphics.shader;
 import graphics.texture;
 import graphics.tilerenderer;
 
+import jkla;
 import modules.module_;
 import random.catmullrom;
 import scheduler;
@@ -38,6 +39,8 @@ class Renderer {
     TileRenderer tileRenderer;
     TileTextureAtlas atlas;
     Camera camera;
+
+    JklA jkla;
     
     alias ShaderProgram!("VP", "M", "color") DudeShaderProgram;
     alias ShaderProgram!("VP", "V", "color", "radius") LineShaderProgram;
@@ -49,13 +52,14 @@ class Renderer {
     
     vec3d*[Unit] specialUnits;
     
-    this(Camera c, TileTextureAtlas _atlas, TileRenderer _tileRenderer, SceneManager _sceneManager)
+    this(Camera c, TileTextureAtlas _atlas, TileRenderer _tileRenderer, SceneManager _sceneManager, JklA _jkla)
     {
         mixin(LogTime!("RendererInit"));
         camera = c;        
         tileRenderer = _tileRenderer;
         atlas = _atlas;
         sceneManager = _sceneManager;
+        jkla = _jkla;
 
     }
 
@@ -96,12 +100,14 @@ class Renderer {
         createTorchModel();
 
         tileRenderer.init();
+        jkla.init();
         atlas.upload();
 
         initialized = true;
     }
     
     void destroy() {
+        jkla.destroy();
         tileRenderer.destroy();
         dudeShader.destroy();
         lineShader.destroy();
@@ -312,22 +318,21 @@ class Renderer {
         
         g_Statistics.addFPS(usecs);
 
-        //TODO: Decide if to move clearing of buffer to outside of renderer, or is render responsible for
-        // _ALL_ rendering?
+        vec3f skyColor = CatmullRomSpline(timeOfDay, SkyColors);
 
         //TODO: Make function setWireframe(bool yes) that does this.
         //Render world
-        glBindFramebuffer(GL_FRAMEBUFFER, g_FBO);
-        glError();
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glError();
+        glBindFramebuffer(GL_FRAMEBUFFER, g_FBO); glError();
+        glClearColor(skyColor.X, skyColor.Y, skyColor.Z, 0.0f); glError();
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); glError();
 
         setWireframe(renderSettings.renderWireframe);
 
-        vec3f skyColor = CatmullRomSpline(timeOfDay, SkyColors);
+
 
         atlas.use();
         tileRenderer.render(camera, skyColor);
+        jkla.render(camera);
 
         sceneManager.renderScene(camera);
 

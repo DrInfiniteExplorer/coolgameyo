@@ -152,6 +152,13 @@ class LayerManager {
         return ptr[0] ^ ptr[1] ^ ptr[2] ^ ptr[3];
     }
 
+    bool hasMap(int level, vec2i mapNum) {
+        if(level == 5) return true;
+        if(level == 0) return false;
+        auto layer = layers[level];
+        return (mapNum in layer) !is null;
+    }
+
     Map getMap(int level, vec2i mapNum) {
         if(level == 5) return layer5;
         auto layer = layers[level];
@@ -275,6 +282,10 @@ class LayerManager {
         return map.getHeight(ptNum.X, ptNum.Y);
     }
 
+    vec3f getBiomeColor(vec2i tp) {
+        return vec3f(0.7f, 0.7f, 0.7f);
+    }
+
 }
 
 
@@ -389,6 +400,10 @@ final class WorldGenerator {
 
     double getHeight01(TilePos t) {
         return cast(double)maxZ(TileXYPos(t)) / 500.0;
+    }
+
+    LayerManager getLayerManager() {
+        return layerManager;
     }
 }
 

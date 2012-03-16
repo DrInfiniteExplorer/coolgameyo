@@ -26,9 +26,11 @@ import graphics.debugging;
 
 import scene.scenemanager;
 
-import clan;
-import json;
+
 import ai.patrolai;
+import clan;
+import jkla;
+import json;
 //import changes.changelist;
 import graphics.tilegeometry;
 import graphics.tilerenderer;
@@ -141,8 +143,10 @@ class Game{
             //geometryCreator = new GeometryCreator(world);
             auto tileRenderer = new TileRenderer();
             tileGeometry = new TileGeometry(world, tileRenderer);
-            renderer = new Renderer(camera, atlas, tileRenderer, sceneManager);
+            auto jkla = new JklA(world);
+            renderer = new Renderer(camera, atlas, tileRenderer, sceneManager, jkla);
             scheduler.registerModule(tileGeometry);
+            scheduler.registerModule(jkla);
             tileGeometry.setCamera(camera);
         }
 
@@ -188,6 +192,7 @@ class Game{
 
         clan.addUnit(u);
 
+        /*
         foreach(idx ; 0 .. 1000) {
             float ratio = cast(float)idx / 1000.0f;
             float x = sin(ratio * 2 * 2 * PI);
@@ -205,6 +210,7 @@ class Game{
             clan.addUnit(u);
 
         }
+        */
 
 
         //world.addUnit(u);

@@ -9,9 +9,6 @@ import stolen.vector3d;
 
 
 
-//! 2d vector template class with lots of operators and methods.
-/** As of Irrlicht 1.6, this class supercedes position2d, which should
-	be considered deprecated. */
 struct vector2d(T)
 {
 public:
@@ -56,6 +53,26 @@ public:
 	vector2d!(T) opDivAssign(const vector2d!(T) other) { X/=other.X; Y/=other.Y; return this; }
 	vector2d!(T) opDiv(const T v) const { return vector2d!(T)(cast(T) (X / v), cast(T) (Y / v)); }
 	vector2d!(T) opDivAssign(const T v) { X/=v; Y/=v; return this; }
+
+    vector2d!T min(const vector2d!T other) const {
+        T min(T a, T b) {
+            return a < b ? a : b;
+        }
+        return vector2d!T(
+                          min(X, other.X), 
+                          min(Y, other.Y)
+                          );
+    }
+
+    vector2d!T max(const vector2d!T other) const {
+        T max(T a, T b) {
+            return a > b ? a : b;
+        }
+        return vector2d!T(
+                          max(X, other.X), 
+                          max(Y, other.Y)
+                          );
+    }
 
 	//! sort in order X, Y. Equality with rounding tolerance.
 	T opCmp(const vector2d!(T)other) const

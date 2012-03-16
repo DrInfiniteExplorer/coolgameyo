@@ -141,7 +141,7 @@ template FixLighting(const string A, const int num, const int dir, const string 
 }
 
 
-class TileGeometry : Module, WorldListener
+final class TileGeometry : Module, WorldListener
 {
     GraphRegionNum[] regionsToUpdate; //Only used in taskFunc and where we populate it, mutually exclusive locations.
     Mutex updateMutex;
@@ -372,12 +372,12 @@ class TileGeometry : Module, WorldListener
     }
 
    
-    override void serializeModule() {  // Module interface
+    override void serializeModule() { 
         //Do nothing. Rebuild geometry when loading instead.
         //TODO: In the future, examine saving of polygon data.
     }
     
-    override void deserializeModule() {  // Module interface
+    override void deserializeModule() { 
         //Tightly linked to the one above.
         //BREAKPOINT;
     }
@@ -438,8 +438,7 @@ class TileGeometry : Module, WorldListener
     void onAddUnit(SectorNum, Unit) { }
 	void onAddEntity(SectorNum, Entity) { }
 
-    void onBuildGeometry(SectorNum sectorNum)
-    {
+    void onBuildGeometry(SectorNum sectorNum) {
         //version(Windows) auto start = GetTickCount();
         auto grNumMin = sectorNum.toTilePos().getGraphRegionNum();
         sectorNum.value += vec3i(1,1,1);
@@ -467,12 +466,10 @@ class TileGeometry : Module, WorldListener
         }
     }
     
-    void onSectorUnload(SectorNum sectorNum)
-    {
+    void onSectorUnload(SectorNum sectorNum) {
         tileRenderer.removeSector(sectorNum);
     }
-    void onUpdateGeometry(TilePos tilePos)
-    {
+    void onUpdateGeometry(TilePos tilePos) {
         GraphRegionNum[] newRegions;
         auto tileAABB = tilePos.getAABB();
         /*
