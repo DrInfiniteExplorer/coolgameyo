@@ -77,17 +77,19 @@ public:
 	//! sort in order X, Y. Equality with rounding tolerance.
 	T opCmp(const vector2d!(T)other) const
 	{
-        auto dX = X - other.X;
-        auto dY = Y - other.Y;
+        auto x = X - other.X;
+        auto y = Y - other.Y;
         
-        if(dX*dY == 0){
+        if(!x && !y){
             return 0;
         }
-        if(dX < 0){
+        if(x > 0){
             return 1;
         }
-        if(dX == 0 && dY < 0){
-            return 1;
+        if(x == 0) {
+            if(y > 0) {
+                return 1;
+            }
         }
         
 		return -1;

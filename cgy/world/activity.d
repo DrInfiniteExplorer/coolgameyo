@@ -17,7 +17,7 @@ import world.time;
 //debug {
     auto activitySize = vec3i(3,3,3);
 //} else {
-    //auto activitySize = vec3i(5,5,5);
+//    auto activitySize = vec3i(5,5,5);
 //}
 
 enum SectorTimeoutTicks = TICKS_PER_SECOND * 15;
@@ -28,6 +28,10 @@ private mixin template ActivityHandlerMethods() {
     int[SectorNum] activeSectors; //Number of clans active in sector X.
 
     ulong[SectorNum] sectorTimeout; //Tick when sector X is scheduled for serializing to harddisk
+
+    bool isActiveSector(SectorNum sectorNum) {
+        return (sectorNum in activeSectors) !is null;
+    }
 
     //Called after every unit movement, otherwise floodfill errors.
     void updateActivity(UnitPos from, UnitPos pos) {
@@ -113,7 +117,7 @@ private mixin template ActivityHandlerMethods() {
             } else {
                 sectorTimeout[sectorNum] = worldTime + SectorTimeoutTicks;
                 msg("Queueing sector for offload");
-                addAABB(sectorNum.getAABB);
+                //addAABB(sectorNum.getAABB);
                 //Removed sector
 
             }
@@ -149,65 +153,6 @@ private mixin template ActivityHandlerMethods() {
         }
     }
 
-/*
-
-    void increaseActivity(UnitPos activityLoc) {
-        auto sectorNum = activityLoc.getSectorNum();
-        auto sector = getSector(sectorNum);
-        if (sector is null) {
-            sector = loadSector(sectorNum);
-        }
-        if (sector is null) {
-            sector = allocateSector(sectorNum);
-        }
-
-        if (sector.activity == 0) {
-            addFloodFillPos(activityLoc);
-        }
-
-        foreach (p; activityRange(sectorNum)) {
-            auto s = getSector(p);
-            if (s is null) {
-                s = loadSector(p);
-            }
-            s.increaseActivity();
-        }
-
-        foreach (p; activityRange(sectorNum)) {
-            if (getSector(p).activity == 1) {
-                floodingSectors ~= p;
-                foreach (n; neighbors(p)) {
-                    auto s = getSector(n);
-
-                    if (s && s.activity > 1) {
-                        addFloodFillWall(p, n);
-                    }
-                }
-            }
-        }
-    }
-    void moveActivity(UnitPos from, UnitPos to) {
-        auto a = from.getSectorNum();
-        auto b = to.getSectorNum();
-        if (a == b) {
-            return;
-        }
-
-        increaseActivity(to);
-
-        foreach (p; activityRange(from.getSectorNum())) {
-            //TODO: Make this work and stuff. Yeah!
-            //It now triggers the invariant that says that sectors need to have activity.
-            //Should be fixed with activity-linger-timer, which when ending should be handled by
-            //serializing sector to disk.
-            //getSector(p).decreaseActivity();
-        }
-    }
-
-    void decreaseActivity(UnitPos activityLoc) {
-        assert (0);
-    }
-*/
 }
 
 auto activityRange(SectorNum base) {

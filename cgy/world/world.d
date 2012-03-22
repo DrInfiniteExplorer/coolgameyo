@@ -407,6 +407,12 @@ class World {
         return null;
     }
 
+    bool isAirSector(SectorNum sectorNum) {
+        auto sector = getSector(sectorNum);
+        if(sector is null) return false;
+        return sector.isAirSector();
+    }
+
     SolidMap* getSolidMap(TilePos tilePos) {
         auto sectorNum = tilePos.getSectorNum();
         auto sector = getSector(sectorNum);

@@ -7,8 +7,9 @@ import std.math;
 
 import changes.changelist;
 import unit;
+import pos;
 
-import world.world;
+import world.worldproxy;
 
 
 class MoveToAI : UnitAI {
@@ -28,11 +29,11 @@ class MoveToAI : UnitAI {
         this.removeOnArrive = removeOnArrive;
     }
 
-    override int tick(ChangeList changeList) {
+    override int tick(WorldProxy world) {
         if (unit.destination != target.pos) {
             auto dist = (target.pos.value - unit.pos.value).getLength();
             int ticks = to!int(ceil(dist / speed));
-            changeList.addMovement(unit, target.pos.value, ticks);
+            world.moveUnit(unit, UnitPos(target.pos.value), ticks);
         }
         if (unit.pos == target.pos) {
             if (done !is null) {

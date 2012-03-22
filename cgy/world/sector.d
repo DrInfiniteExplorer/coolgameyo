@@ -278,6 +278,12 @@ class Sector {
         return solidMap.hasContent(relMin, relMax);
     }
 
+    bool isAirSector() {
+        return !hasContent(TilePos(vec3i(0,0,0)),
+                           TilePos(vec3i(SectorSize.x, SectorSize.y, SectorSize.z)-vec3i(1))
+                           );
+    }
+
     //Returns old solidnessvalue
     bool setSolid(TilePos tilePos, bool solid) { 
         auto sectorRel = tilePos.sectorRel;

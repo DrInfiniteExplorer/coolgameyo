@@ -13,6 +13,7 @@ module jkla;
 [14:37:49] <@Luben> kompromiss där?
 +/
 
+import std.algorithm;
 import std.stdio;
 
 import graphics.camera;
@@ -72,6 +73,8 @@ final class JklA : Module, WorldListener {
     vec3f[41][41] vertices; //lol 20k of vertex data on stack
     vec3f[41][41] normals;  //Another 20k! will it blend?
     vec3f[41][41] colors;   // EVEN MORE! WILL TEH STACK CORPPTU?
+    float sectorMin[100];
+    float sectorMax[100];
     ushort[40*40*6] indices;
 
     void buildHeightmap(SectorNum center) {
@@ -79,11 +82,16 @@ final class JklA : Module, WorldListener {
         // That is (10*4+1)x(10*4+1) vertices
         //Dont be surprised if it doesnt!
 
+
+        this.center = center;
         vec3f centerTp = center.toTilePos.value.convert!float;
 
         SectorXYNum startSect = SectorXYNum(SectorXYNum(center).value - vec2i(5,5));
 
         vec2i baseTp = startSect.getTileXYPos().value;
+
+        sectorMin[] = float.max;
+        sectorMax[] = -float.max;
 
         foreach(y ; 0 .. 41) {
             foreach(x ; 0 .. 41) {
@@ -102,22 +110,41 @@ final class JklA : Module, WorldListener {
             }
         }
 
-        foreach(y ; 0 .. 40) {
-            foreach(x ; 0 .. 40) {
-                vec2i tp = baseTp + vec2i(32) * vec2i(x, y);
-                int base = 6*(40*y+x);
-                if( TileXYPos(tp).getSectorXYNum().value in dontLoad) {
-                    indices[base .. base+6] = 0;
+        foreach(y ; 0 .. 10) {
+            foreach(x ; 0 .. 10) {
+                foreach(dx ; 0 .. 5) {
+                    foreach(dy ; 0 .. 5) {
+                        sectorMin[10 * y + x] = min(sectorMin[10 * y + x], vertices[y*4+dx][x*4+dy].Z);
+                        sectorMax[10 * y + x] = max(sectorMax[10 * y + x], vertices[y*4+dx][x*4+dy].Z);
+                    }
+                }
+            }
+        }
+
+        indices[] = 0;
+        foreach(sectY ; 0 .. 10) {
+            foreach(sectX ; 0 .. 10) {
+                if( !shouldMakeHeightSheet(vec2i(sectX, sectY))) {
+                    loaded[sectX][sectY] = false;
                     continue;
                 }
+                loaded[sectX][sectY] = true;
+                foreach(dy ; 0 .. 4) {
+                    auto y = sectY * 4 + dy;
+                    foreach(dx ; 0 .. 4) {
+                        auto x = sectX * 4 + dx;
+                        vec2i tp = baseTp + vec2i(32) * vec2i(x, y);
+                        int base = 6*(40*y+x);
 
-                indices[base + 1] = cast(ushort)(41 * (y + 0) + x + 0);
-                indices[base + 0] = cast(ushort)(41 * (y + 1) + x + 0);
-                indices[base + 2] = cast(ushort)(41 * (y + 0) + x + 1);
+                        indices[base + 1] = cast(ushort)(41 * (y + 0) + x + 0);
+                        indices[base + 0] = cast(ushort)(41 * (y + 1) + x + 0);
+                        indices[base + 2] = cast(ushort)(41 * (y + 0) + x + 1);
 
-                indices[base + 4] = cast(ushort)(41 * (y + 1) + x + 0);
-                indices[base + 3] = cast(ushort)(41 * (y + 1) + x + 1);
-                indices[base + 5] = cast(ushort)(41 * (y + 0) + x + 1);
+                        indices[base + 4] = cast(ushort)(41 * (y + 1) + x + 0);
+                        indices[base + 3] = cast(ushort)(41 * (y + 1) + x + 1);
+                        indices[base + 5] = cast(ushort)(41 * (y + 0) + x + 1);
+                    }
+                }
             }
         }
 
@@ -148,7 +175,6 @@ final class JklA : Module, WorldListener {
                 vec3f Nx2 = vec3f(c - Xp, 0.0f, 32.0f);
                 vec3f Ny1 = vec3f(0.0f, Yn - c, 32.0f);
                 vec3f Ny2 = vec3f(0.0f, c - Yp, 32.0f);
-
 
                 normals[y][x] = (Nx1 + Nx2 + Ny1 + Ny2).normalize();
             }
@@ -190,31 +216,59 @@ final class JklA : Module, WorldListener {
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, idxVBO);
             glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, indices.sizeof, indices.ptr);
         }
-
-        this.center = center;
     }
 
     SectorNum center;
     bool started = false;
 
-    bool dontLoad[vec2i];
-    vec2i[] removeList;
-    vec2i[] addBack;
+    SectorNum[] addBack;
+    SectorNum[] removeList;
+    bool[10][10] loaded;
+
+    //Indexed [0..10] in x,y
+    //Loops over the range of sectors that the heightsheet covers at a xy-secnum,
+    //checks if it is part of the current world, if not then we are free to make heightsheets.
+    bool shouldMakeHeightSheet(vec2i sectorNum) {
+
+        double maxZ = sectorMax[sectorNum.Y * 10 + sectorNum.X] + center.toTilePos.value.Z;
+        double minZ = sectorMin[sectorNum.Y * 10 + sectorNum.X] + center.toTilePos.value.Z;
+
+        SectorXYNum startSect = SectorXYNum(SectorXYNum(center).value - vec2i(5,5));
+        SectorXYNum thisSect = SectorXYNum(startSect.value + sectorNum);
+        TileXYPos tp = thisSect.getTileXYPos;
+        TilePos maxTP = tp.toTilePos(cast(int)maxZ);
+        TilePos minTP = tp.toTilePos(cast(int)minZ);
+
+        auto maxSector = maxTP.getSectorNum();
+        auto minSector = minTP.getSectorNum();
+        foreach(z ; minSector.value.Z .. maxSector.value.Z+1) {
+            auto testNum = thisSect.getSectorNum(z);
+            if(world.isActiveSector(testNum)) {
+                if(world.isAirSector(testNum)) continue;
+                return false;
+            }
+        }
+        return true;
+    }
 
     void addParts() {
         if(addBack.length == 0 || idxVBO == 0) return;
         synchronized(this) {
+            bool updated = false;
             SectorXYNum startSect = SectorXYNum(SectorXYNum(center).value - vec2i(5,5));
-            vec2i baseTp = startSect.getTileXYPos().value;
-            foreach(sect ; removeList) {
-                auto localId = sect - startSect.value;
-                if(sect.X < 0 || sect.X >= 10 || sect.Y < 0 || sect.Y >= 10) continue;
-                int baseIdx = 6*4*(10*sect.Y + sect.X);
+            foreach(sect ; addBack) {
+                auto localId = SectorXYNum(sect).value - startSect.value;
+                if(localId.X < 0 || localId.X >= 10 || localId.Y < 0 || localId.Y >= 10) continue;
+                if(loaded[localId.Y][localId.X]) continue;
+                if(! shouldMakeHeightSheet(localId)) continue;
+                updated = true;
+                loaded[localId.Y][localId.X] = true;
+
                 foreach(Y ; 0 .. 4) {
-                    int newBaseIdx = baseIdx + 4*6*10*Y;
                     foreach(X ; 0 .. 4) {
-                        int x = X * 4;
-                        int y = Y * 4;
+                        int x = X + localId.X * 4;
+                        int y = Y + localId.Y * 4;
+                        int newBaseIdx = 6*(40*y + x);
                         indices[newBaseIdx + 1] = cast(ushort)(41 * (y + 0) + x + 0);
                         indices[newBaseIdx + 0] = cast(ushort)(41 * (y + 1) + x + 0);
                         indices[newBaseIdx + 2] = cast(ushort)(41 * (y + 0) + x + 1);
@@ -227,30 +281,42 @@ final class JklA : Module, WorldListener {
                 }
             }
             addBack = null;
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, idxVBO);
-            glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, indices.sizeof, indices.ptr);
-
+            if(updated) {
+                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, idxVBO);
+                glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, indices.sizeof, indices.ptr);
+            }
         }
     }
 
     void removeParts() {
         if(removeList.length == 0 || idxVBO == 0) return;
         synchronized(this) {
+            bool updated = false;
             SectorXYNum startSect = SectorXYNum(SectorXYNum(center).value - vec2i(5,5));
             vec2i baseTp = startSect.getTileXYPos().value;
 
             foreach(sect ; removeList) {
-                auto localId = sect - startSect.value;
-                if(sect.X < 0 || sect.X >= 10 || sect.Y < 0 || sect.Y >= 10) continue;
-                int baseIdx = 6*4*(4*sect.Y + sect.X);
+                auto localId = SectorXYNum(sect).value - startSect.value;
+                if(localId.X < 0 || localId.X >= 10 || localId.Y < 0 || localId.Y >= 10) continue;
+                if(!loaded[localId.Y][localId.X]) continue;
+
+                auto bottom = sect.toTilePos().value.Z;
+                auto top = bottom + SectorSize.z;
+                if(bottom > sectorMax[localId.Y * 10 + localId.X]) continue;
+                if(top < sectorMin[localId.Y * 10 + localId.X]) continue;
+                updated = true;
+                loaded[localId.Y][localId.X] = false;
+
                 foreach(y ; 0 .. 4) {
-                    int newBaseIdx = baseIdx + 4*6*10*y;
+                    int newBaseIdx = 6*(40*(localId.Y*4 + y) + localId.X*4);
                     indices[newBaseIdx .. newBaseIdx + 6*4] = 0;
                 }
             }
             removeList = null;
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, idxVBO);
-            glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, indices.sizeof, indices.ptr);
+            if(updated) {
+                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, idxVBO);
+                glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, indices.sizeof, indices.ptr);
+            }
         }
     }
 
@@ -258,15 +324,16 @@ final class JklA : Module, WorldListener {
 
         TilePos camTP = TilePos(camera.getPosition().convert!int);
         SectorNum camSector = camTP.getSectorNum;
-        if(!started || (camSector.value-center.value).getLengthSQ() > 2) {
+        if(!started || (camSector.value-center.value).getLengthSQ() > 0) {
             started = true;
             buildHeightmap(camSector);
         }
-        if(removeList.length > 0) {
-            removeParts();
-        }
         if(addBack.length > 0) {
             addParts();
+        }
+
+        if(removeList.length > 0) {
+            removeParts();
         }
 
 
@@ -318,27 +385,20 @@ final class JklA : Module, WorldListener {
     void onTileChange(TilePos tilePos) { }
 
     void onBuildGeometry(SectorNum sectorNum) {
-        auto val = SectorXYNum(sectorNum).value;
-        if (val !in dontLoad) {
-            synchronized(this) {
-                removeList ~= val;
-            }
+        synchronized(this) {
+            removeList ~= sectorNum;
         }
-        dontLoad[val] = true;
     }
     void onUpdateGeometry(TilePos tilePos) { }
 
     void onSectorLoad(SectorNum sectorNum) {
-        auto val = SectorXYNum(sectorNum).value;
-        dontLoad[val] = true;
+        synchronized(this) {
+            removeList ~= sectorNum;
+        }
     }
     void onSectorUnload(SectorNum sectorNum) {
-        auto val = SectorXYNum(sectorNum).value;
-        dontLoad.remove(val);
-        if(val in dontLoad) {
-            synchronized(this) {
-                addBack ~= val;
-            }
+        synchronized(this) {
+            addBack ~= sectorNum;
         }
     }
 

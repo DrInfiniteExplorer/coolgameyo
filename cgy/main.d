@@ -31,8 +31,9 @@ import game;
 import pos;
 import statistics;
 import settings;
-import util.util;
 import util.memory;
+import util.util;
+import util.window;
 //import worldgen.worldgen;
 import worldgen.newgen;
 
@@ -115,6 +116,8 @@ class Main {
     }
     
     void destroy() {
+        saveSettings();
+
         guiSystem.destroy();
         if (game !is null) {
             game.destroy();
@@ -151,6 +154,8 @@ class Main {
             32,
             SDL_HWSURFACE | SDL_GL_DOUBLEBUFFER | SDL_OPENGL
         );
+        windowSettings.windowsInitialized = true;
+        repositionWindows();
         enforce(surface, text("Could not set sdl video mode (" , SDLError() , ")"));                            
         initOpenGL(client);
         

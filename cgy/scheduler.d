@@ -211,16 +211,15 @@ final class Scheduler {
                 activeWorkers -= 1;
 
                 if (activeWorkers > 0) {
+                    cond.wait();
                     if (exiting) {
                         bool pred(Tid t) {
                             return t == thisTid();
                         }
                         workers = remove!(pred)(workers);
                         return false;
-                    } else {
-                        cond.wait();
-                        return getTask_impl(task, changeList);
                     }
+                    return getTask_impl(task, changeList);
                 }
                 assert (activeWorkers == 0, 
                         text("activeWorkers == ", activeWorkers, " != 0"));
@@ -234,6 +233,7 @@ final class Scheduler {
                 return getTask_impl(task, changeList);
 
             case State.update:
+                BREAK_IF(activeWorkers != 0);
                 assert (activeWorkers == 0, 
                         text("activeWorkers == ", activeWorkers, " != 0"));
                 activeWorkers = workers.length;

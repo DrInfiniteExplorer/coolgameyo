@@ -104,7 +104,6 @@ class Game{
         }
 
         tileGeometry.destroy();
-        msg("Move atlas.destroy(); to renderer.destroy");
         renderer.destroy();
         world.destroy();
         aiModule.destroy();

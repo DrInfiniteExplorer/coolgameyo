@@ -323,6 +323,10 @@ struct SectorXYNum {
         value.set(num.value.X, num.value.Y);
     }
 
+    SectorNum getSectorNum(int z) const {
+        return SectorNum(vec3i( value.X, value.Y, z));
+    }
+
     TileXYPos getTileXYPos() const {
         return TileXYPos(vec2i(
                     value.X * SectorSize.x,

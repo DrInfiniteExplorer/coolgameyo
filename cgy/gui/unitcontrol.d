@@ -55,6 +55,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
     private bool _3rdPerson;
     private bool freeFlight;
     private bool useMouse = true;
+    private bool turbo = false;
     
     private ushort          middleX;
     private ushort          middleY;
@@ -228,9 +229,12 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
     }
     
     void onKey(GuiEvent.KeyboardEvent k) {
+        if (k.SdlSym == SDLK_LSHIFT) {
+            turbo = k.pressed;
+        }
         if (k.pressed) {
             if (k.SdlSym == SDLK_F2) {
-                useMouse = !useMouse;
+                    useMouse = !useMouse;
             }
             if (k.SdlSym == SDLK_F3) {
                 freeFlight = !freeFlight;
@@ -404,7 +408,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
             return;
         }
         if (freeFlight ) {
-            updateCamera();
+            updateCamera(dTime);
         } else {
             updatePossesed(dTime);
         }
@@ -416,7 +420,8 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         double right = 0;
         double fwd = 0;
         //enum speed = 4.0;
-        enum speed = 12.0;
+        double speed = 4.0;
+        if(turbo) speed = 30.0;
         if(keyMap[SDLK_a]){ right-=speed; }
         if(keyMap[SDLK_d]){ right+=speed; }
         if(keyMap[SDLK_w]){ fwd+=speed; }
@@ -424,6 +429,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         if(keyMap[SDLK_SPACE]){
             if(possesAI.onGround){
                 possesAI.fallSpeed = 4.6666f;
+                if(turbo) possesAI.fallSpeed = 40.6666f;
                 //possesAI.fallSpeed = 5.0f;
             }
         }
@@ -442,13 +448,16 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
     }
     
     //Call to update free-flying camera
-    void updateCamera() {
-        if(keyMap[SDLK_a]){ camera.axisMove(-0.1, 0.0, 0.0); }
-        if(keyMap[SDLK_d]){ camera.axisMove( 0.1, 0.0, 0.0); }
-        if(keyMap[SDLK_w]){ camera.axisMove( 0.0, 0.1, 0.0); }
-        if(keyMap[SDLK_s]){ camera.axisMove( 0.0,-0.1, 0.0); }
-        if(keyMap[SDLK_SPACE]){ camera.axisMove( 0.0, 0.0, 0.1); }
-        if(keyMap[SDLK_LCTRL]){ camera.axisMove( 0.0, 0.0,-0.1); }
+    void updateCamera(double dTime) {
+        double speed = 10.0;
+        if(turbo) speed = 120;
+        speed *= dTime;
+        if(keyMap[SDLK_a]){ camera.axisMove(-speed, 0.0, 0.0); }
+        if(keyMap[SDLK_d]){ camera.axisMove( speed, 0.0, 0.0); }
+        if(keyMap[SDLK_w]){ camera.axisMove( 0.0, speed, 0.0); }
+        if(keyMap[SDLK_s]){ camera.axisMove( 0.0,-speed, 0.0); }
+        if(keyMap[SDLK_SPACE]){ camera.axisMove( 0.0, 0.0, speed); }
+        if(keyMap[SDLK_LCTRL]){ camera.axisMove( 0.0, 0.0,-speed); }
     }
     
     

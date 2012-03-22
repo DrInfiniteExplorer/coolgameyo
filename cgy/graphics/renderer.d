@@ -111,6 +111,7 @@ class Renderer {
         tileRenderer.destroy();
         dudeShader.destroy();
         lineShader.destroy();
+        atlas.destroy();
     }
 
     //TODO: Eventually implement models, etc

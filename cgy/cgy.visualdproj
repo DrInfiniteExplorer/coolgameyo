@@ -5,7 +5,7 @@
   <link>0</link>
   <lib>0</lib>
   <multiobj>0</multiobj>
-  <singleFileCompilation>0</singleFileCompilation>
+  <singleFileCompilation>2</singleFileCompilation>
   <oneobj>0</oneobj>
   <trace>0</trace>
   <quiet>0</quiet>
@@ -31,8 +31,8 @@
   <useSwitchError>0</useSwitchError>
   <useUnitTests>1</useUnitTests>
   <useInline>0</useInline>
-  <release>1</release>
-  <preservePaths>0</preservePaths>
+  <release>0</release>
+  <preservePaths>1</preservePaths>
   <warnings>1</warnings>
   <infowarnings>1</infowarnings>
   <checkProperty>0</checkProperty>
@@ -63,7 +63,7 @@
   <debuglevel>0</debuglevel>
   <debugids />
   <versionlevel>0</versionlevel>
-  <versionids />
+  <versionids>WindowsXP</versionids>
   <dump_source>0</dump_source>
   <mapverbosity>0</mapverbosity>
   <createImplib>0</createImplib>
@@ -386,7 +386,9 @@ d:\D\ulnb0333\ulink.exe $(IntDir)\$(TargetName).obj gdi32.lib win32.lib advapi32
   </Folder>
   <Folder name="changes">
    <File path="changes\changelist.d" />
+   <File path="changes\changes.d" />
    <File path="changes\createentity.d" />
+   <File path="changes\worldproxy.d" />
   </Folder>
   <Folder name="entities">
    <File path="entities\entity.d" />
@@ -535,6 +537,7 @@ d:\D\ulnb0333\ulink.exe $(IntDir)\$(TargetName).obj gdi32.lib win32.lib advapi32
    <File path="util\rect.d" />
    <File path="util\tileiterator.d" />
    <File path="util\util.d" />
+   <File path="util\window.d" />
   </Folder>
   <Folder name="world">
    <File path="world\activity.d" />
@@ -547,6 +550,7 @@ d:\D\ulnb0333\ulink.exe $(IntDir)\$(TargetName).obj gdi32.lib win32.lib advapi32
    <File path="world\tile.d" />
    <File path="world\time.d" />
    <File path="world\world.d" />
+   <File path="world\worldproxy.d" />
   </Folder>
   <Folder name="worldgen">
    <File path="worldgen\newgen.d" />

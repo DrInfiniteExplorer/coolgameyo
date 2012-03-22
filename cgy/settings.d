@@ -8,6 +8,7 @@ import std.stdio;
 
 import json;
 import util.util;
+import util.window;
 
 struct RenderSettings {
     static struct InnerRenderSettings {
@@ -61,8 +62,19 @@ struct ControlSettings {
 	alias serializableSettings this;
 }
 
+struct WindowSettings {
+	static struct InnerWindowSettings {
+        vec2i mainCoordinates = vec2i(-1);
+        vec2i consoleCoordinates = vec2i(-1);
+	}
+	InnerWindowSettings serializableSettings;
+	alias serializableSettings this;
+    bool windowsInitialized = false;
+}
+
 shared RenderSettings renderSettings;
 shared ControlSettings controlSettings;
+shared WindowSettings windowSettings;
 
 vec3f getTileCoords(uint tileNum){
     vec3i tmp;
@@ -96,6 +108,12 @@ void loadSettings(){
 	    auto controlVal = rootVal["controlSettings"];
         json.read(controlSettings.serializableSettings, controlVal);
     }
+    if("windowSettings" in rootVal) {
+        auto windowVal = rootVal["windowSettings"];
+        json.read(windowSettings.serializableSettings, windowVal);
+    }
+
+
 }
 
 
@@ -104,6 +122,10 @@ void saveSettings(){
 
     values["renderSettings"] = encode(renderSettings.serializableSettings);
 	values["controlSettings"] = encode(controlSettings.serializableSettings);
+
+    captureWindowPositions();
+
+    values["windowSettings"] = encode(windowSettings.serializableSettings);
 
     auto jsonRoot = json.Value(values);
     auto jsonString = to!string(jsonRoot);
