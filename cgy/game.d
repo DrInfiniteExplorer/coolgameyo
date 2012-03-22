@@ -96,7 +96,7 @@ class Game{
     }
 
     void destroy() {
-        //Wait until done.
+        //Wait until done. 
         scheduler.exit();
         while(scheduler.running()){
             msg("Waiting for scheduler to terminate worker threads...");
