@@ -120,6 +120,20 @@ final class AnimationState {
 final class SceneManager {
 
     SceneNode[][SceneNodeType.Count] sceneNodes;
+    UnitProxy[uint] unitProxies;
+    EntityProxy[uint] entityProxies;
+
+    uint meshPartCount = 0;
+    uint[string] meshNameToInt;
+
+    cgyModel[string] models;
+    cgyModel[] newModels; //To be uploaded on first use
+
+    Skeleton[string] skeletons;
+
+    SceneNodeShader[string] shaders;
+
+    TextureArray[uint] textureArrays;
 
     this() {
     }
@@ -130,9 +144,27 @@ final class SceneManager {
     }
 
     void destroy() {
+        foreach(proxy ; unitProxies) {
+            proxy.destroy();
+        }
+        foreach(proxy ; entityProxies) {
+            proxy.destroy();
+        }
+        foreach(model ; models) {
+            model.destroy();
+        }
+        foreach(skeleton ; skeletons) {
+            skeleton.destroy();
+        }
         foreach(shader ; shaders) {
             shader.destroy();
         }
+        foreach(textureArray ; textureArrays) {
+            textureArray.destroy();
+        }
+
+
+
         shaders = null;
         destroyed = true;
     }
@@ -142,7 +174,6 @@ final class SceneManager {
 
 
 
-    UnitProxy[uint] unitProxies;
     UnitProxy getProxy(Unit unit) {
         if(unit.unitId in unitProxies) {
             return unitProxies[unit.unitId];
@@ -160,7 +191,6 @@ final class SceneManager {
 
 
 
-    EntityProxy[uint] entityProxies;
     EntityProxy getProxy(Entity entity) {
         if(entity.entityId in entityProxies) {
             return entityProxies[entity.entityId];
@@ -188,8 +218,6 @@ final class SceneManager {
         sceneNodes[node.getType()] ~= node;
     }
 
-    uint meshPartCount = 0;
-    uint[string] meshNameToInt;
     uint getMeshId(string meshName, int meshPart) {
         auto str = meshName ~ to!string(meshPart);
         if(str in meshNameToInt) {
@@ -200,8 +228,6 @@ final class SceneManager {
         return meshPartCount - 1;
     }
 
-    cgyModel[string] models;
-    cgyModel[] newModels;
     cgyModel loadModel(string modelName) {
         if(modelName in models) {
             return models[modelName];
@@ -216,7 +242,6 @@ final class SceneManager {
         return model;
     }
 
-    Skeleton[string] skeletons;
     Skeleton loadSkeleton(string skeletonName) {
         if(skeletonName in skeletons) {
             return skeletons[skeletonName];
@@ -232,7 +257,6 @@ final class SceneManager {
     }
 
 
-    SceneNodeShader[string] shaders;
     SceneNodeShader getShader(string shaderPath) {
         if(shaderPath in shaders) {
             return shaders[shaderPath];
@@ -274,7 +298,6 @@ final class SceneManager {
         return shader;
     }
 
-    TextureArray[uint] textureArrays;
     TextureArray loadArrayTexture(string texture, out uint arrayIdx) {
         TextureArray ret;
         Image image = Image(texture);

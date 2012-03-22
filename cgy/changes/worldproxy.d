@@ -22,13 +22,13 @@ string mixinChangeListAdd(string name, T)() {
         ~  "}";
 }
 
-pragma (msg, mixinChangeListAdd!("setTile", SetTile)());
-pragma (msg, FieldTypeTuple!SetTile.stringof);
+//pragma (msg, mixinChangeListAdd!("setTile", SetTile)());
+//pragma (msg, FieldTypeTuple!SetTile.stringof);
 
 
 mixin template mixinAllChangeListAdd(Ts...) {
     static if (Ts.length > 0) {
-        pragma(msg, mixinChangeListAdd!(Ts[0], Ts[1])());
+//        pragma(msg, mixinChangeListAdd!(Ts[0], Ts[1])());
         mixin(mixinChangeListAdd!(Ts[0], Ts[1])());
         mixin mixinAllChangeListAdd!(Ts[2 .. $]);
     }

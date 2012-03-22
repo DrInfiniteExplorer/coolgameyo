@@ -1,4 +1,4 @@
-module jkla;
+module heightsheets;
 
 /+
 [14:35:38] <@Luben> vi borde ha ett bättre namn än heightmap
@@ -24,15 +24,15 @@ import world.world;
 import worldgen.newgen;
 import util.util;
 
-final class JklA : Module, WorldListener {
+final class HeightSheets : Module, WorldListener {
     
 
 
     World world;
     LayerManager layerManager;
 
-    alias ShaderProgram!("offset", "VP") JklAShader;
-    JklAShader shader;
+    alias ShaderProgram!("offset", "VP") HeightSheetsShader;
+    HeightSheetsShader shader;
 
 
     this(World _world) {
@@ -54,7 +54,7 @@ final class JklA : Module, WorldListener {
 
     void init() {
         /+_+/
-        shader = new JklAShader("shaders/JklA.vert", "shaders/JklA.frag");
+        shader = new HeightSheetsShader("shaders/HeightSheets.vert", "shaders/HeightSheets.frag");
         shader.bindAttribLocation(0, "position");
         shader.bindAttribLocation(1, "normal");
         shader.bindAttribLocation(2, "color");

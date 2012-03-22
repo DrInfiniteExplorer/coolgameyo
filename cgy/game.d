@@ -29,7 +29,7 @@ import scene.scenemanager;
 
 import ai.patrolai;
 import clan;
-import jkla;
+import heightsheets;
 import json;
 //import changes.changelist;
 import graphics.tilegeometry;
@@ -103,11 +103,12 @@ class Game{
             core.thread.Thread.sleep(dur!"seconds"(1));
         }
 
+        //Also make policy on where stuff is destroyed.
+        pragma(msg, "Make so that stuff that is only client, only destroys when is client");
         tileGeometry.destroy();
         renderer.destroy();
         world.destroy();
         aiModule.destroy();
-        sceneManager.destroy();
 
         destroyed = true;
     }
@@ -142,10 +143,10 @@ class Game{
             //geometryCreator = new GeometryCreator(world);
             auto tileRenderer = new TileRenderer();
             tileGeometry = new TileGeometry(world, tileRenderer);
-            auto jkla = new JklA(world);
-            renderer = new Renderer(camera, atlas, tileRenderer, sceneManager, jkla);
+            auto heightSheets = new HeightSheets(world);
+            renderer = new Renderer(camera, atlas, tileRenderer, sceneManager, heightSheets);
             scheduler.registerModule(tileGeometry);
-            scheduler.registerModule(jkla);
+            scheduler.registerModule(heightSheets);
             tileGeometry.setCamera(camera);
         }
 

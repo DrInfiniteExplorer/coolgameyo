@@ -559,8 +559,8 @@ d:\D\ulnb0333\ulink.exe $(IntDir)\$(TargetName).obj gdi32.lib win32.lib advapi32
   <File path="clientnetworking.d" />
   <File path="entitytypemanager.d" />
   <File path="game.d" />
+  <File path="heightsheets.d" />
   <File path="inventory.d" />
-  <File path="jkla.d" />
   <File path="json.d" />
   <File path="light.d" />
   <File path="main.d" />

@@ -21,7 +21,7 @@ import graphics.shader;
 import graphics.texture;
 import graphics.tilerenderer;
 
-import jkla;
+import heightsheets;
 import modules.module_;
 import random.catmullrom;
 import scheduler;
@@ -40,7 +40,7 @@ class Renderer {
     TileTextureAtlas atlas;
     Camera camera;
 
-    JklA jkla;
+    HeightSheets heightSheets;
     
     alias ShaderProgram!("VP", "M", "color") DudeShaderProgram;
     alias ShaderProgram!("VP", "V", "color", "radius") LineShaderProgram;
@@ -52,14 +52,14 @@ class Renderer {
     
     vec3d*[Unit] specialUnits;
     
-    this(Camera c, TileTextureAtlas _atlas, TileRenderer _tileRenderer, SceneManager _sceneManager, JklA _jkla)
+    this(Camera c, TileTextureAtlas _atlas, TileRenderer _tileRenderer, SceneManager _sceneManager, HeightSheets _heightSheets)
     {
         mixin(LogTime!("RendererInit"));
         camera = c;        
         tileRenderer = _tileRenderer;
         atlas = _atlas;
         sceneManager = _sceneManager;
-        jkla = _jkla;
+        heightSheets = _heightSheets;
 
     }
 
@@ -100,14 +100,15 @@ class Renderer {
         createTorchModel();
 
         tileRenderer.init();
-        jkla.init();
+        heightSheets.init();
         atlas.upload();
 
         initialized = true;
     }
     
     void destroy() {
-        jkla.destroy();
+        sceneManager.destroy();
+        heightSheets.destroy();
         tileRenderer.destroy();
         dudeShader.destroy();
         lineShader.destroy();
@@ -333,7 +334,7 @@ class Renderer {
 
         atlas.use();
         tileRenderer.render(camera, skyColor);
-        jkla.render(camera);
+        heightSheets.render(camera);
 
         sceneManager.renderScene(camera);
 
