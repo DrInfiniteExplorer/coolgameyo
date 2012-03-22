@@ -14,6 +14,8 @@ import unit;
 import util.util;
 import util.filesystem;
 
+import world.worldproxy;
+
 
 class AIModule : Module, WorldListener {
 
@@ -77,8 +79,8 @@ class AIModule : Module, WorldListener {
                 return;
             }
             assert (state.restTime == 0);
-            scheduler.push(syncTask((const World world, ChangeList changelist) {
-                        state.restTime = state.unit.tick(changelist);
+            scheduler.push(syncTask((WorldProxy world) {
+                        state.restTime = state.unit.tick(world);
                         }));
         }
         foreach (ref state; states) {

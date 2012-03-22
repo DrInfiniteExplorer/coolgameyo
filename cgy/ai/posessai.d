@@ -7,7 +7,7 @@ import std.exception;
 import std.math;
 import std.stdio;
 
-import changes.changelist;
+import changes.changes;
 import graphics.renderer;
 import light;
 import unit;
@@ -15,6 +15,7 @@ import util.util;
 import util.rangefromto;
 
 import world.world;
+import world.worldproxy;
 
 class FPSControlAI : UnitAI, CustomChange {
     Unit unit;
@@ -191,8 +192,8 @@ class FPSControlAI : UnitAI, CustomChange {
     //How/what to do when networked? Other clients will want to know where it is positioned.
     //Probably send information like "Unit X is player-controlled" to set NetworkControlledAI
     //which'll work kina like this one, i suppose.
-    override int tick(ChangeList changeList){
-        changeList.addCustomChange(this);
+    override int tick(WorldProxy world){
+        world.addCustomChange(this);
         return 0;
     }
     

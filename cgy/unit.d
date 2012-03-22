@@ -15,11 +15,13 @@ import util.util;
 import unittypemanager;
 import inventory;
 
+import world.worldproxy;
+
 shared int g_UnitCount = 0; //Global counter of units. Make shared static variable in Game-class?
 
 
 interface UnitAI {
-    int tick(ChangeList changeList);
+    int tick(WorldProxy world);
 }
 
 struct Demand {
@@ -46,7 +48,7 @@ Unit newUnit() {
     auto unit = new Unit;
     unit.unitId = g_UnitCount;
     g_UnitCount++;
-	unit.inventory = new Inventory();
+    unit.inventory = new Inventory();
     return unit;
 }
 
@@ -55,7 +57,7 @@ class Unit {
     bool opEquals(ref const(Unit) u) const {
         assert (0, "Implement Unit.opEquals or find where it's called and make not called!");
     }
-        
+
     struct UnitData {
         uint unitId;
         Demand hunger = Demand(100, 100, 10);
@@ -74,25 +76,25 @@ class Unit {
 
 
     };
-	
+
     UnitData unitData;
     alias unitData this;
-    
+
     UnitAI ai;
     UnitType type;
     Clan clan;
-	Inventory inventory;
+    Inventory inventory;
 
-	
-	
+
+
     Value toJSON() {
         Value val = encode(unitData);
         if (clan !is null) {
             val["clanId"] = Value(clan.clanId);
         }
         /*if (type !is null) {
-            val["unitTypeId"] = Value(type.name);
-        }*/
+          val["unitTypeId"] = Value(type.name);
+          }*/
         //Add ai
         return val;
     }
@@ -110,17 +112,17 @@ class Unit {
             read(unitTypeId, val["unitTypeId"]);
             BREAKPOINT;
         }
-		inventory = new Inventory(); // TODO: RAWR!!
+        inventory = new Inventory(); // TODO: RAWR!!
         //Add ai
     }
-    
 
 
-    
-    int tick(ChangeList changeList) {
+
+
+    int tick(WorldProxy world) {
         this.hunger.tick();
         this.thirst.tick();
-        return ai.tick(changeList);
+        return ai.tick(world);
     }
 
     //Returns the bounding box of the unit, in world space.

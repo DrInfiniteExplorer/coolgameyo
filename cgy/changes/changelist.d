@@ -2,66 +2,65 @@
 module changes.changelist;
 
 import std.stdio;
+import std.typetuple;
 
 import unit;
 
 import util.util;
 import util.array;
 import world.world;
+import changes.changes;
 
-// Only implemented by experimental or semi-hacky classes.
-// List of such classes:
-//  FPSControlAI
-interface CustomChange {
-    void apply(World world);
+alias util.array.Array Array;
+
+struct ChangeArrayCollection(Cs...) {
+    staticMap!(Array, Cs) arrays;
+
+    auto byType(T)() {
+        return arrays[staticIndexOf!(T, Cs)];
+    }
 }
-
-alias util.array.Array ChangeArray;
 
 
 final class ChangeList {
-    static struct MoveChange {
-        Unit unit;
-        vec3d destination;
-        uint ticksToArrive;
-    };
-    ChangeArray!MoveChange moveChanges;
-    ChangeArray!CustomChange customChanges;
-    
-    void addMovement(Unit unit, UnitPos destination, uint ticksToArrive) {
-        addMovement(unit, destination.value, ticksToArrive);
+
+    ChangeArrayCollection!(
+            SetTile,
+            DamageTile,
+            RemoveTile,
+
+            CreateUnit,
+            RemoveUnit,
+            MoveUnit,
+
+            SetIntent,
+            SetAction,
+
+            CreateEntity,
+            RemoveEntity,
+            MoveEntity,
+            PickupEntity,
+            DepositEntity,
+            ActivateEntity,
+
+            CustomChange
+            ) changeArrays;
+
+    auto changes(T)() {
+        return changeArrays.byType!T();
     }
-    void addMovement(Unit unit, vec3d destination, uint ticksToArrive) {
-        moveChanges.insert(MoveChange(unit, destination, ticksToArrive));
+
+    void add(T, Us...)(Us us) {
+        changes!T().insert(T(us));
     }
-    void applyMovement(World world) {
-        foreach(moveChange; moveChanges[]) {
-            world.unsafeMoveUnit(moveChange.unit,
-                    moveChange.destination, moveChange.ticksToArrive);
-        }
+    void addCustomChange(CustomChange c){
+        changes!CustomChange().insert(c);
     }
-    
+
     this() {
-        moveChanges = new ChangeArray!MoveChange;
-        customChanges = new ChangeArray!CustomChange;
     }
     
-    void addCustomChange(CustomChange change) {
-        customChanges.insert(change);
-    }
-    
-    void applyCustomChanges(World world) {
-        foreach(change ; customChanges[]) {
-            change.apply(world);
-        }
-    }
-
     void apply(World world){
-        applyMovement(world);
-        applyCustomChanges(world);
-
-        moveChanges.reset();
-        customChanges.reset();
     }
 }
 

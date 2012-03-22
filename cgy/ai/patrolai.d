@@ -13,7 +13,8 @@ import modules.path;
 import unit;
 import util.util;
 
-import world.world;
+import world.worldproxy;
+import pos;
 
 
 class PatrolAI : UnitAI {
@@ -35,7 +36,7 @@ class PatrolAI : UnitAI {
         id = pathModule.findPath(u.pos, b);
     }
 
-    override int tick(ChangeList changeList) {
+    override int tick(WorldProxy world) {
         if (walking) {
             auto goal = toa ? a : b;
             auto p = path.path.back;
@@ -44,7 +45,7 @@ class PatrolAI : UnitAI {
 
             if (d <= unit.speed) {
                 //msg("arrived!");
-                changeList.addMovement(unit, p, 1);
+                world.moveUnit(unit, p, 1);
                 if (p == goal) {
                     walking = false;
                     id = pathModule.findPath(unit.pos, toa ? b : a);
@@ -59,7 +60,7 @@ class PatrolAI : UnitAI {
                 dp.setLength(ticks * unit.speed);
                 //msg("from ", unit.pos,
                 //        " to ", UnitPos(unit.pos.value + dp));
-                changeList.addMovement(
+                world.moveUnit(
                         unit, UnitPos(unit.pos.value + dp), ticks);
                 return ticks;
             }
@@ -79,7 +80,7 @@ class PatrolAI : UnitAI {
                 }
                 lineId = addLine(positions, vec3f(1, 1, 0));
                 walking = true;
-                return tick(changeList);
+                return tick(world);
             } else {
                 // wait for path module to finish our path :(
                 return 0;

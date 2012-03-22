@@ -15,6 +15,7 @@ import clan;
 import entitytypemanager;
 import light;
 
+import inventory;
 
 import entities.growable;
 import entities.placeable;
@@ -61,6 +62,8 @@ final class Entity {
     Workshop* workshop;
     Placeable* placeable;
     Growable* growable;
+
+    Inventory inventory;
 
     bool shouldTick() const @property {
         return workshop != null || growable != null;

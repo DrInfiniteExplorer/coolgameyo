@@ -30,28 +30,29 @@ import modules.module_;
 import util.util;
 import util.queue;
 
+import world.worldproxy;
+
+import changes.worldproxy;
+
 struct Task {
     bool sync;
     bool syncsScheduler;
-    void delegate(const World, ChangeList changeList) run;
+    void delegate(WorldProxy) run;
 }
 
-Task asyncTask(void delegate (const World) run) {
-    return Task(false, false, (const World w, ChangeList changeList){run(w);});
+Task asyncTask(void delegate (WorldProxy) run) {
+    return Task(false, false, run);
 }
 Task asyncTask(void delegate () run) {
-    return Task(false, false, (const World, ChangeList changeList){ run(); });
+    return Task(false, false, w => run());
 }
-
-Task syncTask(void delegate (const World, ChangeList changeList) run) {
+Task syncTask(void delegate (WorldProxy) run) {
     return Task(true, false, run);
 }
-Task syncTask(void delegate (const World) run) {
-    return Task(true, false, (const World w, ChangeList changeList){ run(w);});
-}
 Task syncTask(void delegate () run) {
-    return Task(true, false, (const World, ChangeList changeList){ run(); });
+    return Task(true, false, w => run());
 }
+
 
 private Task syncTask() {
     return Task(true, true, null);
@@ -64,16 +65,17 @@ private void workerFun(shared Scheduler ssched, int id) {
     auto sched = cast(Scheduler)ssched; // fuck the type system!
     setThreadName("Fun-worker thread");
 
-    ChangeList changeList = new ChangeList;
+
+    WorldChangeListProxy proxy = new WorldChangeListProxy;
     Task task;
 
     try {
         while (should_continue) {
-            should_continue = sched.getTask(task, changeList);
+            should_continue = sched.getTask(task, proxy.changeList);
             if (should_continue) {
                 // try to receive message?
                 //If scheduler syncs, this list is applied to the world.
-                task.run(sched.world, changeList); //Fill changelist!!
+                task.run(proxy); //Fill changelist!!
             }
         }
     } catch (Throwable o) {
@@ -220,15 +222,20 @@ class Scheduler {
                         return getTask_impl(task, changeList);
                     }
                 }
+                assert (activeWorkers == 0, 
+                        text("activeWorkers == ", activeWorkers, " != 0"));
                 auto timeLeft = nextSync - utime();
                 if (timeLeft > 0) {
                     Thread.sleep(dur!"usecs"(timeLeft));
                 }
+                assert (activeWorkers == 0, 
+                        text("activeWorkers == ", activeWorkers, " != 0"));
                 state = State.update;
                 return getTask_impl(task, changeList);
 
             case State.update:
-                assert (activeWorkers == 0);
+                assert (activeWorkers == 0, 
+                        text("activeWorkers == ", activeWorkers, " != 0"));
                 activeWorkers = workers.length;
                 cond.notifyAll();
 

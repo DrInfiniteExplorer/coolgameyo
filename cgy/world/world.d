@@ -41,6 +41,7 @@ import util.rangefromto;
 import util.tileiterator;
 import util.filesystem;
 
+import world.worldproxy;
 import world.activity;
 import world.ambient;
 import world.floodfill;
@@ -571,7 +572,7 @@ class World {
                 //Trixy trick below; if we dont do this, the value num will be shared by all pushed tasks.
                 (HeightmapTaskState state){
                     scheduler.push(asyncTask(
-                                (const(World) world){
+                                (WorldProxy world){
                                 generateHeightmapTaskFunc(state);
                                 }));
                 }(state);

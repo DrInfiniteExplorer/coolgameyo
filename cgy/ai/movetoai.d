@@ -18,7 +18,9 @@ class MoveToAI : UnitAI {
     float speed;
     void delegate(Unit) done;
     bool removeOnArrive;
-    this(Unit u, Unit targetUnit, float speed, void delegate(Unit) done = null, bool removeOnArrive=true){
+    this (Unit u, Unit targetUnit, float speed, 
+            void delegate(Unit) done = null, 
+            bool removeOnArrive=true) {
         unit = u;
         target = targetUnit;
         this.speed = speed;
@@ -39,7 +41,7 @@ class MoveToAI : UnitAI {
                 unit.ai = null;
             }
         }
-        return 0; // BUG: NO THOUGHT APPLIED HERE
+        assert (0); // BUG: NO THOUGHT APPLIED HERE
     }
 }
 

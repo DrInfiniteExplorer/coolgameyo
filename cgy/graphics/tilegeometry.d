@@ -32,6 +32,8 @@ import statistics;
 import stolen.aabbox3d;
 
 import world.world;
+import world.worldproxy;
+
 import util.util;
 import util.rangefromto;
 import util.intersect;
@@ -366,7 +368,7 @@ final class TileGeometry : Module, WorldListener
         tileRenderer.updateGeometry(grNum, tileFaces);
     }
 
-    void taskFunc(const(World) world, GraphRegionNum grNum) {
+    void taskFunc(WorldProxy world, GraphRegionNum grNum) {
         //TODO: Maybe move geometry-building-timing to here?
         buildGraphicsRegion(grNum);
     }
@@ -422,7 +424,7 @@ final class TileGeometry : Module, WorldListener
             //Trixy trick below; if we dont do this, the value num will be shared by all pushed tasks.
             (GraphRegionNum num){
                 scheduler.push(asyncTask(
-                    (const(World) world){
+                    (WorldProxy world){
                         taskFunc(world, num);
                     }));
             }(num);
