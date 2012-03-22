@@ -602,13 +602,13 @@ class World {
     }
 
     // ONLY CALLED FROM CHANGELIST (And some CustomChange-implementations )
-    void unsafeMoveUnit(Unit unit, vec3d destination, uint ticksToArrive){
-        unit.destination = UnitPos(destination);
+    void unsafeMoveUnit(Unit unit, UnitPos destination, uint ticksToArrive){
+        unit.destination = destination;
         unit.ticksToArrive = ticksToArrive;
         //Maybe add to list of moving units? Maybe all units are moving?
         //Consider this later. Related to comment in world.update
         auto proxy = sceneManager.getProxy(unit);
-        proxy.setDestination(destination, ticksToArrive);
+        proxy.setDestination(destination.value, ticksToArrive);
     }
 
 

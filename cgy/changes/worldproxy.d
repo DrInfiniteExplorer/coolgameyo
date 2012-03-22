@@ -38,6 +38,10 @@ final class WorldChangeListProxy : WorldProxy {
     World world;
     ChangeList changeList;
 
+    this() {
+        changeList = new ChangeList;
+    }
+
     World unsafeGetWorld() {
         return world;
     }
@@ -64,7 +68,6 @@ final class WorldChangeListProxy : WorldProxy {
         changeList.add!DepositEntity(e, u.inventory, e2.inventory);
     }
 
-
     void addCustomChange(CustomChange c) {
         changeList.addCustomChange(c);
     }
@@ -72,5 +75,10 @@ final class WorldChangeListProxy : WorldProxy {
     Tile getTile(TilePos tp) {
         return world.getTile(tp);
     }
+
+    void apply() {
+        changeList.apply(world);
+    }
+
 }
 

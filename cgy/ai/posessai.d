@@ -205,7 +205,7 @@ class FPSControlAI : UnitAI, CustomChange {
 
     //Hax used: oldPosition, to make the world produce a delta-pos-value and load sectors
     void apply(World world) {
-        world.unsafeMoveUnit(unit, *unitPos, 1);
+        world.unsafeMoveUnit(unit, UnitPos(*unitPos), 1);
         
         foreach(tilePos, tile ; tilesToChange) {
             world.unsafeSetTile(tilePos, tile);

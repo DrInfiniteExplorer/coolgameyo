@@ -91,7 +91,7 @@ private void workerFun(shared Scheduler ssched, int id) {
     }
 }
 
-class Scheduler {
+final class Scheduler {
     enum State { update, sync, forcedAsync, async, wait }
     enum ASYNC_COUNT = 23;
 

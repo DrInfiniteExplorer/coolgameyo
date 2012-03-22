@@ -16,8 +16,22 @@ alias util.array.Array Array;
 struct ChangeArrayCollection(Cs...) {
     staticMap!(Array, Cs) arrays;
 
+    void init() {
+        foreach (i, c; Cs) {
+            arrays[i] = new typeof(arrays[i]);
+        }
+    }
+
     auto byType(T)() {
         return arrays[staticIndexOf!(T, Cs)];
+    }
+
+    void apply(World world) {
+        foreach (i, c; Cs) {
+            foreach (w; arrays[i][]) {
+                w.apply(world);
+            }
+        }
     }
 }
 
@@ -58,9 +72,11 @@ final class ChangeList {
     }
 
     this() {
+        changeArrays.init();
     }
     
     void apply(World world){
+        changeArrays.apply(world);
     }
 }
 
