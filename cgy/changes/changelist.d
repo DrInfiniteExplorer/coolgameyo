@@ -33,6 +33,12 @@ struct ChangeArrayCollection(Cs...) {
             }
         }
     }
+
+    void reset() {
+        foreach (i, c; Cs) {
+            arrays[i].reset();
+        }
+    }
 }
 
 
@@ -77,6 +83,7 @@ final class ChangeList {
     
     void apply(World world){
         changeArrays.apply(world);
+        changeArrays.reset();
     }
 }
 
