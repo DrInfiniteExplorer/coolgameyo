@@ -91,7 +91,7 @@ void reloadOpenCl() {
 
     static assert(SolidMap.sizeX == 4);
     static assert(SolidMap.sizeY == 128);
-    static assert(SolidMap.sizeZ == 32);
+    static assert(SolidMap.sizeZ == 2*32);
 
     g_traceRaysProgram = g_clContext.createProgram(content);
 

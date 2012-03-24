@@ -55,30 +55,30 @@ public:
 
   vector3d!(T) opAssign(const vector3d!(T) other) { X = other.X; Y = other.Y; Z = other.Z; return this; }
 
-  vector3d!(T) opAdd(const vector3d!(T) other) const { return vector3d!(T)(X + other.X, Y + other.Y, Z + other.Z); }
+  vector3d!(T) opAdd(const vector3d!(T) other) const { return vector3d!(T)(cast(T)(X + other.X), cast(T)(Y + other.Y), cast(T)(Z + other.Z)); }
   vector3d!(T) opAddAssign(const vector3d!(T) other) { X+=other.X; Y+=other.Y; Z+=other.Z; return this; }
-  vector3d!(T) opAdd(const T val) const { return vector3d!(T)(X + val, Y + val, Z + val); }
+  vector3d!(T) opAdd(const T val) const { return vector3d!(T)(cast(T)(X + val), cast(T)(Y + val), cast(T)(Z + val)); }
   vector3d!(T) opAddAssign(const T val) { X+=val; Y+=val; Z+=val; return this; }
 
-  vector3d!(T) opSub(const vector3d!(T) other) const { return vector3d!(T)(X - other.X, Y - other.Y, Z - other.Z); }
+  vector3d!(T) opSub(const vector3d!(T) other) const { return vector3d!(T)(cast(T)(X - other.X), cast(T)(Y - other.Y), cast(T)(Z - other.Z)); }
   vector3d!(T) opSubAssign(const vector3d!(T) other) { X-=other.X; Y-=other.Y; Z-=other.Z; return this; }
-  vector3d!(T) opSub(const T val) const { return vector3d!(T)(X - val, Y - val, Z - val); }
+  vector3d!(T) opSub(const T val) const { return vector3d!(T)(cast(T)(X - val), cast(T)(Y - val), cast(T)(Z - val)); }
   vector3d!(T) opSubAssign(const T val) { X-=val; Y-=val; Z-=val; return this; }
 
-  vector3d!(T) opMul(const vector3d!(T) other) const { return vector3d!(T)(X * other.X, Y * other.Y, Z * other.Z); }
+  vector3d!(T) opMul(const vector3d!(T) other) const { return vector3d!(T)(cast(T)(X * other.X), cast(T)(Y * other.Y), cast(T)(Z * other.Z)); }
   vector3d!(T) opMulAssign(const vector3d!(T) other) { X*=other.X; Y*=other.Y; Z*=other.Z; return this; }
-  vector3d!(T) opMul(const T v) const { return vector3d!(T)(X * v, Y * v, Z * v); }
+  vector3d!(T) opMul(const T v) const { return vector3d!(T)(cast(T)(X * v), cast(T)(Y * v), cast(T)(Z * v)); }
   vector3d!(T) opMulAssign(const T v) { X*=v; Y*=v; Z*=v; return this; }
 
 
     
   
-  vector3d!(T) opDiv(const vector3d!(T) other) const { return vector3d!(T)(X / other.X, Y / other.Y, Z / other.Z); }
+  vector3d!(T) opDiv(const vector3d!(T) other) const { return vector3d!(T)(cast(T)(X / other.X), cast(T)(Y / other.Y), cast(T)(Z / other.Z)); }
   vector3d!(T) opDivAssign(const vector3d!(T) other) { X/=other.X; Y/=other.Y; Z/=other.Z; return this; }
 
   vector3d!(T) opDiv(const T v) const {
       static if (isIntegral!T) {
-        return vector3d!(T)(X / v, Y / v, Z / v);
+        return vector3d!(T)(cast(T)(X / v), cast(T)(Y / v), cast(T)(Z / v));
       } else {
           T i=cast(T)1.0/v; return vector3d!(T)(X * i, Y * i, Z * i);
       }
@@ -99,11 +99,11 @@ public:
   //vector3d!(int) opDivAssign(int val) {X/=val;Y/=val;Z/=val; return this;}
 
   //! sort in order X, Y, Z. Equality with rounding tolerance.
-  T opCmp(const vector3d!(T) other) const
+  int opCmp(const vector3d!(T) other) const
   {
-        T x = X - other.X;
-        T y = Y - other.Y;
-        T z = Z - other.Z;
+        T x = cast(T)(X - other.X);
+        T y = cast(T)(Y - other.Y);
+        T z = cast(T)(Z - other.Z);
         if(!x && !y && !z){ return 0;}
         if(x>0)
         {
@@ -147,26 +147,26 @@ public:
   //! Get squared length of the vector.
   /** This is useful because it is much faster than getLength().
   \return Squared length of the vector. */
-  T getLengthSQ() const { return X*X + Y*Y + Z*Z; }
+  T getLengthSQ() const { return cast(T)(X*X + Y*Y + Z*Z); }
 
   //! Get the dot product with another vector.
   T dotProduct(const vector3d!(T) other) const
   {
-    return X*other.X + Y*other.Y + Z*other.Z;
+    return cast(T)(X*other.X + Y*other.Y + Z*other.Z);
   }
 
   //! Get distance from another point.
   /** Here, the vector is interpreted as point in 3 dimensional space. */
   T getDistanceFrom(const vector3d!(T) other) const
   {
-    return (vector3d!(T)(X - other.X, Y - other.Y, Z - other.Z)).getLength();
+    return (vector3d!(T)(cast(T)(X - other.X), cast(T)(Y - other.Y), cast(T)(Z - other.Z))).getLength();
   }
 
   //! Returns squared distance from another point.
   /** Here, the vector is interpreted as point in 3 dimensional space. */
   T getDistanceFromSQ(const vector3d!(T) other) const
   {
-    return (vector3d!(T)(X - other.X, Y - other.Y, Z - other.Z)).getLengthSQ();
+    return (vector3d!(T)(cast(T)(X - other.X), cast(T)(Y - other.Y), cast(T)(Z - other.Z))).getLengthSQ();
   }
 
   //! Calculates the cross product with another vector.
@@ -174,7 +174,7 @@ public:
   \return Crossproduct of this vector with p. */
   vector3d!(T) crossProduct(const vector3d!(T) p) const
   {
-    return vector3d!(T)(Y * p.Z - Z * p.Y, Z * p.X - X * p.Z, X * p.Y - Y * p.X);
+    return vector3d!(T)(cast(T)(Y * p.Z - Z * p.Y), cast(T)(Z * p.X - X * p.Z), cast(T)(X * p.Y - Y * p.X));
   }
 
   //! Returns if this vector interpreted as a point is on a line between two other points.

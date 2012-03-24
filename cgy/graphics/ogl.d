@@ -360,6 +360,7 @@ void glError(string file = __FILE__, int line = __LINE__){
         }
         auto derp = file ~ to!string(line) ~ "\n" ~str;
         writeln(derp);
+        BREAKPOINT;
         assert(0, derp);
     }
 }

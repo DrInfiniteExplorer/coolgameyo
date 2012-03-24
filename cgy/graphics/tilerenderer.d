@@ -11,6 +11,7 @@ import graphics.shader;
 import graphics.tilegeometry;
 
 import pos;
+import statistics;
 import util.rangefromto;
 import util.util;
 import world.sizes;
@@ -201,6 +202,7 @@ class TileRenderer {
                 glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, GRVertex.sizeof, cast(void*)GRVertex().sunLight.offsetof); glError();
                 glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, GRVertex.sizeof, cast(void*)GRVertex().normal.offsetof); glError();
                 glDrawArrays(GL_QUADS, 0, renderInfo.quadCount*4); glError();
+                triCount += renderInfo.quadCount*2;
             }
         }
         //Get list of vbo's

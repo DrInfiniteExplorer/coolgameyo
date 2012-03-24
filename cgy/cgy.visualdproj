@@ -124,13 +124,13 @@
   <noboundscheck>1</noboundscheck>
   <useSwitchError>0</useSwitchError>
   <useUnitTests>0</useUnitTests>
-  <useInline>0</useInline>
+  <useInline>1</useInline>
   <release>0</release>
   <preservePaths>1</preservePaths>
   <warnings>1</warnings>
   <infowarnings>1</infowarnings>
   <checkProperty>0</checkProperty>
-  <genStackFrame>1</genStackFrame>
+  <genStackFrame>0</genStackFrame>
   <pic>0</pic>
   <cov>0</cov>
   <nofloat>0</nofloat>
@@ -157,7 +157,7 @@
   <debuglevel>0</debuglevel>
   <debugids />
   <versionlevel>0</versionlevel>
-  <versionids />
+  <versionids>WindowsXP</versionids>
   <dump_source>0</dump_source>
   <mapverbosity>0</mapverbosity>
   <createImplib>0</createImplib>
@@ -397,6 +397,11 @@ d:\D\ulnb0333\ulink.exe $(IntDir)\$(TargetName).obj gdi32.lib win32.lib advapi32
    <File path="entities\torch.d" />
    <File path="entities\workshop.d" />
   </Folder>
+  <Folder name="heightsheets">
+   <File path="heightsheets\heightsheets.d" />
+   <File path="heightsheets\level0.d" />
+   <File path="heightsheets\level1.d" />
+  </Folder>
   <Folder name="graphics">
    <Folder name="_2d">
     <File path="graphics\_2d\image.d" />
@@ -501,6 +506,8 @@ d:\D\ulnb0333\ulink.exe $(IntDir)\$(TargetName).obj gdi32.lib win32.lib advapi32
    </Folder>
    <File path="..\gameroot\shaders\fontShader.frag" />
    <File path="..\gameroot\shaders\fontShader.vert" />
+   <File path="..\gameroot\shaders\heightsheetsI.frag" />
+   <File path="..\gameroot\shaders\heightsheetsI.vert" />
    <File path="..\gameroot\shaders\JklA.frag" />
    <File path="..\gameroot\shaders\JklA.vert" />
    <File path="..\gameroot\shaders\lightMixer.frag" />
@@ -559,7 +566,6 @@ d:\D\ulnb0333\ulink.exe $(IntDir)\$(TargetName).obj gdi32.lib win32.lib advapi32
   <File path="clientnetworking.d" />
   <File path="entitytypemanager.d" />
   <File path="game.d" />
-  <File path="heightsheets.d" />
   <File path="inventory.d" />
   <File path="json.d" />
   <File path="light.d" />

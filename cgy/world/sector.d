@@ -102,7 +102,7 @@ struct SolidMap {
     }
 
 }
-static assert(SolidMap.data.sizeof == 65536); //64k yeah :)
+static assert(SolidMap.data.sizeof == 2*65536); //64k yeah :)
 
 class Sector {
 

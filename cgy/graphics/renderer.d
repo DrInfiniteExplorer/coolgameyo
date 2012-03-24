@@ -21,7 +21,7 @@ import graphics.shader;
 import graphics.texture;
 import graphics.tilerenderer;
 
-import heightsheets;
+import heightsheets.heightsheets;
 import modules.module_;
 import random.catmullrom;
 import scheduler;
@@ -333,6 +333,7 @@ class Renderer {
 
 
         atlas.use();
+        triCount = 0;
         tileRenderer.render(camera, skyColor);
         heightSheets.render(camera);
 

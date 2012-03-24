@@ -14,7 +14,7 @@ alias BlockSize TilesPerBlock;
 enum BlocksPerSector {
     x = 16,
     y = 16,
-    z = 4,
+    z = 8,
     total = x*y*z
 }
 

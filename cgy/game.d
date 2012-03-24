@@ -29,7 +29,7 @@ import scene.scenemanager;
 
 import ai.patrolai;
 import clan;
-import heightsheets;
+import heightsheets.heightsheets;
 import json;
 //import changes.changelist;
 import graphics.tilegeometry;

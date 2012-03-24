@@ -12,6 +12,8 @@ import util.util;
 
 __gshared Statistics g_Statistics;
 
+__gshared int triCount = 0;
+
 shared static this() {
     g_Statistics = new Statistics;
 }
@@ -180,8 +182,7 @@ class Statistics {
     mixin(SampleSingle!("AtlasUpload", true));
     mixin(SampleSingle!("InitialFloodFill", true));
     mixin(SampleSingle!("InitialHeightmaps", true));
-        
-    
+
     mixin(ProgressData!("Heightmaps"));
     mixin(ProgressData!("GraphRegions"));
     mixin(ProgressData!("FloodFill"));
