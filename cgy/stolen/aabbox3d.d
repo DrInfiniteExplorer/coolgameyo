@@ -120,6 +120,11 @@ struct aabbox3d(T)
     return MaxEdge - MinEdge;
   }
 
+  aabbox3d!T move(vector3d!T offset) {
+      return aabbox3d!T( MinEdge+offset, MaxEdge+offset);
+  }
+
+
   //! Check if the box is empty.
   /** This means that there is no space between the min and max edge.
   \return True if box is empty, else false. */

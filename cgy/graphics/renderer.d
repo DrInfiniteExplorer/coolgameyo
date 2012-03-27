@@ -95,10 +95,6 @@ class Renderer {
         lightMixShader.use(false);
 
 
-        createDudeModel();
-        createEntityModel();
-        createTorchModel();
-
         tileRenderer.init();
         heightSheets.init();
         atlas.upload();
@@ -115,78 +111,9 @@ class Renderer {
         atlas.destroy();
     }
 
-    //TODO: Eventually implement models, etc
-    uint dudeVBO;
-    void createDudeModel(){
-        vec3f[] vertices;
-        //Body centered at 0.5 z so main body centered aroung local origo
-        vertices ~= makeCube(vec3f(0.5, 0.5, 1), vec3f(0, 0, 0.0)); //Body, -.5, -.5, -1 -> .5, .5, 1
-        vertices ~= makeCube(vec3f(1, 1, 1), vec3f(0, 0, 1)); //Head, -1, -1, 1 -> 1, 1, 2.0
-        glGenBuffers(1, &dudeVBO);
-        glError();
-        glBindBuffer(GL_ARRAY_BUFFER, dudeVBO);
-        glError();
-        glBufferData(GL_ARRAY_BUFFER, vertices.length*vec3f.sizeof, vertices.ptr, GL_STATIC_DRAW);
-        glError();
-    }
-    uint entityVBO;
-    void createEntityModel(){
-        vec3f[] vertices;
-        //Body centered at 0.5 z so main body centered aroung local origo
-        vertices ~= makeCube(vec3f(0.5, 0.5, 1), vec3f(0, 0, 1.0)); //Body, -.5, -.5, -1 -> .5, .5, 1
-        vertices ~= makeCube(vec3f(1, 1, 1), vec3f(0, 0, 0)); //Head, -1, -1, 1 -> 1, 1, 2.0
-        glGenBuffers(1, &entityVBO);
-        glError();
-        glBindBuffer(GL_ARRAY_BUFFER, entityVBO);
-        glError();
-        glBufferData(GL_ARRAY_BUFFER, vertices.length*vec3f.sizeof, vertices.ptr, GL_STATIC_DRAW);
-        glError();
-    }
-    uint torchVBO;
-    void createTorchModel(){
-        vec3f[] vertices;
-        vertices ~= makeCube(vec3f(0.2, 0.2, 0.4), vec3f(0, 0, 0.0));
-        vertices ~= makeCube(vec3f(0.2, 0.2, 0.4), vec3f(0, 0, 0.0));
-        glGenBuffers(1, &torchVBO);
-        glError();
-        glBindBuffer(GL_ARRAY_BUFFER, torchVBO);
-        glError();
-        glBufferData(GL_ARRAY_BUFFER, vertices.length*vec3f.sizeof, vertices.ptr, GL_STATIC_DRAW);
-        glError();
-    }
-    
-    void renderAABB(aabbox3d!(double) bb){
-        auto v = camera.getViewMatrix();
-        auto vp = camera.getProjectionMatrix() * v;
-        lineShader.use();
-        lineShader.setUniform(lineShader.VP, vp);
-        lineShader.setUniform(lineShader.V, v);
-        glEnableVertexAttribArray(0);
-        glError();
 
-        bool oldWireframe = setWireframe(true);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        vec3d[8] edges;
-        bb.getEdges(edges);
-
-        glVertexAttribPointer(0, 3, GL_DOUBLE, GL_FALSE, vec3d.sizeof, edges.ptr);
-        glError();
-        lineShader.setUniform(lineShader.color, vec3f(0.8, 0.0, 0));
-        lineShader.setUniform(lineShader.radius, 100.0f);
-        immutable ubyte[] indices = [0, 1, 0, 4, 0, 2, 2, 6, 2, 3, 5, 1, 5, 4, 6, 2, 6, 4, 6, 7, 7, 5, 7, 3];
-        glDrawElements(GL_LINES, indices.length, GL_UNSIGNED_BYTE, indices.ptr);
-        glError();
-        //dudeShader.use();
-        setWireframe(oldWireframe);
-        
-        
-        glDisableVertexAttribArray(0);
-        glError();        
-        lineShader.use(false);
-    }
-    
     void renderDebug(Camera camera){
-        auto v = camera.getViewMatrix();
+        auto v = camera.getTargetMatrix();
         auto vp = camera.getProjectionMatrix() * v;
         lineShader.use();
         lineShader.setUniform(lineShader.VP, vp);
@@ -200,49 +127,12 @@ class Renderer {
         }
 
         bool oldWireframe = setWireframe(true);
-        renderAABBList(&set);
-        renderLineList(&set);
+        renderAABBList(camera.getPosition(), &set);
+        renderLineList(camera.getPosition(), &set);
         setWireframe(oldWireframe);
         glDisableVertexAttribArray(0);
         glError();
         lineShader.use(false);
-    }
-    
-        
-
-    void renderDude(Unit unit, float tickTimeSoFar){
-        auto M = matrix4();
-        vec3d unitPos;
-        vec3d **p = unit in specialUnits;
-        if (p !is null) {
-            unitPos = **p;
-        } else {
-            unitPos = unit.pos.value; //TODO: Subtract the camera position from the unit before rendering
-        }
-        unitPos += tickTimeSoFar * unit.velocity;
-        M.setTranslation(unitPos.convert!float());
-        M.setRotationRadians(vec3f(0, 0, unit.rotation));
-        dudeShader.setUniform(dudeShader.M, M);
-        dudeShader.setUniform(dudeShader.color,
-                vec3f(unit.type.tintColor.X/255.0f,
-													  unit.type.tintColor.Y/255.0f,
-													  unit.type.tintColor.Z/255.0f)); //Color :p
-        glBindBuffer(GL_ARRAY_BUFFER, dudeVBO);
-        glError();
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, vec3f.sizeof, null /* offset in vbo */);
-        glError();
-
-        glDrawArrays(GL_QUADS, 0, 4*6*2 /*2 cubes */);
-        glError();
-
-
-        //TODO: Move to own function, make own shader or abstractify a "simpleshader"-thing to use.
-        const bool RenderDudeAABB = false;
-        static if(RenderDudeAABB == true){
-            dudeShader.use(false);
-            renderAABB(unit.aabb);
-            dudeShader.use();
-        }
     }
     
     void normalUnit(Unit unit) {
@@ -352,51 +242,6 @@ class Renderer {
   }
 
 	
-	void renderEntity(Entity entity, float tickTimeSoFar){
-        auto M = matrix4();
-        vec3d entityPos;
-        /*vec3d **p = entity in specialUnits;
-        if (p !is null) {
-            entityPos = **p;
-        } else {*/
-            entityPos = entity.pos.value; //TODO: Subtract the camera position from the unit before rendering
-        //}
-        M.setTranslation(entityPos.convert!float());
-        M.setRotationRadians(vec3f(0, 0, entity.rotation));
-		if (entity.isDropped){
-			M.setScale(vec3f(0.2f, 0.2f, 0.2f));
-		}
-        dudeShader.setUniform(dudeShader.M, M);
-        dudeShader.setUniform(dudeShader.color,
-                vec3f(entity.type.tintColor.X/255.0f,
-													  entity.type.tintColor.Y/255.0f,
-													  entity.type.tintColor.Z/255.0f)); //Color :p
-
-        // TODO: sry for extreme ugly hack... lazy and stuff
-        if (entity.type.name == "torch") {
-            glBindBuffer(GL_ARRAY_BUFFER, torchVBO);
-        }
-        else{
-            glBindBuffer(GL_ARRAY_BUFFER, entityVBO);
-        }
-        glError();
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, vec3f.sizeof, null /* offset in vbo */);
-        glError();
-
-        glDrawArrays(GL_QUADS, 0, 4*6*2 /*2 cubes */);
-        glError();
-
-
-        //TODO: Move to own function, make own shader or abstractify a "simpleshader"-thing to use.
-        const bool RenderDudeAABB = false;
-        static if(RenderDudeAABB == true){
-            dudeShader.use(false);
-            renderAABB(entity.aabb);
-            dudeShader.use();
-        }
-    }
-    
-
     // D MINECRAFT MAP VIEWER CLONE INSPIRATION ETC
     // https://github.com/Wallbraker/Charged-Miners
     // wiki is down so arbitrary place is best for future reference and documentation.

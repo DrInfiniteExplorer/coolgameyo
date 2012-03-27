@@ -35,13 +35,15 @@ void removeAABB(int id) {
     aabbList.remove(id);
 }
 
-void renderAABBList(void delegate (vec3f color, float radius) set){
+void renderAABBList(vec3d camPos, void delegate (vec3f color, float radius) set){
 
     vec3d[8] edges;
     vec3f[8] fedges;
     immutable ubyte[] indices = [0, 1, 0, 4, 0, 2, 2, 6, 2, 3, 5, 1, 5, 4, 6, 2, 6, 4, 6, 7, 7, 5, 7, 3];
     foreach(data ; aabbList) {
-        aabbd bb = cast(aabbd)data.aabb;
+
+        //aabbd bb = cast(aabbd)data.aabb;
+        aabbd bb = (cast(aabbd)data.aabb).move(-camPos);
         bb.getEdges(edges);
         foreach(idx, v ; edges) {
             fedges[idx] = v.convert!float; //Lol! Men om som innan att vi skickar doubles så kraschar det på lubens dator här :P
@@ -84,12 +86,24 @@ void removeLine(int id){
     lineList.remove(id);
 }
 
-void renderLineList(void delegate (vec3f color, float radius) set){
-    foreach(data ; lineList) {        
+void renderLineList(vec3d camPos, void delegate (vec3f color, float radius) set){
+    foreach(data ; lineList) {
+        foreach(ref pt ; data.points) {
+            auto a = (cast(vec3d)pt)-camPos;
+            pt.X = a.X;
+            pt.Y = a.Y;
+            pt.Z = a.Z;
+        }
         glVertexAttribPointer(0, 3, GL_DOUBLE, GL_FALSE, vec3d.sizeof, cast(const void*)data.points.ptr);
         glError();
         set(cast(vec3f)data.color, data.radius);
         glDrawArrays(GL_LINE_STRIP, 0, data.points.length);
+        foreach(ref pt ; data.points) {
+            auto a = (cast(vec3d)pt)+camPos;
+            pt.X = a.X;
+            pt.Y = a.Y;
+            pt.Z = a.Z;
+        }
     }
 }
 
