@@ -12,7 +12,9 @@ import modules.module_;
 import scheduler;
 import util.util;
 import util.filesystem;
+import util.array;
 
+alias util.array.Array Array;
 
 
 import graphics.debugging;
@@ -58,14 +60,19 @@ struct Path {
 
 enum maxPathTicks = 35;
 
-class PathModule : Module {
+final class PathModule : Module {
 
     ulong nextIDNum;
 
     Path[PathID] finishedPaths;
 
-    PathFindState[] activeStates;
-    size_t[] toRemoveIndices;
+    Array!PathFindState activeStates;
+    Array!size_t toRemoveIndices;
+
+    this() {
+        activeStates = new Array!PathFindState;
+        toRemoveIndices = new Array!size_t;
+    }
 
     void finishPath(size_t activeStatesIndex) {
         synchronized {
@@ -112,14 +119,15 @@ class PathModule : Module {
                     "goal" : encode(state.goal.value),
                     ]);
             }
-            return Value(array(map!derp(activeStates)));            
+            return Value(array(map!derp(activeStates[])));            
         }
         
         Value[string] values;
         values["nextIdNum"] = Value(nextIDNum);
         values["finishedPaths"] = serializeFinishedPaths();
         values["activeStates"] = serializeActiveStates();
-        values["toRemoveIndices"] = Value(array(map!((uint a){ return Value(a);})(toRemoveIndices)));
+        values["toRemoveIndices"] = Value(array(map!((uint a){
+                        return Value(a);})(toRemoveIndices[])));
         Value jsonRoot = Value(values);
 	    auto jsonString = json.prettifyJSON(jsonRoot);
         
@@ -135,17 +143,17 @@ class PathModule : Module {
         synchronized {
             removeFinished();
 
-            foreach (i, ref state; activeStates[0 .. min($, maxPathTicks)]) {
-                    scheduler.push(
-                            asyncTask(
-                                ((size_t i, PathFindState* state) {
+            foreach (i, ref state; activeStates[][0 .. min($, maxPathTicks)]) {
+                scheduler.push(
+                        asyncTask(
+                            ((size_t i, PathFindState* state) {
                                  return {
                                      if (state.tick(world)) {
-                                         assert(state.finished);
-                                         //msg("finishing state ", i);
-                                         finishPath(i);
-                                     }};
-                                 })(i, &state)));
+                                     assert(state.finished);
+                                     //msg("finishing state ", i);
+                                     finishPath(i);
+                                 }};
+                             })(i, &state)));
             }
         }
     }
@@ -163,11 +171,8 @@ class PathModule : Module {
                 i += 1;
             }
         }
-        activeStates.length -= toRemoveIndices.length;
-        toRemoveIndices.length = 0;
-
-        activeStates.assumeSafeAppend();
-        toRemoveIndices.assumeSafeAppend();
+        activeStates.removeFromEnd(toRemoveIndices.length);
+        toRemoveIndices.reset();
     }
 }
 
@@ -307,7 +312,6 @@ static struct PathFindState {
 
     TilePos findSmallest(bool fwd)() {
         alias CondAlias!(fwd, openf, openb) open;
-        //alias CondAlias!(!fwd, openf, openb) other;
         TilePos x;
         double f = double.infinity;
         
@@ -396,8 +400,8 @@ static struct PathFindState {
             }
             Tile tile(TilePos tp) { return world.getTile(tp, false); }
             bool clear(TilePos tp) { return tile(tp).isAir; }
-            bool pathable(TilePos tp) { return tile(tp).pathable; }
             bool solid(TilePos tp) { return !clear(tp); }
+            bool pathable(TilePos tp) { return clear(tp) && solid(below(tp)); }
             bool avail(TilePos tp) { return pathable(tp) && clear(above(tp)); }
 
             bool test_from_to(TilePos a, TilePos b)

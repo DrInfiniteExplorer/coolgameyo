@@ -22,8 +22,22 @@ final class Array(T) {
         return ts[p];
     }
 
+    void removeFromEnd(size_t howMany) {
+        assert (p >= howMany);
+        p -= howMany;
+    }
+
     bool empty() @property const { return p==0; }
 
-    T[] opSlice() @property { return ts[0 .. p]; }
+    T[] opSlice() { return ts[0 .. p]; }
+
+    ref T opIndex(size_t index) {
+        assert (index < p);
+        return ts[index];
+    }
+
+    void opOpAssign(string s)(T t) if (s == "~") {
+        insert(t);
+    }
 }
 

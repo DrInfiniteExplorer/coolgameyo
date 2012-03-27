@@ -70,7 +70,6 @@ class FPSControlAI : UnitAI, CustomChange {
         if (dir == vec3d(0, 0, 0)) { return pos; }
         if (dir.getLength > OneEps) {
             dir.setLength(OneEps);
-            writeln("derp");
         }
         //TODO: The stuff below
         /*
