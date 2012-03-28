@@ -26,6 +26,7 @@ class PatrolAI : UnitAI {
     PathID id;
     int lineId;
     bool toa, walking;
+    int derp;
 
     this(Unit u, UnitPos p, PathModule m) {
         unit = u;
@@ -33,22 +34,26 @@ class PatrolAI : UnitAI {
         b = p;
         pathModule = m;
 
-        id = pathModule.findPath(u.pos, b);
+        id = pathModule.findPath(a, b);
     }
 
     override int tick(WorldProxy world) {
+        derp++;
+        if(derp < 2) return 0;
+        derp = 0;
         if (walking) {
             auto goal = toa ? a : b;
             auto p = path.path.back;
             //write("going to ", toa ? "a=" : "b=", p, ", ");
             auto d = p.value.getDistanceFrom(unit.pos.value);
 
-            if (d <= unit.speed) {
-                //msg("arrived!");
+            //if (d <= unit.speed) {
+            if (true) {
+                    //msg("arrived!");
                 world.moveUnit(unit, p, 1);
                 if (p == goal) {
                     walking = false;
-                    id = pathModule.findPath(unit.pos, toa ? b : a);
+                    id = pathModule.findPath(toa ? a : b, toa ? b : a);
                     toa = !toa;
                 } else {
                     path.path.popBack();

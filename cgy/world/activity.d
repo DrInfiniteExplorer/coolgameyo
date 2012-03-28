@@ -90,7 +90,7 @@ private mixin template ActivityHandlerMethods() {
                 //Check if lies in TimeOut-queueueue, then readd?
 
                 if(sectorNum in sectorTimeout) {
-                    msg("Removeing sector from offload queueuue");
+                    //msg("Removeing sector from offload queueuue");
                     sectorTimeout.remove(sectorNum);
                     continue;
                 }
@@ -116,7 +116,7 @@ private mixin template ActivityHandlerMethods() {
 
             } else {
                 sectorTimeout[sectorNum] = worldTime + SectorTimeoutTicks;
-                msg("Queueing sector for offload");
+                //msg("Queueing sector for offload");
                 //addAABB(sectorNum.getAABB);
                 //Removed sector
 

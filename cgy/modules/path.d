@@ -75,7 +75,7 @@ final class PathModule : Module {
     }
 
     void finishPath(size_t activeStatesIndex) {
-        synchronized {
+        synchronized(this) {
             auto s = activeStates[activeStatesIndex];
             toRemoveIndices ~= activeStatesIndex;
 
@@ -85,7 +85,7 @@ final class PathModule : Module {
     }
 
     PathID findPath(UnitPos from, UnitPos to) {
-        synchronized {
+        synchronized(this) {
             auto ret = PathID(nextIDNum++);
             activeStates ~= PathFindState(ret, from, to);
             return ret;
@@ -93,7 +93,7 @@ final class PathModule : Module {
     }
 
     bool pollPath(PathID id, out Path path) {
-        synchronized {
+        synchronized(this) {
             if (id !in finishedPaths) return false;
 
             path = finishedPaths[id];
@@ -140,7 +140,7 @@ final class PathModule : Module {
     }
 
     override void update(World world, Scheduler scheduler) { //Module interface
-        synchronized {
+        synchronized(this) {
             removeFinished();
 
             foreach (i, ref state; activeStates[][0 .. min($, maxPathTicks)]) {
@@ -259,6 +259,7 @@ static struct PathFindState {
         tick_count += 1;
 
         if (open.empty) { // we failed to find a path
+            msg("failed to find a path; open is empty");
             finished = true;
             return;
         }

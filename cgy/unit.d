@@ -64,7 +64,7 @@ class Unit {
         Demand thirst = Demand(100, 100, 20);
         UnitPos pos;
         float rotation = 0; //radians
-        float speed = 1;
+        float speed = 1.0;
         UnitPos destination;
         uint ticksToArrive;
         vec3d velocity;
