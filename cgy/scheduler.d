@@ -198,12 +198,22 @@ final class Scheduler {
     }
 
     bool getTask(ref Task task, ChangeList changeList) {
+        StopWatch sw;
+        sw.start();
+
+        scope (exit) {
+            sw.stop();
+            g_Statistics.addGetTask(sw.peek().usecs);
+        }
+
         synchronized (this) {
-            return getTask_impl(task, changeList);
+            return getTask_impl(task, changeList, sw);
         }
     }
 
-    private bool getTask_impl(ref Task task, ChangeList changeList) {
+    private bool getTask_impl(ref Task task, ChangeList changeList,
+            ref StopWatch sw) {
+
         switch (state) {
             default:
                 assert (0);
@@ -211,7 +221,13 @@ final class Scheduler {
                 activeWorkers -= 1;
 
                 if (activeWorkers > 0) {
+
+                    sw.stop();
+
                     cond.wait();
+
+                    sw.start();
+
                     if (exiting) {
                         bool pred(Tid t) {
                             return t == thisTid();
@@ -219,18 +235,20 @@ final class Scheduler {
                         workers = remove!(pred)(workers);
                         return false;
                     }
-                    return getTask_impl(task, changeList);
+                    return getTask_impl(task, changeList, sw);
                 }
                 assert (activeWorkers == 0, 
                         text("activeWorkers == ", activeWorkers, " != 0"));
                 auto timeLeft = nextSync - utime();
                 if (timeLeft > 0) {
+                    sw.stop();
                     Thread.sleep(dur!"usecs"(timeLeft));
+                    sw.start();
                 }
                 assert (activeWorkers == 0, 
                         text("activeWorkers == ", activeWorkers, " != 0"));
                 state = State.update;
-                return getTask_impl(task, changeList);
+                return getTask_impl(task, changeList, sw);
 
             case State.update:
                 BREAK_IF(activeWorkers != 0);
@@ -260,7 +278,7 @@ final class Scheduler {
                 }
 
                 state = state.sync;
-                return getTask_impl(task, changeList);
+                return getTask_impl(task, changeList, sw);
 
             case State.sync:
                 auto t = sync.removeAny();
@@ -273,14 +291,14 @@ final class Scheduler {
                 state = State.forcedAsync;
                 asyncLeft = ASYNC_COUNT;
                 sync.insert(syncTask());
-                return getTask_impl(task, changeList);
+                return getTask_impl(task, changeList, sw);
 
             case State.forcedAsync:
                 asyncLeft -= 1;
                 assert (asyncLeft >= 0);
                 if (asyncLeft == 0 || async.empty) {
                     state = State.async;
-                    return getTask_impl(task, changeList);
+                    return getTask_impl(task, changeList, sw);
                 }
                 task = async.removeAny();
                 return true;
@@ -288,7 +306,7 @@ final class Scheduler {
             case State.async:
                 if (utime() > nextSync || async.empty) {
                     state = State.wait;
-                    return getTask_impl(task, changeList);
+                    return getTask_impl(task, changeList, sw);
                 }
                 task = async.removeAny();
                 return true;

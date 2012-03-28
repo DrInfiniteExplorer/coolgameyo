@@ -136,17 +136,18 @@ template ProgressData(const char[] name) {
     );
 }
 
-
-class Statistics {
+final class Statistics {
 
     this() {
     }    
-    
+
     void save() {
         string str = 
             saveDataGRUploadTime() ~
             saveDataBuildGeometry() ~
             saveDataMakeGeometryTasks() ~
+            saveDataGetTask() ~
+
             saveDataFPS() ~
             saveDataTPS() ~
             saveDataStartupTime() ~
@@ -155,29 +156,34 @@ class Statistics {
             saveDataRendererInit() ~
             saveDataAtlasUpload() ~
             saveDataInitialFloodFill() ~
-            saveDataInitialHeightmaps();
-        
+            saveDataInitialHeightmaps() ~
+            "";
+
         std.file.write("statistics.txt", str);
     }
 
-/*
-    Collects during full gc collect. Shouldnt? :S    
-    ~this(){
-        writeln("ASDASDASD");
-        enforce(0, "Clean up statistics, write to file or something.");
-    }        
-*/  
-    
+    /*
+       Collects during full gc collect. Shouldnt? :S    
+       ~this(){
+       writeln("ASDASDASD");
+       enforce(0, "Clean up statistics, write to file or something.");
+       }        
+     */  
+
     mixin(SampleCircleBuffer!("GRUploadTime", 50));
     mixin(SampleCircleBuffer!("BuildGeometry", 50));
     mixin(SampleCircleBuffer!("MakeGeometryTasks", 50));
+
+    mixin(SampleCircleBuffer!("GetTask", 200));
+
     mixin(SamplesPerSecond!("FPS", 50));
     mixin(SamplesPerSecond!("TPS", 50));
+
     mixin(SampleSingle!("StartupTime", true));
     mixin(SampleSingle!("GameInit", true));
     mixin(SampleSingle!("TileTypeManagerCreation", true));
-	mixin(SampleSingle!("EntityTypeManagerCreation", true));
-	mixin(SampleSingle!("UnitTypeManagerCreation", true));
+    mixin(SampleSingle!("EntityTypeManagerCreation", true));
+    mixin(SampleSingle!("UnitTypeManagerCreation", true));
     mixin(SampleSingle!("RendererInit", true));
     mixin(SampleSingle!("AtlasUpload", true));
     mixin(SampleSingle!("InitialFloodFill", true));
