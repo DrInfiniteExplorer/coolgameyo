@@ -215,6 +215,7 @@ final class Level0Sheet {
 
                 vec3ub col = (color * 255.0f).convert!ubyte;
 
+                tp.value.Z = min(tp.value.Z, firstLoadedTilepos.value.Z);
                 //Build top
                 vec3s southWest = (tp.value-centerTp).convert!short;
                 auto northWest = southWest + vec3s(0, cast(short)scale, 0);
@@ -224,7 +225,6 @@ final class Level0Sheet {
                     addQuad(southWest, southEast, northEast, northWest);
                     addQuadC(col, col, col, col);
                 }
-                z = min(z, firstLoadedTilepos.value.Z);
 
                 xyTp = TileXYPos(thisTp.value + vec2i(x+scale, y));
                 tp = world.getTopTilePos(xyTp);
@@ -264,10 +264,10 @@ final class Level0Sheet {
         }
     }
     void buildUpper(vec2i num, int firstFreeZ) {
-
+        msg("implement buildUpper for heightsheet level 0");
     }
     void buildMiddle(vec2i num, int z) {
-
+        msg("implement buildMiddle for heightsheet level 0");
     }
 
 
