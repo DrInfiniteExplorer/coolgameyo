@@ -34,7 +34,7 @@ struct RenderSettings {
         float fieldOfView = 90f;
         float aspectRatio = 4.0f / 3.0f; //Width per height
         float nearPlane = 0.45f;
-        float farPlane = 1000.0f;
+        float farPlane = 3000.0f;
     }
 	
     InnerRenderSettings serializableSettings;

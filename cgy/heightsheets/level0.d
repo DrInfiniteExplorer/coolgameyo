@@ -63,23 +63,23 @@ final class Level0Sheet {
         mixin(Time!"writeln(\"build+upload:\", usecs/1000);");
 
 
-        SectorXYNum startSect = SectorXYNum(SectorXYNum(center).value - vec2i(5,5));
+        SectorXYNum startSect = SectorXYNum(SectorXYNum(center).value - vec2i(8,8));
 
         vec2i baseTp = startSect.getTileXYPos().value;
 
         usedVertices = 0;
         auto derp = vertices.capacity;
 
-        foreach(y ; 0 .. 10) {
-            foreach(x ; 0 .. 10) {
+        foreach(y ; 0 .. level1SectorCount) {
+            foreach(x ; 0 .. level1SectorCount) {
                 if(!level1.loaded[y][x]) {
 
                     int firstLoadedZ = int.min;
                     int lastLoadedZ = int.min;
                     int[] notLoaded;
 
-                    double maxZ = level1.sectorMax[y * 10 + x] + center.toTilePos.value.Z;
-                    double minZ = level1.sectorMin[y * 10 + x] + center.toTilePos.value.Z;
+                    double maxZ = level1.sectorMax[y * level1SectorCount + x] + center.toTilePos.value.Z;
+                    double minZ = level1.sectorMin[y * level1SectorCount + x] + center.toTilePos.value.Z;
 
                     SectorXYNum thisSect = SectorXYNum(startSect.value + vec2i(x, y));
                     TileXYPos tp = thisSect.getTileXYPos;
@@ -168,7 +168,7 @@ final class Level0Sheet {
 
     void buildLower(vec2i num, int firstLoadedZ) {
         auto centerTp = level1.center.toTilePos.value;
-        auto startSect = SectorXYNum(SectorXYNum(level1.center).value - vec2i(5,5));
+        auto startSect = SectorXYNum(SectorXYNum(level1.center).value - vec2i(8,8));
         auto baseTp = startSect.getTileXYPos().value;
 
         auto thisNum = SectorXYNum(startSect.value + num);
@@ -209,7 +209,7 @@ final class Level0Sheet {
                 if(x == 0) {
                     xyTp = TileXYPos(thisTp.value + vec2i(x, y));
                     tp = world.getTopTilePos(xyTp);
-                    z = tp.value.Z;
+                    z = min(tp.value.Z, firstLoadedTilepos.value.Z);
                     color = layerManager.getBiomeColor(xyTp.value);
                 }
 

@@ -224,21 +224,25 @@ class Renderer {
 
         atlas.use();
         triCount = 0;
-        tileRenderer.render(camera, skyColor);
+
         heightSheets.render(camera);
+
+        tileRenderer.render(camera, skyColor);
 
         sceneManager.renderScene(camera);
 
         //renderDudes(camera, 0.0f);
 		//renderEntities(camera, 0.0f);
         renderDebug(camera);
+
+
+        setWireframe(false);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glError();
     
         castShadowRays();
         finishHim();
 
-        setWireframe(false);
   }
 
 	

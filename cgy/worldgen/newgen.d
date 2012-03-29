@@ -63,9 +63,9 @@ alias ValueMap2D!(double, false) ValueMap;
 
 /* pos 0 not used */
 /* pt2tile-scale*/
-enum ptScale = [0, 32, 128, 512, 2048, 8192];
-/* map2tile-scale*/
-enum mapScale = [0, 12800, 51200, 204800, 819200, 3276800];
+enum ptScale = [0, 32, 128, 512, 2048, 8192, /*start mipmaps*/ 32768, 131072];
+/* map2tile-scale*/ //Mipmap'ed values are farther apart, but same size as level5 (ie. worldsize)
+enum mapScale = [0, 12800, 51200, 204800, 819200, 3276800, /*start mipmaps*/ 3276800, 3276800];
 
 enum halfWorldSize = vec3i(mapScale[5]/2, mapScale[5]/2, 0);
 enum halfWorldSize_xy = vec2i(mapScale[5]/2, mapScale[5]/2);
@@ -75,7 +75,7 @@ enum halfWorldSize_xy = vec2i(mapScale[5]/2, mapScale[5]/2);
 class Feature {
 }
 
-class Map {
+final class Map {
     ValueMap heightMap;
     ValueMap randomField;
     Feature[] features;
@@ -117,8 +117,11 @@ class LayerManager {
 
     int maxLevel = 5;
 
-    Map layer5;
     Map[vec2i][5] layers; /*index 0 is not used, only 1-4 because thats how things are planned out */
+    Map layer5;
+    ValueMap mipLevel1;
+    ValueMap mipLevel2;
+
     WorldGenParams params;
 
     void init(WorldGenParams _params) {
@@ -135,6 +138,43 @@ class LayerManager {
         }
 
         //map.fillwithstuffandbecoolanddoneyeah();
+
+        generateMipMaps();
+    }
+
+    void generateMipMaps() {
+        mipLevel1 = new ValueMap(100, 100);
+        mipLevel2 = new ValueMap(25, 25);
+
+        foreach(Y ; 0 .. ptPerLayer/4) {
+            foreach(X ; 0 .. ptPerLayer/4) {
+                double heightSum;
+                foreach(dY ; 0 .. 4) {
+                    int y = Y * 4 + dY;
+                    foreach(dX ; 0 .. 4) {
+                        int x = X * 4 + dX;
+                        auto height = layer5.getHeight(x, y);
+                        heightSum += height;
+                    }
+                }
+                mipLevel1.set(X, Y, heightSum / 16.0);
+            }
+        }
+        foreach(Y ; 0 .. ptPerLayer/16) {
+            foreach(X ; 0 .. ptPerLayer/16) {
+                double heightSum;
+                foreach(dY ; 0 .. 4) {
+                    int y = Y * 4 + dY;
+                    foreach(dX ; 0 .. 4) {
+                        int x = X * 4 + dX;
+                        auto height = mipLevel1.get(x, y);
+                        heightSum += height;
+                    }
+                }
+                mipLevel2.set(X, Y, heightSum / 16.0);
+            }
+        }
+
     }
 
     int hash(int level, vec2i mapNum, Map parentMap) {
@@ -244,7 +284,6 @@ class LayerManager {
         return map;
     }
 
-    int cnt = 0;
     double getValueInterpolated(int level, TileXYPos tilePos) {
         //mixin(Time!("writeln(usecs, cnt);"));
         //cnt += 1;
@@ -259,6 +298,7 @@ class LayerManager {
         double dtx = cast(double)dx / cast(double)ptScale;
         double dty = cast(double)dy / cast(double)ptScale;
 
+        //Replace these calls. Lots of redundant operations.
         auto v00 = getValueRaw(level, ptNum*ptScale);
         auto v01 = getValueRaw(level, (ptNum+vec2i(0,1))*ptScale);
         auto v10 = getValueRaw(level, (ptNum+vec2i(1,0))*ptScale);
@@ -276,9 +316,13 @@ class LayerManager {
     }
 
     double getValueRaw(int level, vec2i tilePos) {
+        auto ptNum = posModV(negDivV(tilePos, ptScale[level]), ptPerLayer);
+        if(level == 6 || level == 7) {
+            auto map = (level == 6) ? mipLevel1 : mipLevel2;
+            return map.get(ptNum.X, ptNum.Y);
+        }
         auto mapNum = negDivV(tilePos, mapScale[level]);
         auto map = getMap(level, mapNum);
-        auto ptNum = posModV(negDivV(tilePos, ptScale[level]), ptPerLayer);
         return map.getHeight(ptNum.X, ptNum.Y);
     }
 

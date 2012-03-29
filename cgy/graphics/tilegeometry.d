@@ -1,6 +1,5 @@
 module graphics.tilegeometry;
 
-pragma(msg, "> geometrycreator.d");        
 
 import core.sync.mutex;
 
@@ -507,4 +506,3 @@ final class TileGeometry : Module, WorldListener
 
 }
 
-pragma(msg, "< geometrycreator.d");        

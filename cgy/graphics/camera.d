@@ -19,11 +19,17 @@ class Camera{
         targetDir.set(0, 1, 0); //Look into scene
     }
 
-    matrix4 getProjectionMatrix(){
+    matrix4 getProjectionMatrix(float Near = -1.0f, float Far = -1.0f){
         float FOV_Radians = degToRad(cast(float)renderSettings.fieldOfView);
         float aspect = renderSettings.aspectRatio;
         float _near = renderSettings.nearPlane;
         float _far = renderSettings.farPlane;
+        if(Near != -1.0f) {
+            _near = Near;
+        }
+        if(Far != -1.0f) {
+            _far = Far;
+        }
         matrix4 proj;
         proj.buildProjectionMatrixPerspectiveFovRH(FOV_Radians, aspect, _near, _far);
         return proj;

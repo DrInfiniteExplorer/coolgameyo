@@ -343,6 +343,10 @@ class World {
         }
     }
 
+    bool hasSectorXY(SectorXYNum xy) {
+        return (xy in sectorsXY) !is null;
+    }
+
     //TODO: Somehow ensure that we're only called from allocateSector
     //Why would we want this, hmmm?
     //TODO: This function suffers from a horrible bugish behaviour

@@ -1,12 +1,11 @@
 module pos;
 
-pragma(msg, "> pos.d");
 
 import std.conv;
 
 import json;
 import stolen.aabbox3d;
-pragma(msg, "! pos.d");
+
 //import world.sector;
 import world.sizes;
 import util.util;
@@ -362,5 +361,4 @@ struct TileXYPos {
     mixin SerializeValue;
 }
 
-pragma(msg, "< pos.d");
 

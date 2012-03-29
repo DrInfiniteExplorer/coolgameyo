@@ -397,11 +397,6 @@ d:\D\ulnb0333\ulink.exe $(IntDir)\$(TargetName).obj gdi32.lib win32.lib advapi32
    <File path="entities\torch.d" />
    <File path="entities\workshop.d" />
   </Folder>
-  <Folder name="heightsheets">
-   <File path="heightsheets\heightsheets.d" />
-   <File path="heightsheets\level0.d" />
-   <File path="heightsheets\level1.d" />
-  </Folder>
   <Folder name="graphics">
    <Folder name="_2d">
     <File path="graphics\_2d\image.d" />
@@ -455,6 +450,12 @@ d:\D\ulnb0333\ulink.exe $(IntDir)\$(TargetName).obj gdi32.lib win32.lib advapi32
    <File path="gui\statistics.d" />
    <File path="gui\unitcontrol.d" />
    <File path="gui\worldview.d" />
+  </Folder>
+  <Folder name="heightsheets">
+   <File path="heightsheets\heightsheets.d" />
+   <File path="heightsheets\level0.d" />
+   <File path="heightsheets\level1.d" />
+   <File path="heightsheets\level2.d" />
   </Folder>
   <Folder name="modelparser">
    <File path="modelparser\cgyparser.d" />

@@ -15,6 +15,8 @@ import worldgen.newgen;
 import util.util;
 
 
+enum int level1SectorCount = 16;
+enum int level1QuadCount = 4*level1SectorCount;
 
 final class Level1Sheet {
     uint vertVBO;
@@ -23,15 +25,15 @@ final class Level1Sheet {
     uint idxVBO;
 
     //This is for level1-stuff. yeah.
-    vec3f[41][41] vertices; //lol 20k of vertex data on stack
-    vec3f[41][41] normals;  //Another 20k! will it blend?
-    vec3f[41][41] colors;   // EVEN MORE! WILL TEH STACK CORPPTU?
-    float sectorMin[100];
-    float sectorMax[100];
-    ushort[40*40*6] indices;
+    vec3f[level1QuadCount+1][level1QuadCount+1] vertices; //lol 20k of vertex data on stack
+    vec3f[level1QuadCount+1][level1QuadCount+1] normals;  //Another 20k! will it blend?
+    vec3f[level1QuadCount+1][level1QuadCount+1] colors;   // EVEN MORE! WILL TEH STACK CORPPTU?
+    float sectorMin[level1SectorCount*level1SectorCount];
+    float sectorMax[level1SectorCount*level1SectorCount];
+    ushort[level1QuadCount*level1QuadCount*6] indices;
 
     SectorNum center;
-    bool[10][10] loaded;
+    bool[level1SectorCount][level1SectorCount] loaded;
 
     HeightSheets heightSheets;
     LayerManager layerManager;
@@ -64,28 +66,28 @@ final class Level1Sheet {
     }
 
     void buildHeightmap(SectorNum center) {
-        // Build 10x10 sectors of level1-data (1 square kilometer)
-        // That is (10*4+1)x(10*4+1) vertices
+        // Build level1SectorCountxlevel1SectorCount sectors of level1-data (1 square kilometer)
+        // That is (level1SectorCount*4+1)x(level1SectorCount*4+1) vertices
         //Dont be surprised if it doesnt!
 
 
         this.center = center;
         vec3f centerTp = center.toTilePos.value.convert!float;
 
-        SectorXYNum startSect = SectorXYNum(SectorXYNum(center).value - vec2i(5,5));
+        SectorXYNum startSect = SectorXYNum(SectorXYNum(center).value - vec2i(8,8));
 
         vec2i baseTp = startSect.getTileXYPos().value;
 
         sectorMin[] = float.max;
         sectorMax[] = -float.max;
 
-        foreach(y ; 0 .. 41) {
-            foreach(x ; 0 .. 41) {
+        foreach(y ; 0 .. level1QuadCount+1) {
+            foreach(x ; 0 .. level1QuadCount+1) {
                 vec2i tp = baseTp + vec2i(32) * vec2i(x, y);
                 float X = cast(float) tp.X;
                 float Y = cast(float) tp.Y;
                 float Z;
-                if(x == 0 || x == 40 || y == 0 || y == 40) {
+                if(x == 0 || x == level1QuadCount || y == 0 || y == level1QuadCount) {
                     Z = cast(float) layerManager.getValueInterpolated(2, TileXYPos(tp));
                 } else {
                     Z = cast(float) layerManager.getValueRaw(1, tp);
@@ -96,20 +98,20 @@ final class Level1Sheet {
             }
         }
 
-        foreach(y ; 0 .. 10) {
-            foreach(x ; 0 .. 10) {
+        foreach(y ; 0 .. level1SectorCount) {
+            foreach(x ; 0 .. level1SectorCount) {
                 foreach(dx ; 0 .. 5) {
                     foreach(dy ; 0 .. 5) {
-                        sectorMin[10 * y + x] = min(sectorMin[10 * y + x], vertices[y*4+dx][x*4+dy].Z);
-                        sectorMax[10 * y + x] = max(sectorMax[10 * y + x], vertices[y*4+dx][x*4+dy].Z);
+                        sectorMin[level1SectorCount * y + x] = min(sectorMin[level1SectorCount * y + x], vertices[y*4+dx][x*4+dy].Z);
+                        sectorMax[level1SectorCount * y + x] = max(sectorMax[level1SectorCount * y + x], vertices[y*4+dx][x*4+dy].Z);
                     }
                 }
             }
         }
 
         indices[] = 0;
-        foreach(sectY ; 0 .. 10) {
-            foreach(sectX ; 0 .. 10) {
+        foreach(sectY ; 0 .. level1SectorCount) {
+            foreach(sectX ; 0 .. level1SectorCount) {
                 if( !shouldMakeHeightSheet(vec2i(sectX, sectY))) {
                     loaded[sectY][sectX] = false;
                     continue;
@@ -120,35 +122,35 @@ final class Level1Sheet {
                     foreach(dx ; 0 .. 4) {
                         auto x = sectX * 4 + dx;
                         vec2i tp = baseTp + vec2i(32) * vec2i(x, y);
-                        int base = 6*(40*y+x);
+                        int base = 6*(level1QuadCount*y+x);
 
-                        indices[base + 1] = cast(ushort)(41 * (y + 0) + x + 0);
-                        indices[base + 0] = cast(ushort)(41 * (y + 1) + x + 0);
-                        indices[base + 2] = cast(ushort)(41 * (y + 0) + x + 1);
+                        indices[base + 1] = cast(ushort)((level1QuadCount+1) * (y + 0) + x + 0);
+                        indices[base + 0] = cast(ushort)((level1QuadCount+1) * (y + 1) + x + 0);
+                        indices[base + 2] = cast(ushort)((level1QuadCount+1) * (y + 0) + x + 1);
 
-                        indices[base + 4] = cast(ushort)(41 * (y + 1) + x + 0);
-                        indices[base + 3] = cast(ushort)(41 * (y + 1) + x + 1);
-                        indices[base + 5] = cast(ushort)(41 * (y + 0) + x + 1);
+                        indices[base + 4] = cast(ushort)((level1QuadCount+1) * (y + 1) + x + 0);
+                        indices[base + 3] = cast(ushort)((level1QuadCount+1) * (y + 1) + x + 1);
+                        indices[base + 5] = cast(ushort)((level1QuadCount+1) * (y + 0) + x + 1);
                     }
                 }
             }
         }
 
         float get(int x, int y) {
-            if(x < 0 || x > 40 || y < 0 || y > 40) {
+            if(x < 0 || x > level1QuadCount || y < 0 || y > level1QuadCount) {
                 //Should make it so that it returns an extrapolated version, or something? dnot care so much myself :P
                 x = x < 0 ? 0 : x;
-                x = x > 40 ? 40 : x;
+                x = x > level1QuadCount ? level1QuadCount : x;
                 y = y < 0 ? 0 : y;
-                y = y > 40 ? 40 : y;
+                y = y > level1QuadCount ? level1QuadCount : y;
                 return vertices[y][x].Z;
             } else {
                 return vertices[y][x].Z;
             }
         }
 
-        foreach(y ; 0 .. 41) { 
-            foreach(x ; 0 .. 41) {
+        foreach(y ; 0 .. level1QuadCount+1) { 
+            foreach(x ; 0 .. level1QuadCount+1) {
 
                 float Xn = get(x-1, y  );
                 float Xp = get(x+1, y  );
@@ -217,20 +219,20 @@ final class Level1Sheet {
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, idxVBO);
 
-        glDrawElements(GL_TRIANGLES, 40*40*6, GL_UNSIGNED_SHORT, cast(void*) 0);
+        glDrawElements(GL_TRIANGLES, level1QuadCount*level1QuadCount*6, GL_UNSIGNED_SHORT, cast(void*) 0);
 
         level0.render(camera);
     }
 
-    //Indexed [0..10] in x,y
+    //Indexed [0..level1SectorCount] in x,y
     //Loops over the range of sectors that the heightsheet covers at a xy-secnum,
     //checks if it is part of the current world, if not then we are free to make heightsheets.
     bool shouldMakeHeightSheet(vec2i sectorNum) {
 
-        double maxZ = sectorMax[sectorNum.Y * 10 + sectorNum.X] + center.toTilePos.value.Z;
-        double minZ = sectorMin[sectorNum.Y * 10 + sectorNum.X] + center.toTilePos.value.Z;
+        double maxZ = sectorMax[sectorNum.Y * level1SectorCount + sectorNum.X] + center.toTilePos.value.Z;
+        double minZ = sectorMin[sectorNum.Y * level1SectorCount + sectorNum.X] + center.toTilePos.value.Z;
 
-        SectorXYNum startSect = SectorXYNum(SectorXYNum(center).value - vec2i(5,5));
+        SectorXYNum startSect = SectorXYNum(SectorXYNum(center).value - vec2i(8,8));
         SectorXYNum thisSect = SectorXYNum(startSect.value + sectorNum);
         TileXYPos tp = thisSect.getTileXYPos;
         TilePos maxTP = tp.toTilePos(cast(int)maxZ);
