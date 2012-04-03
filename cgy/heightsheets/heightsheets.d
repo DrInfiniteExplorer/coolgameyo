@@ -18,6 +18,9 @@ import std.stdio;
 
 import heightsheets.level1;
 import heightsheets.level2;
+import heightsheets.level3;
+import heightsheets.level4;
+import heightsheets.level5;
 
 import graphics.camera;
 import graphics.ogl;
@@ -35,6 +38,9 @@ final class HeightSheets : Module, WorldListener {
     LayerManager layerManager;
     Level1Sheet level1;
     Level2Sheet level2;
+    Level3Sheet level3;
+    Level4Sheet level4;
+    Level5Sheet level5;
 
     alias ShaderProgram!("offset", "VP") HeightSheetsShader;
     HeightSheetsShader shader;
@@ -46,7 +52,9 @@ final class HeightSheets : Module, WorldListener {
         world.addListener(this);
         level1 = new Level1Sheet(this);
         level2 = new Level2Sheet(this);
-
+        level3 = new Level3Sheet(this);
+        level4 = new Level4Sheet(this);
+        level5 = new Level5Sheet(this);
     }
 
     bool destroyed = false;
@@ -58,6 +66,9 @@ final class HeightSheets : Module, WorldListener {
         world.removeListener(this);
         level1.destroy();
         level2.destroy();
+        level3.destroy();
+        level4.destroy();
+        level5.destroy();
         destroyed = true;
     }
 
@@ -73,6 +84,9 @@ final class HeightSheets : Module, WorldListener {
 
         level1.init();
         level2.init();
+        level3.init();
+        level4.init();
+        level5.init();
 
     }
 
@@ -167,6 +181,9 @@ final class HeightSheets : Module, WorldListener {
             level1.buildHeightmap(camSector);
             
             level2.buildHeightmap(camSector);
+            level3.buildHeightmap(camSector);
+            level4.buildHeightmap(camSector);
+            level5.buildHeightmap(camSector);
             center = camSector;
         }
         if(addBack.length > 0) {
@@ -181,14 +198,20 @@ final class HeightSheets : Module, WorldListener {
         vec3f toCam = (center.toTilePos.value.convert!double - camera.getPosition()).convert!float;
         shader.setUniform(shader.offset, toCam);
 
-        auto VP = camera.getProjectionMatrix(100.0f, 100_000.0f) * camera.getTargetMatrix();
-        shader.setUniform(shader.VP, VP);
-
         glEnableVertexAttribArray(0); glError();
         glEnableVertexAttribArray(1); glError();
         glEnableVertexAttribArray(2); glError();
 
-        
+        //16 mil...
+        auto VP = camera.getProjectionMatrix(100.0f, 640_000.0f) * camera.getTargetMatrix();
+        shader.setUniform(shader.VP, VP);
+
+        level5.render(camera);
+
+        level4.render(camera);
+
+        level3.render(camera);
+
         level2.render(camera);
         glClear(GL_DEPTH_BUFFER_BIT);
 

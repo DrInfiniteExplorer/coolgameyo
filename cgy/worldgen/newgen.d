@@ -134,7 +134,7 @@ class LayerManager {
 
         layer5.heightMap.fill(layer5.randomField, ptPerLayer, ptPerLayer);
         foreach(ref val; layer5.heightMap.randMap) {
-            val = (val+1.0)*0.5 * 500;
+            val = (val+1.0)*0.5 * 15000;
         }
 
         //map.fillwithstuffandbecoolanddoneyeah();

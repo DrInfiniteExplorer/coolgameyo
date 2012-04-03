@@ -289,8 +289,11 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
                     camDemoPoints.camTargetDir.length = 0;
                 }
             }
+            if (k.SdlSym == SDLK_k) {
+                camera.setPosition(camera.getPosition() + vec3d(0.0, 0.0, 1000.0));
+            }
             if (k.SdlSym == SDLK_p) {
-                EntityPos topOfTheWorld2(TileXYPos xy) {
+                    EntityPos topOfTheWorld2(TileXYPos xy) {
                     auto top = world.getTopTilePos(xy);
                     msg("top: ", top);
                     auto ret = top.toEntityPos();

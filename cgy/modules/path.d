@@ -80,11 +80,12 @@ final class PathModule : Module {
 
     void finishPath(size_t activeStatesIndex) {
         synchronized(this) {
+            msg("Done here 2 ", &activeStates[activeStatesIndex]);
             auto s = activeStates[activeStatesIndex];
             toRemoveIndices ~= activeStatesIndex;
 
+            BREAK_IF(!s.finished);
             assert (s.finished, "s.finished");
-            pe
             finishedPaths[s.id] = s.result;
         }
     }
@@ -154,10 +155,13 @@ final class PathModule : Module {
                             ((size_t i, PathFindState* state) {
                                  return {
                                      if (state.tick(world)) {
-                                     assert(state.finished);
-                                     //msg("finishing state ", i);
-                                     finishPath(i);
-                                 }};
+                                         assert(state.finished);
+                                         BREAK_IF(!state.finished);
+                                             //msg("finishing state ", i);
+                                         msg("DONE LOAL ", state, " ", &activeStates[i]);
+                                         finishPath(i);
+                                     }
+                                 };
                              })(i, &state)));
             }
         }
@@ -372,6 +376,7 @@ static struct PathFindState {
         }
 
         while (!canFind(map!(a=>a.tilePos)(goal), y)) {
+            BREAK_IF(y !in wentTo);
             y = wentTo[y];
             push(y);
         }

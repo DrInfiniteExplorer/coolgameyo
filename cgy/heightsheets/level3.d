@@ -1,11 +1,11 @@
-module heightsheets.level2;
+module heightsheets.level3;
 
 import std.algorithm;
 import std.stdio;
 import std.math;
 
 import heightsheets.heightsheets;
-import heightsheets.level1;
+//import heightsheets.level2;
 
 import graphics.camera;
 import graphics.ogl;
@@ -15,22 +15,22 @@ import world.world;
 import worldgen.newgen;
 import util.util;
 
-enum int level2SectorCount = 64;
+enum int level3SectorCount = 256;
 
-enum int level2QuadCount = level2SectorCount;
-enum int level2VertexCount = level2QuadCount+1;
+enum int level3QuadCount = 64;
+enum int level3VertexCount = level3QuadCount+1;
 
 
-final class Level2Sheet {
+final class Level3Sheet {
     uint vertVBO;
     uint normVBO;
     uint colorVBO;
     uint idxVBO;
 
-    vec3f[level2VertexCount][level2VertexCount] vertices;
-    vec3f[level2VertexCount][level2VertexCount] normals;
-    vec3f[level2VertexCount][level2VertexCount] colors;
-    ushort[level2QuadCount*level2QuadCount*6] indices;
+    vec3f[level3VertexCount][level3VertexCount] vertices;
+    vec3f[level3VertexCount][level3VertexCount] normals;
+    vec3f[level3VertexCount][level3VertexCount] colors;
+    ushort[level3QuadCount*level3QuadCount*6] indices;
 
     SectorNum center;
     SectorNum snapCenter;
@@ -65,68 +65,67 @@ final class Level2Sheet {
         // That is (10*4+1)x(10*4+1) vertices
         //Dont be surprised if it doesnt!
 
-        auto snapCenter = SectorXYNum((SectorXYNum(center).value/4 )*4).getSectorNum(center.value.Z);
+        auto snapCenter = SectorXYNum((SectorXYNum(center).value/16 )*16).getSectorNum(center.value.Z);
         this.snapCenter = snapCenter;
         this.center = center;
 
         vec3f centerTp = center.toTilePos.value.convert!float;
 
-        SectorXYNum startSect = SectorXYNum(SectorXYNum(snapCenter).value - vec2i(level2SectorCount/2,level2SectorCount/2));
+        SectorXYNum startSect = SectorXYNum(SectorXYNum(snapCenter).value - vec2i(level3SectorCount/2,level3SectorCount/2));
 
         vec2i baseTp = startSect.getTileXYPos().value;
 
-        foreach(y ; 0 .. level2VertexCount) {
-            foreach(x ; 0 .. level2VertexCount) {
-                vec2i tp = baseTp + vec2i(128) * vec2i(x, y);
+        foreach(y ; 0 .. level3VertexCount) {
+            foreach(x ; 0 .. level3VertexCount) {
+                vec2i tp = baseTp + vec2i(512) * vec2i(x, y);
                 float X = cast(float) tp.X;
                 float Y = cast(float) tp.Y;
                 float Z;
-                if(x == 0 || x == level2QuadCount || y == 0 || y == level2QuadCount) {
-                    Z = cast(float) layerManager.getValueInterpolated(3, TileXYPos(tp));
+                if(x == 0 || x == level3QuadCount || y == 0 || y == level3QuadCount) {
+                    Z = cast(float) layerManager.getValueInterpolated(4, TileXYPos(tp));
                 } else {
-                    Z = cast(float) layerManager.getValueRaw(2, tp);
+                    Z = cast(float) layerManager.getValueRaw(3, tp);
                 }
                 vertices[y][x].set(X,Y,Z);
                 vertices[y][x] -= centerTp;
                 colors[y][x] = layerManager.getBiomeColor(tp);
-                colors[y][x] = vec3f(0.5f, 0.8f, 0.5f);
+                colors[y][x] = vec3f(0.8f, 0.5f, 0.5f);
             }
         }
 
         indices[] = 0;
-        foreach(y ; 0 .. level2SectorCount) {
-            foreach(x ; 0 .. level2SectorCount) {
-                auto sectNum = SectorXYNum(vec2i(x, y) + startSect.value);
-                if( !shouldMakeHeightSheet(sectNum)) {
+        foreach(y ; 0 .. level3QuadCount) {
+            foreach(x ; 0 .. level3QuadCount) {
+                if( !shouldMakeHeightSheet(vec2i(x,y))) {
                     continue;
                 }
 
-                int base = 6*(level2QuadCount*y+x);
-                indices[base + 1] = cast(ushort)(level2VertexCount * (y + 0) + x + 0);
-                indices[base + 0] = cast(ushort)(level2VertexCount * (y + 1) + x + 0);
-                indices[base + 2] = cast(ushort)(level2VertexCount * (y + 0) + x + 1);
+                int base = 6*(level3QuadCount*y+x);
+                indices[base + 1] = cast(ushort)(level3VertexCount * (y + 0) + x + 0);
+                indices[base + 0] = cast(ushort)(level3VertexCount * (y + 1) + x + 0);
+                indices[base + 2] = cast(ushort)(level3VertexCount * (y + 0) + x + 1);
 
-                indices[base + 4] = cast(ushort)(level2VertexCount * (y + 1) + x + 0);
-                indices[base + 3] = cast(ushort)(level2VertexCount * (y + 1) + x + 1);
-                indices[base + 5] = cast(ushort)(level2VertexCount * (y + 0) + x + 1);
+                indices[base + 4] = cast(ushort)(level3VertexCount * (y + 1) + x + 0);
+                indices[base + 3] = cast(ushort)(level3VertexCount * (y + 1) + x + 1);
+                indices[base + 5] = cast(ushort)(level3VertexCount * (y + 0) + x + 1);
             }
         }
 
         float get(int x, int y) {
-            if(x < 0 || x > level2QuadCount || y < 0 || y > level2QuadCount) {
+            if(x < 0 || x > level3QuadCount || y < 0 || y > level3QuadCount) {
                 //Should make it so that it returns an extrapolated version, or something? dnot care so much myself :P
                 x = x < 0 ? 0 : x;
-                x = x > level2QuadCount ? level2QuadCount : x;
+                x = x > level3QuadCount ? level3QuadCount : x;
                 y = y < 0 ? 0 : y;
-                y = y > level2QuadCount ? level2QuadCount : y;
+                y = y > level3QuadCount ? level3QuadCount : y;
                 return vertices[y][x].Z;
             } else {
                 return vertices[y][x].Z;
             }
         }
 
-        foreach(y ; 0 .. level2VertexCount) { 
-            foreach(x ; 0 .. level2VertexCount) {
+        foreach(y ; 0 .. level3VertexCount) { 
+            foreach(x ; 0 .. level3VertexCount) {
 
                 float Xn = get(x-1, y  );
                 float Xp = get(x+1, y  );
@@ -135,10 +134,10 @@ final class Level2Sheet {
                 float Yp = get(x  , y+1);
 
 
-                vec3f Nx1 = vec3f(Xn - c, 0.0f, 128.0f);
-                vec3f Nx2 = vec3f(c - Xp, 0.0f, 128.0f);
-                vec3f Ny1 = vec3f(0.0f, Yn - c, 128.0f);
-                vec3f Ny2 = vec3f(0.0f, c - Yp, 128.0f);
+                vec3f Nx1 = vec3f(Xn - c, 0.0f, 512.0f);
+                vec3f Nx2 = vec3f(c - Xp, 0.0f, 512.0f);
+                vec3f Ny1 = vec3f(0.0f, Yn - c, 512.0f);
+                vec3f Ny2 = vec3f(0.0f, c - Yp, 512.0f);
 
                 normals[y][x] = (Nx1 + Nx2 + Ny1 + Ny2).normalize();
             }
@@ -195,18 +194,31 @@ final class Level2Sheet {
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, idxVBO);
 
-        glDrawElements(GL_TRIANGLES, level2QuadCount*level2QuadCount*6, GL_UNSIGNED_SHORT, cast(void*) 0);
+        glDrawElements(GL_TRIANGLES, level3QuadCount*level3QuadCount*6, GL_UNSIGNED_SHORT, cast(void*) 0);
 
     }
 
-    //Indexed [0..10] in x,y
-    //Loops over the range of sectors that the heightsheet covers at a xy-secnum,
-    //checks if it is part of the current world, if not then we are free to make heightsheets.
-    bool shouldMakeHeightSheet(SectorXYNum sectorNum) {
-        //Ignore the sectors in the middle. We have level1&0 there, possibly tiles as well.
-        sectorNum.value -= SectorXYNum(center).value;
-        if(abs(sectorNum.value.X) >= level1SectorCount/2) return true;
-        if(abs(sectorNum.value.Y) >= level1SectorCount/2) return true;
+
+    bool shouldMakeHeightSheet(vec2i quadNum) {
+
+        //This is the center of level2
+        auto level2Center = (SectorXYNum(center).value/4)*4;
+
+        quadNum = quadNum + SectorXYNum(snapCenter).value/4 - level2Center/4 - vec2i(level3QuadCount/2);
+        //As expected this makes a line of quads per axis intersect. But it doesn't really matter ;P
+        if(abs(quadNum.X) >= 8) return true;
+        if(abs(quadNum.Y) >= 8) return true;
+
         return false;
     }
+
+    /*
+    bool shouldMakeHeightSheet(vec2i num) {
+        //Ignore the sectors in the middle. We have level1&0 there, possibly tiles as well.
+        num -= vec2i(level3QuadCount/2);
+        if(abs(num.X) >= 8) return true;
+        if(abs(num.Y) >= 8) return true;
+        return false;
+    }
+    */
 }

@@ -380,9 +380,11 @@ d:\D\ulnb0333\ulink.exe $(IntDir)\$(TargetName).obj gdi32.lib win32.lib advapi32
  </Config>
  <Folder name="cgy">
   <Folder name="ai">
-   <File path="ai\movetoai.d" />
+   <File path="ai\minetileai.d" />
+   <File path="ai\moveai.d" />
    <File path="ai\patrolai.d" />
    <File path="ai\posessai.d" />
+   <File path="ai\test.d" />
   </Folder>
   <Folder name="changes">
    <File path="changes\changelist.d" />
@@ -456,6 +458,9 @@ d:\D\ulnb0333\ulink.exe $(IntDir)\$(TargetName).obj gdi32.lib win32.lib advapi32
    <File path="heightsheets\level0.d" />
    <File path="heightsheets\level1.d" />
    <File path="heightsheets\level2.d" />
+   <File path="heightsheets\level3.d" />
+   <File path="heightsheets\level4.d" />
+   <File path="heightsheets\level5.d" />
   </Folder>
   <Folder name="modelparser">
    <File path="modelparser\cgyparser.d" />
@@ -571,6 +576,7 @@ d:\D\ulnb0333\ulink.exe $(IntDir)\$(TargetName).obj gdi32.lib win32.lib advapi32
   <File path="json.d" />
   <File path="light.d" />
   <File path="main.d" />
+  <File path="mission.d" />
   <File path="pos.d" />
   <File path="scheduler.d" />
   <File path="settings.d" />

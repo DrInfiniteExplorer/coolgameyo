@@ -213,9 +213,11 @@ class FPSControlAI : UnitAI, CustomChange {
         world.unsafeMoveUnit(unit, UnitPos(*unitPos), 1);
         
         return;
+        /*
         foreach(tilePos, tile ; tilesToChange) {
             world.unsafeSetTile(tilePos, tile);
         }
         tilesToChange = null;
+        */
     }
 }
