@@ -80,7 +80,7 @@ class AIModule : Module, WorldListener {
             }
             assert (state.restTime == 0);
             scheduler.push(syncTask((WorldProxy world) {
-                        state.restTime = state.unit.tick(world);
+                        state.restTime = state.unit.tick(world, pathmodule);
                         }));
         }
         foreach (ref state; states) {

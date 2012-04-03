@@ -63,6 +63,9 @@ final class ChangeList {
             DepositEntity,
             ActivateEntity,
 
+            GetMission,
+            DesignateMine,
+
             CustomChange
             ) changeArrays;
 

@@ -16,28 +16,27 @@ import util.util;
 import world.worldproxy;
 import pos;
 
-
+/+
+// TODO: rewrite using moveai
 class PatrolAI : UnitAI {
 
     Unit unit;
     UnitPos a, b;
     Path path;
-    PathModule pathModule;
     PathID id;
     int lineId;
     bool toa, walking;
     int derp;
 
-    this(Unit u, UnitPos p, PathModule m) {
+    this(Unit u, UnitPos p) {
         unit = u;
         a = u.pos;
         b = p;
-        pathModule = m;
 
-        id = pathModule.findPath(a, b);
     }
 
-    override int tick(WorldProxy world) {
+    override int tick(WorldProxy world, PathModule pathModule) {
+        assert (0); // ffs
         derp++;
         if(derp < 2) return 0;
         derp = 0;
@@ -93,4 +92,4 @@ class PatrolAI : UnitAI {
         }
     }
 }
-
++/

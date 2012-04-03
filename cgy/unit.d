@@ -15,13 +15,17 @@ import util.util;
 import unittypemanager;
 import inventory;
 
+import mission;
+
 import world.worldproxy;
+
+import modules.path;
 
 shared int g_UnitCount = 0; //Global counter of units. Make shared static variable in Game-class?
 
 
 interface UnitAI {
-    int tick(WorldProxy world);
+    int tick(WorldProxy world, PathModule pathfinder);
 }
 
 struct Demand {
@@ -52,7 +56,7 @@ Unit newUnit() {
     return unit;
 }
 
-class Unit {
+final class Unit {
 
     bool opEquals(ref const(Unit) u) const {
         assert (0, "Implement Unit.opEquals or find where it's called and make not called!");
@@ -85,6 +89,7 @@ class Unit {
     Clan clan;
     Inventory inventory;
 
+    Mission mission;
 
 
     Value toJSON() {
@@ -119,10 +124,10 @@ class Unit {
 
 
 
-    int tick(WorldProxy world) {
+    int tick(WorldProxy world, PathModule pathfinder) {
         this.hunger.tick();
         this.thirst.tick();
-        return ai.tick(world);
+        return ai.tick(world, pathfinder);
     }
 
     //Returns the bounding box of the unit, in world space.

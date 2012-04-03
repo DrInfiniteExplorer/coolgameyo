@@ -37,11 +37,11 @@ import entitytypemanager;
 
 
 class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{ 
-    
+
     private GuiSystem guiSystem;
     private GuiElementText fpsText, tickText, frameTimeText, tickTimeText, position, tileInfo, timeInfo, renderMethodInfo;
     private StatisticsWindow statistics;
-	private InventoryWindow inventoryWindow;
+    private InventoryWindow inventoryWindow;
 
     private Game game;    
     private Renderer renderer;    //This and scheduler only used to get fps / tps info. Make proxy or thing?
@@ -56,20 +56,20 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
     private bool freeFlight;
     private bool useMouse = true;
     private bool turbo = false;
-    
+
     private ushort          middleX;
     private ushort          middleY;
-    
+
     private vec2i mousecoords;
     private Tile selectedTile;
     private TilePos selectedTilePos;
     private vec3i selectedTileNormal;
     private bool tileSelected;
     private double selectedDistance;
-	
-	private Entity selectedEntity;
+
+    private Entity selectedEntity;
     private bool entitySelected;
-    
+
     private Tile copiedTile;
 
     struct CamDemoPoints {
@@ -81,7 +81,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
     private bool runCamDemo=false;
     private float camDemoTime = 0.f;
     private int camDemoLine;
-    
+
     this(Game g, GuiSystem s) {
         guiSystem = s;
         game = g;
@@ -95,15 +95,15 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         middleY = cast(ushort)renderSettings.windowHeight/2;
         copiedTile.type = TileTypeAir;
 
-		inventoryWindow = new InventoryWindow(guiSystem, this, &possesAI.unit.inventory);
-		guiSystem.addHotkey(SDLK_i, &(inventoryWindow.onOpenInventory));
+        inventoryWindow = new InventoryWindow(guiSystem, this, &possesAI.unit.inventory);
+        guiSystem.addHotkey(SDLK_i, &(inventoryWindow.onOpenInventory));
 
         Value jsonRoot;
         if(loadJSONFile("saves/camdemo.json", &jsonRoot)) {
             json.read(camDemoPoints, jsonRoot);
         }
     }
-    
+
     private bool destroyed;
     ~this(){
         BREAK_IF(!destroyed);
@@ -116,13 +116,13 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         if( statistics !is null) {
             statistics.destroy();
         }
-		if( inventoryWindow !is null) {
+        if( inventoryWindow !is null) {
             inventoryWindow.destroy();
         }
         possesAI.destroy();
         destroyed = true;
     }
-    
+
     void setControlledUnit(Unit u) {
         if (unit) {
             auto ai = unit.ai;
@@ -134,7 +134,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         possesAI = new FPSControlAI(world, renderer);
         possesAI.setUnit(unit);
     }
-        
+
     override GuiEventResponse onDumpEvent(GuiEvent e) {
         if (e.type == GuiEventType.MouseMove) {
             mouseMove(e);
@@ -151,7 +151,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         }
         return GuiEventResponse.Ignore;
     }
-    
+
     override void activate(bool activated) {
         if (activated) {
             spawnHUD();
@@ -167,20 +167,20 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         "A",
         "M",
         "R"
-    ];
-    
+            ];
+
     void updateHUD() {
         //We plus one microsecond to avoid division by 0.
         auto frameTime = g_Statistics.averageFPS()+1;
         auto fps = 1_000_000 / frameTime;
         fpsText.setText(text("fps ", fps));
         frameTimeText.setText(text("frametime ", frameTime));
-        
+
         auto tickTime = g_Statistics.averageTPS()+1;
         auto tps = 1_000_000 / tickTime;
         tickText.setText(text("tps ", tps));
         tickTimeText.setText(text("ticktime ", tickTime));
-        
+
         auto camPos = camera.getPosition();
         position.setText(text("position ", camPos.X, " ", camPos.Y, " ", camPos.Z));
 
@@ -192,16 +192,16 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
 
         updateDemoPath();
     }
-    
+
     void spawnHUD() {
         fpsText = new GuiElementText(guiSystem, vec2d(0, 0), "Fps counter", false);
         tickText = new GuiElementText(guiSystem, vec2d(0, fpsText.getRelativeRect.getBottom()), "Tick counter", false);
-        
+
         frameTimeText = new GuiElementText(guiSystem, vec2d(0.2, 0), "Frame time counter", false);
         tickTimeText = new GuiElementText(guiSystem, vec2d(0.2, frameTimeText.getRelativeRect.getBottom()), "Tick time counter", false);
 
         renderMethodInfo = new GuiElementText(guiSystem, vec2d(0.4, 0), "Render method", false);
-        
+
         position = new GuiElementText(guiSystem, vec2d(0, tickText.getRelativeRect.getBottom()), "Position", false);
         tileInfo = new GuiElementText(guiSystem, vec2d(0, position.getRelativeRect.getBottom()), "TileInfo", false);
         timeInfo = new GuiElementText(guiSystem, vec2d(0, tileInfo.getRelativeRect.getBottom()), "00:00", false);
@@ -227,14 +227,14 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
             statistics = null;
         }
     }
-    
+
     void onKey(GuiEvent.KeyboardEvent k) {
         if (k.SdlSym == SDLK_LSHIFT) {
             turbo = k.pressed;
         }
         if (k.pressed) {
             if (k.SdlSym == SDLK_F2) {
-                    useMouse = !useMouse;
+                useMouse = !useMouse;
             }
             if (k.SdlSym == SDLK_F3) {
                 freeFlight = !freeFlight;
@@ -328,24 +328,24 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
 
     void updateDemoPath() {
         /* commented out because dont want to get statement is not reachable-warning
-        return;
-        float time;
-        int len = camDemoPoints.camPos.length*4;
-        if(len < 16) {
-            return;
-        }
-        vec3d[] camPoses;
-        foreach(idx ; 0 .. len) {
-            time = cast(float)idx / cast(float)len;
-            auto pos = CatmullRomSpline(time, camDemoPoints.camPos);
-            auto dir = CatmullRomSpline(time, camDemoPoints.camTargetDir);
-            camPoses ~= pos;
-            camPoses ~= pos+dir;
-            camPoses ~= pos;
-        }
-        removeLine(camDemoLine);
-        camDemoLine = addLine(camPoses, vec3f(1.0, 0.0, 0.0));
-        */
+           return;
+           float time;
+           int len = camDemoPoints.camPos.length*4;
+           if(len < 16) {
+           return;
+           }
+           vec3d[] camPoses;
+           foreach(idx ; 0 .. len) {
+           time = cast(float)idx / cast(float)len;
+           auto pos = CatmullRomSpline(time, camDemoPoints.camPos);
+           auto dir = CatmullRomSpline(time, camDemoPoints.camTargetDir);
+           camPoses ~= pos;
+           camPoses ~= pos+dir;
+           camPoses ~= pos;
+           }
+           removeLine(camDemoLine);
+           camDemoLine = addLine(camPoses, vec3f(1.0, 0.0, 0.0));
+         */
     }
 
     void mouseMove(GuiEvent e){
@@ -355,29 +355,28 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         auto diffX = x - middleX;
         auto diffY = y - middleY;
         if((diffX != 0 || diffY != 0) && useMouse){
-                SDL_WarpMouse(middleX, middleY);
+            SDL_WarpMouse(middleX, middleY);
             if(!runCamDemo) {
                 camera.mouseMove( diffX,  diffY);
             }
         }
         mousecoords.set(x, y);
     }    
-    
+
     void mouseClick(GuiEvent e) {
         auto m = e.mouseClick;
         if (!m.down) {
             return;
-        }
-		else if (m.left && entitySelected) {
-			if (selectedEntity.isDropped) {
-				possesAI.unit.inventory.addToInventory(selectedEntity);
-				world.removeEntity(selectedEntity);
-			}
-			else {
-				selectedEntity.deconstruct();
-			}
-		}
-        else if (m.left && tileSelected) {
+        } else if (m.left && entitySelected) {
+            if (selectedEntity.isDropped) {
+                // BUG: SÅHÄR GÖR MAN INTE
+                // använd changes!
+                possesAI.unit.inventory.addToInventory(selectedEntity);
+                world.removeEntity(selectedEntity);
+            } else {
+                selectedEntity.deconstruct();
+            }
+        } else if (m.left && tileSelected) {
             copiedTile = selectedTile;
             //Remove transparensiness sometime!!
             enum airTile = Tile(TileTypeAir, TileFlags.valid);
@@ -391,7 +390,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
             if (! intersectsExclusive(unitAABB, tileAABB)) {
                 possesAI.changeTile(whereToPlace, copiedTile);
             }
-        } else if(m.middle && tileSelected) {
+        } else if (m.middle && tileSelected) {
             //vec3d pos = TilePos(selectedTilePos.value+selectedTileNormal).toEntityPos.value; // + 0.5 * selectedTileNormal.convert!double();
             auto o = newEntity();
             o.pos = TilePos(selectedTilePos.value+selectedTileNormal).toEntityPos;
@@ -400,7 +399,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         }
 
     }
-    
+
     void tick(float dTime) {
         if(runCamDemo) {
             updateCamDemo(dTime);
@@ -446,7 +445,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         auto rad = atan2(dir.Y, dir.X);
         possesAI.setRotation(rad);
     }
-    
+
     //Call to update free-flying camera
     void updateCamera(double dTime) {
         double speed = 10.0;
@@ -459,9 +458,9 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         if(keyMap[SDLK_SPACE]){ camera.axisMove( 0.0, 0.0, speed); }
         if(keyMap[SDLK_LCTRL]){ camera.axisMove( 0.0, 0.0,-speed); }
     }
-    
-    
-    
+
+
+
     int selectedTileBox; //TODO: Implement better way to render selected tile than debug functionality
     void rayPickTile() {
         vec3d start, dir;
@@ -480,41 +479,41 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
             selectedTileBox = addAABB(aabb);
         }
     }
-	
-	
-	
-	void rayPickEntity() {
-		vec3d start, dir;
+
+
+
+    void rayPickEntity() {
+        vec3d start, dir;
         camera.getRayFromScreenCoords(mousecoords, start, dir);
-		double prevDist, dist;
-		entitySelected = false;
-		foreach(entity ; world.getEntities()) {
+        double prevDist, dist;
+        entitySelected = false;
+        foreach(entity ; world.getEntities()) {
             dist = entity.pos.value.getDistanceFromSQ(camera.position);
-			if (entity.aabb.intersectsWithLine(start, dir) && dist>0.5f &&
-                dir.dotProduct(entity.pos.value-camera.position) > 0 &&
-				(!entitySelected || prevDist > dist)) {
-					prevDist = dist;
-					selectedEntity = entity;
-					entitySelected = true;
-			}
-		}
-	}
-	
-	void hoverRay() {
-		rayPickTile();
-		rayPickEntity();
-		if (entitySelected && 
-			selectedEntity.pos.value.getDistanceFromSQ(camera.position) <
-			selectedTilePos.toUnitPos().value.getDistanceFromSQ(camera.position)) { // fulhaxxs
-				tileSelected = false;
-			}
+            if (entity.aabb.intersectsWithLine(start, dir) && dist>0.5f &&
+                    dir.dotProduct(entity.pos.value-camera.position) > 0 &&
+                    (!entitySelected || prevDist > dist)) {
+                prevDist = dist;
+                selectedEntity = entity;
+                entitySelected = true;
+            }
+        }
+    }
+
+    void hoverRay() {
+        rayPickTile();
+        rayPickEntity();
+        if (entitySelected && 
+                selectedEntity.pos.value.getDistanceFromSQ(camera.position) <
+                selectedTilePos.toUnitPos().value.getDistanceFromSQ(camera.position)) { // fulhaxxs
+            tileSelected = false;
+        }
         else {
             entitySelected = false;
         }
-	}
-    
-    
-    
+    }
+
+
+
 }
 
 

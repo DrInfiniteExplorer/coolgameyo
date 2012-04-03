@@ -56,6 +56,10 @@ struct Path {
         //auto a = array(map!(derp)(path));
         return Value(array(map!derp(path)));
     }
+
+    bool empty() const @property {
+        return path.empty;
+    }
 }
 
 enum maxPathTicks = 35;
@@ -80,11 +84,12 @@ final class PathModule : Module {
             toRemoveIndices ~= activeStatesIndex;
 
             assert (s.finished, "s.finished");
+            pe
             finishedPaths[s.id] = s.result;
         }
     }
 
-    PathID findPath(UnitPos from, UnitPos to) {
+    PathID findPath(UnitPos[] from, UnitPos[] to) {
         synchronized(this) {
             auto ret = PathID(nextIDNum++);
             activeStates ~= PathFindState(ret, from, to);
@@ -115,8 +120,8 @@ final class PathModule : Module {
         Value serializeActiveStates() {
             Value derp(PathFindState state) {
                 return Value([
-                    "from" : encode(state.from.value),
-                    "goal" : encode(state.goal.value),
+                    "from" : encode(array(map!(a => a.value)(state.from))),
+                    "goal" : encode(array(map!(a => a.value)(state.goal))),
                     ]);
             }
             return Value(array(map!derp(activeStates[])));            
@@ -188,8 +193,8 @@ static struct PathFindState {
     bool finished;
     Path result;
 
-    UnitPos from;
-    UnitPos goal;
+    UnitPos[] from;
+    UnitPos[] goal;
 
     TilePos[TilePos] cameFrom;
     TilePos[TilePos] wentTo;
@@ -205,14 +210,12 @@ static struct PathFindState {
 
     int tick_count;
 
-    this(PathID id_, UnitPos from_, UnitPos goal_) {
+    this(PathID id_, UnitPos[] from_, UnitPos[] goal_) {
 
         id = id_;
-        from = from_;
-        goal = goal_;
+        from = from_.dup;
+        goal = goal_.dup;
         
-        msg("goal = ", goal.tilePos);
-
         closed = new Set;
         openf = new Set;
         openb = new Set;
@@ -220,12 +223,22 @@ static struct PathFindState {
         openf.insert(from);
         openb.insert(goal);
 
-        g_score[from] = 0;
-        g_score[goal] = 0;
-        f_score[from] = estimateBetween(from, goal);
-        f_score[goal] = estimateBetween(from, goal);
-        boxes[from] = addAABB(from.getAABB(), vec3f(1,0,0));
-        boxes[goal] = addAABB(goal.getAABB(), vec3f(1,0,0));
+        foreach (p; chain(from, goal)) {
+            g_score[p] = 0;
+        }
+
+        // NOT GOOD:
+        foreach (f; from) {
+            f_score[f] = estimateBetween(f, goal[0]);
+        }
+        foreach (g; goal) {
+            f_score[g] = estimateBetween(from[0], g);
+        }
+
+        foreach (p; chain(from, goal)) {
+            boxes[p] = addAABB(p.getAABB(), vec3f(1,0,0));
+            boxes[p] = addAABB(p.getAABB(), vec3f(1,0,0));
+        }
     }
 
     bool tick(World world) {
@@ -300,10 +313,10 @@ static struct PathFindState {
             if (is_new || new_g < g_score[y]) {
                 g_score[y] = new_g;
                 static if (fwd) {
-                    f_score[y] = new_g + estimateBetween(y, goal);
+                    f_score[y] = new_g + estimateBetween(y, goal[0]);
                     cameFrom[y] = x;
                 } else {
-                    f_score[y] = new_g + estimateBetween(from, y);
+                    f_score[y] = new_g + estimateBetween(from[0], y);
                     wentTo[y] = x;
                 }
 
@@ -358,19 +371,19 @@ static struct PathFindState {
             p ~= tp.toUnitPos();
         }
 
-        while (goal.tilePos != y) {
+        while (!canFind(map!(a=>a.tilePos)(goal), y)) {
             y = wentTo[y];
             push(y);
         }
         
-        p ~= goal;
+        //p ~= goal;
 
         //std.algorithm.reverse(p); bug/shit/whatever
         foreach (i; 0 .. p.length / 2) {
             swap(p[i], p[$-1-i]);
         }
 
-        while (from.tilePos != x) {
+        while (!canFind(map!(a=>a.tilePos)(from), x)) {
             push(x);
             x = cameFrom[x];
         }

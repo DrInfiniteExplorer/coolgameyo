@@ -28,6 +28,8 @@ import scene.scenemanager;
 
 
 import ai.patrolai;
+import ai.test;
+
 import clan;
 import heightsheets.heightsheets;
 import json;
@@ -230,7 +232,7 @@ class Game{
         //auto goal = UnitPos(u.pos.value + vec3d(-30, 0, 0));
         auto goal = uu.pos;
         //NO AI FOR NO PATHABLENESS WITH NEW RANDOMMAPNESS
-        u.ai = new PatrolAI(u, goal, pathModule);
+        u.ai = new TestAI(u);
         goal.value.Z += 1;
         //addAABB(goal.tilePos.getAABB());
         //u.ai = new DwarfAI(u);

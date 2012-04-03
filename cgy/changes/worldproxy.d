@@ -10,6 +10,7 @@ import world.world;
 import world.worldproxy;
 import changes.changes;
 import changes.changelist;
+import clan;
 
 import inventory;
 
@@ -59,6 +60,8 @@ final class WorldChangeListProxy : WorldProxy {
             "removeEntity", RemoveEntity,
             "moveEntity", MoveEntity,
             "activateEntity", ActivateEntity,
+            "getMission", GetMission,
+            "designateMine", DesignateMine,
             );
 
     void pickupEntity(Entity e, Unit u) {

@@ -5,6 +5,7 @@ import entities.entity;
 import pos;
 import world.world;
 import changes.changes;
+import clan;
 
 interface WorldProxy {
     World unsafeGetWorld();
@@ -27,6 +28,9 @@ interface WorldProxy {
     void pickupEntity(Entity e, Unit u);
     void depositEntity(Entity e, Unit u, Entity target);
     void activateEntity(Unit u, Entity e);
+
+    void getMission(Unit u);
+    void designateMine(Clan clan, TilePos tp);
 
     void addCustomChange(CustomChange c);
 

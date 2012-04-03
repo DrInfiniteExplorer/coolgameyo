@@ -66,7 +66,7 @@ private void workerFun(shared Scheduler ssched, int id) {
     setThreadName("Fun-worker thread");
 
 
-    WorldChangeListProxy proxy = new WorldChangeListProxy;
+    auto proxy = new WorldChangeListProxy;
     Task task;
 
     try {

@@ -17,6 +17,8 @@ import util.rangefromto;
 import world.world;
 import world.worldproxy;
 
+import modules.path;
+
 class FPSControlAI : UnitAI, CustomChange {
     Unit unit;
 
@@ -191,8 +193,12 @@ class FPSControlAI : UnitAI, CustomChange {
     //How/what to do when networked? Other clients will want to know where it is positioned.
     //Probably send information like "Unit X is player-controlled" to set NetworkControlledAI
     //which'll work kina like this one, i suppose.
-    override int tick(WorldProxy world){
+    override int tick(WorldProxy world, PathModule p) {
         world.addCustomChange(this);
+        
+        foreach (tilePos, tile; tilesToChange) {
+            world.designateMine(unit.clan, tilePos);
+        }
         return 0;
     }
     
@@ -206,11 +212,10 @@ class FPSControlAI : UnitAI, CustomChange {
     void apply(World world) {
         world.unsafeMoveUnit(unit, UnitPos(*unitPos), 1);
         
+        return;
         foreach(tilePos, tile ; tilesToChange) {
             world.unsafeSetTile(tilePos, tile);
         }
         tilesToChange = null;
-
     }
-
 }

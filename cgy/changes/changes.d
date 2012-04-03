@@ -6,6 +6,8 @@ import unit;
 import entities.entity;
 import inventory;
 
+import clan;
+
 struct SetTile {
     TilePos tp;
     Tile t;
@@ -119,6 +121,24 @@ struct ActivateEntity {
         assert(0);
     }
 }
+
+struct GetMission {
+    Unit unit;
+
+    void apply(World world) {
+        unit.mission = unit.clan.unsafeGetMission();
+    }
+}
+
+struct DesignateMine {
+    Clan clan;
+    TilePos pos;
+
+    void apply(World world) {
+        clan.unsafeDesignateMinePos(pos);
+    }
+}
+
 
 // Only implemented by experimental or semi-hacky classes.
 // List of such classes:

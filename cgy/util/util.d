@@ -77,14 +77,15 @@ unittest {
 }
 
 T[6] neighbors(T)(T t) {
+    alias typeof(t.value) V;
     T[6] ret;
     ret[] = t;
-    ret[0].value += vec3i(0,0,1);
-    ret[1].value -= vec3i(0,0,1);
-    ret[2].value += vec3i(0,1,0);
-    ret[3].value -= vec3i(0,1,0);
-    ret[4].value += vec3i(1,0,0);
-    ret[5].value -= vec3i(1,0,0);
+    ret[0].value += V(0,0,1);
+    ret[1].value -= V(0,0,1);
+    ret[2].value += V(0,1,0);
+    ret[3].value -= V(0,1,0);
+    ret[4].value += V(1,0,0);
+    ret[5].value -= V(1,0,0);
     return ret;
 }
 
@@ -209,4 +210,12 @@ body {
         val = max;
     }
     return val;
+}
+
+
+
+void lazyInit(T, Us...)(ref T t, Us us) {
+    if (t is null) {
+        t = new T(us);
+    }
 }
