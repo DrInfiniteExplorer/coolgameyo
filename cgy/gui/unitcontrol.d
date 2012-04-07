@@ -382,7 +382,6 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         } else if (m.left && tileSelected) {
             copiedTile = selectedTile;
             //Remove transparensiness sometime!!
-            enum airTile = Tile(TileTypeAir, TileFlags.valid);
 
             possesAI.changeTile(selectedTilePos, airTile);
         } else if (m.right && tileSelected) {

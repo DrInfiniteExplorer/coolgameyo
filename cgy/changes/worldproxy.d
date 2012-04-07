@@ -39,7 +39,8 @@ final class WorldChangeListProxy : WorldProxy {
     World world;
     ChangeList changeList;
 
-    this() {
+    this(World w) {
+        world = w;
         changeList = new ChangeList;
     }
 

@@ -12,6 +12,7 @@ import mission;
 
 import util.filesystem;
 import util.array;
+import util.util;
 
 import world.world;
 import world.activity;
@@ -54,7 +55,7 @@ final class Clan {
 
     void addUnit(Unit unit) {
         unit.clan = this;
-        clanMembers[unit.unitId] = unit;
+        clanMembers[unit.id] = unit;
         auto centerSectorNum = unit.pos.getSectorNum();
         increaseActivity(centerSectorNum);
         world.addUnit(unit);

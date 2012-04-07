@@ -175,17 +175,17 @@ final class SceneManager {
 
 
     UnitProxy getProxy(Unit unit) {
-        if(unit.unitId in unitProxies) {
-            return unitProxies[unit.unitId];
+        if(unit.id in unitProxies) {
+            return unitProxies[unit.id];
         }
         auto proxy = new UnitProxy(this, unit);
-        unitProxies[unit.unitId] = proxy;
+        unitProxies[unit.id] = proxy;
         return proxy;
     }
     void removeProxy(Unit unit) {
-        UnitProxy* proxy = unit.unitId in unitProxies;
+        UnitProxy* proxy = unit.id in unitProxies;
         if(proxy is null) return;
-        unitProxies.remove(unit.unitId);
+        unitProxies.remove(unit.id);
         proxy.destroy();
     }
 

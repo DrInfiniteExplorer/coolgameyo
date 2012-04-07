@@ -199,6 +199,7 @@ class FPSControlAI : UnitAI, CustomChange {
         foreach (tilePos, tile; tilesToChange) {
             world.designateMine(unit.clan, tilePos);
         }
+        tilesToChange = null;
         return 0;
     }
     

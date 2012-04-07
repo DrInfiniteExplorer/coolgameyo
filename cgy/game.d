@@ -185,61 +185,24 @@ class Game{
 
         auto clan = newClan(world);
 
-        auto xy = TileXYPos(vec2i(3,-20));
-        xy.value += halfWorldSize_xy;
-        auto u = newUnit();
-        u.pos = topOfTheWorld(xy);
-        u.type = world.unitTypeManager.byName("dwarf");
-        //u.pos.value.Z += 1;
-
-        clan.addUnit(u);
-
-        /*
-        foreach(idx ; 0 .. 1000) {
-            float ratio = cast(float)idx / 1000.0f;
-            float x = sin(ratio * 2 * 2 * PI);
-            float y = cos(ratio * 2 * 2 * PI);
-            float dist = 50 * ratio;
-            x *= dist;
-            y *= dist;
-            auto xy = TileXYPos(vec2i(cast(int)x, cast(int)y));
-            xy.value += halfWorldSize_xy;
+        Unit addUnitAtRelativePos(int x, int y) {
+            auto xy = TileXYPos(vec2i(x,y) + halfWorldSize_xy);
             auto u = newUnit();
             u.pos = topOfTheWorld(xy);
-            u.pos.value.X = x + halfWorldSize_xy.X;
-            u.pos.value.Y = y + halfWorldSize_xy.Y;
             u.type = world.unitTypeManager.byName("dwarf");
             clan.addUnit(u);
-
+            return u;
         }
-        */
 
+        auto u = addUnitAtRelativePos(3,-20);
+        auto uu = addUnitAtRelativePos(3,3);
 
-        //world.addUnit(u);
-
-        msg("u.pos == ", u.pos);
-
-        auto uu = newUnit();
-        auto xyy = TileXYPos(vec2i(3,3));
-        xyy.value += halfWorldSize_xy;
-        uu.pos = topOfTheWorld(xyy);
-        uu.type = world.unitTypeManager.byName("dwarf");
-
-        clan.addUnit(uu);
-
-
-        //world.addUnit(uu);
-        //auto goal = UnitPos(u.pos.value + vec3d(-30, 0, 0));
-        auto goal = uu.pos;
-        //NO AI FOR NO PATHABLENESS WITH NEW RANDOMMAPNESS
         u.ai = new TestAI(u);
-        goal.value.Z += 1;
-        //addAABB(goal.tilePos.getAABB());
-        //u.ai = new DwarfAI(u);
 
         activeUnit = uu;
 
 
+        // following is retarded code, ETC :d
         EntityPos topOfTheWorld2(TileXYPos xy) {
             auto top = world.getTopTilePos(xy);
             msg("top: ", top);
@@ -250,7 +213,7 @@ class Game{
             return ret;
         }
 
-        xy = TileXYPos(vec2i(1,5));
+        auto xy = TileXYPos(vec2i(1,5));
         xy.value += halfWorldSize_xy;
         auto o = newEntity();
         o.pos = topOfTheWorld2(xy);
@@ -371,7 +334,7 @@ class Game{
             //private TileTypeManager     tileTypeManager;    
 
             //private Unit               activeUnit; //TODO: Find out when this unit dies, and tell people.
-            auto activeUnit = Value(activeUnit.unitId);
+            auto activeUnit = Value(activeUnit.id);
             auto unitCount = Value(g_UnitCount);
             auto jsonRoot = Value([
                     "activeUnit" : activeUnit,

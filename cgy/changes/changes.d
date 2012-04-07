@@ -8,6 +8,8 @@ import inventory;
 
 import clan;
 
+import util.util;
+
 struct SetTile {
     TilePos tp;
     Tile t;
@@ -21,14 +23,20 @@ struct DamageTile {
     int damage;
 
     void apply(World world) {
-        assert(0);
+        auto t = world.getTile(tp);
+        if (t.hitpoints <= damage) {
+            world.unsafeRemoveTile(tp);
+        } else {
+            t.hitpoints -= damage;
+            world.unsafeSetTile(tp, t);
+        }
     }
 }
 struct RemoveTile {
     TilePos tp;
 
     void apply(World world) {
-        assert(0);
+        world.unsafeRemoveTile(tp);
     }
 }
 

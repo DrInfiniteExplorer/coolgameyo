@@ -23,10 +23,10 @@ class AIModule : Module, WorldListener {
         Unit unit;
         int restTime;
     }
-    
+
     static struct UnitStateJson {
         this(UnitState state) {
-            unitId = state.unit.unitId;
+            unitId = state.unit.id;
             restTime = state.restTime;
         }
         uint unitId;
@@ -56,17 +56,17 @@ class AIModule : Module, WorldListener {
         UnitStateJson data = UnitStateJson(state);
         return encode(data);
     }
-    
+
     override void serializeModule() { //module interface
         Value[] jsonStates;
-        foreach( state ; states ) {
+        foreach (state; states) {
             jsonStates ~= serializeState(state);
         }
         auto jsonRoot = Value(jsonStates);
-	    auto jsonString = json.prettifyJSON(jsonRoot);
+        auto jsonString = json.prettifyJSON(jsonRoot);
         mkdir("saves/current/modules/ai");
         std.file.write("saves/current/modules/ai/states.json", jsonString);
-        
+
     }
     override void deserializeModule() { //module interface
         BREAKPOINT;
@@ -98,8 +98,8 @@ class AIModule : Module, WorldListener {
     override void onAddUnit(SectorNum num, Unit unit) {
         addUnit(unit);
     }
-	void onAddEntity(SectorNum, Entity) { }
-	
+    void onAddEntity(SectorNum, Entity) { }
+
     override void onSectorLoad(SectorNum num) {
     }
     override void onSectorUnload(SectorNum num) {

@@ -24,8 +24,11 @@ version (Posix) {
 
 int workerID = -1; // thread local, set by scheduler
 
+__gshared int TICK_LOL;
+
 void msg(string file=__FILE__, int line=__LINE__, T...)(T t) {
-    writeln(workerID, ": ", file, "(", line, "): ", t);
+    writeln(TICK_LOL % 100, ":", workerID, ": ", 
+            file, "(", line, "): ", t);
 }
 
 long utime() {

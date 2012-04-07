@@ -174,7 +174,7 @@ class Sector {
         }
         file.close();
         
-        Value jsonRoot = encode(array(map!q{a.unitId}(array(units))));
+        Value jsonRoot = encode(array(map!q{a.id}(array(units))));
 	    auto jsonString = json.prettifyJSON(jsonRoot);
         std.file.write(folder ~ "units.json", jsonString);
 

@@ -49,7 +49,7 @@ class UnitProxy {
         auto derp = type.model.meshTextures;
         //If a unit has the same amount of textures for each mesh, will always select
         //a 'matching pair'. Maybe think about this, and be smart about it, in the future.
-        auto texturePath = "models/" ~ derp[unit.unitId % derp.length];
+        auto texturePath = "models/" ~ derp[unit.id % derp.length];
         auto texIdx = bodyMesh.setTexture(sceneManager, texturePath);
 
         bodyInstanceData.texIdx = texIdx;

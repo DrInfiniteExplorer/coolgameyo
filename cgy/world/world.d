@@ -520,7 +520,7 @@ class World {
 
     Unit getUnitFromId(uint id) {
         foreach(unit ; getUnits()) {
-            if (unit.unitId == id) {
+            if (unit.id == id) {
                 return unit;
             }
         }
@@ -577,8 +577,8 @@ class World {
     void update(Scheduler scheduler){
         floodFillSome();
 
-        synchronized(heightmapTasks) { //Not needed, since only thread working now. Anyway.. :)
-            foreach(state ; heightmapTasks.list) {
+        synchronized (heightmapTasks) { //Not needed, since only thread working now. Anyway.. :)
+            foreach (state; heightmapTasks.list) {
                 //Trixy trick below; if we dont do this, the value num will be shared by all pushed tasks.
                 (HeightmapTaskState state){
                     scheduler.push(asyncTask(
@@ -586,7 +586,7 @@ class World {
                                 generateHeightmapTaskFunc(state);
                                 }));
                 }(state);
-            }        
+            }
         }
 
         //MOVE UNITS
@@ -762,6 +762,10 @@ class World {
         block.setTileLight(tilePos, newVal, isSunLight);
 
         //notifyTileChange(tilePos);
+    }
+
+    void unsafeRemoveTile(TilePos pos) {
+        unsafeSetTile(pos, airTile);
     }
 
     void unsafeSetTile(TilePos pos, Tile tile) {

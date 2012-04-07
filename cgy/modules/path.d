@@ -70,36 +70,30 @@ final class PathModule : Module {
 
     Path[PathID] finishedPaths;
 
-    Array!PathFindState activeStates;
-    Array!size_t toRemoveIndices;
+    PathFindState[PathID] activeStates;
 
     this() {
-        activeStates = new Array!PathFindState;
-        toRemoveIndices = new Array!size_t;
     }
 
-    void finishPath(size_t activeStatesIndex) {
+    void finishPath(PathID id) {
         synchronized(this) {
-            msg("Done here 2 ", &activeStates[activeStatesIndex]);
-            auto s = activeStates[activeStatesIndex];
-            toRemoveIndices ~= activeStatesIndex;
-
-            BREAK_IF(!s.finished);
-            assert (s.finished, "s.finished");
-            finishedPaths[s.id] = s.result;
+            assert (activeStates[id].finished, "finished");
+            auto s = activeStates[id].result;
+            activeStates.remove(id);
+            finishedPaths[id] = s;
         }
     }
 
     PathID findPath(UnitPos[] from, UnitPos[] to) {
         synchronized(this) {
             auto ret = PathID(nextIDNum++);
-            activeStates ~= PathFindState(ret, from, to);
+            activeStates[ret] = PathFindState(from, to);
             return ret;
         }
     }
 
     bool pollPath(PathID id, out Path path) {
-        synchronized(this) {
+        synchronized (this) {
             if (id !in finishedPaths) return false;
 
             path = finishedPaths[id];
@@ -125,15 +119,13 @@ final class PathModule : Module {
                     "goal" : encode(array(map!(a => a.value)(state.goal))),
                     ]);
             }
-            return Value(array(map!derp(activeStates[])));            
+            return Value(array(map!derp(activeStates.values[])));            
         }
         
         Value[string] values;
         values["nextIdNum"] = Value(nextIDNum);
         values["finishedPaths"] = serializeFinishedPaths();
         values["activeStates"] = serializeActiveStates();
-        values["toRemoveIndices"] = Value(array(map!((uint a){
-                        return Value(a);})(toRemoveIndices[])));
         Value jsonRoot = Value(values);
 	    auto jsonString = json.prettifyJSON(jsonRoot);
         
@@ -147,41 +139,22 @@ final class PathModule : Module {
 
     override void update(World world, Scheduler scheduler) { //Module interface
         synchronized(this) {
-            removeFinished();
+            size_t i = 0;
+            foreach (id, ref state; activeStates) {
 
-            foreach (i, ref state; activeStates[][0 .. min($, maxPathTicks)]) {
+                i += 1;
+                if (i >= maxPathTicks) { break; }
+
                 scheduler.push(
                         asyncTask(
-                            ((size_t i, PathFindState* state) {
-                                 return {
-                                     if (state.tick(world)) {
-                                         assert(state.finished);
-                                         BREAK_IF(!state.finished);
-                                             //msg("finishing state ", i);
-                                         msg("DONE LOAL ", state, " ", &activeStates[i]);
-                                         finishPath(i);
-                                     }
-                                 };
-                             })(i, &state)));
+                            ((id, state) => {
+                                 if (state.tick(world)) {
+                                     assert(state.finished);
+                                     finishPath(id);
+                                 }
+                             })(id, &state)));
             }
         }
-    }
-
-    void removeFinished() {
-        if (toRemoveIndices.length == 0) return;
-
-        size_t r;
-        size_t i;
-        foreach (j, state; activeStates) {
-            if (j == toRemoveIndices[r]) {
-                r += 1;
-            } else {
-                activeStates[i] = state;
-                i += 1;
-            }
-        }
-        activeStates.removeFromEnd(toRemoveIndices.length);
-        toRemoveIndices.reset();
     }
 }
 
@@ -190,8 +163,6 @@ enum stateTickCount = 10;
 
 
 static struct PathFindState {
-    PathID id;
-
     alias RedBlackTree!(TilePos, q{a.value < b.value}) Set; 
 
     bool finished;
@@ -214,9 +185,8 @@ static struct PathFindState {
 
     int tick_count;
 
-    this(PathID id_, UnitPos[] from_, UnitPos[] goal_) {
+    this(UnitPos[] from_, UnitPos[] goal_) {
 
-        id = id_;
         from = from_.dup;
         goal = goal_.dup;
         
@@ -276,7 +246,6 @@ static struct PathFindState {
         tick_count += 1;
 
         if (open.empty) { // we failed to find a path
-            msg("failed to find a path; open is empty");
             finished = true;
             return;
         }
@@ -299,7 +268,6 @@ static struct PathFindState {
         f_score.remove(x);
 
         foreach (y; availibleNeighbors!fwd(world, x)) {
-            // msg("y = ", y);
             if (y in closed) continue;
 
             static if (fwd) {

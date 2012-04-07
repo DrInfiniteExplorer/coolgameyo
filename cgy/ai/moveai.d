@@ -49,7 +49,7 @@ struct MoveAI {
         assert (!finished, "Tried to tick move ai state which was finished");
         if (!hasPath) {
             if (!pathfinder.pollPath(p, path)) {
-                return 1;
+                return 0;
             }
             if (path.empty) {
                 finished = true;
@@ -57,7 +57,7 @@ struct MoveAI {
                 return 1;
             }
             hasPath = true;
-        } 
+        }
 
         auto next = path.path.back;
 

@@ -58,7 +58,9 @@ private Task syncTask() {
     return Task(true, true, null);
 }
 
-private void workerFun(shared Scheduler ssched, int id) {
+private void workerFun(shared Scheduler ssched,
+                       shared WorldChangeListProxy sproxy,
+                       int id) {
     workerID = id;
     bool should_continue = true;
     thread_attachThis();
@@ -66,7 +68,7 @@ private void workerFun(shared Scheduler ssched, int id) {
     setThreadName("Fun-worker thread");
 
 
-    auto proxy = new WorldChangeListProxy;
+    auto proxy = cast(WorldChangeListProxy)sproxy;
     Task task;
 
     try {
@@ -92,7 +94,7 @@ private void workerFun(shared Scheduler ssched, int id) {
 }
 
 final class Scheduler {
-    enum State { update, sync, forcedAsync, async, wait }
+    enum State { update, sync, forcedAsync, async, wait, apply }
     enum ASYNC_COUNT = 23;
 
     bool shouldSerialize;
@@ -108,6 +110,7 @@ final class Scheduler {
 
     State state;
 
+    WorldChangeListProxy[] proxies;
     Tid[] workers;
 
     int activeWorkers;
@@ -138,13 +141,17 @@ final class Scheduler {
         activeWorkers = workerCount;
 
         workers ~= thisTid();
+        auto myProxy = new WorldChangeListProxy(world);
+        proxies ~= myProxy;
         foreach (x; 1 .. workerCount) {
-            workers ~= spawn(&workerFun, cast(shared)this, x);
+            auto p = new WorldChangeListProxy(world);
+            workers ~= spawn(&workerFun, cast(shared)this, cast(shared)p, x);
+            proxies ~= p;
         }
 
         syncTime = utime();
         tickWatch.start();
-        workerFun(cast(shared)this, 0);
+        workerFun(cast(shared)this, cast(shared)myProxy, 0);
     }
 
     void exit() {
@@ -211,6 +218,53 @@ final class Scheduler {
         }
     }
 
+    private void suspendMe(ref StopWatch sw) {
+        sw.stop();
+
+        activeWorkers -= 1;
+        if (activeWorkers > 0) {
+            cond.wait();
+        } else {
+            auto timeLeft = nextSync - utime();
+            if (timeLeft > 0) {
+                Thread.sleep(dur!"usecs"(timeLeft));
+            }
+        }
+        activeWorkers += 1;
+        
+        sw.start();
+    }
+
+    private bool alone() {
+        return activeWorkers == 1;
+    }
+
+    void wakeWorkers() {
+        cond.notifyAll();
+    }
+
+    void doUpdateShit() {
+        foreach (proxy; proxies) {
+            proxy.changeList.apply(world);
+        }
+
+        world.update(this);
+        foreach (mod; modules) {
+            mod.update(world, this);
+        }
+
+        tickWatch.stop();
+        g_Statistics.addTPS(tickWatch.peek().usecs);
+        tickWatch.reset();
+        tickWatch.start();
+
+        if (shouldSerialize) {
+            serialize();
+        }
+    }
+
+
+    // this is so messy :(
     private bool getTask_impl(ref Task task, ChangeList changeList,
             ref StopWatch sw) {
 
@@ -218,15 +272,10 @@ final class Scheduler {
             default:
                 assert (0);
             case State.wait:
-                activeWorkers -= 1;
 
-                if (activeWorkers > 0) {
+                if (!alone()) {
 
-                    sw.stop();
-
-                    cond.wait();
-
-                    sw.start();
+                    suspendMe(sw);
 
                     if (exiting) {
                         bool pred(Tid t) {
@@ -237,42 +286,29 @@ final class Scheduler {
                     }
                     return getTask_impl(task, changeList, sw);
                 }
-                assert (activeWorkers == 0, 
-                        text("activeWorkers == ", activeWorkers, " != 0"));
-                auto timeLeft = nextSync - utime();
-                if (timeLeft > 0) {
-                    sw.stop();
-                    Thread.sleep(dur!"usecs"(timeLeft));
-                    sw.start();
-                }
-                assert (activeWorkers == 0, 
-                        text("activeWorkers == ", activeWorkers, " != 0"));
+                assert (alone());
+
+                suspendMe(sw);
+
+                assert (alone());
+
                 state = State.update;
+
                 return getTask_impl(task, changeList, sw);
 
             case State.update:
-                BREAK_IF(activeWorkers != 0);
-                assert (activeWorkers == 0, 
-                        text("activeWorkers == ", activeWorkers, " != 0"));
-                activeWorkers = workers.length;
-                cond.notifyAll();
+
+                assert (alone());
 
                 syncTime = utime();
-                changeList.apply(world);
-                world.update(this);
-                foreach (mod; modules) {
-                    mod.update(world, this);
-                }
-                tickWatch.stop();
-                g_Statistics.addTPS(tickWatch.peek().usecs);
-                tickWatch.reset();
-                tickWatch.start();
 
-                if (shouldSerialize) {
-                    serialize();
-                }
+                doUpdateShit();
 
-                if(exiting){
+                wakeWorkers();
+
+                TICK_LOL += 1;
+
+                if (exiting) {
                     workers.length = 0;
                     return false;
                 }

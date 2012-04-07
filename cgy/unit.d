@@ -50,11 +50,12 @@ struct Demand {
 
 Unit newUnit() {
     auto unit = new Unit;
-    unit.unitId = g_UnitCount;
+    unit.id = g_UnitCount;
     g_UnitCount++;
     unit.inventory = new Inventory();
     return unit;
 }
+
 
 final class Unit {
 
@@ -63,7 +64,7 @@ final class Unit {
     }
 
     struct UnitData {
-        uint unitId;
+        uint id;
         Demand hunger = Demand(100, 100, 10);
         Demand thirst = Demand(100, 100, 20);
         UnitPos pos;

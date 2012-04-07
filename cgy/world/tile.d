@@ -18,6 +18,8 @@ enum TileFlags : ushort {
     valid       = 1 << 15,
 }
 
+enum airTile = Tile(TileTypeAir, TileFlags.valid);
+
 struct Tile {
     ushort type;
     TileFlags flags = TileFlags.none;
@@ -32,11 +34,12 @@ struct Tile {
 
     static assert(2^^4 -1== MaxLightStrength);
 
+    ubyte hitpoints;
+    ubyte derppoints;
     mixin(bitfields!(
         ubyte, "lightVal",           4,
         ubyte, "sunLightVal",        4,
-        ubyte, "hitpoints",          8,
-        uint, "restofderpystuff",   16 ));
+        uint, "restofderpystuff",    8 ));
 
 
     byte lightValue() const @property { return lightVal; }
