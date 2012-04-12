@@ -5,14 +5,14 @@
   <link>0</link>
   <lib>0</lib>
   <multiobj>0</multiobj>
-  <singleFileCompilation>2</singleFileCompilation>
+  <singleFileCompilation>0</singleFileCompilation>
   <oneobj>0</oneobj>
   <trace>0</trace>
   <quiet>0</quiet>
   <verbose>0</verbose>
   <vtls>0</vtls>
   <symdebug>1</symdebug>
-  <optimize>0</optimize>
+  <optimize>1</optimize>
   <cpu>0</cpu>
   <isX86_64>0</isX86_64>
   <isLinux>0</isLinux>
@@ -567,6 +567,7 @@ d:\D\ulnb0333\ulink.exe $(IntDir)\$(TargetName).obj gdi32.lib win32.lib advapi32
   </Folder>
   <Folder name="worldgen">
    <File path="worldgen\newgen.d" />
+   <File path="worldgen\voronoi.d" />
   </Folder>
   <File path="clan.d" />
   <File path="clientnetworking.d" />

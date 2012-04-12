@@ -218,3 +218,15 @@ template Time(const char[] WhenDone) {
     }";
     
 }
+
+template MeasureTime(const char[] msg, const bool ms = true) {
+    const char[] MeasureTime = 
+        "StopWatch sw;    
+        sw.start();
+        scope(exit) {
+            sw.stop();
+            auto usecs = sw.peek().usecs;
+            msg(\"" ~ msg ~ "\", "~ (ms?"usecs/1000":"usecs")~", " ~ (ms?"\" ms\"":"\" usecs\"")  ~ ");
+        }";
+
+}

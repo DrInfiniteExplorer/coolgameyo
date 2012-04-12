@@ -16,7 +16,7 @@ import gui.optionmenu;
 import gui.randommenu;
 import gui.splineedit;
 import gui.printscreenmenu;
-import gui.worldview;
+//import gui.worldview;
 import gui.unitcontrol;
 import settings;
 import util.util;
@@ -126,7 +126,7 @@ class MainMenu : GuiElementWindow {
     }
     void onWorldView() {
         setVisible(false);
-        new WorldViewMenu(this);
+        //new WorldViewMenu(this);
     }
     void onColorSplineEdit() {
         setVisible(false);

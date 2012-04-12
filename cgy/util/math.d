@@ -113,3 +113,38 @@ vector2d!(A) posModV(A)(const vector2d!(A) wap, const A b){
     return vector2d!A(posMod(wap.X, b), posMod(wap.Y,b));
 }
 
+vector2d!T CircumCircle(T)(vector2d!T a, vector2d!T b, vector2d!T c) {
+    T tx = (a.X + c.X)/2;
+    T ty = (a.Y + c.Y)/2;
+
+    T vx = (b.X + c.X)/2;
+    T vy = (b.Y + c.Y)/2;
+
+    T ux,uy,wx,wy;
+
+    if(a.X == c.X)
+    {
+        ux = 1;
+        uy = 0;
+    }
+    else
+    {
+        ux = (c.Y - a.Y)/(a.X - c.X);
+        uy = 1;
+    }
+
+    if(b.X == c.X)
+    {
+        wx = -1;
+        wy = 0;
+    }
+    else
+    {
+        wx = (b.Y - c.Y)/(b.X - c.X);
+        wy = -1;
+    }
+
+    T alpha = (wy*(vx-tx)-wx*(vy - ty))/(ux*wy-wx*uy);
+
+    return vector2d!T(tx+alpha*ux,ty+alpha*uy);
+}

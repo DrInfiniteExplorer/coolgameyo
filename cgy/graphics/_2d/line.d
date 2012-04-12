@@ -1,6 +1,7 @@
 
 module graphics._2d.line;
 
+import std.algorithm;
 import std.conv;
 import std.exception;
 import std.stdio;
@@ -49,7 +50,39 @@ struct Lines{
             vertices[idx].pos = start + x * to!(double)(idx) * dx + y * dy;
         }
     }
-    
+
+    void setLines(Recti r, vec2d[] points, vec3f color, vec2d _min = vec2d(0), vec2d _max = vec2d(0)) {
+        enum offset = 0;
+        mixin(fixRect);
+        double minX = double.max;
+        double maxX = -minX;
+        double minY = minX;
+        double maxY = maxX;
+
+        if(_min != _max) {
+            minX = _min.X;
+            maxX = _max.X;
+            minY = _min.Y;
+            maxY = _max.Y;
+        } else {
+            foreach(pt ; points) {
+                minX = min(pt.X, minX);
+                minY = min(pt.Y, minY);
+                maxX = max(pt.X, maxX);
+                maxY = max(pt.Y, maxY);
+            }
+        }
+
+        double width = maxX - minX;
+        double height = maxY - minY;
+        vec2f fix(vec2d pt) {
+            return start + (x+y).mult(pt.convert!float - vec2f(minX, minY)).divide(vec2f(width, height));
+        }
+        foreach(pt ; points) {
+            vertices ~= LineVertex(fix(pt), color);
+        }
+    }
+
     void setColor(vec3f c) {
         foreach(ref v ; vertices) {
             v.color = c;
@@ -117,11 +150,13 @@ class LineShader {
     }
 }
 
-void renderLines(Lines l, vec3f color = vec3f(1.0, 1.0, 1.0)) {
+void renderLines(Lines l, vec3f color = vec3f(float.max)) {
     if (l.vertices.length <= 0) {
         return;
     }
-    l.setColor(color);
+    if(color != vec3f(float.max)) {
+        l.setColor(color);
+    }
     l.renderLines();
 }
 

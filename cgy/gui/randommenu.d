@@ -4,6 +4,7 @@
 
 module gui.randommenu;
 
+import std.algorithm;
 import std.conv;
 
 import main;
@@ -23,41 +24,29 @@ import worldgen.newgen;
 import util.util;
 import util.rect;
 
+import graphics._2d.line;
+import worldgen.voronoi;
+
 auto derp = WorldGenParams.randomSeed.init; //TODO: Why this needed? ;_;
 
 class RandomMenu : GuiElementWindow {
     GuiElement guiSystem;
     MainMenu main;
 
-    GuiElementImage valueImage;
-    GuiElementSimpleGraph!double valueGraph, sliceGraph;
-    
-    ValueSource source;
-    
-    uint seed;
-    double sliceValue = 0.0;
-    
-    enum graphWidth = 16.0;
-    enum pixels = 256;        
-    enum samples = 665;            
+
+    Voronoi voronoi;
+    Lines[] lines;
     
     this(MainMenu m) {
         main = m;
         guiSystem = m.getGuiSystem();
-        seed = derp;
         
         
         super(guiSystem, Rectd(vec2d(0.0, 0.0), vec2d(1, 1)), "Randomness experiment Menu~~~!", false, false);
 
-        valueImage = new GuiElementImage(this, Rectd(0.05, 0.1, 0.6, 0.3), false);
-        valueGraph = new typeof(valueGraph)(this, Rectd(0.05, 0.45, 0.6, 0.10), false);
-        sliceGraph = new typeof(sliceGraph)(this, Rectd(0.05, 0.45, 0.6, 0.10), false);
-        
-        new GuiElementSlider!double(this, Rectd(0.05, 0.8, 0.4, 0.1), sliceValue, 0.0, 10.0, &onSliceSlider);
-
-        new GuiElementButton(this, Rectd(vec2d(0.75, 0.1), vec2d(0.2, 0.10)), "map-vnoise", &onMapVNoise);
-        new GuiElementButton(this, Rectd(vec2d(0.75, 0.25), vec2d(0.2, 0.10)), "perm-vnoise", &onPermVNoise);
-        new GuiElementButton(this, Rectd(vec2d(0.75, 0.40), vec2d(0.2, 0.10)), "perm-gnoise", &onPermGNoise);
+        new GuiElementButton(this, Rectd(vec2d(0.75, 0.1), vec2d(0.2, 0.10)), "VORO-FUCKING-NOI!", &onMapVNoise);
+        new GuiElementButton(this, Rectd(vec2d(0.75, 0.25), vec2d(0.2, 0.10)), "derp", &onPermVNoise);
+        new GuiElementButton(this, Rectd(vec2d(0.75, 0.40), vec2d(0.2, 0.10)), "pred", &onPermGNoise);
         new GuiElementButton(this, Rectd(vec2d(0.75, 0.55), vec2d(0.2, 0.10)), "Back", &onBack);
     }
     
@@ -69,112 +58,100 @@ class RandomMenu : GuiElementWindow {
         main.setVisible(true);
         destroy();
     }    
+
+    override void render() {
+        super.render();
+        foreach(line ; lines) {
+            renderLines(line);
+        }
+    }
     
+    int c = 4;
     void onMapVNoise() {
-        makeNoise!("map", true, true)();
+
+        lines = null;
+        voronoi = new Voronoi(c, c);
+
+        voronoi.cutDiagram(vec2d(-1, -1), vec2d(c+1, c+1));
+
+        c++;
+        enum borderSize = 2;
+        enum dirLength = 0.4;
+        vec2d border = vec2d(borderSize);
+        vec2d[] vertPairs;
+        double minX = double.max;
+        double maxX = -minX;
+        double minY = minX;
+        double maxY = maxX;
+        foreach(vert ; voronoi.vertices) {
+            auto pt = vert.pos;
+            minX = min(pt.X, minX);
+            minY = min(pt.Y, minY);
+            maxX = max(pt.X, maxX);
+            maxY = max(pt.Y, maxY);
+        }
+        minX -= borderSize;
+        minY -= borderSize;
+        maxX += borderSize;
+        maxY += borderSize;
+
+        
+        foreach(edge ; voronoi.edges) {
+            auto a = edge.halfLeft.vertex;
+            auto b = edge.halfRight.vertex;
+            if(a !is null ) {
+                vec2d _b;
+                bool c = true;
+                if(b !is null) {
+                    _b = b.pos;
+                } else {
+                    c = false;
+                    _b = a.pos + edge.dir * dirLength;
+                }
+                auto _a = a.pos;
+                //_a.Y *= -1;
+                //_b.Y *= -1;
+                Lines line;
+                line.setLines(absoluteRect, [_a, _b], c ? vec3f(0.0f) : vec3f(1), vec2d(minX, maxY), vec2d(maxX, minY));
+                lines ~= line;
+            }
+        }
+
+        if(true) {
+            foreach(site ; voronoi.sites) {
+                foreach(he ; site.halfEdges) {
+                    auto a = he.getStartPoint();
+                    auto b = he.getEndPoint();
+                    if(a !is null ) {
+                        vec2d _b;
+                        bool c = true;
+                        if(b !is null) {
+                            _b = b.pos;
+                        } else {
+                            c = false;
+                            _b = a.pos + he.dir * dirLength;
+                        }
+                        auto _a = a.pos;
+                        _a += (site.pos - _a ).normalize() * 0.2;
+                        _b += (site.pos - _b).normalize() * 0.2;
+                        //_a.Y *= -1;
+                        //_b.Y *= -1;
+                        Lines line;
+                        line.setLines(absoluteRect, [_a, _b], c ? vec3f(1, 0, 0) : vec3f(0, 0, 1), vec2d(minX, maxY), vec2d(maxX, minY));
+                        lines ~= line;
+                    }
+                }
+            }
+        }
+
+
     }
     void onPermVNoise() {
-        makeNoise!("permv", true, true)();
     }
     void onPermGNoise() {
-        makeNoise!("permg", true, true)();
     }
     
-    void onSliceSlider(double value) {
-        sliceValue = value;
-        fill!true();
-    }
-    
-    void makeNoise(string type, bool CosInter, bool ModMult)() {
-        auto randSource = new RandSourceUniform(seed);
-        static if (type == "map") {
-            auto source = new ValueMap2Dd();
-            source.fill(randSource, samples, samples);
-        } else static if (type == "permv"){
-            alias PermMap!(samples) asd;
-            auto source = new asd(randSource);
-        } else static if (type == "permg"){
-            auto source = new GradientNoise!()(samples, randSource);
-        }
-        
-        static if (type != "permg") {
-            static if (CosInter) {
-                auto vnoise = new CosInterpolation(source);
-            } else {
-                auto vnoise = source;
-            }
-        } else {
-            auto vnoise = source;
-        }
-        
 
-        static if (ModMult) {
-            auto mod = new ModMultAdd!(0.5, 0.5)(vnoise);
-        } else {
-            auto mod = vnoise;
-        }
-        //toImage(mod, 0, 0, 256, 256, 256u, 256u, 0, 1);
-        
-        //auto img = toImage(mod, 0, 0, samples, samples, pixels, pixels, 0, 1);
-        //valueGraph.setSize(graphHeightPx);
-        this.source = mod;
-        fill();
-    }
-    
-    
-    
-    private void fill(bool onlySlice = false)() {
-        if (source is null) {
-            return;
-        }
-        static if (!onlySlice) {
-            double[4] colorize(double t) {
-                auto c = [
-                    vec3d(0.0, 0.0, 0.0),
-                    vec3d(1.0, 0.0, 0.0),
-                    vec3d(1.0, 0.0, 0.0),
-                    vec3d(1.0, 0.0, 0.0),
-                    vec3d(1.0, 0.0, 0.0),
-                    vec3d(0.0, 1.0, 0.0),
-                    vec3d(0.0, 1.0, 0.0),
-                    vec3d(0.0, 1.0, 0.0),
-                    vec3d(0.0, 0.0, 1.0),
-                    vec3d(0.0, 0.0, 1.0),
-                    vec3d(0.0, 0.0, 1.0),
-                    vec3d(0.0, 0.0, 1.0),
-                    ];
-                auto v = CatmullRomSpline(t, c);
-                return [v.X, v.Y, v.Z, 0];
-            }
-            //auto img = toImage(source, 0, 0, graphWidth, graphWidth, pixels, pixels, 0, 1, &colorize);
-            auto img = toImage(source, 0, 0, graphWidth, graphWidth, pixels, pixels, 0, 1, null);
-            valueImage.setImage(img.toGLTex(0));
-            valueImage.setSize(img.imgWidth, img.imgHeight);
-        }
-                
-        double[] graph, slice;
-        graph.length = pixels;
-        slice.length = pixels;
-        foreach(idx; 0 .. graph.length) {
-            double d = graphWidth / to!double(pixels);
-            double dx = d * to!double(idx);
-            static if (!onlySlice) {
-                graph[idx] = source.getValue(dx);
-            }
-            slice[idx] = source.getValue(dx, sliceValue);
-        }
-        
-        static if (!onlySlice) {        
-            auto r = valueGraph.getAbsoluteRect();
-            r.start.Y = valueImage.getAbsoluteRect.getBottom() + 10;
-            valueGraph.setAbsoluteRect(r);
-            valueGraph.setData(graph, 0, 1);
-
-            r.start.Y = r.getBottom() + 10;
-            sliceGraph.setAbsoluteRect(r);
-        }        
-        sliceGraph.setData(slice, 0, 1);
-    }
 }
 
      

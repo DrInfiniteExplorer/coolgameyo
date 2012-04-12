@@ -11,6 +11,7 @@ import util.util;
 
 version(Windows) {
     import win32.windows;
+
     void captureWindowPositions() {
         if(!windowSettings.windowsInitialized) return;
         auto wierd_str = "I_am_a_flying_unicorn_who_farts_glitter";

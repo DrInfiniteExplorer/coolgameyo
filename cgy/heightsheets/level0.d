@@ -60,7 +60,8 @@ final class Level0Sheet {
 
 
     void buildHeightmap(SectorNum center) {
-        mixin(Time!"writeln(\"build+upload:\", usecs/1000);");
+        //mixin(Time!"writeln(\"build+upload:\", usecs/1000);");
+        mixin(MeasureTime!"Build+upload: ");
 
 
         SectorXYNum startSect = SectorXYNum(SectorXYNum(center).value - vec2i(8,8));
@@ -132,7 +133,8 @@ final class Level0Sheet {
 
 
     void upload() {
-        mixin(Time!"writeln(\"upload:\", usecs/1000);");
+        //mixin(Time!"writeln(\"upload:\", usecs/1000);");
+        mixin(MeasureTime!"upload:");
         auto size = usedVertices;
         if(size == 0) return;
         int alloc = -1;

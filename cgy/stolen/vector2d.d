@@ -54,6 +54,10 @@ public:
 	vector2d!(T) opDiv(const T v) const { return vector2d!(T)(cast(T) (X / v), cast(T) (Y / v)); }
 	vector2d!(T) opDivAssign(const T v) { X/=v; Y/=v; return this; }
 
+
+	vector2d!(T) mult(vector2d!T v) const { return vector2d!(T)(cast(T) (X * v.X), cast(T) (Y * v.Y)); }
+	vector2d!(T) divide(vector2d!T v) const { return vector2d!(T)(cast(T) (X / v.X), cast(T) (Y / v.Y)); }
+
     vector2d!T min(const vector2d!T other) const {
         T min(T a, T b) {
             return a < b ? a : b;
