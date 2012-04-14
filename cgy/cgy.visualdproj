@@ -12,7 +12,7 @@
   <verbose>0</verbose>
   <vtls>0</vtls>
   <symdebug>1</symdebug>
-  <optimize>1</optimize>
+  <optimize>0</optimize>
   <cpu>0</cpu>
   <isX86_64>0</isX86_64>
   <isLinux>0</isLinux>
@@ -539,6 +539,12 @@ d:\D\ulnb0333\ulink.exe $(IntDir)\$(TargetName).obj gdi32.lib win32.lib advapi32
    <File path="stolen\vector3d.d" />
   </Folder>
   <Folder name="util">
+   <Folder name="voronoi">
+    <File path="util\voronoi\fortune.d" />
+    <File path="util\voronoi\lattice.d" />
+    <File path="util\voronoi\voronoi.d" />
+    <File path="util\voronoi\wrapper.d" />
+   </Folder>
    <File path="util\array.d" />
    <File path="util\filesystem.d" />
    <File path="util\httpupload.d" />
@@ -567,7 +573,6 @@ d:\D\ulnb0333\ulink.exe $(IntDir)\$(TargetName).obj gdi32.lib win32.lib advapi32
   </Folder>
   <Folder name="worldgen">
    <File path="worldgen\newgen.d" />
-   <File path="worldgen\voronoi.d" />
   </Folder>
   <File path="clan.d" />
   <File path="clientnetworking.d" />

@@ -96,11 +96,13 @@ final class Unit {
     Value toJSON() {
         Value val = encode(unitData);
         if (clan !is null) {
-            val["clanId"] = Value(clan.clanId);
+            //redundant AT THE MOMENT - see fromJSON
+            val["clanId"] = encode(clan.clanId);
         }
-        /*if (type !is null) {
-          val["unitTypeId"] = Value(type.name);
-          }*/
+        if(type !is null) {
+            val["typeId"] = encode(type.name);
+        }
+
         //Add ai
         return val;
     }
@@ -113,9 +115,9 @@ final class Unit {
             //Since units are stored with their clan, and deserialized by their clan, we dont need
             //to care about a units serialized clanid. :)
         }
-        if ("unitTypeId" in val) {
-            int unitTypeId;
-            read(unitTypeId, val["unitTypeId"]);
+        if ("typeId" in val) {
+            string unitType;
+            read(unitType, val["typeId"]);
             BREAKPOINT;
         }
         inventory = new Inventory(); // TODO: RAWR!!

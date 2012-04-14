@@ -297,6 +297,7 @@ T read(T)(Value v) {
 }
 void read(T)(ref T t, string s) { return read!T(t, parse(s)); }
 void read(T)(ref T t, Value val) {
+//    writeln(T.stringof);
     static if (isNumeric!T) {
         t = to!T(val.num);
     } else static if (is (T : string)) {
@@ -322,6 +323,9 @@ void read(T)(ref T t, Value val) {
             t[key] = value;
         }
     } else static if (__traits(compiles, t.fromJSON(val))) {
+        static if( is( T qwerty == class) || is(T ytrewq == interface)) {
+            enforce(t !is null, "t of type " ~ T.stringof ~ " is null!");
+        }
         t.fromJSON(val);
     } else static if (__traits(compiles, T.insert)) {
         alias typeof(T.removeAny()) Type;
@@ -339,6 +343,7 @@ void read(T)(ref T t, Value val) {
 
 private void update(T)(T* t, string s) { return update!T(t, parse(s)); }
 private void update(T)(T* t, Value val) {
+    enforce(t !is null, "Can not update t of type " ~ T.stringof ~ " because t is null!");
     foreach (m; __traits(allMembers, T)) {
         static if( !__traits(compiles, RealThing!(__traits(getMember, T, m)))) {
             continue;

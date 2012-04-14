@@ -17,7 +17,7 @@ struct UnitModelInfo {
     string skeletonName;//Skeleton family
 }
 
-struct UnitType {
+final class UnitType {
 	static struct InnerUnitType {
 		string displayName;
 		vec3i tintColor;
@@ -49,7 +49,6 @@ class UnitTypeManager {
         Value idRootVal;
         bool hasTypeIdConfFile = loadJSONFile("saves/current/unittypeidconfiguration.json", &idRootVal);
 		
-		UnitType tempType;
 		if(!std.file.exists("data/unit_types.json")){
 			msg("Could not load unit types");
 			return;
@@ -58,6 +57,7 @@ class UnitTypeManager {
 		auto rootVal = json.parse(content);
 		enforce(rootVal.type == json.Value.Type.object, "rootval in unittypejson not object roawoaowoawo: " ~ to!string(rootVal.type));
 		foreach(name, rsVal ; rootVal.pairs) {
+            UnitType tempType = new UnitType;
 			json.read(tempType.serializableSettings, rsVal);
 			
 			tempType.name = name;
