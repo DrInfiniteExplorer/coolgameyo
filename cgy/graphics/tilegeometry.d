@@ -411,14 +411,20 @@ final class TileGeometry : Module, WorldListener
         //TODO: Do not sort every tick in the future.
         schwartzSort!(computeValue, "a>b")(regionsToUpdate);
         //writeln("before ", regionsToUpdate.length);
+        auto len = regionsToUpdate.length;
         regionsToUpdate = array(uniq(regionsToUpdate));
+        auto diff = len - regionsToUpdate.length;
+        if(diff != 0) {
+            g_Statistics.GraphRegionsProgress(diff);
+        }
         //writeln("after ", regionsToUpdate.length);        
         
-        enum GraphRegionsPerTick = 2;
+        enum GraphRegionsPerTick = 4;
         auto cnt = min(regionsToUpdate.length, GraphRegionsPerTick);
-        assert(cnt > 0, "derp derp derp");
+        enforce(cnt > 0, "Do not get here. In fact, it is impossible!");
         auto nums = regionsToUpdate[$-cnt .. $];
         regionsToUpdate.length -= cnt;
+        assumeSafeAppend(regionsToUpdate); //Pretty safe yes
         foreach(num ; nums) {
             //Trixy trick below; if we dont do this, the value num will be shared by all pushed tasks.
             (GraphRegionNum num){
@@ -430,10 +436,10 @@ final class TileGeometry : Module, WorldListener
         }        
     }
 
-    bool nearAirBorder(GraphRegionNum grNum) {
+    bool solidNearAirBorder(GraphRegionNum grNum) {
         auto minTilePos = grNum.min;
         auto maxTilePos = grNum.max();
-        return world.nearAirBorder(minTilePos, maxTilePos);
+        return world.solidNearAirBorder(minTilePos, maxTilePos);
     }
 
     void onAddUnit(SectorNum, Unit) { }
@@ -454,7 +460,7 @@ final class TileGeometry : Module, WorldListener
         GraphRegionNum[] newRegions;
         foreach(pos ; RangeFromTo (grNumMin.value, grNumMax.value)) {
             auto grNum = GraphRegionNum(pos);
-            if(nearAirBorder(grNum)){
+            if(solidNearAirBorder(grNum)){
                 //msg("Has content;", grNum);
                 newRegions ~= grNum;
             }
@@ -469,6 +475,23 @@ final class TileGeometry : Module, WorldListener
     
     void onSectorUnload(SectorNum sectorNum) {
         tileRenderer.removeSector(sectorNum);
+        updateMutex.lock();
+        scope(exit) updateMutex.unlock();
+        int removedCount = 0;
+        int count = regionsToUpdate.length;
+        for(int i = 0; i < count; i++) {
+            if(regionsToUpdate[i].getSectorNum() == sectorNum) {
+                regionsToUpdate[i] = regionsToUpdate[$-1];
+                count--;
+                removedCount++;
+            }
+        }
+        if(removedCount > 0) {
+            regionsToUpdate.length = count;
+            assumeSafeAppend(regionsToUpdate);
+            g_Statistics.GraphRegionsProgress(removedCount);
+        }
+
     }
     void onUpdateGeometry(TilePos tilePos) {
         GraphRegionNum[] newRegions;

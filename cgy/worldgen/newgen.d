@@ -380,6 +380,7 @@ final class WorldGenerator {
         }
 
         block.hasAir = false;
+        block.hasNonAir = false;
 
         bool homogenous = true;
         bool first = true;
@@ -401,6 +402,8 @@ final class WorldGenerator {
             }
             if (tile.type == TileTypeAir) {
                 block.hasAir = true;
+            } else {
+                block.hasNonAir = true;
             }
         }
         if (homogenous) {

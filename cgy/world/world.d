@@ -848,13 +848,16 @@ class World {
         return TilePos(pos);
     }
 
-    bool nearAirBorder(TilePos min, TilePos max) {
+    bool solidNearAirBorder(TilePos min, TilePos max) {
         min.value -= vec3i(1,1,1);
         max.value += vec3i(1,1,1);
+        bool solid = false;
         foreach (bn; RangeFromTo(
                     min.getBlockNum().value,
                     max.getBlockNum().value)) {
-            if (getBlock(BlockNum(bn)).hasAir) {
+            auto block = getBlock(BlockNum(bn));
+            solid |= block.hasNonAir;
+            if (block.hasAir && solid) {
                 return true;
             }
         }

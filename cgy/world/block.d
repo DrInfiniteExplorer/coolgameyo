@@ -30,6 +30,7 @@ enum BlockFlags : ubyte {
     none                = 0,
     sparse              = 1 << 1,
     hasAir              = 1 << 2,
+    hasNonAir           = 1 << 3,
     valid               = 1 << 7,
 }
 
@@ -136,6 +137,9 @@ struct Block {
 
     bool hasAir() const @property { return (flags & BlockFlags.hasAir) != 0; }
     void hasAir(bool val) @property { setFlag(flags, BlockFlags.hasAir, val); }
+
+    bool hasNonAir() const @property { return (flags & BlockFlags.hasNonAir) != 0; }
+    void hasNonAir(bool val) @property { setFlag(flags, BlockFlags.hasNonAir, val); }
 
 
     bool sparse() const @property { return (flags & BlockFlags.sparse) != 0; }
@@ -269,7 +273,7 @@ Block INVALID_BLOCK = {
 Block AirBlock(BlockNum blockNum) {
     Block ret;
     ret.flags = cast(BlockFlags)(
-            BlockFlags.valid | BlockFlags.sparse);
+            BlockFlags.valid | BlockFlags.sparse | BlockFlags.hasAir);
     ret.blockNum = blockNum;
     ret.sparseTileType = TileTypeAir;
     ret.sunLightVal = MaxLightStrength;

@@ -286,6 +286,16 @@ struct TilePos {
 struct GraphRegionNum{
     vec3i value;
 
+    SectorNum getSectorNum() const {
+        enum divX = SectorSize.x / GraphRegionSize.x;
+        enum divY = SectorSize.y / GraphRegionSize.y;
+        enum divZ = SectorSize.z / GraphRegionSize.z;
+        return SectorNum(vec3i(
+                           negDiv(value.X, divX),
+                           negDiv(value.Y, divY),
+                           negDiv(value.Z, divZ)));
+    }
+
     TilePos max() const {
         auto ret = min();
         ret.value += vec3i(
