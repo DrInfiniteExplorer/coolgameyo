@@ -1,11 +1,15 @@
 module random.map;
 
+
+
 import random.random;
 
-class Map(alias f) : ValueSource { //Like the higher order function map, this maps stuff from stuff to stuff.
+final class Map : ValueSource { //Like the higher order function map, this maps stuff from stuff to stuff.
     ValueSource source;
-    this(ValueSource s) {
+    double delegate(double) f;
+    this(ValueSource s, double delegate(double) _f) {
         source = s;
+        f = _f;
     }
 
     double getValue(double x, double y, double z) {

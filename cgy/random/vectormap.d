@@ -1,4 +1,4 @@
-module random.valuemap;
+module random.vectormap;
 
 import std.conv;
 import std.algorithm;
@@ -10,25 +10,25 @@ import util.math;
 import random.random;
 import graphics.image;
 
-alias ValueMap2D!double ValueMap2Dd;
 
-final class ValueMap2D(StorageType, bool Wrap = true) : ValueSource {
-    
-    StorageType[] randMap;
+final class Vector2DMap2D(T, bool Wrap = true) {
+
+    alias Vector2d!T StorageType;
+    StorageType[] map;
     uint sizeX, sizeY;
 
     this() {
     }
-    
+
     this(uint sizeX, uint sizeY) {
-            alloc(sizeX, sizeY);
+        alloc(sizeX, sizeY);
     }
 
     void alloc(uint _sizeX, uint _sizeY) {
         sizeX = _sizeX;
         sizeY = _sizeY;
         auto mul = sizeX * sizeY;
-        randMap.length = mul;
+        map.length = mul;
     }
 
     //Gets values 0.._sizeX, 0.._sizeY from source and puts in place.
@@ -56,13 +56,21 @@ final class ValueMap2D(StorageType, bool Wrap = true) : ValueSource {
         }
     }
 
-    void normalize(const double Min, const double Max) {
+    //Normalizes based on length of vectors. Vectors of length 0 get to point in the 0,1-direction.
+    void normalize(const T Min, const T Max) {
         double min = double.max;
-        double max = -double.max;
-        foreach(val; randMap) {
-            min = std.algorithm.min(min, val);
-            max = std.algorithm.max(max, val);
+        double max = 0;
+        foreach(ref val; map) {
+            auto t = val.getLengthSQ();
+            if(t == 0) {
+                val.set(0,1);
+                t = 1;
+            }
+            min = std.algorithm.min(min, t);
+            max = std.algorithm.max(max, t);
         }
+        min = sqrt(min);
+        max = sqrt(max);
         double scale = (Max-Min) / (max-min);
         writeln(text("normalize: min ", min, " max ", max));
 
@@ -71,21 +79,11 @@ final class ValueMap2D(StorageType, bool Wrap = true) : ValueSource {
         }
     }
 
-    
-    StorageType getValue(double x, double y, double z) { return 0; }
-    StorageType getValue(double x) { return 0; }
-    StorageType getValue(double x, double y) {
-                //writeln(text(x, " ", y));
-        static if(Wrap) {
-            x = posMod(to!int(x), sizeX);
-            y = posMod(to!int(y), sizeY);
-        }
-        return randMap[to!uint(y) * sizeX + to!uint(x)];
-    }
 
     void set(int x, int y, StorageType value) {
         randMap[x + y * sizeX] = value;
     }
+
     StorageType get(int x, int y) {
         debug{
             BREAK_IF(x < 0 || x >= sizeX || y < 0 || y >= sizeY);
@@ -93,21 +91,21 @@ final class ValueMap2D(StorageType, bool Wrap = true) : ValueSource {
         return randMap[x + y * sizeX];
     }
 
-    
-    Image toImage(StorageType min, StorageType max, bool doClamp = true, double[4] delegate(double) color = null) {
+
+    Image toImage(T min, T max, bool doClamp = true, double[4] delegate(double) color = null) {
         ubyte[] imgData;
         imgData.length = 4 * sizeX * sizeY;
         ubyte* ptr = imgData.ptr;
         auto range = max - min;
-        foreach(value ; randMap) {
-            value = (value-min) / range;
+        foreach(value ; map) {
+            double V = cast(double)(value-min) / cast(double)range;
             if (color is null ) {
                 if(doClamp) {
-                    value = clamp(value, 0, 1);
+                    V = clamp(V, 0, 1);
                 }
-                ptr[0..3] = to!ubyte(255 * value);
+                ptr[0..3] = to!ubyte(255 * V);
             } else {
-                auto v = color(value);
+                auto v = color(V);
                 if(doClamp) {
                     foreach(ref vv; v) {
                         vv = clamp(vv, 0, 1);
@@ -123,8 +121,8 @@ final class ValueMap2D(StorageType, bool Wrap = true) : ValueSource {
         auto img = Image(imgData.ptr, sizeX, sizeY);
         return img;        
     }
-    
-    void saveAsImage(string imgName, StorageType min, StorageType max, bool clamp = true) {
+
+    void saveAsImage(string imgName, T min, T max, bool clamp = true) {
         auto img = toImage(min, max, clamp);
         img.save(imgName);
     }
@@ -137,20 +135,3 @@ final class ValueMap2D(StorageType, bool Wrap = true) : ValueSource {
         std.file.write(filename, randMap);
     }
 };
-
-Image toImage(ValueSource source, double lx, double ly, double hx, double hy, uint px, uint py, double low, double high,
-              double[4] delegate(double) color = null){
-    ValueMap2Dd map = new ValueMap2Dd();
-    auto rx = (hx - lx) / to!double(px);
-    auto ry = (hy - ly) / to!double(py);
-    map.fill((double  x, double y)
-             {
-                 auto xx = lx + rx * x;
-                 auto yy = ly + ry * y;
-                 return source.getValue(xx, yy);
-             }
-             , px, py);
-    return map.toImage(low, high, true, color);
-}
-
-

@@ -23,6 +23,28 @@ class GradientField : ValueSource {
     }    
 }
 
+class PlanarDistanceField : ValueSource {
+    vec3d normal;
+    double d;
+
+    this(vec3d zero, vec3d _normal) {
+        normal = _normal;
+        d = normal.dotProduct(zero);
+    }
+
+    double getValue(double x, double y, double z) {
+        return normal.dotProduct(vec3d(x, y, z)) - d;
+    }
+    double getValue(double x, double y) {
+        return getValue(x, y, 0);
+    }
+    double getValue(double x) {
+        return getValue(x, 0, 0);
+    }    
+}
+
+
+
 /*
       | 
       |

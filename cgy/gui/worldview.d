@@ -9,7 +9,7 @@ import gui.mainmenu;
 import gui.all;
 import gui.guisystem.button;
 //import worldgen.worldgen;
-import worldgen.newgen;
+//import worldgen.newgen;
 import util.util;
 import util.rect;
 
@@ -88,6 +88,8 @@ class WorldMenu : GuiElementWindow {
                 if(v < 0.3) ret[0..1] = 0;
                 return ret;
             }));
+
+            temperatureImg.setImage(world.temperatureMap.toImage(0, 200, true));
         }
     }
 

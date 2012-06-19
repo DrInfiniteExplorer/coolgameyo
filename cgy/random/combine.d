@@ -13,6 +13,9 @@ alias Combine!("a/b") CombineDiv;
 alias Combine!("a < b ? b : a") CombineMax;
 alias Combine!("a > b ? b : a") CombineMin;
 
+
+//TODO: Kika på std.functinal.binaryFun och stjäl all kod.
+
 class Combine(string operation) : ValueSource {
     ValueSource source;
     ValueSource source2;
