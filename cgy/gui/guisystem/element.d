@@ -63,6 +63,10 @@ struct GuiEvent{
 }
 
 class GuiElement {
+
+    alias bool delegate(GuiElement, GuiEvent.MouseClick) MouseClickCallback;
+    MouseClickCallback mouseClickCB;
+
     protected GuiElement guiSystem;
     private GuiElement[] children;
     protected GuiElement parent;
@@ -176,11 +180,13 @@ class GuiElement {
     }
 */
     body{
+        if(parent is null) return;
+
         absoluteRect = r;
         auto parentScreenRelative = parent.getScreenRelativeRect();
         
         auto screenRect = Rectd(vec2d(0,0), vec2d(renderSettings.windowWidth, renderSettings.windowHeight));
-        auto screenRelative = screenRect.getSubRectInv(convertR!double(r));
+        auto screenRelative = screenRect.getSubRectInv(r.convert!double);
         relativeRect = parentScreenRelative.getSubRectInv(screenRelative);
         onMove();
     }
@@ -200,7 +206,7 @@ class GuiElement {
     Recti getAbsoluteRect() {
         auto screenRelative = getScreenRelativeRect();
         auto screenRect = Rectd(vec2d(0,0), vec2d(renderSettings.windowWidth, renderSettings.windowHeight));
-        absoluteRect = convertR!int(screenRect.getSubRect(screenRelative));
+        absoluteRect = screenRect.getSubRect(screenRelative).convert!int;
         return absoluteRect;
     }
     
@@ -221,12 +227,15 @@ class GuiElement {
     }
     
     GuiEventResponse onEvent(GuiEvent e){
-        /*
         switch(e.type) {
-            case GuiEventType.MouseMove: msg("MouseMove!"); break;
-            default: msg("other event." ~ to!string(e.type)); break;
+            case GuiEventType.MouseClick:
+                if(mouseClickCB !is null) {
+                    if(mouseClickCB(this, e.mouseClick)) return GuiEventResponse.Accept;
+                }
+                break;
+            default: /*msg("other event." ~ to!string(e.type)); */ break;
         }
-        */
+
         return GuiEventResponse.Ignore;
     }    
     
@@ -283,10 +292,10 @@ class GuiElement {
         }
     }
     
-    double rightOf() const @property { return relativeRect.getRight(); }
-    double leftOf() const @property { return relativeRect.getLeft(); }
-    double topOf() const @property { return relativeRect.getTop(); }
-    double bottomOf() const @property { return relativeRect.getBottom(); }
-    double widthOf() const @property { return relativeRect.getWidth(); }
-    double heightOf() const @property { return relativeRect.getHeight(); }
+    double rightOf() const @property { return relativeRect.rightOf(); }
+    double leftOf() const @property { return relativeRect.leftOf(); }
+    double topOf() const @property { return relativeRect.topOf(); }
+    double bottomOf() const @property { return relativeRect.bottomOf(); }
+    double widthOf() const @property { return relativeRect.widthOf(); }
+    double heightOf() const @property { return relativeRect.heightOf(); }
 }

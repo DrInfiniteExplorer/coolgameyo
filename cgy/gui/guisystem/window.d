@@ -142,4 +142,8 @@ class GuiElementWindow : public GuiElement {
         //Fire callback if got any registered, etc
         destroy();
     }
+
+    Rectd clientArea() const @property {
+        return absoluteRect.convert!double.getSubRectInv(clientRect.convert!double);
+    }
 }

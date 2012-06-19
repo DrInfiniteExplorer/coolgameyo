@@ -1,0 +1,50 @@
+
+
+
+for tree/schrub placement, use 'random placement patterns' / 'bombing' [1] p91
+
+
+worldgen!!!!
+
+Size in x, y counting sectors!!
+
+world is generated as circle, with diameter equal to xy-size. outside of circle, there is straight fall towards infinity, and/or sea level.
+
+World has maps to determine what it cont ains. Such maps are
+  heightmap
+  temperature
+  influx of fluids
+  outflux of fluids
+  waterflux (in-out)
+  evilness
+  growth/vegetation
+
+Air below altitude 0 becomes sea and/or lakes.
+  temperature below 0 makes water freeze. water flux does not affect anything.
+  vegetation determines type of scrubs etc.
+
+temperature above 35
+  water flux: high makes jungle. medium makes plain. negative makes deserts
+
+etc..
+
+heightmap determines initial height.
+what determines the thickness of soil?
+need a map to determine what kind of normal stone is to be placed where.
+need a map to determine where to place special rocks
+need a map to determine where to place veins of metal ore / valuable crystals
+
+generate tile:
+  find 'type of tile': air, ground/soil, rock, fluid
+  air: air!
+  ground/soil: determine what type of soil to place. sand, earth, mud, color of sand, etc
+  rock: determine what rock
+  fluid: determine what kind of fluid to place
+
+geographic points of interest? volcaneos, rivers, streams, jungles?
+
+
+[1] Texturing Modeling - A Procedural Approach - 3rd Edition
+
+
+

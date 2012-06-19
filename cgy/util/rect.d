@@ -7,12 +7,6 @@ import stolen.vector2d;
 
 import util.util;
 
-Rect!A convertR(A,B)(const Rect!B r) {
-    return Rect!A(
-        r.start.convert!A(),
-        r.size.convert!A()
-    );
-}
 
 struct Rect(T) {
     vector2d!T start;
@@ -26,6 +20,12 @@ struct Rect(T) {
     this(T sx, T sy, T w, T h) {
         start.set(sx, sy);
         size.set(w,h);
+    }
+
+    Rect!To convert(To)() const @property {
+        return Rect!To(
+            start.convert!To,
+            size.convert!To);
     }
         
     bool isInside(vector2d!T pos) {
@@ -63,15 +63,21 @@ struct Rect(T) {
                           centerVertical ? newStart.Y : start.Y);
         return Rect!T(tmp, toCenter.size);
     }
-    
+
+/*
     Rect!T diff(int a, int b, int c, int d){
         return diff(vector2d!T(a,b), vector2d!T(c,d));
     }
+*/
     Rect!T diff(vector2d!T dStart, vector2d!T dSize){
         return Rect!T(  start + dStart,
-                        size - dStart + dSize);
+                      size - dStart + dSize);
     }
+    Rect!T diff(T dStartX, T dStartY, T dSizeX, T dSizeY){
         
+        return diff(vector2d!T(dStartX, dStartY), vector2d!T(dSizeX, dSizeY));
+    }
+
     invariant() {
 //        enforce(size.X >= 0, "Width of rect negative!!");
 //        enforce(size.Y >= 0, "Height of rect negative!!");
@@ -85,22 +91,22 @@ struct Rect(T) {
         return start == o.start && size == o.size;
     }
     
-    T getBottom() const {
+    T bottomOf() const {
         return start.Y + size.Y;
     }
-    T getTop() const {
+    T topOf() const {
         return start.Y;
     }
-    T getRight() const {
+    T rightOf() const {
         return start.X + size.X;
     }
-    T getLeft() const {
+    T leftOf() const {
         return start.X;
     }
-    T getWidth() const {
+    T widthOf() const {
         return size.X;
     }
-    T getHeight() const {
+    T heightOf() const {
         return size.Y;
     }
 }

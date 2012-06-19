@@ -1,0 +1,73 @@
+
+
+Nu måste man göra tilechanges som köade ändringar i världen
+ -> alla saker som vill ändra på tiles måste göra det i form av
+    changes
+    -> allt som vill ändras måste vara en modul/anropas av en modul
+       -> eller få tillgång till en changelist på annat vis?
+
+
+När placerar man / populerar man världen?
+
+   Världen består av olika lager
+     Grundlagret är en heightmap.
+     I samma skala som heightmappen finns grov biominformation
+       Hur genereras den?
+         Någon form av cellmönster antagligen
+     Det finns temperatur
+     Och regnkarta
+   Dessa kartor lagras/genereras sparsely!
+   Vi vill stödja stora världar; Men vi kan inte ha hela skåne i minnet samtidigt
+   Vi har en SparseMaps-klass som template-instantieras med X kartor
+     Kartorna har 'callbacks' associerade till sig, så om någon accessar
+       data vi inte har laddat, så genereras det från grund upp.
+     Man accessar kartorna med setters/getters
+     Kartorna pageas ut på något vis om/när de inte behövs?
+       Kopplat till var världen genereras..?
+       Kopplat till intresseområden för intressanta klaner?
+       Kopplat till var kameran befinner sig?
+     Kartorna ska kunna genereras som tasks i bakgrunden?
+       Vill inte stoppa spelet för att generera/ladda data
+       Innebär att pageing & tasking är nära kopplat till activity-maps..?
+         Inblandade komponenter:
+            World, WorldGen, <InterestingActivityMaps>, modul som kan köa task
+            att generera, synkronisering över nätverk
+         Worldgen använder för generering
+         World har tillgång till, för querying
+         <InterestingActivityMaps> notifierar om intressanta områden
+           Vad gör man ifall man behöver querya i world/worldgen innan det genererats klart? :s
+
+
+Vi ska generera delar av världen när man spawnar
+Generera grov version av hela världen?
+  Det verkar jobbigt.. om vi inte begränsar storleken på vår värld.
+  Men om vi inte begränsar, hur får man se den grova bilden på världen?
+    Undersampla och ignorera aliasing? mm
+    Låsa storlek på berg och liknande till storleken på världen?
+     Nej, bättre att ha två olika lager med world-size egenskaper som
+      berg, bergskedjor, och liknande
+     Funktionalitet för att mäta varians i värden i kartan, för att rejecta
+      ala df ifall det blir för liten&tråkig ifall för liten varians ? (el. signalenergi)
+
+Så hur ska vi generera den grova delen?
+ Göra en(flera?) kartor med rand-source-värden och använda dom för ytterligare generering av randomness i världen?
+ Eller använda hash av koordinaterna&kartlagret för att generera?
+  Låter som en bra lösning, om man hittar en bra hash-funktion
+
+Heirarki över information:
+  Grov randomness/hash
+    Grov världsinformation i olika lager med kartor
+      Använda hash av pos och grova kartvärden som source till lokal randomness?
+        Fine-grained information om världen (sektor/tilenivå)
+  Allt i samma klass? Heirarki? Strukturer?
+  Fine-grained sparas sektorsvis..?
+  hur får worldgen tillgong till det?
+
+
+
+
+
+
+
+
+

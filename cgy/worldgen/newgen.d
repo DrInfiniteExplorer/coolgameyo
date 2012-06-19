@@ -27,18 +27,12 @@ import world.world;
 import random.valuemap;
 import random.random;
 import random.randsource;
+import random.gradientnoise;
 
 
 struct WorldGenParams {
     uint randomSeed = 880128;
-    uint worldDiameter = 16; //Measures diameter of world, in number of sectors.
 
-    double worldMin = -50;
-    double worldMax = 450;
-
-    uint heightmapSamplesInWorld() const @property {
-        return worldDiameter * SectorSize.x / HeightMapSampleDistance;
-    }
 }
 
 enum ptPerLayer = 400;
@@ -73,6 +67,9 @@ enum halfWorldSize_xy = vec2i(mapScale[5]/2, mapScale[5]/2);
 //alias double[ptPerLayer][ptPerLayer] Map;
 
 class Feature {
+
+
+
 }
 
 final class Map {

@@ -23,6 +23,7 @@ import util.rect;
 
 class GuiElementEditbox : public GuiElement {
     alias bool delegate(char ch) ValidCharFilter;
+    void delegate(string) onEnter; //When enter is pressed.
     ValidCharFilter filter; //Return true to allow!
     
     int startMarker, stopMarker;
@@ -48,6 +49,10 @@ class GuiElementEditbox : public GuiElement {
     override void destroy() {
         super.destroy();
         text.destroy();
+    }
+
+    void setOnEnter(void delegate(string) cb) {
+        onEnter = cb;
     }
 
     void setPassword(bool pass) {
@@ -139,6 +144,12 @@ class GuiElementEditbox : public GuiElement {
     }
         
     GuiEventResponse handleChar(int sdlSym, char ch) {
+
+        if( (sdlSym == SDLK_RETURN) && onEnter !is null) {
+            onEnter(content);
+            return GuiEventResponse.Accept;
+        }
+
         bool delet = (sdlSym == SDLK_DELETE);
         bool erase = (ch == 8) || (sdlSym == SDLK_BACKSPACE);
         bool insert = (ch != 0) && !erase && !delet && filter(ch);

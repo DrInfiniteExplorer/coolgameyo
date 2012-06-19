@@ -11,6 +11,8 @@ import graphics._2d.rect;
 import util.util;
 import util.rect;
 
+//TODO: Remake this, so that a new window is spawned when one selects, instead of hacking with sizes ;)
+
 class GuiElementComboBox : public GuiElement {
 	private struct RowItem{
 		Recti rect;
@@ -160,8 +162,8 @@ class GuiElementComboBox : public GuiElement {
                     else if(absoluteRect.isInside(m.pos)) {
                         for (int i = 0; i < nrOfItems; i++) {
 							if (rows[i].rect.isInside(m.pos)) {
-								selectItem(i);
                                 setDroppedDown(false);
+								selectItem(i);
                                 return GuiEventResponse.Accept;
 							}
 						}
@@ -199,5 +201,25 @@ class GuiElementComboBox : public GuiElement {
             rows[i].text.setVisible(down);
         }
         setAbsoluteRect(down ? droppedDownRect : mainElementRect);
+        bringToFront();
     }
+}
+
+//A bit of a hack. It relies on the fact that we use no clipping when drawing outside of our parents.
+//Maybe set clipping up as a property of parents?
+class GuiElementLabeledComboBox : GuiElementComboBox {
+    GuiElementText label;
+    this(GuiElement parent, Rectd relative, string _label, SelectionChangedCallback cb = null) {
+        // ~ " " to make space between label/edit in a simpel manner xD
+        label = new GuiElementText(parent, relative.start, _label ~ " ");
+        auto labelRect = label.getRelativeRect();
+        relative.start.X += labelRect.size.X;
+
+        //These lines commented out because when combobox expanded it borks things.
+        //label.setRelativeRect(Rectd(0,0,1,1).getSubRectInv(labelRect));
+        super(parent, relative, cb);
+        //label.setParent(this);
+    }
+
+
 }

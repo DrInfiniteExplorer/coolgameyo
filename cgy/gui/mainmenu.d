@@ -13,10 +13,10 @@ import gui.all;
 import gui.loadscreen;
 import gui.newgamemenu;
 import gui.optionmenu;
-import gui.randommenu;
+import gui.random.menu;
 import gui.splineedit;
 import gui.printscreenmenu;
-//import gui.worldview;
+import gui.worldview;
 import gui.unitcontrol;
 import settings;
 import util.util;
@@ -34,19 +34,19 @@ class MainMenu : GuiElementWindow {
     LoadScreen loadScreen;
     this(GuiSystem g, Main m) {
         guiSystem = g;
-        super(guiSystem, Rectd(vec2d(0.1, 0.1), vec2d(0.8, 0.8)), "Main Menu~~~!", false, false);
+        super(guiSystem, Rectd(0.1, 0.1 , 0.8, 0.8), "Main Menu~~~!", false, false);
 //*
         auto text = new GuiElementText(this, vec2d(0.1, 0.1), "CoolGameYo!!");     
         auto text2 = new GuiElementText(this, vec2d(0.1, 0.2), "Where logic comes to die");
-        newGameButton = new GuiElementButton(this, Rectd(vec2d(0.1, 0.2), vec2d(0.3, 0.2)), "New gay me?", &onNewGame);
+        newGameButton = new GuiElementButton(this, Rectd(0.1, 0.2, 0.3, 0.2), "New gay me?", &onNewGame);
   
-        auto optionsButt = new GuiElementButton(this, Rectd(vec2d(0.1, 0.4), vec2d(0.3, 0.2)), "Options", &onOptions);
+        auto optionsButt = new GuiElementButton(this, Rectd(0.1, 0.4, 0.3, 0.2), "Options", &onOptions);
 
-        auto randomButt = new GuiElementButton(this, Rectd(vec2d(0.1, 0.6), vec2d(0.3, 0.2)), "Random", &onRandom);
-        auto startNewButt = new GuiElementButton(this, Rectd(vec2d(0.1, randomButt.getRelativeRect().getBottom()+0.05), vec2d(0.3, 0.2)), "newgamemenu", &onStartNewGame);
+        auto randomButt = new GuiElementButton(this, Rectd(0.1, 0.6, 0.3, 0.2), "Random", &onRandom);
+        auto startNewButt = new GuiElementButton(this, Rectd(0.1, randomButt.bottomOf+0.05, 0.3, 0.2), "newgamemenu", &onStartNewGame);
         
-        loadGameButton = new GuiElementButton(this, Rectd(vec2d(randomButt.getRelativeRect().getRight()+0.05, 0.6), vec2d(0.3, 0.2)), "Load game", &onLoadGame);
-        auto viewButt = new GuiElementButton(this, Rectd(vec2d(loadGameButton.getRelativeRect().getRight(), 0.6), vec2d(0.3, 0.2)), "World View", &onWorldView);
+        loadGameButton = new GuiElementButton(this, Rectd(randomButt.rightOf+0.05, 0.6, 0.3, 0.2), "Load game", &onLoadGame);
+        auto viewButt = new GuiElementButton(this, Rectd(loadGameButton.rightOf, 0.6, 0.3, 0.2), "World View", &onWorldView);
 
         new GuiElementButton(this, Rectd(viewButt.leftOf, viewButt.bottomOf, viewButt.widthOf, viewButt.heightOf), "Color spline editor", &onColorSplineEdit);
 
@@ -126,7 +126,7 @@ class MainMenu : GuiElementWindow {
     }
     void onWorldView() {
         setVisible(false);
-        //new WorldViewMenu(this);
+        new WorldMenu(this);
     }
     void onColorSplineEdit() {
         setVisible(false);

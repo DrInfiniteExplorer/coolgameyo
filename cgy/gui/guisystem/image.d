@@ -8,6 +8,7 @@ import gui.guisystem.guisystem;
 
 
 import graphics._2d.image;
+import graphics.image;
 import util.util;
 import util.rect;
 
@@ -28,6 +29,10 @@ class GuiElementImage : public GuiElement {
     
     void setImage(uint img) {
         image = img;
+    }
+
+    void setImage(Image img) {
+        image = img.toGLTex(image);
     }
 
     void setImageSource(Rectf source) {

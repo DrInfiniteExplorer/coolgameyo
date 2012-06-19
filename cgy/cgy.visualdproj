@@ -440,6 +440,13 @@ d:\D\ulnb0333\ulink.exe $(IntDir)\$(TargetName).obj gdi32.lib win32.lib advapi32
     <File path="gui\guisystem\text.d" />
     <File path="gui\guisystem\window.d" />
    </Folder>
+   <Folder name="random">
+    <File path="gui\random\hybridfractal.d" />
+    <File path="gui\random\perlin.d" />
+    <File path="gui\random\randommenu.d" />
+    <File path="gui\random\ridgedfractal.d" />
+    <File path="gui\random\voronoi.d" />
+   </Folder>
    <File path="gui\all.d" />
    <File path="gui\inventorywindow.d" />
    <File path="gui\loadscreen.d" />
@@ -447,7 +454,6 @@ d:\D\ulnb0333\ulink.exe $(IntDir)\$(TargetName).obj gdi32.lib win32.lib advapi32
    <File path="gui\newgamemenu.d" />
    <File path="gui\optionmenu.d" />
    <File path="gui\printscreenmenu.d" />
-   <File path="gui\randommenu.d" />
    <File path="gui\splineedit.d" />
    <File path="gui\statistics.d" />
    <File path="gui\unitcontrol.d" />
@@ -476,15 +482,19 @@ d:\D\ulnb0333\ulink.exe $(IntDir)\$(TargetName).obj gdi32.lib win32.lib advapi32
   </Folder>
   <Folder name="random">
    <File path="random\catmullrom.d" />
+   <File path="random\combine.d" />
    <File path="random\fractal.d" />
    <File path="random\gradient.d" />
    <File path="random\gradientnoise.d" />
+   <File path="random\hybridfractal.d" />
+   <File path="random\map.d" />
    <File path="random\modmultadd.d" />
    <File path="random\modscaleoffset.d" />
    <File path="random\permutation.d" />
    <File path="random\peturber.d" />
    <File path="random\random.d" />
    <File path="random\randsource.d" />
+   <File path="random\ridgedfractal.d" />
    <File path="random\valuemap.d" />
    <File path="random\xinterpolate.d" />
    <File path="random\xinterpolate4.d" />
@@ -572,6 +582,7 @@ d:\D\ulnb0333\ulink.exe $(IntDir)\$(TargetName).obj gdi32.lib win32.lib advapi32
    <File path="world\worldproxy.d" />
   </Folder>
   <Folder name="worldgen">
+   <File path="worldgen\maps.d" />
    <File path="worldgen\newgen.d" />
   </Folder>
   <File path="clan.d" />

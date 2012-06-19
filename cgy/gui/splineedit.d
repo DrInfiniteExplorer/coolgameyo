@@ -55,7 +55,7 @@ class SplineEditor : GuiElementWindow {
         blueGraph.setColor(vec3f(0.0, 0.0, 1.0));
 
         colorImg = new GuiElementImage(this, Rectd(blueGraph.leftOf, blueGraph.bottomOf + 0.1, blueGraph.widthOf, 0.1));
-        img = Image(null, colorImg.getAbsoluteRect().getWidth(), 1);
+        img = Image(null, colorImg.getAbsoluteRect().widthOf, 1);
         glTex = img.toGLTex(glTex);
         colorImg.setImage(glTex);
 
@@ -197,7 +197,7 @@ class SplineEditor : GuiElementWindow {
             colors ~= color;
         }
 
-        int width = colorImg.getAbsoluteRect().getWidth();
+        int width = colorImg.getAbsoluteRect().widthOf;
         float[] r, g, b;
         foreach(idx ; 0 .. width) {
             float time = cast(float)idx/cast(float)width;

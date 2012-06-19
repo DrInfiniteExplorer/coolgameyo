@@ -195,16 +195,16 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
 
     void spawnHUD() {
         fpsText = new GuiElementText(guiSystem, vec2d(0, 0), "Fps counter", false);
-        tickText = new GuiElementText(guiSystem, vec2d(0, fpsText.getRelativeRect.getBottom()), "Tick counter", false);
+        tickText = new GuiElementText(guiSystem, vec2d(0, fpsText.bottomOf), "Tick counter", false);
 
         frameTimeText = new GuiElementText(guiSystem, vec2d(0.2, 0), "Frame time counter", false);
-        tickTimeText = new GuiElementText(guiSystem, vec2d(0.2, frameTimeText.getRelativeRect.getBottom()), "Tick time counter", false);
+        tickTimeText = new GuiElementText(guiSystem, vec2d(0.2, frameTimeText.bottomOf), "Tick time counter", false);
 
         renderMethodInfo = new GuiElementText(guiSystem, vec2d(0.4, 0), "Render method", false);
 
-        position = new GuiElementText(guiSystem, vec2d(0, tickText.getRelativeRect.getBottom()), "Position", false);
-        tileInfo = new GuiElementText(guiSystem, vec2d(0, position.getRelativeRect.getBottom()), "TileInfo", false);
-        timeInfo = new GuiElementText(guiSystem, vec2d(0, tileInfo.getRelativeRect.getBottom()), "00:00", false);
+        position = new GuiElementText(guiSystem, vec2d(0, tickText.bottomOf), "Position", false);
+        tileInfo = new GuiElementText(guiSystem, vec2d(0, position.bottomOf), "TileInfo", false);
+        timeInfo = new GuiElementText(guiSystem, vec2d(0, tileInfo.bottomOf), "00:00", false);
         void spawnStatistics() {
             if( statistics is null) {
                 statistics = new StatisticsWindow(guiSystem);

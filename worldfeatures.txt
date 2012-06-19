@@ -1,0 +1,33 @@
+http://www-cs-students.stanford.edu/~amitp/game-programming/polygon-map-generation/
+http://www.marietta.edu/~biol/biomes/biome_main.htm
+http://en.wikipedia.org/wiki/Biome
+http://en.wikipedia.org/wiki/List_of_landforms
+
+
+
+World divided into big voronoi cells and small voronoi cells
+Big voronoi cells are of a special type, a grand-biome type, and small cells contained within it have a tendency towards a certain type of biomes.
+
+Big cells are about 50 kilometers wide. Small cells are between 2 and 6 kilometers wide.
+
+The cells have are of a certain type of biomes.
+
+each small (and big?) cell is either land or sea.
+Land cells can be sweet-water-cells..?
+
+
+We have a heightmap. It is used to make things either sea or land.
+It is also used for placing mountains and features.
+Features can modify the map.
+
+is about 10c cooler for every 1000 meter up.
+
+
+Winds move from west to east or vice versa, and affect temperature and humidity maps.
+
+Biom väljs mest på humidity och temperatur, och ett mått av guidad randomness.
+
+humidity: börjar på kanske tio?. En karta som motsvarar regn rör sig i vindrikningen över världen, och sprider vatten. Efter varje "iteration" blurras vattenkartan något. Ifall vattnet rör sig uppåt (höjd-gradienten i rörelseriktningen positiv) så kommer fuktigheten att öka och regnigheten att minska. Ställen utan fuktighet är lite torrare än vad de annars skulle vara.
+
+
+
