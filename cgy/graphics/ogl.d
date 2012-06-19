@@ -35,9 +35,10 @@ void initOpenGL(bool client){
     glFrontFace(GL_CCW);
     glError();
     if (client) {
-        DerelictGL.loadClassicVersions(GLVersion.GL30);
+        DerelictGL.loadClassicVersions(GLVersion.GL21); //BECAUSE THERE IS ONLY UP TO 2.1 IN THE CLASSIC VERSION! :s
         glError();
-        DerelictGL.loadModernVersions(GLVersion.GL30);
+
+//        DerelictGL.loadModernVersions(GLVersion.GL30);
         glError();
     } else {
         //Load with lesser requirements.
@@ -51,9 +52,16 @@ void initOpenGL(bool client){
         debug msg("MaxTextureSize(", renderSettings.maxTextureSize, ") 'to big'; clamping to 512");
         renderSettings.maxTextureSize = 512;
     }
+
     glGetIntegerv(GL_MAX_ARRAY_TEXTURE_LAYERS, &temp);
-    renderSettings.maxTextureLayers = temp;
-    glError();
+    if(GL_INVALID_ENUM == glGetError()) {
+        msg("ALERT! opengl doesnt seem to like array textures :C");
+        renderSettings.maxTextureLayers = 0;
+    } else {
+        renderSettings.maxTextureLayers = temp;
+        //glError();
+    }
+
     float maxAni;
     glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAni);
     glError();
@@ -79,9 +87,9 @@ void initOpenGL(bool client){
     initFont();
 
     initQuad();
-    initFBO();
 
 
+    renderSettings.canUseFBO = initFBO();
 
     //Refactor raycasting!!
     //initOCL();
@@ -119,35 +127,38 @@ void initOCL() {
 
     g_clCommandQueue = CLCommandQueue(g_clContext, g_clContext.devices[0]);
 
-    static if(UseRenderBuffer) {
-        g_clDepthBuffer = CLBufferRenderGL(g_clContext, CL_MEM_READ_ONLY, g_FBODepthBuffer);
+    if( !renderSettings.canUseFBO) {
+        msg("ALERT! No FBO! Can't use awesome raycast shadowns and lights!");
+        renderSettings.raycastPixelSkip = 0;
+        return;
     } else {
-        g_clDepthBuffer = CLImage2DGL(g_clContext, CL_MEM_READ_ONLY, GL_TEXTURE_2D, 0, g_FBODepthBuffer);
+        static if(UseRenderBuffer) {
+            g_clDepthBuffer = CLBufferRenderGL(g_clContext, CL_MEM_READ_ONLY, g_FBODepthBuffer);
+        } else {
+            g_clDepthBuffer = CLImage2DGL(g_clContext, CL_MEM_READ_ONLY, GL_TEXTURE_2D, 0, g_FBODepthBuffer);
+        }
+
+        g_clRayCastOutput = CLImage2DGL(g_clContext, CL_MEM_WRITE_ONLY, GL_TEXTURE_2D, 0, g_rayCastOutput);
+
+        g_clRayCastMemories = CLMemories([g_clDepthBuffer, g_clRayCastOutput]);
+
+        initInteractiveComputeYourFather();
     }
-
-    g_clRayCastOutput = CLImage2DGL(g_clContext, CL_MEM_WRITE_ONLY, GL_TEXTURE_2D, 0, g_rayCastOutput);
-
-    /*
-    CLMemory derp1 = g_clDepthBuffer;
-    CLMemory derp2 = g_clRayCastOutput;
-    g_clRayCastMemories = CLMemories([derp1, derp2]);
-    */
-    g_clRayCastMemories = CLMemories([g_clDepthBuffer, g_clRayCastOutput]);
-
-    initInteractiveComputeYourFather();
-
 }
 
 void deinitOCL() {
-    deinitInteractiveComputeYourFather();
+    if(renderSettings.canUseFBO) {
+        deinitInteractiveComputeYourFather();
+    }
 }
 
-__gshared uint g_FBO;
-__gshared uint g_FBODepthBuffer;
-__gshared uint g_albedoTexture;
-__gshared uint g_lightTexture;
-__gshared uint g_rayCastOutput;
-void initFBO() {
+__gshared uint g_FBO = 0;
+__gshared uint g_FBODepthBuffer = 0;
+__gshared uint g_albedoTexture = 0;
+__gshared uint g_lightTexture = 0;
+__gshared uint g_rayCastOutput = 0;
+
+bool initFBO() {
 
     glGenFramebuffers(1, &g_FBO);
     glError();
@@ -164,7 +175,7 @@ void initFBO() {
     glBindRenderbuffer(GL_RENDERBUFFER, depth);
     glError();
     glRenderbufferStorage(GL_RENDERBUFFER, 
-            GL_DEPTH_COMPONENT,
+            GL_DEPTH_COMPONENT32,
             renderSettings.windowWidth, renderSettings.windowHeight);
     glError();
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
@@ -256,7 +267,28 @@ void initFBO() {
     glError();
     if(error != GL_FRAMEBUFFER_COMPLETE) {
         writeln("Derp noncomplete framebuffer!");
-        BREAKPOINT;
+        auto table = [
+            GL_FRAMEBUFFER_UNDEFINED:"GL_FRAMEBUFFER_UNDEFINED",
+            GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:"GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT",
+            GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:"GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT",
+            GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:"GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER",
+            GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:"GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER",
+            GL_FRAMEBUFFER_UNSUPPORTED:"GL_FRAMEBUFFER_UNSUPPORTED",
+            GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE:"GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE",
+            GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS:"GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS",
+
+        ];
+        if(error in table) {
+            msg("Error: ", table[error]);
+        } else {
+            msg("OMG! error not found :C ! (error=", error, ")");
+        }
+        msg("ALERT! Could not create frame buffer object :C !");
+        renderSettings.raycastPixelSkip = 0;
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        //TODO: Make code that fucks everything up, so that we dont have lingering fbo's and textoars lying around :)
+        return false;
     }
 
     glGenTextures(1, &g_rayCastOutput);
@@ -283,10 +315,13 @@ void initFBO() {
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+    return true;
 }
 
 
 void deinitFBO() {
+
+    //Dont care if shit is fucked up! :D
 
     glBindFramebuffer(GL_FRAMEBUFFER, g_FBO);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, 0);
@@ -299,6 +334,8 @@ void deinitFBO() {
 
 
 __gshared uint g_quadVBO;
+
+//Build the best, quaaa~d in the world, or i'll eat your soul!
 void initQuad(){
     vec3f[4] quad = [
         vec3f(-1, 1, 0),
@@ -312,10 +349,6 @@ void initQuad(){
     glError();
     glBufferData(GL_ARRAY_BUFFER, quad.sizeof, quad.ptr, GL_STATIC_DRAW);
     glError();
-
-
-
-
 }
 
 void renderQuad() {
@@ -338,11 +371,39 @@ void renderQuad() {
 
 }
 
+string makeLookupTable(string[] enums) {
+    string ret = "[";
+    foreach(str ; enums) {
+        ret ~= str ~ ":\"" ~ str ~ "\",\n";
+    }
+    return ret ~ "]";
+}
+
 void glError(string file = __FILE__, int line = __LINE__){
     //debug
     {
         uint err = glGetError();
+        if(GL_NO_ERROR == err) return;
+
         string str;
+
+        auto table = mixin(makeLookupTable(
+            [
+            "GL_INVALID_ENUM",
+            "GL_INVALID_FRAMEBUFFER_OPERATION",
+            "GL_INVALID_VALUE",
+            "GL_INVALID_OPERATION",
+            "GL_OUT_OF_MEMORY",
+
+            ]));
+
+        if(err in table) {
+            str = table[err];
+        } else {
+            str = "Unrecognized opengl error! " ~ to!string(err);
+        }
+
+/*
         switch(err){
         case GL_NO_ERROR:
             return;
@@ -358,6 +419,7 @@ void glError(string file = __FILE__, int line = __LINE__){
             str = "Got unrecognized gl error; "~ to!string(err);
             break;
         }
+        */
         auto derp = file ~ to!string(line) ~ "\n" ~str;
         writeln(derp);
         BREAKPOINT;

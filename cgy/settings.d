@@ -48,6 +48,8 @@ struct RenderSettings {
     int maxTextureSize;
 
     int renderTrueWorld = 0;
+
+    bool canUseFBO;
     
     double glVersion = 0;
     

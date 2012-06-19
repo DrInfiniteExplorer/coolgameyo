@@ -156,8 +156,9 @@ public:
 	\return This vector after transformation. */
 	vector2d!(T) rotateBy(double degrees, vector2d!(T)* center=null)
 	{
+		vector2d!T derp;
 		if (center is null)
-			center = &vector2d!(T)();
+			center = &derp;
 		
 		degrees *= DEGTORAD64;
 		const double cs = cos(degrees);

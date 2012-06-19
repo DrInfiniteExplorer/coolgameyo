@@ -385,8 +385,9 @@ public:
   (in degrees) represented by this vector. */
   vector3d!(T) rotationToDirection(vector3d!(T)* forwards = null) const
   {
+	  auto derp = vector3d!(T)(cast(T) 0, cast(T) 0, cast(T) 1);
     if (forwards is null)
-      forwards = &vector3d!(T)(cast(T) 0, cast(T) 0, cast(T) 1);
+      forwards = &derp;
 
     const double cr = cos( DEGTORAD64 * X );
     const double sr = sin( DEGTORAD64 * X );
