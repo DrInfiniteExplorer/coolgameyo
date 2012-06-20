@@ -7,6 +7,7 @@ import util.util;
 //import worldgen.newgen;
 
 import random.valuemap;
+import random.vectormap;
 import random.combine;
 import random.random;
 import random.randsource;
@@ -23,9 +24,13 @@ final class World {
     ValueMap moistureMap;
     ValueMap temperatureMap;
 
-    ValueMap windMap;
+    Vector2DMap2D!(double, true) windMap;
+
     ValueMap rainMap;
 
+    double worldHeight = 10_000;
+    double worldMin;
+    double worldMax;
 
 
     void save() {
@@ -35,36 +40,41 @@ final class World {
     }
 
     void init() {
-
+        //Spans 1.0*worldHeight
+        worldMin = -0.3*worldHeight;
+        worldMax =  0.7*worldHeight;
+ 
         generateHeightMap();
         generateTemperatureMap();
         generateWindMap();
         generateHumidityMap();
+
     }
 
     void generateHeightMap() {
         auto randomField = new ValueMap;
         auto gradient = new GradientNoise01!()(400, new RandSourceUniform(880128));
-        auto ridged = new HybridMultiFractal(gradient, 0.1, 2, 6, 0.1);
-        ridged.setBaseWaveLength(80);
+        auto hybrid = new HybridMultiFractal(gradient, 0.1, 2, 6, 0.1);
+        hybrid.setBaseWaveLength(80);
+
         heightMap = new ValueMap(400, 400);
-        heightMap.fill(ridged, 400, 400);
-        heightMap.normalize(0, 1.0);
+        heightMap.fill(hybrid, 400, 400);
+        heightMap.normalize(worldMin, worldMax); 
     }
 
     void generateTemperatureMap() {
         auto equatorDistanceField = new PlanarDistanceField(vec3d(0, 200, 0), vec3d(0, 1, 0));
         auto equatorChillField = new Map(equatorDistanceField, d => 40 - (d<0?-d:d)*60/200 );
 
-        auto heightChillField = new Map(heightMap, d => d/1);
+        //Every 1000 meter gets about 10 degree colder
+        // http://www.marietta.edu/~biol/biomes/biome_main.htm
+        auto heightChillField = new Map(heightMap, d => d < 0 ? -10 : -d/100);
 
         auto temperatureField = new CombineAdd(equatorChillField, heightChillField);
 
         temperatureMap = new ValueMap(400, 400);
         temperatureMap.fill(temperatureField, 400, 400);
-        //temperatureMap.fill(equatorDistanceField, 400, 400);
-        //For each pos;
-            //temp = distance from equator - 10*(height/1000)
+
     }
 
     //Wind map temporary during world generation
@@ -75,6 +85,19 @@ final class World {
         //Use temperature map to affect with?
         //Or only do that later when making humidity map?
     void generateWindMap() {
+        auto randomField = new ValueMap;
+        auto gradient = new GradientNoise!()(400, new RandSourceUniform(880128));
+        auto gradient2 = new GradientNoise!()(400, new RandSourceUniform(821088));
+
+        auto hybrid1 = new HybridMultiFractal(gradient, 0.7, 2, 4, 0);
+        hybrid1.setBaseWaveLength(100);
+        auto hybrid2 = new HybridMultiFractal(gradient2, 0.7, 2, 4, 0);
+        hybrid2.setBaseWaveLength(100);
+
+        windMap = new typeof(windMap)(400, 400);
+        windMap.fill(hybrid1, hybrid2, 400, 400);
+        windMap.normalize(0, 10);
+
     }
 
     void generateHumidityMap() {

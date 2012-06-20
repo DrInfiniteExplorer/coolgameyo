@@ -46,6 +46,9 @@ class GradientNoise(string Step = "smoothStep", string Lerp = "lerp") : ValueSou
     }
     
     double getValue(double x, double y, double z) {
+        x += 0.012354378973;
+        y += 0.834239853982;
+        z += 0.359820984234;
         int i = to!int(floor(x));
         int j = to!int(floor(y));
         int k = to!int(floor(z));
@@ -77,6 +80,9 @@ class GradientNoise(string Step = "smoothStep", string Lerp = "lerp") : ValueSou
         return 2.0 * Interpolate(v0, v1, wx);
     }    
     double getValue(double x, double y) {
+        x += 0.012354378973;
+        y += 0.834239853982;
+
         int i = to!int(floor(x));
         int j = to!int(floor(y));
         double dx = x - to!double(i);
@@ -96,6 +102,8 @@ class GradientNoise(string Step = "smoothStep", string Lerp = "lerp") : ValueSou
     }
     
     double getValue(double x) {
+        x += 0.012354378973;
+
         int i = to!int(floor(x));
         double dx = x - to!double(i);
         

@@ -4,6 +4,9 @@ import std.conv;
 import std.algorithm;
 import std.stdio;
 import std.string;
+import std.math;
+
+import stolen.vector2d;
 
 import util.util;
 import util.math;
@@ -13,7 +16,7 @@ import graphics.image;
 
 final class Vector2DMap2D(T, bool Wrap = true) {
 
-    alias Vector2d!T StorageType;
+    alias vector2d!T StorageType;
     StorageType[] map;
     uint sizeX, sizeY;
 
@@ -32,15 +35,18 @@ final class Vector2DMap2D(T, bool Wrap = true) {
     }
 
     //Gets values 0.._sizeX, 0.._sizeY from source and puts in place.
-    void fill(Source)(Source source, uint _sizeX, uint _sizeY) {
+    void fill(Source)(Source source1, Source source2, uint _sizeX, uint _sizeY) {
         sizeX = _sizeX;
         sizeY = _sizeY;
         auto mul = sizeX * sizeY;
-        randMap.length = mul;
+        map.length = mul;
         foreach(i ; 0 .. mul) {
-            //Since not specified or anything, sample at +½, +½ to avoid sampling at lattice points (perlin)
-            randMap[i] = random.random.getValue(source, to!double(i % sizeX)+0.5, to!double(i / sizeX)+0.5);
-        }
+
+            map[i] = StorageType(
+                random.random.getValue(source1, cast(double)(i % sizeX), cast(double)(i / sizeX)),
+                random.random.getValue(source2, cast(double)(i % sizeX), cast(double)(i / sizeX))
+                );
+            }
     }
 
     //Takes x*y samples in designated area.
@@ -48,11 +54,11 @@ final class Vector2DMap2D(T, bool Wrap = true) {
         sizeX = _sizeX;
         sizeY = _sizeY;
         auto mul = sizeX * sizeY;
-        auto deltaX = (maxX - minX) / to!double(sizeX);
-        auto deltaY = (maxY - minY) / to!double(sizeY);
+        auto deltaX = (maxX - minX) / cast(double)sizeX;
+        auto deltaY = (maxY - minY) / cast(double)sizeY;
         randMap.length = mul;
         foreach(i ; 0 .. mul) {
-            randMap[i] = random.random.getValue(source, minX + to!double(i % sizeX) * deltaX, to!double(i / sizeX) * deltaY);
+            randMap[i] = random.random.getValue(source, minX + cast(double)(i % sizeX) * deltaX, cast(double)(i / sizeX) * deltaY);
         }
     }
 
@@ -74,21 +80,21 @@ final class Vector2DMap2D(T, bool Wrap = true) {
         double scale = (Max-Min) / (max-min);
         writeln(text("normalize: min ", min, " max ", max));
 
-        foreach(ref val; randMap) {
+        foreach(ref val; map) {
             val = (val-min) * scale + Min;
         }
     }
 
 
     void set(int x, int y, StorageType value) {
-        randMap[x + y * sizeX] = value;
+        map[x + y * sizeX] = value;
     }
 
     StorageType get(int x, int y) {
         debug{
             BREAK_IF(x < 0 || x >= sizeX || y < 0 || y >= sizeY);
         }
-        return randMap[x + y * sizeX];
+        return map[x + y * sizeX];
     }
 
 
@@ -98,7 +104,7 @@ final class Vector2DMap2D(T, bool Wrap = true) {
         ubyte* ptr = imgData.ptr;
         auto range = max - min;
         foreach(value ; map) {
-            double V = cast(double)(value-min) / cast(double)range;
+            double V = cast(double)(value.getLength()-min) / cast(double)range;
             if (color is null ) {
                 if(doClamp) {
                     V = clamp(V, 0, 1);
@@ -118,7 +124,28 @@ final class Vector2DMap2D(T, bool Wrap = true) {
             }
             ptr += 4;
         }
+
         auto img = Image(imgData.ptr, sizeX, sizeY);
+        int spacing = 20;
+        double arrowSize = 20;
+        for(int y = 5 ; y < sizeY ; y += spacing) {
+            for(int x = 5 ; x < sizeX ; x += spacing) {
+                auto v = get(x, y);
+                auto len = (v.getLength() - min) / range;
+                len *= arrowSize;
+                v.normalize();
+                auto v_cross = vec2d(-v.Y, v.X);
+
+                auto center = vec2d(x, y);
+                auto start = center - v * len;
+                auto end = center + v * len;
+                img.drawLine(start.convert!int, end.convert!int, vec3i(255, 0, 0));
+                auto start_a = start + v_cross * len*0.3;
+                auto start_b = start - v_cross * len*0.3;
+                img.drawLine(start_a.convert!int, start_b.convert!int, vec3i(0, 0, 0));
+
+            }
+        }
         return img;        
     }
 
@@ -128,10 +155,10 @@ final class Vector2DMap2D(T, bool Wrap = true) {
     }
 
     void saveBin(string filename) {
-        std.file.write(filename, randMap);
+        std.file.write(filename, map);
     }
     void loadBin(string filename) {
-        randMap = cast(StorageType[])std.file.read(filename);
-        std.file.write(filename, randMap);
+        map = cast(StorageType[])std.file.read(filename);
+        std.file.write(filename, map);
     }
 };

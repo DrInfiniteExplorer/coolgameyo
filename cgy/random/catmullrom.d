@@ -73,3 +73,15 @@ body{
         return ((c3*x + c2)*x + c1)*x + c0;
     }
 }
+
+double[4] delegate(double) colorSpline(Type)(Type[] ar) {
+    return (double d) {
+        union Asd {
+            double[4] ret;
+            Type tmp;
+        }
+        Asd asd;
+        asd.tmp = CatmullRomSpline(d, ar);
+        return asd.ret;
+    };
+}

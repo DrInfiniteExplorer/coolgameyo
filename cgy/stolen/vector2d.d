@@ -79,7 +79,7 @@ public:
     }
 
 	//! sort in order X, Y. Equality with rounding tolerance.
-	T opCmp(const vector2d!(T)other) const
+	int opCmp(const vector2d!(T)other) const
 	{
         auto x = X - other.X;
         auto y = Y - other.Y;
@@ -123,6 +123,10 @@ public:
 	/** This is useful because it is much faster than getLength().
 	\return The squared length of the vector. */
 	T getLengthSQ() const { return cast(T) (X*X + Y*Y); }
+
+    void setLength(T length) {
+        this *= cast(T)(length / getLength());
+    }
 
 	//! Get the dot product of this vector with another.
 	/** \param other Other vector to take dot product with.

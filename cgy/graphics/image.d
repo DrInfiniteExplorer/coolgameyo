@@ -105,6 +105,58 @@ struct Image {
         }
     }
 
+    //TODO: Make this retardedly much faster :D
+    // And retardedly much less retarded :P
+    void drawLine(vec2i start, vec2i end, vec3i color) {
+        vec3ub col = color.convert!ubyte;
+        start.X = clamp(start.X, 0, imgWidth-1);
+        end.X = clamp(end.X, 0, imgWidth-1);
+        start.Y = clamp(start.Y, 0, imgHeight-1);
+        end.Y = clamp(end.Y, 0, imgHeight-1);
+
+        if(end.X < start.X) {
+            swap(start, end);
+        }
+        if(start.X == end.X) {
+            if(end.Y < start.Y) {
+                swap(start, end);
+            }
+            foreach(y ; start.Y .. end.Y) {
+                vec3ub* ptr = cast(vec3ub*) (imgData.ptr + 4*( start.X + imgWidth * y));
+                *ptr = col;
+            }
+        }
+        else if(start.Y == end.Y) {
+            foreach(x ; start.X .. end.X) {
+                vec3ub* ptr = cast(vec3ub*) (imgData.ptr + 4*( x + imgWidth * start.Y));
+                *ptr = col;
+            }
+        } else {
+            void set(int x, int y) {
+                BREAK_IF(x < 0);
+                BREAK_IF(y < 0);
+                BREAK_IF(x >= imgWidth);
+                BREAK_IF(y >= imgHeight);
+                scope(failure) BREAKPOINT;
+                vec3ub* ptr = cast(vec3ub*) (imgData.ptr + 4*( x + imgWidth * y));
+                *ptr = col;
+            }
+            vec2d pt = start.convert!double;
+            vec2d dir = end.convert!double - pt;
+            auto step = 0.1;
+            auto maxIter = cast(int) dir.getLength() / step;
+            dir.setLength(step);
+            int iter = 0;
+            while(start.getDistanceFromSQ(end) != 0) {
+                start = pt.convert!int;
+                set(start.X, start.Y);
+                pt += dir;
+                iter++;
+                if(iter >= maxIter) return;
+            }
+        }
+    }
+
     uint toGLTex(uint tex){
         int width, height;
         version(derpderp){

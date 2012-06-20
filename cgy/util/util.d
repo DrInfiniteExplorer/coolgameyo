@@ -35,6 +35,7 @@ long utime() {
     return TickDuration.currSystemTick().usecs;
 }
 
+alias vector2d!(ubyte)  vec2ub;
 alias vector2d!(int)  vec2i;
 alias vector2d!(float)  vec2f;
 alias vector2d!(double)  vec2d;
