@@ -2,10 +2,10 @@ module random.ridgedfractal;
 
 import std.math;
 
-import random.random;
+import random.valuesource;
 
 // TMPA p504
-class RidgedMultiFractal : ValueSource {
+final class RidgedMultiFractal : ValueSource {
     ValueSource source;
     double H = 0.75;
     double lacunarity = 2.0;
@@ -50,7 +50,7 @@ class RidgedMultiFractal : ValueSource {
         baseFrequency = 1.0 / waveLength;
     }
 
-    double getValue(double x, double y, double z) {
+    override double getValue(double x, double y, double z) {
         x *= baseFrequency;
         y *= baseFrequency;
         z *= baseFrequency;
@@ -74,7 +74,7 @@ class RidgedMultiFractal : ValueSource {
         }
         return result;
     }
-    double getValue(double x, double y) {
+    override double getValue(double x, double y) {
         x *= baseFrequency;
         y *= baseFrequency;
 
@@ -97,7 +97,7 @@ class RidgedMultiFractal : ValueSource {
         }
         return result;
     }
-    double getValue(double x) {    
+    override double getValue(double x) {    
         x *= baseFrequency;
 
         double signal = source.getValue(x);

@@ -2,6 +2,7 @@ module statistics;
 
 import std.algorithm;
 import std.conv;
+import std.datetime;
 import std.exception;
 import std.file;
 import std.string;
@@ -196,9 +197,14 @@ final class Statistics {
     mixin(ProgressData!("LoadGame"));
 }
 
+struct StupWatch {
+    StopWatch sw;
+    alias sw this;
+}
+
 template LogTime(const char[] What) {
     const char[] LogTime = 
-    "StopWatch sw;    
+    "StupWatch sw;    
     sw.start();
     scope(exit) {
         sw.stop();
@@ -209,7 +215,7 @@ template LogTime(const char[] What) {
 
 template Time(const char[] WhenDone) {
     const char[] Time = 
-    "StopWatch sw;    
+    "StupWatch sw;    
     sw.start();
     scope(exit) {
         sw.stop();
@@ -221,7 +227,7 @@ template Time(const char[] WhenDone) {
 
 template MeasureTime(const char[] msg, const bool ms = true) {
     const char[] MeasureTime = 
-        "StopWatch sw;    
+        "StupWatch sw;    
         sw.start();
         scope(exit) {
             sw.stop();

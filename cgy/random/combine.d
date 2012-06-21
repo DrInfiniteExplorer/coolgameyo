@@ -1,6 +1,6 @@
 module random.combine;
 
-import random.random;
+import random.valuesource;
 
 // Combine!("+")
 // Combine!("a < 0 ? a : b"
@@ -16,7 +16,7 @@ alias Combine!("a > b ? b : a") CombineMin;
 
 //TODO: Kika på std.functinal.binaryFun och stjäl all kod.
 
-class Combine(string operation) : ValueSource {
+final class Combine(string operation) : ValueSource {
     ValueSource source;
     ValueSource source2;
 
@@ -25,7 +25,7 @@ class Combine(string operation) : ValueSource {
         source2 = s2;
     }
 
-    double getValue(double x, double y, double z) {
+    override double getValue(double x, double y, double z) {
 
         double a = source.getValue(x, y, z);
         double b = source2.getValue(x, y, z);
@@ -36,7 +36,7 @@ class Combine(string operation) : ValueSource {
             pragma(error, "DERP NOOOOO!!!");
         }
     }
-    double getValue(double x, double y) {
+    override double getValue(double x, double y) {
         double a = source.getValue(x, y);
         double b = source2.getValue(x, y);
 
@@ -46,7 +46,7 @@ class Combine(string operation) : ValueSource {
             pragma(error, "DERP NOOOOO!!!");
         }
     }
-    double getValue(double x) {
+    override double getValue(double x) {
         double a = source.getValue(x);
         double b = source2.getValue(x);
 

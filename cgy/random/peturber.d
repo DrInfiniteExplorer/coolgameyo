@@ -1,9 +1,9 @@
 module random.peturber;
 
 import util.util;
-import random.random;
+import random.valuesource;
 
-class Peturber : ValueSource {
+final class Peturber : ValueSource {
     ValueSource source;
     ValueSource petX;
     ValueSource petY;
@@ -18,7 +18,7 @@ class Peturber : ValueSource {
         power = p;
     }
     
-    double getValue(double x, double y, double z) {
+    override double getValue(double x, double y, double z) {
         if (petX !is null) {
             x += petX.getValue(x, y, z) * power.X;
         }
@@ -30,7 +30,7 @@ class Peturber : ValueSource {
         }
         return source.getValue(x, y, z);
     }
-    double getValue(double x, double y) {
+    override double getValue(double x, double y) {
         if (petX !is null) {
             x += petX.getValue(x, y) * power.X;
         }
@@ -39,7 +39,7 @@ class Peturber : ValueSource {
         }
         return source.getValue(x, y);
     }
-    double getValue(double x) {
+    override double getValue(double x) {
         if (petX !is null) {
             x += petX.getValue(x) * power.X;
         }

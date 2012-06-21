@@ -488,6 +488,7 @@ d:\D\ulnb0333\ulink.exe $(IntDir)\$(TargetName).obj gdi32.lib win32.lib advapi32
    <File path="random\randsource.d" />
    <File path="random\ridgedfractal.d" />
    <File path="random\valuemap.d" />
+   <File path="random\valuesource.d" />
    <File path="random\vectormap.d" />
    <File path="random\xinterpolate.d" />
    <File path="random\xinterpolate4.d" />

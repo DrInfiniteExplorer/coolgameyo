@@ -5,6 +5,7 @@ import std.math;
 
 import util.util;
 import random.random;
+import random.valuesource;
 
 double XInterpolate(alias Lerp)(ValueSource source, double x, double y, double z) {
     //TODO: Do not assume that the source is a lattice with grid of size 1,1
@@ -53,18 +54,18 @@ double XInterpolate(alias Lerp)(ValueSource source, double x) {
     return tx1;
 }
 
-class XInterpolation(alias Lerp) : ValueSource{
+final class XInterpolation(alias Lerp) : ValueSource {
     ValueSource source;
     this(ValueSource _source) {
         source = _source;
     }
-    double getValue(double x, double y, double z) {
+    override double getValue(double x, double y, double z) {
         return XInterpolate!Lerp(source, x,y,z);
     }
-    double getValue(double x, double y) {
+    override double getValue(double x, double y) {
         return XInterpolate!Lerp(source, x,y);
     }
-    double getValue(double x) {
+    override double getValue(double x) {
         return XInterpolate!Lerp(source, x);
     }
 }

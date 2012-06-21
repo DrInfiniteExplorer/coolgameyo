@@ -16,23 +16,8 @@ import util.math;
 
 //TODO: Make interface, etc laters
 
-interface ValueSource {
-    double getValue(double x, double y, double z);
-    double getValue(double x, double y);
-    double getValue(double x);
-}
 
-class ValueSourceProxy2D : ValueSource {
-    double delegate (double, double) func;
-    double getValue(double x, double y, double z) { return 0; }
-    double getValue(double x){ return 0;};
-    double getValue(double x, double y) {
-        return func(x,y);
-    }
-}
-
-
-double getValue(Source)(Source s, double x, double y) {
+auto getValue(Source)(Source s, double x, double y) {
     static if(__traits(compiles, s.getValue(x, y))) {    
         return s.getValue(x, y);
     } else static if(__traits(compiles, s(x, y))) {
@@ -43,7 +28,7 @@ double getValue(Source)(Source s, double x, double y) {
         assert(0);
     }
 }
-double getValue(Source)(Source s, double x) {
+auto getValue(Source)(Source s, double x) {
     static if(__traits(compiles, s.getValue(x))) {    
         return s.getValue(x);
     } else static if(__traits(compiles, s(x))) {
@@ -54,6 +39,9 @@ double getValue(Source)(Source s, double x) {
         assert(0);
     }
 }
+
+
+
 
 double clamp(double value, double _min, double _max) {
     return min(_max, max(_min, value));

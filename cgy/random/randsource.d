@@ -3,9 +3,9 @@ module random.randsource;
 import std.random;
 
 import util.util;
-import random.random;
+import random.valuesource;
 
-class RandSourceUniform : ValueSource {
+final class RandSourceUniform : ValueSource {
     Random gen;
     double min, max;
     this(uint seed, double _min = -1.0, double _max = 1.0) {
@@ -13,13 +13,13 @@ class RandSourceUniform : ValueSource {
         min = _min;
         max = _max;
     }
-    double getValue(double x, double y, double z) {
+    override double getValue(double x, double y, double z) {
         return getValue(x);
     }
-    double getValue(double x, double y) {
+    override double getValue(double x, double y) {
         return getValue(x);
     }
-    double getValue(double x) {
+    override double getValue(double x) {
         return uniform(min, max, gen);
     }
     Type get(Type)(Type miin, Type maax) {

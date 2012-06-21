@@ -14,6 +14,7 @@ import util.util;
 import util.rect;
 
 import random.catmullrom;
+import random.randsource;
 
 
 import worldgen.maps;
@@ -34,6 +35,7 @@ class WorldMenu : GuiElementWindow {
     Rectd oldPos;
 
     World world;
+    int seed;
 
     this(MainMenu m) {
         main = m;
@@ -42,12 +44,12 @@ class WorldMenu : GuiElementWindow {
 
         super(guiSystem, Rectd(vec2d(0.0, 0.0), vec2d(1, 1)), "World experiment Menu~~~!", false, false);
 
-        heightImg = new GuiElementImage(this, Rectd(0, 0, 0.3, 0.3));
-        temperatureImg = new GuiElementImage(this, Rectd(0.3, 0, 0.3, 0.3));
-        moistureImg = new GuiElementImage(this, Rectd(0.6, 0, 0.3, 0.3));
+        heightImg = new GuiElementImage(this, Rectd(clientArea.leftOf, clientArea.topOf, 0.3, 0.3));
+        temperatureImg = new GuiElementImage(this, Rectd(heightImg.rightOf, heightImg.topOf, 0.3, 0.3));
+        moistureImg = new GuiElementImage(this, Rectd(temperatureImg.rightOf, temperatureImg.topOf, 0.3, 0.3));
 
-        windImg = new GuiElementImage(this, Rectd(0, 0.3, 0.3, 0.3));
-        rainImg = new GuiElementImage(this, Rectd(0.3, 0.3, 0.3, 0.3));
+        windImg = new GuiElementImage(this, Rectd(heightImg.leftOf, heightImg.bottomOf, 0.3, 0.3));
+        rainImg = new GuiElementImage(this, Rectd(windImg.rightOf, windImg.topOf, 0.3, 0.3));
 
         heightImg.mouseClickCB = &zoomImage;
         moistureImg.mouseClickCB = &zoomImage;
@@ -60,9 +62,31 @@ class WorldMenu : GuiElementWindow {
         world = new World;
         world.init();
 
-        new GuiElementButton(this, Rectd(vec2d(0.75, 0.55), vec2d(0.2, 0.10)), "Back", &onBack);
+        auto button = new GuiElementButton(this, Rectd(vec2d(0.75, 0.55), vec2d(0.2, 0.10)), "Back", &onBack);
 
-        redraw(true);
+        auto seedEdit = new GuiElementLabeledEdit(this, Rectd(windImg.leftOf, windImg.bottomOf, 0.2, 0.05), "seed", to!string(world.worldSeed));
+        seedEdit.setOnEnter((string value) {
+            seed = to!int(value);
+            redraw(true);
+        });
+
+        auto randomButton = new GuiElementButton(this, Rectd(seedEdit.leftOf, seedEdit.bottomOf, 0.2, 0.10), "Random", {
+            auto rand = new RandSourceUniform(seed);
+            seed = rand.get(int.min, int.max);
+            seedEdit.setText(to!string(seed));
+            redraw(true);
+        });
+
+        auto saveImagesButton = new GuiElementButton(this, Rectd(randomButton.leftOf, randomButton.bottomOf, 0.2, 0.1), "Save images", {
+            heightImg.saveImage("worldview_height.bmp");
+            temperatureImg.saveImage("worldview_temperature.bmp");
+            moistureImg.saveImage("worldview_moisture.bmp");
+            windImg.saveImage("worldview_wind.bmp");
+            rainImg.saveImage("worldview_rain.bmp");
+        });
+
+
+        redraw(false);
 
     }
 
@@ -76,7 +100,7 @@ class WorldMenu : GuiElementWindow {
             if(!zoomed) {
                 zoomed = true;
                 oldPos = e.getRelativeRect;
-                e.setRelativeRect(Rectd(0, 0, 0.6, 0.6));
+                e.setRelativeRect(Rectd(clientArea.leftOf, clientArea.topOf, 0.6, 0.6));
                 e.bringToFront();
             }
         } else {
@@ -87,20 +111,22 @@ class WorldMenu : GuiElementWindow {
     };
 
 
-    void redraw(bool all) {
-        if(all) {
-            heightImg.setImage(world.heightMap.toImage(world.worldMin, world.worldMax, true, (double v) {
-                double[4] ret;
-                ret[] = v;
-                if(v < 0.3) ret[0..1] = 0;
-                return ret;
-            }));
-
-
-            temperatureImg.setImage(world.temperatureMap.toImage(-30, 50, true, colorSpline([vec3d(0, 0, 1), vec3d(0, 0, 1), vec3d(1, 1, 0), vec3d(1, 0, 0), vec3d(1, 0, 0)])));
-
-            windImg.setImage(world.windMap.toImage(0, 10, true, colorSpline([vec3d(0, 0, 1), vec3d(0, 0, 1), vec3d(1, 1, 0), vec3d(1, 0, 0), vec3d(1, 0, 0)])));
+    void redraw(bool regen) {
+        if(regen) {
+            world = new World;
+            world.worldSeed = seed;
+            world.init();
         }
+        heightImg.setImage(world.heightMap.toImage(world.worldMin, world.worldMax, true, (double v) {
+            double[4] ret;
+            ret[] = v;
+            if(v < 0.3) ret[0..1] = 0;
+            return ret;
+        }));
+
+        temperatureImg.setImage(world.temperatureMap.toImage(-30, 50, true, colorSpline([vec3d(0, 0, 1), vec3d(0, 0, 1), vec3d(1, 1, 0), vec3d(1, 0, 0), vec3d(1, 0, 0)])));
+
+        windImg.setImage(world.windMap.toImage(0, 10, true, colorSpline([vec3d(0, 0, 1), vec3d(0, 0, 1), vec3d(1, 1, 0), vec3d(1, 0, 0), vec3d(1, 0, 0)])));
     }
 
     void onBack() {

@@ -157,6 +157,31 @@ struct Image {
         }
     }
 
+    void fromGLTex(uint tex) {
+        int width, height;
+
+        glBindTexture(GL_TEXTURE_2D, tex);
+        glError();
+        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
+        glError();
+        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
+        glError();
+
+        if(width * height <= 0) {
+            msg("ALERT! Image captured is not very interesting, it has 0 area! Making it 1x1");
+            imgWidth = 1;
+            imgHeight = 1;
+            imgData.length = 4;
+            return;
+        }
+
+        imgWidth = width;
+        imgHeight = height;
+        imgData.length = 4 * width * height;
+        glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, imgData.ptr);
+        glError();
+    }
+
     uint toGLTex(uint tex){
         int width, height;
         version(derpderp){
@@ -218,15 +243,9 @@ struct Image {
         ilError();
         ilSetInteger(IL_ORIGIN_MODE, IL_ORIGIN_UPPER_LEFT);
         ilError();
-/*
-        int i=0;
-        foreach(ref c ; imgData){
-            i+=10;
-            c = cast(char)(i);
-        }
-*/
+
         ilTexImage(imgWidth, imgHeight, 1, 4, IL_RGBA, IL_UNSIGNED_BYTE, imgData.ptr);
-        //ilSetPixels( 0, 0, 0, imgWidth, imgHeight, 1, IL_BGRA, IL_UNSIGNED_BYTE, imgData.ptr);
+
         ilError();
         const char* ptr = toStringz(filename);
         ilEnable(IL_FILE_OVERWRITE);

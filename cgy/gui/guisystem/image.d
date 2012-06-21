@@ -44,6 +44,12 @@ class GuiElementImage : public GuiElement {
         setAbsoluteRect(absoluteRect);
     }
 
+    void saveImage(string filename) {
+        Image img;
+        img.fromGLTex(image);
+        img.save(filename);
+    }
+
     override void render() {
         //Render background, etc, etc.
         renderImage(image, absoluteRect, imgSource);        

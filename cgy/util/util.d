@@ -10,7 +10,7 @@ import std.range;
 import std.string;
 import std.traits;
 
-public import std.datetime;
+//public import std.datetime;
 
 //TODO: Got order-dependant bugs here. If doing pos, stolen, worldparts, then we get bugs and bugs. sadface.
 //import world.sector;

@@ -6,6 +6,7 @@ import util.util;
 import random.random;
 import random.permutation;
 import random.randsource;
+import random.valuesource;
 
 class GradientNoise(string Step = "smoothStep", string Lerp = "lerp") : ValueSource {
     mixin("alias " ~ Step ~ " StepFunc;");
@@ -45,7 +46,7 @@ class GradientNoise(string Step = "smoothStep", string Lerp = "lerp") : ValueSou
         return v.X * dx;
     }
     
-    double getValue(double x, double y, double z) {
+    override double getValue(double x, double y, double z) {
         x += 0.012354378973;
         y += 0.834239853982;
         z += 0.359820984234;
@@ -79,7 +80,7 @@ class GradientNoise(string Step = "smoothStep", string Lerp = "lerp") : ValueSou
         
         return 2.0 * Interpolate(v0, v1, wx);
     }    
-    double getValue(double x, double y) {
+    override double getValue(double x, double y) {
         x += 0.012354378973;
         y += 0.834239853982;
 
@@ -101,7 +102,7 @@ class GradientNoise(string Step = "smoothStep", string Lerp = "lerp") : ValueSou
         return 2.0 * Interpolate(y0, y1, wy);
     }
     
-    double getValue(double x) {
+    override double getValue(double x) {
         x += 0.012354378973;
 
         int i = to!int(floor(x));

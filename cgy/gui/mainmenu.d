@@ -55,7 +55,7 @@ class MainMenu : GuiElementWindow {
 
 
         void printScreen() {
-            new PrintScreenMenu(this, game.getWorld, game.getCamera);
+            new PrintScreenMenu(this);
         }
         guiSystem.addHotkey(SDLK_PRINT, &printScreen);
     }

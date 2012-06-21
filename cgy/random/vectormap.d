@@ -35,18 +35,14 @@ final class Vector2DMap2D(T, bool Wrap = true) {
     }
 
     //Gets values 0.._sizeX, 0.._sizeY from source and puts in place.
-    void fill(Source)(Source source1, Source source2, uint _sizeX, uint _sizeY) {
+    void fill(Source)(Source source, uint _sizeX, uint _sizeY) {
         sizeX = _sizeX;
         sizeY = _sizeY;
         auto mul = sizeX * sizeY;
         map.length = mul;
         foreach(i ; 0 .. mul) {
-
-            map[i] = StorageType(
-                random.random.getValue(source1, cast(double)(i % sizeX), cast(double)(i / sizeX)),
-                random.random.getValue(source2, cast(double)(i % sizeX), cast(double)(i / sizeX))
-                );
-            }
+            map[i] = random.random.getValue(source, cast(double)(i % sizeX), cast(double)(i / sizeX));
+        }
     }
 
     //Takes x*y samples in designated area.

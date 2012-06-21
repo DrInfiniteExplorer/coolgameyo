@@ -6,6 +6,7 @@ import std.math;
 
 import util.util;
 import random.random;
+import random.valuesource;
 
 
 double XInterpolate4(alias Mixer)(ValueSource source, double x, double y, double z) {
@@ -137,18 +138,18 @@ double XInterpolate4(alias Mixer)(ValueSource source, double x) {
     return tx1;
 }
 
-class XInterpolation4(alias Mixer) : ValueSource{
+final class XInterpolation4(alias Mixer) : ValueSource{
     ValueSource source;
     this(ValueSource _source) {
         source = _source;
     }
-    double getValue(double x, double y, double z) {
+    override double getValue(double x, double y, double z) {
         return XInterpolate4!Mixer(source, x,y,z);
     }
-    double getValue(double x, double y) {
+    override double getValue(double x, double y) {
         return XInterpolate4!Mixer(source, x,y);
     }
-    double getValue(double x) {
+    override double getValue(double x) {
         return XInterpolate4!Mixer(source, x);
     }
 }

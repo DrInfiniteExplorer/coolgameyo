@@ -38,9 +38,9 @@ class PrintScreenMenu : GuiElementWindow {
     GuiEventDump dump;
 
     Image img;
-    this(MainMenu m, World w, Camera c) {
+    this(MainMenu m) {
         img = screenCap();
-        //computeYourFather(w, img, c);
+
         main = m;
         guiSystem = cast(GuiSystem)m.getGuiSystem();
         dump = guiSystem.setEventDump(null);

@@ -1,9 +1,11 @@
 module random.hybridfractal;
 
-import random.random;
+import std.math;
+
+import random.valuesource;
 
 // TMPA p502
-class HybridMultiFractal : ValueSource {
+final class HybridMultiFractal : ValueSource {
     ValueSource source;
     double H = 0.25;
     double lacunarity = 2;
@@ -43,7 +45,7 @@ class HybridMultiFractal : ValueSource {
     }
 
 
-    double getValue(double x, double y, double z) {
+    override double getValue(double x, double y, double z) {
         x *= baseFrequency;
         y *= baseFrequency;
         z *= baseFrequency;
@@ -60,7 +62,7 @@ class HybridMultiFractal : ValueSource {
         }
         return result;
     }
-    double getValue(double x, double y) {
+    override double getValue(double x, double y) {
         x *= baseFrequency;
         y *= baseFrequency;
         double result = (source.getValue(x, y) + offset) * exponents[0]; //[0] should be 1...
@@ -77,7 +79,7 @@ class HybridMultiFractal : ValueSource {
         }
         return result;
     }
-    double getValue(double x) {    
+    override double getValue(double x) {    
         x *= baseFrequency;
         double result = (source.getValue(x) + offset) * exponents[0]; //[0] should be 1...
         double weight = result;

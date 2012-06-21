@@ -1,6 +1,7 @@
 module worldgen.maps;
 
 import std.algorithm;
+import std.math;
 
 import util.util;
 
@@ -15,6 +16,7 @@ import random.gradient;
 import random.gradientnoise;
 import random.hybridfractal;
 import random.map;
+import random.valuesource;
 
 alias ValueMap2Dd ValueMap;
 
@@ -23,12 +25,14 @@ final class World {
     ValueMap heightMap;
     ValueMap moistureMap;
     ValueMap temperatureMap;
-
     Vector2DMap2D!(double, true) windMap;
-
     ValueMap rainMap;
 
+    int worldSeed = 880128;
     double worldHeight = 10_000;
+
+    int heightSeed;
+    int windSeed;
     double worldMin;
     double worldMax;
 
@@ -52,13 +56,41 @@ final class World {
     }
 
     void generateHeightMap() {
+
+        auto rnd = new RandSourceUniform(worldSeed);
+        heightSeed = rnd.get(int.min, int.max);
+        windSeed = rnd.get(int.min, int.max);
+
         auto randomField = new ValueMap;
-        auto gradient = new GradientNoise01!()(400, new RandSourceUniform(880128));
+        auto gradient = new GradientNoise01!()(400, new RandSourceUniform(heightSeed));
         auto hybrid = new HybridMultiFractal(gradient, 0.1, 2, 6, 0.1);
         hybrid.setBaseWaveLength(80);
 
+        auto test = new DelegateSource((double x, double y, double z) {
+            auto height = hybrid.getValue(x, y);
+            auto xDist =  abs(200 - x);
+            auto xBorderDistance = 200 - xDist;
+            auto yDist =  abs(200 - y);
+            auto yBorderDistance = 200 - yDist;
+
+            enum limit = 25.0;
+            enum limitSQ = limit ^^ 2.0;
+            if(xBorderDistance < limit) {
+                auto xLimitDistance = limit - xBorderDistance;
+                auto ratio = (limitSQ - xLimitDistance^^2.0) / limitSQ;
+                height *= ratio;
+            }
+            if(yBorderDistance < limit) {
+                auto yLimitDistance = limit - yBorderDistance;
+                auto ratio = (limitSQ - yLimitDistance^^2.0) / limitSQ;
+                height *= ratio;
+            }
+            return height;
+        });
+
+
         heightMap = new ValueMap(400, 400);
-        heightMap.fill(hybrid, 400, 400);
+        heightMap.fill(test, 400, 400);
         heightMap.normalize(worldMin, worldMax); 
     }
 
@@ -86,17 +118,27 @@ final class World {
         //Or only do that later when making humidity map?
     void generateWindMap() {
         auto randomField = new ValueMap;
-        auto gradient = new GradientNoise!()(400, new RandSourceUniform(880128));
-        auto gradient2 = new GradientNoise!()(400, new RandSourceUniform(821088));
+        auto windRnd = new RandSourceUniform(windSeed);
+        auto gradient = new GradientNoise!()(400, windRnd);
+        auto gradient2 = new GradientNoise!()(400, windRnd);
 
         auto hybrid1 = new HybridMultiFractal(gradient, 0.7, 2, 4, 0);
         hybrid1.setBaseWaveLength(100);
         auto hybrid2 = new HybridMultiFractal(gradient2, 0.7, 2, 4, 0);
         hybrid2.setBaseWaveLength(100);
 
+        auto hybridCombo = new DelegateSource2D( (double x, double y, double z) {
+            auto rand = vec2d(hybrid1.getValue(x,y,z), hybrid2.getValue(x,y,z));
+            auto grad = heightMap.centralGradient(x,y, 1.0)*10;
+            return grad;
+            //return rand + grad;
+        });
+
         windMap = new typeof(windMap)(400, 400);
-        windMap.fill(hybrid1, hybrid2, 400, 400);
+        windMap.fill(hybridCombo, 400, 400);
         windMap.normalize(0, 10);
+
+
 
     }
 

@@ -8,6 +8,7 @@ import std.string;
 import util.util;
 import util.math;
 import random.random;
+import random.valuesource;
 import graphics.image;
 
 alias ValueMap2D!double ValueMap2Dd;
@@ -39,7 +40,7 @@ final class ValueMap2D(StorageType, bool Wrap = true) : ValueSource {
         randMap.length = mul;
         foreach(i ; 0 .. mul) {
             //Since not specified or anything, sample at +½, +½ to avoid sampling at lattice points (perlin)
-            randMap[i] = random.random.getValue(source, to!double(i % sizeX)+0.5, to!double(i / sizeX)+0.5);
+            randMap[i] = random.random.getValue(source, cast(double)(i % sizeX), cast(double)(i / sizeX));
         }
     }
 
@@ -72,9 +73,9 @@ final class ValueMap2D(StorageType, bool Wrap = true) : ValueSource {
     }
 
     
-    StorageType getValue(double x, double y, double z) { return 0; }
-    StorageType getValue(double x) { return 0; }
-    StorageType getValue(double x, double y) {
+    override StorageType getValue(double x, double y, double z) { return 0; }
+    override StorageType getValue(double x) { return 0; }
+    override StorageType getValue(double x, double y) {
                 //writeln(text(x, " ", y));
         static if(Wrap) {
             x = posMod(to!int(x), sizeX);
