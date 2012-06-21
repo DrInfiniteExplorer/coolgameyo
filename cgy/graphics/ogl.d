@@ -38,8 +38,13 @@ void initOpenGL(bool client){
         DerelictGL.loadClassicVersions(GLVersion.GL21); //BECAUSE THERE IS ONLY UP TO 2.1 IN THE CLASSIC VERSION! :s
         glError();
 
-//        DerelictGL.loadModernVersions(GLVersion.GL30);
-        glError();
+        if(renderSettings.glVersion >= 3.0) {
+            DerelictGL.loadModernVersions(GLVersion.GL30);
+            glError();
+        } else {
+            msg("ALERT! Don't have opengl 3.0, stuff amy crash randomly, and probably will!");
+        }
+
     } else {
         //Load with lesser requirements.
     }
