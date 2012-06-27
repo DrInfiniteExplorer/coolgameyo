@@ -137,8 +137,20 @@ final class World {
         windMap = new typeof(windMap)(400, 400);
         windMap.fill(hybridCombo, 400, 400);
         windMap.normalize(0, 10);
+    }
 
 
+    void step() {
+        stepWind();
+    }
+
+    Vector2DMap2D!(double, true) tmpWindMap;
+    void stepWind() {
+        if(tmpWindMap is null) {
+            tmpWindMap = new typeof(windMap)(400, 400);
+        }
+        windMap.advectVectorField(windMap, tmpWindMap, 3.0, 10);
+        swap(windMap, tmpWindMap);
 
     }
 

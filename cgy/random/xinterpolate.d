@@ -7,7 +7,7 @@ import util.util;
 import random.random;
 import random.valuesource;
 
-double XInterpolate(alias Lerp)(ValueSource source, double x, double y, double z) {
+auto XInterpolate(alias Lerp, Source)(Source source, double x, double y, double z) {
     //TODO: Do not assume that the source is a lattice with grid of size 1,1
     // Ie. dX dY may span [0, 1] over a range that is 4 long instead of current length 1.
     int loX = to!int(floor(x));
@@ -33,7 +33,7 @@ double XInterpolate(alias Lerp)(ValueSource source, double x, double y, double z
     return Lerp(v0, v1, dX);
 }
 
-double XInterpolate(alias Lerp)(ValueSource source, double x, double y) {
+auto XInterpolate(alias Lerp, Source)(Source source, double x, double y) {
     //TODO: Do not assume that the source is a lattice with grid of size 1,1
     // Ie. dX dY may span [0, 1] over a range that is 4 long instead of current length 1.
     int loX = to!int(floor(x));
@@ -45,7 +45,7 @@ double XInterpolate(alias Lerp)(ValueSource source, double x, double y) {
     return Lerp(tx1, tx2, dY);
 }
 
-double XInterpolate(alias Lerp)(ValueSource source, double x) {
+auto XInterpolate(alias Lerp, Source)(Source source, double x) {
     //TODO: Do not assume that the source is a lattice with grid of size 1,1
     // Ie. dX dY may span [0, 1] over a range that is 4 long instead of current length 1.
     int loX = to!int(floor(x));
@@ -60,13 +60,13 @@ final class XInterpolation(alias Lerp) : ValueSource {
         source = _source;
     }
     override double getValue(double x, double y, double z) {
-        return XInterpolate!Lerp(source, x,y,z);
+        return XInterpolate!(Lerp, ValueSource)(source, x,y,z);
     }
     override double getValue(double x, double y) {
-        return XInterpolate!Lerp(source, x,y);
+        return XInterpolate!(Lerp, ValueSource)(source, x,y);
     }
     override double getValue(double x) {
-        return XInterpolate!Lerp(source, x);
+        return XInterpolate!(Lerp, ValueSource)(source, x);
     }
 }
 

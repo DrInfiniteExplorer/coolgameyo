@@ -1,16 +1,18 @@
 module random.vectormap;
 
-import std.conv;
 import std.algorithm;
+import std.conv;
+import std.exception;
+import std.math;
 import std.stdio;
 import std.string;
-import std.math;
 
 import stolen.vector2d;
 
 import util.util;
 import util.math;
 import random.random;
+import random.xinterpolate;
 import graphics.image;
 
 
@@ -36,12 +38,15 @@ final class Vector2DMap2D(T, bool Wrap = true) {
 
     //Gets values 0.._sizeX, 0.._sizeY from source and puts in place.
     void fill(Source)(Source source, uint _sizeX, uint _sizeY) {
+        foreachDo!(Source, "=")(source, _sizeX, _sizeY);
+    }
+    void foreachDo(Source, string Op)(Source source, uint _sizeX, uint _sizeY) {
         sizeX = _sizeX;
         sizeY = _sizeY;
         auto mul = sizeX * sizeY;
         map.length = mul;
         foreach(i ; 0 .. mul) {
-            map[i] = random.random.getValue(source, cast(double)(i % sizeX), cast(double)(i / sizeX));
+            mixin(q{ map[i] } ~ Op ~ q{ random.random.getValue(source, cast(double)(i % sizeX), cast(double)(i / sizeX));});
         }
     }
 
@@ -83,12 +88,28 @@ final class Vector2DMap2D(T, bool Wrap = true) {
 
 
     void set(int x, int y, StorageType value) {
+        static if(Wrap) {
+            x = x % sizeX;
+            y = y % sizeY;
+        } else {
+            debug{
+                BREAK_IF(x < 0 || x >= sizeX || y < 0 || y >= sizeY);
+            }
+        }
         map[x + y * sizeX] = value;
     }
 
+    StorageType getValue(int x, int y) {
+        return get(x, y);
+    }
     StorageType get(int x, int y) {
-        debug{
-            BREAK_IF(x < 0 || x >= sizeX || y < 0 || y >= sizeY);
+        static if(Wrap) {
+            x = x % sizeX;
+            y = y % sizeY;
+        } else {
+            debug{
+                BREAK_IF(x < 0 || x >= sizeX || y < 0 || y >= sizeY);
+            }
         }
         return map[x + y * sizeX];
     }
@@ -157,4 +178,39 @@ final class Vector2DMap2D(T, bool Wrap = true) {
         map = cast(StorageType[])std.file.read(filename);
         std.file.write(filename, map);
     }
+
+
+    float getTimeStep() const {
+        return 1.0f;
+    }
+
+
+
+    //Doesn't work well when there are areas with no "wind", since we walk backwards to find
+    //a value to put "here".
+    void advectVectorField(MapType)(MapType inMap, MapType outMap, float t, int steps = 3) {
+        enforce(inMap.sizeX == sizeX, "Can't advect maps of different X-sizes");
+        enforce(inMap.sizeY == sizeY, "Can't advect maps of different Y-sizes");
+        enforce(inMap.sizeX == outMap.sizeX, "Can't advect maps of different X-sizes");
+        enforce(inMap.sizeY == outMap.sizeY, "Can't advect maps of different Y-sizes");
+
+        auto maxTimeStep = getTimeStep();
+        auto dt = t / steps;
+
+        foreach(y ; 0 .. sizeY) {
+            foreach(x ; 0 .. sizeX) {
+                auto where = StorageType(x, y);
+                foreach(step ; 0 .. steps) {
+                    
+                    where = where - XInterpolate!lerp(this, where.X, where.Y) * dt;
+                }
+                auto value = XInterpolate!lerp(this, where.X, where.Y);
+                outMap.set(x, y, value);
+            }
+        }
+    }
+
+
+
+
 };

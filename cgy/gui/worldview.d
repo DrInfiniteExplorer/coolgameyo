@@ -85,6 +85,11 @@ class WorldMenu : GuiElementWindow {
             rainImg.saveImage("worldview_rain.bmp");
         });
 
+        auto stepButton = new GuiElementButton(this, Rectd(saveImagesButton.leftOf, saveImagesButton.bottomOf, 0.2, 0.1), "Step", {
+            world.step();
+            redraw(false);
+        });
+
 
         redraw(false);
 
