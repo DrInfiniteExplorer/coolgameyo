@@ -8,7 +8,7 @@ class ValueSource {
     abstract double getValue(double x);
 
 
-    vec3d centralGradient(double x, double y, double z, double h = 0.1) {
+    vec3d centralGradient(double x, double y, double z, double h = 1.0) {
         return vec3d(
                      (getValue(x+h, y, z) - getValue(x-h, y, z)) / (2*h),
                      (getValue(x, y+h, z) - getValue(x, y-h, z)) / (2*h),
@@ -25,7 +25,7 @@ class ValueSource {
         return (getValue(x+h) - getValue(x-h)) / (2*h);
     }
 
-    vec3d forwardGradient(double x, double y, double z, double h = 0.1) {
+    vec3d forwardGradient(double x, double y, double z, double h = 1.0) {
         auto here = getValue(x, y, z);
         return vec3d(
                      (getValue(x+h, y, z) - here) / h,
@@ -33,15 +33,37 @@ class ValueSource {
                      (getValue(x, y, z+h) - here) / h
                      );
     }
-    vec2d forwardGradient(double x, double y, double h = 0.1) {
+    vec2d forwardGradient(double x, double y, double h = 1.0) {
         auto here = getValue(x, y);
         return vec2d(
                      (getValue(x+h, y) - here) / h,
                      (getValue(x, y+h) - here) / h
                      );
     }
-    double forwardGradient(double x, double h = 0.1) {
+    double forwardGradient(double x, double h = 1.0) {
         return (getValue(x+h) - getValue(x)) / h;
+    }
+
+
+    vec3d upwindGradient(double x, double y, double z, double dirX, double dirY, double dirZ, double h = 1.0) {
+        auto here = getValue(x, y, z);
+        return vec3d(
+                     dirX < 0 ? getValue(x+h, y  , z  ) - here : here - getValue(x-h, y  , z  ),
+                     dirY < 0 ? getValue(x  , y+h, z  ) - here : here - getValue(x  , y-h, z  ),
+                     dirZ < 0 ? getValue(x  , y  , z+h) - here : here - getValue(x  , y  , z-h)
+                     ) / h;
+    }
+
+    vec2d upwindGradient(double x, double y, double dirX, double dirY, double h = 1.0) {
+        auto here = getValue(x, y);
+        return vec2d(
+                     dirX < 0 ? getValue(x+h, y  ) - here : here - getValue(x-h, y  ),
+                     dirY < 0 ? getValue(x  , y+h) - here : here - getValue(x  , y-h)
+                     ) / h;
+    }
+    double upwindGradient(double x, double dirX, double h = 1.0) {
+        auto here = getValue(x);
+        return (dirX < 0 ? getValue(x+h) - here : here - getValue(x-h)) / h;
     }
 
 }

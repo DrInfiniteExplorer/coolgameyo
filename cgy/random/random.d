@@ -41,12 +41,6 @@ auto getValue(Source)(Source s, double x) {
 }
 
 
-
-
-double clamp(double value, double _min, double _max) {
-    return min(_max, max(_min, value));
-}
-
 T lerpCorrect(T)(T x0, T x1, double t) {
     return (1.0 - t) * x0 + t * x1;
 }
@@ -78,7 +72,7 @@ double cosStep(double time) {
 }
 
 double rampStep(double time) {
-    return clamp(time, 0, 1);
+    return clamp(time, 0.0, 1.0);
 }
 
 T CosInter(T)(T x0, T x1, double time){

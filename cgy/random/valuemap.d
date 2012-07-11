@@ -39,8 +39,17 @@ final class ValueMap2D(StorageType, bool Wrap = true) : ValueSource {
         auto mul = sizeX * sizeY;
         randMap.length = mul;
         foreach(i ; 0 .. mul) {
-            //Since not specified or anything, sample at +½, +½ to avoid sampling at lattice points (perlin)
             randMap[i] = random.random.getValue(source, cast(double)(i % sizeX), cast(double)(i / sizeX));
+        }
+    }
+
+    void foreachDo(Source, string Op)(Source source, uint _sizeX, uint _sizeY) {
+        sizeX = _sizeX;
+        sizeY = _sizeY;
+        auto mul = sizeX * sizeY;
+        randMap.length = mul;
+        foreach(i ; 0 .. mul) {
+            mixin(q{ randMap[i] } ~ Op ~ q{ random.random.getValue(source, cast(double)(i % sizeX), cast(double)(i / sizeX));});
         }
     }
 
@@ -104,20 +113,20 @@ final class ValueMap2D(StorageType, bool Wrap = true) : ValueSource {
             value = (value-min) / range;
             if (color is null ) {
                 if(doClamp) {
-                    value = clamp(value, 0, 1);
+                    value = clamp(value, 0.0, 1.0);
                 }
-                ptr[0..3] = to!ubyte(255 * value);
+                ptr[0..3] = cast(ubyte)(255 * value);
             } else {
                 auto v = color(value);
                 if(doClamp) {
                     foreach(ref vv; v) {
-                        vv = clamp(vv, 0, 1);
+                        vv = clamp(vv, 0.0, 1.0);
                     }
                 }
-                ptr[0] = to!ubyte(255 * v[0]);
-                ptr[1] = to!ubyte(255 * v[1]);
-                ptr[2] = to!ubyte(255 * v[2]);
-                ptr[3] = to!ubyte(255 * v[3]);
+                ptr[0] = cast(ubyte)(255 * v[0]);
+                ptr[1] = cast(ubyte)(255 * v[1]);
+                ptr[2] = cast(ubyte)(255 * v[2]);
+                ptr[3] = cast(ubyte)(255 * v[3]);
             }
             ptr += 4;
         }

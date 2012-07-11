@@ -131,7 +131,7 @@ class WorldMenu : GuiElementWindow {
 
         temperatureImg.setImage(world.temperatureMap.toImage(-30, 50, true, colorSpline([vec3d(0, 0, 1), vec3d(0, 0, 1), vec3d(1, 1, 0), vec3d(1, 0, 0), vec3d(1, 0, 0)])));
 
-        windImg.setImage(world.windMap.toImage(0, 10, true, colorSpline([vec3d(0, 0, 1), vec3d(0, 0, 1), vec3d(1, 1, 0), vec3d(1, 0, 0), vec3d(1, 0, 0)])));
+        windImg.setImage(world.windMap.toImage(0.0, 1.2, true, colorSpline([vec3d(0, 0, 1), vec3d(0, 0, 1), vec3d(1, 1, 0), vec3d(1, 0, 0), vec3d(1, 0, 0)])));
     }
 
     void onBack() {

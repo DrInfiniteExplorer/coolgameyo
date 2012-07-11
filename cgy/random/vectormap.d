@@ -124,26 +124,26 @@ final class Vector2DMap2D(T, bool Wrap = true) {
             double V = cast(double)(value.getLength()-min) / cast(double)range;
             if (color is null ) {
                 if(doClamp) {
-                    V = clamp(V, 0, 1);
+                    V = clamp(V, 0.0, 1.0);
                 }
-                ptr[0..3] = to!ubyte(255 * V);
+                ptr[0..3] = cast(ubyte)(255 * V);
             } else {
                 auto v = color(V);
                 if(doClamp) {
                     foreach(ref vv; v) {
-                        vv = clamp(vv, 0, 1);
+                        vv = clamp(vv, 0.0, 1.0);
                     }
                 }
-                ptr[0] = to!ubyte(255 * v[0]);
-                ptr[1] = to!ubyte(255 * v[1]);
-                ptr[2] = to!ubyte(255 * v[2]);
-                ptr[3] = to!ubyte(255 * v[3]);
+                ptr[0] = cast(ubyte)(255 * v[0]);
+                ptr[1] = cast(ubyte)(255 * v[1]);
+                ptr[2] = cast(ubyte)(255 * v[2]);
+                ptr[3] = cast(ubyte)(255 * v[3]);
             }
             ptr += 4;
         }
 
         auto img = Image(imgData.ptr, sizeX, sizeY);
-        int spacing = 20;
+        int spacing = 50;
         double arrowSize = 20;
         for(int y = 5 ; y < sizeY ; y += spacing) {
             for(int x = 5 ; x < sizeX ; x += spacing) {
@@ -156,7 +156,7 @@ final class Vector2DMap2D(T, bool Wrap = true) {
                 auto center = vec2d(x, y);
                 auto start = center - v * len;
                 auto end = center + v * len;
-                img.drawLine(start.convert!int, end.convert!int, vec3i(255, 0, 0));
+                img.drawLine(start.convert!int, end.convert!int, vec3i(0, 255, 0));
                 auto start_a = start + v_cross * len*0.3;
                 auto start_b = start - v_cross * len*0.3;
                 img.drawLine(start_a.convert!int, start_b.convert!int, vec3i(0, 0, 0));
@@ -184,6 +184,21 @@ final class Vector2DMap2D(T, bool Wrap = true) {
         return 1.0f;
     }
 
+    void advectValueField(MapType)(MapType inMap, MapType outMap) {
+        enforce(inMap.sizeX == sizeX, "Can't advect maps of different X-sizes");
+        enforce(inMap.sizeY == sizeY, "Can't advect maps of different Y-sizes");
+        enforce(inMap.sizeX == outMap.sizeX, "Can't advect maps of different X-sizes");
+        enforce(inMap.sizeY == outMap.sizeY, "Can't advect maps of different Y-sizes");
+
+        foreach(y ; 0 .. sizeY) {
+            foreach(x ; 0 .. sizeX) {
+                auto where = StorageType(x, y);
+                auto dir = get(x, y);
+                auto grad = inMap.upwindGradient(x, y, dir.X, dir.Y, 1.0);
+                outMap.set(x, y, -dir.dotProduct(grad));
+            }
+        }
+    }
 
 
     //Doesn't work well when there are areas with no "wind", since we walk backwards to find

@@ -202,7 +202,7 @@ CommonType!(T)[T.length] makeStackArray(T...)(T ts) {
     return ret;
 }
 
-Type clamp(Type)(Type val, Type min, Type max)
+Type clamp(Type=double)(Type val, Type min, Type max)
 in{
     assert(min <= max, "Min must be less than or equal to max!");
 }

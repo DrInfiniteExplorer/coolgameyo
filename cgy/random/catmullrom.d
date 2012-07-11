@@ -24,7 +24,7 @@ body{
         int count = ar.length;
         int nspans = count-3;
     
-        double x = clamp(t, 0, 1) * to!double(nspans);
+        double x = clamp(t, 0.0, 1.0) * to!double(nspans);
         int span = cast(int)x;
         if (span >= count - 3) {
             span = count - 3;

@@ -36,6 +36,10 @@ final class World {
     double worldMin;
     double worldMax;
 
+    double temperatureMin;
+    double temperatureMax;
+    double temperatureRange;
+
 
     void save() {
     }
@@ -47,11 +51,15 @@ final class World {
         //Spans 1.0*worldHeight
         worldMin = -0.3*worldHeight;
         worldMax =  0.7*worldHeight;
+
+        temperatureMin = -20;
+        temperatureMax = 40;
+        temperatureRange = temperatureMax - temperatureMin;
  
         generateHeightMap();
         generateTemperatureMap();
         generateWindMap();
-        generateHumidityMap();
+        generateMoistureMap();
 
     }
 
@@ -96,7 +104,7 @@ final class World {
 
     void generateTemperatureMap() {
         auto equatorDistanceField = new PlanarDistanceField(vec3d(0, 200, 0), vec3d(0, 1, 0));
-        auto equatorChillField = new Map(equatorDistanceField, d => 40 - (d<0?-d:d)*60/200 );
+        auto equatorChillField = new Map(equatorDistanceField, d => temperatureMax - (d<0?-d:d)*temperatureRange/200 );
 
         //Every 1000 meter gets about 10 degree colder
         // http://www.marietta.edu/~biol/biomes/biome_main.htm
@@ -109,61 +117,95 @@ final class World {
 
     }
 
-    //Wind map temporary during world generation
-    //Is map of smoothly varying 2d-vectors
-    //Bigger length of vectors the closer they are to the sea
-    //Add jet stream manually
-    //Let the map affect itself (term for this..)
-        //Use temperature map to affect with?
-        //Or only do that later when making humidity map?
+
+    //So as not to take too much time, just use a prevalent wind from east with some noise.
     void generateWindMap() {
         auto randomField = new ValueMap;
         auto windRnd = new RandSourceUniform(windSeed);
-        auto gradient = new GradientNoise!()(400, windRnd);
-        auto gradient2 = new GradientNoise!()(400, windRnd);
-
-        auto hybrid1 = new HybridMultiFractal(gradient, 0.7, 2, 4, 0);
-        hybrid1.setBaseWaveLength(100);
-        auto hybrid2 = new HybridMultiFractal(gradient2, 0.7, 2, 4, 0);
-        hybrid2.setBaseWaveLength(100);
+        auto gradientNoise = new GradientNoise!()(400, windRnd);
 
         auto hybridCombo = new DelegateSource2D( (double x, double y, double z) {
-            auto rand = vec2d(hybrid1.getValue(x,y,z), hybrid2.getValue(x,y,z));
-            auto grad = heightMap.centralGradient(x,y, 1.0)*10;
-            return grad;
-            //return rand + grad;
+            auto dir = vec2d(-1.0, gradientNoise.getValue(x/40.0, y/40.0));
+            return dir;
         });
 
         windMap = new typeof(windMap)(400, 400);
         windMap.fill(hybridCombo, 400, 400);
-        windMap.normalize(0, 10);
+        windMap.normalize(0.8, 1.2); 
     }
 
 
     void step() {
-        stepWind();
-    }
-
-    Vector2DMap2D!(double, true) tmpWindMap;
-    void stepWind() {
-        if(tmpWindMap is null) {
-            tmpWindMap = new typeof(windMap)(400, 400);
+        foreach(x ; 0 .. 100) {
+            stepWind();
         }
-        windMap.advectVectorField(windMap, tmpWindMap, 3.0, 10);
-        swap(windMap, tmpWindMap);
+    }
+
+    ValueMap tmp;
+    void stepWind() {
+        if(tmp is null) {
+            tmp = new ValueMap(400,400);
+        }
+        windMap.advectValueField(temperatureMap, tmp);
+        temperatureMap.foreachDo!(typeof(tmp), "+=0.1*")(tmp, 400, 400);
+
+
+
+        foreach(y ; 0 .. 400) {
+            foreach(x ; 0 .. 400) {
+
+                /*
+
+                double up = 0.0;
+                double down = 0.0;
+
+                auto height = heightMap.get(x, y);
+                bool atSea = height <= 0.0;
+                auto temp = temperatureMap.get(x, y);
+
+                vec2d windDir = windMap.get(x, y);
+                double slope = windDir.dotProduct(heightMap.upwindGradient(x, y, windDir.X, windDir.Y, 1.0));
+
+                auto moisture = moistureMap.get(x, y);
+                auto rain = rainMap.get(x, y);
+
+                auto tempModifier = clamp(temp/temperatureMax, 0.0, 1.0); //Depending on temp, stuff happens differently.
+                tempModifier *= 0.25; //Temp can change up to 25%!!
+
+                auto slopeRainModifier = 0.0;
+                auto slopeDissapationModifier = 0.0;
+                if(slope > 0 ) {
+                    slopeRainModifier = slope / (worldMax * 0.75); //make it drop to about 0% fallabel rain at 85% of worldheight. (75 slope + 10 default)
+                } else {
+                    slopeDissapationModifier = -slope / (worldMax * 0.25); // When going down, steal less than when going up.
+                }
+
+                up += moisture * clamp(0.05 + slopeDissapationModifier + tempModifier, 0.0, 1.0); // 5% dissapation (?)                
+                down += rain * clamp(0.10 + slopeRainModifier + tempModifier, 0.0, 1.0); //10% rainfall?
+
+                moisture = moisture + down - (atSea ? 0.0 : up);
+                rain = rain + up - down;
+
+                //Amount going down.
+                moistureMap.set(x, y, moisture);
+                rainMap.set(x, y, rain);
+
+                */
+
+
+            }
+        }
+
 
     }
 
-    void generateHumidityMap() {
-        //Initialize rainfall map to 0
-        //Iterate!!
-                //If above sea and warm, take water
-                //If above land, rain water
-                //If above land and moving upwards, rain more water!
-                //If above land and has not much water, take moisture..
-                //Be transformed by the wind map
-                //Affect temperature?
-                //Let wind map be affected by temperature?
+    void generateMoistureMap() {
+        moistureMap = new ValueMap(400, 400);
+        moistureMap.fill((double x, double y) { return heightMap.getValue(x, y) <= 0 ? 10_000 : 10; }, 400, 400);
+
+
+        rainMap = new ValueMap(400, 400);
+        rainMap.fill((double x, double y) { return 0.0; }, 400, 400);
     }
 
 }
