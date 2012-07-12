@@ -94,6 +94,7 @@ class WorldMenu : GuiElementWindow {
             moistureImg.saveImage("worldview_moisture.bmp");
             windImg.saveImage("worldview_wind.bmp");
             rainImg.saveImage("worldview_rain.bmp");
+            displayImg.saveImage("worldview_biomes.bmp");
         });
 
         auto stepButton = new GuiElementButton(this, Rectd(saveImagesButton.leftOf, saveImagesButton.bottomOf, 0.2, 0.1), "Step", {
@@ -158,7 +159,7 @@ class WorldMenu : GuiElementWindow {
             auto temp = world.temperatureMap.get(x, y);
 
             int heightIdx = clamp(cast(int)(height*4 / world.worldMax), 0, 3);
-            int tempIdx = clamp(cast(int)((temp-world.temperatureMin)*8 / world.temperatureRange), 0, 3);
+            int tempIdx = clamp(cast(int)((temp-world.temperatureMin)*4 / world.temperatureRange), 0, 3);
             int moistIdx = clamp(cast(int)(moisture*4.0/10.0), 0, 3);
             //msg(tempIdx, " ", temp-world.temperatureMin);
             
