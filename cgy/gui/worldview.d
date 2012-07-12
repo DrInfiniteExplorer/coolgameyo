@@ -17,6 +17,7 @@ import random.catmullrom;
 import random.randsource;
 
 
+import statistics;
 import worldgen.maps;
 
 
@@ -30,6 +31,11 @@ class WorldMenu : GuiElementWindow {
 
     GuiElementImage windImg;
     GuiElementImage rainImg;
+
+    GuiElementImage displayImg;
+    Image tmpImg;
+
+    Image biomeMap;
 
     bool zoomed;
     Rectd oldPos;
@@ -50,6 +56,7 @@ class WorldMenu : GuiElementWindow {
 
         windImg = new GuiElementImage(this, Rectd(heightImg.leftOf, heightImg.bottomOf, 0.3, 0.3));
         rainImg = new GuiElementImage(this, Rectd(windImg.rightOf, windImg.topOf, 0.3, 0.3));
+        displayImg = new GuiElementImage(this, Rectd(rainImg.rightOf, rainImg.topOf, 0.3, 0.3));
 
         heightImg.mouseClickCB = &zoomImage;
         moistureImg.mouseClickCB = &zoomImage;
@@ -57,12 +64,16 @@ class WorldMenu : GuiElementWindow {
 
         windImg.mouseClickCB = &zoomImage;
         rainImg.mouseClickCB = &zoomImage;
+        displayImg.mouseClickCB = &zoomImage;
+        tmpImg = Image(null, Dim, Dim);
+
+        biomeMap = Image("biomeMap.bmp");
 
 
         world = new World;
         world.init();
 
-        auto button = new GuiElementButton(this, Rectd(vec2d(0.75, 0.55), vec2d(0.2, 0.10)), "Back", &onBack);
+        auto button = new GuiElementButton(this, Rectd(vec2d(0.75, 0.75), vec2d(0.2, 0.10)), "Back", &onBack);
 
         auto seedEdit = new GuiElementLabeledEdit(this, Rectd(windImg.leftOf, windImg.bottomOf, 0.2, 0.05), "seed", to!string(world.worldSeed));
         seedEdit.setOnEnter((string value) {
@@ -86,6 +97,7 @@ class WorldMenu : GuiElementWindow {
         });
 
         auto stepButton = new GuiElementButton(this, Rectd(saveImagesButton.leftOf, saveImagesButton.bottomOf, 0.2, 0.1), "Step", {
+            mixin(MeasureTime!("Time to make a step:"));
             world.step();
             redraw(false);
         });
@@ -115,7 +127,6 @@ class WorldMenu : GuiElementWindow {
         return true;
     };
 
-
     void redraw(bool regen) {
         if(regen) {
             world = new World;
@@ -132,6 +143,32 @@ class WorldMenu : GuiElementWindow {
         temperatureImg.setImage(world.temperatureMap.toImage(-30, 50, true, colorSpline([vec3d(0, 0, 1), vec3d(0, 0, 1), vec3d(1, 1, 0), vec3d(1, 0, 0), vec3d(1, 0, 0)])));
 
         windImg.setImage(world.windMap.toImage(0.0, 1.2, true, colorSpline([vec3d(0, 0, 1), vec3d(0, 0, 1), vec3d(1, 1, 0), vec3d(1, 0, 0), vec3d(1, 0, 0)])));
+
+        moistureImg.setImage(world.moistureMap.toImage(-10, 100, true));
+        rainImg.setImage(world.rainMap.toImage(-10, 100, true));
+
+        foreach(x, y, ref r, ref g, ref b, ref a ; tmpImg) {
+            auto height = world.heightMap.get(x, y);
+            if(height <= 0) {
+                r = g = a = 0;
+                b = 96;
+                continue;
+            }
+            auto moisture = world.moistureMap.get(x, y);
+            auto temp = world.temperatureMap.get(x, y);
+
+            int heightIdx = clamp(cast(int)(height*4 / world.worldMax), 0, 3);
+            int tempIdx = clamp(cast(int)((temp-world.temperatureMin)*8 / world.temperatureRange), 0, 3);
+            int moistIdx = clamp(cast(int)(moisture*4.0/10.0), 0, 3);
+            //msg(tempIdx, " ", temp-world.temperatureMin);
+            
+            biomeMap.getPixel(3-tempIdx, 3-moistIdx, r, g, b, a);
+
+        }
+        displayImg.setImage(tmpImg);
+
+
+
     }
 
     void onBack() {

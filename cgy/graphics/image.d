@@ -232,6 +232,14 @@ struct Image {
         imgData[4*(x + y * imgWidth) .. 4*(x + y * imgWidth) + 4] = pixel;
     }
 
+    void getPixel(int x, int y, ref ubyte r, ref ubyte g, ref ubyte b, ref ubyte a) {
+        y = imgHeight - y -1;
+        r = imgData[4*(x + y * imgWidth) + 0];
+        g = imgData[4*(x + y * imgWidth) + 1];
+        b = imgData[4*(x + y * imgWidth) + 2];
+        a = imgData[4*(x + y * imgWidth) + 3];
+    }
+
     void save(string filename){
         uint img;
         ilGenImages(1, &img);
@@ -271,4 +279,20 @@ struct Image {
             imgData[i+2] *= color.Z;
         }
     }
+
+    int opApply(scope int delegate(int x, int y, ref ubyte r, ref ubyte g, ref ubyte b, ref ubyte a) Do) {
+        const iters = imgWidth * imgHeight;
+        foreach(idx ; 0 .. iters) {
+            if(Do(idx % imgWidth, idx / imgWidth,
+                  imgData[idx*4+0], 
+                  imgData[idx*4+1], 
+                  imgData[idx*4+2], 
+                  imgData[idx*4+3])) {
+                return 1;
+            }
+        }
+        return 0;
+    }
+
+
 }

@@ -104,7 +104,7 @@
   <quiet>0</quiet>
   <verbose>0</verbose>
   <vtls>0</vtls>
-  <symdebug>1</symdebug>
+  <symdebug>0</symdebug>
   <optimize>1</optimize>
   <cpu>0</cpu>
   <isX86_64>0</isX86_64>
@@ -123,7 +123,7 @@
   <noboundscheck>1</noboundscheck>
   <useSwitchError>0</useSwitchError>
   <useUnitTests>0</useUnitTests>
-  <useInline>1</useInline>
+  <useInline>0</useInline>
   <release>0</release>
   <preservePaths>1</preservePaths>
   <warnings>1</warnings>

@@ -20,11 +20,15 @@ import random.valuesource;
 
 alias ValueMap2Dd ValueMap;
 
+enum Dim = 400;
+enum StepIter = 4*25;
+
 final class World {
 
     ValueMap heightMap;
     ValueMap moistureMap;
     ValueMap temperatureMap;
+    ValueMap windTemperatureMap;
     Vector2DMap2D!(double, true) windMap;
     ValueMap rainMap;
 
@@ -70,7 +74,7 @@ final class World {
         windSeed = rnd.get(int.min, int.max);
 
         auto randomField = new ValueMap;
-        auto gradient = new GradientNoise01!()(400, new RandSourceUniform(heightSeed));
+        auto gradient = new GradientNoise01!()(Dim, new RandSourceUniform(heightSeed));
         auto hybrid = new HybridMultiFractal(gradient, 0.1, 2, 6, 0.1);
         hybrid.setBaseWaveLength(80);
 
@@ -97,8 +101,8 @@ final class World {
         });
 
 
-        heightMap = new ValueMap(400, 400);
-        heightMap.fill(test, 400, 400);
+        heightMap = new ValueMap(Dim, Dim);
+        heightMap.fill(test, Dim, Dim);
         heightMap.normalize(worldMin, worldMax); 
     }
 
@@ -112,8 +116,10 @@ final class World {
 
         auto temperatureField = new CombineAdd(equatorChillField, heightChillField);
 
-        temperatureMap = new ValueMap(400, 400);
-        temperatureMap.fill(temperatureField, 400, 400);
+        temperatureMap = new ValueMap(Dim, Dim);
+        windTemperatureMap = new ValueMap(Dim, Dim);
+        temperatureMap.fill(temperatureField, Dim, Dim);
+        windTemperatureMap.fill(temperatureMap, Dim, Dim);
 
     }
 
@@ -122,39 +128,36 @@ final class World {
     void generateWindMap() {
         auto randomField = new ValueMap;
         auto windRnd = new RandSourceUniform(windSeed);
-        auto gradientNoise = new GradientNoise!()(400, windRnd);
+        auto gradientNoise = new GradientNoise!()(Dim, windRnd);
 
         auto hybridCombo = new DelegateSource2D( (double x, double y, double z) {
             auto dir = vec2d(-1.0, gradientNoise.getValue(x/40.0, y/40.0));
             return dir;
         });
 
-        windMap = new typeof(windMap)(400, 400);
-        windMap.fill(hybridCombo, 400, 400);
+        windMap = new typeof(windMap)(Dim, Dim);
+        windMap.fill(hybridCombo, Dim, Dim);
         windMap.normalize(0.8, 1.2); 
     }
 
 
     void step() {
-        foreach(x ; 0 .. 100) {
+        foreach(x ; 0 .. StepIter) {
             stepWind();
         }
+        temperatureMap.randMap[] = temperatureMap.randMap[] * 0.9 + windTemperatureMap.randMap[] * 0.1;
     }
 
     ValueMap tmp;
     void stepWind() {
         if(tmp is null) {
-            tmp = new ValueMap(400,400);
+            tmp = new ValueMap(Dim,Dim);
         }
-        windMap.advectValueField(temperatureMap, tmp);
-        temperatureMap.foreachDo!(typeof(tmp), "+=0.1*")(tmp, 400, 400);
+        windMap.advectValueField(windTemperatureMap, tmp);
+        windTemperatureMap.randMap[] += 0.1 * tmp.randMap[];
 
-
-
-        foreach(y ; 0 .. 400) {
-            foreach(x ; 0 .. 400) {
-
-                /*
+        foreach(y ; 0 .. Dim) {
+            foreach(x ; 0 .. Dim) {
 
                 double up = 0.0;
                 double down = 0.0;
@@ -174,38 +177,38 @@ final class World {
 
                 auto slopeRainModifier = 0.0;
                 auto slopeDissapationModifier = 0.0;
-                if(slope > 0 ) {
-                    slopeRainModifier = slope / (worldMax * 0.75); //make it drop to about 0% fallabel rain at 85% of worldheight. (75 slope + 10 default)
-                } else {
-                    slopeDissapationModifier = -slope / (worldMax * 0.25); // When going down, steal less than when going up.
+                if(!atSea) {
+                    if(slope > 0 ) {
+                        slopeRainModifier = slope / (worldMax * 0.75); //make it drop to about 0% fallabel rain at 85% of worldheight. (75 slope + 10 default)
+                    } else {
+                        slopeDissapationModifier = -slope / (worldMax * 0.25); // When going down, steal less than when going up.
+                    }
                 }
 
                 up += moisture * clamp(0.05 + slopeDissapationModifier + tempModifier, 0.0, 1.0); // 5% dissapation (?)                
                 down += rain * clamp(0.10 + slopeRainModifier + tempModifier, 0.0, 1.0); //10% rainfall?
 
-                moisture = moisture + down - (atSea ? 0.0 : up);
+                moisture = moisture + (atSea ? 0.0 : down - up);
                 rain = rain + up - down;
 
                 //Amount going down.
                 moistureMap.set(x, y, moisture);
                 rainMap.set(x, y, rain);
-
-                */
-
-
-            }
+            } 
         }
 
+        windMap.advectValueField(rainMap, tmp);
+        rainMap.randMap[] += 0.2 * tmp.randMap[];
 
     }
 
     void generateMoistureMap() {
-        moistureMap = new ValueMap(400, 400);
-        moistureMap.fill((double x, double y) { return heightMap.getValue(x, y) <= 0 ? 10_000 : 10; }, 400, 400);
+        moistureMap = new ValueMap(Dim, Dim);
+        moistureMap.fill((double x, double y) { return heightMap.getValue(x, y) <= 0 ? 10 : 4; }, Dim, Dim);
 
 
-        rainMap = new ValueMap(400, 400);
-        rainMap.fill((double x, double y) { return 0.0; }, 400, 400);
+        rainMap = new ValueMap(Dim, Dim);
+        rainMap.fill((double x, double y) { return 0.0; }, Dim, Dim);
     }
 
 }
