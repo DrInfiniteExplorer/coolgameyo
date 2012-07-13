@@ -30,12 +30,15 @@ class WorldMenu : GuiElementWindow {
     GuiElementImage temperatureImg;
 
     GuiElementImage windImg;
-    GuiElementImage rainImg;
+    GuiElementImage voronoiImg;
 
-    GuiElementImage displayImg;
-    Image tmpImg;
+    GuiElementImage climateTypesImg;
+    Image climateTypes;
 
-    Image biomeMap;
+    GuiElementImage climateMapImg;
+    Image climateMap;
+
+    Image voronoiImage;
 
     bool zoomed;
     Rectd oldPos;
@@ -55,20 +58,19 @@ class WorldMenu : GuiElementWindow {
         moistureImg = new GuiElementImage(this, Rectd(temperatureImg.rightOf, temperatureImg.topOf, 0.3, 0.3));
 
         windImg = new GuiElementImage(this, Rectd(heightImg.leftOf, heightImg.bottomOf, 0.3, 0.3));
-        rainImg = new GuiElementImage(this, Rectd(windImg.rightOf, windImg.topOf, 0.3, 0.3));
-        displayImg = new GuiElementImage(this, Rectd(rainImg.rightOf, rainImg.topOf, 0.3, 0.3));
+        voronoiImg = new GuiElementImage(this, Rectd(windImg.rightOf, windImg.topOf, 0.3, 0.3));
+        climateMapImg = new GuiElementImage(this, Rectd(voronoiImg.rightOf, voronoiImg.topOf, 0.3, 0.3));
 
         heightImg.mouseClickCB = &zoomImage;
         moistureImg.mouseClickCB = &zoomImage;
         temperatureImg.mouseClickCB = &zoomImage;
 
         windImg.mouseClickCB = &zoomImage;
-        rainImg.mouseClickCB = &zoomImage;
-        displayImg.mouseClickCB = &zoomImage;
-        tmpImg = Image(null, Dim, Dim);
+        voronoiImg.mouseClickCB = &zoomImage;
+        climateMapImg.mouseClickCB = &zoomImage;
+        climateMap = Image(null, Dim, Dim);
 
-        biomeMap = Image("biomeMap.bmp");
-
+        voronoiImage = Image(null, Dim, Dim);
 
         world = new World;
         world.init();
@@ -93,8 +95,8 @@ class WorldMenu : GuiElementWindow {
             temperatureImg.saveImage("worldview_temperature.bmp");
             moistureImg.saveImage("worldview_moisture.bmp");
             windImg.saveImage("worldview_wind.bmp");
-            rainImg.saveImage("worldview_rain.bmp");
-            displayImg.saveImage("worldview_biomes.bmp");
+            voronoiImg.saveImage("worldview_voronoi.bmp");
+            climateMapImg.saveImage("worldview_climates.bmp");
         });
 
         auto stepButton = new GuiElementButton(this, Rectd(saveImagesButton.leftOf, saveImagesButton.bottomOf, 0.2, 0.1), "Step", {
@@ -102,6 +104,10 @@ class WorldMenu : GuiElementWindow {
             world.step();
             redraw(false);
         });
+
+        climateTypesImg = new GuiElementImage(this, Rectd(stepButton.rightOf + stepButton.heightOf, stepButton.topOf, stepButton.heightOf, stepButton.heightOf));
+        climateTypes = Image("climateMap.bmp");
+        climateTypesImg.setImage(climateTypes);
 
 
         redraw(false);
@@ -146,9 +152,8 @@ class WorldMenu : GuiElementWindow {
         windImg.setImage(world.windMap.toImage(0.0, 1.2, true, colorSpline([vec3d(0, 0, 1), vec3d(0, 0, 1), vec3d(1, 1, 0), vec3d(1, 0, 0), vec3d(1, 0, 0)])));
 
         moistureImg.setImage(world.moistureMap.toImage(-10, 100, true));
-        rainImg.setImage(world.rainMap.toImage(-10, 100, true));
 
-        foreach(x, y, ref r, ref g, ref b, ref a ; tmpImg) {
+        foreach(x, y, ref r, ref g, ref b, ref a ; climateMap) {
             auto height = world.heightMap.get(x, y);
             if(height <= 0) {
                 r = g = a = 0;
@@ -163,10 +168,21 @@ class WorldMenu : GuiElementWindow {
             int moistIdx = clamp(cast(int)(moisture*4.0/10.0), 0, 3);
             //msg(tempIdx, " ", temp-world.temperatureMin);
             
-            biomeMap.getPixel(3-tempIdx, 3-moistIdx, r, g, b, a);
+            climateTypes.getPixel(3-tempIdx, 3-moistIdx, r, g, b, a);
 
         }
-        displayImg.setImage(tmpImg);
+        climateMapImg.setImage(climateMap);
+
+        voronoiImage.clear(0, 0, 0, 0);
+        foreach(edge ; world.bigVoronoi.poly.edges) {
+            auto start = edge.getStartPoint();
+            auto end = edge.getEndPoint();
+
+            voronoiImage.drawLine(start.pos.convert!int, end.pos.convert!int, vec3i(255, 255, 255));
+        }
+
+
+        voronoiImg.setImage(voronoiImage);
 
 
 

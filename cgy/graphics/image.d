@@ -81,6 +81,11 @@ struct Image {
         imgHeight = height;
     }
 
+    void clear(ubyte r, ubyte g, ubyte b, ubyte a) {
+        ubyte[4] rgba = [r, g, b, a];
+        (cast(ubyte[4][]) imgData)[] = rgba;
+    }
+
     //Copies a rectangle of data from img to this
     void blit(uint toX, uint toY, Image img, uint fromX, uint fromY, uint width, uint height) {
         enforce(0 <= toX && toX < imgWidth, "bad Image.blit.toX");

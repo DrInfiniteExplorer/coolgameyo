@@ -3,7 +3,6 @@ module worldgen.maps;
 import std.algorithm;
 import std.math;
 
-import util.util;
 
 //import worldgen.newgen;
 
@@ -18,6 +17,9 @@ import random.hybridfractal;
 import random.map;
 import random.valuesource;
 
+import util.util;
+import util.voronoi.wrapper;
+
 alias ValueMap2Dd ValueMap;
 
 enum Dim = 400;
@@ -30,13 +32,15 @@ final class World {
     ValueMap temperatureMap;
     ValueMap windTemperatureMap;
     Vector2DMap2D!(double, true) windMap;
-    ValueMap rainMap;
+
+    VoronoiWrapper bigVoronoi;
 
     int worldSeed = 880128;
     double worldHeight = 10_000;
 
     int heightSeed;
     int windSeed;
+    int voronoiSeed;
     double worldMin;
     double worldMax;
 
@@ -59,19 +63,22 @@ final class World {
         temperatureMin = -20;
         temperatureMax = 40;
         temperatureRange = temperatureMax - temperatureMin;
- 
+
+        auto rnd = new RandSourceUniform(worldSeed);
+        heightSeed = rnd.get(int.min, int.max);
+        windSeed = rnd.get(int.min, int.max);
+        voronoiSeed = rnd.get(int.min, int.max);
+
         generateHeightMap();
         generateWindMap();
         generateTemperatureMap();
         generateMoistureMap();
 
+        generateBigVoronoi();
+
     }
 
     void generateHeightMap() {
-
-        auto rnd = new RandSourceUniform(worldSeed);
-        heightSeed = rnd.get(int.min, int.max);
-        windSeed = rnd.get(int.min, int.max);
 
         auto randomField = new ValueMap;
         auto gradient = new GradientNoise01!()(Dim, new RandSourceUniform(heightSeed));
@@ -147,68 +154,6 @@ final class World {
     }
 
 
-    void step() {
-        return;
-        foreach(x ; 0 .. StepIter) {
-            stepWind();
-        }
-        //temperatureMap.randMap[] = temperatureMap.randMap[] * 0.9 + windTemperatureMap.randMap[] * 0.1;
-    }
-
-    ValueMap tmp;
-    void stepWind() {
-        if(tmp is null) {
-            tmp = new ValueMap(Dim,Dim);
-        }
-        //windMap.advectValueField(windTemperatureMap, tmp);
-        //windTemperatureMap.randMap[] += 0.1 * tmp.randMap[];
-
-        foreach(y ; 0 .. Dim) {
-            foreach(x ; 0 .. Dim) {
-
-                double up = 0.0;
-                double down = 0.0;
-
-                auto height = heightMap.get(x, y);
-                bool atSea = height <= 0.0;
-                auto temp = temperatureMap.get(x, y);
-
-                vec2d windDir = windMap.get(x, y);
-                double slope = windDir.dotProduct(heightMap.upwindGradient(x, y, windDir.X, windDir.Y, 1.0));
-
-                auto moisture = moistureMap.get(x, y);
-                auto rain = rainMap.get(x, y);
-
-                auto tempModifier = clamp(temp/temperatureMax, 0.0, 1.0); //Depending on temp, stuff happens differently.
-                tempModifier *= 0.25; //Temp can change up to 25%!!
-
-                auto slopeRainModifier = 0.0;
-                auto slopeDissapationModifier = 0.0;
-                if(!atSea) {
-                    if(slope > 0 ) {
-                        slopeRainModifier = slope / (worldMax * 0.75); //make it drop to about 0% fallabel rain at 85% of worldheight. (75 slope + 10 default)
-                    } else {
-                        slopeDissapationModifier = -slope / (worldMax * 0.25); // When going down, steal less than when going up.
-                    }
-                }
-
-                up += moisture * clamp(0.05 + slopeDissapationModifier + tempModifier, 0.0, 1.0); // 5% dissapation (?)                
-                down += rain * clamp(0.10 + slopeRainModifier + tempModifier, 0.0, 1.0); //10% rainfall?
-
-                moisture = moisture + (atSea ? 0.0 : down - up);
-                rain = rain + up - down;
-
-                //Amount going down.
-                moistureMap.set(x, y, moisture);
-                rainMap.set(x, y, rain);
-            } 
-        }
-
-        windMap.advectValueField(rainMap, tmp);
-        rainMap.randMap[] += 0.2 * tmp.randMap[];
-
-    }
-
     void generateMoistureMap() {
         moistureMap = new ValueMap(Dim, Dim);
         moistureMap.fill((double x, double y) {
@@ -222,9 +167,17 @@ final class World {
 
         }, Dim, Dim);
 
+    }
 
-        rainMap = new ValueMap(Dim, Dim);
-        rainMap.fill((double x, double y) { return 0.0; }, Dim, Dim);
+    void generateBigVoronoi() {
+        bigVoronoi = new VoronoiWrapper(Dim/4, Dim/4, voronoiSeed);
+
+
+
+    }
+
+    void step() {
+        return;
     }
 
 }

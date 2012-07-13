@@ -3,6 +3,8 @@ module util.voronoi.fortune;
 import std.algorithm;
 import std.array;
 import std.math;
+import std.range;
+import std.stdio;
 
 import statistics;
 import util.math;
@@ -11,6 +13,8 @@ import util.voronoi.voronoi;
 
 alias std.math.abs abs;
 
+//Substantial speedup when true; goes from 120 seconds to around 90 seconds.
+enum ReuseEvents = true;
 
 final class FortuneVoronoi {
 
@@ -26,6 +30,51 @@ final class FortuneVoronoi {
     Vertex[] vertices;
     Site[] sites;
     HalfEdge[] halfEdges;
+
+    static if(ReuseEvents) {
+        CircleEvent[] circleReuse;
+        SiteEvent[] siteReuse;
+
+        CircleEvent newCircle(TreeLeaf _left, TreeLeaf _leaf, TreeLeaf _right) {
+            if(circleReuse.length == 0) {
+                return new CircleEvent(_left, _leaf, _right);
+            }
+            auto ret = circleReuse[$-1];
+            circleReuse.length = circleReuse.length - 1;
+            assumeSafeAppend(circleReuse);
+            ret.init(_left, _leaf, _right);
+            return ret;
+        }
+        void releaseCircleEvent(CircleEvent e) {
+            circleReuse ~= e;
+        }
+
+        SiteEvent newSite(Site site) {
+            if(siteReuse.length == 0) {
+                return new SiteEvent(site);
+            }
+            auto ret = siteReuse[$-1];
+            siteReuse.length = siteReuse.length - 1;
+            assumeSafeAppend(siteReuse);
+            ret.init(site);
+            return ret;
+        }
+        void releaseSiteEvent(SiteEvent e) {
+            siteReuse ~= e;
+        }
+
+        void releaseEvent(Event e) {
+            if(cast(CircleEvent)e !is null) {
+                releaseCircleEvent(cast(CircleEvent)e);
+            } else {
+                releaseSiteEvent(cast(SiteEvent)e);
+            }
+        }
+    } else {
+        auto newCircle(T...)(T t){ return new CircleEvent(t); }
+        auto newSite(T...)(T t){ return new SiteEvent(t); }
+        void releaseEvent(Event e) const {}
+    }
 
     TreeLeaf[] handleSiteEvent(SiteEvent e) {
         //writeln("site event! ", e.pos);
@@ -128,7 +177,7 @@ final class FortuneVoronoi {
 		if (dx1*dy2 <= dy1*dx2) {
 		    return null;
         }
-        auto event = new CircleEvent(left, leaf, right);
+        auto event = newCircle(left, leaf, right);
         if(event.pos.Y < y) return null;
         return event;
     }
@@ -170,6 +219,7 @@ final class FortuneVoronoi {
 
     VoronoiPoly makeVoronoi(vec2d[] points) {
         mixin(MeasureTime!"Time to make voronoi:");
+        scope(exit) writeln("cnt ", cnt);
 
         //points = [ vec2d(100, 100), vec2d(75, 150), vec2d(120, 155), vec2d(60, 160), vec2d(140, 190) ];
         //points = [ vec2d(100, 80), vec2d(230, 100), vec2d(100, 210)];
@@ -177,16 +227,21 @@ final class FortuneVoronoi {
         CircleEvent[SiteEvent] currentCircles;
 
         //Turn points into sites and add to queueueue.
-        queue.add(array(map!(
-                             (vec2d pt) {
-                                 auto site = new Site(pt, sites.length);
-                                 sites ~= site;
-                                 return cast(Event)new SiteEvent(site);
-                             })(points)));
+        sites.length = points.length;
+        Event[] startEvents;
+        startEvents.length = sites.length;
+        foreach(idx, pt ; points) {
+            auto site = new Site(pt, idx);
+            sites[idx] = site;
+            startEvents[idx] = cast(Event)newSite(site);
+        }
+
+        queue.add(startEvents);
 
         while(!queue.empty) {
             auto event = queue.get();
             handleEvent(event);
+            releaseEvent(event);
         }
 
         auto poly = new VoronoiPoly;
@@ -199,13 +254,15 @@ final class FortuneVoronoi {
 
 };
 
+int cnt = 0;
 
 final class PQ {
     Event[] events;
 
     void add(Event e) {
         events ~= e;
-        events.sort;
+        //events.sort;
+        completeSort(assumeSorted(events[0 .. $-1]), events[$-1 .. $]);
     }
     void add(Event[] e) {
         events ~= e;
@@ -218,7 +275,9 @@ final class PQ {
         //events = events[0 .. $-1];
         return ret;
     }
+
     void remove(Event e) {
+        cnt++;
         bool pred(Event f) {
             return f == e;
         }
@@ -246,6 +305,9 @@ public:
 final class SiteEvent : Event {
     Site site;
     this(Site _site) {
+        init(_site);
+    }
+    void init(Site _site) {
         site = _site;
         pos = site.pos;
     }
@@ -256,6 +318,10 @@ final class CircleEvent : Event {
     vec2d center;
     double radius;
     this(TreeLeaf _left, TreeLeaf _leaf, TreeLeaf _right) {
+        init(_left, _leaf, _right);
+    }
+
+    void init(TreeLeaf _left, TreeLeaf _leaf, TreeLeaf _right) {
         left = _left;
         leaf = _leaf;
         right = _right;
