@@ -75,6 +75,14 @@ final class HalfEdge {
         return _reverse;
     }
 
+    HalfEdge prev() @property {
+        HalfEdge he = this;
+        while(he.next !is this) {
+            he = he.next;
+        }
+        return he;
+    }
+
     Vertex getStartPoint() {
         return vertex;
     }
@@ -258,6 +266,68 @@ final class VoronoiPoly {
         }
 
     }
+
+    //This works fine now, i think, so long as the sites only share one edge. Otherwise, strange things happen :)
+    Site mergeSites(Site a, Site b) {
+        writeln("s e he ", sites.length, " ", edges.length, " ", halfEdges.length);
+        scope(exit) writeln("s e he ", sites.length, " ", edges.length, " ", halfEdges.length);
+        //Loop and find the connection using the shortest loop.
+        if(a.halfEdges.length < b.halfEdges.length) {
+            swap(a, b);
+        }
+        foreach(he ; b.halfEdges) {
+            if(he.right is a) {
+
+                //Find and eliminate as long a stretch as possible along this border.
+
+
+
+                // Knit together the half-edge-struct
+                auto he_r = he.reverse;
+                auto he_prev = he.prev;
+                auto he_next = he.next;
+                auto he_r_prev = he_r.prev;
+                auto he_r_next = he_r.next;
+                he_prev.next = he_r_next;
+                he_r_prev.next = he_next;
+
+                //Now he and he_r are dangling pointers. No other half-edge points to them.
+                // There is an edge, and there is a reference each in the site's lists of
+                // half-edges referencing them.
+                
+                // Make the half-edges switch alegiance to b!
+                auto iter = he_next;
+                while(iter.next !is he_r_next) {
+                    iter.left = b;
+                    iter = iter.next;
+                }
+                //They are no longer sorted!
+                //Add the half-edges from the small to the big
+                b.halfEdges ~= a.halfEdges;
+                a.halfEdges = null;
+
+                //Remove the small site.
+                sites = remove!(s => s is a)(sites);
+
+                //Remove the two evil half-edges.
+                bool heInB(HalfEdge h) {
+                    return (h is he) || (h is he_r);
+                }
+                b.halfEdges = remove!heInB(b.halfEdges);
+                halfEdges = remove!heInB(halfEdges);
+
+                bool edgePred(Edge edge){
+                    return (edge.halfLeft is he || edge.halfRight is he);
+                }
+                edges = remove!edgePred(edges);
+
+                return b;
+            }
+        }
+        msg("WARNING! Tried to merge two voronoi cells which where not neighbors");
+        return null;
+    }
+
 
     //This code runs under the assumption that sites are never outside of the box.
     void cutDiagram(vec2d min, vec2d max) {

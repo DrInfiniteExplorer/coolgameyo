@@ -171,12 +171,17 @@ final class World {
 
     void generateBigVoronoi() {
         bigVoronoi = new VoronoiWrapper(Dim/4, Dim/4, voronoiSeed);
-
-
+        bigVoronoi.setScale(vec2d(Dim));
 
     }
 
+    void classifyBigVoronoi() {
+        int idx = 0;
+        while(null is bigVoronoi.poly.mergeSites(bigVoronoi.poly.sites[idx], bigVoronoi.poly.sites[idx+1])) idx++;
+    }
+
     void step() {
+        classifyBigVoronoi();
         return;
     }
 

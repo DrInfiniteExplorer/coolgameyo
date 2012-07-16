@@ -100,8 +100,10 @@ class WorldMenu : GuiElementWindow {
         });
 
         auto stepButton = new GuiElementButton(this, Rectd(saveImagesButton.leftOf, saveImagesButton.bottomOf, 0.2, 0.1), "Step", {
-            mixin(MeasureTime!("Time to make a step:"));
-            world.step();
+            {
+                mixin(MeasureTime!("Time to make a step:"));
+                world.step();
+            }
             redraw(false);
         });
 

@@ -32,7 +32,6 @@ mixin template RandomVoronoi() {
                 img.setPixel(x, y, r, g ,b);
             }
         }
-        this.voronoiImg.setImage(img);
 
         foreach(site ; voronoi.poly.sites) {
             foreach(he ; site.halfEdges) {
@@ -48,12 +47,14 @@ mixin template RandomVoronoi() {
                         BREAKPOINT;
                     }
                     auto _a = a.pos;
-                    Lines line;
-                    line.setLines(container.getAbsoluteRect, [_a, _b], c ? vec3f(0, 0, 0) : vec3f(0, 0, 1), vec2d(0, 0), vec2d(800, 600));
-                    lines ~= line;
+                    //Lines line;
+                    //line.setLines(container.getAbsoluteRect, [_a, _b], c ? vec3f(0, 0, 0) : vec3f(0, 0, 1), vec2d(0, 0), vec2d(800, 600));
+                    //lines ~= line;
+                    img.drawLine(_a.convert!int, _b.convert!int, c ? vec3i(0, 0, 0) : vec3i(0, 0, 255));
                 }
             }
         }
+        this.voronoiImg.setImage(img);
     }
     void destroyVoronoi() {
         voronoiImg.destroy();

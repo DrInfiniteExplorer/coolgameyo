@@ -195,7 +195,7 @@ final class FortuneVoronoi {
         auto y = e.pos.Y; //duh!
         foreach(TreeLeaf leaf ; checkCircle) {
             if(leaf in currentCircles) {
-                currentCircles[leaf].valid = false;
+                currentCircles[leaf]._valid = false;
                 currentCircles.remove(leaf);
                 //writeln("FALSE CIRCLE FOUND or more like something?!");
             }
@@ -206,15 +206,18 @@ final class FortuneVoronoi {
                 queue.add(newEvent);
             }
         }
+        
+        /*
         //Did we just destroyed a circle?
         if(cast(SiteEvent)e !is null) {
             foreach(circle ; currentCircles) {
-                if(circle.center.getDistanceFrom(e.pos) < circle.radius - 1E10) {
+                if(circle.center.getDistanceFromSQ(e.pos) < (circle.radius*circle.radius) - 1E10) {
                     //writeln("FALSE CIRCLE FOUND with stuff in it!");
-                    circle.valid = false;
+                    circle._valid = false;
                 }
             }
         }
+        */
     }
 
     VoronoiPoly makeVoronoi(vec2d[] points) {
@@ -254,7 +257,7 @@ final class FortuneVoronoi {
 
 };
 
-int cnt = 0;
+int cnt = -1;
 
 final class PQ {
     Event[] events;
@@ -262,7 +265,7 @@ final class PQ {
     void add(Event e) {
         events ~= e;
         //events.sort;
-        completeSort(assumeSorted(events[0 .. $-1]), events[$-1 .. $]);
+        completeSort!("a < b", SwapStrategy.unstable, Event[], Event[])(assumeSorted(events[0 .. $-1]), events[$-1 .. $]);
     }
     void add(Event[] e) {
         events ~= e;
@@ -314,7 +317,7 @@ final class SiteEvent : Event {
 }
 final class CircleEvent : Event {
     TreeLeaf left, leaf, right;
-    bool valid;
+    bool _valid;
     vec2d center;
     double radius;
     this(TreeLeaf _left, TreeLeaf _leaf, TreeLeaf _right) {
@@ -327,7 +330,7 @@ final class CircleEvent : Event {
         right = _right;
         center = CircumCircle(left.site.pos, leaf.site.pos, right.site.pos);
         radius = center.getDistanceFrom(left.site.pos);
-        valid = true;
+        _valid = true;
         pos = center + vec2d(0.0, radius);
     }
 }
