@@ -173,15 +173,51 @@ class WorldMenu : GuiElementWindow {
             climateTypes.getPixel(3-tempIdx, 3-moistIdx, r, g, b, a);
 
         }
-        climateMapImg.setImage(climateMap);
+
 
         voronoiImage.clear(0, 0, 0, 0);
+        foreach(x, y, ref r, ref g, ref b, ref a ; voronoiImage) {
+            int cellId = world.bigVoronoi.identifyCell(vec2d(x, y));
+            int tempIdx = world.bigVoronoiClimates[cellId];
+            
+            bool isSea = (tempIdx & (1 << 4)) != 0;
+            int moistIdx = (tempIdx >> 2) & 3;
+            tempIdx = tempIdx & 3;
+            if(isSea) {
+                r = g = a = 0;
+                b = 0;
+                continue;
+            }
+            auto height = world.heightMap.get(x, y);
+            if(height <= 0) {
+                r = g = a = 0;
+                b = 96;
+                continue;
+            }
+
+            climateTypes.getPixel(3-tempIdx, 3-moistIdx, r, g, b, a);
+
+        }
+
+
         foreach(edge ; world.bigVoronoi.poly.edges) {
             auto start = edge.getStartPoint();
             auto end = edge.getEndPoint();
 
-            voronoiImage.drawLine(start.pos.convert!int, end.pos.convert!int, vec3i(255, 255, 255));
+            auto height1 = world.heightMap.getValue(start.pos.X, start.pos.Y);
+            auto height2 = world.heightMap.getValue(end.pos.X, end.pos.Y);
+            if(height1 <= 0 || height2 <= 0) {
+                continue;
+            }
+
+            climateMap.drawLine(start.pos.convert!int, end.pos.convert!int, vec3i(0));
+            int site1 = edge.halfLeft.left.siteId;
+            int site2 = edge.halfRight.left.siteId;
+            if((world.bigVoronoiClimates[site1] & 0xF) == (world.bigVoronoiClimates[site2] & 0xF)) continue;
+            voronoiImage.drawLine(start.pos.convert!int, end.pos.convert!int, vec3i(0));
         }
+
+        climateMapImg.setImage(climateMap);
 
 
         voronoiImg.setImage(voronoiImage);

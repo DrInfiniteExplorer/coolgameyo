@@ -287,13 +287,15 @@ struct Image {
 
     int opApply(scope int delegate(int x, int y, ref ubyte r, ref ubyte g, ref ubyte b, ref ubyte a) Do) {
         const iters = imgWidth * imgHeight;
+        int ret;
         foreach(idx ; 0 .. iters) {
-            if(Do(idx % imgWidth, idx / imgWidth,
-                  imgData[idx*4+0], 
-                  imgData[idx*4+1], 
-                  imgData[idx*4+2], 
-                  imgData[idx*4+3])) {
-                return 1;
+            ret = Do(idx % imgWidth, idx / imgWidth,
+                     imgData[idx*4+0], 
+                     imgData[idx*4+1], 
+                     imgData[idx*4+2], 
+                     imgData[idx*4+3]);
+            if(ret) {
+                return ret;
             }
         }
         return 0;

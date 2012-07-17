@@ -1,6 +1,7 @@
 module util.voronoi.voronoi;
 
 import std.algorithm;
+import std.array;
 import std.math;
 import std.random;
 import std.stdio;
@@ -247,6 +248,12 @@ final class Site {
     int siteId;
     vec2d pos;
     HalfEdge[] halfEdges;
+
+
+    //TODO: Turn into delegate?
+    Site[] getNeighbors() {
+        return array(map!"a.right"(halfEdges));
+    }
 }
 
 

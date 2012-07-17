@@ -17,6 +17,7 @@ import random.hybridfractal;
 import random.map;
 import random.valuesource;
 
+import util.rangefromto;
 import util.util;
 import util.voronoi.wrapper;
 
@@ -175,9 +176,86 @@ final class World {
 
     }
 
+
+    //Figure out a better datastructure for this. bits 0-3 holds climate information, bit 4 holds isSea'ness, bit 5 wether or not it has been sorted into a region, etc.
+    ubyte[Dim*Dim/16] bigVoronoiClimates;
+
+    final class Region {
+        int[] areas;
+
+        void addArea(int area) {
+            areas ~= area;
+        }
+
+
+    }
+
+    Region[] regions;
+
+
     void classifyBigVoronoi() {
-        int idx = 0;
-        while(null is bigVoronoi.poly.mergeSites(bigVoronoi.poly.sites[idx], bigVoronoi.poly.sites[idx+1])) idx++;
+        auto poly = bigVoronoi.poly;
+        double temp[Dim*Dim/16];
+        double moisture[Dim*Dim/16];
+        double count[Dim*Dim/16];
+        bool isSea[Dim*Dim/16];
+        isSea[] = true;
+        temp[] = 0;
+        moisture[] = 0;
+        count[] = 0;
+        foreach(x, y ; Range2D(0, 400, 0, 400)) {
+            int cellId = bigVoronoi.identifyCell(vec2d(x, y));
+            temp[cellId] += temperatureMap.get(x, y);
+            moisture[cellId] += moistureMap.get(x, y);
+            count[cellId] += 1;
+            if(heightMap.get(x, y) > 0) {
+                isSea[cellId] = false;
+            }
+        }
+        temp[] /= count[];
+        moisture[] /= count[];
+        foreach(idx ; 0 .. Dim*Dim/16) {
+            int tempIdx = clamp(cast(int)((temp[idx]-temperatureMin)*4 / temperatureRange), 0, 3);
+            int moistIdx = clamp(cast(int)(moisture[idx]*4.0/10.0), 0, 3);
+            //msg(temp[Idx], " ", moisture[Idx]);
+            if(isSea[idx]) {
+                bigVoronoiClimates[idx] = 1<<4;
+            } else {
+                bigVoronoiClimates[idx] = cast(ubyte)(tempIdx + (moistIdx << 2));
+            }
+        }
+
+        foreach(idx ; 0 .. Dim*Dim/16) {
+            int tmp = bigVoronoiClimates[idx];
+            bool sorted = (tmp & (1 << 5)) != 0;
+            if(sorted) continue;
+
+            Region region = new Region;
+            regions ~= region;
+
+            //Floodfill from this area to all of the same type.
+            int climateType = tmp & 0x1F;
+            bool[int] visited;
+            bool[int] toVisit;
+            toVisit[idx] = true;
+            while(toVisit.length > 0) {
+                int area = toVisit.keys[0];
+                toVisit.remove(area);
+                int areaInfo = bigVoronoiClimates[area];
+                int areaClimateType = areaInfo & 0x1F;
+                if(areaClimateType != climateType) continue;
+                region.addArea(area);
+                areaInfo |= (1 << 5);
+                bigVoronoiClimates[area] = cast(ubyte)areaInfo;
+                visited[area] = true;
+                foreach(neighbor ; bigVoronoi.poly.sites[area].getNeighbors()) {
+                    if(neighbor is null) continue;
+                    if( neighbor.siteId in visited) continue;
+                    toVisit[neighbor.siteId] = true;
+                }
+            }
+        }
+
     }
 
     void step() {
