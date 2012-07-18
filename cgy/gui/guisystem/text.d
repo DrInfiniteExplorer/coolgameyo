@@ -32,6 +32,13 @@ class GuiElementText : public GuiElement {
             setColor(vec3f(1.0)); //If not transparent, make the font show by default :P
         }
     }
+
+    override Recti getAbsoluteRect() {
+        auto rect = super.getAbsoluteRect;
+        absoluteRect.size = text.getSize();
+        return absoluteRect;
+    }
+
     
     override void destroy() {
         super.destroy();

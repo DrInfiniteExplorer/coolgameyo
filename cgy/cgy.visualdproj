@@ -421,6 +421,7 @@ d:\D\ulnb0333\ulink.exe $(IntDir)\$(TargetName).obj gdi32.lib win32.lib advapi32
     <File path="gui\guisystem\button.d" />
     <File path="gui\guisystem\checkbox.d" />
     <File path="gui\guisystem\combobox.d" />
+    <File path="gui\guisystem\dialogbox.d" />
     <File path="gui\guisystem\editbox.d" />
     <File path="gui\guisystem\element.d" />
     <File path="gui\guisystem\guisystem.d" />
@@ -576,8 +577,14 @@ d:\D\ulnb0333\ulink.exe $(IntDir)\$(TargetName).obj gdi32.lib win32.lib advapi32
    <File path="world\worldproxy.d" />
   </Folder>
   <Folder name="worldgen">
+   <File path="worldgen\areas.d" />
+   <File path="worldgen\heightmap.d" />
    <File path="worldgen\maps.d" />
+   <File path="worldgen\mapviz.d" />
+   <File path="worldgen\moisture.d" />
    <File path="worldgen\newgen.d" />
+   <File path="worldgen\temperature.d" />
+   <File path="worldgen\wind.d" />
   </Folder>
   <File path="clan.d" />
   <File path="clientnetworking.d" />

@@ -51,7 +51,7 @@ class InventoryWindow : GuiElementWindow {
     }
     
 	void onOpenInventory() {
-		if (getVisible()){
+		if (isVisible){
 			setVisible(false);
 			guiSystem.setEventDump(ofDOOM);
 		}

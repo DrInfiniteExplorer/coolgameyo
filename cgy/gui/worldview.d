@@ -23,32 +23,38 @@ import worldgen.maps;
 
 class WorldMenu : GuiElementWindow {
     GuiElement guiSystem;
-    MainMenu main;
+    GuiElement creator;
 
     GuiElementImage heightImg;
     GuiElementImage moistureImg;
     GuiElementImage temperatureImg;
 
     GuiElementImage windImg;
-    GuiElementImage voronoiImg;
 
-    GuiElementImage climateTypesImg;
-    Image climateTypes;
+    GuiElementImage voronoiImg;
+    Image voronoiImage;
+    bool renderEveryCell = false;
+    bool renderRegions = false;
+    bool renderRegionBorders = false;
 
     GuiElementImage climateMapImg;
     Image climateMap;
+    bool renderClimateBorders = false;
 
-    Image voronoiImage;
+    //The map used to visualize climate types.
+    GuiElementImage climateTypesImg;
+    Image climateTypes;
 
     bool zoomed;
     Rectd oldPos;
 
     World world;
+    World.MapVisualizer mapViz;
     int seed;
 
-    this(MainMenu m) {
-        main = m;
-        guiSystem = m.getGuiSystem();
+    this(GuiElement _creator) {
+        creator = _creator;
+        guiSystem = creator.getGuiSystem();
 
 
         super(guiSystem, Rectd(vec2d(0.0, 0.0), vec2d(1, 1)), "World experiment Menu~~~!", false, false);
@@ -74,6 +80,7 @@ class WorldMenu : GuiElementWindow {
 
         world = new World;
         world.init();
+        mapViz = world.getVisualizer();
 
         auto button = new GuiElementButton(this, Rectd(vec2d(0.75, 0.75), vec2d(0.2, 0.10)), "Back", &onBack);
 
@@ -112,11 +119,46 @@ class WorldMenu : GuiElementWindow {
         climateTypesImg.setImage(climateTypes);
 
 
+        auto climate_borders = new GuiElementCheckBox(this, Rectd(seedEdit.rightOf, seedEdit.topOf, seedEdit.widthOf, seedEdit.heightOf), "Borders on climate map?",
+            (bool down, bool abort) {
+                if(down || abort) return;
+                renderClimateBorders = !renderClimateBorders;
+                redraw(false);
+            }
+        );
+        auto voronoi_region_borders = new GuiElementCheckBox(this, Rectd(climate_borders.leftOf, climate_borders.bottomOf + 0.5 * climate_borders.heightOf, climate_borders.widthOf, climate_borders.heightOf),
+            "Regions borders?",
+            (bool down, bool abort) {
+                if(down || abort) return;
+                renderRegionBorders = !renderRegionBorders;
+                redraw(false);
+            }
+        );
+        auto voronoi_region_internal_borders = new GuiElementCheckBox(this, Rectd(voronoi_region_borders.leftOf, voronoi_region_borders.bottomOf, voronoi_region_borders.widthOf, voronoi_region_borders.heightOf),
+            "Borders inside regions?",
+            (bool down, bool abort) {
+                if(down || abort) return;
+                renderEveryCell = !renderEveryCell;
+                redraw(false);
+            }
+        );
+        auto voronoi_render_regions = new GuiElementCheckBox(this,
+            Rectd(voronoi_region_internal_borders.leftOf, voronoi_region_internal_borders.bottomOf, voronoi_region_internal_borders.widthOf, voronoi_region_internal_borders.heightOf),
+            "Render regions only?",
+            (bool down, bool abort) {
+                if(down || abort) return;
+                renderRegions = !renderRegions;
+                redraw(false);
+            }
+        );
+
+
         redraw(false);
 
     }
 
     override void destroy() {
+        world.destroy();
         super.destroy();
     }
 
@@ -142,65 +184,20 @@ class WorldMenu : GuiElementWindow {
             world.worldSeed = seed;
             world.init();
         }
-        heightImg.setImage(world.heightMap.toImage(world.worldMin, world.worldMax, true, (double v) {
-            double[4] ret;
-            ret[] = v;
-            if(v < 0.3) ret[0..1] = 0;
-            return ret;
-        }));
+        heightImg.setImage(mapViz.getHeightmapImage());
 
-        temperatureImg.setImage(world.temperatureMap.toImage(-30, 50, true, colorSpline([vec3d(0, 0, 1), vec3d(0, 0, 1), vec3d(1, 1, 0), vec3d(1, 0, 0), vec3d(1, 0, 0)])));
+        temperatureImg.setImage(mapViz.getTemperatureImage());
 
-        windImg.setImage(world.windMap.toImage(0.0, 1.2, true, colorSpline([vec3d(0, 0, 1), vec3d(0, 0, 1), vec3d(1, 1, 0), vec3d(1, 0, 0), vec3d(1, 0, 0)])));
+        windImg.setImage(mapViz.getWindImage());
 
-        moistureImg.setImage(world.moistureMap.toImage(-10, 100, true));
+        moistureImg.setImage(mapViz.getMoistureImage());
 
-        foreach(x, y, ref r, ref g, ref b, ref a ; climateMap) {
-            auto height = world.heightMap.get(x, y);
-            if(height <= 0) {
-                r = g = a = 0;
-                b = 96;
-                continue;
-            }
-            auto moisture = world.moistureMap.get(x, y);
-            auto temp = world.temperatureMap.get(x, y);
-
-            int heightIdx = clamp(cast(int)(height*4 / world.worldMax), 0, 3);
-            int tempIdx = clamp(cast(int)((temp-world.temperatureMin)*4 / world.temperatureRange), 0, 3);
-            int moistIdx = clamp(cast(int)(moisture*4.0/10.0), 0, 3);
-            //msg(tempIdx, " ", temp-world.temperatureMin);
-            
-            climateTypes.getPixel(3-tempIdx, 3-moistIdx, r, g, b, a);
-
-        }
 
 
         voronoiImage.clear(0, 0, 0, 0);
-        foreach(x, y, ref r, ref g, ref b, ref a ; voronoiImage) {
-            int cellId = world.bigVoronoi.identifyCell(vec2d(x, y));
-            int tempIdx = world.bigVoronoiClimates[cellId];
-            
-            bool isSea = (tempIdx & (1 << 4)) != 0;
-            int moistIdx = (tempIdx >> 2) & 3;
-            tempIdx = tempIdx & 3;
-            if(isSea) {
-                r = g = a = 0;
-                b = 0;
-                continue;
-            }
-            auto height = world.heightMap.get(x, y);
-            if(height <= 0) {
-                r = g = a = 0;
-                b = 96;
-                continue;
-            }
-
-            climateTypes.getPixel(3-tempIdx, 3-moistIdx, r, g, b, a);
-
-        }
 
 
-        foreach(edge ; world.bigVoronoi.poly.edges) {
+        foreach(edge ; world.areaVoronoi.poly.edges) {
             auto start = edge.getStartPoint();
             auto end = edge.getEndPoint();
 
@@ -209,25 +206,33 @@ class WorldMenu : GuiElementWindow {
             if(height1 <= 0 || height2 <= 0) {
                 continue;
             }
-
-            climateMap.drawLine(start.pos.convert!int, end.pos.convert!int, vec3i(0));
+            if(renderClimateBorders) {
+                climateMap.drawLine(start.pos.convert!int, end.pos.convert!int, vec3i(0));
+            }
             int site1 = edge.halfLeft.left.siteId;
             int site2 = edge.halfRight.left.siteId;
-            if((world.bigVoronoiClimates[site1] & 0xF) == (world.bigVoronoiClimates[site2] & 0xF)) continue;
-            voronoiImage.drawLine(start.pos.convert!int, end.pos.convert!int, vec3i(0));
+            if(!renderEveryCell) {
+                if((world.areas[site1].climateType) == (world.areas[site2].climateType)) continue;
+            }
+            if(renderRegionBorders || renderEveryCell) {
+                voronoiImage.drawLine(start.pos.convert!int, end.pos.convert!int, vec3i(0));
+            }
         }
 
-        climateMapImg.setImage(climateMap);
+        climateMapImg.setImage(mapViz.getClimateImage(climateTypes, renderClimateBorders));
 
-
-        voronoiImg.setImage(voronoiImage);
+        if(renderRegions) {
+            voronoiImg.setImage(mapViz.getRegionImage(renderRegionBorders));
+        } else {
+            voronoiImg.setImage(mapViz.getAreaImage(climateTypes, renderRegionBorders, renderEveryCell));
+        }
 
 
 
     }
 
     void onBack() {
-        main.setVisible(true);
+        creator.setVisible(true);
         destroy();
     }    
 

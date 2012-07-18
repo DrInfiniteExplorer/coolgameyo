@@ -74,6 +74,8 @@ body{
     }
 }
 
+enum vec3d[5] temperatureSpline = [vec3d(0, 0, 1), vec3d(0, 0, 1), vec3d(1, 1, 0), vec3d(1, 0, 0), vec3d(1, 0, 0)];
+
 double[4] delegate(double) colorSpline(Type)(Type[] ar) {
     return (double d) {
         union Asd {

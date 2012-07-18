@@ -80,6 +80,17 @@ unittest {
     assert(si.dwPageSize == 4096);
 }
 
+void colorize(int num, int count, ref ubyte r, ref ubyte g, ref ubyte b) {
+    enum v = 2^^24;
+
+    double ratio = (cast(double)num) / (count);
+    int c = v - (cast(int)(cast(double)v * ratio));
+    char* ptr = cast(char*)&c;
+    r = ptr[0];
+    g = ptr[1];
+    b = ptr[2];
+}
+
 T[6] neighbors(T)(T t) {
     alias typeof(t.value) V;
     T[6] ret;

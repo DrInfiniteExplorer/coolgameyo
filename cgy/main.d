@@ -221,7 +221,7 @@ class Main {
                         kb.pressed = event.key.state == SDL_PRESSED;
                         kb.repeat = 0; //TODO: Implement later?
                         auto unicode = event.key.keysym.unicode;
-                        if (unicode & 0xFF80) {
+                        if (unicode & 0xFF80) { // Haha i dont know what this is about now. Prolly multi-byte keys? maybe? :D
                         } else {
                             kb.ch = unicode & 0x7F;
                         }
@@ -245,11 +245,11 @@ class Main {
                         guiEvent.type = GuiEventType.MouseClick;
                         auto m = &guiEvent.mouseClick;
                         m.down = event.type == SDL_MOUSEBUTTONDOWN;
-                        m.left = event.button.button == SDL_BUTTON_LEFT; //Makes all others right. including scrollwheel, i think. :P
-                        m.right = event.button.button == SDL_BUTTON_RIGHT; //Makes all others right. including scrollwheel, i think. :P
-                        m.middle = event.button.button == SDL_BUTTON_MIDDLE; //Makes all others right. including scrollwheel, i think. :P
-                        m.wheelUp = event.button.button == SDL_BUTTON_WHEELUP; //Makes all others right. including scrollwheel, i think. :P
-                        m.wheelDown = event.button.button == SDL_BUTTON_WHEELDOWN; //Makes all others right. including scrollwheel, i think. :P
+                        m.left = event.button.button == SDL_BUTTON_LEFT;
+                        m.right = event.button.button == SDL_BUTTON_RIGHT;
+                        m.middle = event.button.button == SDL_BUTTON_MIDDLE;
+                        m.wheelUp = event.button.button == SDL_BUTTON_WHEELUP;
+                        m.wheelDown = event.button.button == SDL_BUTTON_WHEELDOWN;
                         m.pos.set(event.button.x,
                                     event.button.y);
                         guiSystem.onEvent(guiEvent);                        

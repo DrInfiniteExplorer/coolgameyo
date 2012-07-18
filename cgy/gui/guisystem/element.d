@@ -74,8 +74,10 @@ class GuiElement {
     protected Rectd relativeRect;
     protected Recti absoluteRect;
     protected Font font;
+
     protected bool visible = true;
     protected bool selectable = true;
+    protected bool enabled = true;
     
     this(GuiElement parent){
         //Uh, yeah! make sure that if parent == null then we are a GuiSystem.
@@ -213,7 +215,7 @@ class GuiElement {
     
     void render(){
         foreach(child ; children) {
-            if (child.getVisible()) {
+            if (child.isVisible) {
                 child.render();
             }
         }
@@ -274,14 +276,21 @@ class GuiElement {
         }
         visible = enable;
     }
-    bool getVisible() {
+    bool isVisible() const @property{
         return visible;
+    }
+
+    void setEnabled(bool enable) {
+        enabled = enable;
+    }
+    bool isEnabled() const @property {
+        return enabled;
     }
     
     void setSelectable(bool v) {
         selectable = v;
     }
-    bool getSelectable() const {
+    bool isSelectable() const @property {
         return selectable;
     }
     

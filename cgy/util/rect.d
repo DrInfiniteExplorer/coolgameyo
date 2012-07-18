@@ -59,8 +59,8 @@ struct Rect(T) {
     
     Rect!T centerRect(Rect!T toCenter, bool centerHorizontal = true, bool centerVertical = true) {
         auto newStart = start + (size - toCenter.size) / 2;
-        auto tmp = vector2d!T( centerHorizontal ? newStart.X : start.X,
-                          centerVertical ? newStart.Y : start.Y);
+        auto tmp = vector2d!T( centerHorizontal ? newStart.X : toCenter.start.X,
+                          centerVertical ? newStart.Y : toCenter.start.Y);
         return Rect!T(tmp, toCenter.size);
     }
 
@@ -78,9 +78,8 @@ struct Rect(T) {
         return diff(vector2d!T(dStartX, dStartY), vector2d!T(dSizeX, dSizeY));
     }
 
-    invariant() {
-//        enforce(size.X >= 0, "Width of rect negative!!");
-//        enforce(size.Y >= 0, "Height of rect negative!!");
+    Rect!T pad(T width, T height) {
+        return diff(-width / 2, -height / 2, width / 2, height / 2);
     }
     
     string toString() const {

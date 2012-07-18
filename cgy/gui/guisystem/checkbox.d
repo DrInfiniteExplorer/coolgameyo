@@ -32,7 +32,7 @@ class GuiElementCheckBox : public GuiElementButtonAll {
     
     override void onMove() {
         if (buttonText !is null) {
-            auto textRect = Recti(vec2i(0, 0), buttonText.getSize());
+            auto textRect = Recti(absoluteRect.start, buttonText.getSize());
             textRect = absoluteRect.centerRect(textRect, false);
             textRect = textRect.diff(vec2i(checkboxSizeInPixels+2, 0), vec2i(0, 0));
             buttonText.setAbsoluteRect(textRect);
@@ -58,7 +58,7 @@ class GuiElementCheckBox : public GuiElementButtonAll {
     override void render() {
         auto r = absoluteRect;
         renderOutlineRect(r, vec3f(1, 0, 0));
-        auto checkSize = Recti(vec2i(0,0), vec2i(checkboxSizeInPixels, checkboxSizeInPixels));
+        auto checkSize = Recti(r.start, vec2i(checkboxSizeInPixels, checkboxSizeInPixels));
         auto rect = r.centerRect(checkSize, false);
         
         renderRect(rect, vec3f(1.0, 1.0, 1.0));

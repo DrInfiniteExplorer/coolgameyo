@@ -43,6 +43,8 @@ class GuiElementWindow : public GuiElement {
         caption = text;
         if (captionText is null) {
             captionText = new GuiElementText(this, vec2d(0, 0), text);
+            auto r = captionText.getAbsoluteRect();
+            captionText.setAbsoluteRect(r.diff(r.heightOf / 2, 0, 0, 0));
         } else {
             captionText.setText(text);            
         }
@@ -145,5 +147,14 @@ class GuiElementWindow : public GuiElement {
 
     Rectd clientArea() const @property {
         return absoluteRect.convert!double.getSubRectInv(clientRect.convert!double);
+    }
+    Recti clientAreaAbsolute() const @property {
+        return absoluteRect.convert!double.getSubRect(clientArea).convert!int;
+    }
+    Rectd barArea() const @property {
+        return absoluteRect.convert!double.getSubRectInv(barRect.convert!double);
+    }
+    Recti barAreaAbsolute() const @property {
+        return absoluteRect.convert!double.getSubRect(barArea).convert!int;
     }
 }

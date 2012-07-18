@@ -249,7 +249,6 @@ final class Site {
     vec2d pos;
     HalfEdge[] halfEdges;
 
-
     //TODO: Turn into delegate?
     Site[] getNeighbors() {
         return array(map!"a.right"(halfEdges));
