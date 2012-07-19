@@ -24,7 +24,7 @@ mixin template MapViz() {
             return moistureMap.toImage(-10, 100, true);
         }
 
-        Image getClimateImage(Image climateTypes, bool areaBorders = false) {
+        Image getClimateImage(Image climateTypes = Image("climateMap.bmp"), bool areaBorders = false) {
             Image climateMap = Image(null, Dim, Dim);
             foreach(x, y, ref r, ref g, ref b, ref a ; climateMap) {
                 auto height = heightMap.get(x, y);

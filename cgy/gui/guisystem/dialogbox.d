@@ -2,6 +2,8 @@ module gui.guisystem.dialogbox;
 
 import std.algorithm;
 import std.array;
+import std.exception;
+import std.range;
 
 import gui.all;
 
@@ -13,16 +15,36 @@ class DialogBox : GuiElementWindow {
     GuiElement creator;
 
 
-    alias void delegate(string) AnswerDelegate;
-    AnswerDelegate cb;
+    alias void delegate(string) SingleAnswerDelegate;
+    alias void delegate() MultiAnswerDelegate;
+
     GuiElementText message;
 
-    this(GuiElement _creator, string title, string _message, string choices, AnswerDelegate _cb) {
+    this(T...)(GuiElement _creator, string title, string _message, T t) {
         creator = _creator;
         guiSystem = creator.getGuiSystem();
-        cb = _cb;
 
         super(guiSystem, Rectd(vec2d(0.0, 0.0), vec2d(1, 1)), title, true, false);
+
+        static if(is(t[1] : SingleAnswerDelegate)) {
+            enum singleAnswer = true;
+            auto options = array(split(t[0], "|"));
+            auto callback = t[1];
+        } else {
+            enum singleAnswer = false;
+
+            string[] options;
+            MultiAnswerDelegate[] callbacks;
+            foreach(item ; t) {
+                static if(is(typeof(item) : string)) {
+                    options ~= item;
+                } else {
+                    callbacks ~= item;
+                }
+            }
+            enforce(options.length == callbacks.length, "Length of options and callbacks not the same!");
+        }
+
 
         // Make the message and find out how big it is in relation to the screen.
         message = new GuiElementText(this, vec2d(0.0), _message);
@@ -43,7 +65,6 @@ class DialogBox : GuiElementWindow {
         auto newRect = clientAreaAbsolute.centerRect(a, true, false);
         message.setAbsoluteRect(newRect);
         
-        auto options = array(split(choices, "|"));
 
         double buttonStartY = message.bottomOf + barArea.heightOf;
         double buttonHeight = clientArea.heightOf - buttonStartY;
@@ -54,12 +75,16 @@ class DialogBox : GuiElementWindow {
         foreach(idx, option ; options) {
             auto x = padding + basicWidth*3*idx;
             new GuiElementButton(this, Rectd(x, buttonStartY, 2*basicWidth, buttonHeight), option, 
-                (string s){
+                (int idx, string s){
                     return {
-                        cb(s);
+                        static if(singleAnswer) {
+                            callback(s);
+                        } else {
+                            callbacks[idx]();
+                        }
                         destroy();
                     };
-                }(option)
+                }(idx, option)
             );
 
         }

@@ -1,6 +1,7 @@
 module worldgen.maps;
 
 import std.algorithm;
+import std.conv;
 import std.math;
 
 
@@ -20,6 +21,9 @@ import random.vectormap;
 
 import graphics.image;
 
+import json;
+
+import util.filesystem;
 import util.rangefromto;
 import util.util;
 import util.voronoi.wrapper;
@@ -54,21 +58,48 @@ final class World {
 
     int voronoiSeed;
 
-    void save() {
+    string getWorldHash() const @property {
+        return to!string(worldSeed) ~ "_";
     }
 
-    void load() {
+    string worldPath(string hash = null) const @property{
+
+        return "worlds/" ~ ((hash is null) ? getWorldHash() : hash);
+    }
+
+    void save() {
+        auto worldPath = worldPath;
+        mkdir(worldPath);
+
+        getVisualizer().getClimateImage().save(worldPath ~ "/map.tga");
+        saveHeightmap();
+        saveWindMap();
+        saveTemperatureMap();
+        saveMoistureMap();
+        saveAreas();
+    }
+
+    void load(string worldHash) {
+        auto path = worldPath(worldHash);        
+        enforce(existsDir(path), "World not found:" ~ path);
+
+        worldSeed = to!int( split(worldHash, "_")[0] );
+        initSeed();
+
+        loadHeightmap();
+        loadWindMap();
+        loadTemperatureMap();
+        loadMoistureMap();
+        loadAreas();
     }
 
     void init() {
         //Spans 1.0*worldHeight
+        initSeed();
+
         heightmapInit();
         temperatureInit();
 
-        auto rnd = new RandSourceUniform(worldSeed);
-        heightSeed = rnd.get(int.min, int.max);
-        windSeed = rnd.get(int.min, int.max);
-        voronoiSeed = rnd.get(int.min, int.max);
 
         generateHeightMap();
         generateWindMap();
@@ -76,6 +107,13 @@ final class World {
         generateMoistureMap();
 
         generateAreas();
+    }
+
+    void initSeed() {
+        auto rnd = new RandSourceUniform(worldSeed);
+        heightSeed = rnd.get(int.min, int.max);
+        windSeed = rnd.get(int.min, int.max);
+        voronoiSeed = rnd.get(int.min, int.max);
     }
 
     void destroy() {
@@ -86,6 +124,5 @@ final class World {
         classifyAreas();
         return;
     }
-
 }
 

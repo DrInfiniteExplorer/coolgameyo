@@ -42,10 +42,12 @@ class NewGameMenu : GuiElementWindow {
     void noWorldsAvailable() {
         setEnabled(false);
         new DialogBox(this, "No worlds avaiable", "Sorry, there are no worlds avaiable. Create one or cancel?",
-                      "yes", { setVis...},
-                      "no", 
-                      
-                      "yes|no|wtf?", (string choice) {
+                      "yes", { setVisible(false); new WorldMenu(this); },
+                      "no", { onBack(); },
+                      "wtf?", { noWorldsAvailable(); }
+                      );
+        /*
+        new DialogBox(this, "No worlds avaiable", "Sorry, there are no worlds avaiable. Create one or cancel?", "yes|no|wtf?", (string choice) {
             setEnabled(true);
             if(choice == "yes") {
                 setVisible(false);
@@ -56,6 +58,7 @@ class NewGameMenu : GuiElementWindow {
                 noWorldsAvailable();
             }
         });
+        */
     }
 
     void init() {

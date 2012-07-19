@@ -95,13 +95,13 @@ vec3f getTileCoordSize(){
 
 
 void loadSettings(){
-    if(!std.file.exists("settings.json")){
-        msg("Could not load settings");
+    Value rootVal;
+    
+    if(!loadJSONFile("settings.json", rootVal)) {
+        msg("Settings file does not exist.");
         return;
     }
-    auto content = readText("settings.json");
-    
-    auto rootVal = json.parse(content);
+
     if("renderSettings" in rootVal){
         auto rsVal = rootVal["renderSettings"];
         json.read(renderSettings.serializableSettings, rsVal);
@@ -120,19 +120,11 @@ void loadSettings(){
 
 
 void saveSettings(){
-    json.Value[string] values;
-
-    values["renderSettings"] = encode(renderSettings.serializableSettings);
-	values["controlSettings"] = encode(controlSettings.serializableSettings);
 
     captureWindowPositions();
+    makeJSONObject("renderSettings", renderSettings.serializableSettings,
+                   "controlSettings", controlSettings.serializableSettings,
+                   "windowSettings", windowSettings.serializableSettings).saveJSON("settings.json");
 
-    values["windowSettings"] = encode(windowSettings.serializableSettings);
 
-    auto jsonRoot = json.Value(values);
-    auto jsonString = to!string(jsonRoot);
-	
-	jsonString = json.prettifyJSON(jsonString);
-	
-    std.file.write("settings.json", jsonString);
 }

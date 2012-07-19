@@ -15,6 +15,8 @@ module json;
 import std.range, std.algorithm, std.stdio, std.exception, std.conv;
 import std.file, std.traits;
 
+import util.util;
+
 class JsonException : Exception {
     this(string s) {
         super(s);
@@ -407,13 +409,50 @@ Value encode(T)(T t) {
 
 // Loads the root Value and saves into value.
 // Returns true if the file exists, false otherwise
-bool loadJSONFile(string path, Value* value) {
-    if (std.file.exists(path)) {
+bool loadJSON(string path, out Value value) {
+    if (exists(path)) {
         string idContent = readText(path);
-        *value = json.parse(idContent);
+        value = json.parse(idContent);
         return true;
     }
     return false;
+}
+
+Value loadJSON(string path) {
+    Value val;
+    enforce(loadJSON(path, val), "Can't load json file:" ~ path);
+    return val;
+}
+
+void saveJSON(Value value, string path, bool prettify = true) {
+    writeText(path, prettify ? prettifyJSON(value) : to!string(value));
+}
+
+Value makeJSONObject(T...)(T t) if( (t.length % 2) == 0) {
+    Value[string] map;
+    foreach(idx, what ; t) {
+        static if( (idx % 2) == 0) {
+            auto key = t[idx];
+            auto value=t[idx+1];
+            map[key] = encode(value);
+        }
+    }
+    return Value(map);
+}
+
+void readJSONObject(T...)(Value value, T t) if( (t.length % 2) == 0) {
+    enforce(value.type == Value.Type.object, "Can't read a non-object json-value as an object, merplerp");
+    foreach(idx, what ; t) {
+        static if( (idx % 2) == 0) {
+            auto key = t[idx];
+            auto valuePtr=t[idx+1];
+            assert(isPointer!(typeof(valuePtr)));
+
+            if(key in value) {
+                read(*valuePtr, value[key]);
+            }
+        }
+    }
 }
 
 // lat sta!

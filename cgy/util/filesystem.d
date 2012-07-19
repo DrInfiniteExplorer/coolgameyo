@@ -11,10 +11,17 @@ import util.util;
 bool exists(string path) {
     return std.file.exists(path);
 }
+bool existsDir(string path) {
+    return exists(path) && isDir(path);
+}
 
 //Reads a whole file as text
 string readText(string path) {
     return std.file.readText(path);
+}
+
+void writeText(string path, string content) {
+    std.file.write(path, content);
 }
 
 //Makes dir, recursively

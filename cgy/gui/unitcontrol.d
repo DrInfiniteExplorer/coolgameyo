@@ -99,7 +99,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         guiSystem.addHotkey(SDLK_i, &(inventoryWindow.onOpenInventory));
 
         Value jsonRoot;
-        if(loadJSONFile("saves/camdemo.json", &jsonRoot)) {
+        if(loadJSON("saves/camdemo.json", jsonRoot)) {
             json.read(camDemoPoints, jsonRoot);
         }
     }

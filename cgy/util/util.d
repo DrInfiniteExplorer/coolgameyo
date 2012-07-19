@@ -9,6 +9,8 @@ import std.stdio;
 import std.range;
 import std.string;
 import std.traits;
+import std.typecons;
+import std.typetuple;
 
 //public import std.datetime;
 
@@ -89,6 +91,17 @@ void colorize(int num, int count, ref ubyte r, ref ubyte g, ref ubyte b) {
     r = ptr[0];
     g = ptr[1];
     b = ptr[2];
+}
+
+template tuples(int n, Rest...) {
+    static assert (Rest.length % n == 0);
+    static if (Rest.length == 0) {
+        alias TypeTuple!() tuples;
+    } else {
+        alias TypeTuple!(
+                         tuple(Rest[0 .. n]),
+                         tuples!(n, Rest[n .. $])) tuples;
+    }
 }
 
 T[6] neighbors(T)(T t) {

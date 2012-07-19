@@ -13,6 +13,23 @@ mixin template Heightmap() {
         worldMax =  0.7*worldHeight;
     }
 
+    string heightmapJSONPath() const @property {
+        return worldPath ~ "/height.json";
+    }
+    void saveHeightmap() {
+        makeJSONObject(
+                       "worldHeight", worldHeight,
+                       "worldMin", worldMin,
+                       "worldMax", worldMax).saveJSON(heightmapJSONPath);
+    }
+
+    void loadHeightmap() {
+        loadJSON(heightmapJSONPath).readJSONObject(
+                                "worldHeight", &worldHeight,
+                                "worldMin", &worldMin,
+                                "worldMax", &worldMax);
+    }
+
     void generateHeightMap() {
 
         auto randomField = new ValueMap;
