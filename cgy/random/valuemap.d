@@ -6,6 +6,7 @@ import std.stdio;
 import std.string;
 
 import util.util;
+import util.filesystem;
 import util.math;
 import random.random;
 import random.valuesource;
@@ -139,12 +140,14 @@ final class ValueMap2D(StorageType, bool Wrap = true) : ValueSource {
         img.save(imgName);
     }
 
+    //Note! Does not save the dimensions!
     void saveBin(string filename) {
-        std.file.write(filename, randMap);
+        //std.file.write(filename, randMap);
+        writeBin(filename, randMap);
     }
     void loadBin(string filename) {
-        randMap = cast(StorageType[])std.file.read(filename);
-        std.file.write(filename, randMap);
+        //randMap = cast(StorageType[])std.file.read(filename);
+        readBin(filename, randMap);
     }
 };
 

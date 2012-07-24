@@ -187,10 +187,11 @@ class World {
         uint activeUnitId;
 
         deserializeFloodfill(jsonRoot);
-        json.read(activeSectors, jsonRoot["activeSectors"]);
-        json.read(g_UnitCount, jsonRoot["g_UnitCount"]);
-        json.read(g_entityCount, jsonRoot["g_entityCount"]);
-        json.read(g_ClanCount, jsonRoot["g_ClanCount"]);
+        jsonRoot.readJSONObject(
+                                "activeSectors",    &activeSectors,
+                                "g_UnitCount",      &g_UnitCount,
+                                "g_entityCount",    &g_entityCount,
+                                "g_ClanCount",      &g_ClanCount);
 
         deserializeClans();
 

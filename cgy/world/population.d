@@ -44,10 +44,9 @@ private mixin template WorldPopulationMixin() {
     }
 
     private void deserializeClans() {
-        auto content = readText("saves/current/world/clans/clans.json");
-        auto jsonRoot = json.parse(content);
         int[] clanList;
-        json.read(clanList, jsonRoot["clanList"]);
+        loadJSON("saves/current/world/clans/clans.json").
+            readJSONObject("clanList", &clanList);
 
         foreach(clanId ; clanList) {
             auto clan = new Clan(this);

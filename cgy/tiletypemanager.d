@@ -2,6 +2,7 @@ module tiletypemanager;
 
 import std.exception;
 import std.algorithm;
+import std.array;
 import std.conv;
 import std.stdio;
 import std.file;
@@ -22,7 +23,7 @@ static struct TileTextureID {
     ushort top, side, bottom;
 }
 
-struct TileType {
+struct TileType_t {
 	static struct InnerTileType {
 		string displayName;
 		string material;
@@ -46,6 +47,7 @@ struct TileType {
     ushort id = 0;
     bool transparent = false;
 }
+alias TileType_t* TileType;
 
 
 class TileTypeManager {
@@ -70,7 +72,7 @@ class TileTypeManager {
 		
         // Loads the tile type id configuration
         Value idRootVal;
-        bool hasTypeIdConfFile = loadJSONFile("saves/current/tiletypeidconfiguration.json", &idRootVal);
+        bool hasTypeIdConfFile = loadJSON("saves/current/tiletypeidconfiguration.json", idRootVal);
 
 		TileType tempType;
 		if(!std.file.exists("data/tile_types.json")){
@@ -81,7 +83,7 @@ class TileTypeManager {
 		auto rootVal = json.parse(content);
 		enforce(rootVal.type == json.Value.Type.object, "rootval in tiltypejson not object roawoaowoawo: " ~ to!string(rootVal.type));
 		foreach(name, rsVal ; rootVal.pairs) {
-			json.read(tempType.serializableSettings, rsVal);
+			rsVal.read(tempType.serializableSettings);
 			tempType.textures.top = atlas.addTile(
 					tempType.texturePathTop,
                     tempType.textureCoordTop,
@@ -98,7 +100,7 @@ class TileTypeManager {
 			tempType.name = name;
             if ( hasTypeIdConfFile == true && tempType.name in idRootVal) {
                 ushort id;
-                read(id, idRootVal[tempType.name]);
+                idRootVal[tempType.name].read(id);
                 enforce(id > 1, "Some tile type wants to hijack the invalid or air tile type");
 			    add(tempType, id, true);
             }
@@ -107,11 +109,11 @@ class TileTypeManager {
             }
 		}
 
+        /*
         // This should be done with some fancy json function...
         // Saves the tile type id configuration
         string jsonString = "{\n";
         for (int i = 0; i < types.length; i++) {
-            // don't save invalid or air
             if (types[i].id > 1) {
                 jsonString ~= "\"";
                 jsonString ~= types[i].name;
@@ -123,6 +125,18 @@ class TileTypeManager {
         jsonString~="}";
         util.filesystem.mkdir("saves/current");
         std.file.write("saves/current/tiletypeidconfiguration.json", jsonString);
+        */
+
+        util.filesystem.mkdir("saves/current");
+        // don't save invalid or air
+        ushort[string] typeAA;
+        foreach(type ; types) {
+            if(type.id > 1) {
+                typeAA[type.name] = type.id;
+            }
+        }
+        encode(typeAA).saveJSON("saves/current/tiletypeidconfiguration.json");
+
     }
 
     TileType byID(ushort id) {

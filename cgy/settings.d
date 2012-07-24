@@ -41,6 +41,9 @@ struct RenderSettings {
     alias serializableSettings this;
 
 	// These settings are generated in the program, not from settings file
+    double widthHeightRatio() shared @property {
+        return cast(double)windowWidth / cast(double)windowHeight;
+    }
 	
     // Some opengl-implementation-dependant constants,
     // gathered on renderer creation
@@ -97,25 +100,14 @@ vec3f getTileCoordSize(){
 void loadSettings(){
     Value rootVal;
     
-    if(!loadJSONFile("settings.json", rootVal)) {
+    if(!loadJSON("settings.json", rootVal)) {
         msg("Settings file does not exist.");
         return;
     }
 
-    if("renderSettings" in rootVal){
-        auto rsVal = rootVal["renderSettings"];
-        json.read(renderSettings.serializableSettings, rsVal);
-    }
-    if("controlSettings" in rootVal){
-	    auto controlVal = rootVal["controlSettings"];
-        json.read(controlSettings.serializableSettings, controlVal);
-    }
-    if("windowSettings" in rootVal) {
-        auto windowVal = rootVal["windowSettings"];
-        json.read(windowSettings.serializableSettings, windowVal);
-    }
-
-
+    rootVal.readJSONObject("renderSettings", &renderSettings.serializableSettings,
+                           "controlSettings", &controlSettings.serializableSettings,
+                           "windowSettings", &windowSettings.serializableSettings);
 }
 
 

@@ -17,14 +17,14 @@ mixin template FloodFill() {
         reset_r();
     }
     void serializeFloodfill(Value v) {
-        v["toFlood"] = encode(floodingSectors[]);
-        v["floodcur"] = encode(current);
-        v["floodr"] = encode(r);
+        v.populateJSONObject("toFlood", floodingSectors,
+                             "floodcur", current,
+                             "floodr", r);
     }
     void deserializeFloodfill(Value v) {
-        json.read(floodingSectors, v["toFlood"]);
-        json.read(current, v["floodcur"]);
-        json.read(r, v["floodr"]);
+        v.readJSONObject("toFlood", &floodingSectors,
+                         "floodcur", &current,
+                         "floodr", &r);
     }
 
     void floodFillSome(int max=10_000) {

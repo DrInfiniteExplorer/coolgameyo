@@ -107,7 +107,7 @@ final class Unit {
         return val;
     }
     void fromJSON(Value val) {
-        read(unitData, val);
+        val.read(unitData);
         if ("clanId" in val) {
             //int clanId;
             //read(clanId, val["clanId"]);
@@ -117,7 +117,7 @@ final class Unit {
         }
         if ("typeId" in val) {
             string unitType;
-            read(unitType, val["typeId"]);
+            val["typeId"].read(unitType);
             BREAKPOINT;
         }
         inventory = new Inventory(); // TODO: RAWR!!

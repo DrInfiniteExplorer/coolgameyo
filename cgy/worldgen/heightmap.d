@@ -1,9 +1,11 @@
 module worldgen.heightmap;
 
 mixin template Heightmap() {
+
+    int heightSeed; //generated in initSeed, no need to serialize.
+
     ValueMap heightMap;
 
-    int heightSeed;
     double worldHeight = 10_000;
     double worldMin;
     double worldMax;
@@ -11,16 +13,22 @@ mixin template Heightmap() {
     void heightmapInit() {
         worldMin = -0.3*worldHeight;
         worldMax =  0.7*worldHeight;
+        heightMap = new ValueMap(Dim, Dim);
     }
 
     string heightmapJSONPath() const @property {
         return worldPath ~ "/height.json";
     }
+    string heightmapImagePath() const @property {
+        return worldPath ~ "/height.bin";
+    }
+
     void saveHeightmap() {
         makeJSONObject(
                        "worldHeight", worldHeight,
                        "worldMin", worldMin,
                        "worldMax", worldMax).saveJSON(heightmapJSONPath);
+        heightMap.saveBin(heightmapImagePath);
     }
 
     void loadHeightmap() {
@@ -28,6 +36,7 @@ mixin template Heightmap() {
                                 "worldHeight", &worldHeight,
                                 "worldMin", &worldMin,
                                 "worldMax", &worldMax);
+        heightMap.loadBin(heightmapImagePath);
     }
 
     void generateHeightMap() {
@@ -59,8 +68,6 @@ mixin template Heightmap() {
             return height;
         });
 
-
-        heightMap = new ValueMap(Dim, Dim);
         heightMap.fill(test, Dim, Dim);
         heightMap.normalize(worldMin, worldMax); 
     }

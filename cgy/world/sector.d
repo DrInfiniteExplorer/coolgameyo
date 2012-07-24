@@ -220,19 +220,11 @@ class Sector {
 //            unit.fromJSON(unitVal);
 //            units.insert(unit);
             int unitId;
-            json.read(unitId, unitVal);
+            json.read(unitVal, unitId);
             addUnit(world.getUnitById(unitId));
         }
         
-		// Todo: remove this whenever everyone has renamed their saves
-		if(!std.file.exists(folder ~ "entities.json")){
-			content = readText(folder ~ "objects.json");
-		}
-        else{
-			content = readText(folder ~ "entities.json");
-		}
-        jsonRoot = json.parse(content);
-        foreach (entityVal ; jsonRoot.elements) {
+        foreach (idx, entityVal ; loadJSON(folder ~ "entities.json").asArray()) {
             //Entity entity = newEntity();
             //entity.fromJSON(entityVal, entityTypeManager);
             //addEntity(entity);

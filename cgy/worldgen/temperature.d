@@ -11,6 +11,29 @@ mixin template Temperature() {
         temperatureMin = -20;
         temperatureMax = 40;
         temperatureRange = temperatureMax - temperatureMin;
+
+        temperatureMap = new ValueMap(Dim, Dim);
+    }
+
+    string temperatureJSONPath() const @property {
+        return worldPath ~ "/temperature.json";
+    }
+    string temperatureImagePath() const @property {
+        return worldPath ~ "/temperature.bin";
+    }
+
+    void saveTemperatureMap() {
+        makeJSONObject(
+                       "tempMin", temperatureMin,
+                       "tempMax", temperatureMax).saveJSON(temperatureJSONPath);
+        temperatureMap.saveBin(temperatureImagePath);
+    }
+    void loadTemperatureMap() {
+        loadJSON(temperatureJSONPath).readJSONObject(
+                                                   "tempMin", &temperatureMin,
+                                                   "tempMax", &temperatureMax);
+        temperatureRange = temperatureMax - temperatureMin;
+        temperatureMap.loadBin(temperatureImagePath);
     }
 
     void generateTemperatureMap() {
@@ -31,7 +54,6 @@ mixin template Temperature() {
             return equatorChillField.getValue(x, y) + heightChillField.getValue(x, y) - grad;
         }
 
-        temperatureMap = new ValueMap(Dim, Dim);
         temperatureMap.fill(&combine, Dim, Dim);
     }
 

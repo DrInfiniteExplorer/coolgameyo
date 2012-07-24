@@ -17,7 +17,7 @@ struct UnitModelInfo {
     string skeletonName;//Skeleton family
 }
 
-final class UnitType {
+struct UnitType_t {
 	static struct InnerUnitType {
 		string displayName;
 		vec3i tintColor;
@@ -31,10 +31,11 @@ final class UnitType {
 	string name;
     ushort id;
 }
+alias UnitType_t* UnitType;
 
 
 class UnitTypeManager {
-    UnitType[] types;
+    UnitType_t[] types;
     ushort[string] _byName;
 	
     invariant() {
@@ -47,7 +48,7 @@ class UnitTypeManager {
 		
         // Loads the unit type id configuration
         Value idRootVal;
-        bool hasTypeIdConfFile = loadJSONFile("saves/current/unittypeidconfiguration.json", &idRootVal);
+        bool hasTypeIdConfFile = loadJSON("saves/current/unittypeidconfiguration.json", idRootVal);
 		
 		if(!std.file.exists("data/unit_types.json")){
 			msg("Could not load unit types");
@@ -56,14 +57,14 @@ class UnitTypeManager {
 		auto content = readText("data/unit_types.json");
 		auto rootVal = json.parse(content);
 		enforce(rootVal.type == json.Value.Type.object, "rootval in unittypejson not object roawoaowoawo: " ~ to!string(rootVal.type));
-		foreach(name, rsVal ; rootVal.pairs) {
-            UnitType tempType = new UnitType;
-			json.read(tempType.serializableSettings, rsVal);
+		foreach(name, rsVal ; rootVal.asObject) {
+            UnitType tempType;
+			rsVal.read(tempType.serializableSettings);
 			
 			tempType.name = name;
             if ( hasTypeIdConfFile == true && tempType.name in idRootVal) {
                 ushort id;
-                read(id, idRootVal[tempType.name]);
+                idRootVal[tempType.name].read(id);
 			    add(tempType, id, true);
             }
             else {
@@ -71,6 +72,7 @@ class UnitTypeManager {
             }
 		}
 
+        /*
         // This should be done with some fancy json function...
         // Saves the unit type id configuration
         string jsonString = "{\n";
@@ -84,19 +86,28 @@ class UnitTypeManager {
         jsonString~="}";
         util.filesystem.mkdir("saves/current");
         std.file.write("saves/current/unittypeidconfiguration.json", jsonString);
+        */
+        util.filesystem.mkdir("saves/current");
+        ushort[string] typeAA;
+        foreach(type ; types) {
+            typeAA[type.name] = type.id;
+        }
+        encode(typeAA).saveJSON("saves/current/unittypeidconfiguration.json");
     }
 
     UnitType byID(ushort id) {
-        return types[id];
+        return &types[id];
     }
     UnitType byName(string name) {
-        return types[idByName(name)];
+        return &types[idByName(name)];
     }
     ushort idByName(string name) {
         return *enforce(name in _byName, "no unit type by name '" ~ name ~ "'");
     }
 
     // Adds unit to the unit list. If we want to we can force an id.
+    //Only ever add a unit type when loading a game; Otherwise type pointers
+    //can be made to point to the wrong type!
     ushort add(UnitType unit, ushort id = 0, bool isSendingId = false) {
         enforce(!(unit.name in _byName));
 
@@ -126,11 +137,11 @@ class UnitTypeManager {
                 _byName[intrudingBastard.name] = intrudingBastard.id;
                 types[intrudingBastard.id] = intrudingBastard;
             }
-            types[unit.id] = unit;
+            types[unit.id] = *unit;
 		}
         else {
             unit.id = to!ushort(types.length);
-            types ~= unit;
+            types ~= *unit;
         }
 
         _byName[unit.name] = unit.id;

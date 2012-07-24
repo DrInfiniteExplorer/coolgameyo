@@ -114,14 +114,6 @@ class WorldMenu : GuiElementWindow {
             redraw(false);
         });
 
-        auto saveWorldButton = new GuiElementButton(this, Rectd(saveImagesButton.rightOf, saveImagesButton.topOf, saveImagesButton.widthOf, saveImagesButton.heightOf), "Save world", {
-            {
-                mixin(MeasureTime!("Time to save the world(All in a days work):"));
-                world.save();
-            }
-        });
-
-
         climateTypesImg = new GuiElementImage(this, Rectd(stepButton.rightOf + stepButton.heightOf, stepButton.topOf, stepButton.heightOf, stepButton.heightOf));
         climateTypes = Image("climateMap.bmp");
         climateTypesImg.setImage(climateTypes);
@@ -160,6 +152,14 @@ class WorldMenu : GuiElementWindow {
             }
         );
 
+        auto saveWorldButton = new GuiElementButton(this, Rectd(voronoi_region_borders.rightOf, voronoi_region_borders.topOf, voronoi_region_borders.widthOf, voronoi_region_borders.heightOf), "Save world", {
+            {
+                mixin(MeasureTime!("Time to save the world(All in a days work):"));
+                world.save();
+            }
+        });
+
+
 
         redraw(false);
 
@@ -191,6 +191,7 @@ class WorldMenu : GuiElementWindow {
             world = new World;
             world.worldSeed = seed;
             world.init();
+            mapViz = world.getVisualizer();
         }
         heightImg.setImage(mapViz.getHeightmapImage());
 

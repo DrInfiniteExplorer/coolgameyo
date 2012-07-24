@@ -12,10 +12,16 @@
 module json;
 
 
-import std.range, std.algorithm, std.stdio, std.exception, std.conv;
-import std.file, std.traits;
+import std.algorithm;
+import std.conv;
+import std.exception;
+//import std.file;
+import std.range;
+import std.stdio;
+import std.traits;
 
 import util.util;
+import util.filesystem;
 
 class JsonException : Exception {
     this(string s) {
@@ -68,6 +74,37 @@ struct Value {
 
     bool opCast(T : bool)() const { return boolVal; }
     bool isNull() @property const { return type !is Type.null_; }
+
+
+    size_t arrayLength() const @property {
+        enforce (type == Type.array, new JsonException(text("Cant do arrayLength on json-value when type is ", type)));
+        return elements.length;
+    }
+    //Could "return elements" for the same effect. Weight the pros and cons for it. Maybe version(...) it?
+    auto asArray() {
+        enforce (type == Type.array, new JsonException(text("Cant do asArray on json-value when type is ", type)));
+        return (int delegate(ref int i, ref Value v) Body) {
+            int ret;
+            foreach(int i ; 0 .. elements.length) {
+                ret = Body(i, elements[i]);
+                if(ret) return ret;
+            }
+            return 0;
+        };
+    }
+
+    //Could "return pairs" for the same effect. Weight the pros and cons for it. Maybe version(...) it?
+    auto asObject() {
+        enforce (type == Type.object, new JsonException(text("Cant do asObject on json-value when type is ", type)));
+        return (int delegate(ref string str, ref Value v) Body) {
+            int ret;
+            foreach(key, ref value ; pairs) {
+                ret = Body(key, value);
+                if(ret) return ret;
+            }
+            return 0;
+        };
+    }
 
     bool opEquals(ref const Value other) const {
         if (type != other.type) return false;
@@ -289,16 +326,18 @@ template RealThing(T...) if(T.length == 1)
 
 T read(T)(string s) {
     T t;
-    read!T(t, s);    
+    read!T(s, t);    
     return t;
 }
 T read(T)(Value v) {
     T t;
-    read!T(t, v);
+    read!T(v, t);
     return t;
 }
-void read(T)(ref T t, string s) { return read!T(t, parse(s)); }
-void read(T)(ref T t, Value val) {
+void read(T)(string s, ref T t)  if(! is( T : Value)) {
+    return read!T(parse(s), t);
+}
+void read(T)(Value val, ref T t) if(! is( T : Value)) {
 //    writeln(T.stringof);
     static if (isNumeric!T) {
         t = to!T(val.num);
@@ -347,16 +386,18 @@ private void update(T)(T* t, string s) { return update!T(t, parse(s)); }
 private void update(T)(T* t, Value val) {
     enforce(t !is null, "Can not update t of type " ~ T.stringof ~ " because t is null!");
     foreach (m; __traits(allMembers, T)) {
+
         static if( !__traits(compiles, RealThing!(__traits(getMember, T, m)))) {
             continue;
         } else {
+            //pragma(msg, text("T is ", T.stringof));
             alias typeof(__traits(getMember, *t, m)) M;
             static if (isSomeFunction!(__traits(getMember, T, m))){
                 continue;
             } else {
                 if (m !in val) continue;
                 static if (__traits(compiles, read!M(val[m]))){
-                    read!M(__traits(getMember, *t, m), val[m]);
+                    val[m].read!M(__traits(getMember, *t, m));
                 } else static if (is (M == struct)) {
                     update(&__traits(getMember, *t, m), val[m]);
                 }
@@ -403,7 +444,7 @@ Value encode(T)(T t) {
         return Value(blep);
     } else {
         pragma (msg, "cannot encode ", T);
-        assert (0);
+        static assert (0);
     }
 }
 
@@ -428,8 +469,17 @@ void saveJSON(Value value, string path, bool prettify = true) {
     writeText(path, prettify ? prettifyJSON(value) : to!string(value));
 }
 
+//Example:
+//makeJSONObject("renderSettings", renderSettings.serializableSettings,
+//               "controlSettings", controlSettings.serializableSettings).saveJSON("settings.json");
+//
 Value makeJSONObject(T...)(T t) if( (t.length % 2) == 0) {
     Value[string] map;
+    Value ret = Value(map);
+    ret.populateJSONObject(t);
+    return ret;
+}
+void populateJSONObject(T ...)(ref Value map, T t) if( (t.length % 2) == 0) {
     foreach(idx, what ; t) {
         static if( (idx % 2) == 0) {
             auto key = t[idx];
@@ -437,9 +487,12 @@ Value makeJSONObject(T...)(T t) if( (t.length % 2) == 0) {
             map[key] = encode(value);
         }
     }
-    return Value(map);
 }
 
+//Example:
+//loadJSON("settings.json").readJSONObject( "renderSettings", &renderSettings.serializableSettings,
+//                                          "controlSettings", &controlSettings.serializableSettings);
+//
 void readJSONObject(T...)(Value value, T t) if( (t.length % 2) == 0) {
     enforce(value.type == Value.Type.object, "Can't read a non-object json-value as an object, merplerp");
     foreach(idx, what ; t) {
@@ -449,7 +502,7 @@ void readJSONObject(T...)(Value value, T t) if( (t.length % 2) == 0) {
             assert(isPointer!(typeof(valuePtr)));
 
             if(key in value) {
-                read(*valuePtr, value[key]);
+                value[key].read(*valuePtr);
             }
         }
     }

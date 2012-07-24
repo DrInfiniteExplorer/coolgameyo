@@ -24,6 +24,21 @@ void writeText(string path, string content) {
     std.file.write(path, content);
 }
 
+//Reads a binary file
+void readBin(T)(string path, ref T[] t) {
+    //static assert (__traits(compiles, cast(T)std.file.read(path)));
+    t = cast(T[])std.file.read(path);
+}
+//Writes to a file as binary data.
+void writeBin(T)(string path, T t) {
+    std.file.write(path, t);
+}
+
+// int[] t = [1, 3, 5]
+// writeBin("asd", t); 
+// readBin("asd", t);
+
+
 //Makes dir, recursively
 void mkdir(string path) {
     if (exists(path)) {

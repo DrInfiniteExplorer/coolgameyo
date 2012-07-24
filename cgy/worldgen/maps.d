@@ -1,7 +1,9 @@
 module worldgen.maps;
 
 import std.algorithm;
+import std.array;
 import std.conv;
+import std.exception;
 import std.math;
 
 
@@ -22,6 +24,8 @@ import random.vectormap;
 import graphics.image;
 
 import json;
+
+import statistics;
 
 import util.filesystem;
 import util.rangefromto;
@@ -93,12 +97,22 @@ final class World {
         loadAreas();
     }
 
+    public static string[] enumerateSavedWorlds() {
+        string[] ret;
+        dir("worlds/", (string s) {ret ~= s;});
+        return ret;
+    }
+
     void init() {
+        mixin(MeasureTime!"Time to init world:");
         //Spans 1.0*worldHeight
         initSeed();
 
         heightmapInit();
+        windInit();
         temperatureInit();
+        moistureInit();
+        areasInit();
 
 
         generateHeightMap();

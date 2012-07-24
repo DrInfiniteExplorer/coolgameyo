@@ -3,8 +3,23 @@ module worldgen.moisture;
 mixin template Moisture() {
     ValueMap moistureMap;
 
-    void generateMoistureMap() {
+
+    void moistureInit() {
         moistureMap = new ValueMap(Dim, Dim);
+    }
+
+    string moistureImagePath() const @property {
+        return worldPath ~ "/moisture.bin";
+    }
+
+    void saveMoistureMap() {
+        moistureMap.saveBin(moistureImagePath);
+    }
+    void loadMoistureMap() {
+        moistureMap.loadBin(moistureImagePath);
+    }
+
+    void generateMoistureMap() {
         moistureMap.fill((double x, double y) {
             double grad = 0.0;
             if(heightMap.get(cast(int)x, cast(int) y) <= 0.0 ) {

@@ -1,8 +1,25 @@
 module worldgen.wind;
 
 mixin template Wind() {
-    Vector2DMap2D!(double, true) windMap;
     int windSeed;
+
+    Vector2DMap2D!(double, true) windMap;
+
+    void windInit() {
+        windMap = new typeof(windMap)(Dim, Dim);
+    }
+
+    string windImagePath() const @property {
+        return worldPath ~ "/wind.bin";
+    }
+
+    void saveWindMap() {
+        windMap.saveBin(windImagePath);
+    }
+    void loadWindMap() {
+        windMap.loadBin(windImagePath);
+    }
+
 
     //So as not to take too much time, just use a prevalent wind from east with some noise.
     void generateWindMap() {
@@ -15,8 +32,8 @@ mixin template Wind() {
             return dir;
         });
 
-        windMap = new typeof(windMap)(Dim, Dim);
         windMap.fill(hybridCombo, Dim, Dim);
         windMap.normalize(0.8, 1.2); 
     }
+
 }

@@ -10,6 +10,7 @@ import std.string;
 import stolen.vector2d;
 
 import util.util;
+import util.filesystem;
 import util.math;
 import random.random;
 import random.xinterpolate;
@@ -172,11 +173,12 @@ final class Vector2DMap2D(T, bool Wrap = true) {
     }
 
     void saveBin(string filename) {
-        std.file.write(filename, map);
+        //std.file.write(filename, map);
+        writeBin(filename, map);
     }
     void loadBin(string filename) {
-        map = cast(StorageType[])std.file.read(filename);
-        std.file.write(filename, map);
+        //map = cast(StorageType[])std.file.read(filename);
+        readBin(filename, map);
     }
 
 

@@ -21,7 +21,7 @@ struct EntityModelInfo {
 }
 
 
-struct EntityType {
+struct EntityType_t {
 	static struct InnerEntityType {
 		string displayName;
 		float tintFromMaterial;
@@ -41,6 +41,7 @@ struct EntityType {
 	string name;
     ushort id;
 }
+alias EntityType_t* EntityType;
 
 
 class EntityTypeManager {
@@ -57,7 +58,7 @@ class EntityTypeManager {
 		
         // Loads the entity type id configuration
         Value idRootVal;
-        bool hasTypeIdConfFile = loadJSONFile("saves/current/entitytypeidconfiguration.json", &idRootVal);
+        bool hasTypeIdConfFile = loadJSON("saves/current/entitytypeidconfiguration.json", idRootVal);
 
 		//EntityType tempType;
 		if(!std.file.exists("data/entity_types.json")){
@@ -71,12 +72,12 @@ class EntityTypeManager {
             EntityType tempType; // is is le working if this is here lololooo.
             // problem is tree gets light, shrubbery dont. neither should.
             // build expansion then defense it
-			json.read(tempType.serializableSettings, rsVal);
+			rsVal.read(tempType.serializableSettings);
 			
 			tempType.name = name;
             if ( hasTypeIdConfFile == true && tempType.name in idRootVal) {
                 ushort id;
-                read(id, idRootVal[tempType.name]);
+                idRootVal[tempType.name].read(id);
 			    add(tempType, id, true);
             }
             else {
@@ -84,6 +85,7 @@ class EntityTypeManager {
             }
 		}
 
+        /*
         // This should be done with some fancy json function...
         // Saves the entity type id configuration
         string jsonString = "{\n";
@@ -97,6 +99,14 @@ class EntityTypeManager {
         jsonString~="}";
         util.filesystem.mkdir("saves/current");
         std.file.write("saves/current/entitytypeidconfiguration.json", jsonString);
+        */
+        util.filesystem.mkdir("saves/current");
+        ushort[string] typeAA;
+        foreach(type ; types) {
+            typeAA[type.name] = type.id;
+        }
+        encode(typeAA).saveJSON("saves/current/entitytypeidconfiguration.json");
+
     }
 
     EntityType byID(ushort id) {

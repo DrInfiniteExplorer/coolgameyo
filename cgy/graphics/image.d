@@ -68,7 +68,9 @@ struct Image {
 
         imgWidth = min(ilGetInteger(IL_IMAGE_WIDTH)- offset.X, size.X);
         imgHeight = min(ilGetInteger(IL_IMAGE_HEIGHT)- offset.Y, size.Y);
-        imgData.length = 4*imgWidth*imgHeight;
+
+        imgData = new ubyte[](4*imgWidth*imgHeight);
+
         ilCopyPixels( offset.X, offset.Y, 0, imgWidth, imgHeight, 1, IL_RGBA, IL_UNSIGNED_BYTE, imgData.ptr);
         ilError();
     }

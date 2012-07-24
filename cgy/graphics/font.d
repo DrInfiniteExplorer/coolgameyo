@@ -21,7 +21,7 @@ import settings;
 import util.util;
 import util.rect;
 
-static import json;
+import json;
 
 struct FontVertex{
     vec2f vertPos;
@@ -282,9 +282,8 @@ class Font {
         if(-1 != lastIdx){
             path = fontFile[0 .. lastIdx+1];
         }
-        auto content = readText(fontFile ~ ".json");
 
-        json.read(conf, content);
+        loadJSON(fontFile ~ ".json").read(conf);
 
         auto img = Image(path ~ conf.textureFile);
         texId = img.toGLTex(0);

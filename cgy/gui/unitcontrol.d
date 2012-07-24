@@ -100,7 +100,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
 
         Value jsonRoot;
         if(loadJSON("saves/camdemo.json", jsonRoot)) {
-            json.read(camDemoPoints, jsonRoot);
+            jsonRoot.read(camDemoPoints);
         }
     }
 

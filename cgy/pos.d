@@ -35,7 +35,7 @@ mixin template SerializeValue() {
         return encode(value);
     }
     void fromJSON(Value v) {
-        read(value, v);
+        v.read(value);
     }
 }
 

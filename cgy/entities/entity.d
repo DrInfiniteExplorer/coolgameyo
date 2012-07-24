@@ -81,11 +81,11 @@ final class Entity {
         return val;
     }
     void fromJSON(Value val, EntityTypeManager entityTypeManager) {
-        read(entityData, val);
+        val.read(entityData);
 
         if ("entityTypeId" in val) {
             int entityTypeId;
-            read(entityTypeId, val["entityTypeId"]);
+            val["entityTypeId"].read(entityTypeId);
             type = entityTypeManager.byID(cast(ushort)entityTypeId);
         }
     }
