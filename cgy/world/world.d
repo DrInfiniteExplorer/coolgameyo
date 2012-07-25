@@ -114,7 +114,7 @@ class World {
     UnitTypeManager unitTypeManager;
     SceneManager sceneManager;
 
-    this(WorldGenParams params, TileTypeManager tilesys, EntityTypeManager entitysys, UnitTypeManager unitsys, SceneManager _sceneManager) {
+    this(TileTypeManager tilesys, EntityTypeManager entitysys, UnitTypeManager unitsys, SceneManager _sceneManager) {
         isServer = true;
         tileTypeManager = tilesys;
         worldGen = new WorldGenerator;

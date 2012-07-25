@@ -36,7 +36,7 @@ class InventoryWindow : GuiElementWindow {
         super(guiSystem, Rectd(vec2d(0.25, 0.25), vec2d(0.5, 0.5)), "Inventory window~~~!", true, true);
 		
 		
-        new GuiElementButton(this, Rectd(vec2d(0.75, 0.9), vec2d(0.2, 0.10)), "Back", &onBack);
+        new PushButton(this, Rectd(vec2d(0.75, 0.9), vec2d(0.2, 0.10)), "Back", &onBack);
 		listBox = new GuiElementListBox(this, Rectd(vec2d(0.5, 0.0), vec2d(0.5, 0.80)), 30);
         inventory.listBox = &listBox;
 

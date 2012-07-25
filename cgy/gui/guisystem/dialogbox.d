@@ -74,7 +74,7 @@ class DialogBox : GuiElementWindow {
 
         foreach(idx, option ; options) {
             auto x = padding + basicWidth*3*idx;
-            new GuiElementButton(this, Rectd(x, buttonStartY, 2*basicWidth, buttonHeight), option, 
+            new PushButton(this, Rectd(x, buttonStartY, 2*basicWidth, buttonHeight), option, 
                 (int idx, string s){
                     return {
                         static if(singleAnswer) {
@@ -91,7 +91,7 @@ class DialogBox : GuiElementWindow {
 
 
 
-        //GuiElementButton
+        //PushButton
 
 
 

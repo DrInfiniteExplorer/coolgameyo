@@ -117,7 +117,7 @@ class Game{
 
 
     //This and finishInit are run in the thread which becomes the scheduler thread
-    private void init(WorldGenParams worldParams) {
+    private void init() {
         mixin(LogTime!("GameInit"));
         if (isClient) {
             atlas = new TileTextureAtlas; // HACK
@@ -127,7 +127,7 @@ class Game{
         entityTypeManager = new EntityTypeManager();
         unitTypeManager = new UnitTypeManager();
         sceneManager = new SceneManager();
-        world = new World(worldParams, tileTypeManager, entityTypeManager, unitTypeManager, sceneManager);
+        world = new World(tileTypeManager, entityTypeManager, unitTypeManager, sceneManager);
         assert (isWorker, "otherwise wont work lol (maybe)");
 
         scheduler = new Scheduler(world);
@@ -229,8 +229,8 @@ class Game{
         msg("o.pos == ", o.pos);
     } 
 
-    void newGameThread(WorldGenParams worldParams) {
-        init(worldParams);
+    void newGameThread() {
+        init();
         populateWorld();
         camera.setPosition(vec3d(0, 0, 0));
         camera.setTarget(vec3d(0, 1, 0));
@@ -246,8 +246,7 @@ class Game{
     }
 
     void loadGameThread(string name) {
-        WorldGenParams worldParams;
-        init(worldParams);
+        init();
         deserialize();
         finishInit();        
     }
@@ -255,15 +254,15 @@ class Game{
     //TODO: Move to better place
     void delegate() initCallback = null;
 
-    void newGame(WorldGenParams worldParams, void delegate() onDone) {
+    void newGame(void delegate() onDone) {
         if (exists("saves/current")) {
             rmdir("saves/current");
         }
         initCallback = onDone;
-        static void newGameThreadStarter(shared Game g, shared WorldGenParams p) {
+        static void newGameThreadStarter(shared Game g) {
             try {
                 Game game = cast(Game)g;
-                game.newGameThread(cast(WorldGenParams)p);
+                game.newGameThread();
             } catch (Throwable o) {
                 msg("Thread exception!\n", o.toString());
                 version(Windows) {
@@ -272,7 +271,7 @@ class Game{
                 }
             }
         }        
-        spawn(&newGameThreadStarter, cast(shared)this, cast(shared)worldParams);
+        spawn(&newGameThreadStarter, cast(shared)this);
     }
     void loadGame(string name, void delegate() onDone) {
         string saveDir = "saves/" ~ name;

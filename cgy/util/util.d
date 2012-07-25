@@ -210,12 +210,17 @@ version(Windows){
 
 }
 
-
 unittest{
     /*setCopyString("dix\n");
     string s;
     assert(getCopyString(s), "Could not get string from clipboard");
     assert(s == "dix\n", "Didn't get correct string from clipboard");*/
+}
+
+version(Windows) {
+    double getDoubleClickTime() {
+        return GetDoubleClickTime() / 1_000.0;
+    }
 }
 
 CommonType!(T)[T.length] makeStackArray(T...)(T ts) {

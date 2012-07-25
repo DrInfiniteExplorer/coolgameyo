@@ -2,7 +2,11 @@
 
 module gui.guisystem.button;
 
+
 import std.stdio;
+import std.traits;
+import std.typecons;
+import std.typetuple;
 
 import gui.guisystem.guisystem;
 import gui.guisystem.text;
@@ -11,14 +15,44 @@ import graphics._2d.rect;
 import util.util;
 import util.rect;
 
+enum ButtonCallbackPolicies {
+    Simple,
+    Element,
+    State,
+    SimpleElement
+}
 
-//Difference between this and subclass GuiElementButton
-//is that GuiElementButton only calls callback on released click on button.
-class GuiElementButtonAll : public GuiElement {
+mixin template params(ButtonCallbackPolicies policy, T...) {
+    static if(policy == ButtonCallbackPolicies.State) {
+        auto params(T t){ return tuple(t[0..2]); }
+        enum SimpleButton = false;
+    }else static if(policy == ButtonCallbackPolicies.Element) {
+        auto params(T t){ return tuple(t[2]); }
+        enum SimpleButton = false;
+    }else static if(policy == ButtonCallbackPolicies.Simple) {
+        auto params(T t){ return tuple(); }
+        enum SimpleButton = true;
+    }else static if(policy == ButtonCallbackPolicies.SimpleElement) {
+        auto params(T t){ return tuple(t[2]); }
+        enum SimpleButton = true;
+
+    }else {
+        static assert(0, "Unidentified button callback policy");
+    }
+
+}
+
+//Difference between this and subclass PushButton
+//is that PushButton only calls callback on released click on button.
+class Button(ButtonCallbackPolicies policy) : public GuiElement {
     protected GuiElementText buttonText;
 
     protected bool pushedDown;    
-    alias void delegate(bool pressed, bool abort) PressCallback;
+    protected vec3f textColor;
+    
+    mixin params!(policy, bool, bool, typeof(this));
+    alias void delegate(typeof(ReturnType!(params).init.expand)) PressCallback;
+
     private PressCallback pressCallback;
         
     this(GuiElement parent, Rectd relative, string text, PressCallback cb = null) {
@@ -40,7 +74,12 @@ class GuiElementButtonAll : public GuiElement {
     }
     
     void setColor(vec3f c) {
+        textColor = c;
         buttonText.setColor(c);
+    }
+
+    vec3f getColor() const {
+        return textColor;
     }
     
     override void onMove() {
@@ -50,6 +89,12 @@ class GuiElementButtonAll : public GuiElement {
             buttonText.setAbsoluteRect(newTextRect);
         }
         super.onMove();        
+    }
+
+    override void setEnabled(bool enable) {
+        super.setEnabled(enable);
+        pushedDown = false;
+        buttonText.setColor(enable ? textColor : vec3f(0.4f));
     }
     
     override void render() {
@@ -69,13 +114,15 @@ class GuiElementButtonAll : public GuiElement {
     }
     
     void onPushed(bool down, bool abort){
-        if (pressCallback !is null) {
-            pressCallback(down, abort);
+        if (pressCallback is null) return;
+        static if(SimpleButton) {
+            if(down || abort) return;
         }
+        pressCallback(params(down, abort, this).expand);
     }
     
     override GuiEventResponse onEvent(GuiEvent e) {
-        if (e.type == GuiEventType.MouseClick) {
+        if (e.type == GuiEventType.MouseClick && enabled) {
             auto m = &e.mouseClick;
             if(m.left) {
                 if (m.down) {
@@ -102,17 +149,13 @@ class GuiElementButtonAll : public GuiElement {
     }
 }
 
-class GuiElementButton   : GuiElementButtonAll {
-    private void delegate() callback;
-    this(GuiElement parent, Rectd relative, string text, void delegate() cb = null) {
-        super(parent, relative, text);
-        callback = cb;
-    }
-    
-    override void onPushed(bool down, bool abort){
-        if (!down && !abort && callback !is null) {
-            callback();
-        }
-    }
+template StringButton(string policy) {
+    mixin(q{alias Button!(ButtonCallbackPolicies.} ~ policy ~ q{) StringButton;});
 }
+
+alias StringButton!"Simple"  PushButton;
+alias StringButton!"State"   StateButton;
+alias StringButton!"Element" ElementButton;
+alias StringButton!"SimpleElement" SimpleElementButton;
+
 

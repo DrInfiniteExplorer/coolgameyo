@@ -24,7 +24,7 @@ import random.vectormap;
 import graphics.image;
 
 import json;
-
+import pos;
 import statistics;
 
 import util.filesystem;
@@ -38,11 +38,22 @@ import worldgen.wind;
 import worldgen.temperature;
 import worldgen.areas;
 import worldgen.mapviz;
+import worldgen.layers;
 
 alias ValueMap2Dd ValueMap;
 
 enum Dim = 400;
 enum StepIter = 4*25;
+
+/* pos 0 not used */
+/* pt2tile-scale*/
+enum ptScale = [0, 32, 128, 512, 2048, 8192, /*start mipmaps*/ 32768, 131072];
+/* map2tile-scale*/ //Mipmap'ed values are farther apart, but same size as level5 (ie. worldsize)
+enum mapScale = [0, 12800, 51200, 204800, 819200, 3276800, /*start mipmaps*/ 3276800, 3276800];
+
+enum halfWorldSize = vec3i(mapScale[5]/2, mapScale[5]/2, 0);
+enum halfWorldSize_xy = vec2i(mapScale[5]/2, mapScale[5]/2);
+
 
 final class World {
 
@@ -55,12 +66,23 @@ final class World {
 
     mixin MapViz;
 
+    mixin Layers;
+
     //Figure out a better datastructure for this. bits 0-3 holds climate information, bit 4 holds isSea'ness, bit 5 wether or not it has been sorted into a region, etc.
 
 
     int worldSeed = 880128;
 
     int voronoiSeed;
+
+    this(string name) {
+        init();
+        load(name);
+    }
+
+    this() {
+        init();
+    }
 
     string getWorldHash() const @property {
         return to!string(worldSeed) ~ "_";
@@ -103,6 +125,10 @@ final class World {
         return ret;
     }
 
+    public static Image getWorldImage(string name) {
+        return Image("worlds/" ~ name ~ "/map.tga");
+    }
+
     void init() {
         mixin(MeasureTime!"Time to init world:");
         //Spans 1.0*worldHeight
@@ -113,7 +139,9 @@ final class World {
         temperatureInit();
         moistureInit();
         areasInit();
+    }
 
+    void generate() {
 
         generateHeightMap();
         generateWindMap();

@@ -189,12 +189,13 @@ class Main {
     bool inputActive = true;
     long then;
     void run() {
-        long nextTime = utime();
+        long now, nextTime = utime();
         auto exit = false;
         SDL_Event event;
         GuiEvent guiEvent;
         while (!exit) {
             while (SDL_PollEvent(&event)) {
+                guiEvent.eventTimeStamp = now / 1_000_000.0;
                 switch (event.type){
                     case SDL_ACTIVEEVENT:
                         if(event.active.state & SDL_APPINPUTFOCUS) {
@@ -227,6 +228,7 @@ class Main {
                         }
                         kb.SdlSym = event.key.keysym.sym;
                         kb.SdlMod = event.key.keysym.mod;
+
                         guiSystem.onEvent(guiEvent);
                         //onKey(event.key);
                         break;
@@ -273,7 +275,7 @@ class Main {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             glError();
             
-            long now = utime();
+            now = utime();
             long diff = now-then;
             float deltaT = to!float(diff) / 1_000_000.0f;            
             then = now;

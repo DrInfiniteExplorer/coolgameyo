@@ -34,6 +34,7 @@ enum GuiEventResponse {
 
 struct GuiEvent{
     GuiEventType type;
+    double eventTimeStamp;
     union{
         struct MouseMove {
             vec2i pos;
@@ -65,7 +66,7 @@ struct GuiEvent{
 class GuiElement {
 
     alias bool delegate(GuiElement, GuiEvent.MouseClick) MouseClickCallback;
-    MouseClickCallback mouseClickCB;
+    protected MouseClickCallback mouseClickCB;
 
     protected GuiElement guiSystem;
     private GuiElement[] children;
@@ -299,6 +300,10 @@ class GuiElement {
         if (uncursive) {
             parent.bringToFront();
         }
+    }
+
+    void setMouseClickCallback(MouseClickCallback cb) {
+        mouseClickCB = cb;
     }
     
     double rightOf() const @property { return relativeRect.rightOf(); }

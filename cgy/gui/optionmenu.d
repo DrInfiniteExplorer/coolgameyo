@@ -26,10 +26,10 @@ import util.rect;
 
 class OptionMenu : GuiElementWindow {
     GuiElement guiSystem;
-    GuiElementCheckBox vsync;
-    GuiElementCheckBox mipmap;
-    GuiElementCheckBox wireframe;
-    GuiElementCheckBox renderinvalid;
+    CheckBox vsync;
+    CheckBox mipmap;
+    CheckBox wireframe;
+    CheckBox renderinvalid;
     GuiElementSlider!float sensX, sensY;
     GuiElementComboBox smoothSetting;
     GuiElementComboBox raycastSetting;
@@ -42,16 +42,16 @@ class OptionMenu : GuiElementWindow {
         super(guiSystem, Rectd(vec2d(0.1, 0.1), vec2d(0.8, 0.8)), "Options Menu~~~!", false, false);
 //*
         auto text = new GuiElementText(this, vec2d(0.1, 0.1), "Settings yeah!");     
-        vsync = new GuiElementCheckBox(this, Rectd(vec2d(0.10, 0.15), vec2d(0.3, 0.05)), "Enable vsync?", &onVsync);
+        vsync = new CheckBox(this, Rectd(vec2d(0.10, 0.15), vec2d(0.3, 0.05)), "Enable vsync?", &onVsync);
         vsync.setChecked(renderSettings.enableVSync);
         
-        mipmap = new GuiElementCheckBox(this, Rectd(vec2d(0.10, 0.20), vec2d(0.3, 0.05)), "Interpolate mipmap levels?", &onMipmap);
+        mipmap = new CheckBox(this, Rectd(vec2d(0.10, 0.20), vec2d(0.3, 0.05)), "Interpolate mipmap levels?", &onMipmap);
         mipmap.setChecked(renderSettings.mipLevelInterpolate);
 
-        wireframe = new GuiElementCheckBox(this, Rectd(vec2d(0.10, 0.25), vec2d(0.3, 0.05)), "Render wireframe?", &onWireframe);
+        wireframe = new CheckBox(this, Rectd(vec2d(0.10, 0.25), vec2d(0.3, 0.05)), "Render wireframe?", &onWireframe);
         wireframe.setChecked(renderSettings.renderWireframe);
 
-        renderinvalid = new GuiElementCheckBox(this, Rectd(vec2d(0.10, 0.30), vec2d(0.3, 0.05)), "Render invalid tiles?", &onInvalid);
+        renderinvalid = new CheckBox(this, Rectd(vec2d(0.10, 0.30), vec2d(0.3, 0.05)), "Render invalid tiles?", &onInvalid);
         renderinvalid.setChecked(renderSettings.renderInvalidTiles);
         
         sensX = new GuiElementSlider!float(this, Rectd(vec2d(0.10, 0.40), vec2d(0.3, 0.05)), controlSettings.mouseSensitivityX, 0.25, 5.0, &onMouseX);
@@ -78,7 +78,7 @@ class OptionMenu : GuiElementWindow {
         raycastSetting.selectItem(renderSettings.raycastPixelSkip);
 
 
-        auto butt = new GuiElementButton(this, Rectd(vec2d(0.1, raycastSetting.bottomOf + 0.05), vec2d(0.3, 0.10)), "Back", &onBack);
+        auto butt = new PushButton(this, Rectd(vec2d(0.1, raycastSetting.bottomOf + 0.05), vec2d(0.3, 0.10)), "Back", &onBack);
         
         smoothSetting.bringToFront;
   

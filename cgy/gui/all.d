@@ -14,5 +14,6 @@ public import gui.guisystem.listbox;
 public import gui.guisystem.progressbar;
 public import gui.guisystem.simplegraph;
 public import gui.guisystem.slider;
+public import gui.guisystem.tabbar;
 public import gui.guisystem.text;
 public import gui.guisystem.window;

@@ -417,6 +417,12 @@ d:\D\ulnb0333\ulink.exe $(IntDir)\$(TargetName).obj gdi32.lib win32.lib advapi32
    <File path="graphics\tilerenderer.d" />
   </Folder>
   <Folder name="gui">
+   <Folder name="newgame">
+    <File path="gui\newgame\page1.d" />
+    <File path="gui\newgame\page2.d" />
+    <File path="gui\newgame\page3.d" />
+    <File path="gui\newgame\page4.d" />
+   </Folder>
    <Folder name="guisystem">
     <File path="gui\guisystem\button.d" />
     <File path="gui\guisystem\checkbox.d" />
@@ -430,6 +436,7 @@ d:\D\ulnb0333\ulink.exe $(IntDir)\$(TargetName).obj gdi32.lib win32.lib advapi32
     <File path="gui\guisystem\progressbar.d" />
     <File path="gui\guisystem\simplegraph.d" />
     <File path="gui\guisystem\slider.d" />
+    <File path="gui\guisystem\tabbar.d" />
     <File path="gui\guisystem\text.d" />
     <File path="gui\guisystem\window.d" />
    </Folder>
@@ -579,6 +586,7 @@ d:\D\ulnb0333\ulink.exe $(IntDir)\$(TargetName).obj gdi32.lib win32.lib advapi32
   <Folder name="worldgen">
    <File path="worldgen\areas.d" />
    <File path="worldgen\heightmap.d" />
+   <File path="worldgen\layers.d" />
    <File path="worldgen\maps.d" />
    <File path="worldgen\mapviz.d" />
    <File path="worldgen\moisture.d" />

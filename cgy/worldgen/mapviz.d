@@ -12,6 +12,22 @@ mixin template MapViz() {
                 return ret;
             });
         }
+        Image getShadedHeightmapImage() {
+            auto shadedMap = new ValueMap(Dim, Dim);
+
+            shadedMap.fill((double x, double y) {
+                double grad = 0.0;
+                if(heightMap.get(cast(int)x, cast(int) y) <= 0.0 ) {
+                    return 10;
+                }
+                auto dir = vec2d(-1, 0);
+                grad = dir.dotProduct(heightMap.upwindGradient(x, y, dir.X, dir.Y)) * 0.05;
+                return 4 + grad;
+
+            }, Dim, Dim);
+
+            return shadedMap.toImage(-10, 100, true);
+        }
 
         Image getTemperatureImage() {
             return temperatureMap.toImage(-30, 50, true, colorSpline(temperatureSpline));
@@ -23,6 +39,7 @@ mixin template MapViz() {
         Image getMoistureImage() {
             return moistureMap.toImage(-10, 100, true);
         }
+
 
         Image getClimateImage(Image climateTypes = Image("climateMap.bmp"), bool areaBorders = false) {
             Image climateMap = Image(null, Dim, Dim);

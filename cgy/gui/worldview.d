@@ -67,22 +67,22 @@ class WorldMenu : GuiElementWindow {
         voronoiImg = new GuiElementImage(this, Rectd(windImg.rightOf, windImg.topOf, 0.3, 0.3));
         climateMapImg = new GuiElementImage(this, Rectd(voronoiImg.rightOf, voronoiImg.topOf, 0.3, 0.3));
 
-        heightImg.mouseClickCB = &zoomImage;
-        moistureImg.mouseClickCB = &zoomImage;
-        temperatureImg.mouseClickCB = &zoomImage;
+        heightImg.setMouseClickCallback(&zoomImage);
+        moistureImg.setMouseClickCallback(&zoomImage);
+        temperatureImg.setMouseClickCallback(&zoomImage);
 
-        windImg.mouseClickCB = &zoomImage;
-        voronoiImg.mouseClickCB = &zoomImage;
-        climateMapImg.mouseClickCB = &zoomImage;
+        windImg.setMouseClickCallback(&zoomImage);
+        voronoiImg.setMouseClickCallback(&zoomImage);
+        climateMapImg.setMouseClickCallback(&zoomImage);
         climateMap = Image(null, Dim, Dim);
 
         voronoiImage = Image(null, Dim, Dim);
 
         world = new World;
-        world.init();
+        world.generate();
         mapViz = world.getVisualizer();
 
-        auto button = new GuiElementButton(this, Rectd(vec2d(0.75, 0.75), vec2d(0.2, 0.10)), "Back", &onBack);
+        auto button = new PushButton(this, Rectd(vec2d(0.75, 0.75), vec2d(0.2, 0.10)), "Back", &onBack);
 
         auto seedEdit = new GuiElementLabeledEdit(this, Rectd(windImg.leftOf, windImg.bottomOf, 0.2, 0.05), "seed", to!string(world.worldSeed));
         seedEdit.setOnEnter((string value) {
@@ -90,14 +90,14 @@ class WorldMenu : GuiElementWindow {
             redraw(true);
         });
 
-        auto randomButton = new GuiElementButton(this, Rectd(seedEdit.leftOf, seedEdit.bottomOf, 0.2, 0.10), "Random", {
+        auto randomButton = new PushButton(this, Rectd(seedEdit.leftOf, seedEdit.bottomOf, 0.2, 0.10), "Random", {
             auto rand = new RandSourceUniform(seed);
             seed = rand.get(int.min, int.max);
             seedEdit.setText(to!string(seed));
             redraw(true);
         });
 
-        auto saveImagesButton = new GuiElementButton(this, Rectd(randomButton.leftOf, randomButton.bottomOf, 0.2, 0.1), "Save images", {
+        auto saveImagesButton = new PushButton(this, Rectd(randomButton.leftOf, randomButton.bottomOf, 0.2, 0.1), "Save images", {
             heightImg.saveImage("worldview_height.bmp");
             temperatureImg.saveImage("worldview_temperature.bmp");
             moistureImg.saveImage("worldview_moisture.bmp");
@@ -106,7 +106,7 @@ class WorldMenu : GuiElementWindow {
             climateMapImg.saveImage("worldview_climates.bmp");
         });
 
-        auto stepButton = new GuiElementButton(this, Rectd(saveImagesButton.leftOf, saveImagesButton.bottomOf, 0.2, 0.1), "Step", {
+        auto stepButton = new PushButton(this, Rectd(saveImagesButton.leftOf, saveImagesButton.bottomOf, 0.2, 0.1), "Step", {
             {
                 mixin(MeasureTime!("Time to make a step:"));
                 world.step();
@@ -119,14 +119,14 @@ class WorldMenu : GuiElementWindow {
         climateTypesImg.setImage(climateTypes);
 
 
-        auto climate_borders = new GuiElementCheckBox(this, Rectd(seedEdit.rightOf, seedEdit.topOf, seedEdit.widthOf, seedEdit.heightOf), "Borders on climate map?",
+        auto climate_borders = new CheckBox(this, Rectd(seedEdit.rightOf, seedEdit.topOf, seedEdit.widthOf, seedEdit.heightOf), "Borders on climate map?",
             (bool down, bool abort) {
                 if(down || abort) return;
                 renderClimateBorders = !renderClimateBorders;
                 redraw(false);
             }
         );
-        auto voronoi_region_borders = new GuiElementCheckBox(this, Rectd(climate_borders.leftOf, climate_borders.bottomOf + 0.5 * climate_borders.heightOf, climate_borders.widthOf, climate_borders.heightOf),
+        auto voronoi_region_borders = new CheckBox(this, Rectd(climate_borders.leftOf, climate_borders.bottomOf + 0.5 * climate_borders.heightOf, climate_borders.widthOf, climate_borders.heightOf),
             "Regions borders?",
             (bool down, bool abort) {
                 if(down || abort) return;
@@ -134,7 +134,7 @@ class WorldMenu : GuiElementWindow {
                 redraw(false);
             }
         );
-        auto voronoi_region_internal_borders = new GuiElementCheckBox(this, Rectd(voronoi_region_borders.leftOf, voronoi_region_borders.bottomOf, voronoi_region_borders.widthOf, voronoi_region_borders.heightOf),
+        auto voronoi_region_internal_borders = new CheckBox(this, Rectd(voronoi_region_borders.leftOf, voronoi_region_borders.bottomOf, voronoi_region_borders.widthOf, voronoi_region_borders.heightOf),
             "Borders inside regions?",
             (bool down, bool abort) {
                 if(down || abort) return;
@@ -142,7 +142,7 @@ class WorldMenu : GuiElementWindow {
                 redraw(false);
             }
         );
-        auto voronoi_render_regions = new GuiElementCheckBox(this,
+        auto voronoi_render_regions = new CheckBox(this,
             Rectd(voronoi_region_internal_borders.leftOf, voronoi_region_internal_borders.bottomOf, voronoi_region_internal_borders.widthOf, voronoi_region_internal_borders.heightOf),
             "Render regions only?",
             (bool down, bool abort) {
@@ -152,7 +152,7 @@ class WorldMenu : GuiElementWindow {
             }
         );
 
-        auto saveWorldButton = new GuiElementButton(this, Rectd(voronoi_region_borders.rightOf, voronoi_region_borders.topOf, voronoi_region_borders.widthOf, voronoi_region_borders.heightOf), "Save world", {
+        auto saveWorldButton = new PushButton(this, Rectd(voronoi_region_borders.rightOf, voronoi_region_borders.topOf, voronoi_region_borders.widthOf, voronoi_region_borders.heightOf), "Save world", {
             {
                 mixin(MeasureTime!("Time to save the world(All in a days work):"));
                 world.save();
@@ -190,7 +190,7 @@ class WorldMenu : GuiElementWindow {
         if(regen) {
             world = new World;
             world.worldSeed = seed;
-            world.init();
+            world.generate();
             mapViz = world.getVisualizer();
         }
         heightImg.setImage(mapViz.getHeightmapImage());

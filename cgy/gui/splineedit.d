@@ -63,20 +63,20 @@ class SplineEditor : GuiElementWindow {
 
         editBox = new GuiElementEditbox(this, Rectd(listBox.leftOf, listBox.bottomOf + 0.05, listBox.widthOf, 0.05), "R, G, B");
 
-        auto up = new GuiElementButton(this, Rectd(listBox.rightOf+0.05, listBox.topOf + 0.15, 0.05, 0.05), "Up", &onMoveUp);
-        auto down = new GuiElementButton(this, Rectd(listBox.rightOf+0.05, up.bottomOf + 0.05, 0.05, 0.05), "Down", &onMoveDown);
+        auto up = new PushButton(this, Rectd(listBox.rightOf+0.05, listBox.topOf + 0.15, 0.05, 0.05), "Up", &onMoveUp);
+        auto down = new PushButton(this, Rectd(listBox.rightOf+0.05, up.bottomOf + 0.05, 0.05, 0.05), "Down", &onMoveDown);
 
-        auto add = new GuiElementButton(this, Rectd(editBox.leftOf, editBox.bottomOf + 0.05, editBox.widthOf/2.0, 0.05), "Add", &onAddColor);
-        auto set = new GuiElementButton(this,
+        auto add = new PushButton(this, Rectd(editBox.leftOf, editBox.bottomOf + 0.05, editBox.widthOf/2.0, 0.05), "Add", &onAddColor);
+        auto set = new PushButton(this,
             Rectd(add.rightOf + 0.05, add.topOf, editBox.rightOf - (add.rightOf+0.05), add.heightOf), "Set", &onSetColor);
 
-        auto del = new GuiElementButton(this, Rectd(add.leftOf, add.bottomOf+ 0.025, add.widthOf, add.heightOf), "Delete", &onDelete);
+        auto del = new PushButton(this, Rectd(add.leftOf, add.bottomOf+ 0.025, add.widthOf, add.heightOf), "Delete", &onDelete);
 
 
-        new GuiElementButton(this, Rectd(listBox.leftOf, listBox.topOf - 0.075, 0.2, 0.05), "Load skycolors", &onLoadSky);
+        new PushButton(this, Rectd(listBox.leftOf, listBox.topOf - 0.075, 0.2, 0.05), "Load skycolors", &onLoadSky);
 
 
-        auto butt = new GuiElementButton(this, Rectd(vec2d(colorImg.leftOf, colorImg.bottomOf + 0.05), vec2d(0.3, 0.10)), "Back", &onBack);
+        auto butt = new PushButton(this, Rectd(vec2d(colorImg.leftOf, colorImg.bottomOf + 0.05), vec2d(0.3, 0.10)), "Back", &onBack);
   
         main = m;
     }

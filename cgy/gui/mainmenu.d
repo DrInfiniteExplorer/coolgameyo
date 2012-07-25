@@ -26,10 +26,10 @@ class MainMenu : GuiElementWindow {
     Main main;
     Game game;
     GuiSystem guiSystem;
-    GuiElementButton newGameButton;
-    GuiElementButton resumeGameButton;
-    GuiElementButton saveGameButton;
-    GuiElementButton loadGameButton;
+    PushButton newGameButton;
+    PushButton resumeGameButton;
+    PushButton saveGameButton;
+    PushButton loadGameButton;
     HyperUnitControlInterfaceInputManager userControl;
     LoadScreen loadScreen;
     this(GuiSystem g, Main m) {
@@ -38,17 +38,17 @@ class MainMenu : GuiElementWindow {
 //*
         auto text = new GuiElementText(this, vec2d(0.1, 0.1), "CoolGameYo!!");     
         auto text2 = new GuiElementText(this, vec2d(0.1, 0.2), "Where logic comes to die");
-        newGameButton = new GuiElementButton(this, Rectd(0.1, 0.2, 0.3, 0.2), "New gay me?", &onNewGame);
+        newGameButton = new PushButton(this, Rectd(0.1, 0.2, 0.3, 0.2), "New gay me?", &onNewGame);
   
-        auto optionsButt = new GuiElementButton(this, Rectd(0.1, 0.4, 0.3, 0.2), "Options", &onOptions);
+        auto optionsButt = new PushButton(this, Rectd(0.1, 0.4, 0.3, 0.2), "Options", &onOptions);
 
-        auto randomButt = new GuiElementButton(this, Rectd(0.1, 0.6, 0.3, 0.2), "Random", &onRandom);
-        auto startNewButt = new GuiElementButton(this, Rectd(0.1, randomButt.bottomOf+0.05, 0.3, 0.2), "newgamemenu", &onStartNewGame);
+        auto randomButt = new PushButton(this, Rectd(0.1, 0.6, 0.3, 0.2), "Random", &onRandom);
+        auto startNewButt = new PushButton(this, Rectd(0.1, randomButt.bottomOf+0.05, 0.3, 0.2), "newgamemenu", &onStartNewGame);
         
-        loadGameButton = new GuiElementButton(this, Rectd(randomButt.rightOf+0.05, 0.6, 0.3, 0.2), "Load game", &onLoadGame);
-        auto viewButt = new GuiElementButton(this, Rectd(loadGameButton.rightOf, 0.6, 0.3, 0.2), "World View", &onWorldView);
+        loadGameButton = new PushButton(this, Rectd(randomButt.rightOf+0.05, 0.6, 0.3, 0.2), "Load game", &onLoadGame);
+        auto viewButt = new PushButton(this, Rectd(loadGameButton.rightOf, 0.6, 0.3, 0.2), "World View", &onWorldView);
 
-        new GuiElementButton(this, Rectd(viewButt.leftOf, viewButt.bottomOf, viewButt.widthOf, viewButt.heightOf), "Color spline editor", &onColorSplineEdit);
+        new PushButton(this, Rectd(viewButt.leftOf, viewButt.bottomOf, viewButt.widthOf, viewButt.heightOf), "Color spline editor", &onColorSplineEdit);
 
         main = m;
         loadScreen = new LoadScreen(guiSystem);
@@ -74,9 +74,9 @@ class MainMenu : GuiElementWindow {
         void loadDone() {
             loadScreen.setLoading(false);
             userControl = new HyperUnitControlInterfaceInputManager(game, guiSystem);
-            resumeGameButton = new GuiElementButton(this, rect, "Resume gay me?", &onResumeGame);
+            resumeGameButton = new PushButton(this, rect, "Resume gay me?", &onResumeGame);
             rect.start.X += rect.size.X * 2;
-            saveGameButton = new GuiElementButton(this, rect, "Save gay me?", &onSaveGame);
+            saveGameButton = new PushButton(this, rect, "Save gay me?", &onSaveGame);
             onResumeGame();
         }
         game = main.startGame(&loadDone);
@@ -107,9 +107,9 @@ class MainMenu : GuiElementWindow {
         void loadDone() {
             loadScreen.setLoading(false);
             userControl = new HyperUnitControlInterfaceInputManager(game, guiSystem);
-            resumeGameButton = new GuiElementButton(this, rect, "Resume gay me?", &onResumeGame);
+            resumeGameButton = new PushButton(this, rect, "Resume gay me?", &onResumeGame);
             rect.start.X += rect.size.X * 2;
-            saveGameButton = new GuiElementButton(this, rect, "Save gay me?", &onSaveGame);
+            saveGameButton = new PushButton(this, rect, "Save gay me?", &onSaveGame);
             onResumeGame();
         }
         game = main.loadGame("Save1", &loadDone);

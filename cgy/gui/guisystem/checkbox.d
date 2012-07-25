@@ -17,7 +17,7 @@ import util.rect;
 enum checkboxSizeInPixels = 12;
 
 
-class GuiElementCheckBox : public GuiElementButtonAll {
+class CheckBox : public Button!(ButtonCallbackPolicies.State) {
     
     protected bool checked;
     

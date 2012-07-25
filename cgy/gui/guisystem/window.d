@@ -19,7 +19,7 @@ class GuiElementWindow : public GuiElement {
     private bool dragable;
     
     private bool closeable;
-    private GuiElementButton closeButton;
+    private PushButton closeButton;
     
     private bool dragging; //true when dragging
     vec2i dragHold; //Hold-position of window, kinda, yeah.
@@ -61,7 +61,7 @@ class GuiElementWindow : public GuiElement {
         }
         closeable = enable;
         if (enable) {
-            closeButton = new GuiElementButton(this, Rectd(0,0,1,1), "X", &onWindowClose);
+            closeButton = new PushButton(this, Rectd(0,0,1,1), "X", &onWindowClose);
             closeButton.setColor(vec3f(0, 0, 0));
             closeButton.setAbsoluteRect(closeRect);
         } else {

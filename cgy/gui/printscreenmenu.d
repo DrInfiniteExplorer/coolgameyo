@@ -33,7 +33,7 @@ import world.world;
 class PrintScreenMenu : GuiElementWindow {
     GuiSystem guiSystem;
     MainMenu main;
-    GuiElementButton wikiButt, sendfileButt, fileButt, okButt;
+    PushButton wikiButt, sendfileButt, fileButt, okButt;
     GuiElementEditbox nameBox;
     GuiEventDump dump;
 
@@ -49,9 +49,9 @@ class PrintScreenMenu : GuiElementWindow {
         //*
         auto text = new GuiElementText(this, vec2d(0.1, 0.1), "Printscreen yeah~~~!");     
 
-        wikiButt = new GuiElementButton(this, Rectd(vec2d(0.1, 0.30), vec2d(0.3, 0.10)), "Wiki", onClick(&onWiki));
-        sendfileButt = new GuiElementButton(this, Rectd(vec2d(0.1, 0.45), vec2d(0.3, 0.10)), "Sendfile", onClick(&onSendfile));
-        fileButt = new GuiElementButton(this, Rectd(vec2d(0.1, 0.60), vec2d(0.3, 0.10)), "File", onClick(&onFile));
+        wikiButt = new PushButton(this, Rectd(vec2d(0.1, 0.30), vec2d(0.3, 0.10)), "Wiki", onClick(&onWiki));
+        sendfileButt = new PushButton(this, Rectd(vec2d(0.1, 0.45), vec2d(0.3, 0.10)), "Sendfile", onClick(&onSendfile));
+        fileButt = new PushButton(this, Rectd(vec2d(0.1, 0.60), vec2d(0.3, 0.10)), "File", onClick(&onFile));
 
         //main.setVisible(false);
     }
@@ -72,7 +72,7 @@ class PrintScreenMenu : GuiElementWindow {
             closeButt();
 
             nameBox = new GuiElementEditbox(this, Rectd(vec2d(0.10, 0.35), vec2d(0.3, 0.05)), "ImgName.bmp",); //TODO: <-- ending with ,) ?
-            fileButt = new GuiElementButton(this, Rectd(vec2d(0.1, 0.60), vec2d(0.3, 0.10)), "Ok", (){cb(); /*main.setVisible(true);*/ destroy();});
+            fileButt = new PushButton(this, Rectd(vec2d(0.1, 0.60), vec2d(0.3, 0.10)), "Ok", (){cb(); /*main.setVisible(true);*/ destroy();});
         };  
     }
 

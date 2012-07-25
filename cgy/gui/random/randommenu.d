@@ -40,8 +40,6 @@ import util.voronoi.voronoi;
 import util.voronoi.fortune;
 import util.voronoi.wrapper;
 
-auto derp = WorldGenParams.randomSeed.init; //TODO: Why this needed? ;_;
-
 class RandomMenu : GuiElementWindow {
     GuiElement guiSystem;
     GuiElement container;
@@ -51,7 +49,7 @@ class RandomMenu : GuiElementWindow {
 
     GuiElementLabeledComboBox randomSelector;
     GuiElementLabeledComboBox colorSelector;
-    GuiElementButton randomButton;
+    PushButton randomButton;
 
     int seed;
 
@@ -82,7 +80,7 @@ class RandomMenu : GuiElementWindow {
             redraw();
         });
 
-        randomButton = new GuiElementButton(this, Rectd(a.leftOf, a.bottomOf, 0.2, 0.10), "Random", {
+        randomButton = new PushButton(this, Rectd(a.leftOf, a.bottomOf, 0.2, 0.10), "Random", {
             auto rand = new RandSourceUniform(seed);
             seed = rand.get(0, int.max);
             a.setText(to!string(seed));

@@ -25,7 +25,11 @@ class GuiElementListBox : public GuiElement {
 
     alias void delegate(int index) SelectionChangedCallback;
     private SelectionChangedCallback selectionChangedCallback;
-	
+
+    alias void delegate(int index) DoubleClickCallback;
+
+    private DoubleClickCallback doubleClickCallback;
+
 
     this(GuiElement parent, Rectd relative, int _rowHeight, SelectionChangedCallback cb = null) {
         super(parent);
@@ -37,19 +41,19 @@ class GuiElementListBox : public GuiElement {
 
 
 
-    public string getSelectedItemText() {
+    string getSelectedItemText() {
         if (selectedIndex == -1) return ""; // Maybe throw error instead??
         return rows[selectedIndex].text.getText();
     }
-    public int getSelectedItemIndex() {
+    int getSelectedItemIndex() {
         return selectedIndex;
     }
-    public string getItemText(int index) {
+    string getItemText(int index) {
         return rows[index].text.getText();
     }
 
     // Returns the first occurance of text
-    public int getIndex(string text) {
+    int getIndex(string text) {
         for (int i = 0; i < nrOfItems; i++) {
             if (rows[i].text.getText() == text) {
                 return i;
@@ -58,17 +62,17 @@ class GuiElementListBox : public GuiElement {
         return -1;
     }
 
-    public void selectItem(int index) {
+    void selectItem(int index) {
         selectedIndex = index;
         if (selectionChangedCallback !is null) {
             selectionChangedCallback(index);
         }
     }
-    public void setText(string text, int index) {
+    void setText(string text, int index) {
         rows[index].text.setText(text);
     }
 
-    public void addItem(string str, int index) {
+    void addItem(string str, int index) {
         if(index < 0) {
             index = nrOfItems;
         }
@@ -89,10 +93,10 @@ class GuiElementListBox : public GuiElement {
             updateRowTextPos(idx);
         }
     }
-	public void addItem(string str) {
+	void addItem(string str) {
         addItem(str, nrOfItems);
 	}
-    public void removeItem(int index) {
+    void removeItem(int index) {
         enforce(index < nrOfItems, "ListBox error: Tried to remove out of index");
         if (index < selectedIndex) {
             selectedIndex--;
@@ -108,16 +112,19 @@ class GuiElementListBox : public GuiElement {
         }
     }
 
-    public void clear() {
+    void clear() {
         while(nrOfItems != 0) {
             removeItem(nrOfItems-1);
         }
     }
 
-    public int getItemCount() const {
+    int getItemCount() const {
         return nrOfItems;
     }
     
+    void setDoubleClickCallback(DoubleClickCallback cb) {
+        doubleClickCallback = cb;
+    }
 
 
 
@@ -135,6 +142,7 @@ class GuiElementListBox : public GuiElement {
         super.render();
     }
     
+    double lastClickTime = -double.max;
     override GuiEventResponse onEvent(GuiEvent e) {
         if (e.type == GuiEventType.MouseClick) {
             auto m = &e.mouseClick;
@@ -143,13 +151,21 @@ class GuiElementListBox : public GuiElement {
                     if(absoluteRect.isInside(m.pos)) {
 						for (int i = 0; i < nrOfItems; i++) {
 							if (rows[i].rect.isInside(m.pos)) {
-								selectItem(i);
+                                if(selectedIndex == i && 
+                                   e.eventTimeStamp - lastClickTime < getDoubleClickTime() &&
+                                   doubleClickCallback !is null) {
+                                            doubleClickCallback(selectedIndex);
+                                } else {
+    								selectItem(i);
+                                }
 							}
 						}
+                        lastClickTime = e.eventTimeStamp;
+
                         return GuiEventResponse.Accept;
                     }                    
                 } else {
-                    
+                    //Released mouse
                 }
             }
         }
@@ -160,34 +176,5 @@ class GuiElementListBox : public GuiElement {
         rows[index].rect = Recti(absoluteRect.start.X, absoluteRect.start.Y + index * rowHeight,
                                  absoluteRect.size.X, rowHeight);
         rows[index].text.setAbsoluteRect(rows[index].rect); 
-        /*auto buttonSize = buttonText.getSize();
-        auto newTextRect = absoluteRect.centerRect(Recti(vec2i(0, 0), buttonSize));
-        buttonText.setAbsoluteRect(newTextRect);*/
     }
 }
-/*
-class GuiElementInventoryListBox : GuiElementListBox {
-	Inventory* inventory;
-	
-    this(GuiElement parent, Rectd relative, int _rowHeight, Inventory* inv) {
-        super(parent, relative, _rowHeight);
-        inventory = inv;
-    }
-
-    public void inventoryUpdated() {
-        rows.length = nrOfItems = inventory.inventory.length;
-        for (int i = 0; i < rows.length && i < inventory.inventory.length; i++){
-			rows[i].text.setText(inventory.inventory[i] is null ? "" : inventory.inventory[i].type.displayName);
-			rows[i].rect = Recti(absoluteRect.start.X, absoluteRect.start.Y + i * rowHeight,
-								 absoluteRect.size.X, rowHeight);
-			rows[i].text.setAbsoluteRect(rows[i].rect);
-		}
-    }
-
-	override void render() {
-        // ToDo: It is a bit lol to have this here, but I'm too lazy to do it properly yet
-		inventoryUpdated();
-
-		super.render();
-	}
-}*/
