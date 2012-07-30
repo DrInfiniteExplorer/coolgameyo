@@ -7,7 +7,7 @@ import std.math;
 import unit;
 import pos;
 import util.util;
-import world.worldproxy;
+import worldstate.worldproxy;
 
 import modules.path;
 

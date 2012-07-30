@@ -1,4 +1,4 @@
-module world.floodfill;
+module worldstate.floodfill;
 
 import util.array;
 

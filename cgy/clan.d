@@ -14,13 +14,13 @@ import util.filesystem;
 import util.array;
 import util.util;
 
-import world.world;
-import world.activity;
+import worldstate.worldstate;
+import worldstate.activity;
 
 shared int g_ClanCount = 0; //Unique clan id.
 
 
-Clan newClan(World world) {
+Clan newClan(WorldState world) {
     Clan clan = new Clan(world);
     clan.clanId = g_ClanCount++;
     return clan;
@@ -35,9 +35,9 @@ final class Clan {
     Unit[int] clanMembers;
 
     int[SectorNum] activityMap;
-    World world;
+    WorldState world;
 
-    this(World _world) {
+    this(WorldState _world) {
         world = _world;
         world.addClan(this);
 

@@ -11,8 +11,8 @@ import graphics.camera;
 import graphics.ogl;
 import graphics.shader;
 import modules.module_;
-import world.world;
-import worldgen.newgen;
+import worldgen.maps;
+import worldstate.worldstate;
 import util.util;
 
 enum int level5SectorCount = 4096;
@@ -36,14 +36,13 @@ final class Level5Sheet {
     SectorNum snapCenter;
 
     HeightSheets heightSheets;
-    LayerManager layerManager;
-    World world;
-
+    WorldMap worldMap;
+    WorldState worldState;
 
     this(HeightSheets _heightSheets) {
         heightSheets = _heightSheets;
-        layerManager = heightSheets.layerManager;
-        world = heightSheets.world;
+        worldMap = heightSheets.worldMap;
+        worldState = heightSheets.worldState;
     }
 
     bool destroyed = false;
@@ -82,13 +81,13 @@ final class Level5Sheet {
                 float Y = cast(float) tp.Y;
                 float Z;
                 if(x == 0 || x == level5QuadCount || y == 0 || y == level5QuadCount) {
-                    Z = cast(float) layerManager.getValueRaw(5, tp);
+                    Z = cast(float) worldMap.getValueRaw(5, tp);
                 } else {
-                    Z = cast(float) layerManager.getValueRaw(5, tp);
+                    Z = cast(float) worldMap.getValueRaw(5, tp);
                 }
                 vertices[y][x].set(X,Y,Z);
                 vertices[y][x] -= centerTp;
-                colors[y][x] = layerManager.getBiomeColor(tp);
+                pragma(msg, "colors[y][x] = layerManager.getBiomeColor(tp);");
                 colors[y][x] = vec3f(0.5f, 0.8f, 0.8f);
             }
         }

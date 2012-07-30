@@ -88,10 +88,10 @@ final class ValueMap2D(StorageType, bool Wrap = true) : ValueSource {
     override StorageType getValue(double x, double y) {
                 //writeln(text(x, " ", y));
         static if(Wrap) {
-            x = posMod(to!int(x), sizeX);
-            y = posMod(to!int(y), sizeY);
+            x = posMod(cast(int)x, sizeX);
+            y = posMod(cast(int)y, sizeY);
         }
-        return randMap[to!uint(y) * sizeX + to!uint(x)];
+        return randMap[cast(uint)y * sizeX + cast(uint)x];
     }
 
     void set(int x, int y, StorageType value) {

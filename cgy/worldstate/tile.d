@@ -1,5 +1,5 @@
 
-module world.tile;
+module worldstate.tile;
 
 import std.bitmanip;
 import std.conv;

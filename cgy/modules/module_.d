@@ -2,10 +2,10 @@
 module modules.module_;
 
 public import scheduler;
-public import world.world;
+public import worldstate.worldstate;
 
 abstract class Module {
-    void update(World world, Scheduler scheduler);
+    void update(WorldState world, Scheduler scheduler);
     
     void serializeModule();
     void deserializeModule();

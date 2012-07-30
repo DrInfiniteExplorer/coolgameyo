@@ -23,14 +23,14 @@ version(Windows) import std.c.windows.windows;
 public import changes.changelist;
 import statistics;
 
-import world.time;
-import world.world;
+import worldstate.time;
+import worldstate.worldstate;
 
 import modules.module_;
 import util.util;
 import util.queue;
 
-import world.worldproxy;
+import worldstate.worldproxy;
 
 import changes.worldproxy;
 
@@ -102,7 +102,7 @@ final class Scheduler {
     
     private StopWatch tickWatch;
 
-    World world;
+    WorldState world;
     Module[] modules;
     ChangeList changeList;
 
@@ -124,7 +124,7 @@ final class Scheduler {
 
     Condition cond;
 
-    this(World world_) {
+    this(WorldState world_) {
         world = world_;
         sync = new Queue!Task;
         async = new Queue!Task;

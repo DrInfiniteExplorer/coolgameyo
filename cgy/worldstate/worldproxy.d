@@ -1,14 +1,14 @@
-module world.worldproxy;
+module worldstate.worldproxy;
 
 import unit;
 import entities.entity;
 import pos;
-import world.world;
+import worldstate.worldstate;
 import changes.changes;
 import clan;
 
 interface WorldProxy {
-    World unsafeGetWorld();
+    WorldState unsafeGetWorld();
 
     void setTile(TilePos tp, Tile t);
     void damageTile(TilePos tp, int damage);

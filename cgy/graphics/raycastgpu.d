@@ -20,13 +20,13 @@ import graphics.camera;
 import graphics.ogl;
 import graphics.image;
 import light;
-import world.ambient;
+import worldstate.ambient;
 import settings;
 import statistics;
 import util.math;
 import util.rangefromto;
 import util.util;
-import world.world;
+import worldstate.worldstate;
 
 enum MaxLightTraceDistance = 100f;
 enum FadeLightTraceDistance = 90f;   //Start fading lightstrength at this distance,
@@ -109,7 +109,7 @@ void reloadOpenCl() {
 }
 
 static SectorNum[3][3][3] oldSectorNum;
-void uploadTileData(World world, Camera camera) {
+void uploadTileData(WorldState world, Camera camera) {
     SectorNum startNum = UnitPos(camera.getPosition).getSectorNum();
     foreach(num ; RangeFromTo(startNum.value - vec3i(1,1,1), startNum.value + vec3i(1,1,1))){
         SectorNum sectorNum = SectorNum(num);
@@ -149,7 +149,7 @@ void uploadTileData(World world, Camera camera) {
 import std.datetime;
 SysTime startTime;
 
-void interactiveComputeYourFather(World world, Camera camera) {
+void interactiveComputeYourFather(WorldState world, Camera camera) {
     Duration duration = Clock.currTime() - startTime;
     long currentTime = duration.total!"msecs"();
 

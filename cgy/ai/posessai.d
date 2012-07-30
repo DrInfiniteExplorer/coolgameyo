@@ -14,8 +14,8 @@ import unit;
 import util.util;
 import util.rangefromto;
 
-import world.world;
-import world.worldproxy;
+import worldstate.worldstate;
+import worldstate.worldproxy;
 
 import modules.path;
 
@@ -26,11 +26,11 @@ class FPSControlAI : UnitAI, CustomChange {
     //vec3d velocity;
     float fallSpeed;
     bool onGround;
-    World world;
+    WorldState world;
     Renderer renderer;
     vec3d* unitPos;
 
-    this(World w, Renderer r) {
+    this(WorldState w, Renderer r) {
         world = w;
         renderer = r;
     }
@@ -210,7 +210,7 @@ class FPSControlAI : UnitAI, CustomChange {
 
 
     //Hax used: oldPosition, to make the world produce a delta-pos-value and load sectors
-    void apply(World world) {
+    void apply(WorldState world) {
         world.unsafeMoveUnit(unit, UnitPos(*unitPos), 1);
         
         return;

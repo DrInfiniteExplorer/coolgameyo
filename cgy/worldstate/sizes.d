@@ -1,5 +1,5 @@
 
-module world.sizes;
+module worldstate.sizes;
 
 import std.math;
 

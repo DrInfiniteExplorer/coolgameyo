@@ -6,8 +6,8 @@ import std.typetuple;
 import unit;
 import entities.entity;
 import pos;
-import world.world;
-import world.worldproxy;
+import worldstate.worldstate;
+import worldstate.worldproxy;
 import changes.changes;
 import changes.changelist;
 import clan;
@@ -36,15 +36,15 @@ mixin template mixinAllChangeListAdd(Ts...) {
 }
 
 final class WorldChangeListProxy : WorldProxy {
-    World world;
+    WorldState world;
     ChangeList changeList;
 
-    this(World w) {
+    this(WorldState w) {
         world = w;
         changeList = new ChangeList;
     }
 
-    World unsafeGetWorld() {
+    WorldState unsafeGetWorld() {
         return world;
     }
 

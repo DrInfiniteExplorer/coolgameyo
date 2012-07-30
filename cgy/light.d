@@ -3,7 +3,7 @@ module light;
 import pos;
 import util.util;
 
-const enum MaxLightStrength = 15;
+enum MaxLightStrength = 15;
 
 //A class, because we want it to reside on the heap, so that a light-creator can update the light
 // without always going trough the world?

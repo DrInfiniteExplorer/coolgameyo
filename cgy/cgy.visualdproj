@@ -417,12 +417,6 @@ d:\D\ulnb0333\ulink.exe $(IntDir)\$(TargetName).obj gdi32.lib win32.lib advapi32
    <File path="graphics\tilerenderer.d" />
   </Folder>
   <Folder name="gui">
-   <Folder name="newgame">
-    <File path="gui\newgame\page1.d" />
-    <File path="gui\newgame\page2.d" />
-    <File path="gui\newgame\page3.d" />
-    <File path="gui\newgame\page4.d" />
-   </Folder>
    <Folder name="guisystem">
     <File path="gui\guisystem\button.d" />
     <File path="gui\guisystem\checkbox.d" />
@@ -439,6 +433,12 @@ d:\D\ulnb0333\ulink.exe $(IntDir)\$(TargetName).obj gdi32.lib win32.lib advapi32
     <File path="gui\guisystem\tabbar.d" />
     <File path="gui\guisystem\text.d" />
     <File path="gui\guisystem\window.d" />
+   </Folder>
+   <Folder name="newgame">
+    <File path="gui\newgame\page1.d" />
+    <File path="gui\newgame\page2.d" />
+    <File path="gui\newgame\page3.d" />
+    <File path="gui\newgame\page4.d" />
    </Folder>
    <Folder name="random">
     <File path="gui\random\hybridfractal.d" />
@@ -570,18 +570,18 @@ d:\D\ulnb0333\ulink.exe $(IntDir)\$(TargetName).obj gdi32.lib win32.lib advapi32
    <File path="util\util.d" />
    <File path="util\window.d" />
   </Folder>
-  <Folder name="world">
-   <File path="world\activity.d" />
-   <File path="world\ambient.d" />
-   <File path="world\block.d" />
-   <File path="world\floodfill.d" />
-   <File path="world\population.d" />
-   <File path="world\sector.d" />
-   <File path="world\sizes.d" />
-   <File path="world\tile.d" />
-   <File path="world\time.d" />
-   <File path="world\world.d" />
-   <File path="world\worldproxy.d" />
+  <Folder name="worldstate">
+   <File path="worldstate\activity.d" />
+   <File path="worldstate\ambient.d" />
+   <File path="worldstate\block.d" />
+   <File path="worldstate\floodfill.d" />
+   <File path="worldstate\population.d" />
+   <File path="worldstate\sector.d" />
+   <File path="worldstate\sizes.d" />
+   <File path="worldstate\tile.d" />
+   <File path="worldstate\time.d" />
+   <File path="worldstate\worldproxy.d" />
+   <File path="worldstate\worldstate.d" />
   </Folder>
   <Folder name="worldgen">
    <File path="worldgen\areas.d" />
@@ -590,7 +590,7 @@ d:\D\ulnb0333\ulink.exe $(IntDir)\$(TargetName).obj gdi32.lib win32.lib advapi32
    <File path="worldgen\maps.d" />
    <File path="worldgen\mapviz.d" />
    <File path="worldgen\moisture.d" />
-   <File path="worldgen\newgen.d" />
+   <File path="worldgen\worldgen.d" />
    <File path="worldgen\temperature.d" />
    <File path="worldgen\wind.d" />
   </Folder>

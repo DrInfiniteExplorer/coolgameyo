@@ -8,7 +8,7 @@ import graphics.texture;
 
 import json;
 import util.util;
-import world.tile;
+import worldstate.tile;
 import statistics;
 
 struct UnitModelInfo {

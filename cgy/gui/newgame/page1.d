@@ -19,7 +19,7 @@ mixin template Page1() {
         page1 = new GuiElement(this);
         page1.setRelativeRect(Rectd(0, 0, 1, 1));
 
-        auto worlds = World.enumerateSavedWorlds();
+        auto worlds = WorldMap.enumerateSavedWorlds();
         if(worlds.length == 0) {
             noWorldsAvailable();
             return;
@@ -75,7 +75,7 @@ mixin template Page1() {
         } else {
             continueButton.setEnabled(true);
             auto name = worldList.getItemText(worldSelected);
-            worldImage.setImage(World.getWorldImage(name));
+            worldImage.setImage(WorldMap.getWorldImage(name));
         }
     }
 

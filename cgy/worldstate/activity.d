@@ -1,6 +1,6 @@
 
 
-module world.activity;
+module worldstate.activity;
 
 import std.algorithm;
 
@@ -11,8 +11,8 @@ import pos;
 import util.rangefromto;
 import util.util;
 
-import world.sizes;
-import world.time;
+import worldstate.sizes;
+import worldstate.time;
 
 //debug {
     auto activitySize = vec3i(3,3,3);

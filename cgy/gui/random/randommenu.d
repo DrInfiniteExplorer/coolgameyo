@@ -24,7 +24,7 @@ import random.xinterpolate;
 
 import settings;
 //import worldgen.worldgen;
-import worldgen.newgen;
+//import worldgen.newgen;
 import util.util;
 import util.rect;
 

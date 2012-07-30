@@ -35,7 +35,7 @@ import util.memory;
 import util.util;
 import util.window;
 //import worldgen.worldgen;
-import worldgen.newgen;
+//import worldgen.maps;
 
 
 import modelparser.cgyparser;
@@ -165,19 +165,18 @@ class Main {
     }
     
     //The delegate is called when all is done. Used to update gui and the likes.
-    Game startGame(void delegate() loadDone) {
+    Game startGame(string worldName, void delegate() loadDone) {
 		assert(game is null, "We already had a game, lawl");
         mixin(LogTime!("StartupTime"));
         game = new Game(client, server, worker);
-        WorldGenParams worldParams;
-        game.newGame(worldParams, loadDone);
+        game.newGame(worldName, loadDone);
         return game;
     }
-    Game loadGame(string saveName, void delegate() loadDone) {
+    Game loadGame(string worldName, void delegate() loadDone) {
 		assert(game is null, "We already had a game, lawl");
         mixin(LogTime!("StartupTime"));
         game = new Game(client, server, worker);
-        game.loadGame(saveName, loadDone);
+        game.loadGame(worldName, loadDone);
         return game;
     }
     
@@ -323,7 +322,7 @@ class Main {
     }
 }
 
-import world.world;
+import worldstate.worldstate;
 void actualMain() {    
 
     version (Windows) {

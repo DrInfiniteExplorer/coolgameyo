@@ -30,8 +30,8 @@ import settings;
 import statistics;
 import stolen.aabbox3d;
 
-import world.world;
-import world.worldproxy;
+import worldstate.worldstate;
+import worldstate.worldproxy;
 
 import util.util;
 import util.rangefromto;
@@ -142,16 +142,16 @@ template FixLighting(const string A, const int num, const int dir, const string 
 }
 
 
-final class TileGeometry : Module, WorldListener
+final class TileGeometry : Module, WorldStateListener
 {
     GraphRegionNum[] regionsToUpdate; //Only used in taskFunc and where we populate it, mutually exclusive locations.
     Mutex updateMutex;
 
     Camera camera;
     TileRenderer tileRenderer;
-    World world;
+    WorldState world;
 
-    this(World w, TileRenderer _tileRenderer)
+    this(WorldState w, TileRenderer _tileRenderer)
     {
         world = w;
         tileRenderer = _tileRenderer;
@@ -383,7 +383,7 @@ final class TileGeometry : Module, WorldListener
         //BREAKPOINT;
     }
 
-    override void update(World world, Scheduler scheduler) { // Module interface
+    override void update(WorldState world, Scheduler scheduler) { // Module interface
         updateMutex.lock();
         scope(exit) updateMutex.unlock();
 

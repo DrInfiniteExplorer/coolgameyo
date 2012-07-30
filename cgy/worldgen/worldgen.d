@@ -1,14 +1,12 @@
 
-module worldgen.newgen;
+module worldgen.worldgen;
 
 import std.algorithm;
 import std.c.process;
 import std.conv;
 import std.exception;
 import std.math;
-import std.md5;
 import std.random;
-import std.stdio;
 import std.typecons;
 
 
@@ -17,21 +15,16 @@ import graphics.debugging;
 import light;
 import pos;
 import statistics;
-import tiletypemanager;
-import util.math;
 import util.rangefromto;
 import util.util;
-import world.world;
 
 import worldgen.maps;
 
-import random.valuemap;
 import random.random;
 import random.randsource;
 import random.gradientnoise;
 
 
-enum ptPerLayer = 400;
 
 
 /*
@@ -48,96 +41,23 @@ layer1: 10km², 1mil
 
 */
 
-alias ValueMap2D!(double, false) ValueMap;
+//alias ValueMap2D!(double, false) ValueMap;
 
 
 
 //alias double[ptPerLayer][ptPerLayer] Map;
 
-class Feature {
 
 
+mixin template WorldGenerator() {
 
-}
-
-final class Map {
-    ValueMap heightMap;
-    ValueMap randomField;
-    Feature[] features;
-    int level;
-    vec2i mapNum;
-    int randomSeed;
-
-    this(int _level, vec2i _mapNum, int _randomSeed) {
-        level = _level;
-        mapNum = _mapNum;
-        randomSeed = _randomSeed;
-        heightMap = new ValueMap(ptPerLayer, ptPerLayer);
-        randomField = new ValueMap;
-
-        randomField.fill(new RandSourceUniform(randomSeed), ptPerLayer, ptPerLayer);
-    }
-    void setHeight(int x, int y, double value) {
-        heightMap.set(x,y, value);
-    }
-    double getHeight(int x, int y) {
-        return heightMap.get(x,y);
-    }
-
-    void addRandomHeight() {
-
-        foreach(pt ; RangeFromTo(0, ptPerLayer-1, 0, ptPerLayer-1, 0, 0)) {
-            auto x = pt.X;
-            auto y = pt.Y;
-            auto height = heightMap.get(x, y);
-            height += (randomField.get(x, y) + 1.0 ) * 0.5 * ptScale[level];
-            heightMap.set(x, y, height);
-        }
-    }
-
-
-}
-
-class LayerManager {
-
-
-}
-
-
-
-
-final class WorldGenerator {
     TileTypeManager sys;
 
-    LayerManager layerManager;
-
-
-    void init(TileTypeManager tileTypeManager) {
-        this.params = params;
+    void initWorldGenerator(TileTypeManager tileTypeManager) {
         sys = tileTypeManager;
-        layerManager = new LayerManager;
-        layerManager.init(params);
-    }
-
-    void serialize() {
-        msg("Implement serializing worldgen");
-    }
-    void deserialize() {
-        msg("Implement deserializing worldgen");
-    }
-    
-    
-    bool destroyed = false;
-    ~this() {
-        BREAK_IF(!destroyed);
-    }
-    
-    void destroy() {
-        destroyed = true;
     }
 
     Block fillBlock(Block block) {
-
         auto tp0 = block.blockNum.toTilePos();
 
         double[BlockSize.x][BlockSize.y] zs;
@@ -146,7 +66,7 @@ final class WorldGenerator {
             auto pos = tp0;
             pos.value += xy;
             zs[xy.Y][xy.X] = 
-                layerManager.getValueInterpolated(1, TileXYPos(pos));
+                getValueInterpolated(1, TileXYPos(pos));
         }
 
         block.hasAir = false;
@@ -187,7 +107,7 @@ final class WorldGenerator {
 
     Tile getTile(TilePos pos) {
         return getTile(pos,
-                layerManager.getValueInterpolated(1, TileXYPos(pos)));
+                getValueInterpolated(1, TileXYPos(pos)));
     }
 
     Tile getTile(TilePos pos, double z) {
@@ -197,7 +117,7 @@ final class WorldGenerator {
         }
         if(pos.value.Z > z) {
             auto tile = Tile(TileTypeAir, flags);
-            tile.sunLightValue = MaxLightStrength;
+            tile.sunLightValue = 15;
             return tile;
         }
         return Tile(TileTypeAir+1, flags);
@@ -211,7 +131,7 @@ final class WorldGenerator {
         return dist < max;
     } 
     int maxZ(TileXYPos xypos) {
-        auto z = layerManager.getValueInterpolated(1, xypos);
+        auto z = getValueInterpolated(1, xypos);
         return cast(int)ceil(z);
     }
 
@@ -219,9 +139,6 @@ final class WorldGenerator {
         return cast(double)maxZ(TileXYPos(t)) / 500.0;
     }
 
-    LayerManager getLayerManager() {
-        return layerManager;
-    }
 }
 
 

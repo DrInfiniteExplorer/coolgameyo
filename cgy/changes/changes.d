@@ -1,6 +1,6 @@
 module changes.changes;
 
-import world.world;
+import worldstate.worldstate;
 import pos;
 import unit;
 import entities.entity;
@@ -14,7 +14,7 @@ struct SetTile {
     TilePos tp;
     Tile t;
 
-    void apply(World world) {
+    void apply(WorldState world) {
         world.unsafeSetTile(tp, t);
     }
 }
@@ -22,7 +22,7 @@ struct DamageTile {
     TilePos tp;
     int damage;
 
-    void apply(World world) {
+    void apply(WorldState world) {
         auto t = world.getTile(tp);
         if (t.hitpoints <= damage) {
             world.unsafeRemoveTile(tp);
@@ -35,7 +35,7 @@ struct DamageTile {
 struct RemoveTile {
     TilePos tp;
 
-    void apply(World world) {
+    void apply(WorldState world) {
         world.unsafeRemoveTile(tp);
     }
 }
@@ -43,14 +43,14 @@ struct RemoveTile {
 struct CreateUnit {
     Unit u;
 
-    void apply(World world) {
+    void apply(WorldState world) {
         assert(0);
     }
 }
 struct RemoveUnit {
     Unit u;
 
-    void apply(World world) {
+    void apply(WorldState world) {
         assert(0);
     }
 }
@@ -59,7 +59,7 @@ struct MoveUnit {
     UnitPos destination;
     uint ticksToArrive;
 
-    void apply(World world) {
+    void apply(WorldState world) {
         world.unsafeMoveUnit(unit, destination, ticksToArrive);
     }
 }
@@ -69,7 +69,7 @@ struct SetIntent {
     string id;
     string description;
 
-    void apply(World world) {
+    void apply(WorldState world) {
         assert(0);
     }
 }
@@ -78,7 +78,7 @@ struct SetAction {
     string id;
     string description;
 
-    void apply(World world) {
+    void apply(WorldState world) {
         assert(0);
     }
 }
@@ -86,14 +86,14 @@ struct SetAction {
 struct CreateEntity {
     Entity e;
 
-    void apply(World world) {
+    void apply(WorldState world) {
         assert(0);
     }
 }
 struct RemoveEntity {
     Entity e;
 
-    void apply(World world) {
+    void apply(WorldState world) {
         assert(0);
     }
 }
@@ -101,7 +101,7 @@ struct MoveEntity {
     Entity e;
     EntityPos pos;
 
-    void apply(World world) {
+    void apply(WorldState world) {
         assert(0);
     }
 }
@@ -109,7 +109,7 @@ struct PickupEntity {
     Entity e;
     Inventory a;
 
-    void apply(World world) {
+    void apply(WorldState world) {
         assert(0);
     }
 }
@@ -117,7 +117,7 @@ struct DepositEntity {
     Entity e;
     Inventory a, b;
 
-    void apply(World world) {
+    void apply(WorldState world) {
         assert(0);
     }
 }
@@ -125,7 +125,7 @@ struct ActivateEntity {
     Unit activator;
     Entity e;
 
-    void apply(World world) {
+    void apply(WorldState world) {
         assert(0);
     }
 }
@@ -133,7 +133,7 @@ struct ActivateEntity {
 struct GetMission {
     Unit unit;
 
-    void apply(World world) {
+    void apply(WorldState world) {
         unit.mission = unit.clan.unsafeGetMission();
     }
 }
@@ -142,7 +142,7 @@ struct DesignateMine {
     Clan clan;
     TilePos pos;
 
-    void apply(World world) {
+    void apply(WorldState world) {
         clan.unsafeDesignateMinePos(pos);
     }
 }
@@ -152,5 +152,5 @@ struct DesignateMine {
 // List of such classes:
 //  FPSControlAI
 interface CustomChange {
-    void apply(World world);
+    void apply(WorldState world);
 }

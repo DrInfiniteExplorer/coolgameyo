@@ -33,7 +33,7 @@ struct Mission {
         mine,
         attack,
         haulSpSp, // Stockpile to Stockpile
-        haulWSp,  // World to Stockpile
+        haulWSp,  // WorldState to Stockpile
     }
 
     Type type;

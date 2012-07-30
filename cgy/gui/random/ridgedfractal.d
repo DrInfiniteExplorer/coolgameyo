@@ -54,8 +54,8 @@ mixin template RandomRidged() {
     }
 
     void renderRidged() {
-        auto randomField = new ValueMap;
-        auto heightMap = new ValueMap(400, 400);
+        auto randomField = new ValueMap2Dd;
+        auto heightMap = new ValueMap2Dd(400, 400);
         auto gradient = new GradientNoise01!()(400, new RandSourceUniform(seed));
         auto ridged = new RidgedMultiFractal(gradient, H, lacuna, octaves, offset, gain);
         ridged.setBaseWaveLength(50);

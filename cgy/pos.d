@@ -6,8 +6,8 @@ import std.conv;
 import json;
 import stolen.aabbox3d;
 
-//import world.sector;
-import world.sizes;
+//import worldstate.sector;
+import worldstate.sizes;
 import util.util;
 import util.math;
 

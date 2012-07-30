@@ -13,7 +13,7 @@ import modules.path;
 import unit;
 import util.util;
 
-import world.worldproxy;
+import worldstate.worldproxy;
 import pos;
 
 /+

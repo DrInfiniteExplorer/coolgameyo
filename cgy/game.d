@@ -47,9 +47,9 @@ import unittypemanager;
 import unit;
 import util.util;
 import util.filesystem;
-import world.world;
+import worldstate.worldstate;
 //import worldgen.worldgen;
-import worldgen.newgen;
+import worldgen.maps;
 
 import std.socket;
 import clientnetworking;
@@ -60,8 +60,8 @@ string SDLError() { return to!string(SDL_GetError()); }
 
 class Game{
 
-    private World           world;
-
+    private WorldMap            worldMap;
+    private WorldState          worldState;
 
     private bool            isClient;
     private bool            isServer;
@@ -109,7 +109,9 @@ class Game{
         pragma(msg, "Make so that stuff that is only client, only destroys when is client");
         tileGeometry.destroy();
         renderer.destroy();
-        world.destroy();
+        worldState.destroy();
+        worldMap.destroy();
+
         aiModule.destroy();
 
         destroyed = true;
@@ -117,7 +119,7 @@ class Game{
 
 
     //This and finishInit are run in the thread which becomes the scheduler thread
-    private void init() {
+    private void init(string worldName) {
         mixin(LogTime!("GameInit"));
         if (isClient) {
             atlas = new TileTextureAtlas; // HACK
@@ -127,12 +129,15 @@ class Game{
         entityTypeManager = new EntityTypeManager();
         unitTypeManager = new UnitTypeManager();
         sceneManager = new SceneManager();
-        world = new World(tileTypeManager, entityTypeManager, unitTypeManager, sceneManager);
+
+        worldMap = new WorldMap(worldName);
+        worldState = new WorldState(worldMap, tileTypeManager, entityTypeManager, unitTypeManager, sceneManager);
+
         assert (isWorker, "otherwise wont work lol (maybe)");
 
-        scheduler = new Scheduler(world);
+        scheduler = new Scheduler(worldState);
         pathModule = new PathModule;
-        aiModule = new AIModule(pathModule, world);
+        aiModule = new AIModule(pathModule, worldState);
         scheduler.registerModule(pathModule);
         scheduler.registerModule(aiModule);
 
@@ -144,8 +149,8 @@ class Game{
             camera.setTarget(vec3d(0, 0, 20));
             //geometryCreator = new GeometryCreator(world);
             auto tileRenderer = new TileRenderer();
-            tileGeometry = new TileGeometry(world, tileRenderer);
-            auto heightSheets = new HeightSheets(world);
+            tileGeometry = new TileGeometry(worldState, tileRenderer);
+            auto heightSheets = new HeightSheets(worldMap, worldState);
             renderer = new Renderer(camera, atlas, tileRenderer, sceneManager, heightSheets);
             scheduler.registerModule(tileGeometry);
             scheduler.registerModule(heightSheets);
@@ -175,7 +180,7 @@ class Game{
         g_UnitCount = 0;
 
         UnitPos topOfTheWorld(TileXYPos xy) {
-            auto top = world.getTopTilePos(xy);
+            auto top = worldState.getTopTilePos(xy);
             msg("top: ", top);
             auto ret = top.toUnitPos();
             ret.value.Z += 1;
@@ -183,13 +188,13 @@ class Game{
             return ret;
         }
 
-        auto clan = newClan(world);
+        auto clan = newClan(worldState);
 
         Unit addUnitAtRelativePos(int x, int y) {
             auto xy = TileXYPos(vec2i(x,y) + halfWorldSize_xy);
             auto u = newUnit();
             u.pos = topOfTheWorld(xy);
-            u.type = world.unitTypeManager.byName("dwarf");
+            u.type = worldState.unitTypeManager.byName("dwarf");
             clan.addUnit(u);
             return u;
         }
@@ -204,7 +209,7 @@ class Game{
 
         // following is retarded code, ETC :d
         EntityPos topOfTheWorld2(TileXYPos xy) {
-            auto top = world.getTopTilePos(xy);
+            auto top = worldState.getTopTilePos(xy);
             msg("top: ", top);
             auto ret = top.toEntityPos();
             ret.value.Z += 1;
@@ -217,36 +222,36 @@ class Game{
         xy.value += halfWorldSize_xy;
         auto o = newEntity();
         o.pos = topOfTheWorld2(xy);
-        o.type = world.entityTypeManager.byName("tree");
-        world.addEntity(o);
+        o.type = worldState.entityTypeManager.byName("tree");
+        worldState.addEntity(o);
         msg("o.pos == ", o.pos);
         xy = TileXYPos(vec2i(5,1));
         xy.value += halfWorldSize_xy;
         o = newEntity();
         o.pos = topOfTheWorld2(xy);
-        o.type = world.entityTypeManager.byName("shrubbery");
-        world.addEntity(o);
+        o.type = worldState.entityTypeManager.byName("shrubbery");
+        worldState.addEntity(o);
         msg("o.pos == ", o.pos);
     } 
 
-    void newGameThread() {
-        init();
+    void newGameThread(string worldName) {
+        init(worldName);
         populateWorld();
         camera.setPosition(vec3d(0, 0, 0));
         camera.setTarget(vec3d(0, 1, 0));
         {
             mixin(LogTime!("InitialHeightmaps"));
-            world.generateAllHeightmaps();
+            worldState.generateAllHeightmaps();
         }
         {
             mixin(LogTime!("InitialFloodFill"));            
-            world.floodFillSome(1_000_000);
+            worldState.floodFillSome(1_000_000);
         }
         finishInit();
     }
 
-    void loadGameThread(string name) {
-        init();
+    void loadGameThread(string worldName) {
+        init(worldName);
         deserialize();
         finishInit();        
     }
@@ -254,15 +259,12 @@ class Game{
     //TODO: Move to better place
     void delegate() initCallback = null;
 
-    void newGame(void delegate() onDone) {
-        if (exists("saves/current")) {
-            rmdir("saves/current");
-        }
+    void newGame(string worldName, void delegate() onDone) {
         initCallback = onDone;
-        static void newGameThreadStarter(shared Game g) {
+        static void newGameThreadStarter(shared Game g, string worldName) {
             try {
                 Game game = cast(Game)g;
-                game.newGameThread();
+                game.newGameThread(worldName);
             } catch (Throwable o) {
                 msg("Thread exception!\n", o.toString());
                 version(Windows) {
@@ -271,7 +273,7 @@ class Game{
                 }
             }
         }        
-        spawn(&newGameThreadStarter, cast(shared)this);
+        spawn(&newGameThreadStarter, cast(shared)this, worldName);
     }
     void loadGame(string name, void delegate() onDone) {
         string saveDir = "saves/" ~ name;
@@ -300,7 +302,7 @@ class Game{
     //Called in loading thread.
     private void deserialize() {
 
-        world.deserialize();
+        worldState.deserialize();
 
         auto content = readText("saves/current/game.json");
         auto rootVal = json.parse(content);
@@ -314,13 +316,13 @@ class Game{
         }
 
         g_UnitCount = unitCount;
-        activeUnit = world.getUnitFromId(activeUnitId);
+        activeUnit = worldState.getUnitFromId(activeUnitId);
 
     }
 
     void serializeAll(void delegate() andThen) {
         void serialize() {
-            //private World           world; Tas hand om av scheduler.
+            //private WorldState           world; Tas hand om av scheduler.
             //private bool            isClient;
             //private bool            isServer;
             //private bool            isWorker;
@@ -378,8 +380,8 @@ class Game{
         return activeUnit;
     }
 
-    World getWorld() {
-        return world;
+    WorldState getWorld() {
+        return worldState;
     }
 
     Renderer getRenderer() {
@@ -392,7 +394,7 @@ class Game{
 
     void render(long usecs) {
         if(renderer is null) return;
-        renderer.render(usecs, world.getDayTime());
+        renderer.render(usecs, worldState.getDayTime());
     }
 
     mixin NetworkCode; // from clientnetworking.d

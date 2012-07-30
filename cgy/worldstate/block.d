@@ -4,7 +4,7 @@
 //TODO: Make things private?
 
 
-module world.block;
+module worldstate.block;
 
 import std.algorithm;
 import std.exception;
@@ -16,9 +16,9 @@ import tiletypemanager : TileTypeAir;
 //import tiletypemanager;
 
 //import worldgen.worldgen;
-import worldgen.newgen;
-import world.tile;
-import world.sizes;
+import worldgen.maps;
+import worldstate.tile;
+import worldstate.sizes;
 import util.memory;
 import util.rangefromto;
 import util.util;
@@ -180,12 +180,12 @@ struct Block {
         }
     }
 
-    static Block generateBlock(BlockNum blockNum, WorldGenerator worldgen) {
+    static Block generateBlock(BlockNum blockNum, WorldMap worldMap) {
         auto block = alloc();
         block.blockNum = blockNum;
 
 
-        return worldgen.fillBlock(block);
+        return worldMap.fillBlock(block);
     }
 
 

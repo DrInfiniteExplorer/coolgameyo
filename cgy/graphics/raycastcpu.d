@@ -10,9 +10,9 @@ import graphics.camera;
 import graphics.image;
 import light;
 import util.util;
-import world.world;
+import worldstate.worldstate;
 
-void computeYourMother(World world, Image img, Camera camera) {
+void computeYourMother(WorldState world, Image img, Camera camera) {
 
     vec3d upperLeft, toRight, toDown, dir, startPos;
     startPos = camera.getPosition();

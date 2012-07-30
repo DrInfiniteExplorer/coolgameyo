@@ -45,8 +45,8 @@ mixin template RandomHybrid() {
     }
 
     void renderHybrid() {
-        auto randomField = new ValueMap;
-        auto heightMap = new ValueMap(400, 400);
+        auto randomField = new ValueMap2Dd;
+        auto heightMap = new ValueMap2Dd(400, 400);
         auto gradient = new GradientNoise01!()(400, new RandSourceUniform(seed));
         auto hybrid = new HybridMultiFractal(gradient, H, lacuna, octaves, offset);
         hybrid.setBaseWaveLength(wavelength);

@@ -30,7 +30,7 @@ import unit;
 import util.intersect;
 import util.rangefromto;
 import util.util;
-import world.world;
+import worldstate.worldstate;
 import entities.entity;
 import entitytypemanager;
 
@@ -46,7 +46,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
     private Game game;    
     private Renderer renderer;    //This and scheduler only used to get fps / tps info. Make proxy or thing?
     private Scheduler scheduler;
-    private World world;
+    private WorldState world;
     private FPSControlAI possesAI;
     private Camera camera;
     private Unit unit;

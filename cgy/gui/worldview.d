@@ -48,8 +48,8 @@ class WorldMenu : GuiElementWindow {
     bool zoomed;
     Rectd oldPos;
 
-    World world;
-    World.MapVisualizer mapViz;
+    WorldMap worldMap;
+    WorldMap.MapVisualizer mapViz;
     int seed;
 
     this(GuiElement _creator) {
@@ -57,7 +57,7 @@ class WorldMenu : GuiElementWindow {
         guiSystem = creator.getGuiSystem();
 
 
-        super(guiSystem, Rectd(vec2d(0.0, 0.0), vec2d(1, 1)), "World experiment Menu~~~!", false, false);
+        super(guiSystem, Rectd(vec2d(0.0, 0.0), vec2d(1, 1)), "World Mapexperiment Menu~~~!", false, false);
 
         heightImg = new GuiElementImage(this, Rectd(clientArea.leftOf, clientArea.topOf, 0.3, 0.3));
         temperatureImg = new GuiElementImage(this, Rectd(heightImg.rightOf, heightImg.topOf, 0.3, 0.3));
@@ -78,13 +78,13 @@ class WorldMenu : GuiElementWindow {
 
         voronoiImage = Image(null, Dim, Dim);
 
-        world = new World;
-        world.generate();
-        mapViz = world.getVisualizer();
+        worldMap = new WorldMap;
+        worldMap.generate();
+        mapViz = worldMap.getVisualizer();
 
         auto button = new PushButton(this, Rectd(vec2d(0.75, 0.75), vec2d(0.2, 0.10)), "Back", &onBack);
 
-        auto seedEdit = new GuiElementLabeledEdit(this, Rectd(windImg.leftOf, windImg.bottomOf, 0.2, 0.05), "seed", to!string(world.worldSeed));
+        auto seedEdit = new GuiElementLabeledEdit(this, Rectd(windImg.leftOf, windImg.bottomOf, 0.2, 0.05), "seed", to!string(worldMap.worldSeed));
         seedEdit.setOnEnter((string value) {
             seed = to!int(value);
             redraw(true);
@@ -109,7 +109,7 @@ class WorldMenu : GuiElementWindow {
         auto stepButton = new PushButton(this, Rectd(saveImagesButton.leftOf, saveImagesButton.bottomOf, 0.2, 0.1), "Step", {
             {
                 mixin(MeasureTime!("Time to make a step:"));
-                world.step();
+                worldMap.step();
             }
             redraw(false);
         });
@@ -155,7 +155,7 @@ class WorldMenu : GuiElementWindow {
         auto saveWorldButton = new PushButton(this, Rectd(voronoi_region_borders.rightOf, voronoi_region_borders.topOf, voronoi_region_borders.widthOf, voronoi_region_borders.heightOf), "Save world", {
             {
                 mixin(MeasureTime!("Time to save the world(All in a days work):"));
-                world.save();
+                worldMap.save();
             }
         });
 
@@ -166,7 +166,7 @@ class WorldMenu : GuiElementWindow {
     }
 
     override void destroy() {
-        world.destroy();
+        worldMap.destroy();
         super.destroy();
     }
 
@@ -188,10 +188,10 @@ class WorldMenu : GuiElementWindow {
 
     void redraw(bool regen) {
         if(regen) {
-            world = new World;
-            world.worldSeed = seed;
-            world.generate();
-            mapViz = world.getVisualizer();
+            worldMap = new WorldMap;
+            worldMap.worldSeed = seed;
+            worldMap.generate();
+            mapViz = worldMap.getVisualizer();
         }
         heightImg.setImage(mapViz.getHeightmapImage());
 
@@ -205,13 +205,13 @@ class WorldMenu : GuiElementWindow {
 
         voronoiImage.clear(0, 0, 0, 0);
 
-
-        foreach(edge ; world.areaVoronoi.poly.edges) {
+/*
+        foreach(edge ; worldMap.areaVoronoi.poly.edges) {
             auto start = edge.getStartPoint();
             auto end = edge.getEndPoint();
 
-            auto height1 = world.heightMap.getValue(start.pos.X, start.pos.Y);
-            auto height2 = world.heightMap.getValue(end.pos.X, end.pos.Y);
+            auto height1 = worldMap.heightMap.getValue(start.pos.X, start.pos.Y);
+            auto height2 = worldMap.heightMap.getValue(end.pos.X, end.pos.Y);
             if(height1 <= 0 || height2 <= 0) {
                 continue;
             }
@@ -221,13 +221,13 @@ class WorldMenu : GuiElementWindow {
             int site1 = edge.halfLeft.left.siteId;
             int site2 = edge.halfRight.left.siteId;
             if(!renderEveryCell) {
-                if((world.areas[site1].climateType) == (world.areas[site2].climateType)) continue;
+                if((worldMap.areas[site1].climateType) == (worldMap.areas[site2].climateType)) continue;
             }
             if(renderRegionBorders || renderEveryCell) {
                 voronoiImage.drawLine(start.pos.convert!int, end.pos.convert!int, vec3i(0));
             }
         }
-
+*/
         climateMapImg.setImage(mapViz.getClimateImage(climateTypes, renderClimateBorders));
 
         if(renderRegions) {

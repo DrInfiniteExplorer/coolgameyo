@@ -1,30 +1,63 @@
 module worldgen.layers;
 
+import random.valuemap;
 
+import worldgen.maps;
+
+import util.util;
+
+class Feature {
+}
+
+
+final class LayerMap {
+    ValueMap2Dd heightMap;
+    ValueMap2Dd randomField;
+    Feature[] features;
+    int level;
+    vec2i mapNum;
+    int randomSeed;
+
+    this(int _level, vec2i _mapNum, int _randomSeed) {
+        level = _level;
+        mapNum = _mapNum;
+        randomSeed = _randomSeed;
+        heightMap = new ValueMap2Dd(ptPerLayer, ptPerLayer);
+        //randomField = new ValueMap2Dd;
+
+        //randomField.fill(new RandSourceUniform(randomSeed), ptPerLayer, ptPerLayer);
+    }
+    this(ValueMap2Dd topHeightmap) {
+        level = 5;
+        mapNum.set(0, 0);
+
+        heightMap = topHeightmap;
+    }
+    void setHeight(int x, int y, double value) {
+        heightMap.set(x,y, value);
+    }
+    double getHeight(int x, int y) {
+        return heightMap.get(x,y);
+    }
+
+}
 
 
 mixin template Layers() {
 
-    Map[vec2i][5] layers; /*index 0 is not used, only 1-4 because thats how things are planned. And the fifth layer is not stored in that. */
-    Map layer5;
+    LayerMap[vec2i][5] layers; /*index 0 is not used, only 1-4 because thats how things are planned. And the fifth layer is not stored in that. */
+    LayerMap layer5;
+
     ValueMap mipLevel1;
     ValueMap mipLevel2;
 
-    void init() {
-        generateTopLevel();
+    void layersInit() {
+        layer5 = new LayerMap(heightMap);
+        //enforce(0, "Implement this here layers thing");
     }
 
-    void generateTopLevel() {
-        layer5 = new Map(5, vec2i(0,0), params.randomSeed);
-
-        layer5.heightMap.fill(layer5.randomField, ptPerLayer, ptPerLayer);
-        foreach(ref val; layer5.heightMap.randMap) {
-            val = (val+1.0)*0.5 * 15000;
-        }
-
-        //map.fillwithstuffandbecoolanddoneyeah();
-
-        generateMipMaps();
+    void generateTopLayer() {
+        msg("do we actually need generateMipMaps(); for anything?");
     }
 
     void generateMipMaps() {
@@ -62,7 +95,7 @@ mixin template Layers() {
 
     }
 
-    int hash(int level, vec2i mapNum, Map parentMap) {
+    int hash(int level, vec2i mapNum, LayerMap parentMap) {
         vec2i local = posModV(mapNum, ptPerLayer);
 
 
@@ -71,7 +104,7 @@ mixin template Layers() {
         context.start();
         context.update([level]);
         context.update([local]);
-        context.update([parentMap.randomField.get(local.X, local.Y)]);
+        //context.update([parentMap.randomField.get(local.X, local.Y)]);
         context.finish(digest);
         int* ptr = cast(int*)digest.ptr;
         return ptr[0] ^ ptr[1] ^ ptr[2] ^ ptr[3];
@@ -84,8 +117,10 @@ mixin template Layers() {
         return (mapNum in layer) !is null;
     }
 
-    Map getMap(int level, vec2i mapNum) {
-        if(level == 5) return layer5;
+    LayerMap getMap(int level, vec2i mapNum) {
+        if(level == 5) {
+            return layer5;
+        }
         auto layer = layers[level];
         if(mapNum in layer) {
             return layer[mapNum];
@@ -97,7 +132,7 @@ mixin template Layers() {
         auto parentMapNum = negDivV(mapNum, 4);
         auto parentMap = getMap(level+1, parentMapNum);
         auto mapSeed = hash(level, mapNum, parentMap);
-        auto map = new Map(level, mapNum, mapSeed);
+        auto map = new LayerMap(level, mapNum, mapSeed);
 
         /* Start by filling in the base from the previous map */
 
@@ -155,7 +190,7 @@ mixin template Layers() {
 
         /* Add 'our own' randomness */
 
-        map.addRandomHeight();
+        //map.addRandomHeight();
 
         /* Process the map, etc */
 
@@ -173,10 +208,10 @@ mixin template Layers() {
         //mixin(Time!("writeln(usecs, cnt);"));
         //cnt += 1;
 
-        auto ptNum = negDivV(tilePos.value, ptScale[level]);
+        auto ptScale = ptScale[level];
+        auto ptNum = negDivV(tilePos.value, ptScale);
 
         //Tiles from 'base' of area to pt of interes
-        auto ptScale = ptScale[level];
         int dx = tilePos.value.X - ptNum.X*ptScale;
         int dy = tilePos.value.Y - ptNum.Y*ptScale;
 
@@ -211,9 +246,11 @@ mixin template Layers() {
         return map.getHeight(ptNum.X, ptNum.Y);
     }
 
+    /*
     vec3f getBiomeColor(vec2i tp) {
         return vec3f(0.7f, 0.7f, 0.7f);
     }
+    */
 
 
 }

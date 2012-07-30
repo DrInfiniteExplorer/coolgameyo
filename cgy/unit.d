@@ -9,7 +9,7 @@ import changes.changelist;
 import pos;
 import stolen.aabbox3d;
 
-import world.world;
+import worldstate.worldstate;
 import clan;
 import util.util;
 import unittypemanager;
@@ -17,7 +17,7 @@ import inventory;
 
 import mission;
 
-import world.worldproxy;
+import worldstate.worldproxy;
 
 import modules.path;
 

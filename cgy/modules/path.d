@@ -33,7 +33,7 @@ struct PathID {
     ulong id;
 }
 struct Path {
-    // World w;
+    // WorldState w;
     // TODO: add path smoothing here? D:
     UnitPos[] path;
 
@@ -137,7 +137,7 @@ final class PathModule : Module {
         BREAKPOINT;
     }
 
-    override void update(World world, Scheduler scheduler) { //Module interface
+    override void update(WorldState world, Scheduler scheduler) { //Module interface
         synchronized(this) {
             size_t i = 0;
             foreach (id, ref state; activeStates) {
@@ -215,7 +215,7 @@ static struct PathFindState {
         }
     }
 
-    bool tick(World world) {
+    bool tick(WorldState world) {
         assert (!finished);
         foreach (i; 0 .. stateTickCount) {
 
@@ -239,7 +239,7 @@ static struct PathFindState {
         return false;
     }
 
-    void tickety(bool fwd)(World world) {
+    void tickety(bool fwd)(WorldState world) {
         alias CondAlias!(fwd, openf, openb) open;
         alias CondAlias!(!fwd, openf, openb) other;
 
@@ -317,7 +317,7 @@ static struct PathFindState {
     enum moveDownRegular = 2.7;
     enum normalStep = 1.0;
 
-    double costBetween(World world, TilePos a, TilePos b) {
+    double costBetween(WorldState world, TilePos a, TilePos b) {
 
         if (a.value.Z == b.value.Z) {
             return normalStep;
@@ -335,7 +335,7 @@ static struct PathFindState {
         return estimateFactor * sqrt(cast(real)xx + yy + zz);
     }
 
-    void completePath(World world, TilePos x) {
+    void completePath(WorldState world, TilePos x) {
         UnitPos[] p;
         TilePos y = x;
 
@@ -375,7 +375,7 @@ static struct PathFindState {
     // BUG: TODO: I have no idea if this is correct code
     // TODO: Now only walks {n,e,s,w}, should walk diagonally as well
     private static struct AvailibleNeighbors(bool fwd) {
-        World world;
+        WorldState world;
         TilePos around;
 
         private {
@@ -461,7 +461,7 @@ static struct PathFindState {
         }
     }
 
-    auto availibleNeighbors(bool fwd)(World world, TilePos tp) {
+    auto availibleNeighbors(bool fwd)(WorldState world, TilePos tp) {
         return AvailibleNeighbors!fwd(world, tp);
     }
 }

@@ -14,10 +14,10 @@ import unit;
 import util.util;
 import util.filesystem;
 
-import world.worldproxy;
+import worldstate.worldproxy;
 
 
-class AIModule : Module, WorldListener {
+class AIModule : Module, WorldStateListener {
 
     static struct UnitState {
         Unit unit;
@@ -34,11 +34,11 @@ class AIModule : Module, WorldListener {
     }
 
     PathModule pathmodule;
-    World world;
+    WorldState world;
 
     UnitState[Unit] states;
 
-    this(PathModule pathmodule_, World w) {
+    this(PathModule pathmodule_, WorldState w) {
         pathmodule = pathmodule_;
         world = w;
         world.addListener(this);
@@ -71,7 +71,7 @@ class AIModule : Module, WorldListener {
     override void deserializeModule() { //module interface
         BREAKPOINT;
     }
-    override void update(World world, Scheduler scheduler) { //module interface
+    override void update(WorldState world, Scheduler scheduler) { //module interface
         void push(ref UnitState state) {
             if (state.unit.ai is null) return;
             if (state.restTime > 0) {

@@ -14,8 +14,8 @@ mixin template RandomPerlin() {
 
 
     void renderPerlin() {
-        auto randomField = new ValueMap;
-        auto heightMap = new ValueMap(400, 400);
+        auto randomField = new ValueMap2Dd;
+        auto heightMap = new ValueMap2Dd(400, 400);
         auto gradient = new GradientNoise01!()(400, new RandSourceUniform(seed));
         heightMap.fill(gradient, 400, 400);
         heightMap.normalize(0, 1.0);

@@ -46,7 +46,7 @@ class MainMenu : GuiElementWindow {
         auto startNewButt = new PushButton(this, Rectd(0.1, randomButt.bottomOf+0.05, 0.3, 0.2), "newgamemenu", &onStartNewGame);
         
         loadGameButton = new PushButton(this, Rectd(randomButt.rightOf+0.05, 0.6, 0.3, 0.2), "Load game", &onLoadGame);
-        auto viewButt = new PushButton(this, Rectd(loadGameButton.rightOf, 0.6, 0.3, 0.2), "World View", &onWorldView);
+        auto viewButt = new PushButton(this, Rectd(loadGameButton.rightOf, 0.6, 0.3, 0.2), "WorldState View", &onWorldView);
 
         new PushButton(this, Rectd(viewButt.leftOf, viewButt.bottomOf, viewButt.widthOf, viewButt.heightOf), "Color spline editor", &onColorSplineEdit);
 
@@ -69,6 +69,9 @@ class MainMenu : GuiElementWindow {
     }    
         
     void onNewGame() {
+        new DialogBox(this, "NO!", "You can't do this right now :(", "Ok :(", (){ onStartNewGame(); });
+        return;
+        /*
         auto rect = newGameButton.getRelativeRect();        
         loadScreen.setLoading(true);
         void loadDone() {
@@ -79,12 +82,13 @@ class MainMenu : GuiElementWindow {
             saveGameButton = new PushButton(this, rect, "Save gay me?", &onSaveGame);
             onResumeGame();
         }
-        game = main.startGame(&loadDone);
+        //game = main.startGame(&loadDone);
         newGameButton.destroy();
         newGameButton = null;
         loadGameButton.destroy();
         loadGameButton = null;
         setVisible(false);        
+        */
     }
 
     void onResumeGame() {
@@ -96,12 +100,9 @@ class MainMenu : GuiElementWindow {
         SDL_WarpMouse(middleX, middleY);
     }
     
-    void onSaveGame() {
-        
-        loadScreen.setLoading(true);
-        game.saveGame("Save1", { loadScreen.setLoading(false); } );
-    }
     void onLoadGame() {
+        new DialogBox(this, "NO!", "You can't do this right now :(", "Ok :(", (){ onStartNewGame(); });
+        /*
         loadScreen.setLoading(true);
         auto rect = newGameButton.getRelativeRect();        
         void loadDone() {
@@ -118,6 +119,7 @@ class MainMenu : GuiElementWindow {
         loadGameButton.destroy();
         loadGameButton = null;
         setVisible(false);        
+        */
     }
     
     void onRandom() {

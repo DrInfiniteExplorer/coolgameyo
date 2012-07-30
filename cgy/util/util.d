@@ -15,8 +15,8 @@ import std.typetuple;
 //public import std.datetime;
 
 //TODO: Got order-dependant bugs here. If doing pos, stolen, worldparts, then we get bugs and bugs. sadface.
-//import world.sector;
-//import world.block;
+//import worldstate.sector;
+//import worldstate.block;
 import stolen.all;
 
 version (Posix) {

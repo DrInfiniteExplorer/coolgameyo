@@ -14,7 +14,7 @@ import pos;
 import statistics;
 import util.rangefromto;
 import util.util;
-import world.sizes;
+import worldstate.sizes;
 
 
 class TileRenderer {

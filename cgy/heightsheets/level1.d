@@ -10,8 +10,8 @@ import graphics.camera;
 import graphics.ogl;
 import graphics.shader;
 import modules.module_;
-import world.world;
-import worldgen.newgen;
+import worldgen.maps;
+import worldstate.worldstate;
 import util.util;
 
 
@@ -36,16 +36,16 @@ final class Level1Sheet {
     bool[level1SectorCount][level1SectorCount] loaded;
 
     HeightSheets heightSheets;
-    LayerManager layerManager;
-    World world;
+    WorldMap worldMap;
+    WorldState worldState;
 
     Level0Sheet level0;
 
 
     this(HeightSheets _heightSheets) {
         heightSheets = _heightSheets;
-        layerManager = heightSheets.layerManager;
-        world = heightSheets.world;
+        worldMap = heightSheets.worldMap;
+        worldState = heightSheets.worldState;
         level0 = new Level0Sheet(this);
     }
 
@@ -88,13 +88,13 @@ final class Level1Sheet {
                 float Y = cast(float) tp.Y;
                 float Z;
                 if(x == 0 || x == level1QuadCount || y == 0 || y == level1QuadCount) {
-                    Z = cast(float) layerManager.getValueInterpolated(2, TileXYPos(tp));
+                    Z = cast(float) worldMap.getValueInterpolated(2, TileXYPos(tp));
                 } else {
-                    Z = cast(float) layerManager.getValueRaw(1, tp);
+                    Z = cast(float) worldMap.getValueRaw(1, tp);
                 }
                 vertices[y][x].set(X,Y,Z);
                 vertices[y][x] -= centerTp;
-                colors[y][x] = layerManager.getBiomeColor(tp);
+                pragma(msg, "colors[y][x] = worldMap.getBiomeColor(tp);");
             }
         }
 
@@ -242,8 +242,8 @@ final class Level1Sheet {
         auto minSector = minTP.getSectorNum();
         foreach(z ; minSector.value.Z .. maxSector.value.Z+1) {
             auto testNum = thisSect.getSectorNum(z);
-            if(world.isActiveSector(testNum)) {
-                if(world.isAirSector(testNum)) continue;
+            if(worldState.isActiveSector(testNum)) {
+                if(worldState.isAirSector(testNum)) continue;
                 return false;
             }
         }

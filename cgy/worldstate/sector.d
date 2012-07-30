@@ -2,7 +2,7 @@
 //TODO: make members private etc
 
 
-module world.sector;
+module worldstate.sector;
 
 import std.algorithm;
 import std.conv;
@@ -15,11 +15,11 @@ import std.stdio;
 import entitytypemanager;
 import json;
 import light;
-import world.world;
-import world.block;
-import world.sizes;
+import worldgen.maps;
+import worldstate.worldstate;
+import worldstate.block;
+import worldstate.sizes;
 //import worldgen.worldgen;
-import worldgen.newgen;
 import pos;
 import unit;
 import entities.entity;
@@ -186,7 +186,7 @@ class Sector {
         std.file.write(folder ~ "entities.json", jsonString);
     }
     
-    bool deserialize(EntityTypeManager entityTypeManager, World world) {
+    bool deserialize(EntityTypeManager entityTypeManager, WorldState world) {
         string folder = text("saves/current/world/", sectorNum.value.X, ",", sectorNum.value.Y, "/", sectorNum.value.Z, "/");
         if (!std.file.exists(folder)) {
             return false;
@@ -233,7 +233,7 @@ class Sector {
         return true;
     }
     
-    void generateBlock(BlockNum blockNum, WorldGenerator worldGen)
+    void generateBlock(BlockNum blockNum, WorldMap worldMap)
     in{
         assert(blockNum.getSectorNum() == sectorNum, "Trying to generate a block in the wrong sector!");
         assert(blockNum.getSectorNum.toTilePos() == pos);
@@ -244,7 +244,7 @@ class Sector {
     }
     body{
         auto pos = blockNum.rel();
-        auto block = Block.generateBlock(blockNum, worldGen);
+        auto block = Block.generateBlock(blockNum, worldMap);
         blocks[pos.X][pos.Y][pos.Z] = block;
         solidMap.updateBlock(block);
     }

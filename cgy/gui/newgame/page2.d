@@ -7,8 +7,8 @@ mixin template Page2() {
     GuiElement page2;
     GuiElementImage bigWorldImage;
     GuiElementImage smallWorldImage;
-    World world;
-    World.MapVisualizer mapViz;
+    WorldMap worldMap;
+    WorldMap.MapVisualizer mapViz;
     vec2i startPos;
 
     void initPage2(string worldName) {
@@ -17,8 +17,8 @@ mixin template Page2() {
         page2.setVisible(true);
         page2.bringToFront();
 
-        world = new World(worldName);
-        mapViz = world.getVisualizer();
+        worldMap = new WorldMap(worldName);
+        mapViz = worldMap.getVisualizer();
 
         bigWorldImage = new GuiElementImage(page2, Rectd(0.1, 0.1, 0.3, 0.3 * renderSettings.widthHeightRatio));
         smallWorldImage = new GuiElementImage(page2, Rectd(bigWorldImage.rightOf+0.05, bigWorldImage.topOf,
@@ -28,7 +28,8 @@ mixin template Page2() {
 
         new TabBar(page2, Rectd(bigWorldImage.leftOf, bigWorldImage.topOf - 0.07, bigWorldImage.widthOf * 2, 0.05),
                    "Heightmap", { show!"Heightmap"(); },
-                   "Shaded", { show!"ShadedHeightmap"(); });
+                   "Shaded", { show!"ShadedHeightmap"(); }
+        );
 
 
         bigWorldImage.setMouseClickCallback((GuiElement element, GuiEvent.MouseClick e) {
@@ -52,7 +53,15 @@ mixin template Page2() {
         bigWorldImage.setImage( mixin(q{mapViz.get} ~ which ~ q{Image()}));
     }
 
+    //Show about 12² kilometers on small map
+    // Each pixel on the big map is ~8 kilometers big
+    // If we show 12² kilometers on the small map,
+    //  then each pixel there is about 30 meters,
+    //  ie. 4 pixels make a sector.
+    //  NEED EVEN BIGGER MAP??
+
     void updatePos(vec2i tilePos) {
+        smallWorldImage.setImage(mapViz.generateMap!"Shaded"(TileXYPos(tilePos), 4*4*4*12_000));
         msg(tilePos);
     }
 

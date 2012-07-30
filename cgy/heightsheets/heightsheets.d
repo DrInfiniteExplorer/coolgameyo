@@ -26,16 +26,15 @@ import graphics.camera;
 import graphics.ogl;
 import graphics.shader;
 import modules.module_;
-import world.world;
-import worldgen.newgen;
+import worldgen.maps;
+import worldstate.worldstate;
 import util.util;
 
-final class HeightSheets : Module, WorldListener {
-    
+final class HeightSheets : Module, WorldStateListener {
 
 
-    World world;
-    LayerManager layerManager;
+    WorldMap worldMap;
+    WorldState worldState;
     Level1Sheet level1;
     Level2Sheet level2;
     Level3Sheet level3;
@@ -46,10 +45,10 @@ final class HeightSheets : Module, WorldListener {
     HeightSheetsShader shader;
 
 
-    this(World _world) {
-        world = _world;
-        layerManager = world.worldGen.getLayerManager();
-        world.addListener(this);
+    this(WorldMap _maps, WorldState _world) {
+        worldMap = _maps;
+        worldState = _world;
+        worldState.addListener(this);
         level1 = new Level1Sheet(this);
         level2 = new Level2Sheet(this);
         level3 = new Level3Sheet(this);
@@ -63,7 +62,7 @@ final class HeightSheets : Module, WorldListener {
     }
 
     void destroy() {
-        world.removeListener(this);
+        worldState.removeListener(this);
         level1.destroy();
         level2.destroy();
         level3.destroy();
@@ -233,7 +232,7 @@ final class HeightSheets : Module, WorldListener {
 
     override void deserializeModule() { }
 
-    override void update(World world, Scheduler scheduler) { // Module interface
+    override void update(WorldState world, Scheduler scheduler) { // Module interface
         //If work left
         //Queue a bit, or all!
 

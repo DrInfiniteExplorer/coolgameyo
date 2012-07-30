@@ -1,5 +1,5 @@
 
-module world.ambient;
+module worldstate.ambient;
 
 
 mixin template LightStorageMethods() {

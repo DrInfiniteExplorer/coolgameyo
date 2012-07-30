@@ -7,7 +7,7 @@ import std.stdio;
 import gui.guisystem.listbox;
 import json;
 import util.util;
-import world.world;
+import worldstate.worldstate;
 import clan;
 import entities.entity;
 

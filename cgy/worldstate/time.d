@@ -1,5 +1,5 @@
 
-module world.time;
+module worldstate.time;
 
 import std.string;
 import std.exception;

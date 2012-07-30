@@ -1,9 +1,9 @@
 
 
-module world.population;
+module worldstate.population;
 
 
-import world.world;
+import worldstate.worldstate;
 import clan;
 
 

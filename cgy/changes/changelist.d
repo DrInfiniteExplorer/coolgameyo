@@ -8,7 +8,7 @@ import unit;
 
 import util.util;
 import util.array;
-import world.world;
+import worldstate.worldstate;
 import changes.changes;
 
 alias util.array.Array Array;
@@ -26,7 +26,7 @@ struct ChangeArrayCollection(Cs...) {
         return arrays[staticIndexOf!(T, Cs)];
     }
 
-    void apply(World world) {
+    void apply(WorldState world) {
         foreach (i, c; Cs) {
             foreach (w; arrays[i][]) {
                 w.apply(world);
@@ -84,7 +84,7 @@ final class ChangeList {
         changeArrays.init();
     }
     
-    void apply(World world){
+    void apply(WorldState world){
         changeArrays.apply(world);
         changeArrays.reset();
     }

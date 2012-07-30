@@ -1,5 +1,5 @@
 
-module world.world;
+module worldstate.worldstate;
 
 import std.algorithm;
 import std.range;
@@ -23,7 +23,7 @@ import tiletypemanager;
 import entitytypemanager;
 import unittypemanager;
 //import worldgen.worldgen;
-import worldgen.newgen;
+import worldgen.maps;
 public import unit;
 public import entities.entity;
 
@@ -31,27 +31,29 @@ import scheduler;
 import statistics;
 
 public import pos;
-public import world.sizes;
-public import world.sector;
-public import world.block;
-public import world.tile;
+public import worldstate.sizes;
+public import worldstate.sector;
+public import worldstate.block;
+public import worldstate.tile;
 import util.util;
 import util.intersect;
 import util.rangefromto;
 import util.tileiterator;
 import util.filesystem;
 
-import world.worldproxy;
-import world.activity;
-import world.ambient;
-import world.floodfill;
-import world.population;
-import world.time;
+import worldstate.worldproxy;
+import worldstate.activity;
+import worldstate.ambient;
+import worldstate.floodfill;
+import worldstate.population;
+import worldstate.time;
+
+import worldgen.maps;
 
 
 // TODO: Refactor so these send world as first parameter,
 // and remove the world member from listeners
-interface WorldListener {
+interface WorldStateListener {
     void onAddUnit(SectorNum sectorNum, Unit unit);
     void onAddEntity(SectorNum sectorNum, Entity entity);
     void onSectorLoad(SectorNum sectorNum);
@@ -63,7 +65,7 @@ interface WorldListener {
 }
 
 
-final class Heightmap {
+final class SectorHeightmap {
     int[SectorSize.y][SectorSize.x] heightmap;
 
     void opIndexAssign(int val, size_t x, size_t y) {
@@ -75,20 +77,20 @@ final class Heightmap {
     this() {};
 }
 
-class World {
+class WorldState {
 
     static struct SectorXY {
-        Heightmap heightmap;
+        SectorHeightmap heightmap;
         Sector[int] sectors;
     }
 
     static final class HeightmapTaskState {
         SectorXYNum pos;
-        Heightmap heightmap;
+        SectorHeightmap heightmap;
         int x, y, z;
         this(SectorXYNum p) {
             pos = p;
-            heightmap = new Heightmap;
+            heightmap = new SectorHeightmap;
             x = 0;
             y = 0;
             z = int.max;
@@ -104,25 +106,26 @@ class World {
     Sector[SectorNum] sectorList;
 
     //WorldGenParams worldGenParams;
-    WorldGenerator worldGen;
+
     bool isServer;  //TODO: How, exactly, does the world function differently if it actually is a server? Find out!
 
-    WorldListener[] listeners;
+    WorldStateListener[] listeners;
 
     TileTypeManager tileTypeManager;
     EntityTypeManager entityTypeManager;
     UnitTypeManager unitTypeManager;
     SceneManager sceneManager;
 
-    this(TileTypeManager tilesys, EntityTypeManager entitysys, UnitTypeManager unitsys, SceneManager _sceneManager) {
+    WorldMap worldMap;
+
+    this(WorldMap _worldMap, TileTypeManager tilesys, EntityTypeManager entitysys, UnitTypeManager unitsys, SceneManager _sceneManager) {
         isServer = true;
         tileTypeManager = tilesys;
-        worldGen = new WorldGenerator;
+        worldMap = _worldMap;
         entityTypeManager = entitysys;
         unitTypeManager = unitsys;
         //worldGenParams = params;
         sceneManager = _sceneManager;
-        worldGen.init(params, tilesys);
 
         heightmapTasks = new HeightmapTasks;
 
@@ -130,18 +133,20 @@ class World {
     }
 
     void destroy() {
-        worldGen.destroy();
     }
 
     void serialize() { 
+        //TODO: Totally redo serialization.
+
         //TODO: Things commented should probably be serialized.
         //HeightmapTasks heightmapTasks;
         //WorldGenParams worldGenParams;
         //WorldGenerator worldGen;
-        worldGen.serialize();
+
+        //worldGen.serialize();
         //bool isServer;  //TODO: How, exactly, does the world function differently if it actually is a server? Find out!
 
-        //WorldListener[] listeners;
+        //WorldStateListener[] listeners;
         //TileTypeManager tileTypeManager;
 
 
@@ -180,7 +185,8 @@ class World {
     }
 
     void deserialize() {
-        worldGen.deserialize();
+        //TODO: Totally redo serialization.
+        //worldGen.deserialize();
 
         auto content = readText("saves/current/world/world.json");
         auto jsonRoot = json.parse(content);
@@ -229,7 +235,7 @@ class World {
             SectorXY* xyPtr = getSectorXY(xy, false);
             string folder = text("saves/current/world/", xy.value.X, ",", xy.value.Y, "/");
             if (util.filesystem.exists(folder ~ "heightmap.bin")) {
-                Heightmap heightmap = new Heightmap;            
+                SectorHeightmap heightmap = new SectorHeightmap;            
                 heightmap.heightmap = cast(int[128][])std.file.read(folder ~ "heightmap.bin");
                 xyPtr.heightmap = heightmap;
             } else {
@@ -282,7 +288,7 @@ class World {
                 return;
             }
         }
-        sector.generateBlock(blockNum, worldGen);
+        sector.generateBlock(blockNum, worldMap);
     }
 
     void generateHeightmapTaskFunc(HeightmapTaskState state) {
@@ -299,11 +305,11 @@ class World {
                 int z;
                 auto posXY = TileXYPos(tmp);
                 if (state.z == int.max) {
-                    z = worldGen.maxZ(posXY);
+                    z = worldMap.maxZ(posXY);
                 }
 
-                if(worldGen.isInsideWorld(TilePos(vec3i(posXY.value.X, posXY.value.Y, z)))) {
-                    while (worldGen.getTile(TilePos(vec3i(
+                if(worldMap.isInsideWorld(TilePos(vec3i(posXY.value.X, posXY.value.Y, z)))) {
+                    while (worldMap.getTile(TilePos(vec3i(
                                         posXY.value.X, posXY.value.Y, z))).type
                             is TileTypeAir) {
                         z -= 1;
@@ -832,12 +838,12 @@ class World {
 
         auto heightmap = sectorXY.heightmap;
         if (heightmap is null ) {
-            int z = worldGen.maxZ(xy);
+            int z = worldMap.maxZ(xy);
             auto tp = TilePos(vec3i(xy.value.X, xy.value.Y, z));    
-            if(!worldGen.isInsideWorld(tp)) {
+            if(!worldMap.isInsideWorld(tp)) {
                 return tp;
             }
-            while (worldGen.getTile(TilePos(vec3i(
+            while (worldMap.getTile(TilePos(vec3i(
                                 xy.value.X, xy.value.Y, z))).type
                     is TileTypeAir) {
                 z -= 1;
@@ -887,10 +893,10 @@ class World {
         return false;
     }
 
-    void addListener(WorldListener listener) {
+    void addListener(WorldStateListener listener) {
         listeners ~= listener;
     }
-    void removeListener(WorldListener listener) {
+    void removeListener(WorldStateListener listener) {
         remove(listeners, countUntil!q{a is b}(listeners, listener));
         listeners.length -= 1;
     }

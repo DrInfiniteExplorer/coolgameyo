@@ -4,7 +4,7 @@ import pos;
 import unit;
 import util.util;
 import ai.moveai;
-import world.worldproxy;
+import worldstate.worldproxy;
 
 import modules.path;
 

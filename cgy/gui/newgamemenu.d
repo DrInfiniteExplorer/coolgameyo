@@ -14,6 +14,8 @@ import gui.all;
 import gui.mainmenu;
 import gui.worldview;
 
+import pos;
+
 import settings;
 //import worldgen.worldgen;
 //import worldgen.newgen;

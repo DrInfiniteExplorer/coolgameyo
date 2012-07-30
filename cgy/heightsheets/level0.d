@@ -12,8 +12,8 @@ import graphics.ogl;
 import graphics.shader;
 import modules.module_;
 import statistics;
-import world.world;
-import worldgen.newgen;
+import worldgen.maps;
+import worldstate.worldstate;
 import util.util;
 
 final class Level0Sheet {
@@ -24,14 +24,15 @@ final class Level0Sheet {
 
     Level1Sheet level1;
     HeightSheets heightSheets;
-    LayerManager layerManager;
-    World world;
+
+    WorldMap worldMap;
+    WorldState worldState;
 
     this(Level1Sheet _level1) {
         level1 = _level1;
         heightSheets = level1.heightSheets;
-        layerManager = heightSheets.layerManager;
-        world = heightSheets.world;
+        worldMap = heightSheets.worldMap;
+        worldState = heightSheets.worldState;
         vertices.length = 100;
         colors.length = vertices.length;
     }
@@ -91,7 +92,7 @@ final class Level0Sheet {
                     auto minSector = minTP.getSectorNum();
                     foreach(z ; minSector.value.Z .. maxSector.value.Z+1) {
                         auto testNum = thisSect.getSectorNum(z);
-                        bool isLoaded = world.isActiveSector(testNum) && !world.isAirSector(testNum);
+                        bool isLoaded = worldState.isActiveSector(testNum) && !worldState.isAirSector(testNum);
 
                         if(isLoaded) {
                             if(firstLoadedZ == int.min) {
@@ -210,9 +211,9 @@ final class Level0Sheet {
                 TileXYPos xyTp;
                 if(x == 0) {
                     xyTp = TileXYPos(thisTp.value + vec2i(x, y));
-                    tp = world.getTopTilePos(xyTp);
+                    tp = worldState.getTopTilePos(xyTp);
                     z = min(tp.value.Z, firstLoadedTilepos.value.Z);
-                    color = layerManager.getBiomeColor(xyTp.value);
+                    pragma(msg, "color = layerManager.getBiomeColor(xyTp.value);");
                 }
 
                 vec3ub col = (color * 255.0f).convert!ubyte;
@@ -229,9 +230,9 @@ final class Level0Sheet {
                 }
 
                 xyTp = TileXYPos(thisTp.value + vec2i(x+scale, y));
-                tp = world.getTopTilePos(xyTp);
+                tp = worldState.getTopTilePos(xyTp);
                 nextZ = min(tp.value.Z, firstLoadedTilepos.value.Z);
-                color = layerManager.getBiomeColor(xyTp.value);
+                pragma(msg, "color = layerManager.getBiomeColor(xyTp.value);");
 
                 if(z != nextZ) {
                     auto dZ = nextZ - z;
@@ -244,7 +245,7 @@ final class Level0Sheet {
                 }
 
                 xyTp = TileXYPos(thisTp.value + vec2i(x, y+scale));
-                auto tp_derp = world.getTopTilePos(xyTp);
+                auto tp_derp = worldState.getTopTilePos(xyTp);
                 auto northZ = min(tp_derp.value.Z, firstLoadedTilepos.value.Z);
                 if(z != northZ) {
                     auto dZ = northZ - z;
