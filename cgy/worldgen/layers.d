@@ -1,5 +1,7 @@
 module worldgen.layers;
 
+import std.conv;
+
 import random.valuemap;
 
 import worldgen.maps;
@@ -27,6 +29,7 @@ final class LayerMap {
 
         //randomField.fill(new RandSourceUniform(randomSeed), ptPerLayer, ptPerLayer);
     }
+
     this(ValueMap2Dd topHeightmap) {
         level = 5;
         mapNum.set(0, 0);
@@ -40,6 +43,10 @@ final class LayerMap {
         return heightMap.get(x,y);
     }
 
+}
+
+template shift(string q, string w, string e, string r, string t) {
+    enum shift = text(q, "=", w, "; ", w, "=", e, "; ", e, "=", r, "; ", r, "=", t, ";");
 }
 
 
@@ -58,6 +65,8 @@ mixin template Layers() {
 
     void generateTopLayer() {
         msg("do we actually need generateMipMaps(); for anything?");
+
+        //When do we scan the toplayer to identify mountains, peaks etc?
     }
 
     void generateMipMaps() {
@@ -117,6 +126,7 @@ mixin template Layers() {
         return (mapNum in layer) !is null;
     }
 
+
     LayerMap getMap(int level, vec2i mapNum) {
         if(level == 5) {
             return layer5;
@@ -136,8 +146,9 @@ mixin template Layers() {
 
         /* Start by filling in the base from the previous map */
 
-
         //The index where the current map begins, in the parents pt-grid
+
+        /*
         auto parentHeight = parentMap.heightMap;
         auto local = posModV(mapNum, 4)*100;
         double v00, v01, v10, v11;
@@ -187,10 +198,101 @@ mixin template Layers() {
                 parentY += 1;
             }
         }
+        */
+        /*
+        {
+            mixin(MeasureTime!"Layer gen:");
+
+        auto parentHeight = parentMap.heightMap;
+        auto local = posModV(mapNum, 4)*100;
+
+        double get(int x, int y) {
+            if(x < 0 || x >= 400 || y < 0 || y >= 400) {
+                auto localX = posMod(x, 400);
+                auto localY = posMod(y, 400);
+                auto neighborParentNum = parentMapNum + vec2i(x/400, y/400);
+                auto parentMap = getMap(level+1, neighborParentNum);
+                return parentMap.getHeight(localX, localY);
+            } else {
+                return parentHeight.get(x, y);
+            }
+        }
+
+        double v00, v01, v02, v03, v10, v11, v12, v13, v20, v21, v22, v23, v30, v31, v32, v33;
+        double i0, i1, i2, i3;
+        double deltaX = 0.0;
+        double deltaY = 0.0;
+        int parentY = local.Y;
+        int parentX;
+        foreach(y ; 0 .. ptPerLayer) {
+            parentX = local.X;
+
+            v00 = get(parentX-1, parentY-1);
+            v01 = get(parentX-1, parentY+0);
+            v02 = get(parentX-1, parentY+1);
+            v03 = get(parentX-1, parentY+2);
+            v10 = get(parentX+0, parentY-1);
+            v11 = get(parentX+0, parentY+0);
+            v12 = get(parentX+0, parentY+1);
+            v13 = get(parentX+0, parentY+2);
+            v20 = get(parentX+1, parentY-1);
+            v21 = get(parentX+1, parentY+0);
+            v22 = get(parentX+1, parentY+1);
+            v23 = get(parentX+1, parentY+2);
+            v30 = get(parentX+2, parentY-1);
+            v31 = get(parentX+2, parentY+0);
+            v32 = get(parentX+2, parentY+1);
+            v33 = get(parentX+2, parentY+2);
+            i0 = BicubeInter(v00, v01, v02, v03, deltaY);
+            i1 = BicubeInter(v10, v11, v12, v13, deltaY);
+            i2 = BicubeInter(v20, v21, v22, v23, deltaY);
+            i3 = BicubeInter(v30, v31, v32, v33, deltaY);
+
+            deltaX = 0.0;
+            foreach(x ; 0 .. ptPerLayer) {
+                auto v = BicubeInter(i0, i1, i2, i3, deltaX);
+                map.setHeight(x, y, v);
+
+                deltaX += 0.25;
+                if( (x & 3) == 3) {
+                    deltaX = 0.0;
+                    parentX +=1;
+                    mixin(shift!("v00", "v10", "v20", "v30", "get(parentX+2, parentY-1)"));
+                    mixin(shift!("v01", "v11", "v21", "v31", "get(parentX+2, parentY+0)"));
+                    mixin(shift!("v02", "v12", "v22", "v32", "get(parentX+2, parentY+1)"));
+                    mixin(shift!("v03", "v13", "v23", "v33", "get(parentX+2, parentY+2)"));
+                    mixin(shift!("i0", "i1", "i2", "i3", "BicubeInter(v30, v31, v32, v33, deltaY)"));
+
+                }
+            }
+            deltaY += 0.25;
+            if( (y & 3) == 3) {
+                deltaY = 0.0;
+                parentY += 1;
+            }
+        }
+
+        }
+        */
+
+        //*
+
+        {
+            mixin(MeasureTime!("To make layer:"));
+        auto layerSize = vec2d(mapScale[level]);
+        auto layerRect = Rectd(layerSize * mapNum.convert!double, layerSize);
+
+        auto interpolated = new BicubeInterpolation(parentMap.heightMap);
+
+        auto local = (posModV(mapNum, 4)*100).convert!double;
+        auto parentMapArea = Rectd(local, vec2d(100));
+        auto scaled = MapRectToSize(interpolated, parentMapArea, vec2d(400));
+
+        map.heightMap.fill(scaled, 400, 400);
+        }
+        //*/
 
         /* Add 'our own' randomness */
-
-        //map.addRandomHeight();
 
         /* Process the map, etc */
 
@@ -203,6 +305,33 @@ mixin template Layers() {
         layers[level][mapNum] = map;
         return map;
     }
+
+    void initLayer4(LayerMap layer) {
+
+        /*
+        // How would and _area_ apply or change things, anyway?
+        // It's more likely they add a feature or something which modifies the height,
+        // but it's not like a tundra, jungle or a desert affects the height of the world
+        // by being a desert...
+        //
+        // So maybe use this as a point to add features.
+        //
+        // Or add different kinds of noise depending on what kind of terrain there is?
+        // IN THAT CASE USE A DISPLACEMENT FIELD AS WELL?????
+        //
+        foreach(area ; getLayerAreas(4, layer.mapNum)) {
+            area.applyHeight(layer);
+        }
+        */
+
+        /*
+        foreach(feature ; getLevelFeatures(4, layer.mapNum)) {
+            feature.applyHeight(layer);
+        }
+        */
+        enforce(0, "herp derp");
+    }
+
 
     double getValueInterpolated(int level, TileXYPos tilePos) {
         //mixin(Time!("writeln(usecs, cnt);"));

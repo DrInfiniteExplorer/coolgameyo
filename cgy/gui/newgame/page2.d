@@ -11,6 +11,11 @@ mixin template Page2() {
     WorldMap.MapVisualizer mapViz;
     vec2i startPos;
 
+
+    enum smallLevel = 3;
+    enum smallSize = mapScale[smallLevel];
+
+
     void initPage2(string worldName) {
         page2 = new GuiElement(this);
         page2.setRelativeRect(Rectd(0, 0, 1, 1));
@@ -33,14 +38,29 @@ mixin template Page2() {
 
 
         bigWorldImage.setMouseClickCallback((GuiElement element, GuiEvent.MouseClick e) {
+            if(e.down) return false;
             auto r = element.getAbsoluteRect();
             auto p = e.pos;
             auto nP = p - r.start;
             auto relative = nP.convert!double / r.size.convert!double;
-            
+
             updatePos((relative * vec2d(mapScale[5])).convert!int);
             return true;
         });
+        smallWorldImage.setMouseClickCallback((GuiElement element, GuiEvent.MouseClick e) {
+            if(e.down || !e.left) return false;
+            auto r = element.getAbsoluteRect();
+            auto p = e.pos;
+            auto nP = p - r.start;
+            auto relative = nP.convert!double / r.size.convert!double;
+            relative -= vec2d(0.5);
+
+            auto pos = startPos + (relative * vec2d(smallSize)).convert!int;
+
+            updatePos(pos);
+            return true;
+        });
+
 
         /*
         auto nextButton = new PushButton(page2, Rectd(backButton.rightOf, backButton.topOf, backButton.widthOf, backButton.heightOf), "Next", &newWorld);
@@ -61,7 +81,10 @@ mixin template Page2() {
     //  NEED EVEN BIGGER MAP??
 
     void updatePos(vec2i tilePos) {
-        smallWorldImage.setImage(mapViz.generateMap!"Shaded"(TileXYPos(tilePos), 4*4*4*12_000));
+        startPos = tilePos;
+        mixin(MeasureTime!("updatePos:"));
+        smallWorldImage.setImage(mapViz.generateMap!"Shaded"(TileXYPos(tilePos), smallSize));
+        //smallWorldImage.setImageSource(Rectf(0.4, 0.4, 0.2, 0.2));
         msg(tilePos);
     }
 

@@ -58,7 +58,7 @@ class UnitTypeManager {
 		auto rootVal = json.parse(content);
 		enforce(rootVal.type == json.Value.Type.object, "rootval in unittypejson not object roawoaowoawo: " ~ to!string(rootVal.type));
 		foreach(name, rsVal ; rootVal.asObject) {
-            UnitType tempType;
+            UnitType_t tempType;
 			rsVal.read(tempType.serializableSettings);
 			
 			tempType.name = name;
@@ -108,7 +108,7 @@ class UnitTypeManager {
     // Adds unit to the unit list. If we want to we can force an id.
     //Only ever add a unit type when loading a game; Otherwise type pointers
     //can be made to point to the wrong type!
-    ushort add(UnitType unit, ushort id = 0, bool isSendingId = false) {
+    ushort add(UnitType_t unit, ushort id = 0, bool isSendingId = false) {
         enforce(!(unit.name in _byName));
 
         // This is ok since we can't have a unit with id 0
@@ -137,11 +137,11 @@ class UnitTypeManager {
                 _byName[intrudingBastard.name] = intrudingBastard.id;
                 types[intrudingBastard.id] = intrudingBastard;
             }
-            types[unit.id] = *unit;
+            types[unit.id] = unit;
 		}
         else {
             unit.id = to!ushort(types.length);
-            types ~= *unit;
+            types ~= unit;
         }
 
         _byName[unit.name] = unit.id;

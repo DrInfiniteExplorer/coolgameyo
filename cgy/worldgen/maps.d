@@ -17,11 +17,13 @@ import random.gradient;
 import random.gradientnoise;
 import random.hybridfractal;
 import random.map;
+import random.modscaleoffset;
 import random.random;
 import random.randsource;
 import random.valuemap;
 import random.valuesource;
 import random.vectormap;
+import random.xinterpolate4;
 
 import graphics.image;
 
@@ -33,6 +35,7 @@ import tiletypemanager;
 import util.filesystem;
 import util.math;
 import util.rangefromto;
+import util.rect;
 import util.util;
 import util.voronoi.wrapper;
 

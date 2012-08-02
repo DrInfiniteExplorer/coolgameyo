@@ -99,6 +99,45 @@ mixin template Areas() {
         classifyAreas();
     }
 
+    auto getLayerAreas(int level, vec2i mapNum) {
+        //Get the size of the map
+        //Get the "distance between cells"
+        //Use thinking to realize we only need to
+        // iterate sizeOfMap±? areas, which we check
+        // OR
+        //  bruteforce-check all vertices, to make an
+        //  array of vertices inside the sizeOfMap
+        //  and return it
+        //
+        //The later alternative requies less thought, and will produce results faster
+        // but less optimally, so do it and return later
+        //TODO: Above comments.
+
+        auto scale = mapScale[level];
+        auto layerMapSize = vec2d(scale);
+        Rectd layerArea;
+        layerArea.start = mapNum.convert!double * layerMapSize;
+        layerArea.size = layerMapSize;
+        
+
+        bool[int] areas;
+
+        foreach(vert ; areaVoronoi.poly.vertices) {
+            if(layerArea.isInside(vert.pos)) {
+                foreach(edge ; vert.getEdges) {
+                    areas[edge.left.siteId] = true;
+                }
+            }
+        }
+        Area[] ret;
+        ret.length = areas.length;
+        int c = 0;
+        foreach(key ; areas.byKey()) {
+            ret[c++] = &this.areas[key];
+        }
+        return ret;
+    }
+
     void classifyAreas() {
         auto poly = areaVoronoi.poly;
         double temp[Dim*Dim/16];

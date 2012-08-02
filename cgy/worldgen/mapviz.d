@@ -137,8 +137,14 @@ mixin template MapViz() {
         //Eventually think well, and implement rendering with opengl instead.
         Image generateMap(string type)(TileXYPos tilePos, size_t diameter) {
             //Figure out what level of detail / up to what layer of features we want to display.
-            enforce(diameter == 4*4*4*12_000, "Now it's time to implement that fancy code which figures out level of detail...:)");
             int level = 4; //HARD CODED SHIT :D
+            for(int i = 1; i < 5; i++) {
+
+                if(mapScale[i] > diameter) {
+                    level = i-1;
+                    break;
+                }
+            }
 
             static if(type == "Shaded") {
                 auto min = tilePos.value - vec2i(diameter / 2);
@@ -165,8 +171,8 @@ mixin template MapViz() {
                     if(asd.get(cast(int)x, cast(int) y) <= 0.0 ) {
                         return 10;
                     }
-                    auto dir = vec2d(-0, 1);
-                    grad = dir.dotProduct(asd.upwindGradient(x, y, dir.X, dir.Y)) * 0.25;
+                    auto dir = vec2d(-1, 0);
+                    grad = dir.dotProduct(asd.upwindGradient(x, y, dir.X, dir.Y)) * 0.5;
                     grad = asd.getValue(x, y) / 100;
                     //grad = -(asd.getValue(x, y) - asd.getValue(x-1, y)) * 0.25;
                     return 4 + grad;

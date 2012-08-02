@@ -65,7 +65,6 @@ double smootherStep(double time) {
     return time*time*time * (10 + time*(-15 + time*6)); 
 }
 
-
 double cosStep(double time) {
     float tmp = (1.0-cos(time*PI))/2.0; //TODO: Make fancy cos-table? mayhaps? interpolate in table? :)
     return tmp;

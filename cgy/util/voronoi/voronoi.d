@@ -19,10 +19,24 @@ final class HalfEdge {
     HalfEdge _reverse;
     HalfEdge next;
 
-    Vertex vertex;
+    Vertex _vertex;
     Site left;
 
     double angle; //Angle of the half-edge. Ie. angle of line between sites.
+
+    void vertex(Vertex v) @property {
+        if(_vertex !is null) {
+            _vertex.edge = null;
+        }
+        _vertex = v;
+        if(vertex !is null) {
+            _vertex.edge = this;
+        }
+    }
+
+    Vertex vertex() @property {
+        return _vertex;
+    }
 
     this(Site l, Site right) {
         left = l;
@@ -209,7 +223,7 @@ final class Edge {
         swap(halfLeft, halfRight);
     }
 
-    vec2d dir() const @property {
+    vec2d dir() @property {
         if(halfLeft.vertex !is null && halfRight.vertex !is null) {
             return halfRight.vertex.pos - halfLeft.vertex.pos;
         }
@@ -228,9 +242,21 @@ final class Edge {
 
 final class Vertex {
     vec2d pos;
+    HalfEdge edge;
 
     this(vec2d pt) {
         pos = pt;
+    }
+
+    HalfEdge[] getEdges() {
+        HalfEdge[] ret;
+        auto edge = edge;
+        auto startEdge = edge;
+        do{
+            ret ~= edge;
+            edge = edge.next;
+        }while(edge !is null && edge != startEdge);
+        return ret;
     }
 
     int refCnt = 0;

@@ -1,6 +1,7 @@
 module random.modscaleoffset;
 
 import util.util;
+import util.rect;
 import random.valuesource;
 
 //Scale and offset. For example, to use a valuemap(width, height) as source for world height,
@@ -15,15 +16,15 @@ final class ModScaleOffset : ValueSource {
         scale = _scale;
         offset = _offset;
     }
-    
+
     ~this(){
     }
-    
+
     override double getValue(double x, double y, double z) {
         auto v = source.getValue(x*scale.X + offset.X, y*scale.Y + offset.Y, z*scale.Z + offset.Z);
         return v;
     }
-    
+
     override double getValue(double x, double y) {
         auto v = source.getValue(x*scale.X + offset.X, y*scale.Y + offset.Y);
         return v;
@@ -34,32 +35,48 @@ final class ModScaleOffset : ValueSource {
     }
 }
 
+//A more sane version of the cryptic stuff above.
+// Maps for example (100, 100, 200, 200) to (10, 10). Derp.
+auto MapRectToSize(ValueSource s, Rectd sourceRect, vec2d targetSize) {
+    return new ModScaleOffset(s, (sourceRect.size / targetSize).vec3, sourceRect.start.vec3);
+}
 
-final class AddSources : ValueSource {
-    ValueSource source1;
-    ValueSource source2;
-    this(ValueSource s1, ValueSource s2) {
-        source1 = s1;
-        source2 = s2;
+/*
+// A more sane version of the cryptic one above.
+final class MapRectToSize : ValueSource {
+    ValueSource source;
+    Rectd sourceRect;
+    vec2d targetRange;
+    this(ValueSource s, Rectd _sourceRect, vec2d _targetRange) {
+        source = s;
+        sourceRect = _sourceRect;
+        targetRange = _targetRange;
     }
 
     ~this(){
     }
 
     override double getValue(double x, double y, double z) {
-        auto v = source1.getValue(x, y, z) + source2.getValue(x, y, z);
-        return v;
+        enforce(0, "MapRectToSize is not implemented for 3-D querying.");
+        return double.init;
     }
 
     override double getValue(double x, double y) {
-        auto v = source1.getValue(x, y) + source2.getValue(x, y);
+        //X, Y in range 0->1
+        auto X = x / scale.X;
+        auto Y = y / scale.Y;
+        //X, Y -> range 0->sourceSize
+        X *= sourceRect.size.X;
+        Y *= sourceRect.size.Y;
+        //X, Y -> range start->end
+        X += sourceRect.start.X;
+        Y += sourceRect.start.Y;
+        auto v = source.getValue(X, Y);
+
         return v;
     }
     override double getValue(double x) {
-        auto v = source1.getValue(x) + source2.getValue(x);
-        return v;
+        enforce(0, "MapRectToSize is not implemented for 1-D querying.");
     }
 }
-
-
-
+*/

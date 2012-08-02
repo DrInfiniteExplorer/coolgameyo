@@ -51,7 +51,7 @@ alias TileType_t* TileType;
 
 
 class TileTypeManager {
-    TileType[] types;
+    TileType_t[] types;
     ushort[string] _byName;
 
     invariant() {
@@ -62,8 +62,8 @@ class TileTypeManager {
     this(TileTextureAtlas atlas) {
         mixin(LogTime!("TileTypeManagerCreation"));
 
-		TileType invalid;
-        TileType air;
+		TileType_t invalid;
+        TileType_t air;
         air.name = "air";
         air.transparent = true;
         add(invalid);
@@ -74,7 +74,7 @@ class TileTypeManager {
         Value idRootVal;
         bool hasTypeIdConfFile = loadJSON("saves/current/tiletypeidconfiguration.json", idRootVal);
 
-		TileType tempType;
+		TileType_t tempType;
 		if(!std.file.exists("data/tile_types.json")){
 			msg("Could not load tile types");
 			return;
@@ -140,17 +140,17 @@ class TileTypeManager {
     }
 
     TileType byID(ushort id) {
-        return types[id];
+        return &types[id];
     }
     TileType byName(string name) {
-        return types[idByName(name)];
+        return &types[idByName(name)];
     }
     ushort idByName(string name) {
         return *enforce(name in _byName, "no tile type by name '" ~ name ~ "'");
     }
 
     // Adds tile to the tile list. If we want to we can force an id.
-    ushort add(TileType tile, ushort id = 0, bool isSendingId = false) {
+    ushort add(TileType_t tile, ushort id = 0, bool isSendingId = false) {
         enforce(!(tile.name in _byName));
 		
         if (isSendingId) {

@@ -17,6 +17,7 @@ import gui.worldview;
 import pos;
 
 import settings;
+import statistics;
 //import worldgen.worldgen;
 //import worldgen.newgen;
 import worldgen.maps;

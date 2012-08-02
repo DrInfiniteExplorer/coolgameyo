@@ -45,7 +45,7 @@ alias EntityType_t* EntityType;
 
 
 class EntityTypeManager {
-    EntityType[] types;
+    EntityType_t[] types;
     ushort[string] _byName;
 	
     invariant() {
@@ -69,7 +69,7 @@ class EntityTypeManager {
 		auto rootVal = json.parse(content);
 		enforce(rootVal.type == json.Value.Type.object, "rootval in entitytypejson not object roawoaowoawo: " ~ to!string(rootVal.type));
 		foreach(name, rsVal ; rootVal.pairs) {
-            EntityType tempType; // is is le working if this is here lololooo.
+            EntityType_t tempType; // is is le working if this is here lololooo.
             // problem is tree gets light, shrubbery dont. neither should.
             // build expansion then defense it
 			rsVal.read(tempType.serializableSettings);
@@ -110,17 +110,17 @@ class EntityTypeManager {
     }
 
     EntityType byID(ushort id) {
-        return types[id];
+        return &types[id];
     }
     EntityType byName(string name) {
-        return types[idByName(name)];
+        return &types[idByName(name)];
     }
     ushort idByName(string name) {
         return *enforce(name in _byName, "no entity type by name '" ~ name ~ "'");
     }
 
     // Adds entity to the entity list. If we want to we can force an id.
-    ushort add(EntityType entity, ushort id = 0, bool isSendingId = false) {
+    ushort add(EntityType_t entity, ushort id = 0, bool isSendingId = false) {
         enforce(!(entity.name in _byName));
 
         if (isSendingId) {
