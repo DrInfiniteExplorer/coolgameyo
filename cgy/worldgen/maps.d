@@ -136,6 +136,9 @@ final class WorldMap {
     }
 
     public static string[] enumerateSavedWorlds() {
+        if(!exists("worlds/")) {
+            return null;
+        }
         string[] ret;
         dir("worlds/", (string s) {ret ~= s;});
         return ret;

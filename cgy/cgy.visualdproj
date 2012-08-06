@@ -104,7 +104,7 @@
   <quiet>0</quiet>
   <verbose>0</verbose>
   <vtls>0</vtls>
-  <symdebug>0</symdebug>
+  <symdebug>1</symdebug>
   <optimize>1</optimize>
   <cpu>0</cpu>
   <isX86_64>0</isX86_64>
@@ -570,6 +570,17 @@ d:\D\ulnb0333\ulink.exe $(IntDir)\$(TargetName).obj gdi32.lib win32.lib advapi32
    <File path="util\util.d" />
    <File path="util\window.d" />
   </Folder>
+  <Folder name="worldgen">
+   <File path="worldgen\areas.d" />
+   <File path="worldgen\heightmap.d" />
+   <File path="worldgen\layers.d" />
+   <File path="worldgen\maps.d" />
+   <File path="worldgen\mapviz.d" />
+   <File path="worldgen\moisture.d" />
+   <File path="worldgen\temperature.d" />
+   <File path="worldgen\wind.d" />
+   <File path="worldgen\worldgen.d" />
+  </Folder>
   <Folder name="worldstate">
    <File path="worldstate\activity.d" />
    <File path="worldstate\ambient.d" />
@@ -582,17 +593,6 @@ d:\D\ulnb0333\ulink.exe $(IntDir)\$(TargetName).obj gdi32.lib win32.lib advapi32
    <File path="worldstate\time.d" />
    <File path="worldstate\worldproxy.d" />
    <File path="worldstate\worldstate.d" />
-  </Folder>
-  <Folder name="worldgen">
-   <File path="worldgen\areas.d" />
-   <File path="worldgen\heightmap.d" />
-   <File path="worldgen\layers.d" />
-   <File path="worldgen\maps.d" />
-   <File path="worldgen\mapviz.d" />
-   <File path="worldgen\moisture.d" />
-   <File path="worldgen\worldgen.d" />
-   <File path="worldgen\temperature.d" />
-   <File path="worldgen\wind.d" />
   </Folder>
   <File path="clan.d" />
   <File path="clientnetworking.d" />

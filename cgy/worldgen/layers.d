@@ -198,8 +198,9 @@ mixin template Layers() {
                 parentY += 1;
             }
         }
-        */
-        /*
+        //*/
+
+        //*
         {
             mixin(MeasureTime!"Layer gen:");
 
@@ -210,7 +211,7 @@ mixin template Layers() {
             if(x < 0 || x >= 400 || y < 0 || y >= 400) {
                 auto localX = posMod(x, 400);
                 auto localY = posMod(y, 400);
-                auto neighborParentNum = parentMapNum + vec2i(x/400, y/400);
+                auto neighborParentNum = parentMapNum +  negDivV(vec2i(x, y), 400);
                 auto parentMap = getMap(level+1, neighborParentNum);
                 return parentMap.getHeight(localX, localY);
             } else {
@@ -243,14 +244,14 @@ mixin template Layers() {
             v31 = get(parentX+2, parentY+0);
             v32 = get(parentX+2, parentY+1);
             v33 = get(parentX+2, parentY+2);
-            i0 = BicubeInter(v00, v01, v02, v03, deltaY);
-            i1 = BicubeInter(v10, v11, v12, v13, deltaY);
-            i2 = BicubeInter(v20, v21, v22, v23, deltaY);
-            i3 = BicubeInter(v30, v31, v32, v33, deltaY);
+            i0 = CubicInter(v00, v01, v02, v03, deltaY);
+            i1 = CubicInter(v10, v11, v12, v13, deltaY);
+            i2 = CubicInter(v20, v21, v22, v23, deltaY);
+            i3 = CubicInter(v30, v31, v32, v33, deltaY);
 
             deltaX = 0.0;
             foreach(x ; 0 .. ptPerLayer) {
-                auto v = BicubeInter(i0, i1, i2, i3, deltaX);
+                auto v = CubicInter(i0, i1, i2, i3, deltaX);
                 map.setHeight(x, y, v);
 
                 deltaX += 0.25;
@@ -261,7 +262,7 @@ mixin template Layers() {
                     mixin(shift!("v01", "v11", "v21", "v31", "get(parentX+2, parentY+0)"));
                     mixin(shift!("v02", "v12", "v22", "v32", "get(parentX+2, parentY+1)"));
                     mixin(shift!("v03", "v13", "v23", "v33", "get(parentX+2, parentY+2)"));
-                    mixin(shift!("i0", "i1", "i2", "i3", "BicubeInter(v30, v31, v32, v33, deltaY)"));
+                    mixin(shift!("i0", "i1", "i2", "i3", "CubicInter(v30, v31, v32, v33, deltaY)"));
 
                 }
             }
@@ -273,22 +274,23 @@ mixin template Layers() {
         }
 
         }
-        */
+        //*/
 
-        //*
+        /*
 
         {
             mixin(MeasureTime!("To make layer:"));
-        auto layerSize = vec2d(mapScale[level]);
-        auto layerRect = Rectd(layerSize * mapNum.convert!double, layerSize);
+            auto layerSize = vec2d(mapScale[level]);
+            auto layerRect = Rectd(layerSize * mapNum.convert!double, layerSize);
 
-        auto interpolated = new BicubeInterpolation(parentMap.heightMap);
+            auto interpolated = new CubicInterpolation(parentMap.heightMap);
 
-        auto local = (posModV(mapNum, 4)*100).convert!double;
-        auto parentMapArea = Rectd(local, vec2d(100));
-        auto scaled = MapRectToSize(interpolated, parentMapArea, vec2d(400));
+            auto local = (posModV(mapNum, 4)*100).convert!double;
+            auto parentMapArea = Rectd(local, vec2d(100));
+            auto scaled = MapRectToSize(interpolated, parentMapArea, vec2d(400));
+            //The big problem with this is that we can't get data from different parent areas :P
 
-        map.heightMap.fill(scaled, 400, 400);
+            map.heightMap.fill(scaled, 400, 400);
         }
         //*/
 

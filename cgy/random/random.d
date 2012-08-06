@@ -86,6 +86,25 @@ T SmootherInter(T)(T x0, T x1, double time) {
 }
 
 
-T BicubeInter(T)(T x0, T x1, T x2, T x3, double time) {
+/*
+T CubicInter(T)(T x0, T x1, T x2, T x3, double time) {
     return x1 + 0.5 * time*(x2 - x0 + time*(2.0*x0 - 5.0*x1 + 4.0*x2 - x3 + time*(3.0*(x1 - x2) + x3 - x0)));
+}
+
+*/
+
+T CubicInter(T)(
+                        T y0,T y1,
+                        T y2,T y3,
+                        double mu)
+{
+    T a0,a1,a2,a3,mu2;
+
+    mu2 = mu*mu;
+    a0 = y3 - y2 - y0 + y1;
+    a1 = y0 - y1 - a0;
+    a2 = y2 - y0;
+    a3 = y1;
+
+    return(a0*mu*mu2+a1*mu2+a2*mu+a3);
 }

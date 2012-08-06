@@ -154,4 +154,4 @@ final class XInterpolation4(alias Mixer) : ValueSource{
     }
 }
 
-alias XInterpolation4!BicubeInter BicubeInterpolation;
+alias XInterpolation4!CubicInter CubicInterpolation;
