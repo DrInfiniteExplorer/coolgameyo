@@ -25,7 +25,9 @@ mixin template Page2() {
         worldMap = new WorldMap(worldName);
         mapViz = worldMap.getVisualizer();
 
-        bigWorldImage = new GuiElementImage(page2, Rectd(0.1, 0.1, 0.3, 0.3 * renderSettings.widthHeightRatio));
+        double _400Pixels = 400.0 / renderSettings.windowWidth;
+
+        bigWorldImage = new GuiElementImage(page2, Rectd(0.1, 0.1, _400Pixels, _400Pixels * renderSettings.widthHeightRatio));
         smallWorldImage = new GuiElementImage(page2, Rectd(bigWorldImage.rightOf+0.05, bigWorldImage.topOf,
                                                            bigWorldImage.widthOf, bigWorldImage.heightOf));
 
@@ -35,6 +37,8 @@ mixin template Page2() {
                    "Heightmap", { show!"Heightmap"(); },
                    "Shaded", { show!"ShadedHeightmap"(); }
         );
+
+
 
 
         bigWorldImage.setMouseClickCallback((GuiElement element, GuiEvent.MouseClick e) {
@@ -69,8 +73,19 @@ mixin template Page2() {
         */
     }
 
+
+    void delegate(vec2i) updatePos;
     void show(string which)() {
         bigWorldImage.setImage( mixin(q{mapViz.get} ~ which ~ q{Image()}));
+        updatePos = (vec2i tilePos) {
+            mixin(MeasureTime!"updatePos:");
+            startPos = tilePos;
+            auto img = mapViz.generateMap!(which)(TileXYPos(tilePos), smallSize);
+            smallWorldImage.setImage(img);
+            //smallWorldImage.setImageSource(Rectf(0.4, 0.4, 0.2, 0.2));
+            msg(tilePos);
+        };
+        updatePos(startPos);
     }
 
     //Show about 12² kilometers on small map
@@ -80,12 +95,5 @@ mixin template Page2() {
     //  ie. 4 pixels make a sector.
     //  NEED EVEN BIGGER MAP??
 
-    void updatePos(vec2i tilePos) {
-        startPos = tilePos;
-        mixin(MeasureTime!("updatePos:"));
-        smallWorldImage.setImage(mapViz.generateMap!"Shaded"(TileXYPos(tilePos), smallSize));
-        //smallWorldImage.setImageSource(Rectf(0.4, 0.4, 0.2, 0.2));
-        msg(tilePos);
-    }
 
 }

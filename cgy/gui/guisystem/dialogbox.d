@@ -10,6 +10,38 @@ import gui.all;
 import util.util;
 import util.rect;
 
+/*
+
+A dialog box class, and it is awesome!
+It can be used in two different ways, either like this
+
+new DialogBox(this, "No worlds avaiable", "Sorry, there are no worlds avaiable. Create one or cancel?",
+              "yes", &newWorld,
+              "no", { onBack(); },
+                  "wtf?", { noWorldsAvailable(); }
+              );
+
+Or like this
+
+new DialogBox(this, "No worlds avaiable", "Sorry, there are no worlds avaiable. Create one or cancel?", "yes|no|wtf?", (string choice) {
+    setEnabled(true);
+    if(choice == "yes") {
+        setVisible(false);
+        new WorldMenu(this);
+    }else if(choice == "no") {
+        onBack();
+    } else {
+        noWorldsAvailable();
+    }
+});
+
+Whis is awesome!
+You can also prepent an option string with an exclamation mark (!) to make it the focused gui element, ie. the default button.
+ If you dont, button #1 is the default button.
+*/
+
+
+
 class DialogBox : GuiElementWindow {
     GuiElement guiSystem;
     GuiElement creator;
@@ -28,7 +60,7 @@ class DialogBox : GuiElementWindow {
 
         static if(is(t[1] : SingleAnswerDelegate)) {
             enum singleAnswer = true;
-            auto options = array(split(t[0], "|"));
+            enum options = array(split(t[0], "|"));
             auto callback = t[1];
         } else {
             enum singleAnswer = false;
@@ -74,7 +106,15 @@ class DialogBox : GuiElementWindow {
 
         foreach(idx, option ; options) {
             auto x = padding + basicWidth*3*idx;
-            new PushButton(this, Rectd(x, buttonStartY, 2*basicWidth, buttonHeight), option, 
+            string str;
+            bool focused = idx == 0;
+            if(option[0] == '!') {
+                str = option[1..$-1];
+                focused = true;
+            } else {
+                str = option;
+            }
+            auto butt = new PushButton(this, Rectd(x, buttonStartY, 2*basicWidth, buttonHeight), option, 
                 (int idx, string s){
                     return {
                         static if(singleAnswer) {
@@ -84,8 +124,11 @@ class DialogBox : GuiElementWindow {
                         }
                         destroy();
                     };
-                }(idx, option)
+                }(idx, str)
             );
+            if(focused) {
+                setFocus(butt);
+            }
 
         }
 

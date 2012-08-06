@@ -8,6 +8,10 @@ import std.traits;
 import std.typecons;
 import std.typetuple;
 
+//TODO: Make this a public import in some gui-module.
+import derelict.sdl.sdl;
+
+
 import gui.guisystem.guisystem;
 import gui.guisystem.text;
 
@@ -110,10 +114,17 @@ class Button(ButtonCallbackPolicies policy) : public GuiElement {
             inner = inner.diff(vec2i(1, 1), vec2i(-1, -1));
             renderXXRect(inner, vec3f(0.5, 0.5, 0.5), false);
         }
+
+        if(hasFocus) {
+            auto asd = absoluteRect.diff(4, 4, -4, -4);
+            renderOutlineRect(asd, vec3f(0, 0, 0), 1);
+        }
+
         super.render();
     }
     
     void onPushed(bool down, bool abort){
+        pushedDown = down;
         if (pressCallback is null) return;
         static if(SimpleButton) {
             if(down || abort) return;
@@ -122,18 +133,19 @@ class Button(ButtonCallbackPolicies policy) : public GuiElement {
     }
     
     override GuiEventResponse onEvent(GuiEvent e) {
-        if (e.type == GuiEventType.MouseClick && enabled) {
+        if(!enabled) {
+            return super.onEvent(e);
+        }
+        if (e.type == GuiEventType.MouseClick) {
             auto m = &e.mouseClick;
             if(m.left) {
                 if (m.down) {
                     if(absoluteRect.isInside(m.pos)) {
-                        pushedDown = true;
                         onPushed(true, false);
                         return GuiEventResponse.Accept;
                     }                    
                 } else {
                     if (pushedDown) {
-                        pushedDown = false;
                         if(absoluteRect.isInside(m.pos)) {
                             onPushed(false, false);
                             return GuiEventResponse.Accept;
@@ -143,6 +155,12 @@ class Button(ButtonCallbackPolicies policy) : public GuiElement {
                         }
                     }
                 }
+            }
+        }
+        if (e.type == GuiEventType.Keyboard && hasFocus) {
+            auto k = &e.keyboardEvent;
+            if(k.SdlSym == SDLK_RETURN ||k.SdlSym == SDLK_SPACE) {
+                onPushed(k.pressed, false);
             }
         }
         return super.onEvent(e);

@@ -342,7 +342,7 @@ mixin template Layers() {
         auto ptScale = ptScale[level];
         auto ptNum = negDivV(tilePos.value, ptScale);
 
-        //Tiles from 'base' of area to pt of interes
+        //Tiles from 'base' of area to pt of interest
         int dx = tilePos.value.X - ptNum.X*ptScale;
         int dy = tilePos.value.Y - ptNum.Y*ptScale;
 
@@ -350,20 +350,29 @@ mixin template Layers() {
         double dty = cast(double)dy / cast(double)ptScale;
 
         //Replace these calls. Lots of redundant operations.
-        auto v00 = getValueRaw(level, ptNum*ptScale);
-        auto v01 = getValueRaw(level, (ptNum+vec2i(0,1))*ptScale);
-        auto v10 = getValueRaw(level, (ptNum+vec2i(1,0))*ptScale);
-        auto v11 = getValueRaw(level, (ptNum+vec2i(1,1))*ptScale);
+        auto v00 = getValueRaw(level, (ptNum+vec2i(-1,-1))*ptScale);
+        auto v01 = getValueRaw(level, (ptNum+vec2i(-1, 0))*ptScale);
+        auto v02 = getValueRaw(level, (ptNum+vec2i(-1, 1))*ptScale);
+        auto v03 = getValueRaw(level, (ptNum+vec2i(-1, 2))*ptScale);
+        auto v10 = getValueRaw(level, (ptNum+vec2i( 0,-1))*ptScale);
+        auto v11 = getValueRaw(level, (ptNum+vec2i( 0, 0))*ptScale);
+        auto v12 = getValueRaw(level, (ptNum+vec2i( 0, 1))*ptScale);
+        auto v13 = getValueRaw(level, (ptNum+vec2i( 0, 2))*ptScale);
+        auto v20 = getValueRaw(level, (ptNum+vec2i( 1,-1))*ptScale);
+        auto v21 = getValueRaw(level, (ptNum+vec2i( 1, 0))*ptScale);
+        auto v22 = getValueRaw(level, (ptNum+vec2i( 1, 1))*ptScale);
+        auto v23 = getValueRaw(level, (ptNum+vec2i( 1, 2))*ptScale);
+        auto v30 = getValueRaw(level, (ptNum+vec2i( 2,-1))*ptScale);
+        auto v31 = getValueRaw(level, (ptNum+vec2i( 2, 0))*ptScale);
+        auto v32 = getValueRaw(level, (ptNum+vec2i( 2, 1))*ptScale);
+        auto v33 = getValueRaw(level, (ptNum+vec2i( 2, 2))*ptScale);
 
-        auto v0 = lerp(v00, v01, dty);
-        auto v1 = lerp(v10, v11, dty);
+        auto v0 = CubicInter(v00, v01, v02, v03, dty);
+        auto v1 = CubicInter(v10, v11, v12, v13, dty);
+        auto v2 = CubicInter(v20, v21, v22, v23, dty);
+        auto v3 = CubicInter(v30, v31, v32, v33, dty);
 
-        auto v = lerp(v0, v1, dtx);
-
-        return v;
-
-        /* Figure out an interpolation-scheme */
-        /* Use values from getValueRaw and interpolate them */
+        return CubicInter(v0, v1, v2, v3, dtx);
     }
 
     double getValueRaw(int level, vec2i tilePos) {

@@ -137,16 +137,19 @@ mixin template MapViz() {
         //Eventually think well, and implement rendering with opengl instead.
         Image generateMap(string type)(TileXYPos tilePos, size_t diameter) {
             //Figure out what level of detail / up to what layer of features we want to display.
-            int level = 4; //HARD CODED SHIT :D
-            for(int i = 1; i < 5; i++) {
+            int level = 1;
+            /*
+            for(int i = 1; i <= 5; i++) {
 
+                //This might work?
                 if(mapScale[i] > diameter) {
-                    level = i-1;
+                    level = max(1, i-1);
                     break;
                 }
             }
+            */
 
-            static if(type == "Shaded") {
+            static if(type == "ShadedHeightmap") {
                 auto min = tilePos.value - vec2i(diameter / 2);
 
                 auto diam = vec2i(diameter).convert!double;
@@ -161,7 +164,8 @@ mixin template MapViz() {
 
                     auto tp = min + (diam * vec2d(dX, dY)).convert!int;
 
-                    auto val = getValueInterpolated(level, TileXYPos(tp));
+                    //auto val = getValueInterpolated(level, TileXYPos(tp));
+                    auto val = getValueRaw(level, tp);
                     return val;
 
                 }, Dim, Dim);
@@ -172,9 +176,9 @@ mixin template MapViz() {
                         return 10;
                     }
                     auto dir = vec2d(-1, 0);
-                    grad = dir.dotProduct(asd.upwindGradient(x, y, dir.X, dir.Y)) * 0.5;
-                    grad = asd.getValue(x, y) / 100;
-                    //grad = -(asd.getValue(x, y) - asd.getValue(x-1, y)) * 0.25;
+                    //grad = dir.dotProduct(asd.upwindGradient(x, y, dir.X, dir.Y)) * 0.5;
+                    //grad = asd.getValue(x, y) / 100;
+                    grad = -(asd.getValue(x, y) - asd.getValue(x-1, y)) * 0.25;
                     return 4 + grad;
 
                 }, Dim, Dim);
@@ -186,15 +190,20 @@ mixin template MapViz() {
                 TileXYPos max = tilePos.value + radius;
                 auto diam = vec2i(diameter).convert!double;
             
-                Image img = Image(null, 400, 400);
-                foreach(int x, int y, ref ubyte r,ref ubyte g, ref ubyte b, ref ubyte a; img) {
+                auto map = new ValueMap(Dim, Dim);
+                map.fill((double x, double y) {
                     auto dX = cast(double)x / 400.0;
                     auto dY = cast(double)y / 400.0;
                     auto tp = min.value + (diam * vec2d(dX, dY)).convert!int;
-                    auto val = getValueInterpolated(level, TileXYPos(tp));
-                    //msg(val);
-                }
-                return img;
+                    auto val = getValueRaw(level, tp);
+                    return val;
+                }, Dim, Dim);
+                return map.toImage(worldMin, worldMax, true, (double v) {
+                    double[4] ret;
+                    ret[] = v;
+                    if(v < 0.3) ret[0..1] = 0;
+                    return ret;
+                });
             }
         }
     }
