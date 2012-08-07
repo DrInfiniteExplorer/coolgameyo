@@ -175,7 +175,7 @@ class Game{
         initCallback(); //Call the registered 'tell me when your finished starting the game'-callback here.
     }
 
-    void populateWorld() {
+    void populateWorld(vec2i startPos) {
 
         g_UnitCount = 0;
 
@@ -190,8 +190,10 @@ class Game{
 
         auto clan = newClan(worldState);
 
-        Unit addUnitAtRelativePos(int x, int y) {
-            auto xy = TileXYPos(vec2i(x,y) + halfWorldSize_xy);
+        // halfWorldSize_xy
+        auto offset = startPos;
+        Unit addUnitAtRelativePos(bool relative = false)(int x, int y) {
+            auto xy = TileXYPos(vec2i(x,y) + offset);
             auto u = newUnit();
             u.pos = topOfTheWorld(xy);
             u.type = worldState.unitTypeManager.byName("dwarf");
@@ -219,14 +221,14 @@ class Game{
         }
 
         auto xy = TileXYPos(vec2i(1,5));
-        xy.value += halfWorldSize_xy;
+        xy.value += offset;
         auto o = newEntity();
         o.pos = topOfTheWorld2(xy);
         o.type = worldState.entityTypeManager.byName("tree");
         worldState.addEntity(o);
         msg("o.pos == ", o.pos);
         xy = TileXYPos(vec2i(5,1));
-        xy.value += halfWorldSize_xy;
+        xy.value += offset;
         o = newEntity();
         o.pos = topOfTheWorld2(xy);
         o.type = worldState.entityTypeManager.byName("shrubbery");
@@ -234,9 +236,9 @@ class Game{
         msg("o.pos == ", o.pos);
     } 
 
-    void newGameThread(string worldName) {
+    void newGameThread(vec2i startPos, string worldName) {
         init(worldName);
-        populateWorld();
+        populateWorld(startPos);
         camera.setPosition(vec3d(0, 0, 0));
         camera.setTarget(vec3d(0, 1, 0));
         {
@@ -259,12 +261,12 @@ class Game{
     //TODO: Move to better place
     void delegate() initCallback = null;
 
-    void newGame(string worldName, void delegate() onDone) {
+    void newGame(vec2i startPos, string worldName, void delegate() onDone) {
         initCallback = onDone;
-        static void newGameThreadStarter(shared Game g, string worldName) {
+        static void newGameThreadStarter(shared Game g, vec2i startPos, string worldName) {
             try {
                 Game game = cast(Game)g;
-                game.newGameThread(worldName);
+                game.newGameThread(startPos, worldName);
             } catch (Throwable o) {
                 msg("Thread exception!\n", o.toString());
                 version(Windows) {
@@ -273,7 +275,7 @@ class Game{
                 }
             }
         }        
-        spawn(&newGameThreadStarter, cast(shared)this, worldName);
+        spawn(&newGameThreadStarter, cast(shared)this, startPos, worldName);
     }
     void loadGame(string name, void delegate() onDone) {
         string saveDir = "saves/" ~ name;

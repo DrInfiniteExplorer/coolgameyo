@@ -38,6 +38,7 @@ mixin template Page2() {
                    "Shaded", { show!"ShadedHeightmap"(); }
         );
 
+        auto StartButton = new PushButton(page2, Rectd(backButton.leftOf, backButton.bottomOf + 0.05, 0.2, 0.1), "Start", &onStartGame);
 
 
 

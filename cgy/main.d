@@ -165,11 +165,11 @@ class Main {
     }
     
     //The delegate is called when all is done. Used to update gui and the likes.
-    Game startGame(string worldName, void delegate() loadDone) {
+    Game startGame(vec2i startPos, string worldName, void delegate() loadDone) {
 		assert(game is null, "We already had a game, lawl");
         mixin(LogTime!("StartupTime"));
         game = new Game(client, server, worker);
-        game.newGame(worldName, loadDone);
+        game.newGame(startPos, worldName, loadDone);
         return game;
     }
     Game loadGame(string worldName, void delegate() loadDone) {

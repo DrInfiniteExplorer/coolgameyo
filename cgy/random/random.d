@@ -86,12 +86,16 @@ T SmootherInter(T)(T x0, T x1, double time) {
 }
 
 
+
 /*
 T CubicInter(T)(T x0, T x1, T x2, T x3, double time) {
     return x1 + 0.5 * time*(x2 - x0 + time*(2.0*x0 - 5.0*x1 + 4.0*x2 - x3 + time*(3.0*(x1 - x2) + x3 - x0)));
 }
 
 */
+
+//Cubic interpolation seems to be non-convex, ie. causes overshoot. It is interpolating,
+// and c2-continous.
 
 T CubicInter(T)(
                         T y0,T y1,
@@ -108,3 +112,14 @@ T CubicInter(T)(
 
     return(a0*mu*mu2+a1*mu2+a2*mu+a3);
 }
+
+
+//B-splines are stable and convex and awesome?
+// mu goes from 0 to 1 and interpolates between x1 and x2
+T BSpline(T)(T x0, T x1, T x2, T x3, T t) {
+    return (x0 + 4*x1 + x2 + t*( 3*(x2 - x0) +  t*( 3*(x0 + x2) - 6*x1 + t*(-x0 + 3*(x1 - x2) + x3)))) / 6.0;
+}
+
+
+
+

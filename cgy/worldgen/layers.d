@@ -225,6 +225,9 @@ mixin template Layers() {
         double deltaY = 0.0;
         int parentY = local.Y;
         int parentX;
+
+        alias BSpline Mixer;
+
         foreach(y ; 0 .. ptPerLayer) {
             parentX = local.X;
 
@@ -244,14 +247,14 @@ mixin template Layers() {
             v31 = get(parentX+2, parentY+0);
             v32 = get(parentX+2, parentY+1);
             v33 = get(parentX+2, parentY+2);
-            i0 = CubicInter(v00, v01, v02, v03, deltaY);
-            i1 = CubicInter(v10, v11, v12, v13, deltaY);
-            i2 = CubicInter(v20, v21, v22, v23, deltaY);
-            i3 = CubicInter(v30, v31, v32, v33, deltaY);
+            i0 = Mixer(v00, v01, v02, v03, deltaY);
+            i1 = Mixer(v10, v11, v12, v13, deltaY);
+            i2 = Mixer(v20, v21, v22, v23, deltaY);
+            i3 = Mixer(v30, v31, v32, v33, deltaY);
 
             deltaX = 0.0;
             foreach(x ; 0 .. ptPerLayer) {
-                auto v = CubicInter(i0, i1, i2, i3, deltaX);
+                auto v = Mixer(i0, i1, i2, i3, deltaX);
                 map.setHeight(x, y, v);
 
                 deltaX += 0.25;
@@ -262,7 +265,7 @@ mixin template Layers() {
                     mixin(shift!("v01", "v11", "v21", "v31", "get(parentX+2, parentY+0)"));
                     mixin(shift!("v02", "v12", "v22", "v32", "get(parentX+2, parentY+1)"));
                     mixin(shift!("v03", "v13", "v23", "v33", "get(parentX+2, parentY+2)"));
-                    mixin(shift!("i0", "i1", "i2", "i3", "CubicInter(v30, v31, v32, v33, deltaY)"));
+                    mixin(shift!("i0", "i1", "i2", "i3", "Mixer(v30, v31, v32, v33, deltaY)"));
 
                 }
             }
@@ -367,12 +370,12 @@ mixin template Layers() {
         auto v32 = getValueRaw(level, (ptNum+vec2i( 2, 1))*ptScale);
         auto v33 = getValueRaw(level, (ptNum+vec2i( 2, 2))*ptScale);
 
-        auto v0 = CubicInter(v00, v01, v02, v03, dty);
-        auto v1 = CubicInter(v10, v11, v12, v13, dty);
-        auto v2 = CubicInter(v20, v21, v22, v23, dty);
-        auto v3 = CubicInter(v30, v31, v32, v33, dty);
+        auto v0 = BSpline(v00, v01, v02, v03, dty);
+        auto v1 = BSpline(v10, v11, v12, v13, dty);
+        auto v2 = BSpline(v20, v21, v22, v23, dty);
+        auto v3 = BSpline(v30, v31, v32, v33, dty);
 
-        return CubicInter(v0, v1, v2, v3, dtx);
+        return BSpline(v0, v1, v2, v3, dtx);
     }
 
     double getValueRaw(int level, vec2i tilePos) {

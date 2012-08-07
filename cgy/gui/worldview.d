@@ -78,7 +78,7 @@ class WorldMenu : GuiElementWindow {
 
         voronoiImage = Image(null, Dim, Dim);
 
-        worldMap = new WorldMap;
+        worldMap = new WorldMap(880128);
         worldMap.generate();
         mapViz = worldMap.getVisualizer();
 
@@ -188,8 +188,9 @@ class WorldMenu : GuiElementWindow {
 
     void redraw(bool regen) {
         if(regen) {
-            worldMap = new WorldMap;
-            worldMap.worldSeed = seed;
+            worldMap.destroy();
+            worldMap = new WorldMap(seed);
+
             worldMap.generate();
             mapViz = worldMap.getVisualizer();
         }

@@ -87,7 +87,7 @@ final class WorldMap {
     //Figure out a better datastructure for this. bits 0-3 holds climate information, bit 4 holds isSea'ness, bit 5 wether or not it has been sorted into a region, etc.
 
 
-    int worldSeed = 880128;
+    int worldSeed;
 
     int voronoiSeed;
 
@@ -96,17 +96,18 @@ final class WorldMap {
         load(name);
     }
 
-    this() {
+    this(int seed) {
+        worldSeed = seed;
         init();
     }
 
-    string getWorldHash() const @property {
+    string worldHash() const @property {
         return to!string(worldSeed) ~ "_";
     }
 
     string worldPath(string hash = null) const @property{
 
-        return "worlds/" ~ ((hash is null) ? getWorldHash() : hash);
+        return "worlds/" ~ ((hash is null) ? worldHash() : hash);
     }
 
     void save() {

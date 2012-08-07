@@ -7,6 +7,19 @@ import std.traits;
 import util.util;
 import random.random;
 
+
+// The Catmull Rom spline is a spline that is C2-continous spline.
+// Wikipedia redirects "catmull rom" to "cubic hermite spline", since catmull-rom is
+//  a specialcase of CHS with well defined tangents.
+// Catmull-Rom is often used to interpolate between keyframes, such as camera movement.
+// My experiments in the color spline menu led me to conclude that it is now convex,
+//  ie. it overshoots, which is not always awesome.
+// It's also local and interpolating.
+
+//  Some sources of information
+// http://en.wikipedia.org/wiki/Cubic_Hermite_spline
+// http://www.cs.clemson.edu/~dhouse/courses/405/notes/splines.pdf
+
 //Dynamic version
 Type CatmullRomSpline(Type)(double t, Type[] ar)
 in{

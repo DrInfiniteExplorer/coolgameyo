@@ -94,9 +94,9 @@ class NewGameMenu : GuiElementWindow {
         main.setVisible(true);
         destroy();
     }    
-    void onStart() {
+    void onStartGame() {
         destroy();
-        main.onNewGame();
+        main.onNewGame(startPos, worldMap.worldHash);
     }    
     
 }

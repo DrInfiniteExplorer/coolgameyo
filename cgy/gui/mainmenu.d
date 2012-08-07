@@ -38,12 +38,11 @@ class MainMenu : GuiElementWindow {
 //*
         auto text = new GuiElementText(this, vec2d(0.1, 0.1), "CoolGameYo!!");     
         auto text2 = new GuiElementText(this, vec2d(0.1, 0.2), "Where logic comes to die");
-        newGameButton = new PushButton(this, Rectd(0.1, 0.2, 0.3, 0.2), "New gay me?", &onNewGame);
+        newGameButton = new PushButton(this, Rectd(0.1, 0.2, 0.3, 0.2), "New gay me?", &onStartNewGame);
   
         auto optionsButt = new PushButton(this, Rectd(0.1, 0.4, 0.3, 0.2), "Options", &onOptions);
 
         auto randomButt = new PushButton(this, Rectd(0.1, 0.6, 0.3, 0.2), "Random", &onRandom);
-        auto startNewButt = new PushButton(this, Rectd(0.1, randomButt.bottomOf+0.05, 0.3, 0.2), "newgamemenu", &onStartNewGame);
         
         loadGameButton = new PushButton(this, Rectd(randomButt.rightOf+0.05, 0.6, 0.3, 0.2), "Load game", &onLoadGame);
         auto viewButt = new PushButton(this, Rectd(loadGameButton.rightOf, 0.6, 0.3, 0.2), "WorldState View", &onWorldView);
@@ -68,10 +67,8 @@ class MainMenu : GuiElementWindow {
         super.destroy();
     }    
         
-    void onNewGame() {
-        new DialogBox(this, "NO!", "You can't do this right now :(", "Ok :(", (){ onStartNewGame(); });
-        return;
-        /*
+    void onNewGame(vec2i startPos, string worldName) {
+
         auto rect = newGameButton.getRelativeRect();        
         loadScreen.setLoading(true);
         void loadDone() {
@@ -79,16 +76,14 @@ class MainMenu : GuiElementWindow {
             userControl = new HyperUnitControlInterfaceInputManager(game, guiSystem);
             resumeGameButton = new PushButton(this, rect, "Resume gay me?", &onResumeGame);
             rect.start.X += rect.size.X * 2;
-            saveGameButton = new PushButton(this, rect, "Save gay me?", &onSaveGame);
             onResumeGame();
         }
-        //game = main.startGame(&loadDone);
+        game = main.startGame(startPos, worldName, &loadDone);
         newGameButton.destroy();
         newGameButton = null;
         loadGameButton.destroy();
         loadGameButton = null;
         setVisible(false);        
-        */
     }
 
     void onResumeGame() {
