@@ -177,6 +177,15 @@ void setThreadName(string threadName) {
     }
 }
 
+version(Windows) {
+    void RestartCoolGameYo() {
+		//Find out how to start us
+		//Do it
+		//Crash
+		ExitProcess(0);
+    }
+}
+
 version(Windows){
     /*import win32.windows : GlobalAlloc, GlobalLock, GlobalUnlock, GMEM_MOVEABLE,
         OpenClipboard, EmptyClipboard, SetClipboardData, CF_TEXT, CloseClipboard, GetClipboardData;

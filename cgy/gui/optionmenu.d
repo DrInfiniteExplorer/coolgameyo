@@ -77,6 +77,14 @@ class OptionMenu : GuiElementWindow {
         raycastSetting.addItem("5");
         raycastSetting.selectItem(renderSettings.raycastPixelSkip);
 
+        auto resolutionText = new GuiElementText(this, vec2d(raycastText.leftOf, raycastSetting.bottomOf+0.05), "Resolution");
+        raycastSetting = new GuiElementComboBox(this, Rectd(resolutionText.rightOf+0.05, resolutionText.topOf, 0.3, 0.05), &onResolutionChange);
+        raycastSetting.addItem("800x600");
+        raycastSetting.addItem("1400x900");
+        raycastSetting.selectItem(renderSettings.windowWidth == 800 ? 0 : 1);
+
+
+
 
         auto butt = new PushButton(this, Rectd(vec2d(0.1, raycastSetting.bottomOf + 0.05), vec2d(0.3, 0.10)), "Back", &onBack);
         
@@ -134,6 +142,21 @@ class OptionMenu : GuiElementWindow {
 
     void onRayCastChange(int selectedIndex) {
         renderSettings.raycastPixelSkip = selectedIndex;
+    }
+
+	void onResolutionChange(int selectedIndex) {
+		bool changed = false;
+        if(selectedIndex == 0) {
+			changed = renderSettings.windowWidth != 800;
+			renderSettings.windowWidth = 800;
+			renderSettings.windowHeight = 600;
+		} else {
+			changed = renderSettings.windowWidth == 800;
+			renderSettings.windowWidth = 1400;
+			renderSettings.windowHeight = 900;
+		} 
+		saveSettings();
+		if(changed) RestartCoolGameYo();
     }
 
     

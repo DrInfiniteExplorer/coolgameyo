@@ -279,10 +279,13 @@ static:
 
 alias Parser.parseValue parse;
 
-template RealThing(T...) if(T.length == 1)
-{
-    enum bool RealThing = true;
-}
+template RealThing(alias Class, string Member) {
+    static if(__traits(compiles, typeof(__traits(getMember, Class, Member)))) {
+		enum bool RealThing = true;
+	} else {
+		enum bool RealThing = false;
+	}
+} 
 
 
 T read(T)(string s) {
@@ -339,10 +342,10 @@ void read(T)(ref T t, Value val) {
 
 private void update(T)(T* t, string s) { return update!T(t, parse(s)); }
 private void update(T)(T* t, Value val) {
+    enforce(t !is null, "Can not update t of type " ~ T.stringof ~ " because t is null!");
     foreach (m; __traits(allMembers, T)) {
-        static if( !__traits(compiles, RealThing!(__traits(getMember, T, m)))) {
-            continue;
-        } else {
+
+        static if( RealThing!(T, m)) {
             alias typeof(__traits(getMember, *t, m)) M;
             static if (isSomeFunction!(__traits(getMember, T, m))){
                 continue;
@@ -354,9 +357,11 @@ private void update(T)(T* t, Value val) {
                     update(&__traits(getMember, *t, m), val[m]);
                 }
             }
+        } else {
         }
     }    
 }
+
 
 Value encode(T)(T t) {
     static if (isNumeric!T || is (T : string) || is (T : bool)) { //Normal primitive
@@ -385,21 +390,20 @@ Value encode(T)(T t) {
     } else static if (is (T == struct)) {
         Value[string] blep;
         foreach (m; __traits(allMembers, T)) { 
-            static if (!__traits(compiles, RealThing!(__traits(getMember, T, m)))) {
-                continue;
-            } else static if (isSomeFunction!(__traits(getMember, T, m))) {
-                continue;
-            } else {
-                blep[m] = encode(__traits(getMember, t, m));
-            }
+            static if (RealThing!(T, m)) {
+				static if (isSomeFunction!(__traits(getMember, T, m))) {
+					continue;
+				} else {
+					blep[m] = encode(__traits(getMember, t, m));
+				}
+            } 
         }
         return Value(blep);
     } else {
         pragma (msg, "cannot encode ", T);
-        assert (0);
+        static assert (0);
     }
-}
-
+}  
 // Loads the root Value and saves into value.
 // Returns true if the file exists, false otherwise
 bool loadJSONFile(string path, Value* value) {

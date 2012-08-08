@@ -79,7 +79,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
 
     private CamDemoPoints camDemoPoints;
     private bool runCamDemo=false;
-    private float camDemoTime = 0.0;
+    private float camDemoTime = 0.0f;
     private int camDemoLine;
 
     this(Game g, GuiSystem s) {

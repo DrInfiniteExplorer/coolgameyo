@@ -318,12 +318,6 @@ static:
 
 alias Parser.parseValue parse;
 
-template RealThing(T...) if(T.length == 1)
-{
-    enum bool RealThing = true;
-}
-
-
 T read(T)(string s) {
     T t;
     read!T(s, t);    
@@ -335,7 +329,7 @@ T read(T)(Value v) {
     return t;
 }
 void read(T)(string s, ref T t)  if(! is( T : Value)) {
-    return read!T(parse(s), t);
+    return read!T(t, parse(s));
 }
 void read(T)(Value val, ref T t) if(! is( T : Value)) {
 //    writeln(T.stringof);
@@ -382,15 +376,31 @@ void read(T)(Value val, ref T t) if(! is( T : Value)) {
     }
 }
 
+/*
+template RealThing(T...) if(T.length == 1)
+{
+    enum bool RealThing = true;
+}
+*/
+
+
+template RealThing(alias Class, string Member) {
+    static if(__traits(compiles, typeof(__traits(getMember, Class, Member)))) {
+		enum bool RealThing = true;
+	} else {
+		enum bool RealThing = false;
+	}
+}
+
+
+
+
 private void update(T)(T* t, string s) { return update!T(t, parse(s)); }
 private void update(T)(T* t, Value val) {
     enforce(t !is null, "Can not update t of type " ~ T.stringof ~ " because t is null!");
     foreach (m; __traits(allMembers, T)) {
 
-        static if( !__traits(compiles, RealThing!(__traits(getMember, T, m)))) {
-            continue;
-        } else {
-            //pragma(msg, text("T is ", T.stringof));
+        static if( RealThing!(T, m)) {
             alias typeof(__traits(getMember, *t, m)) M;
             static if (isSomeFunction!(__traits(getMember, T, m))){
                 continue;
@@ -402,9 +412,11 @@ private void update(T)(T* t, Value val) {
                     update(&__traits(getMember, *t, m), val[m]);
                 }
             }
+        } else {
         }
     }    
 }
+
 
 Value encode(T)(T t) {
     static if (isNumeric!T || is (T : string) || is (T : bool)) { //Normal primitive
@@ -433,13 +445,13 @@ Value encode(T)(T t) {
     } else static if (is (T == struct)) {
         Value[string] blep;
         foreach (m; __traits(allMembers, T)) { 
-            static if (!__traits(compiles, RealThing!(__traits(getMember, T, m)))) {
-                continue;
-            } else static if (isSomeFunction!(__traits(getMember, T, m))) {
-                continue;
-            } else {
-                blep[m] = encode(__traits(getMember, t, m));
-            }
+            static if (RealThing!(T, m)) {
+				static if (isSomeFunction!(__traits(getMember, T, m))) {
+					continue;
+				} else {
+					blep[m] = encode(__traits(getMember, t, m));
+				}
+            } 
         }
         return Value(blep);
     } else {
