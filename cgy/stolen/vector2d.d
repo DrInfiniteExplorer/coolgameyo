@@ -184,7 +184,7 @@ public:
 	vector2d!(T) normalize()
 	{
 		float length = cast(float)(X*X + Y*Y);
-		if (stolen.math.equals(length, 0.f))
+		if (stolen.math.equals(length, 0.0f))
 			return this;
 		length = 1.0f / sqrt ( length );
 		X = cast(T)(X * length);

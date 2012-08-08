@@ -79,7 +79,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
 
     private CamDemoPoints camDemoPoints;
     private bool runCamDemo=false;
-    private float camDemoTime = 0.f;
+    private float camDemoTime = 0.0;
     private int camDemoLine;
 
     this(Game g, GuiSystem s) {
@@ -434,7 +434,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
                 //possesAI.fallSpeed = 5.0f;
             }
         }
-        possesAI.move(right, fwd, 0.f, dTime);
+        possesAI.move(right, fwd, 0.0f, dTime);
 
         auto pos = possesAI.getUnitPos();
         auto dir = camera.getTargetDir();

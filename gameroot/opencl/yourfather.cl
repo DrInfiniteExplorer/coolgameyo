@@ -5,11 +5,11 @@
 #endif
 
 #ifndef MaxLightTraceDistance
-#define MaxLightTraceDistance 100.f
+#define MaxLightTraceDistance 100.0f
 #endif
 
 #ifndef FadeLightTraceDistance
-#define FadeLightTraceDistance 90.f
+#define FadeLightTraceDistance 90.0f
 #endif
 
 
@@ -38,7 +38,7 @@ struct Light {
 };
 
 __constant int4 sectorSize = (int4)(128, 128, 32, 1); //1 to prevent division with 0 :p
-__constant float4 sectorSizef = (float4)(128.f, 128.f, 32.f, 1.f); //1 to prevent division with 0 :p
+__constant float4 sectorSizef = (float4)(128.0f, 128.0f, 32.0f, 1.0f); //1 to prevent division with 0 :p
 __constant int4 solidMapSize = (int4)(4, 128, 32, 1);
 
 int4 getSectorNum(int4 tilePos) {
@@ -77,10 +77,10 @@ int4 getTilePos(float4 tilePos) {
 // Makes starting position floating. Alltsa tMax
 float initStuff(float start, float vel, float delta) {
     if( ((int)start) == start) {
-        if (vel > 0.f) {
+        if (vel > 0.0f) {
             return delta;
         }
-        return 0.f;
+        return 0.0f;
     }
     float stop = start+sign(vel); //Take one step in the direction we want to move in
     //Depending on direction we move in, find floor or ceil to get
@@ -140,9 +140,9 @@ void getDaPoint(
     int4 tilePos    = getTilePos(camera->position);
     int4 dir      = convert_int4(sign(rayDir));;
     float4 tDelta;
-    tDelta.x        = fabs(1.f / rayDir.x);
-    tDelta.y        = fabs(1.f / rayDir.y);
-    tDelta.z        = fabs(1.f / rayDir.z);
+    tDelta.x        = fabs(1.0f / rayDir.x);
+    tDelta.y        = fabs(1.0f / rayDir.y);
+    tDelta.z        = fabs(1.0f / rayDir.z);
     //tDelta = tDelta * sign(tDelta); //Make absolute value ;)
     
     float4 tMax;
@@ -205,7 +205,7 @@ float4 calculateLightInPoint(
 ) {
     
     
-	float4 lightValue = {0.f, 0.f, 0.f, 0.f};
+	float4 lightValue = {0.0f, 0.0f, 0.0f, 0.0f};
     float4 color;
 	int i;
 	float4 rayDir;
@@ -244,7 +244,7 @@ float4 calculateLightInPoint(
 			// *7 does it so it is 0-240 for 2 lights (16*15=240)
             lightValue += color * clamp(
                 strength-distance(daPoint, lights[i].position) - 0.2f,
-                0.f,
+                0.0f,
                 strength);
 		}
 		else {
@@ -259,9 +259,9 @@ float4 calculateLightInPoint(
 			dir = convert_int4(sign(rayDir));
             
 			
-			tDelta.x = fabs(1.f / rayDir.x);
-			tDelta.y = fabs(1.f / rayDir.y);
-			tDelta.z = fabs(1.f / rayDir.z);
+			tDelta.x = fabs(1.0f / rayDir.x);
+			tDelta.y = fabs(1.0f / rayDir.y);
+			tDelta.z = fabs(1.0f / rayDir.z);
 			
 			tMax.x = initStuff(daPoint.x, rayDir.x, tDelta.x);
 			tMax.y = initStuff(daPoint.y, rayDir.y, tDelta.y);
@@ -274,7 +274,7 @@ float4 calculateLightInPoint(
 					//lightValue += (MAXLIGHTDIST - time);
                     lightValue += color * clamp(
                         strength-distance(daPoint, lights[i].position) - 0.2f,
-                        0.f,
+                        0.0f,
                         strength);
                     break;
 					
@@ -284,7 +284,7 @@ float4 calculateLightInPoint(
 			}
 		}
 	}
-	lightValue = clamp(lightValue * 7.f, 0.f, 255.f);
+	lightValue = clamp(lightValue * 7.0f, 0.0f, 255.0f);
 	return lightValue;
 }
 
@@ -309,7 +309,7 @@ __kernel void castRays(
 
 	float4 val = calculateLightInPoint(daPoint, lights, nrOfLights, solidMap, depth);
 	
-    write_imagef(output, (int2)(x,camera->height-1-y), (float4)(val.x/255.f, val.y/255.f, val.z/255.f ,val.w/255.f));
+    write_imagef(output, (int2)(x,camera->height-1-y), (float4)(val.x/255.0f, val.y/255.0f, val.z/255.0f ,val.w/255.0f));
 }
 
 

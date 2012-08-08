@@ -194,7 +194,7 @@ final class TileGeometry : Module, WorldStateListener
             foreach(ref vert ; f.quad){
                 vert.texcoord = vert.texcoord * tileTexSize + tileTexCoord;
                 //vert.light = cast(float)t.lightValue / cast(float)MaxLightStrength;
-                vert.light = 0.f;
+                vert.light = 0.0f;
                 vert.normal = normalDir;
             }
         }

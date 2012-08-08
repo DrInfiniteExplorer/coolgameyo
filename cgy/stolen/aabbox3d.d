@@ -255,7 +255,7 @@ struct aabbox3d(T)
             return a * t + b * (t-1); //numerically stable, yeah!
         }
 
-        float start = 0.f;
+        float start = 0.0f;
         float stop = 1.0f;
         bool intersects(float dir, float min, float max, float omin, float omax, vector3d!(T) side){
             if(abs(dir) < epsilon){

@@ -258,7 +258,7 @@ static:
         void skip(Tag tag) {
             enforce(front.tag == tag,
                     new JsonException(
-                        text("Expected ", tag, ", found ", front.tag)));
+                        text("Expected ", tag, ", found ", front.tag, "\n", s)));
             popFront();
         }
         this(string data) {

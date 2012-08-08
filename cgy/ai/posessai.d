@@ -54,7 +54,7 @@ class FPSControlAI : UnitAI, CustomChange {
         if (u is null) return;
         unit = u;        
         unit.ai = this;
-        fallSpeed = 0.f;
+        fallSpeed = 0.0f;
         onGround=false;
         unitPos = renderer.specialUnit(unit, unit.pos.value);
 
@@ -174,7 +174,7 @@ class FPSControlAI : UnitAI, CustomChange {
         dir.rotateXYBy(unit.rotation, origo);
         *unitPos = collideMove(*unitPos, dir);
         if(onGround){
-            fallSpeed = 0.f;
+            fallSpeed = 0.0f;
         }
     }
 

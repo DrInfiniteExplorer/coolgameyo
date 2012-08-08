@@ -50,7 +50,7 @@ struct RenderSettings {
     int maxTextureLayers;
     int maxTextureSize;
 
-    int renderTrueWorld = 0;
+    int renderTrueWorld = 1;
 
     bool canUseFBO;
     

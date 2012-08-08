@@ -17,7 +17,7 @@ layout(location = 2) out vec4 depth;
 void main() {
    float dist = length(viewPos);
    float tmp = 1.0 - dist/radius;
-   frag_color = vec4(tmp * color, 0.0);
+   frag_color = vec4(color, tmp);
    depth = vec4(worldPosition, float(0));
 } 
 
