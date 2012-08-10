@@ -254,6 +254,8 @@ class WorldState {
         if (sector.deserialize(entityTypeManager, this)) {
             notifySectorLoad(num);
             notifyBuildGeometry(num);
+        } else {
+            addFloodFillSector(num);
         }
         return sector;
     }

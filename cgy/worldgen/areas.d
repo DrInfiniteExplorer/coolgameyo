@@ -91,12 +91,31 @@ mixin template Areas() {
             region.fromJSON(regionValue, areas.ptr);
             regions[idx] = region;
         }
+        generateAreas!true();
     }
 
-    void generateAreas() {
+    void generateAreas(bool regenerate = false)() {
         areaVoronoi = new VoronoiWrapper(Dim/4, Dim/4, voronoiSeed);
-        areaVoronoi.setScale(vec2d(Dim));
-        classifyAreas();
+        areaVoronoi.setScale(vec2d(mapScale[5]));        
+        static if(!regenerate) {
+            classifyAreas();
+        } 
+    }
+
+    Area getArea(TileXYPos tp) {
+        auto areaId = areaVoronoi.identifyCell(tp.value.convert!double);
+        return &areas[areaId];
+    }
+
+    vec3f getClimateColor(TileXYPos tp) {
+        auto area = getArea(tp);
+        auto sea = area.isSea;
+        if(sea) {
+            return vec3f(0.0f, 0.1f, 0.3f);
+        }
+        auto temp = area.temperature;
+        auto mois = area.moisture;
+        return climates.getPixel(3-temp, 3-mois);
     }
 
     auto getLayerAreas(int level, vec2i mapNum) {

@@ -246,6 +246,13 @@ struct Image {
         b = imgData[4*(x + y * imgWidth) + 2];
         a = imgData[4*(x + y * imgWidth) + 3];
     }
+    vec3f getPixel(int x, int y) {
+        y = imgHeight - y -1;
+        ubyte r = imgData[4*(x + y * imgWidth) + 0];
+        ubyte g = imgData[4*(x + y * imgWidth) + 1];
+        ubyte b = imgData[4*(x + y * imgWidth) + 2];
+        return vec3i(r, g, b).convert!float / 255.0f;
+    }
 
     void save(string filename){
         uint img;

@@ -41,7 +41,7 @@ final class HeightSheets : Module, WorldStateListener {
     Level4Sheet level4;
     Level5Sheet level5;
 
-    alias ShaderProgram!("offset", "VP") HeightSheetsShader;
+    alias ShaderProgram!("offset", "VP", "sunDir") HeightSheetsShader;
     HeightSheetsShader shader;
 
 
@@ -80,6 +80,7 @@ final class HeightSheets : Module, WorldStateListener {
         shader.link();
         shader.offset      = shader.getUniformLocation("offset");
         shader.VP          = shader.getUniformLocation("VP");
+        shader.sunDir      = shader.getUniformLocation("sunDir");
 
         level1.init();
         level2.init();
@@ -196,6 +197,10 @@ final class HeightSheets : Module, WorldStateListener {
         shader.use();
         vec3f toCam = (center.toTilePos.value.convert!double - camera.getPosition()).convert!float;
         shader.setUniform(shader.offset, toCam);
+
+        auto sunDir = (worldState.getSunPosition() - camera.getPosition()).normalize().convert!float;
+        shader.setUniform(shader.sunDir, sunDir);
+
 
         glEnableVertexAttribArray(0); glError();
         glEnableVertexAttribArray(1); glError();

@@ -536,6 +536,8 @@ d:\D\ulnb0333\ulink.exe $(IntDir)\$(TargetName).obj gdi32.lib win32.lib advapi32
    </Folder>
    <File path="..\gameroot\shaders\fontShader.frag" />
    <File path="..\gameroot\shaders\fontShader.vert" />
+   <File path="..\gameroot\shaders\heightsheets.frag" />
+   <File path="..\gameroot\shaders\heightsheets.vert" />
    <File path="..\gameroot\shaders\heightsheetsI.frag" />
    <File path="..\gameroot\shaders\heightsheetsI.vert" />
    <File path="..\gameroot\shaders\JklA.frag" />

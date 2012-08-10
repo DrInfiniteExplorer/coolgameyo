@@ -98,12 +98,19 @@ unittest {
     assert(posMod( 8, 8) == 0);
 }
 
+
+vector3d!(A) snapV(A)(const vector3d!(A) wap, const A b){
+    return vector3d!A(snap(wap.X, b), snap(wap.Y,b), snap(wap.Z, b));
+}
+
+vector2d!(A) snapV(A)(const vector2d!(A) wap, const A b){
+    return vector2d!A(snap(wap.X, b), snap(wap.Y,b));
+}
+
 vector3d!(A) negDivV(A)(const vector3d!(A) wap, const A b){
-    //return vector3d!A(to!A(negDiv(wap.X, b)), to!A(negDiv(wap.Y,b)), to!A(negDiv(wap.Z, b)));
     return vector3d!A(negDiv(wap.X, b), negDiv(wap.Y,b), negDiv(wap.Z, b));
 }
 vector2d!(A) negDivV(A)(const vector2d!(A) wap, const A b){
-    //return vector3d!A(to!A(negDiv(wap.X, b)), to!A(negDiv(wap.Y,b)), to!A(negDiv(wap.Z, b)));
     return vector2d!A(negDiv(wap.X, b), negDiv(wap.Y,b));
 }
 vector3d!(A) posModV(A)(const vector3d!(A) wap, const A b){

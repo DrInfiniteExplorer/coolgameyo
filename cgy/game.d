@@ -220,6 +220,7 @@ class Game{
             return ret;
         }
 
+        /*
         auto xy = TileXYPos(vec2i(1,5));
         xy.value += offset;
         auto o = newEntity();
@@ -234,6 +235,7 @@ class Game{
         o.type = worldState.entityTypeManager.byName("shrubbery");
         worldState.addEntity(o);
         msg("o.pos == ", o.pos);
+        */
     } 
 
     void newGameThread(vec2i startPos, string worldName) {

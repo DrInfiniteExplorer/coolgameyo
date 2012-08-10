@@ -116,6 +116,10 @@ class EntityTypeManager {
         return &types[idByName(name)];
     }
     ushort idByName(string name) {
+        if(!(name in _byName)) {
+            BREAKPOINT; //If breaks here, step out and find out where it came from.
+            return 0;
+        }
         return *enforce(name in _byName, "no entity type by name '" ~ name ~ "'");
     }
 

@@ -13,12 +13,13 @@ import graphics.shader;
 import modules.module_;
 import worldgen.maps;
 import worldstate.worldstate;
+import util.math;
 import util.util;
 
-enum int level2SectorCount = 64;
-
-enum int level2QuadCount = level2SectorCount;
+enum int level2SectorCount = 64; //Spans 64 sectors
+enum int level2QuadCount = level2SectorCount; //64 quads
 enum int level2VertexCount = level2QuadCount+1;
+enum int level2SampleDistance = level2SectorCount * SectorSize.x / level2QuadCount; //Distance in tiles between samples.
 
 
 final class Level2Sheet {
@@ -65,7 +66,11 @@ final class Level2Sheet {
         // That is (10*4+1)x(10*4+1) vertices
         //Dont be surprised if it doesnt!
 
-        auto snapCenter = SectorXYNum((SectorXYNum(center).value/4 )*4).getSectorNum(center.value.Z);
+
+        //Snap to every 4'th sector. Dont update unless!
+        //4 comes from that a quad in level3 is 4 sectors big,
+        // so we snap to every 4'th sector, yeah.
+        auto snapCenter = SectorXYNum(snapV(center.value.vec2, 4)).getSectorNum(center.value.Z);
         this.snapCenter = snapCenter;
         this.center = center;
 
@@ -77,7 +82,7 @@ final class Level2Sheet {
 
         foreach(y ; 0 .. level2VertexCount) {
             foreach(x ; 0 .. level2VertexCount) {
-                vec2i tp = baseTp + vec2i(128) * vec2i(x, y);
+                vec2i tp = baseTp + vec2i(level2SampleDistance) * vec2i(x, y);
                 float X = cast(float) tp.X;
                 float Y = cast(float) tp.Y;
                 float Z;
@@ -88,16 +93,15 @@ final class Level2Sheet {
                 }
                 vertices[y][x].set(X,Y,Z);
                 vertices[y][x] -= centerTp;
-                pragma(msg, "colors[y][x] = layerManager.getBiomeColor(tp);");
-                colors[y][x] = vec3f(0.5f, 0.8f, 0.5f);
+                colors[y][x] = worldMap.getClimateColor(TileXYPos(tp));
             }
         }
 
         indices[] = 0;
-        foreach(y ; 0 .. level2SectorCount) {
-            foreach(x ; 0 .. level2SectorCount) {
-                auto sectNum = SectorXYNum(vec2i(x, y) + startSect.value);
-                if( !shouldMakeHeightSheet(sectNum)) {
+        foreach(y ; 0 .. level2QuadCount) {
+            foreach(x ; 0 .. level2QuadCount) {
+                auto quadNum = vec2i(x, y);
+                if( !shouldMakeHeightSheet(quadNum)) {
                     continue;
                 }
 
@@ -135,10 +139,10 @@ final class Level2Sheet {
                 float Yp = get(x  , y+1);
 
 
-                vec3f Nx1 = vec3f(Xn - c, 0.0f, 128.0f);
-                vec3f Nx2 = vec3f(c - Xp, 0.0f, 128.0f);
-                vec3f Ny1 = vec3f(0.0f, Yn - c, 128.0f);
-                vec3f Ny2 = vec3f(0.0f, c - Yp, 128.0f);
+                vec3f Nx1 = vec3f(Xn - c, 0.0f, level2SampleDistance);
+                vec3f Nx2 = vec3f(c - Xp, 0.0f, level2SampleDistance);
+                vec3f Ny1 = vec3f(0.0f, Yn - c, level2SampleDistance);
+                vec3f Ny2 = vec3f(0.0f, c - Yp, level2SampleDistance);
 
                 normals[y][x] = (Nx1 + Nx2 + Ny1 + Ny2).normalize();
             }
@@ -199,14 +203,15 @@ final class Level2Sheet {
 
     }
 
-    //Indexed [0..10] in x,y
-    //Loops over the range of sectors that the heightsheet covers at a xy-secnum,
-    //checks if it is part of the current world, if not then we are free to make heightsheets.
-    bool shouldMakeHeightSheet(SectorXYNum sectorNum) {
+    bool shouldMakeHeightSheet(vec2i quadNum) {
         //Ignore the sectors in the middle. We have level1&0 there, possibly tiles as well.
-        sectorNum.value -= SectorXYNum(center).value;
-        if(abs(sectorNum.value.X) >= level1SectorCount/2) return true;
-        if(abs(sectorNum.value.Y) >= level1SectorCount/2) return true;
+        quadNum -= vec2i(level2QuadCount/2);
+        quadNum = quadNum * 2 + vec2i(1);
+
+        enum numCoveringQuads = level1SectorCount * level2QuadCount / level2SectorCount;
+
+        if(abs(quadNum.X) >= numCoveringQuads) return true;
+        if(abs(quadNum.Y) >= numCoveringQuads) return true;
         return false;
     }
 }

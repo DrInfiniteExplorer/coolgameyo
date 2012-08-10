@@ -42,12 +42,7 @@ private mixin template ActivityHandlerMethods() {
         if(sector is null) {
             sector = loadSector(centerSectorNum);
         }
-        if(sector is null) {
-            sector = allocateSector(centerSectorNum);
-        }
-        if(centerSectorNum !in activeSectors) {
-            addFloodFillPos(pos);
-        } else {
+        if(centerSectorNum in activeSectors) {
             enforce(activeSectors[centerSectorNum] > 0, "error of derpy magnitude somewhere");
         }
 
@@ -99,21 +94,6 @@ private mixin template ActivityHandlerMethods() {
                 if(sector is null) {
                     sector = loadSector(sectorNum);
                 }
-
-                floodingSectors ~= sectorNum;
-
-                //This line is implicit in loadSector. Find and kill and comment instances of this code (derp)!
-                if(sector is null) {
-                    sector = allocateSector(sectorNum);
-                }
-                foreach(neighborSectorNum ; neighbors(sectorNum)) {
-                    //If is active sector and wasn't added/removed
-                    // then floodfill from that place.
-                    if(neighborSectorNum in activeSectors && activeSectors[neighborSectorNum] != 0 && neighborSectorNum !in changeMap) {
-                        addFloodFillWall(sectorNum, neighborSectorNum);
-                    }
-                }
-
             } else {
                 sectorTimeout[sectorNum] = worldTime + SectorTimeoutTicks;
                 //msg("Queueing sector for offload");

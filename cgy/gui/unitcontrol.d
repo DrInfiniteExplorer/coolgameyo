@@ -56,6 +56,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
     private bool freeFlight;
     private bool useMouse = true;
     private bool turbo = false;
+    private bool turboTurbo = false;
 
     private ushort          middleX;
     private ushort          middleY;
@@ -231,6 +232,9 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
     void onKey(GuiEvent.KeyboardEvent k) {
         if (k.SdlSym == SDLK_LSHIFT) {
             turbo = k.pressed;
+        }
+        if (k.SdlSym == SDLK_RSHIFT) {
+            turboTurbo = k.pressed;
         }
         if (k.pressed) {
             if (k.SdlSym == SDLK_F2) {
@@ -452,6 +456,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
     void updateCamera(double dTime) {
         double speed = 10.0;
         if(turbo) speed = 120;
+        if(turboTurbo) speed = 10_000;
         speed *= dTime;
         if(keyMap[SDLK_a]){ camera.axisMove(-speed, 0.0, 0.0); }
         if(keyMap[SDLK_d]){ camera.axisMove( speed, 0.0, 0.0); }

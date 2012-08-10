@@ -9,6 +9,7 @@ import std.exception;
 import std.traits;
 
 import stolen.math;
+import stolen.vector2d;
 
 //! 3d vector template class with lots of operators and methods.
 /** The vector3d class is used in Irrlicht for three main purposes:
@@ -28,6 +29,10 @@ public:
 
   //! Copy constructor
   this(const vector3d!(T) other) {X = other.X; Y = other.Y; Z = other.Z;}
+
+  vector2d!(T) vec2() const {
+      return typeof(return)(X, Y);
+  }
 
   // operators
 

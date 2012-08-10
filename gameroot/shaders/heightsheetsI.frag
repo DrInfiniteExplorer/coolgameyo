@@ -3,6 +3,8 @@
 #extension GL_EXT_gpu_shader4 : enable
 #extension GL_ARB_explicit_attrib_location : enable
 
+// Derp herp code for level 0 sheets
+
 
 in vec3 interp_normal;
 in vec3 interp_color;

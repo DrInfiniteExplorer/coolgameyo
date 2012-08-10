@@ -62,12 +62,9 @@ mixin template FloodFill() {
 
         return block.sparse ? 1 : 45;
     }
-    void addFloodFillPos(TilePos pos) {
-        floodingSectors ~= pos.getSectorNum();
-        g_Statistics.FloodFillNew(BlocksPerSector.total);
-    }
-    void addFloodFillWall(SectorNum inactive, SectorNum active) {
-        floodingSectors ~= inactive;
+
+    void addFloodFillSector(SectorNum num) {
+        floodingSectors ~= num;
         g_Statistics.FloodFillNew(BlocksPerSector.total);
     }
 }

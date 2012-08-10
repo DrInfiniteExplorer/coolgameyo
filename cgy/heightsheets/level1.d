@@ -15,8 +15,10 @@ import worldstate.worldstate;
 import util.util;
 
 
-enum int level1SectorCount = 16;
-enum int level1QuadCount = 4*level1SectorCount;
+enum int level1SectorCount = 16; //Spans 16 sectors
+enum int level1QuadCount = 64; //64 quads
+enum int level1VertexCount = level1QuadCount + 1;
+enum int level1SampleDistance = level1SectorCount * SectorSize.x / level1QuadCount; //Distance in tiles between samples
 
 final class Level1Sheet {
     uint vertVBO;
@@ -25,9 +27,9 @@ final class Level1Sheet {
     uint idxVBO;
 
     //This is for level1-stuff. yeah.
-    vec3f[level1QuadCount+1][level1QuadCount+1] vertices; //lol 20k of vertex data on stack
-    vec3f[level1QuadCount+1][level1QuadCount+1] normals;  //Another 20k! will it blend?
-    vec3f[level1QuadCount+1][level1QuadCount+1] colors;   // EVEN MORE! WILL TEH STACK CORPPTU?
+    vec3f[level1VertexCount][level1VertexCount] vertices; //lol 20k of vertex data on stack
+    vec3f[level1VertexCount][level1VertexCount] normals;  //Another 20k! will it blend?
+    vec3f[level1VertexCount][level1VertexCount] colors;   // EVEN MORE! WILL TEH STACK CORPPTU?
     float sectorMin[level1SectorCount*level1SectorCount];
     float sectorMax[level1SectorCount*level1SectorCount];
     ushort[level1QuadCount*level1QuadCount*6] indices;
@@ -66,7 +68,7 @@ final class Level1Sheet {
     }
 
     void buildHeightmap(SectorNum center) {
-        // Build level1SectorCountxlevel1SectorCount sectors of level1-data (1 square kilometer)
+        // Build level1SectorCount * level1SectorCount sectors of level1-data (1 square kilometer)
         // That is (level1SectorCount*4+1)x(level1SectorCount*4+1) vertices
         //Dont be surprised if it doesnt!
 
@@ -74,16 +76,17 @@ final class Level1Sheet {
         this.center = center;
         vec3f centerTp = center.toTilePos.value.convert!float;
 
-        SectorXYNum startSect = SectorXYNum(SectorXYNum(center).value - vec2i(8,8));
+        //South-western corner of this heightsheet starts in this sectornum.
+        SectorXYNum startSect = SectorXYNum(SectorXYNum(center).value - vec2i(level1SectorCount / 2));
 
         vec2i baseTp = startSect.getTileXYPos().value;
 
         sectorMin[] = float.max;
         sectorMax[] = -float.max;
 
-        foreach(y ; 0 .. level1QuadCount+1) {
-            foreach(x ; 0 .. level1QuadCount+1) {
-                vec2i tp = baseTp + vec2i(32) * vec2i(x, y);
+        foreach(y ; 0 .. level1VertexCount) {
+            foreach(x ; 0 .. level1VertexCount) {
+                vec2i tp = baseTp + vec2i(level1SampleDistance) * vec2i(x, y);
                 float X = cast(float) tp.X;
                 float Y = cast(float) tp.Y;
                 float Z;
@@ -94,7 +97,7 @@ final class Level1Sheet {
                 }
                 vertices[y][x].set(X,Y,Z);
                 vertices[y][x] -= centerTp;
-                pragma(msg, "colors[y][x] = worldMap.getBiomeColor(tp);");
+                colors[y][x] = worldMap.getClimateColor(TileXYPos(tp));
             }
         }
 
@@ -102,6 +105,10 @@ final class Level1Sheet {
             foreach(x ; 0 .. level1SectorCount) {
                 foreach(dx ; 0 .. 5) {
                     foreach(dy ; 0 .. 5) {
+                        //Find min and max for sectors within our areas.
+                        // It may be possible that within our 2d-neighborhood we are above
+                        // or below the ground, and the heightsheet for the ground may need to be built depending on that,
+                        // so we find where the ground is(here) and uses it to compare with what is loaded (later)
                         sectorMin[level1SectorCount * y + x] = min(sectorMin[level1SectorCount * y + x], vertices[y*4+dx][x*4+dy].Z);
                         sectorMax[level1SectorCount * y + x] = max(sectorMax[level1SectorCount * y + x], vertices[y*4+dx][x*4+dy].Z);
                     }
@@ -121,16 +128,16 @@ final class Level1Sheet {
                     auto y = sectY * 4 + dy;
                     foreach(dx ; 0 .. 4) {
                         auto x = sectX * 4 + dx;
-                        vec2i tp = baseTp + vec2i(32) * vec2i(x, y);
+                        vec2i tp = baseTp + vec2i(level1SampleDistance) * vec2i(x, y);
                         int base = 6*(level1QuadCount*y+x);
 
-                        indices[base + 1] = cast(ushort)((level1QuadCount+1) * (y + 0) + x + 0);
-                        indices[base + 0] = cast(ushort)((level1QuadCount+1) * (y + 1) + x + 0);
-                        indices[base + 2] = cast(ushort)((level1QuadCount+1) * (y + 0) + x + 1);
+                        indices[base + 1] = cast(ushort)((level1VertexCount) * (y + 0) + x + 0);
+                        indices[base + 0] = cast(ushort)((level1VertexCount) * (y + 1) + x + 0);
+                        indices[base + 2] = cast(ushort)((level1VertexCount) * (y + 0) + x + 1);
 
-                        indices[base + 4] = cast(ushort)((level1QuadCount+1) * (y + 1) + x + 0);
-                        indices[base + 3] = cast(ushort)((level1QuadCount+1) * (y + 1) + x + 1);
-                        indices[base + 5] = cast(ushort)((level1QuadCount+1) * (y + 0) + x + 1);
+                        indices[base + 4] = cast(ushort)((level1VertexCount) * (y + 1) + x + 0);
+                        indices[base + 3] = cast(ushort)((level1VertexCount) * (y + 1) + x + 1);
+                        indices[base + 5] = cast(ushort)((level1VertexCount) * (y + 0) + x + 1);
                     }
                 }
             }
@@ -149,8 +156,8 @@ final class Level1Sheet {
             }
         }
 
-        foreach(y ; 0 .. level1QuadCount+1) { 
-            foreach(x ; 0 .. level1QuadCount+1) {
+        foreach(y ; 0 .. level1VertexCount) { 
+            foreach(x ; 0 .. level1VertexCount) {
 
                 float Xn = get(x-1, y  );
                 float Xp = get(x+1, y  );
@@ -159,10 +166,10 @@ final class Level1Sheet {
                 float Yp = get(x  , y+1);
 
 
-                vec3f Nx1 = vec3f(Xn - c, 0.0f, 32.0f);
-                vec3f Nx2 = vec3f(c - Xp, 0.0f, 32.0f);
-                vec3f Ny1 = vec3f(0.0f, Yn - c, 32.0f);
-                vec3f Ny2 = vec3f(0.0f, c - Yp, 32.0f);
+                vec3f Nx1 = vec3f(Xn - c, 0.0f, level1SampleDistance);
+                vec3f Nx2 = vec3f(c - Xp, 0.0f, level1SampleDistance);
+                vec3f Ny1 = vec3f(0.0f, Yn - c, level1SampleDistance);
+                vec3f Ny2 = vec3f(0.0f, c - Yp, level1SampleDistance);
 
                 normals[y][x] = (Nx1 + Nx2 + Ny1 + Ny2).normalize();
             }
@@ -232,7 +239,7 @@ final class Level1Sheet {
         double maxZ = sectorMax[sectorNum.Y * level1SectorCount + sectorNum.X] + center.toTilePos.value.Z;
         double minZ = sectorMin[sectorNum.Y * level1SectorCount + sectorNum.X] + center.toTilePos.value.Z;
 
-        SectorXYNum startSect = SectorXYNum(SectorXYNum(center).value - vec2i(8,8));
+        SectorXYNum startSect = SectorXYNum(SectorXYNum(center).value - vec2i(level1SectorCount / 2));
         SectorXYNum thisSect = SectorXYNum(startSect.value + sectorNum);
         TileXYPos tp = thisSect.getTileXYPos;
         TilePos maxTP = tp.toTilePos(cast(int)maxZ);

@@ -213,7 +213,7 @@ final class Level0Sheet {
                     xyTp = TileXYPos(thisTp.value + vec2i(x, y));
                     tp = worldState.getTopTilePos(xyTp);
                     z = min(tp.value.Z, firstLoadedTilepos.value.Z);
-                    pragma(msg, "color = layerManager.getBiomeColor(xyTp.value);");
+                    color = worldMap.getClimateColor(TileXYPos(tp));
                 }
 
                 vec3ub col = (color * 255.0f).convert!ubyte;
@@ -232,7 +232,7 @@ final class Level0Sheet {
                 xyTp = TileXYPos(thisTp.value + vec2i(x+scale, y));
                 tp = worldState.getTopTilePos(xyTp);
                 nextZ = min(tp.value.Z, firstLoadedTilepos.value.Z);
-                pragma(msg, "color = layerManager.getBiomeColor(xyTp.value);");
+                pragma(msg, "color = layerManager.getClimateColor(xyTp.value);");
 
                 if(z != nextZ) {
                     auto dZ = nextZ - z;

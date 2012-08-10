@@ -89,8 +89,7 @@ final class Level4Sheet {
                 }
                 vertices[y][x].set(X,Y,Z);
                 vertices[y][x] -= centerTp;
-                pragma(msg, "colors[y][x] = layerManager.getBiomeColor(tp);");
-                colors[y][x] = vec3f(0.5f, 0.5f, 0.8f);
+                colors[y][x] = worldMap.getClimateColor(TileXYPos(tp));
             }
         }
 

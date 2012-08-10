@@ -110,7 +110,12 @@ final class ShaderProgram(T...){
             msg(constants ~ content);
             msg(*ptrptr);
             auto error = printShaderError(shader);
-            assert(0, "Shader compilation failed: " ~ filename ~"\n" ~error);
+
+            if(1 == NativeDialogBox("Shader compilation failed: " ~ filename ~"\n" ~error, "Error", NDBAnswer.Retry_Cancel)) {
+                return compileFile(shader, filename, constants);
+            } else {
+                //derp
+            }
         }
     }
 

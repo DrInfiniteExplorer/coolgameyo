@@ -307,6 +307,12 @@ mixin template Layers() {
 
         /* Done! Add it to our known maps =) */
 
+        if(level == 4) {
+            ValueMap randomField = new ValueMap(400, 400);
+            randomField.fill(new RandSourceUniform(880128), Dim, Dim);
+            map.heightMap.randMap[] += randomField.randMap[] * 500;
+        }
+
         layers[level][mapNum] = map;
         return map;
     }
@@ -389,11 +395,6 @@ mixin template Layers() {
         return map.getHeight(ptNum.X, ptNum.Y);
     }
 
-    /*
-    vec3f getBiomeColor(vec2i tp) {
-        return vec3f(0.7f, 0.7f, 0.7f);
-    }
-    */
 
 
 }

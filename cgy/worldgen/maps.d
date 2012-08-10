@@ -84,6 +84,9 @@ final class WorldMap {
 
     mixin WorldGenerator;
 
+    //Eventually make a mixin for climate?
+    Image climates;
+
     //Figure out a better datastructure for this. bits 0-3 holds climate information, bit 4 holds isSea'ness, bit 5 wether or not it has been sorted into a region, etc.
 
 
@@ -150,6 +153,7 @@ final class WorldMap {
     }
 
     void init() {
+        climates = Image("climateMap.bmp");
         mixin(MeasureTime!"Time to init world:");
         //Spans 1.0*worldHeight
         initSeed();

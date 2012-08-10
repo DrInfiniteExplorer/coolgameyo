@@ -34,6 +34,14 @@ mixin template WorldTimeClockCode() {
         return std.string.format("%02d:%02d", hours, minutes);
     }
 
+    vec3d getSunPosition() {
+
+        auto sincos = expi(2*PI*getDayTime());
+        enum double worldSize = mapScale[5];
+        enum worldSize2 = 2 * worldSize;
+        return vec3d(worldSize2*sincos.im, 0, abs(worldSize2*sincos.re));
+    }
+
 
 }
 

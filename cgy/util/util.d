@@ -232,6 +232,29 @@ version(Windows) {
     }
 }
 
+enum NDBAnswer {
+    Ok,
+    Retry_Cancel,
+    Yes_No,
+    Yes_No_Abort
+}
+
+version(Windows) {
+    //ret: 1 is affermative, 2 is negative, 3 is HERPDERPBACON?
+    int NativeDialogBox(string msg, string title, NDBAnswer a) {
+        if(a == NDBAnswer.Retry_Cancel) {
+            auto b = MessageBox(null, msg.toStringz, title.toStringz, cast(uint)MB_RETRYCANCEL);
+            if(b == IDCANCEL) return 2;
+            if(b == IDRETRY) return 1;
+            enforce(0, "Derp? NOOOO! " ~ to!string(b));
+        } else {
+            enforce(0, "NDB-choice not implemented:" ~ to!string(a));
+        }
+        return 0;
+    }
+}
+
+
 CommonType!(T)[T.length] makeStackArray(T...)(T ts) {
     typeof(return) ret;
     foreach (i, t; ts) {
