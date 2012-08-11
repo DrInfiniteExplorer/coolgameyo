@@ -97,7 +97,8 @@ mixin template WorldGenerator() {
             }
         }
         if (homogenous) {
-            Block.free(block);
+            block.free();
+            //Block.free(block);
             block.tiles = null;
             block.sparse = true;
         }
@@ -126,13 +127,22 @@ mixin template WorldGenerator() {
     long worldRadius = mapScale[5]/2;
     long worldRadiusSquare = (cast(long)mapScale[5]/2) ^^2;
     bool isInsideWorld(TilePos pos) {
-        long dist = pos.value.X ^^ 2 + pos.value.Y ^^ 2;
-        long max = worldRadiusSquare;
-        return dist < max;
+        if(pos.value.X < 0 || pos.value.X >= worldSize ||
+           pos.value.Y < 0 || pos.value.Y >= worldSize) {
+            return false;
+        }
+        return true;
     } 
-    int maxZ(TileXYPos xypos) {
-        auto z = getValueInterpolated(1, xypos);
+
+    //This returns a pessimistiv top value, there may be air-tiles below but no solid above.
+    int maxZ(TileXYPos xyPos) {
+        auto z = getValueInterpolated(1, xyPos);
         return cast(int)ceil(z);
+    }
+
+    //This returns the real, actual top tile pos.
+    int getRealTopTilePos(TileXYPos xyPos) {
+        return maxZ(xyPos);
     }
 
     double getHeight01(TilePos t) {

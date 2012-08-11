@@ -12,7 +12,7 @@ mixin template RandomVoronoi() {
     }
     void renderVoronoi() {
         lines = null;
-        enum gridSize = 50;
+        immutable gridSize = 50;
         auto voronoi = new VoronoiWrapper(gridSize, gridSize, 880128);
         voronoi.setScale(vec2d(800, 600));
 
@@ -21,7 +21,7 @@ mixin template RandomVoronoi() {
             foreach(x ; 0 .. 800) {
 
                 int id = voronoi.identifyCell(vec2d(x, y));
-                enum v = 2^^24;
+                immutable v = 2^^24;
 
                 double ratio = (cast(double)id) / (gridSize*gridSize);
                 int c = v - (cast(int)(cast(double)v * ratio));

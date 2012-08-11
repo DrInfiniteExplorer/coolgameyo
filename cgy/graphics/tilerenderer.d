@@ -198,8 +198,8 @@ class TileRenderer {
                 glBindBuffer(GL_ARRAY_BUFFER, renderInfo.vbo); glError();
                 glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, GRVertex.sizeof, null /* offset in vbo */); glError();
                 glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, GRVertex.sizeof, cast(void*)GRVertex().texcoord.offsetof); glError();
-                glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, GRVertex.sizeof, cast(void*)GRVertex().light.offsetof); glError();
-                glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, GRVertex.sizeof, cast(void*)GRVertex().sunLight.offsetof); glError();
+                glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, GRVertex.sizeof, cast(void*)GRVertex().lightValue.offsetof); glError();
+                glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, GRVertex.sizeof, cast(void*)GRVertex().sunLightValue.offsetof); glError();
                 glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, GRVertex.sizeof, cast(void*)GRVertex().normal.offsetof); glError();
                 glDrawArrays(GL_QUADS, 0, renderInfo.quadCount*4); glError();
                 triCount += renderInfo.quadCount*2;

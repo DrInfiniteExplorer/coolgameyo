@@ -59,11 +59,11 @@ class DialogBox : GuiElementWindow {
         super(guiSystem, Rectd(vec2d(0.0, 0.0), vec2d(1, 1)), title, true, false);
 
         static if(is(t[1] : SingleAnswerDelegate)) {
-            enum singleAnswer = true;
-            enum options = array(split(t[0], "|"));
+            immutable singleAnswer = true;
+            immutable options = array(split(t[0], "|"));
             auto callback = t[1];
         } else {
-            enum singleAnswer = false;
+            immutable singleAnswer = false;
 
             string[] options;
             MultiAnswerDelegate[] callbacks;

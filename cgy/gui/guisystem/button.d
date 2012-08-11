@@ -29,16 +29,16 @@ enum ButtonCallbackPolicies {
 mixin template params(ButtonCallbackPolicies policy, T...) {
     static if(policy == ButtonCallbackPolicies.State) {
         auto params(T t){ return tuple(t[0..2]); }
-        enum SimpleButton = false;
+        immutable SimpleButton = false;
     }else static if(policy == ButtonCallbackPolicies.Element) {
         auto params(T t){ return tuple(t[2]); }
-        enum SimpleButton = false;
+        immutable SimpleButton = false;
     }else static if(policy == ButtonCallbackPolicies.Simple) {
         auto params(T t){ return tuple(); }
-        enum SimpleButton = true;
+        immutable SimpleButton = true;
     }else static if(policy == ButtonCallbackPolicies.SimpleElement) {
         auto params(T t){ return tuple(t[2]); }
-        enum SimpleButton = true;
+        immutable SimpleButton = true;
 
     }else {
         static assert(0, "Unidentified button callback policy");

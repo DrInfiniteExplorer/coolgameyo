@@ -12,8 +12,8 @@ mixin template Page2() {
     vec2i startPos;
 
 
-    enum smallLevel = 3;
-    enum smallSize = mapScale[smallLevel];
+    immutable smallLevel = 3;
+    immutable smallSize = mapScale[smallLevel];
 
 
     void initPage2(string worldName) {
@@ -38,7 +38,10 @@ mixin template Page2() {
                    "Shaded", { show!"ShadedHeightmap"(); }
         );
 
-        auto StartButton = new PushButton(page2, Rectd(backButton.leftOf, backButton.bottomOf + 0.05, 0.2, 0.1), "Start", { worldMap.destroy(); onStartGame(); });
+        auto StartButton = new PushButton(page2, Rectd(backButton.leftOf, backButton.bottomOf + 0.05, 0.2, 0.1), "Start", {
+            worldMap.destroy();
+            onStartGame();
+        });
 
 
 

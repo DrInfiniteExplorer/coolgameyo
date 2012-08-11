@@ -97,7 +97,7 @@ private void workerFun(shared Scheduler ssched,
 
 final class Scheduler {
     enum State { update, sync, forcedAsync, async, wait, apply }
-    enum ASYNC_COUNT = 23;
+    immutable ASYNC_COUNT = 23;
 
     bool shouldSerialize;
     bool exiting;

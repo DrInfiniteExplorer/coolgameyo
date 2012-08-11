@@ -20,7 +20,7 @@ import worldstate.time;
 //    auto activitySize = vec3i(5,5,5);
 //}
 
-enum SectorTimeoutTicks = TICKS_PER_SECOND * 15;
+immutable SectorTimeoutTicks = TICKS_PER_SECOND * 15;
 
 
 private mixin template ActivityHandlerMethods() {

@@ -14,7 +14,7 @@ import graphics._2d.rect;
 import util.util;
 import util.rect;
 
-enum checkboxSizeInPixels = 12;
+immutable checkboxSizeInPixels = 12;
 
 
 class CheckBox : public Button!(ButtonCallbackPolicies.State) {

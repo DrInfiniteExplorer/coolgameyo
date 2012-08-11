@@ -11,10 +11,10 @@ version(Windows){
     import win32.windows;
 }
 
-void[] allocateBlob(size_t size, size_t blobSize) {
+void[] allocateBlob(size_t count, size_t blobSize) {
     version (Windows) {
-        auto ret = VirtualAlloc(null, blobSize * size, MEM_COMMIT, PAGE_READWRITE);
-        auto tmp = enforce(ret[0 .. blobSize*size], "memory allocation fail :-)");
+        auto ret = VirtualAlloc(null, blobSize * count, MEM_COMMIT, PAGE_READWRITE);
+        auto tmp = enforce(ret[0 .. blobSize*count], "memory allocation fail :-)");
         return tmp;
     } else version (Posix) {
         void* ret;

@@ -52,21 +52,23 @@ import worldstate.worldstate;
 
 alias ValueMap2Dd ValueMap;
 
-enum Dim = 400;
-//enum ptPerLayer = 400;
+immutable Dim = 400;
+//immutable ptPerLayer = 400;
 alias Dim ptPerLayer;
 
 
-enum StepIter = 4*25;
+immutable StepIter = 4*25;
 
 /* pos 0 not used */
 /* pt2tile-scale*/
-enum ptScale = [0, 32, 128, 512, 2048, 8192, /*start mipmaps*/ 32768, 131072];
+immutable ptScale = [0, 32, 128, 512, 2048, 8192, /*start mipmaps*/ 32768, 131072];
 /* map2tile-scale*/ //Mipmap'ed values are farther apart, but same size as level5 (ie. worldsize)
-enum mapScale = [0, 12800, 51200, 204800, 819200, 3276800, /*start mipmaps*/ 3276800, 3276800];
+immutable mapScale = [0, 12800, 51200, 204800, 819200, 3276800, /*start mipmaps*/ 3276800, 3276800];
 
-enum halfWorldSize = vec3i(mapScale[5]/2, mapScale[5]/2, 0);
-enum halfWorldSize_xy = vec2i(mapScale[5]/2, mapScale[5]/2);
+immutable worldSize = mapScale[5];
+
+immutable halfWorldSize = vec3i(mapScale[5]/2, mapScale[5]/2, 0);
+immutable halfWorldSize_xy = vec2i(mapScale[5]/2, mapScale[5]/2);
 
 
 final class WorldMap {

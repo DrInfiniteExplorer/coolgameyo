@@ -18,7 +18,7 @@ enum TileFlags : ushort {
     valid       = 1 << 15,
 }
 
-enum airTile = Tile(TileTypeAir, TileFlags.valid);
+immutable airTile = Tile(TileTypeAir, TileFlags.valid);
 
 struct Tile {
     ushort type;
@@ -78,5 +78,5 @@ struct Tile {
     }
 }
 
-enum INVALID_TILE = Tile(0, TileFlags.none);
+immutable INVALID_TILE = Tile(0, TileFlags.none);
 

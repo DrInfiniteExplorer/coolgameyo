@@ -15,8 +15,8 @@ import clan;
 import inventory;
 
 string mixinChangeListAdd(string name, T)() {
-    enum T_name = T.stringof;
-    enum params = FieldTypeTuple!T.stringof;
+    immutable T_name = T.stringof;
+    immutable params = FieldTypeTuple!T.stringof;
         
     return "void "~name~"(TypeTuple!"~params~" ts) {"
         ~  "    changeList.add!"~T.stringof~"(ts);"

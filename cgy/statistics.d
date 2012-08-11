@@ -24,7 +24,7 @@ shared static ~this() {
 }
 
 
-enum MaxSamples = 100;
+immutable MaxSamples = 100;
 
 template SampleCircleBuffer(const char[] name, const int MaxSamples) {
     const char [] SampleCircleBuffer = text(

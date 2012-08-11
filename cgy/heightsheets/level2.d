@@ -16,10 +16,10 @@ import worldstate.worldstate;
 import util.math;
 import util.util;
 
-enum int level2SectorCount = 64; //Spans 64 sectors
-enum int level2QuadCount = level2SectorCount; //64 quads
-enum int level2VertexCount = level2QuadCount+1;
-enum int level2SampleDistance = level2SectorCount * SectorSize.x / level2QuadCount; //Distance in tiles between samples.
+immutable int level2SectorCount = 64; //Spans 64 sectors
+immutable int level2QuadCount = level2SectorCount; //64 quads
+immutable int level2VertexCount = level2QuadCount+1;
+immutable int level2SampleDistance = level2SectorCount * SectorSize.x / level2QuadCount; //Distance in tiles between samples.
 
 
 final class Level2Sheet {
@@ -208,7 +208,7 @@ final class Level2Sheet {
         quadNum -= vec2i(level2QuadCount/2);
         quadNum = quadNum * 2 + vec2i(1);
 
-        enum numCoveringQuads = level1SectorCount * level2QuadCount / level2SectorCount;
+        immutable numCoveringQuads = level1SectorCount * level2QuadCount / level2SectorCount;
 
         if(abs(quadNum.X) >= numCoveringQuads) return true;
         if(abs(quadNum.Y) >= numCoveringQuads) return true;

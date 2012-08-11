@@ -16,8 +16,6 @@ public:
 	this(T nx, T ny) {X = nx; Y = ny;}
 	//! Constructor with the same value for both members
 	this(T n) {X = n; Y = n;}
-	//! Copy constructor
-	this(const vector2d!(T) other) {X = other.X; Y = other.Y;}
 
     vector3d!T vec3(T z = 0) const {
         return vector3d!T(X, Y, z);
@@ -30,8 +28,6 @@ public:
 	// operators
 
 	vector2d!(T) opNeg() const { return vector2d!(T)(-X, -Y); }
-
-	vector2d!(T) opAssign(const vector2d!(T) other) { X = other.X; Y = other.Y; return this; }
 
 
 	vector2d!(T) opAdd(const vector2d!(T) other) const { return vector2d!(T)(cast(T) (X + other.X) ,cast(T) (Y + other.Y)); }

@@ -52,7 +52,7 @@ T lerpFast(T)(T x0, T x1, double t) {
     return x0 + t * d;
 }
 T lerpFast(T, T x0, T x1)(double t) {
-    enum d = x1 - x0;
+    immutable d = x1 - x0;
     return x0 + t * d;
 }
 alias lerpFast lerp;

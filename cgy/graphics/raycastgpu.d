@@ -28,8 +28,8 @@ import util.rangefromto;
 import util.util;
 import worldstate.worldstate;
 
-enum MaxLightTraceDistance = 100f;
-enum FadeLightTraceDistance = 90f;   //Start fading lightstrength at this distance,
+immutable MaxLightTraceDistance = 100f;
+immutable FadeLightTraceDistance = 90f;   //Start fading lightstrength at this distance,
 //so it is 0 at MaxLightTraceDistance
 
 struct CLCamera {

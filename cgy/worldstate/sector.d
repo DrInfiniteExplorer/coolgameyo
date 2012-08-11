@@ -30,7 +30,7 @@ import util.rangefromto;
 
 
 
-enum BitCount = 32;
+immutable BitCount = 32;
 alias uint StorageType;
 
 struct SolidMap {

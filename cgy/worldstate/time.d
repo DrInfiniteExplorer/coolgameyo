@@ -4,13 +4,13 @@ module worldstate.time;
 import std.string;
 import std.exception;
 
-enum TICKS_PER_SECOND = 35; //Ticks per irl second
+immutable TICKS_PER_SECOND = 35; //Ticks per irl second
 
-//enum TicksPerMinute = 24; //This is then number of ticks required to increase world/game time with 1 minute
+//immutable TicksPerMinute = 24; //This is then number of ticks required to increase world/game time with 1 minute
 //For debug and quick day :)
-enum TicksPerMinute = 15;
-enum TicksPerHour = TicksPerMinute * 60;
-enum TicksPerDay = TicksPerMinute * 24;
+immutable TicksPerMinute = 15;
+immutable TicksPerHour = TicksPerMinute * 60;
+immutable TicksPerDay = TicksPerMinute * 24;
 
 mixin template WorldTimeClockCode() {
 
@@ -37,8 +37,8 @@ mixin template WorldTimeClockCode() {
     vec3d getSunPosition() {
 
         auto sincos = expi(2*PI*getDayTime());
-        enum double worldSize = mapScale[5];
-        enum worldSize2 = 2 * worldSize;
+        immutable double worldSize = mapScale[5];
+        immutable worldSize2 = 2 * worldSize;
         return vec3d(worldSize2*sincos.im, 0, abs(worldSize2*sincos.re));
     }
 

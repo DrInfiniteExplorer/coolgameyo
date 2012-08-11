@@ -110,10 +110,8 @@ struct CMatrix4(T)
     //! Sets all elements of this matrix to the value.
     CMatrix4!(T) opAssign(const T scalar)
     {
-      for (int i; i < 16; ++i)
-        M[i]=scalar;
-
-      return this;
+        M[] = scalar;
+        return this;
     }
 
     //! Returns pointer to internal array
@@ -123,111 +121,40 @@ struct CMatrix4(T)
       return M.ptr;
     }
 
-
     //! Returns true if other matrix is equal to this matrix.
     bool opEquals(const ref CMatrix4!(T) other) const
     {
-      for (int i; i < 16; ++i)
-        if (M[i] != other.M[i])
-          return false;
-
-      return true;
+        return M[] == other.M[];
     }
 
     //! Add another matrix.
     CMatrix4!(T) opAdd(const CMatrix4!(T) other) const
     {
-      CMatrix4!(T) temp;
-
-      temp[0] = M[0]+other[0];
-      temp[1] = M[1]+other[1];
-      temp[2] = M[2]+other[2];
-      temp[3] = M[3]+other[3];
-      temp[4] = M[4]+other[4];
-      temp[5] = M[5]+other[5];
-      temp[6] = M[6]+other[6];
-      temp[7] = M[7]+other[7];
-      temp[8] = M[8]+other[8];
-      temp[9] = M[9]+other[9];
-      temp[10] = M[10]+other[10];
-      temp[11] = M[11]+other[11];
-      temp[12] = M[12]+other[12];
-      temp[13] = M[13]+other[13];
-      temp[14] = M[14]+other[14];
-      temp[15] = M[15]+other[15];
-
-      return temp;
+        CMatrix4!(T) temp;
+        temp.M[] = M[] + other.M[];
+        return temp;
     }
 
     //! Add another matrix.
     CMatrix4!(T) opAddAssign(const CMatrix4!(T) other)
     {
-      M[0]+=other[0];
-      M[1]+=other[1];
-      M[2]+=other[2];
-      M[3]+=other[3];
-      M[4]+=other[4];
-      M[5]+=other[5];
-      M[6]+=other[6];
-      M[7]+=other[7];
-      M[8]+=other[8];
-      M[9]+=other[9];
-      M[10]+=other[10];
-      M[11]+=other[11];
-      M[12]+=other[12];
-      M[13]+=other[13];
-      M[14]+=other[14];
-      M[15]+=other[15];
-
-      return this;
+        M[] += other.M[];
+        return this;
     }
 
     //! Subtract another matrix.
     CMatrix4!(T) opSub(const CMatrix4!(T) other) const
     {
-      CMatrix4!(T) temp;
-
-      temp[0] = M[0]-other[0];
-      temp[1] = M[1]-other[1];
-      temp[2] = M[2]-other[2];
-      temp[3] = M[3]-other[3];
-      temp[4] = M[4]-other[4];
-      temp[5] = M[5]-other[5];
-      temp[6] = M[6]-other[6];
-      temp[7] = M[7]-other[7];
-      temp[8] = M[8]-other[8];
-      temp[9] = M[9]-other[9];
-      temp[10] = M[10]-other[10];
-      temp[11] = M[11]-other[11];
-      temp[12] = M[12]-other[12];
-      temp[13] = M[13]-other[13];
-      temp[14] = M[14]-other[14];
-      temp[15] = M[15]-other[15];
-
-      return temp;
+        CMatrix4!(T) temp;
+        temp.M[] = M[] - other.M[];
+        return temp;
     }
 
     //! Subtract another matrix.
     CMatrix4!(T) opSubAssign(const CMatrix4!(T) other)
     {
-      M[0]-=other[0];
-      M[1]-=other[1];
-      M[2]-=other[2];
-      M[3]-=other[3];
-      M[4]-=other[4];
-      M[5]-=other[5];
-      M[6]-=other[6];
-      M[7]-=other[7];
-      M[8]-=other[8];
-      M[9]-=other[9];
-      M[10]-=other[10];
-      M[11]-=other[11];
-      M[12]-=other[12];
-      M[13]-=other[13];
-      M[14]-=other[14];
-      M[15]-=other[15];
-
-      return this;
+        M[] -= other.M[];
+        return this;
     }
 
     //! set this matrix to the product of two matrices
@@ -306,49 +233,16 @@ struct CMatrix4(T)
     //! Multiply by scalar.
     CMatrix4!(T) opMul(const T scalar) const
     {
-      CMatrix4!(T) temp;
-
-      temp[0] = M[0]*scalar;
-      temp[1] = M[1]*scalar;
-      temp[2] = M[2]*scalar;
-      temp[3] = M[3]*scalar;
-      temp[4] = M[4]*scalar;
-      temp[5] = M[5]*scalar;
-      temp[6] = M[6]*scalar;
-      temp[7] = M[7]*scalar;
-      temp[8] = M[8]*scalar;
-      temp[9] = M[9]*scalar;
-      temp[10] = M[10]*scalar;
-      temp[11] = M[11]*scalar;
-      temp[12] = M[12]*scalar;
-      temp[13] = M[13]*scalar;
-      temp[14] = M[14]*scalar;
-      temp[15] = M[15]*scalar;
-
-      return temp;
+        CMatrix4!(T) temp;
+        temp.M[] = M[] * scalar;
+        return temp;
     }
 
     //! Multiply by scalar.
     CMatrix4!(T) opMulAssign(const T scalar)
     {
-      M[0]*=scalar;
-      M[1]*=scalar;
-      M[2]*=scalar;
-      M[3]*=scalar;
-      M[4]*=scalar;
-      M[5]*=scalar;
-      M[6]*=scalar;
-      M[7]*=scalar;
-      M[8]*=scalar;
-      M[9]*=scalar;
-      M[10]*=scalar;
-      M[11]*=scalar;
-      M[12]*=scalar;
-      M[13]*=scalar;
-      M[14]*=scalar;
-      M[15]*=scalar;
-
-      return this;
+        M[] *= scalar;
+        return this;
     }
 
     CMatrix4!(T) opMul(const T scalar, const CMatrix4!(T) mat)
@@ -359,10 +253,10 @@ struct CMatrix4(T)
     //! Set matrix to identity.
     CMatrix4!(T) makeIdentity()
     {
-      memset(M.ptr, 0, 16*T.sizeof);
-      M[0] = M[5] = M[10] = M[15] = cast(T)1;
+        M[] = 0;
+        M[0] = M[5] = M[10] = M[15] = cast(T)1;
 
-      return this;
+        return this;
     }
 
     //! Returns true if the matrix is the identity matrix
@@ -1536,4 +1430,4 @@ struct CMatrix4(T)
 alias CMatrix4!(float) matrix4;
 
 //! global const identity matrix
-enum IdentityMatrix = CMatrix4!(float)();
+immutable IdentityMatrix = CMatrix4!(float)();

@@ -228,7 +228,7 @@ final class Edge {
             return halfRight.vertex.pos - halfLeft.vertex.pos;
         }
 
-        auto ortho = vec2d(halfRight.left.pos - halfLeft.left.pos);
+        auto ortho = halfRight.left.pos - halfLeft.left.pos;
         ortho = vec2d(-ortho.Y, ortho.X);
         //if(derp) ortho = -ortho;
         return ortho.normalize();
@@ -372,7 +372,7 @@ final class VoronoiPoly {
         auto maxY = max.Y;
 
         bool inside(vec2d pos) {
-            enum epsilon = 1E-6;
+            immutable epsilon = 1E-6;
             return (pos.X+epsilon >= minX && pos.X-epsilon <= maxX &&
                     pos.Y+epsilon >= minY && pos.Y-epsilon <= maxY);
         }
@@ -479,11 +479,11 @@ final class VoronoiPoly {
         bool aboutSameV(Vertex A, Vertex B) {
             auto a = A.pos;
             auto b = B.pos;
-            enum epsilon = 1E-4;
+            immutable epsilon = 1E-4;
             return (abs(a.X-b.X) < epsilon) && (abs(a.Y-b.Y) < epsilon);
         }
         bool aboutSame(double a, double b) {
-            enum epsilon = 1E-4;
+            immutable epsilon = 1E-4;
             return abs(a-b) < epsilon;
         }
 

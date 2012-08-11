@@ -96,6 +96,7 @@ class NewGameMenu : GuiElementWindow {
     }    
     void onStartGame() {
         destroy();
+        startPos = halfWorldSize_xy;
         main.onNewGame(startPos, worldMap.worldHash);
     }    
     

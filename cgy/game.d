@@ -249,7 +249,7 @@ class Game{
         }
         {
             mixin(LogTime!("InitialFloodFill"));            
-            worldState.floodFillSome(1_000_000);
+            worldState.initialFloodFill();
         }
         finishInit();
     }

@@ -386,9 +386,9 @@ template RealThing(T...) if(T.length == 1)
 
 template RealThing(alias Class, string Member) {
     static if(__traits(compiles, typeof(__traits(getMember, Class, Member)))) {
-		enum bool RealThing = true;
+		immutable bool RealThing = true;
 	} else {
-		enum bool RealThing = false;
+		immutable bool RealThing = false;
 	}
 }
 

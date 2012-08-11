@@ -15,10 +15,10 @@ import worldgen.maps;
 import worldstate.worldstate;
 import util.util;
 
-enum int level3SectorCount = 256;
+immutable int level3SectorCount = 256;
 
-enum int level3QuadCount = 64;
-enum int level3VertexCount = level3QuadCount+1;
+immutable int level3QuadCount = 64;
+immutable int level3VertexCount = level3QuadCount+1;
 
 
 final class Level3Sheet {

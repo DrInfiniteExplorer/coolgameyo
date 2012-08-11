@@ -14,8 +14,7 @@ public:
 	this(T xa, T ya, T xb, T yb) {start = vector2d!(T)(xa, ya); end = vector2d!(T)(xb, yb);}
 	//! Constructor for line between the two points given as vectors.
 	this(const vector2d!(T) vstart, const vector2d!(T) vend) { start = vstart; end = vend; }
-	//! Copy constructor.
-	this(const line2d!(T) other) {start = other.start; end = other.end;}
+
 
 	// operators
 

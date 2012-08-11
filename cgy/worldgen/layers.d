@@ -46,7 +46,7 @@ final class LayerMap {
 }
 
 template shift(string q, string w, string e, string r, string t) {
-    enum shift = text(q, "=", w, "; ", w, "=", e, "; ", e, "=", r, "; ", r, "=", t, ";");
+    immutable shift = text(q, "=", w, "; ", w, "=", e, "; ", e, "=", r, "; ", r, "=", t, ";");
 }
 
 

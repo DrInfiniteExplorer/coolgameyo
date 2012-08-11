@@ -15,10 +15,10 @@ import worldgen.maps;
 import worldstate.worldstate;
 import util.util;
 
-enum int level4SectorCount = 1024;
+immutable int level4SectorCount = 1024;
 
-enum int level4QuadCount = 64;
-enum int level4VertexCount = level4QuadCount+1;
+immutable int level4QuadCount = 64;
+immutable int level4VertexCount = level4QuadCount+1;
 
 
 final class Level4Sheet {

@@ -41,4 +41,4 @@ static assert(SectorSize.x % GraphRegionSize.x == 0, "Sector not evenly divisibl
 static assert(SectorSize.y % GraphRegionSize.y == 0, "Sector not evenly divisible by graph regions!");
 static assert(SectorSize.z % GraphRegionSize.z == 0, "Sector not evenly divisible by graph regions!");
 
-enum HeightMapSampleDistance = SectorSize.x / 4; // samples per sector
+immutable HeightMapSampleDistance = SectorSize.x / 4; // samples per sector

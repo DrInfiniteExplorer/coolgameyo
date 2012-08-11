@@ -53,8 +53,8 @@ mixin template Heightmap() {
             auto yDist =  abs(200 - y);
             auto yBorderDistance = 200 - yDist;
 
-            enum limit = 25.0;
-            enum limitSQ = limit ^^ 2.0;
+            immutable limit = 25.0;
+            immutable limitSQ = limit ^^ 2.0;
             if(xBorderDistance < limit) {
                 auto xLimitDistance = limit - xBorderDistance;
                 auto ratio = (limitSQ - xLimitDistance^^2.0) / limitSQ;

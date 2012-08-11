@@ -83,7 +83,7 @@ unittest {
 }
 
 void colorize(int num, int count, ref ubyte r, ref ubyte g, ref ubyte b) {
-    enum v = 2^^24;
+    immutable v = 2^^24;
 
     double ratio = (cast(double)num) / (count);
     int c = v - (cast(int)(cast(double)v * ratio));

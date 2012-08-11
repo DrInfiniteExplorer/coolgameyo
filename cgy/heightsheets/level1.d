@@ -15,10 +15,10 @@ import worldstate.worldstate;
 import util.util;
 
 
-enum int level1SectorCount = 16; //Spans 16 sectors
-enum int level1QuadCount = 64; //64 quads
-enum int level1VertexCount = level1QuadCount + 1;
-enum int level1SampleDistance = level1SectorCount * SectorSize.x / level1QuadCount; //Distance in tiles between samples
+immutable int level1SectorCount = 16; //Spans 16 sectors
+immutable int level1QuadCount = 64; //64 quads
+immutable int level1VertexCount = level1QuadCount + 1;
+immutable int level1SampleDistance = level1SectorCount * SectorSize.x / level1QuadCount; //Distance in tiles between samples
 
 final class Level1Sheet {
     uint vertVBO;

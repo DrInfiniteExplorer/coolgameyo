@@ -14,7 +14,7 @@ import util.voronoi.voronoi;
 alias std.math.abs abs;
 
 //Substantial speedup when true; goes from 120 seconds to around 90 seconds.
-enum ReuseEvents = true;
+immutable ReuseEvents = true;
 
 final class FortuneVoronoi {
 

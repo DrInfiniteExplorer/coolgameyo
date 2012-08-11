@@ -23,7 +23,7 @@ void computeYourMother(WorldState world, Image img, Camera camera) {
     vec3i tileNormal, dummyNormal;
     double intersectionTime;
 
-    enum maxIter = 100;
+    immutable maxIter = 100;
     double min = double.max;
     double max = -double.max;
 

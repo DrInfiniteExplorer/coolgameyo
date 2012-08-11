@@ -39,6 +39,8 @@ mixin template Page1() {
         auto newWorldButton = new PushButton(page1, Rectd(backButton.rightOf, backButton.topOf, backButton.widthOf, backButton.heightOf), "New World", &newWorld);
         continueButton = new PushButton(page1, Rectd(newWorldButton.rightOf, newWorldButton.topOf, newWorldButton.widthOf, newWorldButton.heightOf), "Next", &onNext);
         continueButton.setEnabled(false);
+
+        worldList.selectItem(0);
     }
 
     void noWorldsAvailable() {

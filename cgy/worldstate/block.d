@@ -10,6 +10,8 @@ import std.algorithm;
 import std.exception;
 import std.stdio;
 
+import core.sync.mutex;
+
 import light;
 import pos;
 import tiletypemanager : TileTypeAir;
@@ -25,6 +27,79 @@ import util.util;
 
 
 
+
+
+private struct AllocationBlock {
+    bool[] allocmap; // true = allocated, false = not
+    BlockTiles[] data;
+
+    //static assert (T.sizeof == 4096);
+
+    immutable dataSize = 128; //dataSize = number of T's to allocate
+
+    AllocationBlock* next;
+
+    BlockTiles* getMem() {
+        auto i = allocmap.countUntil(false);
+        if (i < 0) {
+            if (next is null) next = create();
+            return next.getMem();
+        }
+        BREAK_IF(allocmap[i]);
+        assert (!allocmap[i]);
+        allocmap[i] = true;
+        return &data[i];
+    }
+    void returnMem(BlockTiles* mem) {
+        auto diff = mem - data.ptr;
+        //writeln(mem, " ", data.ptr, " ", diff);
+        //Diff is magically (cast(void*)mem - cast(void*)data.ptr) / typeof(mem).sizeof !
+        if (0 <= diff && diff < dataSize) {
+            // IT IS OUR BLOB!!!!!
+            allocmap[diff] = false;
+        } else {
+            BREAK_IF(next is null);
+            assert (next, "We have our buddie's blob, "~
+                    "but our buddy is dead. Gosh darned it!");
+            next.returnMem(mem);
+        }
+    }
+
+    static AllocationBlock* create() {
+        auto alloc = new AllocationBlock;
+        alloc.allocmap = new bool[](dataSize);
+        auto blob = allocateBlob(dataSize, BlockTiles.sizeof);
+        (cast(ubyte[])blob)[] = 0;
+        alloc.data = cast(BlockTiles[])blob;
+        return alloc;
+    }
+}
+
+__gshared Mutex blockAllocatorMutex;
+__gshared AllocationBlock* freeblock;
+
+shared static this() {
+    blockAllocatorMutex = new Mutex;
+    freeblock = AllocationBlock.create();
+}
+
+Block alloc() {
+    synchronized(blockAllocatorMutex) {
+
+        Block block;
+        block.tiles = freeblock.getMem();
+        setFlag(block.flags, BlockFlags.valid, true);
+
+        assert (block.valid);
+
+        return block;
+    }
+}
+void free(Block block) {
+    synchronized(blockAllocatorMutex) {
+        freeblock.returnMem(block.tiles);
+    }
+}
 
 enum BlockFlags : ubyte {
     none                = 0,
@@ -54,7 +129,7 @@ struct Block {
 
         if(valid && !sparse) {
             enforce(tiles !is null, "gerp blerpo");
-            free(this);
+            free();
             tiles = null;
             flags = BlockFlags.none;
         }
@@ -188,80 +263,12 @@ struct Block {
         return worldMap.fillBlock(block);
     }
 
+    void free() {
+        .free(this);
+    }
+
 
     // allocation / freelist stuff
-
-    static {
-        class Mutex {}
-        Mutex mutex;
-        private struct AllocationBlock {
-            bool[] allocmap; // true = allocated, false = not
-            BlockTiles[] data;
-
-            //static assert (T.sizeof == 4096);
-
-            enum dataSize = 128; //dataSize = number of T's to allocate
-
-            AllocationBlock* next;
-
-            BlockTiles* getMem() {
-                auto i = allocmap.countUntil(false);
-                if (i < 0) {
-                    if (next is null) next = create();
-                    return next.getMem();
-                }
-                assert (!allocmap[i]);
-                allocmap[i] = true;
-                return &data[i];
-            }
-            void returnMem(BlockTiles* mem) {
-                auto diff = mem - data.ptr;
-                if (0 <= diff && diff < dataSize) {
-                    // IT IS OUR BLOB!!!!!
-                    allocmap[diff] = false;
-                } else {
-                    BREAK_IF(next is null);
-                    assert (next, "We have our buddie's blob, "~
-                            "but our buddy is dead. Gosh darned it!");
-                    next.returnMem(mem);
-                }
-            }
-
-            static AllocationBlock* create() {
-                auto alloc = new AllocationBlock;
-                alloc.allocmap = new bool[](dataSize);
-                auto blob = allocateBlob(dataSize, BlockTiles.sizeof);
-                (cast(ubyte[])blob)[] = 0;
-                alloc.data = cast(BlockTiles[])blob;
-                return alloc;
-            }
-        }
-        __gshared AllocationBlock* freeblock;
-
-        Block alloc() {
-            if(mutex is null) {
-                mutex = new Mutex;
-            }
-            synchronized(mutex) {
-                if (freeblock is null) {
-                    freeblock = AllocationBlock.create();
-                }
-
-                Block block;
-                block.tiles = freeblock.getMem();
-                setFlag(block.flags, BlockFlags.valid, true);
-
-                assert (block.valid);
-
-                return block;
-            }
-        }
-        void free(Block block) {
-            synchronized(mutex) {
-                freeblock.returnMem(block.tiles);
-            }
-        }
-    }
 }
 
 Block INVALID_BLOCK = {

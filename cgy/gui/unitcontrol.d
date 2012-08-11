@@ -161,7 +161,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         }
     }
 
-    enum renderMethods=[
+    immutable renderMethods=[
         "A*(M+R)",
         "A*M",
         "A*R",
@@ -424,7 +424,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
     void updatePossesed(float dTime) { 
         double right = 0;
         double fwd = 0;
-        //enum speed = 4.0;
+        //immutable speed = 4.0;
         double speed = 4.0;
         if(turbo) speed = 30.0;
         if(keyMap[SDLK_a]){ right-=speed; }

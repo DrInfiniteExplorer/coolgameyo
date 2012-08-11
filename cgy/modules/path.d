@@ -62,7 +62,7 @@ struct Path {
     }
 }
 
-enum maxPathTicks = 35;
+immutable maxPathTicks = 35;
 
 final class PathModule : Module {
 
@@ -159,7 +159,7 @@ final class PathModule : Module {
 }
 
 
-enum stateTickCount = 10;
+immutable stateTickCount = 10;
 
 
 static struct PathFindState {
@@ -311,11 +311,11 @@ static struct PathFindState {
     }
 
     // costs, lol
-    enum moveUpHalfstep = 1.6;
-    enum moveDownHalfstep = 1.1;
-    enum moveUpRegular = 4.5;
-    enum moveDownRegular = 2.7;
-    enum normalStep = 1.0;
+    immutable moveUpHalfstep = 1.6;
+    immutable moveDownHalfstep = 1.1;
+    immutable moveUpRegular = 4.5;
+    immutable moveDownRegular = 2.7;
+    immutable normalStep = 1.0;
 
     double costBetween(WorldState world, TilePos a, TilePos b) {
 
@@ -328,7 +328,7 @@ static struct PathFindState {
         }
     }
     double estimateBetween(TilePos a, TilePos b) {
-        enum estimateFactor = 0.99;
+        immutable estimateFactor = 0.99;
         auto xx = (a.value.X - b.value.X) ^^ 2;
         auto yy = (a.value.Y - b.value.Y) ^^ 2;
         auto zz = (a.value.Z - b.value.Z) ^^ 2;

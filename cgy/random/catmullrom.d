@@ -21,7 +21,7 @@ import random.random;
 // http://www.cs.clemson.edu/~dhouse/courses/405/notes/splines.pdf
 
 //Dynamic version
-Type CatmullRomSpline(Type)(double t, Type[] ar)
+Unqual!Type CatmullRomSpline(Type)(double t, Type[] ar)
 in{
     enforce(ar.length >= 4, "Can't do catmull-rom with less than 4 control points!");
 }
@@ -32,7 +32,7 @@ body{
         auto c1 = -0.5 * ar[0] +                 0.5 * ar[2];
         auto c0 =                 1.0 * ar[1];
     
-        return ((c3*t + c2)*t + c1)*t + c0;
+        return cast(Unqual!Type)  (((c3*t + c2)*t + c1)*t + c0);
     } else {
         int count = ar.length;
         int nspans = count-3;
@@ -49,7 +49,7 @@ body{
         auto c1 = -0.5 * knot[0] +                   0.5 * knot[2];
         auto c0 =                   1.0 * knot[1];
     
-        return ((c3*x + c2)*x + c1)*x + c0;
+        return cast(Unqual!Type) (((c3*x + c2)*x + c1)*x + c0);
     }
 }
 
@@ -87,16 +87,17 @@ body{
     }
 }
 
-enum vec3d[5] temperatureSpline = [vec3d(0, 0, 1), vec3d(0, 0, 1), vec3d(1, 1, 0), vec3d(1, 0, 0), vec3d(1, 0, 0)];
+
+immutable vec3d[5] temperatureSpline = [vec3d(0, 0, 1), vec3d(0, 0, 1), vec3d(1, 1, 0), vec3d(1, 0, 0), vec3d(1, 0, 0)];
 
 double[4] delegate(double) colorSpline(Type)(Type[] ar) {
     return (double d) {
         union Asd {
             double[4] ret;
-            Type tmp;
+            Unqual!Type tmp;
         }
         Asd asd;
         asd.tmp = CatmullRomSpline(d, ar);
         return asd.ret;
     };
-}
+} 

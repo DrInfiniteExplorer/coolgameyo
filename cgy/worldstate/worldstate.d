@@ -2,13 +2,14 @@
 module worldstate.worldstate;
 
 import std.algorithm;
-import std.range;
-import std.stdio;
 import std.container;
 import std.conv;
 import std.exception;
 //import std.file;
 import std.math;
+import std.parallelism;
+import std.range;
+import std.stdio;
 import std.typecons;
 
 import graphics.camera;
@@ -41,12 +42,13 @@ import util.rangefromto;
 import util.tileiterator;
 import util.filesystem;
 
-import worldstate.worldproxy;
 import worldstate.activity;
 import worldstate.ambient;
 import worldstate.floodfill;
+import worldstate.heightmap;
 import worldstate.population;
 import worldstate.time;
+import worldstate.worldproxy;
 
 import worldgen.maps;
 
@@ -65,17 +67,6 @@ interface WorldStateListener {
 }
 
 
-final class SectorHeightmap {
-    int[SectorSize.y][SectorSize.x] heightmap;
-
-    void opIndexAssign(int val, size_t x, size_t y) {
-        heightmap[x][y] = val;
-    }
-    ref int opIndex(size_t x, size_t y) {
-        return heightmap[x][y];
-    }
-    this() {};
-}
 
 class WorldState {
 
@@ -83,24 +74,6 @@ class WorldState {
         SectorHeightmap heightmap;
         Sector[int] sectors;
     }
-
-    static final class HeightmapTaskState {
-        SectorXYNum pos;
-        SectorHeightmap heightmap;
-        int x, y, z;
-        this(SectorXYNum p) {
-            pos = p;
-            heightmap = new SectorHeightmap;
-            x = 0;
-            y = 0;
-            z = int.max;
-        }            
-    }
-
-    static final class HeightmapTasks {
-        HeightmapTaskState[] list;
-    };
-    HeightmapTasks heightmapTasks;
 
     SectorXY[SectorXYNum] sectorsXY;
     Sector[SectorNum] sectorList;
@@ -118,6 +91,13 @@ class WorldState {
 
     WorldMap worldMap;
 
+    mixin WorldPopulationMixin;
+    mixin WorldTimeClockCode;
+    mixin LightStorageMethods;
+    mixin ActivityHandlerMethods;
+    mixin FloodFill;
+    mixin Heightmap;
+
     this(WorldMap _worldMap, TileTypeManager tilesys, EntityTypeManager entitysys, UnitTypeManager unitsys, SceneManager _sceneManager) {
         isServer = true;
         tileTypeManager = tilesys;
@@ -127,9 +107,9 @@ class WorldState {
         //worldGenParams = params;
         sceneManager = _sceneManager;
 
-        heightmapTasks = new HeightmapTasks;
 
         initFloodfill();
+        initHeightmap();
     }
 
     void destroy() {
@@ -239,8 +219,7 @@ class WorldState {
                 heightmap.heightmap = cast(int[128][])std.file.read(folder ~ "heightmap.bin");
                 xyPtr.heightmap = heightmap;
             } else {
-                heightmapTasks.list ~= new HeightmapTaskState(xy);
-                g_Statistics.HeightmapsNew(SectorSize.x * SectorSize.y);                
+                addHeightmapTask(xy);
             }
         }
 
@@ -293,64 +272,7 @@ class WorldState {
         sector.generateBlock(blockNum, worldMap);
     }
 
-    void generateHeightmapTaskFunc(HeightmapTaskState state) {
-        enum iterationLimit = 10_000;
-        auto xy = state.pos;
-        auto p = xy.getTileXYPos();
-        int iterations = 0;
-        int done = 0;
-        int yStart = state.y;
-        foreach (x ; state.x .. SectorSize.x) {
-            foreach (y ; yStart .. SectorSize.y) {
-                yStart = 0;
-                auto tmp = p.value + vec2i(x, y);
-                int z;
-                auto posXY = TileXYPos(tmp);
-                if (state.z == int.max) {
-                    z = worldMap.maxZ(posXY);
-                }
 
-                if(worldMap.isInsideWorld(TilePos(vec3i(posXY.value.X, posXY.value.Y, z)))) {
-                    while (worldMap.getTile(TilePos(vec3i(
-                                        posXY.value.X, posXY.value.Y, z))).type
-                            is TileTypeAir) {
-                        z -= 1;
-                        iterations++;
-                        if (iterations >= iterationLimit) {
-                            state.x = x;
-                            state.y = y;
-                            state.z = z;
-                            g_Statistics.HeightmapsProgress(done);
-                            return;
-                        }
-                    }
-                }
-                state.z = int.max;
-                state.heightmap[x, y] = z;
-                done++;
-            }
-        }
-        synchronized(heightmapTasks) {
-            bool pred(HeightmapTaskState a) {
-                return a == state;
-            }
-            heightmapTasks.list = remove!pred(heightmapTasks.list);
-            if (heightmapTasks.list.empty) {
-                g_Statistics.HeightmapsNew(0);
-            }
-        }
-        getSectorXY(xy).heightmap = state.heightmap;
-        g_Statistics.HeightmapsProgress(done);        
-    }
-
-    //Causes blocking, yeah!
-    void generateAllHeightmaps() {
-        synchronized(heightmapTasks) {
-            while (!heightmapTasks.list.empty) {
-                generateHeightmapTaskFunc(heightmapTasks.list[0]);
-            }
-        }
-    }
 
     bool hasSectorXY(SectorXYNum xy) {
         return (xy in sectorsXY) !is null;
@@ -370,10 +292,7 @@ class WorldState {
         //We didnt have it. Create it, and a heightmap along with it!
         SectorXY ret;
         if (generateHeightmap) {
-            synchronized(heightmapTasks) {
-                heightmapTasks.list ~= new HeightmapTaskState(xy);
-                g_Statistics.HeightmapsNew(SectorSize.x * SectorSize.y);
-            }
+            addHeightmapTask(xy);
         }
 
         sectorsXY[xy] = ret; //Spara det vi skapar, yeah!
@@ -581,22 +500,12 @@ class WorldState {
         }
         return null;
     }
-    ///////////////// inge mer entity kod!
+    ///////////////// inge mer entity kod! <- lol
 
     void update(Scheduler scheduler){
         floodFillSome();
 
-        synchronized (heightmapTasks) { //Not needed, since only thread working now. Anyway.. :)
-            foreach (state; heightmapTasks.list) {
-                //Trixy trick below; if we dont do this, the value num will be shared by all pushed tasks.
-                (HeightmapTaskState state){
-                    scheduler.push(asyncTask(
-                                (WorldProxy world){
-                                generateHeightmapTaskFunc(state);
-                                }));
-                }(state);
-            }
-        }
+        pushHeightmapTasks(scheduler);
 
         //MOVE UNITS
         //TODO: Make list of only-moving units, so as to not process every unit?
@@ -945,12 +854,5 @@ class WorldState {
             listener.onUpdateGeometry(tilePos);
         }
     }
-
-
-    mixin WorldPopulationMixin;
-    mixin WorldTimeClockCode;
-    mixin LightStorageMethods;
-    mixin ActivityHandlerMethods;
-    mixin FloodFill;
 
 }

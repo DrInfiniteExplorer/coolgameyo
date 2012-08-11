@@ -38,7 +38,7 @@ struct Lines{
     }
     
     void makeGraph(T)(Recti r, const(T[]) values, T min, T max) {
-        enum offset = 0;
+        immutable offset = 0;
         mixin(fixRect);
         double dx = 1.0 / to!(double)(values.length-1);
         vertices.length = values.length;
@@ -52,7 +52,7 @@ struct Lines{
     }
 
     void setLines(Recti r, vec2d[] points, vec3f color, vec2d _min = vec2d(0), vec2d _max = vec2d(0)) {
-        enum offset = 0;
+        immutable offset = 0;
         mixin(fixRect);
         double minX = double.max;
         double maxX = -minX;

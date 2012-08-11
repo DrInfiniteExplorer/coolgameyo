@@ -63,12 +63,12 @@ class FPSControlAI : UnitAI, CustomChange {
     }
 
     vec3d collideMove(vec3d pos, vec3d dir){
-        enum NOOO = vec3d(0,0,0);
+        immutable NOOO = vec3d(0,0,0);
         if (dir == NOOO) {
             return pos;
         }
-        enum epsilon = 1.0E-7;
-        enum OneEps = 1.0-epsilon;
+        immutable epsilon = 1.0E-7;
+        immutable OneEps = 1.0-epsilon;
         if (dir == vec3d(0, 0, 0)) { return pos; }
         if (dir.getLength > OneEps) {
             dir.setLength(OneEps);
@@ -86,7 +86,7 @@ class FPSControlAI : UnitAI, CustomChange {
 
         auto unitWidth = unit.unitWidth;
         auto unitHeight = unit.unitHeight;
-        enum dirs = [vec3i(1, 0, 0), vec3i(0, 1, 0), vec3i(0, 0, 1)];
+        immutable dirs = [vec3i(1, 0, 0), vec3i(0, 1, 0), vec3i(0, 0, 1)];
         
         auto sizes = [
             vec3i(1,                to!int(floor(unitWidth)+1),    to!int(ceil(unitHeight)+1)),

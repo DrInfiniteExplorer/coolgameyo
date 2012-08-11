@@ -27,12 +27,29 @@ mixin template FloodFill() {
                          "floodr", &r);
     }
 
+
+    void initialFloodFill() {
+
+        foreach(sectorNum ; parallel(floodingSectors)) {
+            auto abs = sectorNum.toBlockNum().value;
+            foreach(rel ; RangeFromTo( 0, BlocksPerSector.x - 1, 0, BlocksPerSector.y - 1, 0, BlocksPerSector.z - 1)) {
+                auto blockNum = BlockNum(abs + rel);
+                auto block = getBlock(blockNum, true);
+                g_Statistics.FloodFillProgress(1);
+            }
+
+        }
+
+        floodFillSome(int.max);
+    }
+
     void floodFillSome(int max=10_000) {
         int i = 0;
         while (i < max && current < floodingSectors.length) {
             i += fillOneBlock();
         }
     }
+
     private int fillOneBlock() {
         assert (!r.empty);
 
