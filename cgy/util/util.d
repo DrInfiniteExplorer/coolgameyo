@@ -74,8 +74,6 @@ void BREAKPOINT(uint doBreak=1) {
 }
 alias BREAKPOINT BREAK_IF;
 
-
-
 unittest {
     SYSTEM_INFO si;
     GetSystemInfo(&si);

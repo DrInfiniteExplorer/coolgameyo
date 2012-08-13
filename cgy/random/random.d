@@ -102,7 +102,8 @@ T CubicInter(T)(
                         T y2,T y3,
                         double mu)
 {
-    T a0,a1,a2,a3,mu2;
+    T a0,a1,a2,a3;
+    double mu2;
 
     mu2 = mu*mu;
     a0 = y3 - y2 - y0 + y1;
@@ -116,7 +117,7 @@ T CubicInter(T)(
 
 //B-splines are stable and convex and awesome?
 // mu goes from 0 to 1 and interpolates between x1 and x2
-T BSpline(T)(T x0, T x1, T x2, T x3, T t) {
+T BSpline(T)(T x0, T x1, T x2, T x3, double t) {
     return (x0 + 4*x1 + x2 + t*( 3*(x2 - x0) +  t*( 3*(x0 + x2) - 6*x1 + t*(-x0 + 3*(x1 - x2) + x3)))) / 6.0;
 }
 

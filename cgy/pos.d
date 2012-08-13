@@ -87,6 +87,12 @@ struct SectorNum {
                     value.Y * SectorSize.y,
                     value.Z * SectorSize.z));
     }
+
+    TileXYPos toTileXYPos() const{
+        return TileXYPos(vec2i(
+                             value.X * SectorSize.x,
+                             value.Y * SectorSize.y));
+    }
     aabbox3d!double getAABB(){
         auto minPos = toTilePos().value.convert!double();
         auto maxPos = minPos + vec3d(SectorSize.x, SectorSize.y, SectorSize.z);

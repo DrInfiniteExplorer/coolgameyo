@@ -17,6 +17,7 @@ import graphics.ogl;
 import graphics.renderconstants;
 
 import random.catmullrom;
+import random.random;
 
 import settings;
 import util.util;
@@ -197,11 +198,29 @@ class SplineEditor : GuiElementWindow {
             colors ~= color;
         }
 
+        auto Knotify(alias Mixer)(float t, vec3f[] ar) {
+            int count = ar.length;
+            int nspans = count-3;
+
+            double x = clamp(cast(double)t, 0.0, 1.0) * to!double(nspans);
+            int span = cast(int)x;
+            if (span >= count - 3) {
+                span = count - 3;
+            }
+            x -= span;
+            vec3f* knot = &ar[span];
+            return Mixer(knot[0], knot[1], knot[2], knot[3], x);
+
+        }
+
+        alias Knotify!CubicInter cubic;
+        alias Knotify!BSpline bspline;
+
         int width = colorImg.getAbsoluteRect().widthOf;
         float[] r, g, b;
         foreach(idx ; 0 .. width) {
             float time = cast(float)idx/cast(float)width;
-            color = CatmullRomSpline(time, colors);
+            color = bspline(time, colors);
             r ~= color.X;
             g ~= color.Y;
             b ~= color.Z;

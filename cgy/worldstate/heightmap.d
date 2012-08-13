@@ -1,19 +1,35 @@
 module worldstate.heightmap;
 
+import std.algorithm;
+
+import util.rangefromto;
+
 import pos;
 import worldstate.sizes;
 
 
 final class SectorHeightmap {
-    int[SectorSize.y][SectorSize.x] heightmap;
+    int[SectorSize.x][SectorSize.y] heightmap;
 
     void opIndexAssign(int val, size_t x, size_t y) {
-        heightmap[x][y] = val;
+        heightmap[y][x] = val;
     }
     ref int opIndex(size_t x, size_t y) {
-        return heightmap[x][y];
+        return heightmap[y][x];
     }
     this() {};
+
+    int[BlocksPerSector.x][BlocksPerSector.y] getMaxPerBlock() {
+        typeof(return) ret;
+        //This always feels like magic. D should have a property of multidimensional static-sized arrays to
+        // cast them into a single-dimensional array for operations like this.
+        (cast(int*)ret.ptr)[0.. BlocksPerSector.y * BlocksPerSector.x] = int.min;
+        foreach(int x, int y ; Range2D(0, SectorSize.x, 0, SectorSize.y)) {
+            int* v = &ret[y/BlockSize.y][x/BlockSize.x];
+            *v = max(*v, heightmap[y][x]);
+        }
+        return ret;
+    }
 }
 
 static final class HeightmapTaskState {
@@ -84,7 +100,7 @@ mixin template Heightmap() {
         }
     }
 
-    void generateHeightmapTaskFunc(int iterationLimit = 10_000)(HeightmapTaskState state) {
+    void generateHeightmapTaskFunc(int iterationLimit = 1000_000)(HeightmapTaskState state) {
         static if(compileHeightmaps) {
             auto xy = state.pos;
             auto p = xy.getTileXYPos();
@@ -100,16 +116,6 @@ mixin template Heightmap() {
                     auto posXY = TileXYPos(tmp);
 
                     z = worldMap.getRealTopTilePos(posXY);
-
-                    /*
-                    if(worldMap.isInsideWorld(TilePos(vec3i(posXY.value.X, posXY.value.Y, z)))) {
-                        while (worldMap.getTile(TilePos(vec3i(
-                                                              posXY.value.X, posXY.value.Y, z))).type
-                               is TileTypeAir) {
-                                   z -= 1;
-                               }
-                    }
-                    */
                     static if(iterationLimit != int.max) {
                         iterations++;
                         if (iterations >= iterationLimit) {

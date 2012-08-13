@@ -49,6 +49,7 @@ import worldgen.wind;
 import worldgen.worldgen;
 
 import worldstate.worldstate;
+import worldstate.heightmap;
 
 alias ValueMap2Dd ValueMap;
 
@@ -74,7 +75,7 @@ immutable halfWorldSize_xy = vec2i(mapScale[5]/2, mapScale[5]/2);
 final class WorldMap {
 
     mixin Moisture;
-    mixin Heightmap;
+    mixin worldgen.heightmap.Heightmap;
     mixin Wind;
     mixin Temperature;
 

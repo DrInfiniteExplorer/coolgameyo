@@ -38,6 +38,9 @@ struct SolidMap {
     const int sizeY = SectorSize.y;
     const int sizeZ = SectorSize.z;
     StorageType[sizeX][sizeY][sizeZ] data;
+
+    pragma(msg, data.length);
+
     bool dirty = false;
 
     bool set(vec3i idx, bool val) {
@@ -72,7 +75,7 @@ struct SolidMap {
         (&data[0][0][0])[0..(data.sizeof / data[0][0][0].sizeof)] = 0xFF;
     }
 
-    void updateBlock(Block b) {
+    void updateBlock(Block_t b) {
         dirty=true;
         auto blockNum = b.blockNum;
         auto relNum = blockNum.rel();
@@ -109,8 +112,8 @@ class Sector {
     private TilePos pos;
     private SectorNum sectorNum;
 
-    private Block[BlocksPerSector.z][BlocksPerSector.y][BlocksPerSector.x] blocks;
-    static assert(blocks.length == BlocksPerSector.x);
+    private Block_t[BlocksPerSector.x][BlocksPerSector.y][BlocksPerSector.z] blocks;
+    static assert(blocks[0][0].length == BlocksPerSector.x);
 
     private SolidMap solidMap;
 
@@ -147,7 +150,7 @@ class Sector {
         msg("Done destroying");
     }
 
-    const(Block)[] getBlocks() const {
+    const(Block_t)[] getBlocks() const {
         debug {
             auto b = &blocks[0][0][0];
             auto bb = b[0 .. BlocksPerSector.total];
@@ -203,11 +206,11 @@ class Sector {
         }
 
         while (readBytes < fileSize) {
-            Block block;
+            Block_t block;
             block.deserialize(&read);
             auto num = block.blockNum.rel();
-            enforce(blocks[num.X][num.Y][num.Z].tiles is null, "DERP!");
-            blocks[num.X][num.Y][num.Z] = block;
+            enforce(blocks[num.Z][num.Y][num.X].tiles is null, "DERP!");
+            blocks[num.Z][num.Y][num.X] = block;
             solidMap.updateBlock(block);
             block.tiles = null;
         }
@@ -233,35 +236,50 @@ class Sector {
         return true;
     }
     
-    void generateBlock(BlockNum blockNum, WorldMap worldMap)
+    private void generateBlock(BlockNum blockNum, WorldMap worldMap)
     in{
         assert(blockNum.getSectorNum() == sectorNum, "Trying to generate a block in the wrong sector!");
         assert(blockNum.getSectorNum.toTilePos() == pos);
         auto pos = blockNum.rel();
-        assert(blocks[pos.X][pos.Y][pos.Z] == INVALID_BLOCK, 
+        assert(blocks[pos.Z][pos.Y][pos.X] == INVALID_BLOCK, 
                 text("Trying to generate a block which already contains stuff.",
                     blockNum));
     }
     body{
+        BREAKPOINT;
+        //THIS FUNCTION IS OUT OF COMMISION AND DEPRECATED!
+        //WE NOW GENERATE WHOLE SECTORS AT A TIME INSTEAD!
+        /*
         auto pos = blockNum.rel();
         auto block = Block.generateBlock(blockNum, worldMap);
-        blocks[pos.X][pos.Y][pos.Z] = block;
+        blocks[pos.Z][pos.Y][pos.X] = block;
         solidMap.updateBlock(block);
+        */
     }
 
     void makeAirBlock(BlockNum blockNum) {
         auto pos = blockNum.rel();
         auto airBlock = AirBlock(blockNum);
-        blocks[pos.X][pos.Y][pos.Z] = airBlock;
+        blocks[pos.Z][pos.Y][pos.X] = airBlock;
+        solidMap.updateBlock(airBlock); //Can make a clearBlock ? 
     }
 
-    Block* getBlock(BlockNum blockNum)
+    Block getBlock(BlockNum blockNum)
     in{
         assert(blockNum.getSectorNum() == sectorNum);
     }
     body{
         auto pos = blockNum.rel();
-        return &blocks[pos.X][pos.Y][pos.Z];
+        return &blocks[pos.Z][pos.Y][pos.X];
+    }
+
+    void unsafe_setBlock(Block_t block) {
+        auto pos = block.blockNum.rel();        
+        Block blockPtr = &blocks[pos.Z][pos.Y][pos.X];
+        blockPtr.destroy;
+        *blockPtr = block;
+
+        solidMap.updateBlock(block);
     }
 
     bool hasContent(TilePos min, TilePos max) {

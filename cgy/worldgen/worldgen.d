@@ -57,17 +57,44 @@ mixin template WorldGenerator() {
         sys = tileTypeManager;
     }
 
-    Block fillBlock(Block block) {
-        auto tp0 = block.blockNum.toTilePos();
+    void fillSector(Sector sector, SectorHeightmap heightmap) {
 
-        double[BlockSize.x][BlockSize.y] zs;
-        foreach (xy; RangeFromTo (0, BlockSize.x-1,
-                    0, BlockSize.y-1, 0, 0)) {
-            auto pos = tp0;
-            pos.value += xy;
-            zs[xy.Y][xy.X] = 
-                getValueInterpolated(1, TileXYPos(pos));
+        double[SectorSize.x][SectorSize.y] heightValues;
+        auto sectorStart = sector.getSectorNum().toTileXYPos();
+        foreach(int x, int y ; Range2D(vec2i(0, 0), vec2i(SectorSize.x, SectorSize.y))) {
+            heightValues[y][x] = getValueInterpolated(1, TileXYPos(sectorStart.value + vec2i(x, y)));
         }
+
+        auto heightmap = heightmap.getMaxPerBlock();
+
+        auto sectorNum = sector.getSectorNum();
+        auto abs = sectorNum.toBlockNum().value;
+        Block_t tempBlock = Block.allocBlock();
+        foreach(rel ; RangeFromTo( 0, BlocksPerSector.x - 1, 0, BlocksPerSector.y - 1, 0, BlocksPerSector.z - 1)) {
+            auto blockNum = BlockNum(abs + rel);
+            if(blockNum.toTilePos().value.Z > heightmap[rel.Y][rel.X]) {
+                sector.makeAirBlock(blockNum);
+                continue;
+            }
+            Block_t block = tempBlock;
+            block.blockNum = blockNum;
+            if(fillBlockInternal(&block, heightValues)) {
+                tempBlock = block.allocBlock();
+            }
+            sector.unsafe_setBlock(block);
+        }
+        tempBlock.free();
+    }
+
+    //Returns true if the block is solid, false if it is sparse.
+    //It is the callers responsibility to make sure the block is free'd
+    private bool fillBlockInternal(Block block, ref double[SectorSize.x][SectorSize.y] groundValueMap) {
+        auto blockNum = block.blockNum;
+        auto blockRel = blockNum.rel();
+        auto tp0 = blockNum.toTilePos();
+
+        int tileOffset_x = blockRel.X * BlockSize.x;
+        int tileOffset_y = blockRel.Y * BlockSize.y;
 
         block.hasAir = false;
         block.hasNonAir = false;
@@ -78,8 +105,9 @@ mixin template WorldGenerator() {
                     0, BlockSize.y-1, 0, BlockSize.z-1)) {
             auto tp = tp0;
             tp.value += relPos;
-            auto tile = getTile(tp, zs[relPos.Y][relPos.X]);
-            block.tiles.tiles[relPos.X][relPos.Y][relPos.Z] = tile;
+            auto groundValue = groundValueMap[tileOffset_y + relPos.Y][tileOffset_x + relPos.X];
+            auto tile = getTile(tp, groundValue);
+            block.tiles.tiles[relPos.Z][relPos.Y][relPos.X] = tile;
 
             if (first) {
                 first = false;
@@ -97,21 +125,24 @@ mixin template WorldGenerator() {
             }
         }
         if (homogenous) {
-            block.free();
+            //block.free();
             //Block.free(block);
             block.tiles = null;
             block.sparse = true;
+            return false;
         }
 
-        return block;
+        return true;
     }
 
     Tile getTile(TilePos pos) {
+        BREAKPOINT;
         return getTile(pos,
                 getValueInterpolated(1, TileXYPos(pos)));
     }
 
     Tile getTile(TilePos pos, double z) {
+
         TileFlags flags = cast(TileFlags)(TileFlags.valid);
         if(! isInsideWorld(pos)) {
             return Tile(TileTypeAir, flags);

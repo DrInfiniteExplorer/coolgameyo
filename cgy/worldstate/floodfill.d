@@ -1,9 +1,24 @@
 module worldstate.floodfill;
 
+import pos;
 import util.array;
 
+static final class FillingTaskState {
+    SectorNum sectorNum;
+    this(SectorNum p) {
+        sectorNum = p;
+    }            
+}
+
 mixin template FloodFill() {
-    SectorNum[] floodingSectors;
+
+    static final class FillingTasks {
+        FillingTaskState[] list;
+        alias list this;
+    };
+    FillingTasks fillingTasks;
+
+    SectorNum[] _floodingSectors;
     size_t current;
     RangeFromTo r;
 
@@ -14,15 +29,16 @@ mixin template FloodFill() {
                 0, BlocksPerSector.z - 1);
     }
     void initFloodfill() {
+        fillingTasks = new FillingTasks;
         reset_r();
     }
     void serializeFloodfill(Value v) {
-        v.populateJSONObject("toFlood", floodingSectors,
+        v.populateJSONObject("toFlood", _floodingSectors,
                              "floodcur", current,
                              "floodr", r);
     }
     void deserializeFloodfill(Value v) {
-        v.readJSONObject("toFlood", &floodingSectors,
+        v.readJSONObject("toFlood", &_floodingSectors,
                          "floodcur", &current,
                          "floodr", &r);
     }
@@ -30,58 +46,66 @@ mixin template FloodFill() {
 
     void initialFloodFill() {
 
-        foreach(sectorNum ; parallel(floodingSectors)) {
+        foreach(task ; parallel(fillingTasks)) {
+        //foreach(task ; fillingTasks) {
+                fillingTaskFunc(task);
+            /*
             auto abs = sectorNum.toBlockNum().value;
             foreach(rel ; RangeFromTo( 0, BlocksPerSector.x - 1, 0, BlocksPerSector.y - 1, 0, BlocksPerSector.z - 1)) {
                 auto blockNum = BlockNum(abs + rel);
                 auto block = getBlock(blockNum, true);
                 g_Statistics.FloodFillProgress(1);
             }
-
+            */
         }
+        foreach(task ; fillingTasks) {
 
-        floodFillSome(int.max);
+            notifySectorLoad(task.sectorNum);
+        }
+        fillingTasks.length = 0;
+        assumeSafeAppend(fillingTasks);
+
     }
 
-    void floodFillSome(int max=10_000) {
-        int i = 0;
-        while (i < max && current < floodingSectors.length) {
-            i += fillOneBlock();
-        }
-    }
+    void pushFloodFillTasks(Scheduler scheduler) {
+        synchronized (fillingTasks) {
+            foreach (state; fillingTasks.list) {
+                //Trixy trick below; if we dont do this, the value num will be shared by all pushed tasks.
+                (FillingTaskState state){
+                    scheduler.push(
+                                   asyncTask(
+                                             (WorldProxy world){
+                                                 fillingTaskFunc(state);
+                                             }));
+                }(state);
 
-    private int fillOneBlock() {
-        assert (!r.empty);
-
-        scope (success) {
-            r.popFront();
-            if (r.empty) {
-                reset_r();
-                notifySectorLoad(floodingSectors[current]);
-
-                current += 1;
-                if (current >= floodingSectors.length) {
-                    floodingSectors.length = 0;
-                    floodingSectors.assumeSafeAppend();
-                    current = 0;
-                    g_Statistics.FloodFillNew(0);
-                }
             }
         }
+        fillingTasks.length = 0;
 
-        auto abs = floodingSectors[current].toBlockNum();
-        abs.value += r.front;
+    }
 
-        auto block = getBlock(abs, true);
-        assert (block.valid);
-
-        g_Statistics.FloodFillProgress(1);
-
-        return block.sparse ? 1 : 45;
+    void fillingTaskFunc(FillingTaskState state) {
+        mixin(MeasureTime!"fillingTaskFunc: ");
+        SectorXY* xy;
+        auto sectorNum = state.sectorNum;
+        auto sector = getSector(sectorNum, &xy);
+        auto heightmap = xy.heightmap;
+        if(heightmap is null) {
+            addFloodFillSector(state.sectorNum);
+            return;
+        }
+        worldMap.fillSector(sector, heightmap);
+        g_Statistics.FloodFillProgress(BlocksPerSector.total);
+        notifySectorLoad(state.sectorNum);
     }
 
     void addFloodFillSector(SectorNum num) {
-        floodingSectors ~= num;
+        //_floodingSectors ~= num;
+        synchronized(fillingTasks) {
+            fillingTasks.list ~= new FillingTaskState(num);
+        }
+
         g_Statistics.FloodFillNew(BlocksPerSector.total);
     }
 }

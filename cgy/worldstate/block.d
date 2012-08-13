@@ -83,10 +83,10 @@ shared static this() {
     freeblock = AllocationBlock.create();
 }
 
-Block alloc() {
+Block_t alloc() {
     synchronized(blockAllocatorMutex) {
 
-        Block block;
+        Block_t block;
         block.tiles = freeblock.getMem();
         setFlag(block.flags, BlockFlags.valid, true);
 
@@ -95,7 +95,7 @@ Block alloc() {
         return block;
     }
 }
-void free(Block block) {
+void free(Block_t block) {
     synchronized(blockAllocatorMutex) {
         freeblock.returnMem(block.tiles);
     }
@@ -110,10 +110,10 @@ enum BlockFlags : ubyte {
 }
 
 struct BlockTiles {
-    Tile[BlockSize.z][BlockSize.y][BlockSize.x] tiles;
+    Tile[BlockSize.x][BlockSize.y][BlockSize.z] tiles;
 }
 
-struct Block {
+struct Block_t {
 
     BlockTiles* tiles = null;
 
@@ -166,7 +166,7 @@ struct Block {
             return sparseTile();
         }
         auto pos = tilePos.rel();
-        return tiles.tiles[pos.X][pos.Y][pos.Z];
+        return tiles.tiles[pos.Z][pos.Y][pos.X];
     }
 
     void unsparsify() {
@@ -189,7 +189,7 @@ struct Block {
         if (sparse) {
             unsparsify();
         }
-        tiles.tiles[p.X][p.Y][p.Z] = tile;
+        tiles.tiles[p.Z][p.Y][p.X] = tile;
     }
 
     void setTileLight(TilePos pos, const byte newVal, const bool isSunLight)
@@ -204,7 +204,7 @@ struct Block {
             unsparsify();
         }
 
-        tiles.tiles[p.X][p.Y][p.Z].setLight(isSunLight, newVal);
+        tiles.tiles[p.Z][p.Y][p.X].setLight(isSunLight, newVal);
     }
 
     bool valid() const @property { return (flags & BlockFlags.valid) != 0; }
@@ -255,12 +255,9 @@ struct Block {
         }
     }
 
-    static Block generateBlock(BlockNum blockNum, WorldMap worldMap) {
+    static Block_t allocBlock() {
         auto block = alloc();
-        block.blockNum = blockNum;
-
-
-        return worldMap.fillBlock(block);
+        return block;
     }
 
     void free() {
@@ -271,14 +268,16 @@ struct Block {
     // allocation / freelist stuff
 }
 
-Block INVALID_BLOCK = {
+alias Block_t* Block;
+
+Block_t INVALID_BLOCK = {
     tiles : null,
     flags : BlockFlags.none,
     blockNum : BlockNum(vec3i(int.min, int.min, int.min)),
 };
 
-Block AirBlock(BlockNum blockNum) {
-    Block ret;
+Block_t AirBlock(BlockNum blockNum) {
+    Block_t ret;
     ret.flags = cast(BlockFlags)(
             BlockFlags.valid | BlockFlags.sparse | BlockFlags.hasAir);
     ret.blockNum = blockNum;

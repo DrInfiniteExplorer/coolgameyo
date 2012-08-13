@@ -206,6 +206,7 @@ class WorldState {
 
 
     //Ensure that it only happens when no other code is running.
+    // Why? This might be a problem soon.
     Sector loadSector(SectorNum num)
         in{
             BREAK_IF(getSector(num) !is null);
@@ -244,7 +245,10 @@ class WorldState {
     //If the block is decidedly above ground level, we use a shortcut and set it as a sparse air block immediately.
     //Otherwise we let the world-generator produce a block for us.
     //TODO: Measure the time it takes to check for above-ground-level for comparisons.
-    void generateBlock(BlockNum blockNum) {
+    private void generateBlock(BlockNum blockNum) {
+        //This function is now deprecated. We generate whole sectors at a time now.
+        BREAKPOINT;
+
         SectorXY* xy;
         auto sectorNum = blockNum.getSectorNum();
         auto sector = getSector(sectorNum, &xy);
@@ -269,7 +273,7 @@ class WorldState {
                 return;
             }
         }
-        sector.generateBlock(blockNum, worldMap);
+        //sector.generateBlock(blockNum, worldMap);
     }
 
 
@@ -355,9 +359,9 @@ class WorldState {
     }
 
 
-    Block* getBlockLastBlock = null;
+    Block getBlockLastBlock = null;
     BlockNum getBlockLastBlockNum = BlockNum(vec3i(int.min));
-    private Block* getBlock(BlockNum blockNum, bool generate=false) {
+    private Block getBlock(BlockNum blockNum, bool generate=false) {
         /*
            if (blockNum == getBlockLastBlockNum) {
            return getBlockLastBlock;
@@ -503,8 +507,9 @@ class WorldState {
     ///////////////// inge mer entity kod! <- lol
 
     void update(Scheduler scheduler){
-        floodFillSome();
+        //floodFillSome();
 
+        pushFloodFillTasks(scheduler);
         pushHeightmapTasks(scheduler);
 
         //MOVE UNITS
@@ -749,17 +754,9 @@ class WorldState {
 
         auto heightmap = sectorXY.heightmap;
         if (heightmap is null ) {
-            int z = worldMap.maxZ(xy);
-            auto tp = TilePos(vec3i(xy.value.X, xy.value.Y, z));    
-            if(!worldMap.isInsideWorld(tp)) {
-                return tp;
-            }
-            while (worldMap.getTile(TilePos(vec3i(
-                                xy.value.X, xy.value.Y, z))).type
-                    is TileTypeAir) {
-                z -= 1;
-            }
-            return TilePos(vec3i(xy.value.X, xy.value.Y, z));
+            int z = worldMap.getRealTopTilePos(xy);
+            auto tp = TilePos(vec3i(xy.value.X, xy.value.Y, z));
+            return tp;
         }
         assert(heightmap !is null, "heightmap == null! :(");
         auto pos = vec3i(xy.value.X, xy.value.Y, heightmap[x, y]);

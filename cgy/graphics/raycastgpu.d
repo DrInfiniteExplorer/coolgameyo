@@ -126,18 +126,18 @@ void uploadTileData(WorldState world, Camera camera) {
                 );
 
         bool sameSector = oldSectorNum
-            [rel.X]
+            [rel.Z]
             [rel.Y]
-            [rel.Z] == sectorNum;
+            [rel.X] == sectorNum;
         if(!dirty && sameSector) { //If not dirty and same sector
             continue;
         }
         writeln("Uploading sector data! ", to!string(sectorNum));
         tileMap.dirty = false;
         oldSectorNum
-            [rel.X]
+            [rel.Z]
             [rel.Y]
-            [rel.Z] = sectorNum;
+            [rel.X] = sectorNum;
 
         rel *= vec3i(SolidMap.sizeX, SolidMap.sizeY, SolidMap.sizeZ);
         const size_t[3] origin = [rel.X,rel.Y,rel.Z];

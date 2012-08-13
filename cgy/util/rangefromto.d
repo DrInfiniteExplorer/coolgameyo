@@ -116,7 +116,7 @@ unittest {
     int[5][5][5] x;
     cast(int[])(x[0][0])[] = 0;
     foreach (p; RangeFromTo (0,4,0,4,0,4)) {
-        x[p.X][p.Y][p.Z] = 1;
+        x[p.Z][p.Y][p.X] = 1;
     }
     auto xx = &x[0][0][0];
     for (int i = 0; i < (x.sizeof / x[0].sizeof ); i += 1) {
