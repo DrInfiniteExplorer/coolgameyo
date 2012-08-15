@@ -6,7 +6,7 @@ mixin template Heightmap() {
 
     ValueMap heightMap;
 
-    double worldHeight = 8_848*2/0.7; //Twice mt everest
+    double worldHeight = 8_848*2/0.7; //Twice mt everest, then some. ( /0.7 ???? :S ) ah, to make worldMax = that.
     double worldMin;
     double worldMax;
 

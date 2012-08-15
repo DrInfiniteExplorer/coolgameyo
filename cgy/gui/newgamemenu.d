@@ -14,6 +14,7 @@ import gui.all;
 import gui.mainmenu;
 import gui.worldview;
 
+import json;
 import pos;
 
 import settings;
@@ -38,7 +39,7 @@ class NewGameMenu : GuiElementWindow {
     mixin Page2;
 
 
-    string worldName;
+//    string worldName;
 
     this(MainMenu m) {
         main = m;
@@ -61,9 +62,8 @@ class NewGameMenu : GuiElementWindow {
     void onNext() {
 
         if(page1.isVisible) {
-            auto name = worldList.getItemText(worldSelected);
             page1.setVisible(false);
-            initPage2(name);
+            initPage2();
         } else if(page2.isVisible) {
             page2.setVisible(false);
         } else {
@@ -96,7 +96,6 @@ class NewGameMenu : GuiElementWindow {
     }    
     void onStartGame() {
         destroy();
-        startPos = halfWorldSize_xy;
         main.onNewGame(startPos, worldMap.worldHash);
     }    
     

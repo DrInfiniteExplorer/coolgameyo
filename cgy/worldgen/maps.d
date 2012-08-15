@@ -40,6 +40,7 @@ import util.util;
 import util.voronoi.wrapper;
 
 import worldgen.areas;
+import worldgen.biomes;
 import worldgen.heightmap;
 import worldgen.layers;
 import worldgen.mapviz;
@@ -80,6 +81,8 @@ final class WorldMap {
     mixin Temperature;
 
     mixin Areas;
+
+    mixin Biomes;
 
     mixin MapViz;
 
@@ -197,6 +200,8 @@ final class WorldMap {
     void destroy() {
         destroyed = true;
     }
+
+
 
 
     void step() {

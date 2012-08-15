@@ -574,6 +574,7 @@ d:\D\ulnb0333\ulink.exe $(IntDir)\$(TargetName).obj gdi32.lib win32.lib advapi32
   </Folder>
   <Folder name="worldgen">
    <File path="worldgen\areas.d" />
+   <File path="worldgen\biomes.d" />
    <File path="worldgen\heightmap.d" />
    <File path="worldgen\layers.d" />
    <File path="worldgen\maps.d" />

@@ -152,7 +152,16 @@ mixin template WorldGenerator() {
             tile.sunLightValue = 15;
             return tile;
         }
+
+        //For now just use basic climate types to determine tile types.
+//        auto area = getArea(pos.toTileXYPos());
+  //      getBasicTileType(area);
+
         return Tile(TileTypeAir+1, flags);
+    }
+
+    auto getBasicTileType(Area area) {
+        
     }
 
     long worldRadius = mapScale[5]/2;

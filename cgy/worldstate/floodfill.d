@@ -46,6 +46,9 @@ mixin template FloodFill() {
 
     void initialFloodFill() {
 
+        if(fillingTasks.length == 0) {
+            g_Statistics.FloodFillNew(0);
+        }
         foreach(task ; parallel(fillingTasks)) {
         //foreach(task ; fillingTasks) {
                 fillingTaskFunc(task);

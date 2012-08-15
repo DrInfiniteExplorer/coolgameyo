@@ -6,6 +6,10 @@ import std.bitmanip;
 
 import json;
 
+import worldgen.maps;
+
+immutable areaCount = Dim / 2;
+
 struct Area_t {
     union {
         mixin(bitfields!(
@@ -58,7 +62,7 @@ final class Region {
 mixin template Areas() {
     VoronoiWrapper areaVoronoi;
 
-    Area_t[Dim*Dim/16] areas;
+    Area_t[areaCount*areaCount] areas;
 
     Region[] regions;
 
@@ -66,7 +70,7 @@ mixin template Areas() {
         //Do nothing here. Just be awesome.
     }
 
-    string areasJSONPath() const @property {
+    string areasBinaryPath() const @property {
         return worldPath ~ "/areas.bin";
     }
     string regionsJSONPath() const @property {
@@ -75,13 +79,13 @@ mixin template Areas() {
 
 
     void saveAreas() {
-        writeBin(areasJSONPath, areas);
+        writeBin(areasBinaryPath, areas);
         encode(regions).saveJSON(regionsJSONPath, false);
 
     }
     void loadAreas() {
         Area_t[] temp;
-        readBin(areasJSONPath, temp);
+        readBin(areasBinaryPath, temp);
         areas[] = temp[];
 
         auto regionsValue = loadJSON(regionsJSONPath);
@@ -94,10 +98,11 @@ mixin template Areas() {
         generateAreas!true();
     }
 
-    void generateAreas(bool regenerate = false)() {
-        areaVoronoi = new VoronoiWrapper(Dim/4, Dim/4, voronoiSeed);
-        areaVoronoi.setScale(vec2d(mapScale[5]));        
-        static if(!regenerate) {
+    void generateAreas(bool regenerateVoronoiOnly = false)() {
+        areaVoronoi = new VoronoiWrapper(areaCount, areaCount, voronoiSeed);
+        areaVoronoi.setScale(vec2d(mapScale[5]));
+        //areaVoronoi.setScale(vec2d(Dim));        
+        static if(regenerateVoronoiOnly == false) {
             classifyAreas();
         } 
     }
@@ -107,7 +112,33 @@ mixin template Areas() {
         return &areas[areaId];
     }
 
+    vec3f getClimateColorForTile(TileXYPos tp) {
+        ubyte r,g,b,a;
+        //Very much same color as for climate in generateMap.
+        vec2d rel = tp.value.convert!double / vec2d(worldSize);
+        vec2i idx = (rel * Dim).convert!int;
+        auto x = clamp(idx.X, 0, Dim-1);
+        auto y = clamp(idx.Y, 0, Dim-1);
+
+        auto height = heightMap.get(x, y);
+        if(height <= 0) {
+            r = g = a = 0;
+            b = 96;
+            return vec3i(r,g,b).convert!float / 255.0f;
+        }
+        auto moisture = moistureMap.get(x, y);
+        auto temp = temperatureMap.get(x, y);
+
+        //int heightIdx = clamp(cast(int)(height*4 / worldMax), 0, 3);
+        int tempIdx = clamp(cast(int)((temp-temperatureMin)*4 / temperatureRange), 0, 3);
+        int moistIdx = clamp(cast(int)(moisture*4.0/10.0), 0, 3);
+        //msg(tempIdx, " ", temp-world.temperatureMin);
+
+        climates.getPixel(3-tempIdx, 3-moistIdx, r, g, b, a);
+        return vec3i(r,g,b).convert!float / 255.0f;
+    }
     vec3f getClimateColor(TileXYPos tp) {
+        //return getClimateColorForTile(tp);
         auto area = getArea(tp);
         auto sea = area.isSea;
         if(sea) {
@@ -159,17 +190,17 @@ mixin template Areas() {
 
     void classifyAreas() {
         auto poly = areaVoronoi.poly;
-        double temp[Dim*Dim/16];
-        double moisture[Dim*Dim/16];
-        double count[Dim*Dim/16];
-        bool isSea[Dim*Dim/16];
+        double temp[areaCount*areaCount];
+        double moisture[areaCount*areaCount];
+        double count[areaCount*areaCount];
+        bool isSea[areaCount*areaCount];
         isSea[] = true;
         temp[] = 0;
         moisture[] = 0;
         count[] = 0;
         //Determine average climate in cell / area
-        foreach(x, y ; Range2D(0, 400, 0, 400)) {
-            int cellId = areaVoronoi.identifyCell(vec2d(x, y));
+        foreach(x, y ; Range2D(0, Dim, 0, Dim)) {
+            int cellId = areaVoronoi.identifyCell(vec2d(x, y) * vec2d(worldSize / Dim));
             temp[cellId] += temperatureMap.get(x, y);
             moisture[cellId] += moistureMap.get(x, y);
             count[cellId] += 1;
@@ -181,7 +212,7 @@ mixin template Areas() {
         moisture[] /= count[];
 
         //Transition from "cell" to "area"
-        foreach(idx ; 0 .. Dim*Dim/16) {
+        foreach(idx ; 0 .. areaCount*areaCount) {
             int tempIdx = clamp(cast(int)((temp[idx]-temperatureMin)*4 / temperatureRange), 0, 3);
             int moistIdx = clamp(cast(int)(moisture[idx]*4.0/10.0), 0, 3);
             //msg(temp[Idx], " ", moisture[Idx]);
@@ -195,7 +226,7 @@ mixin template Areas() {
         }
 
         //Group areas together into regions by floodfill.
-        foreach(idx ; 0 .. Dim*Dim/16) {
+        foreach(idx ; 0 .. areaCount*areaCount) {
             Area startArea = &areas[idx];
             if(startArea.region !is null) continue;
 

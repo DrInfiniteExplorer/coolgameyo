@@ -16,7 +16,7 @@ mixin template Page2() {
     immutable smallSize = mapScale[smallLevel];
 
 
-    void initPage2(string worldName) {
+    void initPage2() {
         page2 = new GuiElement(this);
         page2.setRelativeRect(Rectd(0, 0, 1, 1));
         page2.setVisible(true);
@@ -24,6 +24,10 @@ mixin template Page2() {
 
         worldMap = new WorldMap(worldName);
         mapViz = worldMap.getVisualizer();
+
+        try {
+            loadJSON("worlds/" ~ worldName ~ "/start.json").readJSONObject("startPos", &startPos);
+        }catch(Throwable o) {}
 
         double _400Pixels = 400.0 / renderSettings.windowWidth;
 
@@ -33,10 +37,13 @@ mixin template Page2() {
 
         auto backButton = new PushButton(page2, Rectd(bigWorldImage.leftOf, bigWorldImage.bottomOf + 0.05, 0.2, 0.1), "Back", &onBack);
 
-        new TabBar(page2, Rectd(bigWorldImage.leftOf, bigWorldImage.topOf - 0.07, bigWorldImage.widthOf * 2, 0.05),
+        auto tabBar = new TabBar(page2, Rectd(bigWorldImage.leftOf, bigWorldImage.topOf - 0.07, bigWorldImage.widthOf * 2, 0.05),
                    "Heightmap", { show!"Heightmap"(); },
-                   "Shaded", { show!"ShadedHeightmap"(); }
+                   "Shaded", { show!"ShadedHeightmap"(); },
+                   "Climate", { show!"Climate"(); }
         );
+        tabBar.select(2);
+
 
         auto StartButton = new PushButton(page2, Rectd(backButton.leftOf, backButton.bottomOf + 0.05, 0.2, 0.1), "Start", {
             worldMap.destroy();
@@ -80,16 +87,24 @@ mixin template Page2() {
 
     void delegate(vec2i) updatePos;
     void show(string which)() {
-        bigWorldImage.setImage( mixin(q{mapViz.get} ~ which ~ q{Image()}));
+        mixin(MeasureTime!"show: ");
+        auto img = mixin(q{mapViz.get} ~ which ~ q{Image()});
+
+
+        auto pixPos = ((startPos.convert!double / vec2d(worldSize)) * vec2d(400)).convert!int;
+        img.setPixel(pixPos.X, pixPos.Y, 255, 0, 0, 0);
+        bigWorldImage.setImage( img );
+        
+        img = mapViz.generateMap!(which)(TileXYPos(startPos), smallSize);
+        smallWorldImage.setImage(img);
+
         updatePos = (vec2i tilePos) {
-            mixin(MeasureTime!"updatePos:");
             startPos = tilePos;
-            auto img = mapViz.generateMap!(which)(TileXYPos(tilePos), smallSize);
-            smallWorldImage.setImage(img);
-            //smallWorldImage.setImageSource(Rectf(0.4, 0.4, 0.2, 0.2));
-            msg(tilePos);
+            makeJSONObject("startPos", startPos).saveJSON("worlds/" ~ worldName ~ "/start.json");
+            show!which();
+
         };
-        updatePos(startPos);
+        //updatePos(startPos);
     }
 
     //Show about 12² kilometers on small map

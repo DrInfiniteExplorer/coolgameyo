@@ -13,6 +13,7 @@ mixin template Page1() {
     GuiElementListBox worldList;
     GuiElementImage worldImage;
     int worldSelected = -1;
+    string worldName;
 
     void initPage1() {
 
@@ -78,6 +79,7 @@ mixin template Page1() {
             continueButton.setEnabled(true);
             auto name = worldList.getItemText(worldSelected);
             worldImage.setImage(WorldMap.getWorldImage(name));
+            worldName = name;
         }
     }
 

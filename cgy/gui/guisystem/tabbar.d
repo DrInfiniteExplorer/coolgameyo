@@ -8,6 +8,8 @@ import util.rect;
 
 class TabBar : public GuiElement {
 
+    SimpleElementButton[] buttons;
+
     this(T...)(GuiElement parent, Rectd pos, T t) if( (T.length % 2) == 0 ) {
         super(parent);
         setRelativeRect(pos);
@@ -20,7 +22,7 @@ class TabBar : public GuiElement {
                 auto label = t[idx];
                 auto cb = t[idx+1];
                 double x = width * idx / 2;
-                new SimpleElementButton(this, Rectd(x, 0, width, 1), label,
+                buttons ~= new SimpleElementButton(this, Rectd(x, 0, width, 1), label,
                                         (void delegate() cb) {
                                             return (SimpleElementButton b) {
                                                 if(selected !is null) {
@@ -32,6 +34,14 @@ class TabBar : public GuiElement {
                                             };
                                         }(cb));
             }
+        }
+    }
+
+    void select(int idx) {
+        auto butt = buttons[idx];
+        if(butt !is null) {
+            butt.onPushed(true, false);
+            butt.onPushed(false, false);
         }
     }
 }

@@ -73,7 +73,8 @@ mixin template MapViz() {
         Image getAreaImage(Image climateTypes, bool renderAreaBorders, bool renderAllBorders) {
             Image areaMap = Image(null, Dim, Dim);
             foreach(x, y, ref r, ref g, ref b, ref a ; areaMap) {
-                int cellId = areaVoronoi.identifyCell(vec2d(x, y));
+                auto tp = (vec2d(x, y) / vec2d(400)) * vec2d(worldSize);
+                int cellId = areaVoronoi.identifyCell(tp);
                 auto area = areas[cellId];
 
                 bool isSea = area.isSea;
@@ -120,11 +121,11 @@ mixin template MapViz() {
 
         void drawAreaBorders(Image image, bool onlyRegions) {
             foreach(edge ; areaVoronoi.poly.edges) {
-                auto start = edge.getStartPoint();
-                auto end = edge.getEndPoint();
+                auto start = edge.getStartPoint().pos * vec2d(400.0 / worldSize);
+                auto end = edge.getEndPoint().pos * vec2d(400.0 / worldSize);
 
-                auto height1 = heightMap.getValue(start.pos.X, start.pos.Y);
-                auto height2 = heightMap.getValue(end.pos.X, end.pos.Y);
+                auto height1 = heightMap.getValue(start.X, start.Y);
+                auto height2 = heightMap.getValue(end.X, end.Y);
                 if(height1 <= 0 || height2 <= 0) {
                     continue;
                 }
@@ -133,7 +134,7 @@ mixin template MapViz() {
                 if(onlyRegions) {
                     if((areas[site1].climateType) == (areas[site2].climateType)) continue;
                 }
-                image.drawLine(start.pos.convert!int, end.pos.convert!int, vec3i(0));
+                image.drawLine(start.convert!int, end.convert!int, vec3i(0));
             }
         }
 
@@ -153,7 +154,47 @@ mixin template MapViz() {
             }
             //*/
 
-            static if(type == "ShadedHeightmap") {
+            static if(type == "Climate") {
+                auto min = (tilePos.value - vec2i(diameter / 2)).convert!double;
+
+                auto diam = vec2i(diameter).convert!double;
+                auto asd = new ValueMap(Dim, Dim);
+                auto step = vec2d(diameter / 400.0, 0).convert!int;
+
+
+                Image climateMap = Image(null, Dim, Dim);
+                foreach(X, Y, ref r, ref g, ref b, ref a ; climateMap) {
+                    auto dX = X / 400.0;
+                    auto dY = Y / 400.0;
+
+                    vec2d tp = min + (diam * vec2d(dX, dY));
+
+                    vec2d rel = tp / vec2d(worldSize);
+                    vec2i idx = (rel * 400).convert!int;
+                    auto x = clamp(idx.X, 0, 399);
+                    auto y = clamp(idx.Y, 0, 399);
+
+                    auto height = heightMap.get(x, y);
+                    if(height <= 0) {
+                        r = g = a = 0;
+                        b = 96;
+                        continue;
+                    }
+                    auto moisture = moistureMap.get(x, y);
+                    auto temp = temperatureMap.get(x, y);
+
+                    //int heightIdx = clamp(cast(int)(height*4 / worldMax), 0, 3);
+                    int tempIdx = clamp(cast(int)((temp-temperatureMin)*4 / temperatureRange), 0, 3);
+                    int moistIdx = clamp(cast(int)(moisture*4.0/10.0), 0, 3);
+                    //msg(tempIdx, " ", temp-world.temperatureMin);
+
+                    climates.getPixel(3-tempIdx, 3-moistIdx, r, g, b, a);
+                }
+                return climateMap;
+
+
+
+            } else static if(type == "ShadedHeightmap") {
                 auto min = tilePos.value - vec2i(diameter / 2);
 
                 auto diam = vec2i(diameter).convert!double;

@@ -42,7 +42,7 @@ mixin template Temperature() {
 
         //Every 1000 meter gets about 10 degree colder
         // http://www.marietta.edu/~biol/biomes/biome_main.htm
-        auto heightChillField = new Map(heightMap, d => d < 0 ? -10 : -d/100);
+        auto heightChillField = new Map(heightMap, d => d < 0 ? -10 : -d/500);
 
         double combine(double x, double y) {
             double grad = 0.0;
