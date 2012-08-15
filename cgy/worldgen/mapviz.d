@@ -226,7 +226,7 @@ mixin template MapViz() {
                     grad = -(asd.getValue(x, y) - asd.getValue(x+dir.X, y+dir.Y)) * 0.5;
                     return 4 + grad;
 
-                }, Dim, Dim);
+                }, Dim, Dim); 
 
                 return shadedMap.toImage(-10, 100, true);
             } else {

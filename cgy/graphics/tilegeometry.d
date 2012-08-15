@@ -57,82 +57,94 @@ struct GRFace{
 }
 
 
-static const(string) FixLighting_get(int num, int dir, int which) {
-    string[int] map = [
-        0 : "0",
-        1 : "1",
-        2 : "2",
-        -1 : "-1"
-    ];
+const(string) FixLighting_get(int num, int dir, int which) {
     int div, mod;
     div = (which/3) -1;
     mod = (which%3) -1;
     if(num == 0) { //X
-        return text(map[dir], ", ", map[div], ", ", map[mod]);
+        return text(dir, ", ", div, ", ", mod);
     } else if(num == 1) { //Y
-        return text(map[div], ", ", map[dir], ", ", map[mod]);
+        return text(div, ", ", dir, ", ", mod);
     } else if(num == 2) { //Z
-        return text(map[div], ", ", map[mod], ", ", map[dir]);
+        return text(div, ", ", mod, ", ", dir);
     }
     assert(0); 
 }
 
 
-template FixLighting(const string A, const int num, const int dir, const string one, const string two, const string three, const string four, const bool sunLight) {
+template FixLighting(const string A, const int num, const int dir, const string one, const string two, const string three, const string four) {
 
-    enum lighting = [ false : "lightValue", true : "sunLightValue" ];
+    /*
+    static if (sunLight) {
+        enum lighting = "sunLightValue";
+    } else {
+        enum lighting = "lightValue";
+    }
+    */
+
+    enum lighting = "lightValue";
+
     //This is used to get a vertex index based on stuff like "UH". one-two-three-four is different
     // for different orientations to fix lighting.
+
     enum vertIndex = [ one : "0", two : "1", three : "2", four : "3" ];
  
-    const char[] FixLighting = text("
-                                    if(0 == smoothMethod) {
-                                    newFace.quad[0].",lighting[sunLight]," = tile",A,".",lighting[sunLight],"/cast(float)MaxLightStrength;
-                                    newFace.quad[1].",lighting[sunLight]," = tile",A,".",lighting[sunLight],"/cast(float)MaxLightStrength;
-                                    newFace.quad[2].",lighting[sunLight]," = tile",A,".",lighting[sunLight],"/cast(float)MaxLightStrength;
-                                    newFace.quad[3].",lighting[sunLight]," = tile",A,".",lighting[sunLight],"/cast(float)MaxLightStrength;
-                                    } else if ( 1 == smoothMethod) {
-                                    float v00 = world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 0),")), false).",lighting[sunLight],";
-                                    float v01 = world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 1),")), false).",lighting[sunLight],";
-                                    float v02 = world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 2),")), false).",lighting[sunLight],";
-                                    float v10 = world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 3),")), false).",lighting[sunLight],";
-                                    float v11 = tile",A,".",lighting[sunLight],";
-                                    float v12 = world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 5),")), false).",lighting[sunLight],";
-                                    float v20 = world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 6),")), false).",lighting[sunLight],";
-                                    float v21 = world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 7),")), false).",lighting[sunLight],";
-                                    float v22 = world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 8),")), false).",lighting[sunLight],";
+    const char[] FixLighting = "
+    if(0 == smoothMethod) {
+        newFace.quad[0].sunLightValue = tile" ~ A ~ ".sunLightValue / cast(float)MaxLightStrength;
+        newFace.quad[0].lightValue = tile" ~ A ~ ".lightValue / cast(float)MaxLightStrength;
+        newFace.quad[1].sunLightValue = tile" ~ A ~ ".sunLightValue / cast(float)MaxLightStrength;
+        newFace.quad[1].lightValue = tile" ~ A ~ ".lightValue / cast(float)MaxLightStrength;
+        newFace.quad[2].sunLightValue = tile" ~ A ~ ".sunLightValue / cast(float)MaxLightStrength;
+        newFace.quad[2].lightValue = tile" ~ A ~ ".lightValue / cast(float)MaxLightStrength;
+        newFace.quad[3].sunLightValue = tile" ~ A ~ ".sunLightValue / cast(float)MaxLightStrength;
+        newFace.quad[3].lightValue = tile" ~ A ~ ".lightValue / cast(float)MaxLightStrength;
+        } else if ( 1 == smoothMethod) {
+        /*
+                                    float v00 = world.getTile(TilePos(pos+vec3i(" ~ FixLighting_get(num, dir, 0) ~ ")), false)." ~ lighting ~ ";
+                                    float v01 = world.getTile(TilePos(pos+vec3i(" ~ FixLighting_get(num, dir, 1) ~ ")), false)." ~ lighting ~ ";
+                                    float v02 = world.getTile(TilePos(pos+vec3i(" ~ FixLighting_get(num, dir, 2) ~ ")), false)." ~ lighting ~ ";
+                                    float v10 = world.getTile(TilePos(pos+vec3i(" ~ FixLighting_get(num, dir, 3) ~ ")), false)." ~ lighting ~ ";
+                                    float v11 = tile" ~ A ~ "." ~ lighting ~ ";
+                                    float v12 = world.getTile(TilePos(pos+vec3i(" ~ FixLighting_get(num, dir, 5) ~ ")), false)." ~ lighting ~ ";
+                                    float v20 = world.getTile(TilePos(pos+vec3i(" ~ FixLighting_get(num, dir, 6) ~ ")), false)." ~ lighting ~ ";
+                                    float v21 = world.getTile(TilePos(pos+vec3i(" ~ FixLighting_get(num, dir, 7) ~ ")), false)." ~ lighting ~ ";
+                                    float v22 = world.getTile(TilePos(pos+vec3i(" ~ FixLighting_get(num, dir, 8) ~ ")), false)." ~ lighting ~ ";
 
-                                    newFace.quad[",vertIndex["UH"],"].",lighting[sunLight]," = (v02+v01+v12+v11)/(4.0*MaxLightStrength); //UH
-                                    newFace.quad[",vertIndex["LH"],"].",lighting[sunLight]," = (v01+v00+v11+v10)/(4.0*MaxLightStrength); //LH
-                                    newFace.quad[",vertIndex["LF"],"].",lighting[sunLight]," = (v11+v10+v21+v20)/(4.0*MaxLightStrength); //LF
-                                    newFace.quad[",vertIndex["UF"],"].",lighting[sunLight]," = (v12+v11+v22+v21)/(4.0*MaxLightStrength); //UF
+                                    newFace.quad[" ~ vertIndex["UH"] ~ "]." ~ lighting ~ " = (v02+v01+v12+v11)/(4.0*MaxLightStrength); //UH
+                                    newFace.quad[" ~ vertIndex["LH"] ~ "]." ~ lighting ~ " = (v01+v00+v11+v10)/(4.0*MaxLightStrength); //LH
+                                    newFace.quad[" ~ vertIndex["LF"] ~ "]." ~ lighting ~ " = (v11+v10+v21+v20)/(4.0*MaxLightStrength); //LF
+                                    newFace.quad[" ~ vertIndex["UF"] ~ "]." ~ lighting ~ " = (v12+v11+v22+v21)/(4.0*MaxLightStrength); //UF
+        //*/
                                     } else if ( 2 == smoothMethod) {
-                                    auto t00= world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 0),")), false);
-                                    auto t01= world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 1),")), false);
-                                    auto t02= world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 2),")), false);
-                                    auto t10= world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 4),")), false);
-                                    auto t11= tile",A,";
-                                    auto t12= world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 5),")), false);
-                                    auto t20= world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 6),")), false);
-                                    auto t21= world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 7),")), false);
-                                    auto t22= world.getTile(TilePos(pos+vec3i(",FixLighting_get(num, dir, 8),")), false);
+        /*
+                                    auto t00= world.getTile(TilePos(pos+vec3i(" ~ FixLighting_get(num, dir, 0) ~ ")), false);
+                                    auto t01= world.getTile(TilePos(pos+vec3i(" ~ FixLighting_get(num, dir, 1) ~ ")), false);
+                                    auto t02= world.getTile(TilePos(pos+vec3i(" ~ FixLighting_get(num, dir, 2) ~ ")), false);
+                                    auto t10= world.getTile(TilePos(pos+vec3i(" ~ FixLighting_get(num, dir, 4) ~ ")), false);
+                                    auto t11= tile" ~ A ~ ";
+                                    auto t12= world.getTile(TilePos(pos+vec3i(" ~ FixLighting_get(num, dir, 5) ~ ")), false);
+                                    auto t20= world.getTile(TilePos(pos+vec3i(" ~ FixLighting_get(num, dir, 6) ~ ")), false);
+                                    auto t21= world.getTile(TilePos(pos+vec3i(" ~ FixLighting_get(num, dir, 7) ~ ")), false);
+                                    auto t22= world.getTile(TilePos(pos+vec3i(" ~ FixLighting_get(num, dir, 8) ~ ")), false);
 
-                                    float v00 = t00.isAir ? t00.",lighting[sunLight]," : 0;
-                                    float v01 = t01.isAir ? t01.",lighting[sunLight]," : 0;
-                                    float v02 = t02.isAir ? t02.",lighting[sunLight]," : 0;
-                                    float v10 = t10.isAir ? t10.",lighting[sunLight]," : 0;
-                                    float v11 = t11.isAir ? t11.",lighting[sunLight]," : 0;
-                                    float v12 = t12.isAir ? t12.",lighting[sunLight]," : 0;
-                                    float v20 = t20.isAir ? t20.",lighting[sunLight]," : 0;
-                                    float v21 = t21.isAir ? t21.",lighting[sunLight]," : 0;
-                                    float v22 = t22.isAir ? t22.",lighting[sunLight]," : 0;
+                                    float v00 = t00.isAir ? t00." ~ lighting ~ " : 0;
+                                    float v01 = t01.isAir ? t01." ~ lighting ~ " : 0;
+                                    float v02 = t02.isAir ? t02." ~ lighting ~ " : 0;
+                                    float v10 = t10.isAir ? t10." ~ lighting ~ " : 0;
+                                    float v11 = t11.isAir ? t11." ~ lighting ~ " : 0;
+                                    float v12 = t12.isAir ? t12." ~ lighting ~ " : 0;
+                                    float v20 = t20.isAir ? t20." ~ lighting ~ " : 0;
+                                    float v21 = t21.isAir ? t21." ~ lighting ~ " : 0;
+                                    float v22 = t22.isAir ? t22." ~ lighting ~ " : 0;
 
-                                    newFace.quad[",vertIndex["UH"],"].",lighting[sunLight]," = (v02+v01+v12+v11)/(count(t02.isAir, t01.isAir, t12.isAir)*MaxLightStrength); //UH
-                                    newFace.quad[",vertIndex["LH"],"].",lighting[sunLight]," = (v01+v00+v11+v10)/(count(t01.isAir, t00.isAir, t10.isAir)*MaxLightStrength); //LH
-                                    newFace.quad[",vertIndex["LF"],"].",lighting[sunLight]," = (v11+v10+v21+v20)/(count(t10.isAir, t21.isAir, t20.isAir)*MaxLightStrength); //LF
-                                    newFace.quad[",vertIndex["UF"],"].",lighting[sunLight]," = (v12+v11+v22+v21)/(count(t12.isAir, t22.isAir, t21.isAir)*MaxLightStrength); //UF
+                                    newFace.quad[" ~ vertIndex["UH"] ~ "]." ~ lighting ~ " = (v02+v01+v12+v11)/(count(t02.isAir, t01.isAir, t12.isAir)*MaxLightStrength); //UH
+                                    newFace.quad[" ~ vertIndex["LH"] ~ "]." ~ lighting ~ " = (v01+v00+v11+v10)/(count(t01.isAir, t00.isAir, t10.isAir)*MaxLightStrength); //LH
+                                    newFace.quad[" ~ vertIndex["LF"] ~ "]." ~ lighting ~ " = (v11+v10+v21+v20)/(count(t10.isAir, t21.isAir, t20.isAir)*MaxLightStrength); //LF
+                                    newFace.quad[" ~ vertIndex["UF"] ~ "]." ~ lighting ~ " = (v12+v11+v22+v21)/(count(t12.isAir, t22.isAir, t21.isAir)*MaxLightStrength); //UF
+        //*/
                                     }
-                                    ");
+                                    ";
     // */
 }
 
@@ -162,7 +174,22 @@ final class TileGeometry : Module, WorldStateListener
         camera = cam;
     }
 
-    TileFaces buildGeometry(TilePos min, TilePos max)
+    auto buildGeometry(T...)(T t) {
+        int smoothMethod = renderSettings.smoothSetting;
+
+        if(smoothMethod == 0) {
+            return buildGeometryImpl!0(t);
+        } else if(smoothMethod == 1) {
+            return buildGeometryImpl!1(t);
+        } else if(smoothMethod == 2) {
+            return buildGeometryImpl!2(t);
+        } else {
+            return buildGeometryImpl!0(t);
+        }
+
+    }
+
+    TileFaces buildGeometryImpl(int smoothMethod)(TilePos min, TilePos max)
     in{
         assert(min.value.X < max.value.X);
         assert(min.value.Y < max.value.Y);
@@ -175,16 +202,16 @@ final class TileGeometry : Module, WorldStateListener
         GRFace[] faceList;
 
         GRFace newFace;
-        void fixTex(ref GRFace f, const(Tile) t, bool side, bool upper, Direction normalDir){
+        vec3f tileTexSize = settings.getTileCoordSize();
+        void fixTex(bool side, bool upper)(ref GRFace f, const(Tile) t, Direction normalDir){
             ushort tileId;
-            if (side) {
+            static if (side) {
                 tileId = world.tileTypeManager.byID(t.type).textures.side;
+            } else static if(upper) {
+                tileId = world.tileTypeManager.byID(t.type).textures.top;
             } else {
-                tileId = upper ? 
-                    world.tileTypeManager.byID(t.type).textures.top :
-                    world.tileTypeManager.byID(t.type).textures.bottom;
+                tileId = world.tileTypeManager.byID(t.type).textures.bottom;
             }
-            vec3f tileTexSize = settings.getTileCoordSize();
             vec3f tileTexCoord = settings.getTileCoords(tileId);
             foreach(ref vert ; f.quad){
                 vert.texcoord = vert.texcoord * tileTexSize + tileTexCoord;
@@ -194,7 +221,6 @@ final class TileGeometry : Module, WorldStateListener
             }
         }
 
-        int smoothMethod = renderSettings.smoothSetting;
         float count(bool a, bool b, bool c) {
             return 1 + (a?1:0) + (b?1:0) + (c?1:0);
         }
@@ -252,10 +278,9 @@ final class TileGeometry : Module, WorldStateListener
                 newFace.quad[1].texcoord.set(0, 1, 0);
                 newFace.quad[2].texcoord.set(1, 1, 0);
                 newFace.quad[3].texcoord.set(1, 0, 0);
-                fixTex(newFace, tile, true, false, Direction.eastCount);
+                fixTex!(true, false)(newFace, tile, Direction.eastCount);
 
-                mixin(FixLighting!("Xp", 0, 1, "UH", "LH", "LF", "UF", true));
-                mixin(FixLighting!("Xp", 0, 1, "UH", "LH", "LF", "UF", false));
+                mixin(FixLighting!("Xp", 0, 1, "UH", "LH", "LF", "UF"));
 
                 faceList ~= newFace;
             }
@@ -268,10 +293,9 @@ final class TileGeometry : Module, WorldStateListener
                 newFace.quad[1].texcoord.set(0, 0, 0);
                 newFace.quad[2].texcoord.set(1, 0, 0);
                 newFace.quad[3].texcoord.set(1, 1, 0);
-                fixTex(newFace, tile, true, false, Direction.westCount);
+                fixTex!(true, false)(newFace, tile, Direction.westCount);
 
-                mixin(FixLighting!("Xn", 0,-1, "LH", "UH", "UF", "LF", true));
-                mixin(FixLighting!("Xn", 0,-1, "LH", "UH", "UF", "LF", false));
+                mixin(FixLighting!("Xn", 0,-1, "LH", "UH", "UF", "LF"));
 
                 faceList ~= newFace;
             }
@@ -284,10 +308,9 @@ final class TileGeometry : Module, WorldStateListener
                 newFace.quad[1].texcoord.set(0, 0, 0);
                 newFace.quad[2].texcoord.set(1, 0, 0);
                 newFace.quad[3].texcoord.set(1, 1, 0);
-                fixTex(newFace, tile, true, false, Direction.northCount);
+                fixTex!(true, false)(newFace, tile, Direction.northCount);
 
-                mixin(FixLighting!("Yp", 1, 1, "LH", "UH", "UF", "LF", true));
-                mixin(FixLighting!("Yp", 1, 1, "LH", "UH", "UF", "LF", false));
+                mixin(FixLighting!("Yp", 1, 1, "LH", "UH", "UF", "LF"));
 
                 faceList ~= newFace;
             }
@@ -300,10 +323,9 @@ final class TileGeometry : Module, WorldStateListener
                 newFace.quad[1].texcoord.set(0, 1, 0);
                 newFace.quad[2].texcoord.set(1, 1, 0);
                 newFace.quad[3].texcoord.set(1, 0, 0);
-                fixTex(newFace, tile, true, false, Direction.southCount);
+                fixTex!(true, false)(newFace, tile, Direction.southCount);
 
-                mixin(FixLighting!("Yn", 1,-1, "UH", "LH", "LF", "UF", true));
-                mixin(FixLighting!("Yn", 1,-1, "UH", "LH", "LF", "UF", false));
+                mixin(FixLighting!("Yn", 1,-1, "UH", "LH", "LF", "UF"));
 
                 faceList ~= newFace;
             }
@@ -316,10 +338,9 @@ final class TileGeometry : Module, WorldStateListener
                 newFace.quad[1].texcoord.set(0, 1, 0);
                 newFace.quad[2].texcoord.set(1, 1, 0);
                 newFace.quad[3].texcoord.set(1, 0, 0);
-                fixTex(newFace, tile, false, true, Direction.upCount);
+                fixTex!(false, true)(newFace, tile, Direction.upCount);
 
-                mixin(FixLighting!("Zp", 2, 1, "UH", "LH", "LF", "UF", true));
-                mixin(FixLighting!("Zp", 2, 1, "UH", "LH", "LF", "UF", false));
+                mixin(FixLighting!("Zp", 2, 1, "UH", "LH", "LF", "UF"));
 
                 faceList ~= newFace;
             }
@@ -332,10 +353,9 @@ final class TileGeometry : Module, WorldStateListener
                 newFace.quad[1].texcoord.set(0, 1, 0);
                 newFace.quad[2].texcoord.set(1, 1, 0);
                 newFace.quad[3].texcoord.set(1, 0, 0);
-                fixTex(newFace, tile, false, false, Direction.downCount);
+                fixTex!(false, false)(newFace, tile, Direction.downCount);
 
-                mixin(FixLighting!("Zn", 2,-1, "LH", "UH", "UF", "LF", true));
-                mixin(FixLighting!("Zn", 2,-1, "LH", "UH", "UF", "LF", false));
+                mixin(FixLighting!("Zn", 2,-1, "LH", "UH", "UF", "LF"));
                 faceList ~= newFace;
             }
         }
@@ -343,6 +363,8 @@ final class TileGeometry : Module, WorldStateListener
         return tileFaces;
     }
     
+
+
     
     void buildGraphicsRegion(GraphRegionNum grNum){
         mixin(LogTime!("BuildGeometry"));        
@@ -353,7 +375,7 @@ final class TileGeometry : Module, WorldStateListener
         auto tileFaces = buildGeometry(min, max);
 
         //TODO: Fix so that this is not needed anylonger.
-        foreach(ref face ; tileFaces.faces) {
+        foreach(ref face ; tileFaces.faces) { 
             foreach(ref vert ; face.quad) {
                 vert.vertex -= min.value.convert!float();
             }
