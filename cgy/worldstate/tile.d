@@ -7,6 +7,7 @@ import std.conv;
 import light;
 import tiletypemanager : TileTypeAir;
 import util.util;
+import util.math;
 
 
 //TODO: Make things private?

@@ -93,7 +93,7 @@ final class Level2Sheet {
                 }
                 vertices[y][x].set(X,Y,Z);
                 vertices[y][x] -= centerTp;
-                colors[y][x] = worldMap.getClimateColor(TileXYPos(tp));
+                colors[y][x] = worldMap.getAreaColor(TileXYPos(tp));
             }
         }
 

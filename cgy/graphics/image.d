@@ -9,8 +9,9 @@ import std.string;
 import derelict.devil.il;
 
 import graphics.ogl;
-import util.util;
+import util.math;
 import util.rect;
+import util.util;
 
 
 void ilError(string file = __FILE__, int line = __LINE__) {

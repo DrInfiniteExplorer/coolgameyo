@@ -261,22 +261,6 @@ CommonType!(T)[T.length] makeStackArray(T...)(T ts) {
     return ret;
 }
 
-Type clamp(Type=double)(Type val, Type min, Type max)
-in{
-    assert(min <= max, "Min must be less than or equal to max!");
-}
-body {
-    if(val < min) {
-        val = min;
-    }
-    if(val > max) {
-        val = max;
-    }
-    return val;
-}
-
-
-
 void lazyInit(T, Us...)(ref T t, Us us) {
     if (t is null) {
         t = new T(us);

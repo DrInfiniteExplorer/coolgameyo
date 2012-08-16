@@ -4,6 +4,7 @@ import std.conv;
 import std.exception;
 import std.traits;
 
+import util.math;
 import util.util;
 import random.random;
 

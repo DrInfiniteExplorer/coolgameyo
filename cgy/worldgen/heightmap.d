@@ -6,7 +6,7 @@ mixin template Heightmap() {
 
     ValueMap heightMap;
 
-    double worldHeight = 8_848*2/0.7; //Twice mt everest, then some. ( /0.7 ???? :S ) ah, to make worldMax = that.
+    double worldHeight = 8_848/0.7; //Twice half mt everest, then some. ( /0.7 ???? :S ) ah, to make worldMax = that.
     double worldMin;
     double worldMax;
 
@@ -44,7 +44,7 @@ mixin template Heightmap() {
         auto randomField = new ValueMap;
         auto gradient = new GradientNoise01!()(Dim, new RandSourceUniform(heightSeed));
         auto hybrid = new HybridMultiFractal(gradient, 0.1, 2, 6, 0.1);
-        hybrid.setBaseWaveLength(80);
+        hybrid.setBaseWaveLength(120);
 
         auto test = new DelegateSource((double x, double y, double z) {
             auto height = hybrid.getValue(x, y);

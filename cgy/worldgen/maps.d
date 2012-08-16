@@ -63,14 +63,14 @@ immutable StepIter = 4*25;
 
 /* pos 0 not used */
 /* pt2tile-scale*/
-immutable ptScale = [0, 32, 128, 512, 2048, 8192, /*start mipmaps*/ 32768, 131072];
+immutable ptScale = [0, 32 / 4, 128 / 4, 512 / 4, 2048 / 4, /* start mipmaps */ 8192 / 4,  32768 / 4, 131072 / 4];
 /* map2tile-scale*/ //Mipmap'ed values are farther apart, but same size as level5 (ie. worldsize)
-immutable mapScale = [0, 12800, 51200, 204800, 819200, 3276800, /*start mipmaps*/ 3276800, 3276800];
+immutable mapScale = [0, 12800 / 4, 51200 / 4, 204800 / 4, 819200 / 4, /*start mipmaps */ 3276800 / 4,  3276800 / 4, 3276800 / 4];
 
-immutable worldSize = mapScale[5];
+immutable worldSize = mapScale[4];
 
-immutable halfWorldSize = vec3i(mapScale[5]/2, mapScale[5]/2, 0);
-immutable halfWorldSize_xy = vec2i(mapScale[5]/2, mapScale[5]/2);
+immutable halfWorldSize = vec3i(worldSize/2, worldSize/2, 0);
+immutable halfWorldSize_xy = vec2i(worldSize/2);
 
 
 final class WorldMap {

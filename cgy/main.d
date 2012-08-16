@@ -35,7 +35,7 @@ import util.memory;
 import util.util;
 import util.window;
 //import worldgen.worldgen;
-//import worldgen.maps;
+import worldgen.maps : worldSize;
 
 
 import modelparser.cgyparser;
@@ -331,6 +331,8 @@ void actualMain() {
         // plols laptop cant handle the CLIENT STUFF WHOOOOAAhhhh....!!
         bool client = false;
     }
+
+    msg("worldSize: ", worldSize / 1_000, " km");
     
     Main main = new Main(client, true, true); //Be a worker? lolololol
     main.run();

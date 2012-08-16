@@ -8,7 +8,7 @@ import json;
 
 import worldgen.maps;
 
-immutable areaCount = Dim / 2;
+immutable areaCount = Dim/2;
 
 struct Area_t {
     union {
@@ -100,7 +100,7 @@ mixin template Areas() {
 
     void generateAreas(bool regenerateVoronoiOnly = false)() {
         areaVoronoi = new VoronoiWrapper(areaCount, areaCount, voronoiSeed);
-        areaVoronoi.setScale(vec2d(mapScale[5]));
+        areaVoronoi.setScale(vec2d(worldSize));
         //areaVoronoi.setScale(vec2d(Dim));        
         static if(regenerateVoronoiOnly == false) {
             classifyAreas();
@@ -137,16 +137,24 @@ mixin template Areas() {
         climates.getPixel(3-tempIdx, 3-moistIdx, r, g, b, a);
         return vec3i(r,g,b).convert!float / 255.0f;
     }
-    vec3f getClimateColor(TileXYPos tp) {
+
+    vec3f getAreaColor(bool climateColor = false)(TileXYPos tp) {
         //return getClimateColorForTile(tp);
+
         auto area = getArea(tp);
         auto sea = area.isSea;
         if(sea) {
             return vec3f(0.0f, 0.1f, 0.3f);
         }
-        auto temp = area.temperature;
-        auto mois = area.moisture;
-        return climates.getPixel(3-temp, 3-mois);
+        static if(climateColor) {
+            auto temp = area.temperature;
+            auto mois = area.moisture;
+            return climates.getPixel(3-temp, 3-mois);
+        } else {
+            ubyte r,g,b,a;
+            colorize(area.areaId, areas.length, r, g, b);
+            return vec3i(r,g,b).convert!float / 255.0f;
+        }
     }
 
     auto getLayerAreas(int level, vec2i mapNum) {

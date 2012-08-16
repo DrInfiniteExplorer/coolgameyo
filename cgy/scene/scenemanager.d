@@ -45,6 +45,7 @@ alias ShaderProgram!("VP", "texUnit") SceneNodeShader;
 struct InstanceData {
     vec3f pos;  //Updated to be camera-relative each frame in proxy.preRender
     vec3f rot;
+    vec3f scale = vec3f(1.0f);
     uint animationIndex;
     uint frameIndex;
     uint texIdx;
@@ -281,6 +282,7 @@ final class SceneManager {
         shader.bindAttribLocation(7, "animationIndex");
         shader.bindAttribLocation(8, "frameIndex");
         shader.bindAttribLocation(9, "texIdx");
+        shader.bindAttribLocation(10, "scale");
         shader.link();
 
         shader.use();

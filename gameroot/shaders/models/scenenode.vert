@@ -14,6 +14,7 @@ in vec4 weights;
 
 in vec3 pos;
 in uint texIdx;
+in vec3 scale;
 /*
 in vec3 rot;
 in uint animationIndex;
@@ -37,7 +38,7 @@ void main(){
    //View it
    //gl_Position = VP * Pos;
    Pos = position.xyz + pos;
-   gl_Position = VP * vec4(Pos, 1.0);
+   gl_Position = VP * vec4(Pos*scale, 1.0);
 }
 
 

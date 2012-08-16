@@ -164,8 +164,8 @@ mixin template WorldGenerator() {
         
     }
 
-    long worldRadius = mapScale[5]/2;
-    long worldRadiusSquare = (cast(long)mapScale[5]/2) ^^2;
+    long worldRadius = worldSize;
+    long worldRadiusSquare = (cast(long)worldSize) ^^2;
     bool isInsideWorld(TilePos pos) {
         if(pos.value.X < 0 || pos.value.X >= worldSize ||
            pos.value.Y < 0 || pos.value.Y >= worldSize) {

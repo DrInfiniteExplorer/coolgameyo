@@ -119,6 +119,7 @@ final class InstanceManager {
 
         glEnableVertexAttribArray(5); glError();
         glEnableVertexAttribArray(9); glError();
+        glEnableVertexAttribArray(10); glError();
         /*
         glEnableVertexAttribArray(6); glError();
         glEnableVertexAttribArray(7); glError();
@@ -126,6 +127,7 @@ final class InstanceManager {
         */
         glVertexAttribDivisor(5, 1); glError();
         glVertexAttribDivisor(9, 1); glError();
+        glVertexAttribDivisor(10, 1); glError();
         /*
         glVertexAttribDivisor(6, 1); glError();
         glVertexAttribDivisor(7, 1); glError();
@@ -134,6 +136,7 @@ final class InstanceManager {
         */
         glVertexAttribPointer(5, 3, GL_FLOAT, GL_FALSE, InstanceData.sizeof, cast(void*)InstanceData().pos.offsetof); glError();
         glVertexAttribIPointer(9, 1, GL_UNSIGNED_INT, InstanceData.sizeof, cast(void*)InstanceData().texIdx.offsetof); glError();
+        glVertexAttribPointer(10, 3, GL_FLOAT, GL_FALSE, InstanceData.sizeof, cast(void*)InstanceData().scale.offsetof); glError();
         /*
         glVertexAttribPointer(6, 3, GL_FLOAT, GL_FALSE, InstanceData.sizeof, cast(void*)InstanceData().rot.offsetof); glError();
         glVertexAttribPointer(7, 1, GL_UNSIGNED_BYTE, GL_FALSE, InstanceData.sizeof, cast(void*)InstanceData().animationIndex.offsetof); glError();
@@ -145,6 +148,7 @@ final class InstanceManager {
 
         glVertexAttribDivisor(5, 0); glError();
         glVertexAttribDivisor(9, 0); glError();
+        glVertexAttribDivisor(10, 0); glError();
         /*
         glVertexAttribDivisor(6, 0); glError();
         glVertexAttribDivisor(7, 0); glError();
@@ -154,6 +158,7 @@ final class InstanceManager {
         glDisableVertexAttribArray(1); glError();
         glDisableVertexAttribArray(5); glError();
         glDisableVertexAttribArray(9); glError();
+        glDisableVertexAttribArray(10); glError();
         /*
         glDisableVertexAttribArray(2); glError();
         glDisableVertexAttribArray(3); glError();

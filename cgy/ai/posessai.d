@@ -8,7 +8,7 @@ import std.math;
 import std.stdio;
 
 import changes.changes;
-import graphics.renderer;
+import scene.scenemanager;
 import light;
 import unit;
 import util.util;
@@ -27,12 +27,12 @@ class FPSControlAI : UnitAI, CustomChange {
     float fallSpeed;
     bool onGround;
     WorldState world;
-    Renderer renderer;
-    vec3d* unitPos;
+    SceneManager scene;
+    vec3d unitPos;
 
-    this(WorldState w, Renderer r) {
+    this(WorldState w, SceneManager s) {
         world = w;
-        renderer = r;
+        scene = s;
     }
     
     private bool destroyed;
@@ -48,15 +48,16 @@ class FPSControlAI : UnitAI, CustomChange {
             return;
         }
         if (unit) {
-            renderer.normalUnit(unit);
             unit.ai = oldAi;
+            scene.getProxy(u).scale = vec3f(1.0f);
         }
         if (u is null) return;
         unit = u;        
         unit.ai = this;
         fallSpeed = 0.0f;
         onGround=false;
-        unitPos = renderer.specialUnit(unit, unit.pos.value);
+        unitPos = unit.pos.value;
+        scene.getProxy(u).scale = vec3f(0.0f);
 
         //LATER: Send data to clients that this unit is possessed!!!!
         // :)
@@ -172,7 +173,7 @@ class FPSControlAI : UnitAI, CustomChange {
         fallSpeed -= 10.0f * deltaT;
         auto dir = vec3d(fwd, -right, up + fallSpeed) * deltaT;
         dir.rotateXYBy(unit.rotation, origo);
-        *unitPos = collideMove(*unitPos, dir);
+        unitPos = collideMove(unitPos, dir);
         if(onGround){
             fallSpeed = 0.0f;
         }
@@ -185,7 +186,7 @@ class FPSControlAI : UnitAI, CustomChange {
 
     vec3d getUnitPos(){
         enforce(unit !is null, "FPSControlAI's unit is null!!");
-        return *unitPos;
+        return unitPos;
     }
 
     //This is now mostly used to make a 'real' commit of the movement.
@@ -211,7 +212,7 @@ class FPSControlAI : UnitAI, CustomChange {
 
     //Hax used: oldPosition, to make the world produce a delta-pos-value and load sectors
     void apply(WorldState world) {
-        world.unsafeMoveUnit(unit, UnitPos(*unitPos), 1);
+        world.unsafeMoveUnit(unit, UnitPos(unitPos), 1);
         
         return;
         /*

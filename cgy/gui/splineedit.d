@@ -20,8 +20,9 @@ import random.catmullrom;
 import random.random;
 
 import settings;
-import util.util;
+import util.math;
 import util.rect;
+import util.util;
 
 class SplineEditor : GuiElementWindow {
     GuiElement guiSystem;

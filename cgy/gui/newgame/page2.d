@@ -59,7 +59,7 @@ mixin template Page2() {
             auto nP = p - r.start;
             auto relative = nP.convert!double / r.size.convert!double;
 
-            updatePos((relative * vec2d(mapScale[5])).convert!int);
+            updatePos((relative * vec2d(worldSize)).convert!int);
             return true;
         });
         smallWorldImage.setMouseClickCallback((GuiElement element, GuiEvent.MouseClick e) {

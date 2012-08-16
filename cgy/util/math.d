@@ -98,6 +98,26 @@ unittest {
     assert(posMod( 8, 8) == 0);
 }
 
+Type clamp(Type=double)(Type val, Type min, Type max)
+in{
+    assert(min <= max, "Min must be less than or equal to max!");
+}
+body {
+    if(val < min) {
+        return min;
+    }
+    if(val > max) {
+        return max;
+    }
+    return val;
+}
+
+vector3d!(A) clampV(A)(const vector3d!(A) wap, const vector3d!(A) a, const vector3d!(A) b){
+    return vector3d!A(clamp(wap.X, a.X, b.X), clamp(wap.Y,a.Y, b.Y), clamp(wap.Z, a.Z, b.Z));
+}
+vector2d!(A) clampV(A)(const vector2d!(A) wap, const vector2d!(A) a, const vector2d!(A) b){
+    return vector2d!A(clamp(wap.X, a.X, b.X), clamp(wap.Y,a.Y, b.Y));
+}
 
 vector3d!(A) snapV(A)(const vector3d!(A) wap, const A b){
     return vector3d!A(snap(wap.X, b), snap(wap.Y,b), snap(wap.Z, b));

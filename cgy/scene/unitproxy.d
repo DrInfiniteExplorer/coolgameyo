@@ -63,10 +63,12 @@ class UnitProxy {
 
     void preRender(Camera camera) {
         bodyInstanceData.pos = (pos - camera.getPosition()).convert!float;
+        bodyInstanceData.scale = scale;
         
     }
 
     vec3d pos;
+    vec3f scale = vec3f(1.0f);
 
     AnimationState animState;
     Skeleton skeleton;

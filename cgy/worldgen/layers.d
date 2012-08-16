@@ -31,7 +31,7 @@ final class LayerMap {
     }
 
     this(ValueMap2Dd topHeightmap) {
-        level = 5;
+        level = 4;
         mapNum.set(0, 0);
 
         heightMap = topHeightmap;
@@ -52,14 +52,14 @@ template shift(string q, string w, string e, string r, string t) {
 
 mixin template Layers() {
 
-    LayerMap[vec2i][5] layers; /*index 0 is not used, only 1-4 because thats how things are planned. And the fifth layer is not stored in that. */
-    LayerMap layer5;
+    LayerMap[vec2i][4] layers; /*index 0 is not used, only 1-3 because thats how things are planned. And the fifth layer is not stored in that. */
+    LayerMap layer4;
 
     ValueMap mipLevel1;
     ValueMap mipLevel2;
 
     void layersInit() {
-        layer5 = new LayerMap(heightMap);
+        layer4 = new LayerMap(heightMap);
         //enforce(0, "Implement this here layers thing");
     }
 
@@ -80,7 +80,7 @@ mixin template Layers() {
                     int y = Y * 4 + dY;
                     foreach(dX ; 0 .. 4) {
                         int x = X * 4 + dX;
-                        auto height = layer5.getHeight(x, y);
+                        auto height = layer4.getHeight(x, y);
                         heightSum += height;
                     }
                 }
@@ -120,7 +120,7 @@ mixin template Layers() {
     }
 
     bool hasMap(int level, vec2i mapNum) {
-        if(level == 5) return true;
+        if(level == 4) return true;
         if(level == 0) return false;
         auto layer = layers[level];
         return (mapNum in layer) !is null;
@@ -128,8 +128,9 @@ mixin template Layers() {
 
 
     LayerMap getMap(int level, vec2i mapNum) {
-        if(level == 5) {
-            return layer5;
+        BREAK_IF(level > 4);
+        if(level == 4) {
+            return layer4;
         }
         auto layer = layers[level];
         if(mapNum in layer) {
@@ -307,7 +308,7 @@ mixin template Layers() {
 
         /* Done! Add it to our known maps =) */
 
-        if(level == 4) {
+        if(level == 3000000) {
             ValueMap randomField = new ValueMap(400, 400);
             randomField.fill(new RandSourceUniform(880128), Dim, Dim);
             map.heightMap.randMap[] += randomField.randMap[] * 500;
@@ -317,7 +318,7 @@ mixin template Layers() {
         return map;
     }
 
-    void initLayer4(LayerMap layer) {
+    void initLayer3(LayerMap layer) {
 
         /*
         // How would and _area_ apply or change things, anyway?
@@ -386,8 +387,13 @@ mixin template Layers() {
 
     double getValueRaw(int level, vec2i tilePos) {
         auto ptNum = posModV(negDivV(tilePos, ptScale[level]), ptPerLayer);
-        if(level == 6 || level == 7) {
-            auto map = (level == 6) ? mipLevel1 : mipLevel2;
+        if(level == 5 || level == 6) {
+            if(mipLevel1 is null)  {
+                generateMipMaps();
+            }
+            auto map = (level == 5) ? mipLevel1 : mipLevel2;
+            ptNum = (level == 5) ? ptNum / 4 : ptNum / 16;
+            //ptNum = clampV(ptNum, vec2i(0), vec2i(Dim-1));
             return map.get(ptNum.X, ptNum.Y);
         }
         auto mapNum = negDivV(tilePos, mapScale[level]);

@@ -135,14 +135,6 @@ class Renderer {
         lineShader.use(false);
     }
     
-    void normalUnit(Unit unit) {
-        specialUnits[unit] = null;
-    }
-    vec3d* specialUnit(Unit unit, vec3d pos) {
-        auto p = new vec3d(pos);
-        specialUnits[unit] = p;
-        return p;
-    }
 
     // D MINECRAFT MAP VIEWER CLONE INSPIRATION ETC
     // https://github.com/Wallbraker/Charged-Miners
