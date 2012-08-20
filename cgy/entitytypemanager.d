@@ -14,6 +14,49 @@ import worldstate.tile;
 import statistics;
 import util.util;
 
+struct BranchType {
+    ubyte id;                           // id=0 is reserved for the start branch which is NOT defined in a file. See this as the seeds or the entity.
+    ubyte growsOn;                      // this refers to an id of a different branch type
+    float spawnChance;                  // spawnChance is for this branch. If multiple branch types can grow on the same branch type, all types will have chance to spawn.
+    ubyte nrOfNodesTarget;
+    ubyte nrOfNodesTargetVariation;
+    float newNodeChance;
+    float newNodePos;
+    float newNodePosDistanceCost;
+    float newNodePosRandomness;
+    ubyte nodeDistanceTarget;
+    ubyte nodeDistanceTargetVariation;
+    float nodeDistanceIncreaseChace;
+
+    float angleFromParent;              // Measured in radians
+    float angleFromParentVariation;
+    float nodeFirstDeriveAngle;
+    float nodeSecondDeriveAngle;
+    float posOnParent;                  // 0.0 = first node on parent branch, 1.0 = newest node on parent branch
+    ubyte posOnParentMin;               // the branch can only spawn on a node with index higher than this
+    float posOnParentDistanceCost;      // how much the chance to spawn this branch is affected by distance from posOnParent
+    float posOnParentCrowdedCost;       // how much the cost is increased for each other branch on the parent node
+    float posOnParentRandomness;        // random[0, posOnParentRandomness] is added to each node when choosing best node
+
+    float thicknessStart;
+    float thicknessTarget;
+    float thicknessTargetVariation;
+    float thicknessDistanceCost;
+    float thicknessGrowth;
+
+    float leafDensity;
+    float leafRadius;
+    float gravityAffection;
+    ubyte branchesPerBranchTarget;
+    ubyte branchesPerBranchTargetVariation;
+
+    bool pineShape;
+}
+struct TreelikeType {
+    string woodMaterial; // flytta till branches
+	string leafMaterial;
+    BranchType[] branches;
+}
 struct EntityModelInfo {
     string name;
     string[] meshTextures;
@@ -33,6 +76,8 @@ struct EntityType_t {
 
         EntityModelInfo model;   //Model family
 	}
+
+    TreelikeType treelike;
 	
 	InnerEntityType serializableSettings;
     alias serializableSettings this;

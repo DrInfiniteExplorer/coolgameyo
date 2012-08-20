@@ -17,7 +17,7 @@ import light;
 
 import inventory;
 
-import entities.growable;
+import entities.treelikeinstance;
 import entities.placeable;
 import entities.workshop;
 
@@ -50,6 +50,8 @@ final class Entity {
 
         float entityWidth = 1.0;
         float entityHeight = 1.0;
+
+        TilePos[] ownedTiles;
     }
     EntityData entityData;
     alias entityData this;
@@ -61,12 +63,12 @@ final class Entity {
     // these need serairarleinzlaeniton IN SOME WAY
     Workshop* workshop;
     Placeable* placeable;
-    Growable* growable;
+    TreelikeInstance treelike;
 
     Inventory inventory;
 
     bool shouldTick() const @property {
-        return workshop != null || growable != null;
+        return workshop != null || treelike !is null;
     }
 
     void deconstruct() {

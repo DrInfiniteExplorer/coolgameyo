@@ -71,15 +71,10 @@ class TreeManager {
         foreach (entity ; entities) {
             foreach (branch ; entity.treelike.branches) {
                 for (int i = 0; i < iterations; i++) {
-                    //printAllFuckingEntities();
                     newBranch(entity, branch);
-                    //printAllFuckingEntities();
                     increaseNodeDistance(entity, branch);
-                   // printAllFuckingEntities();
                     increaseThickness(entity, branch);
-                   // printAllFuckingEntities();
                     newNode(entity, branch);
-                    //printAllFuckingEntities();
                 }
             }
             clearTiles(entity);
@@ -91,9 +86,24 @@ class TreeManager {
         printAllFuckingEntities();
     }
 
+    public void growTree(Entity entity, int iterations = 1)
+    {
+        foreach (branch ; entity.treelike.branches) {
+            for (int i = 0; i < iterations; i++) {
+                newBranch(entity, branch);
+                increaseNodeDistance(entity, branch);
+                increaseThickness(entity, branch);
+                newNode(entity, branch);
+            }
+        }
+        clearTiles(entity);
+        makeTiles(entity);
+        makeLeafs(entity);
+    }
+
     private void newBranch(Entity entity, BranchInstance parentBranch)
     {
-        msg("newBranch()");
+        //msg("newBranch()");
         if (parentBranch.nrOfChildBranches >= parentBranch.branchesPerBranchTarget) {
             return;
         }
@@ -113,7 +123,7 @@ class TreeManager {
                 if ((branchType.spawnChance - bestNodeCost) > uniform(0.0f, 1.0f, gen)) {
                     entity.treelike.branches ~= createAndInitializeBranch(branchType, bestNode);
                     parentBranch.nrOfChildBranches++;
-                    msg("Spawned branch on ", cast(int)parentBranch.typeId);
+                    //msg("Spawned branch on ", cast(int)parentBranch.typeId);
                 }
             }
         }
@@ -122,7 +132,7 @@ class TreeManager {
 
     private BranchInstance createAndInitializeBranch(BranchType type, NodeInstance parentNode)
     {
-        msg("createAndInitializeBranch()");
+        //msg("createAndInitializeBranch()");
         BranchInstance branch = new BranchInstance;
         branch.typeId = type.id;
         
@@ -154,7 +164,7 @@ class TreeManager {
 
     private void increaseNodeDistance(Entity entity, BranchInstance branch)
     {
-        msg("increaseNodeDistance()");
+        //msg("increaseNodeDistance()");
         BranchType branchType = getBranchType(entity, branch);
         ubyte nodeDistance;
         float angleVertical;
@@ -177,7 +187,7 @@ class TreeManager {
 
     private void increaseThickness(Entity entity, BranchInstance branch)
     {
-        msg("increaseThickness()");
+        //msg("increaseThickness()");
         if (branch.thickness < branch.thicknessTarget) {
             if (getBranchType(entity, branch).thicknessGrowth > uniform(0.0f, 1.0f, gen)) {
                 branch.thickness++;
@@ -188,7 +198,7 @@ class TreeManager {
 
     private void newNode(Entity entity, BranchInstance branch)
     {
-        msg("newNode()");
+        //msg("newNode()");
         if (branch.nodes.length >= branch.nrOfNodesTarget) {
             return;
         }
@@ -237,7 +247,7 @@ class TreeManager {
 
             branch.nodes.insertInPlace(bestNodePos, node);
             
-            msg("Added node on ", cast(int)branch.typeId, " at pos ", cast(int)bestNodePos);
+            //msg("Added node on ", cast(int)branch.typeId, " at pos ", cast(int)bestNodePos);
         }
     }
 
