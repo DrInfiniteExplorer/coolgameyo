@@ -39,8 +39,6 @@ struct SolidMap {
     const int sizeZ = SectorSize.z;
     StorageType[sizeX][sizeY][sizeZ] data;
 
-    pragma(msg, data.length);
-
     bool dirty = false;
 
     bool set(vec3i idx, bool val) {

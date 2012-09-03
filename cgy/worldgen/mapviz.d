@@ -73,8 +73,8 @@ mixin template MapViz() {
         Image getAreaImage(Image climateTypes, bool renderAreaBorders, bool renderAllBorders) {
             Image areaMap = Image(null, Dim, Dim);
             foreach(x, y, ref r, ref g, ref b, ref a ; areaMap) {
-                auto tp = (vec2d(x, y) / vec2d(400)) * vec2d(worldSize);
-                int cellId = areaVoronoi.identifyCell(tp);
+                auto tp = (vec2d(x, y) / vec2d(Dim)) * vec2d(worldSize);
+                int cellId = voronoiLattice.identifyCell(tp);
                 auto area = areas[cellId];
 
                 bool isSea = area.isSea;
@@ -105,7 +105,8 @@ mixin template MapViz() {
         Image getRegionImage(bool renderRegionBorders) {
             Image regionMap = Image(null, Dim, Dim);
             foreach(x, y, ref r, ref g, ref b, ref a ; regionMap) {
-                int cellId = areaVoronoi.identifyCell(vec2d(x, y));
+                auto tp = (vec2d(x, y) / vec2d(Dim)) * vec2d(worldSize);
+                int cellId = voronoiLattice.identifyCell(tp);
                 auto area = areas[cellId];
                 int regionId = area.region.regionId;
                 int regionCount = regions.length;
@@ -120,7 +121,7 @@ mixin template MapViz() {
         }
 
         void drawAreaBorders(Image image, bool onlyRegions) {
-            foreach(edge ; areaVoronoi.poly.edges) {
+            foreach(edge ; voronoiPoly.edges) {
                 auto start = edge.getStartPoint().pos * vec2d(400.0 / worldSize);
                 auto end = edge.getEndPoint().pos * vec2d(400.0 / worldSize);
 

@@ -9,6 +9,7 @@ import std.stdio;
 alias std.math.abs abs;
 
 import util.util;
+import util.filesystem;
 
 
 import statistics;
@@ -21,6 +22,40 @@ final class HalfEdge {
 
     Vertex _vertex;
     Site left;
+
+    void serialize(BinaryFile writer, int[HalfEdge] halfEdges, int[Vertex] vertices, int[Site] sites) {
+        if(_reverse is null) {
+            writer.write(-1);
+        } else {
+            writer.write(halfEdges[_reverse]);
+        }
+        if(next is null) {
+            writer.write(-1);
+        } else {
+            writer.write(halfEdges[next]);
+        }
+        writer.write(vertices[_vertex]);
+        writer.write(sites[left]);
+    }
+    void deserialize(BinaryFile reader, HalfEdge[] halfEdges, Vertex[] vertices, Site[] sites) {
+
+        _reverse = null;
+        next = null;
+
+        int id;
+        reader.read(id);
+        if(id != -1) {
+            _reverse = halfEdges[id];
+        }
+        reader.read(id);
+        if(id != -1) {
+            next = halfEdges[id];
+        }
+        reader.read(id);
+        _vertex = vertices[id];
+        reader.read(id);
+        left = sites[id];
+    }
 
     double angle; //Angle of the half-edge. Ie. angle of line between sites.
 
@@ -60,6 +95,10 @@ final class HalfEdge {
     private this(HalfEdge rev, Vertex endVert) {
         rev.reverse = this;
         vertex = endVert;
+    }
+
+    //Helper for creating an empty shite.
+    this() {
     }
 
     void nuke() {
@@ -139,6 +178,34 @@ final class Edge {
 
     bool derp = false;
 
+    void serialize(BinaryFile writer, int[HalfEdge] halfEdges) {
+        if(halfLeft is null) {
+            writer.write(-1);
+        } else {
+            writer.write(halfEdges[halfLeft]);
+        }
+        if(halfRight is null) {
+            writer.write(-1);
+        } else {
+            writer.write(halfEdges[halfRight]);
+        }
+        writer.write(derp);
+    }
+    void deserialize(BinaryFile reader, HalfEdge[] halfEdges) {
+        int id;
+        halfLeft = null;
+        halfRight = null;
+        reader.read(id);
+        if(id != -1) {
+            halfLeft = halfEdges[id];
+        }
+        reader.read(id);
+        if(id != -1) {
+            halfRight = halfEdges[id];
+        }
+        reader.read(derp);
+    }
+
     this(Site left, Site right, Vertex vA = null, Vertex vB = null) {
 
         halfLeft = new HalfEdge(left, right);
@@ -150,6 +217,10 @@ final class Edge {
         if(vB !is null) {
             setEndPoint(left, right, vB);
         }
+    }
+
+    this() {
+        //Derp.
     }
 
     void nuke() {
@@ -259,6 +330,27 @@ final class Vertex {
         return ret;
     }
 
+
+    void serialize(BinaryFile writer, int[HalfEdge] halfEdges) {
+        writer.write(pos);
+        if(edge in halfEdges) {
+            writer.write(halfEdges[edge]);
+        } else {
+            //msg("Wut? A loose vertex? Nevermind, ignore.");
+            writer.write(-1);
+        }
+    }
+    void deserialize(BinaryFile reader, HalfEdge[] halfEdges) {
+        reader.read(pos);
+        edge = null;
+        int id;
+        reader.read(id);
+        if(id != -1) {
+            edge = halfEdges[id];
+        }
+    }
+
+
     int refCnt = 0;
     void Ref() { refCnt++; }
     void unRef() { refCnt--;};
@@ -271,9 +363,36 @@ final class Site {
         pos = pt;
         siteId = id;
     }
+
     int siteId;
     vec2d pos;
     HalfEdge[] halfEdges;
+
+    void serialize(BinaryFile writer, int[HalfEdge] halfEdgeMap) {
+        writer.write(siteId);
+        writer.write(pos);
+        int len = halfEdges.length;
+        writer.write(len);
+        foreach(idx, he ; halfEdges) {
+            if(he in halfEdgeMap) {
+                writer.write(halfEdgeMap[he]);
+            } else {
+                msg("Error at ", siteId, ":", idx, " of ", halfEdges.length, "/", halfEdgeMap.keys.length);
+                BREAKPOINT;
+            }
+        }
+    }
+
+    void deserialize(BinaryFile reader, HalfEdge[] he) {
+        reader.read(siteId);
+        reader.read(pos);
+        this.halfEdges.length = reader.read!int;
+        int id;
+        foreach(ref h ; this.halfEdges) {
+            reader.read(id);
+            h = he[id];
+        }
+    }
 
     //TODO: Turn into delegate?
     Site[] getNeighbors() {
@@ -288,6 +407,85 @@ final class VoronoiPoly {
     Site[] sites;
     HalfEdge[] halfEdges;
 
+    void serialize(string path) {
+        auto writer = BinaryFile(path, "w");
+
+        int edgeMap[Edge];
+        int vertexMap[Vertex];
+        int siteMap[Site];
+        int halfEdgeMap[HalfEdge];
+
+        foreach(idx, edge ; edges) {
+            edgeMap[edge] = idx;
+        }
+        foreach(idx, vertex; vertices) {
+            vertexMap[vertex] = idx;
+        }
+        foreach(idx, site ; sites) {
+            siteMap[site] = idx;
+        }
+        foreach(idx, he; halfEdges) {
+            halfEdgeMap[he] = idx;
+        }
+
+        writer.write(sites.length);
+        writer.write(vertices.length);
+        writer.write(halfEdges.length);
+        writer.write(edges.length);
+
+        foreach(site ; sites) {
+            site.serialize(writer, halfEdgeMap);
+        }
+        foreach(vertex ; vertices) {
+            vertex.serialize(writer, halfEdgeMap);
+        }
+        foreach(halfEdge ; halfEdges) {
+            halfEdge.serialize(writer, halfEdgeMap, vertexMap, siteMap);
+        }
+        foreach(edge ; edges) {
+            edge.serialize(writer, halfEdgeMap);
+        }
+    }
+
+    void deserialize(string path) {
+        auto reader = BinaryFile(path, "r");
+
+        static assert(int.sizeof == size_t.sizeof);
+
+        sites.length = reader.read!int();
+        vertices.length = reader.read!int();
+        halfEdges.length = reader.read!int();
+        edges.length = reader.read!int();
+
+        auto nan2 = vec2d(double.nan);
+
+        
+        foreach(ref site ; sites) {
+            site = new Site(nan2, -1);
+        }
+        foreach(ref vertex ; vertices) {
+            vertex = new Vertex(nan2);
+        }
+        foreach(ref halfEdge ; halfEdges) {
+            halfEdge = new HalfEdge;
+        }
+        foreach(ref edge ; edges) {
+            edge = new Edge;
+        }
+
+        foreach(ref site ; sites) {
+            site.deserialize(reader, halfEdges);
+        }
+        foreach(ref vertex ; vertices) {
+            vertex.deserialize(reader, halfEdges);
+        }
+        foreach(ref halfEdge ; halfEdges) {
+            halfEdge.deserialize(reader, halfEdges, vertices, sites);
+        }
+        foreach(ref edge ; edges) {
+            edge.deserialize(reader, halfEdges);
+        }
+    }
 
     void scale(vec2d scale) {
         foreach(vert ; vertices) {
@@ -299,72 +497,9 @@ final class VoronoiPoly {
 
     }
 
-    //This works fine now, i think, so long as the sites only share one edge. Otherwise, strange things happen :)
-    Site mergeSites(Site a, Site b) {
-        writeln("s e he ", sites.length, " ", edges.length, " ", halfEdges.length);
-        scope(exit) writeln("s e he ", sites.length, " ", edges.length, " ", halfEdges.length);
-        //Loop and find the connection using the shortest loop.
-        if(a.halfEdges.length < b.halfEdges.length) {
-            swap(a, b);
-        }
-        foreach(he ; b.halfEdges) {
-            if(he.right is a) {
-
-                //Find and eliminate as long a stretch as possible along this border.
-
-
-
-                // Knit together the half-edge-struct
-                auto he_r = he.reverse;
-                auto he_prev = he.prev;
-                auto he_next = he.next;
-                auto he_r_prev = he_r.prev;
-                auto he_r_next = he_r.next;
-                he_prev.next = he_r_next;
-                he_r_prev.next = he_next;
-
-                //Now he and he_r are dangling pointers. No other half-edge points to them.
-                // There is an edge, and there is a reference each in the site's lists of
-                // half-edges referencing them.
-                
-                // Make the half-edges switch alegiance to b!
-                auto iter = he_next;
-                while(iter.next !is he_r_next) {
-                    iter.left = b;
-                    iter = iter.next;
-                }
-                //They are no longer sorted!
-                //Add the half-edges from the small to the big
-                b.halfEdges ~= a.halfEdges;
-                a.halfEdges = null;
-
-                //Remove the small site.
-                sites = remove!(s => s is a)(sites);
-
-                //Remove the two evil half-edges.
-                bool heInB(HalfEdge h) {
-                    return (h is he) || (h is he_r);
-                }
-                b.halfEdges = remove!heInB(b.halfEdges);
-                halfEdges = remove!heInB(halfEdges);
-
-                bool edgePred(Edge edge){
-                    return (edge.halfLeft is he || edge.halfRight is he);
-                }
-                edges = remove!edgePred(edges);
-
-                return b;
-            }
-        }
-        msg("WARNING! Tried to merge two voronoi cells which where not neighbors");
-        return null;
-    }
-
-
     //This code runs under the assumption that sites are never outside of the box.
     void cutDiagram(vec2d min, vec2d max) {
         mixin(MeasureTime!"Time to cut diagram:");
-
 
         auto minX = min.X;
         auto minY = min.Y;
@@ -456,11 +591,11 @@ final class VoronoiPoly {
             }
         }
 
-        HalfEdge[HalfEdge] toRemoveHalf;
+        Site[HalfEdge] toRemoveHalf;
         bool pred(Edge e) {
             if(e in toRemove) {
-                toRemoveHalf[e.halfLeft] = e.halfLeft;
-                toRemoveHalf[e.halfRight] = e.halfRight;
+                toRemoveHalf[e.halfLeft] = e.halfLeft.left;
+                toRemoveHalf[e.halfRight] = e.halfRight.left;
                 e.nuke();
                 //remove e
                 return true;
@@ -474,6 +609,9 @@ final class VoronoiPoly {
             return (e in toRemoveHalf) !is null;
         }
         halfEdges = remove!pred2(halfEdges);
+        foreach(site ; toRemoveHalf) {
+            site.halfEdges = remove!pred2(site.halfEdges);
+        }
         vertices = remove!"!a.isAlive()"(vertices);
 
         bool aboutSameV(Vertex A, Vertex B) {
@@ -553,6 +691,7 @@ final class VoronoiPoly {
                     } else {
                         site.halfEdges = site.halfEdges[0 .. i+1] ~ newHalf ~ site.halfEdges[i+1 .. $];
                     }
+                    halfEdges ~= newHalf;
                     edgeCount+=1;
                 }
                 if(curr._reverse.left is null) { //Delete temporary reverse-he used to span the edge.

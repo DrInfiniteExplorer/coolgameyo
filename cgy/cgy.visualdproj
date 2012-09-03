@@ -391,6 +391,9 @@ d:\D\ulnb0333\ulink.exe $(IntDir)\$(TargetName).obj gdi32.lib win32.lib advapi32
    <File path="entities\treelikeinstance.d" />
    <File path="entities\workshop.d" />
   </Folder>
+  <Folder name="feature">
+   <File path="feature\feature.d" />
+  </Folder>
   <Folder name="graphics">
    <Folder name="_2d">
     <File path="graphics\_2d\image.d" />

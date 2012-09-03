@@ -9,13 +9,14 @@ class VoronoiLattice {
     int width, height;
     int seed;
 
+    vec2d scale;
     vec2d[] points;
 
     this(int _width, int _height, int _seed) {
         width = _width;
         height = _height;
         seed = _seed;
-
+        scale = vec2d(1);
 
         //POP U LATE?
         Random gen;
@@ -33,6 +34,10 @@ class VoronoiLattice {
         }
     }
 
+    void setRange(vec2d max) {
+        scale = vec2d(width, height) / max;
+    }
+
     vec2d get(int x, int y) {
         //Can't be that cell; return a distance guaranteed to be longer than
         //to any other neighboring cell.
@@ -41,6 +46,7 @@ class VoronoiLattice {
     }
 
     int identifyCell(vec2d pt) {
+        pt *= scale;
         if(pt.X < 0) pt.X = 0;
         if(pt.Y < 0) pt.Y = 0;
         if(pt.X > width) pt.X = width;

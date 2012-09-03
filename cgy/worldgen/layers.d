@@ -1,54 +1,153 @@
 module worldgen.layers;
 
 import std.conv;
+import std.exception;
 
+
+
+import feature.feature;
+import json;
+import pos;
+import random.random;
+import random.randsource;
 import random.valuemap;
+import random.xinterpolate4;
+import statistics;
+
+import util.filesystem;
+import util.math;
+import util.rangefromto;
+import util.util;
 
 import worldgen.maps;
 
-import util.util;
-
-class Feature {
-}
-
-
 final class LayerMap {
+    WorldMap worldMap;
+    LayerMap parentMap;
     ValueMap2Dd heightMap;
     ValueMap2Dd randomField;
     Feature[] features;
     int level;
+    vec2i parentMapNum;
     vec2i mapNum;
     int randomSeed;
 
-    this(int _level, vec2i _mapNum, int _randomSeed) {
-        level = _level;
+    this(WorldMap _worldMap, LayerMap parent, vec2i _mapNum, int _randomSeed) {
+        worldMap = _worldMap;
+        parentMap = parent;
+        level = parentMap.level - 1;
         mapNum = _mapNum;
+        parentMapNum = negDivV(mapNum, 4);
         randomSeed = _randomSeed;
         heightMap = new ValueMap2Dd(ptPerLayer, ptPerLayer);
-        //randomField = new ValueMap2Dd;
+        randomField = new ValueMap2Dd;
+        randomField.fill(new RandSourceUniform(randomSeed), ptPerLayer, ptPerLayer);
 
-        //randomField.fill(new RandSourceUniform(randomSeed), ptPerLayer, ptPerLayer);
+        interpolateParent();
+        featureAffection();
+
     }
 
-    this(ValueMap2Dd topHeightmap) {
+    this(WorldMap _worldMap, ValueMap2Dd topHeightmap, int _randomSeed) {
+        worldMap = _worldMap;
         level = 4;
         mapNum.set(0, 0);
+        parentMapNum.set(0, 0);
+
+        randomSeed = _randomSeed;
+        randomField = new ValueMap2Dd;
+        randomField.fill(new RandSourceUniform(randomSeed), ptPerLayer, ptPerLayer);
 
         heightMap = topHeightmap;
     }
+
+    void interpolateParent() {
+        mixin(MeasureTime!"Layer gen:");
+
+        auto parentHeight = parentMap.heightMap;
+        auto local = posModV(mapNum, 4)*100;
+
+        auto get(int x, int y) {
+            return parentMap.getHeight(x, y);
+        }
+        auto set(int x, int y, double v) {
+            return setHeight(x, y, v);
+        }
+
+        upsampleX4!(BSpline, get, set)(local, Dim);
+    }
+
+    auto getFeatures() {
+        return features;
+    }
+
+    void featureAffection() {
+        if(parentMap !is null) {
+            enforce(features.length == 0, "Somehow, when featureAffection was called, a layer already had featuers :S");
+            features = parentMap.getFeatures();
+        }
+        foreach(feature ; features) {
+            feature.affectHeightmap(this, level);
+        }
+    }
+
     void setHeight(int x, int y, double value) {
+        /*
+        if(x < 0 || x >= 400 || y < 0 || y >= 400) {
+            auto localX = posMod(x, 400);
+            auto localY = posMod(y, 400);
+            auto neighborParentNum = parentMapNum +  negDivV(vec2i(x, y), 400);
+            auto parentMap = worldMap.getMap(level+1, neighborParentNum);
+            return parentMap.setHeight(localX, localY, value);
+        }
+        */
         heightMap.set(x,y, value);
     }
     double getHeight(int x, int y) {
+        if(x < 0 || x >= 400 || y < 0 || y >= 400) {
+            auto localX = posMod(x, 400);
+            auto localY = posMod(y, 400);
+            auto neighborNum = mapNum +  negDivV(vec2i(x, y), 400);
+            auto siblingMap = worldMap.getMap(level, neighborNum);
+            return siblingMap.getHeight(localX, localY);
+        }
         return heightMap.get(x,y);
     }
 
-}
+    void addFeature(TileXYPos tp, Feature feature) {
+        // ... ignore tp! :D
+        feature.init(this);
+        features ~= feature;
+        feature.affectHeightmap(this, level);
+    }
 
-template shift(string q, string w, string e, string r, string t) {
-    immutable shift = text(q, "=", w, "; ", w, "=", e, "; ", e, "=", r, "; ", r, "=", t, ";");
-}
+    string featuresPath() const @property {
+        if(level == 4) {
+            return "";
+        }
+        return text(parentMap.featuresPath, "/", mapNum.X, ", ", mapNum.Y);
+    }
 
+    void saveFeatures(string path) {
+        path = path ~ "/" ~ featuresPath;
+        mkdir(featuresPath);
+
+        bool[Feature] feats;
+        foreach(feature ; features) {
+            feats[feature] = true;
+        }
+        if(parentMap !is null) {
+            foreach(feature ; parentMap.getFeatures()) {
+                feats.remove(feature);
+            }
+        }
+        Value[] values;
+        foreach(feature, _true ; feats) {
+            values ~= feature.save();
+        }
+        Value(values).saveJSON(path ~ "/features.json", false);
+    }
+}
 
 mixin template Layers() {
 
@@ -58,15 +157,72 @@ mixin template Layers() {
     ValueMap mipLevel1;
     ValueMap mipLevel2;
 
+    int layerSeed;
+
     void layersInit() {
-        layer4 = new LayerMap(heightMap);
+        layer4 = new LayerMap(this, heightMap, layerSeed); //Ah.
         //enforce(0, "Implement this here layers thing");
     }
 
-    void generateTopLayer() {
-        msg("do we actually need generateMipMaps(); for anything?");
+    //These features are generated and immediately affect the heightmap of the world.
+    void generateTopLayerFeatures() {
+        //msg("do we actually need generateMipMaps(); for anything?");
+        //Yep now we do. For heightsheets.
+        //Are generated on request.
 
-        //When do we scan the toplayer to identify mountains, peaks etc?
+        //Add cone mountains at least 10 km apart.
+        TileXYPos[] soFar;
+        int limit = 10_000;
+        foreach(asdasd ; 0 .. 100) {
+            TileXYPos pt;
+            while(true) {
+                pt = getRandomPointOnLand();
+                auto yes = true;
+                foreach(tp ; soFar) {
+                    auto diff = pt.value - tp.value;
+                    auto distance = max(abs(diff.X), abs(diff.Y));
+                    if(distance < limit) {
+                        writeln(distance);
+                        yes = false;
+                    }
+                }
+                if(yes) {
+                    break;
+                } else {
+                    //addFeature(pt, new ConeMountainFeature(pt, cast(int)worldMax));
+                    limit -= 1;
+                }
+            }
+            soFar ~= pt;
+
+            auto cone = new ConeMountainFeature(pt, cast(int)worldMax);
+            addFeature(pt, cone);
+        }
+    }
+
+    string featuresPath(string hash = null) const @property{
+        return worldPath ~ "/features";
+    }
+
+    void saveFeatures() {
+        mkdir(featuresPath);
+        layer4.saveFeatures(featuresPath);
+        foreach(layer ; layers) {
+            foreach(layerMap ; layer) {
+                layerMap.saveFeatures(featuresPath);
+            }
+        }
+    }
+
+    void loadFeatures() {
+        /*
+        layer4.loadFeatures(featuresPath);
+        foreach(layer ; layers) {
+            foreach(layerMap ; layer) {
+                layerMap.saveFeatures(featuresPath);
+            }
+        }
+        */
     }
 
     void generateMipMaps() {
@@ -102,6 +258,11 @@ mixin template Layers() {
             }
         }
 
+    }
+
+    void addFeature(TileXYPos tp, Feature feature) {
+        msg("Eventually add the thingy to a layer other than toplayer herp derp");
+        layer4.addFeature(tp, feature);        
     }
 
     int hash(int level, vec2i mapNum, LayerMap parentMap) {
@@ -143,205 +304,15 @@ mixin template Layers() {
         auto parentMapNum = negDivV(mapNum, 4);
         auto parentMap = getMap(level+1, parentMapNum);
         auto mapSeed = hash(level, mapNum, parentMap);
-        auto map = new LayerMap(level, mapNum, mapSeed);
+        auto map = new LayerMap(this, parentMap, mapNum, mapSeed);
 
         /* Start by filling in the base from the previous map */
 
         //The index where the current map begins, in the parents pt-grid
-
-        /*
-        auto parentHeight = parentMap.heightMap;
-        auto local = posModV(mapNum, 4)*100;
-        double v00, v01, v10, v11;
-        double deltaX = 0.0;
-        double deltaY = 0.0;
-
-        double get(int x, int y) {
-            if(x < 0 || x >= 400 || y < 0 || y >= 400) {
-                auto localX = posMod(x, 400);
-                auto localY = posMod(y, 400);
-                auto neighborParentNum = parentMapNum + vec2i(x/400, y/400);
-                auto parentMap = getMap(level+1, neighborParentNum);
-                return parentMap.getHeight(localX, localY);
-            } else {
-                return parentHeight.get(x, y);
-            }
-        }
-
-        int parentY = local.Y;
-        int parentX;
-        foreach(y ; 0 .. ptPerLayer) {
-            parentX = local.X;
-            v00 = get(parentX, parentY);
-            v01 = get(parentX, parentY+1); //Will crash, eventually, and then we fix something.
-            v10 = get(parentX+1, parentY);
-            v11 = get(parentX+1, parentY+1);
-            deltaX = 0.0;
-            foreach(x ; 0 .. ptPerLayer) {
-                auto v_0 = lerp(v00, v10, deltaX);
-                auto v_1 = lerp(v01, v11, deltaX);
-                auto v = lerp(v_0, v_1, deltaY);
-                map.setHeight(x, y, v);
-
-                deltaX += 0.25;
-                if( (x & 3) == 3) {
-                    deltaX = 0.0;
-                    parentX +=1;
-                    v00 = v10;
-                    v01 = v11;
-                    v10 = get(parentX+1, parentY);
-                    v11 = get(parentX+1, parentY+1);
-                }
-            }
-            deltaY += 0.25;
-            if( (y & 3) == 3) {
-                deltaY = 0.0;
-                parentY += 1;
-            }
-        }
-        //*/
-
-        //*
-        {
-            mixin(MeasureTime!"Layer gen:");
-
-        auto parentHeight = parentMap.heightMap;
-        auto local = posModV(mapNum, 4)*100;
-
-        double get(int x, int y) {
-            if(x < 0 || x >= 400 || y < 0 || y >= 400) {
-                auto localX = posMod(x, 400);
-                auto localY = posMod(y, 400);
-                auto neighborParentNum = parentMapNum +  negDivV(vec2i(x, y), 400);
-                auto parentMap = getMap(level+1, neighborParentNum);
-                return parentMap.getHeight(localX, localY);
-            } else {
-                return parentHeight.get(x, y);
-            }
-        }
-
-        double v00, v01, v02, v03, v10, v11, v12, v13, v20, v21, v22, v23, v30, v31, v32, v33;
-        double i0, i1, i2, i3;
-        double deltaX = 0.0;
-        double deltaY = 0.0;
-        int parentY = local.Y;
-        int parentX;
-
-        alias BSpline Mixer;
-
-        foreach(y ; 0 .. ptPerLayer) {
-            parentX = local.X;
-
-            v00 = get(parentX-1, parentY-1);
-            v01 = get(parentX-1, parentY+0);
-            v02 = get(parentX-1, parentY+1);
-            v03 = get(parentX-1, parentY+2);
-            v10 = get(parentX+0, parentY-1);
-            v11 = get(parentX+0, parentY+0);
-            v12 = get(parentX+0, parentY+1);
-            v13 = get(parentX+0, parentY+2);
-            v20 = get(parentX+1, parentY-1);
-            v21 = get(parentX+1, parentY+0);
-            v22 = get(parentX+1, parentY+1);
-            v23 = get(parentX+1, parentY+2);
-            v30 = get(parentX+2, parentY-1);
-            v31 = get(parentX+2, parentY+0);
-            v32 = get(parentX+2, parentY+1);
-            v33 = get(parentX+2, parentY+2);
-            i0 = Mixer(v00, v01, v02, v03, deltaY);
-            i1 = Mixer(v10, v11, v12, v13, deltaY);
-            i2 = Mixer(v20, v21, v22, v23, deltaY);
-            i3 = Mixer(v30, v31, v32, v33, deltaY);
-
-            deltaX = 0.0;
-            foreach(x ; 0 .. ptPerLayer) {
-                auto v = Mixer(i0, i1, i2, i3, deltaX);
-                map.setHeight(x, y, v);
-
-                deltaX += 0.25;
-                if( (x & 3) == 3) {
-                    deltaX = 0.0;
-                    parentX +=1;
-                    mixin(shift!("v00", "v10", "v20", "v30", "get(parentX+2, parentY-1)"));
-                    mixin(shift!("v01", "v11", "v21", "v31", "get(parentX+2, parentY+0)"));
-                    mixin(shift!("v02", "v12", "v22", "v32", "get(parentX+2, parentY+1)"));
-                    mixin(shift!("v03", "v13", "v23", "v33", "get(parentX+2, parentY+2)"));
-                    mixin(shift!("i0", "i1", "i2", "i3", "Mixer(v30, v31, v32, v33, deltaY)"));
-
-                }
-            }
-            deltaY += 0.25;
-            if( (y & 3) == 3) {
-                deltaY = 0.0;
-                parentY += 1;
-            }
-        }
-
-        }
-        //*/
-
-        /*
-
-        {
-            mixin(MeasureTime!("To make layer:"));
-            auto layerSize = vec2d(mapScale[level]);
-            auto layerRect = Rectd(layerSize * mapNum.convert!double, layerSize);
-
-            auto interpolated = new CubicInterpolation(parentMap.heightMap);
-
-            auto local = (posModV(mapNum, 4)*100).convert!double;
-            auto parentMapArea = Rectd(local, vec2d(100));
-            auto scaled = MapRectToSize(interpolated, parentMapArea, vec2d(400));
-            //The big problem with this is that we can't get data from different parent areas :P
-
-            map.heightMap.fill(scaled, 400, 400);
-        }
-        //*/
-
-        /* Add 'our own' randomness */
-
-        /* Process the map, etc */
-
-        /* Add river-objects, cave-objects, etc */
-
-        /* postprocess the map */
-
-        /* Done! Add it to our known maps =) */
-
-        if(level == 3000000) {
-            ValueMap randomField = new ValueMap(400, 400);
-            randomField.fill(new RandSourceUniform(880128), Dim, Dim);
-            map.heightMap.randMap[] += randomField.randMap[] * 500;
-        }
+        map.featureAffection();
 
         layers[level][mapNum] = map;
         return map;
-    }
-
-    void initLayer3(LayerMap layer) {
-
-        /*
-        // How would and _area_ apply or change things, anyway?
-        // It's more likely they add a feature or something which modifies the height,
-        // but it's not like a tundra, jungle or a desert affects the height of the world
-        // by being a desert...
-        //
-        // So maybe use this as a point to add features.
-        //
-        // Or add different kinds of noise depending on what kind of terrain there is?
-        // IN THAT CASE USE A DISPLACEMENT FIELD AS WELL?????
-        //
-        foreach(area ; getLayerAreas(4, layer.mapNum)) {
-            area.applyHeight(layer);
-        }
-        */
-
-        /*
-        foreach(feature ; getLevelFeatures(4, layer.mapNum)) {
-            feature.applyHeight(layer);
-        }
-        */
-        enforce(0, "herp derp");
     }
 
 

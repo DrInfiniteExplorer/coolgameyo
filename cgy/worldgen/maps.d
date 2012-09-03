@@ -11,6 +11,11 @@ import std.stdio;
 
 //import worldgen.newgen;
 
+import feature.feature;
+import json;
+import graphics.image;
+
+import pos;
 import random.catmullrom;
 import random.combine;
 import random.gradient;
@@ -25,10 +30,7 @@ import random.valuesource;
 import random.vectormap;
 import random.xinterpolate4;
 
-import graphics.image;
 
-import json;
-import pos;
 import statistics;
 import tiletypemanager;
 
@@ -37,7 +39,9 @@ import util.math;
 import util.rangefromto;
 import util.rect;
 import util.util;
-import util.voronoi.wrapper;
+import util.voronoi.fortune;
+import util.voronoi.lattice;
+import util.voronoi.voronoi;
 
 import worldgen.areas;
 import worldgen.biomes;
@@ -81,13 +85,10 @@ final class WorldMap {
     mixin Temperature;
 
     mixin Areas;
-
     mixin Biomes;
 
     mixin MapViz;
-
     mixin Layers;
-
     mixin WorldGenerator;
 
     //Eventually make a mixin for climate?
@@ -125,12 +126,14 @@ final class WorldMap {
 
         getVisualizer().getClimateImage().save(worldPath ~ "/map.tga");
         saveHeightmap();
+        saveAreas();
         saveWindMap();
         saveTemperatureMap();
         saveMoistureMap();
-        saveAreas();
+        saveFeatures();
     }
 
+    //We always initialize before we call load.
     void load(string worldHash) {
         auto path = worldPath(worldHash);        
         enforce(existsDir(path), "WorldState not found:" ~ path);
@@ -139,10 +142,11 @@ final class WorldMap {
         initSeed();
 
         loadHeightmap();
+        loadAreas();
         loadWindMap();
         loadTemperatureMap();
         loadMoistureMap();
-        loadAreas();
+        loadFeatures();
     }
 
     public static string[] enumerateSavedWorlds() {
@@ -158,6 +162,7 @@ final class WorldMap {
         return Image("worlds/" ~ name ~ "/map.tga");
     }
 
+    // We always initialize, then we call either generate or load.
     void init() {
         climates = Image("climateMap.bmp");
         mixin(MeasureTime!"Time to init world:");
@@ -169,20 +174,19 @@ final class WorldMap {
         temperatureInit();
         moistureInit();
         areasInit();
-
         layersInit();
+
     }
 
+    // We always call init before generate.
     void generate() {
 
         generateHeightMap();
         generateWindMap();
         generateTemperatureMap();
         generateMoistureMap();
-
-        generateAreas();
-
-        generateTopLayer();
+        generateAreas(); //Also classifies them.
+        generateTopLayerFeatures();
     }
 
     void initSeed() {
@@ -190,6 +194,7 @@ final class WorldMap {
         heightSeed = rnd.get(int.min, int.max);
         windSeed = rnd.get(int.min, int.max);
         voronoiSeed = rnd.get(int.min, int.max);
+        layerSeed = rnd.get(int.min, int.max);
     }
 
     bool destroyed = false;
@@ -202,11 +207,5 @@ final class WorldMap {
     }
 
 
-
-
-    void step() {
-        classifyAreas();
-        return;
-    }
 }
 

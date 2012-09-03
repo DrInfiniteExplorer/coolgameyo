@@ -3,6 +3,7 @@ module gui.random.menu;
 import std.algorithm;
 import std.conv;
 import std.exception;
+import std.math;
 import std.stdio;
 
 import main;
@@ -20,6 +21,7 @@ import random.permutation;
 import random.random;
 import random.randsource;
 import random.valuemap;
+import random.valuesource;
 import random.xinterpolate;
 
 import settings;

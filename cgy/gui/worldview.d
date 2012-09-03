@@ -106,15 +106,8 @@ class WorldMenu : GuiElementWindow {
             climateMapImg.saveImage("worldview_climates.bmp");
         });
 
-        auto stepButton = new PushButton(this, Rectd(saveImagesButton.leftOf, saveImagesButton.bottomOf, 0.2, 0.1), "Step", {
-            {
-                mixin(MeasureTime!("Time to make a step:"));
-                worldMap.step();
-            }
-            redraw(false);
-        });
 
-        climateTypesImg = new GuiElementImage(this, Rectd(stepButton.rightOf + stepButton.heightOf, stepButton.topOf, stepButton.heightOf, stepButton.heightOf));
+        climateTypesImg = new GuiElementImage(this, Rectd(saveImagesButton.leftOf, saveImagesButton.bottomOf, saveImagesButton.heightOf, saveImagesButton.heightOf));
         climateTypes = Image("climateMap.bmp");
         climateTypesImg.setImage(climateTypes);
 

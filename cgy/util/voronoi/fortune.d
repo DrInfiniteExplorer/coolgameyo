@@ -29,7 +29,6 @@ final class FortuneVoronoi {
     Edge[] edges;
     Vertex[] vertices;
     Site[] sites;
-    HalfEdge[] halfEdges;
 
     static if(ReuseEvents) {
         CircleEvent[] circleReuse;
@@ -251,7 +250,21 @@ final class FortuneVoronoi {
         poly.edges = edges; edges = null;
         poly.vertices = vertices; vertices = null;
         poly.sites = sites; sites = null;
-        poly.halfEdges = halfEdges; halfEdges = null;
+
+
+        int[HalfEdge] heMap;
+        foreach(site ; poly.sites) {
+            foreach(he ; site.halfEdges) {
+                heMap[he] = 0;
+            }
+        }
+        poly.halfEdges.length = heMap.length;
+        int c = 0;
+        foreach(he, zero ; heMap) {
+            poly.halfEdges[c] = he;
+            c++;
+        }
+
         return poly;
     }
 

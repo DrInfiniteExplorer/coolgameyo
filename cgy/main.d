@@ -2,8 +2,6 @@
 
 module main;
 
-pragma(msg, "main.d");
-
 import core.memory;
 import core.runtime;
 import core.thread;
@@ -34,7 +32,7 @@ import settings;
 import util.memory;
 import util.util;
 import util.window;
-//import worldgen.worldgen;
+import worldgen.maps;
 import worldgen.maps : worldSize;
 
 
@@ -333,7 +331,13 @@ void actualMain() {
     }
 
     msg("worldSize: ", worldSize / 1_000, " km");
-    
+    foreach(idx, size ; mapScale) {
+        msg("Mapsize ", idx, " : ", size);
+    }
+    foreach(idx, size ; ptScale) {
+        msg("ptScale ", idx, " : ", size);
+    }
+
     Main main = new Main(client, true, true); //Be a worker? lolololol
     main.run();
     main.destroy();

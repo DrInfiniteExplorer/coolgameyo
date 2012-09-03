@@ -10,10 +10,13 @@ mixin template Heightmap() {
     double worldMin;
     double worldMax;
 
+    RandSourceUniform randSource;
+
     void heightmapInit() {
         worldMin = -0.3*worldHeight;
         worldMax =  0.7*worldHeight;
         heightMap = new ValueMap(Dim, Dim);
+        randSource = new RandSourceUniform(heightSeed);
     }
 
     string heightmapJSONPath() const @property {
@@ -42,7 +45,7 @@ mixin template Heightmap() {
     void generateHeightMap() {
 
         auto randomField = new ValueMap;
-        auto gradient = new GradientNoise01!()(Dim, new RandSourceUniform(heightSeed));
+        auto gradient = new GradientNoise01!()(Dim, randSource);
         auto hybrid = new HybridMultiFractal(gradient, 0.1, 2, 6, 0.1);
         hybrid.setBaseWaveLength(120);
 
@@ -69,7 +72,28 @@ mixin template Heightmap() {
         });
 
         heightMap.fill(test, Dim, Dim);
-        heightMap.normalize(worldMin, worldMax); 
+        heightMap.normalize(worldMin * 0.1 , worldMax * 0.1); 
+
+        auto hybrid2 = new HybridMultiFractal(gradient, 0.1, 2, 6, 0.1);
+        hybrid2.setBaseWaveLength(40);
+        auto heightMap2 = new typeof(heightMap)(Dim, Dim);
+        heightMap2.fill(hybrid2, Dim, Dim);
+        heightMap2.normalize(worldMin * 0.2 , worldMax * 0.2); 
+
+        heightMap.data[] += heightMap2.data[];
+
+        //heightMap.data = array(map!(a => a > 0 ? 10.0 : -10.0)(heightMap.data));
+    }
+
+    
+    TileXYPos getRandomPointOnLand() {
+        auto x = randSource.get!int(0, worldSize-1);
+        auto y = randSource.get!int(0, worldSize-1);
+        auto X = x * Dim / worldSize;
+        auto Y = y * Dim / worldSize;
+        if(heightMap.get(X, Y) > 0) return TileXYPos(vec2i(x, y));
+        return getRandomPointOnLand();
+
     }
 
 }

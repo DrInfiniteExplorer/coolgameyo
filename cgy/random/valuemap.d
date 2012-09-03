@@ -16,7 +16,7 @@ alias ValueMap2D!double ValueMap2Dd;
 
 final class ValueMap2D(StorageType, bool Wrap = true) : ValueSource {
     
-    StorageType[] randMap;
+    StorageType[] data;
     uint sizeX, sizeY;
 
     this() {
@@ -30,7 +30,7 @@ final class ValueMap2D(StorageType, bool Wrap = true) : ValueSource {
         sizeX = _sizeX;
         sizeY = _sizeY;
         auto mul = sizeX * sizeY;
-        randMap.length = mul;
+        data.length = mul;
     }
 
     //Gets values 0.._sizeX, 0.._sizeY from source and puts in place.
@@ -38,9 +38,9 @@ final class ValueMap2D(StorageType, bool Wrap = true) : ValueSource {
         sizeX = _sizeX;
         sizeY = _sizeY;
         auto mul = sizeX * sizeY;
-        randMap.length = mul;
+        data.length = mul;
         foreach(i ; 0 .. mul) {
-            randMap[i] = random.random.getValue(source, cast(double)(i % sizeX), cast(double)(i / sizeX));
+            data[i] = random.random.getValue(source, cast(double)(i % sizeX), cast(double)(i / sizeX));
         }
     }
 
@@ -48,9 +48,9 @@ final class ValueMap2D(StorageType, bool Wrap = true) : ValueSource {
         sizeX = _sizeX;
         sizeY = _sizeY;
         auto mul = sizeX * sizeY;
-        randMap.length = mul;
+        data.length = mul;
         foreach(i ; 0 .. mul) {
-            mixin(q{ randMap[i] } ~ Op ~ q{ random.random.getValue(source, cast(double)(i % sizeX), cast(double)(i / sizeX));});
+            mixin(q{ data[i] } ~ Op ~ q{ random.random.getValue(source, cast(double)(i % sizeX), cast(double)(i / sizeX));});
         }
     }
 
@@ -61,23 +61,23 @@ final class ValueMap2D(StorageType, bool Wrap = true) : ValueSource {
         auto mul = sizeX * sizeY;
         auto deltaX = (maxX - minX) / to!double(sizeX);
         auto deltaY = (maxY - minY) / to!double(sizeY);
-        randMap.length = mul;
+        data.length = mul;
         foreach(i ; 0 .. mul) {
-            randMap[i] = random.random.getValue(source, minX + to!double(i % sizeX) * deltaX, to!double(i / sizeX) * deltaY);
+            data[i] = random.random.getValue(source, minX + to!double(i % sizeX) * deltaX, to!double(i / sizeX) * deltaY);
         }
     }
 
     void normalize(const double Min, const double Max) {
         double min = double.max;
         double max = -double.max;
-        foreach(val; randMap) {
+        foreach(val; data) {
             min = std.algorithm.min(min, val);
             max = std.algorithm.max(max, val);
         }
         double scale = (Max-Min) / (max-min);
         writeln(text("normalize: min ", min, " max ", max));
 
-        foreach(ref val; randMap) {
+        foreach(ref val; data) {
             val = (val-min) * scale + Min;
         }
     }
@@ -91,17 +91,20 @@ final class ValueMap2D(StorageType, bool Wrap = true) : ValueSource {
             x = posMod(cast(int)x, sizeX);
             y = posMod(cast(int)y, sizeY);
         }
-        return randMap[cast(uint)y * sizeX + cast(uint)x];
+        return data[cast(uint)y * sizeX + cast(uint)x];
     }
 
     void set(int x, int y, StorageType value) {
-        randMap[x + y * sizeX] = value;
+        debug{
+            BREAK_IF(x < 0 || x >= sizeX || y < 0 || y >= sizeY);
+        }
+        data[x + y * sizeX] = value;
     }
     StorageType get(int x, int y) {
         debug{
             BREAK_IF(x < 0 || x >= sizeX || y < 0 || y >= sizeY);
         }
-        return randMap[x + y * sizeX];
+        return data[x + y * sizeX];
     }
 
     
@@ -110,7 +113,7 @@ final class ValueMap2D(StorageType, bool Wrap = true) : ValueSource {
         imgData.length = 4 * sizeX * sizeY;
         ubyte* ptr = imgData.ptr;
         auto range = max - min;
-        foreach(value ; randMap) {
+        foreach(value ; data) {
             value = (value-min) / range;
             if (color is null ) {
                 if(doClamp) {
@@ -142,12 +145,12 @@ final class ValueMap2D(StorageType, bool Wrap = true) : ValueSource {
 
     //Note! Does not save the dimensions!
     void saveBin(string filename) {
-        //std.file.write(filename, randMap);
-        writeBin(filename, randMap);
+        //std.file.write(filename, data);
+        writeBin(filename, data);
     }
     void loadBin(string filename) {
-        //randMap = cast(StorageType[])std.file.read(filename);
-        readBin(filename, randMap);
+        //data = cast(StorageType[])std.file.read(filename);
+        readBin(filename, data);
     }
 };
 

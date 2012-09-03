@@ -16,8 +16,12 @@ final class VoronoiWrapper {
     this(int _width, int _height, int _seed) {
         width = _width;
         height = _height;
-
         seed = _seed;
+
+    }
+
+    void generate() {
+
         lattice = new VoronoiLattice(width, height, seed);
         auto fortune = new FortuneVoronoi;
         poly = fortune.makeVoronoi(lattice.points);

@@ -7,17 +7,23 @@ import std.conv;
 import std.math;
 import std.array;
 
-import graphics.debugging;
-import stolen.aabbox3d;
-
-import util.util;
-import util.tileiterator;
-import worldstate.worldstate;
-import worldstate.sector;
-import worldstate.block;
 import entities.entity;
 import entities.treelikeinstance;
 import entitytypemanager;
+
+import graphics.debugging;
+
+import stolen.aabbox3d;
+
+import util.math;
+import util.tileiterator;
+import util.util;
+
+import worldstate.worldstate;
+import worldstate.sector;
+import worldstate.block;
+
+
 import tiletypemanager;
 
 class TreeManager {

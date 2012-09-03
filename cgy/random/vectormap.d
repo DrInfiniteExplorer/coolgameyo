@@ -58,9 +58,9 @@ final class Vector2DMap2D(T, bool Wrap = true) {
         auto mul = sizeX * sizeY;
         auto deltaX = (maxX - minX) / cast(double)sizeX;
         auto deltaY = (maxY - minY) / cast(double)sizeY;
-        randMap.length = mul;
+        data.length = mul;
         foreach(i ; 0 .. mul) {
-            randMap[i] = random.random.getValue(source, minX + cast(double)(i % sizeX) * deltaX, cast(double)(i / sizeX) * deltaY);
+            data[i] = random.random.getValue(source, minX + cast(double)(i % sizeX) * deltaX, cast(double)(i / sizeX) * deltaY);
         }
     }
 

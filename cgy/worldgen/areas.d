@@ -60,14 +60,21 @@ final class Region {
 }
 
 mixin template Areas() {
-    VoronoiWrapper areaVoronoi;
+    VoronoiLattice voronoiLattice;
+    VoronoiPoly voronoiPoly;
 
     Area_t[areaCount*areaCount] areas;
 
     Region[] regions;
 
     void areasInit() {
-        //Do nothing here. Just be awesome.
+        voronoiLattice = new VoronoiLattice(areaCount, areaCount, voronoiSeed);
+        voronoiLattice.setRange(vec2d(worldSize));
+    }
+
+    Area getArea(TileXYPos tp) {
+        auto areaId = voronoiLattice.identifyCell(tp.value.convert!double);
+        return &areas[areaId];
     }
 
     string areasBinaryPath() const @property {
@@ -76,12 +83,15 @@ mixin template Areas() {
     string regionsJSONPath() const @property {
         return worldPath ~ "/regions.json";
     }
+    string voronoiPolyPath() const @property {
+        return worldPath ~ "/poly.bin";
+    }
 
 
     void saveAreas() {
         writeBin(areasBinaryPath, areas);
         encode(regions).saveJSON(regionsJSONPath, false);
-
+        voronoiPoly.serialize(voronoiPolyPath);
     }
     void loadAreas() {
         Area_t[] temp;
@@ -95,22 +105,20 @@ mixin template Areas() {
             region.fromJSON(regionValue, areas.ptr);
             regions[idx] = region;
         }
-        generateAreas!true();
+
+        voronoiPoly = new VoronoiPoly;
+        voronoiPoly.deserialize(voronoiPolyPath);
     }
 
-    void generateAreas(bool regenerateVoronoiOnly = false)() {
-        areaVoronoi = new VoronoiWrapper(areaCount, areaCount, voronoiSeed);
-        areaVoronoi.setScale(vec2d(worldSize));
-        //areaVoronoi.setScale(vec2d(Dim));        
-        static if(regenerateVoronoiOnly == false) {
-            classifyAreas();
-        } 
+    void generateAreas()() {
+
+        auto fortune = new FortuneVoronoi;
+        voronoiPoly = fortune.makeVoronoi(voronoiLattice.points);
+        voronoiPoly.cutDiagram(vec2d(0, 0), vec2d(areaCount));
+        voronoiPoly.scale(vec2d( cast(double)worldSize / cast(double)areaCount ));
+        classifyAreas();
     }
 
-    Area getArea(TileXYPos tp) {
-        auto areaId = areaVoronoi.identifyCell(tp.value.convert!double);
-        return &areas[areaId];
-    }
 
     vec3f getClimateColorForTile(TileXYPos tp) {
         ubyte r,g,b,a;
@@ -180,7 +188,7 @@ mixin template Areas() {
 
         bool[int] areas;
 
-        foreach(vert ; areaVoronoi.poly.vertices) {
+        foreach(vert ; voronoiPoly.vertices) {
             if(layerArea.isInside(vert.pos)) {
                 foreach(edge ; vert.getEdges) {
                     areas[edge.left.siteId] = true;
@@ -197,7 +205,7 @@ mixin template Areas() {
     }
 
     void classifyAreas() {
-        auto poly = areaVoronoi.poly;
+        auto poly = voronoiPoly;
         double temp[areaCount*areaCount];
         double moisture[areaCount*areaCount];
         double count[areaCount*areaCount];
@@ -208,7 +216,8 @@ mixin template Areas() {
         count[] = 0;
         //Determine average climate in cell / area
         foreach(x, y ; Range2D(0, Dim, 0, Dim)) {
-            int cellId = areaVoronoi.identifyCell(vec2d(x, y) * vec2d(worldSize / Dim));
+            auto tp = (vec2d(x, y) / vec2d(Dim)) * vec2d(worldSize);
+            int cellId = voronoiLattice.identifyCell(tp);
             temp[cellId] += temperatureMap.get(x, y);
             moisture[cellId] += moistureMap.get(x, y);
             count[cellId] += 1;
@@ -254,7 +263,7 @@ mixin template Areas() {
                 if(areaClimateType != climateType) continue;
                 region.addArea(area);
                 visited[visitedAreaId] = true;
-                foreach(neighbor ; areaVoronoi.poly.sites[visitedAreaId].getNeighbors()) {
+                foreach(neighbor ; voronoiPoly.sites[visitedAreaId].getNeighbors()) {
                     if(neighbor is null) continue;
                     if( neighbor.siteId in visited) continue;
                     toVisit[neighbor.siteId] = true;

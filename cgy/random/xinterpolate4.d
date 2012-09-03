@@ -155,3 +155,63 @@ final class XInterpolation4(alias Mixer) : ValueSource{
 }
 
 alias XInterpolation4!CubicInter CubicInterpolation;
+
+template shift(string q, string w, string e, string r, string t) {
+    immutable shift = text(q, "=", w, "; ", w, "=", e, "; ", e, "=", r, "; ", r, "=", t, ";");
+}
+
+void upsampleX4(alias Mixer, alias get, alias set)(vec2i local, int ptPerLayer) {
+    double v00, v01, v02, v03, v10, v11, v12, v13, v20, v21, v22, v23, v30, v31, v32, v33;
+    double i0, i1, i2, i3;
+    double deltaX = 0.0;
+    double deltaY = 0.0;
+    int parentY = local.Y;
+    int parentX;
+    foreach(y ; 0 .. ptPerLayer) {
+        parentX = local.X;
+
+        v00 = get(parentX-1, parentY-1);
+        v01 = get(parentX-1, parentY+0);
+        v02 = get(parentX-1, parentY+1);
+        v03 = get(parentX-1, parentY+2);
+        v10 = get(parentX+0, parentY-1);
+        v11 = get(parentX+0, parentY+0);
+        v12 = get(parentX+0, parentY+1);
+        v13 = get(parentX+0, parentY+2);
+        v20 = get(parentX+1, parentY-1);
+        v21 = get(parentX+1, parentY+0);
+        v22 = get(parentX+1, parentY+1);
+        v23 = get(parentX+1, parentY+2);
+        v30 = get(parentX+2, parentY-1);
+        v31 = get(parentX+2, parentY+0);
+        v32 = get(parentX+2, parentY+1);
+        v33 = get(parentX+2, parentY+2);
+        i0 = Mixer(v00, v01, v02, v03, deltaY);
+        i1 = Mixer(v10, v11, v12, v13, deltaY);
+        i2 = Mixer(v20, v21, v22, v23, deltaY);
+        i3 = Mixer(v30, v31, v32, v33, deltaY);
+
+        deltaX = 0.0;
+        foreach(x ; 0 .. ptPerLayer) {
+            auto v = Mixer(i0, i1, i2, i3, deltaX);
+            set(x, y, v);
+
+            deltaX += 0.25;
+            if( (x & 3) == 3) {
+                deltaX = 0.0;
+                parentX +=1;
+                mixin(shift!("v00", "v10", "v20", "v30", "get(parentX+2, parentY-1)"));
+                mixin(shift!("v01", "v11", "v21", "v31", "get(parentX+2, parentY+0)"));
+                mixin(shift!("v02", "v12", "v22", "v32", "get(parentX+2, parentY+1)"));
+                mixin(shift!("v03", "v13", "v23", "v33", "get(parentX+2, parentY+2)"));
+                mixin(shift!("i0", "i1", "i2", "i3", "Mixer(v30, v31, v32, v33, deltaY)"));
+
+            }
+        }
+        deltaY += 0.25;
+        if( (y & 3) == 3) {
+            deltaY = 0.0;
+            parentY += 1;
+        }
+    }
+}
