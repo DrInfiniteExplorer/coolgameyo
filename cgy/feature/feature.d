@@ -29,7 +29,7 @@ class Feature {
     abstract void load(Value jsonValue);
 
     static Feature create(Value json) {
-        auto className = json["featureName"].str;
+        auto className = json["className"].str;
         auto obj = factory(className);
         enforce(obj !is null, "Could not create class of type " ~ className);
         auto feature = cast(Feature) obj;
@@ -70,6 +70,7 @@ class ConeMountainFeature : public Feature {
     TileXYPos tp;
     int height;
     double radius;
+    bool affectedLevel4 = false;
 
     ValueMap2Dd heightMap;
 
@@ -121,6 +122,8 @@ class ConeMountainFeature : public Feature {
     override void affectHeightmap(LayerMap map, int level) {
         //Maybe figure out if mountains shouldn't be on level3 really? or? something?
         if(level == 4) {
+            if(affectedLevel4) return;
+            affectedLevel4 = true;
             auto heightMap = map.heightMap;
             immutable int level = 4;
             immutable int mapSize = mapScale[level];
@@ -162,13 +165,15 @@ class ConeMountainFeature : public Feature {
 
     override Value save() {
         return makeJSONObject("className", this.classinfo.name,
+                              "affectedLevel4", affectedLevel4,
                               "tp", tp,
                               "height", height,
                               "radius", radius);
     }
 
     override void load(Value json) {
-        json.readJSONObject("tp", &tp,
+        json.readJSONObject("affectedLevel4", &affectedLevel4,
+                            "tp", &tp,
                             "height", &height,
                             "radius", &radius);
     }

@@ -74,6 +74,18 @@ body{
     }
 }
 
+auto dir(string path) {
+    return (int delegate(ref string path) Body) {
+        foreach(string name ; dirEntries(path, SpanMode.shallow)) {
+            name = name[max(lastIndexOf(name, "/")+1,
+                            lastIndexOf(name, "\\")+1) .. $];
+            int ret = Body(name);
+            if(ret) return ret;
+        }
+        return 0;
+    };
+}
+
 //Call cb with every item in the path
 void dir(string path, void delegate(string name) cb) {
     return dir(path, (string name){cb(name); return false;});

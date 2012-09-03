@@ -130,7 +130,7 @@ final class WorldMap {
         saveWindMap();
         saveTemperatureMap();
         saveMoistureMap();
-        saveFeatures();
+        saveAllFeatures();
     }
 
     //We always initialize before we call load.
@@ -146,7 +146,7 @@ final class WorldMap {
         loadWindMap();
         loadTemperatureMap();
         loadMoistureMap();
-        loadFeatures();
+        loadAllFeatures();
     }
 
     public static string[] enumerateSavedWorlds() {

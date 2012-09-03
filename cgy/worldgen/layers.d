@@ -114,24 +114,14 @@ final class LayerMap {
         return heightMap.get(x,y);
     }
 
-    void addFeature(TileXYPos tp, Feature feature) {
+    void addFeature(Feature feature) {
         // ... ignore tp! :D
         feature.init(this);
         features ~= feature;
         feature.affectHeightmap(this, level);
     }
 
-    string featuresPath() const @property {
-        if(level == 4) {
-            return "";
-        }
-        return text(parentMap.featuresPath, "/", mapNum.X, ", ", mapNum.Y);
-    }
-
-    void saveFeatures(string path) {
-        path = path ~ "/" ~ featuresPath;
-        mkdir(featuresPath);
-
+    Value saveFeatures() {
         bool[Feature] feats;
         foreach(feature ; features) {
             feats[feature] = true;
@@ -145,8 +135,17 @@ final class LayerMap {
         foreach(feature, _true ; feats) {
             values ~= feature.save();
         }
-        Value(values).saveJSON(path ~ "/features.json", false);
+        return Value(values);
     }
+
+    void loadFeatures(string path) {        
+        auto root = loadJSON(path);
+        foreach(idx, value ; root.asArray()) {
+            auto feature = Feature.create(value);
+            worldMap.addFeature(feature);
+        }
+    }
+
 }
 
 mixin template Layers() {
@@ -196,7 +195,7 @@ mixin template Layers() {
             soFar ~= pt;
 
             auto cone = new ConeMountainFeature(pt, cast(int)worldMax);
-            addFeature(pt, cone);
+            addFeature(cone);
         }
     }
 
@@ -204,25 +203,39 @@ mixin template Layers() {
         return worldPath ~ "/features";
     }
 
-    void saveFeatures() {
+    void saveAllFeatures() {
         mkdir(featuresPath);
-        layer4.saveFeatures(featuresPath);
-        foreach(layer ; layers) {
+        auto value = layer4.saveFeatures();
+        value.saveJSON(featuresPath ~ "/features.json", false);
+        foreach(layer ; layers[1..$]) {
             foreach(layerMap ; layer) {
-                layerMap.saveFeatures(featuresPath);
+                auto path = text(featuresPath, "/", layerMap.level, "/", layerMap.mapNum.X, ",", layerMap.mapNum.Y);
+                mkdir(path);
+                value = layerMap.saveFeatures();
+                value.saveJSON(path ~ "/features.json", false);
             }
         }
     }
 
-    void loadFeatures() {
-        /*
-        layer4.loadFeatures(featuresPath);
-        foreach(layer ; layers) {
-            foreach(layerMap ; layer) {
-                layerMap.saveFeatures(featuresPath);
+
+    void loadFeatures(int level, vec2i mapNum) {
+        auto path = text(featuresPath, "/", level, "/", mapNum.X, ",", mapNum.Y, "/features.json");
+        auto layer = getMap(level, mapNum);
+        layer.loadFeatures(path);
+    }
+
+    void loadAllFeatures() {
+        layer4.loadFeatures(featuresPath ~ "/features.json");
+        foreach(level, layer ; layers[1..$]) {
+            auto levelPath = text(featuresPath, "/", level);
+            if(!exists(levelPath)) continue;
+            foreach(item ; dir(levelPath)) {
+                auto parts = item.split(",");
+                auto mapNum = vec2i(to!int(parts[0]), to!int(parts[1]));
+                loadFeatures(level, mapNum);
             }
         }
-        */
+
     }
 
     void generateMipMaps() {
@@ -260,9 +273,9 @@ mixin template Layers() {
 
     }
 
-    void addFeature(TileXYPos tp, Feature feature) {
+    void addFeature(Feature feature) {
         msg("Eventually add the thingy to a layer other than toplayer herp derp");
-        layer4.addFeature(tp, feature);        
+        layer4.addFeature(feature);        
     }
 
     int hash(int level, vec2i mapNum, LayerMap parentMap) {
@@ -309,7 +322,8 @@ mixin template Layers() {
         /* Start by filling in the base from the previous map */
 
         //The index where the current map begins, in the parents pt-grid
-        map.featureAffection();
+        // Moved into constructor now.
+        //map.featureAffection();
 
         layers[level][mapNum] = map;
         return map;
