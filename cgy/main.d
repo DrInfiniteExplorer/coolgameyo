@@ -286,7 +286,7 @@ class Main {
 
             if(nextTime < utime()) {
                 nextTime = utime() + 1_000_000; //1 sec
-                auto str = "CoolGameYo! ~ " ~ getMemoryUsage();
+                auto str = format("CoolGameYo! ~ %d", getMemoryUsage());
                 SDL_WM_SetCaption( toStringz(str), "Herp");
             }
 

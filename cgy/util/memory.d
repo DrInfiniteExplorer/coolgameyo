@@ -55,10 +55,16 @@ extern(Windows) BOOL initGPMI(HANDLE h, PPROCESS_MEMORY_COUNTERS p, DWORD d) {
 
 __gshared GetProcessMemoryInfoPtr getProcessMemoryInfo = &initGPMI;
 
-string getMemoryUsage() { //Returns a string of memory info, ripe for display!
+ulong getMemoryUsage() {
     PROCESS_MEMORY_COUNTERS pmc;
     enforce(getProcessMemoryInfo(GetCurrentProcess(), &pmc, pmc.sizeof), "Error calling GetProcessMemoryInfo");
-    return format("%d", pmc.WorkingSetSize/1024);
+    return pmc.WorkingSetSize/1024;
+}
+
+ulong getMemoryPageFaults() {
+    PROCESS_MEMORY_COUNTERS data;
+    enforce(getProcessMemoryInfo(GetCurrentProcess(), &data, data.sizeof), "Error calling GetProcessMemoryInfo");
+    return data.PageFaultCount;
 }
 
 

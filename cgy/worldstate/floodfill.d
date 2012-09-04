@@ -1,5 +1,6 @@
 module worldstate.floodfill;
 
+
 import pos;
 import util.array;
 
@@ -46,6 +47,8 @@ mixin template FloodFill() {
 
     void initialFloodFill() {
 
+        auto startPageFaults = getMemoryPageFaults();
+        auto startMemory = getMemoryUsage();
         if(fillingTasks.length == 0) {
             g_Statistics.FloodFillNew(0);
         }
@@ -67,6 +70,8 @@ mixin template FloodFill() {
         }
         fillingTasks.length = 0;
         assumeSafeAppend(fillingTasks);
+        msg("Page fault count in initialFloodFill: ", getMemoryPageFaults() - startPageFaults);
+        msg("Memory increase in initialFloodFill: ", getMemoryUsage() - startMemory);
 
     }
 

@@ -36,6 +36,7 @@ import tiletypemanager;
 
 import util.filesystem;
 import util.math;
+import util.memory;
 import util.rangefromto;
 import util.rect;
 import util.util;

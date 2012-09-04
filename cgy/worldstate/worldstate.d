@@ -38,6 +38,7 @@ public import worldstate.block;
 public import worldstate.tile;
 import util.util;
 import util.intersect;
+import util.memory;
 import util.rangefromto;
 import util.tileiterator;
 import util.filesystem;

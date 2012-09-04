@@ -2,6 +2,7 @@
   "dirt":{
     "displayName":"Dirt",
     "material":"dirt",
+	"group":"dirt",
 	"strength":10,
 	"tintFromMaterial":1,
 	"tintColor":{ "X":255, "Y":255, "Z":255 },
@@ -15,6 +16,7 @@
   "stone":{
     "displayName":"Stone",
     "material":"fungus mamma",
+	"group":"dirt",
 	"strength":10,
 	"tintFromMaterial":1,
 	"tintColor":{ "X":255, "Y":255, "Z":255 },
@@ -28,6 +30,7 @@
   "snow":{
     "displayName":"Snow",
     "material":"fungus pappa",
+	"group":"dirt",
 	"strength":10,
 	"tintFromMaterial":1,
 	"tintColor":{ "X":255, "Y":255, "Z":255 },
@@ -41,6 +44,7 @@
   "water":{
     "displayName":"Water",
     "material":"min mamma",
+	"group":"dirt",
 	"strength":10,
 	"tintFromMaterial":1,
 	"tintColor":{ "X":32, "Y":0, "Z":255 },
@@ -54,6 +58,7 @@
   "birchtree":{
     "displayName":"Tree",
     "material":"jag",
+	"group":"dirt",
 	"strength":10,
 	"tintFromMaterial":0,
 	"tintColor":{ "X":255, "Y":255, "Z":255 },
@@ -67,6 +72,7 @@
   "birchleaf":{
     "displayName":"Leaf",
     "material":"Greensaker",
+	"group":"dirt",
 	"strength":10,
 	"tintFromMaterial":0,
 	"tintColor":{ "X":255, "Y":255, "Z":255 },
@@ -80,6 +86,7 @@
   "smoothstone":{
     "displayName":"Smooth Stone",
     "material":"fungus mamma",
+	"group":"dirt",
 	"strength":10,
 	"tintFromMaterial":1,
 	"tintColor":{ "X":255, "Y":255, "Z":255 },

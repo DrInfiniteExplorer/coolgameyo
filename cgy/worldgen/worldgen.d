@@ -99,8 +99,9 @@ mixin template WorldGenerator() {
 
         bool homogenous = true;
         bool first = true;
-        foreach (relPos; RangeFromTo (0, BlockSize.x-1,
-                    0, BlockSize.y-1, 0, BlockSize.z-1)) {
+        foreach (relPos; RangeFromTo (  0, BlockSize.x-1,
+                                        0, BlockSize.y-1, 
+                                        0, BlockSize.z-1)) {
             auto tp = tp0;
             tp.value += relPos;
             auto groundValue = groundValueMap[tileOffset_y + relPos.Y][tileOffset_x + relPos.X];
@@ -157,9 +158,18 @@ mixin template WorldGenerator() {
 
         return Tile(tileType, flags);
     }
-
     ushort getBasicTileType(Area area) {
-        return tileSys.byName("dirt").id;
+        auto group = tileSys.getGroup("dirt");
+
+        randomNumber++;
+        int idx = randomNumber % group.length;
+        //idx = 1;
+        //msg(&group, " ", &idx);
+        auto id = group[idx].id;
+        return id;
+
+        
+        //return tileSys.byName("dirt").id;
     }
 
     long worldRadius = worldSize;

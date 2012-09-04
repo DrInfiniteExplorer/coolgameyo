@@ -27,6 +27,7 @@ struct TileType_t {
 	static struct InnerTileType {
 		string displayName;
 		string material;
+        string group;
 		int strength;
 		float tintFromMaterial;
 		vec3i tintColor;
@@ -53,6 +54,8 @@ alias TileType_t* TileType;
 class TileTypeManager {
     TileType_t[] types;
     ushort[string] _byName;
+
+    TileType[][string] tileTypeGroups;
 
     invariant() {
         //assert (types.length == _byName.length); // because of id definition file, types.length can be bigger than _byName.length
@@ -149,6 +152,11 @@ class TileTypeManager {
         return *enforce(name in _byName, "no tile type by name '" ~ name ~ "'");
     }
 
+    TileType[] getGroup(string groupName) {
+        enforce(groupName in tileTypeGroups, "Cant find group for group-name:" ~ groupName);
+        return tileTypeGroups[groupName];
+    }
+
     // Adds tile to the tile list. If we want to we can force an id.
     ushort add(TileType_t tile, ushort id = 0, bool isSendingId = false) {
         enforce(!(tile.name in _byName));
@@ -186,6 +194,7 @@ class TileTypeManager {
         }
         
         _byName[tile.name] = tile.id;
+        tileTypeGroups[tile.group] ~= byID(tile.id);
 		
         return tile.id;
     }
