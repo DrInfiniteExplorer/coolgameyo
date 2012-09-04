@@ -21,6 +21,19 @@ import util.math;
 import util.rangefromto;
 import util.util;
 
+const(TypeInfo_Class) isDerivedClass(string base, string derived) {
+    bool check(const TypeInfo_Class base, const TypeInfo_Class derived) {
+        if(base is derived) {
+            return true;
+        }
+        if(derived.base is null) return false;
+        return check(base, derived.base);
+    }
+    auto baseInfo = TypeInfo_Class.find(base);
+    auto derivedInfo = TypeInfo_Class.find(derived);
+    return check(baseInfo, derivedInfo) ? derivedInfo : null;
+}
+
 class Feature {
     abstract void affectHeightmap(LayerMap map, int level);
     abstract void init(LayerMap map);
@@ -30,7 +43,9 @@ class Feature {
 
     static Feature create(Value json) {
         auto className = json["className"].str;
-        auto obj = factory(className);
+        auto typeInfo = isDerivedClass("feature.feature.Feature", className);
+        enforce(typeInfo !is null, "Class " ~ className ~ " does not derive from Feature");
+        auto obj = typeInfo.create();
         enforce(obj !is null, "Could not create class of type " ~ className);
         auto feature = cast(Feature) obj;
         feature.load(json);

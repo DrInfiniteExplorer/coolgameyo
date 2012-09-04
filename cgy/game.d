@@ -131,6 +131,7 @@ class Game{
         sceneManager = new SceneManager();
 
         worldMap = new WorldMap(worldName);
+        worldMap.tileSys = tileTypeManager;
         worldState = new WorldState(worldMap, tileTypeManager, entityTypeManager, unitTypeManager, sceneManager);
 
         assert (isWorker, "otherwise wont work lol (maybe)");

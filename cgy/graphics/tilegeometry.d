@@ -99,22 +99,35 @@ template FixLighting(const string A, const int num, const int dir, const string 
         newFace.quad[2].lightValue = tile" ~ A ~ ".lightValue / cast(float)MaxLightStrength;
         newFace.quad[3].sunLightValue = tile" ~ A ~ ".sunLightValue / cast(float)MaxLightStrength;
         newFace.quad[3].lightValue = tile" ~ A ~ ".lightValue / cast(float)MaxLightStrength;
-        } else if ( 1 == smoothMethod) {
-        /*
-                                    float v00 = world.getTile(TilePos(pos+vec3i(" ~ FixLighting_get(num, dir, 0) ~ ")), false)." ~ lighting ~ ";
-                                    float v01 = world.getTile(TilePos(pos+vec3i(" ~ FixLighting_get(num, dir, 1) ~ ")), false)." ~ lighting ~ ";
-                                    float v02 = world.getTile(TilePos(pos+vec3i(" ~ FixLighting_get(num, dir, 2) ~ ")), false)." ~ lighting ~ ";
-                                    float v10 = world.getTile(TilePos(pos+vec3i(" ~ FixLighting_get(num, dir, 3) ~ ")), false)." ~ lighting ~ ";
-                                    float v11 = tile" ~ A ~ "." ~ lighting ~ ";
-                                    float v12 = world.getTile(TilePos(pos+vec3i(" ~ FixLighting_get(num, dir, 5) ~ ")), false)." ~ lighting ~ ";
-                                    float v20 = world.getTile(TilePos(pos+vec3i(" ~ FixLighting_get(num, dir, 6) ~ ")), false)." ~ lighting ~ ";
-                                    float v21 = world.getTile(TilePos(pos+vec3i(" ~ FixLighting_get(num, dir, 7) ~ ")), false)." ~ lighting ~ ";
-                                    float v22 = world.getTile(TilePos(pos+vec3i(" ~ FixLighting_get(num, dir, 8) ~ ")), false)." ~ lighting ~ ";
+    } else if ( smoothMethod == 1 ) {
+    //*
+        float v00  = world.getTile(TilePos(pos+vec3i(" ~ FixLighting_get(num, dir, 0) ~ ")), false).lightValue;
+        float v00s = world.getTile(TilePos(pos+vec3i(" ~ FixLighting_get(num, dir, 0) ~ ")), false).sunLightValue;
+        float v01  = world.getTile(TilePos(pos+vec3i(" ~ FixLighting_get(num, dir, 1) ~ ")), false).lightValue;
+        float v01s = world.getTile(TilePos(pos+vec3i(" ~ FixLighting_get(num, dir, 1) ~ ")), false).sunLightValue;
+        float v02  = world.getTile(TilePos(pos+vec3i(" ~ FixLighting_get(num, dir, 2) ~ ")), false).lightValue;
+        float v02s = world.getTile(TilePos(pos+vec3i(" ~ FixLighting_get(num, dir, 2) ~ ")), false).sunLightValue;
+        float v10  = world.getTile(TilePos(pos+vec3i(" ~ FixLighting_get(num, dir, 3) ~ ")), false).lightValue;
+        float v10s = world.getTile(TilePos(pos+vec3i(" ~ FixLighting_get(num, dir, 3) ~ ")), false).sunLightValue;
+        float v11  = tile" ~ A ~ ".lightValue;
+        float v11s = tile" ~ A ~ ".sunLightValue;
+        float v12  = world.getTile(TilePos(pos+vec3i(" ~ FixLighting_get(num, dir, 5) ~ ")), false).lightValue;
+        float v12s = world.getTile(TilePos(pos+vec3i(" ~ FixLighting_get(num, dir, 5) ~ ")), false).sunLightValue;
+        float v20  = world.getTile(TilePos(pos+vec3i(" ~ FixLighting_get(num, dir, 6) ~ ")), false).lightValue;
+        float v20s = world.getTile(TilePos(pos+vec3i(" ~ FixLighting_get(num, dir, 6) ~ ")), false).sunLightValue;
+        float v21  = world.getTile(TilePos(pos+vec3i(" ~ FixLighting_get(num, dir, 7) ~ ")), false).lightValue;
+        float v21s = world.getTile(TilePos(pos+vec3i(" ~ FixLighting_get(num, dir, 7) ~ ")), false).sunLightValue;
+        float v22  = world.getTile(TilePos(pos+vec3i(" ~ FixLighting_get(num, dir, 8) ~ ")), false).lightValue;
+        float v22s = world.getTile(TilePos(pos+vec3i(" ~ FixLighting_get(num, dir, 8) ~ ")), false).sunLightValue;
 
-                                    newFace.quad[" ~ vertIndex["UH"] ~ "]." ~ lighting ~ " = (v02+v01+v12+v11)/(4.0*MaxLightStrength); //UH
-                                    newFace.quad[" ~ vertIndex["LH"] ~ "]." ~ lighting ~ " = (v01+v00+v11+v10)/(4.0*MaxLightStrength); //LH
-                                    newFace.quad[" ~ vertIndex["LF"] ~ "]." ~ lighting ~ " = (v11+v10+v21+v20)/(4.0*MaxLightStrength); //LF
-                                    newFace.quad[" ~ vertIndex["UF"] ~ "]." ~ lighting ~ " = (v12+v11+v22+v21)/(4.0*MaxLightStrength); //UF
+        newFace.quad[" ~ vertIndex["UH"] ~ "].lightValue = (v02 +v01 +v12 +v11 )/(4.0*MaxLightStrength); //UH
+        newFace.quad[" ~ vertIndex["UH"] ~ "].sunLightValue = (v02s+v01s+v12s+v11s)/(4.0*MaxLightStrength); //UH
+        newFace.quad[" ~ vertIndex["LH"] ~ "].lightValue = (v01 +v00 +v11 +v10 )/(4.0*MaxLightStrength); //LH
+        newFace.quad[" ~ vertIndex["LH"] ~ "].sunLightValue = (v01s+v00s+v11s+v10s)/(4.0*MaxLightStrength); //LH
+        newFace.quad[" ~ vertIndex["LF"] ~ "].lightValue = (v11 +v10 +v21 +v20 )/(4.0*MaxLightStrength); //LF
+        newFace.quad[" ~ vertIndex["LF"] ~ "].sunLightValue = (v11s+v10s+v21s+v20s)/(4.0*MaxLightStrength); //LF
+        newFace.quad[" ~ vertIndex["UF"] ~ "].lightValue = (v12 +v11 +v22 +v21 )/(4.0*MaxLightStrength); //UF
+        newFace.quad[" ~ vertIndex["UF"] ~ "].sunLightValue = (v12s+v11s+v22s+v21s)/(4.0*MaxLightStrength); //UF
         //*/
                                     } else if ( 2 == smoothMethod) {
         /*

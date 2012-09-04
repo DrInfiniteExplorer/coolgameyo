@@ -182,7 +182,7 @@ class TileTextureAtlas{
             return *valuePtr;
         }
 
-        vec2i tileSize = vec2i(1, 1)*renderSettings.pixelsPerTile;
+        vec2i tileSize = vec2i(renderSettings.pixelsPerTile);
         Image img = Image(filename, offset, tileSize);
         img.tint(tint);
         atlasData ~= img.imgData;

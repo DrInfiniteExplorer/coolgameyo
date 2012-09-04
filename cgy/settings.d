@@ -23,7 +23,6 @@ struct RenderSettings {
         int smoothSetting = 1; // 0 = flat, 1 = smooth + AO, 2 = smooth - AO
         /* Derp derp derp */
 
-        int pixelsPerTile = 16;
 
         int windowWidth = 800;
         int windowHeight = 600;
@@ -36,7 +35,7 @@ struct RenderSettings {
         float nearPlane = 0.45f;
         float farPlane = 3000.0f;
     }
-	
+
     InnerRenderSettings serializableSettings;
     alias serializableSettings this;
 
@@ -49,6 +48,7 @@ struct RenderSettings {
     // gathered on renderer creation
     int maxTextureLayers;
     int maxTextureSize;
+    int pixelsPerTile = 32;
 
     int renderTrueWorld = 1;
 

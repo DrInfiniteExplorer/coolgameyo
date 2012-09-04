@@ -51,11 +51,9 @@ layer1: 10km², 1mil
 
 mixin template WorldGenerator() {
 
-    TileTypeManager sys;
+    int randomNumber = 0;
 
-    void initWorldGenerator(TileTypeManager tileTypeManager) {
-        sys = tileTypeManager;
-    }
+    TileTypeManager tileSys;
 
     void fillSector(Sector sector, SectorHeightmap heightmap) {
 
@@ -154,14 +152,14 @@ mixin template WorldGenerator() {
         }
 
         //For now just use basic climate types to determine tile types.
-//        auto area = getArea(pos.toTileXYPos());
-  //      getBasicTileType(area);
+        auto area = getArea(pos.toTileXYPos());
+        auto tileType = getBasicTileType(area);
 
-        return Tile(TileTypeAir+1, flags);
+        return Tile(tileType, flags);
     }
 
-    auto getBasicTileType(Area area) {
-        
+    ushort getBasicTileType(Area area) {
+        return tileSys.byName("dirt").id;
     }
 
     long worldRadius = worldSize;
