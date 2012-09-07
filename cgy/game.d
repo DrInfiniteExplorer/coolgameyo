@@ -9,6 +9,7 @@ import std.concurrency;
 import std.conv;
 import std.exception;
 import std.math;
+import std.socket;
 import std.stdio;
 import std.string;
 
@@ -16,33 +17,38 @@ version(Windows) import std.c.windows.windows;
 
 import derelict.sdl.sdl;
 
-import graphics.ogl;
-import graphics.camera;
-import graphics.font;
-import graphics.renderer;
-import graphics.texture;
-
-import graphics.debugging;
-
-import scene.scenemanager;
-
-
 import ai.patrolai;
 import ai.test;
 
 import clan;
-import heightsheets.heightsheets;
-import json;
-//import changes.changelist;
+import clientnetworking;
+
+import entitytypemanager;
+
+import graphics.camera;
+import graphics.debugging;
+import graphics.font;
+import graphics.ogl;
+import graphics.renderer;
+import graphics.texture;
 import graphics.tilegeometry;
 import graphics.tilerenderer;
+
+import heightsheets.heightsheets;
+import json;
+
+//import changes.changelist;
 import modules.ai;
 import modules.path;
 import pos;
 import scheduler;
+import scene.scenemanager;
+import settings;
 import statistics;
+
 import tiletypemanager;
-import entitytypemanager;
+import treemanager;
+
 import unittypemanager;
 import unit;
 import util.util;
@@ -51,10 +57,10 @@ import worldstate.worldstate;
 //import worldgen.worldgen;
 import worldgen.maps;
 
-import std.socket;
-import clientnetworking;
 
-import settings;
+
+
+
 
 string SDLError() { return to!string(SDL_GetError()); }
 
@@ -67,19 +73,19 @@ class Game{
     private bool            isServer;
     private bool            isWorker;
 
+    private AIModule            aiModule;
     private Camera              camera;
+    private EntityTypeManager   entityTypeManager;
+    private PathModule          pathModule;
     private Renderer            renderer;
     private SceneManager        sceneManager;
-    private TileGeometry        tileGeometry;
     private Scheduler           scheduler;
+    private TileGeometry        tileGeometry;
+    private TreeManager         treeManager;
     private TileTextureAtlas    atlas;
     private TileTypeManager     tileTypeManager;
-    private EntityTypeManager   entityTypeManager;
     private UnitTypeManager     unitTypeManager;
-    private PathModule          pathModule;
-    private AIModule            aiModule;
-
-    private Unit               activeUnit; //TODO: Find out when this unit dies, and tell people.
+    private Unit                activeUnit; //TODO: Find out when this unit dies, and tell people.
 
 
 
@@ -182,10 +188,10 @@ class Game{
 
         UnitPos topOfTheWorld(TileXYPos xy) {
             auto top = worldState.getTopTilePos(xy);
-            msg("top: ", top);
+            //msg("top: ", top);
             auto ret = top.toUnitPos();
-            ret.value.Z += 1;
-            msg("ret: ", ret);
+            //ret.value.Z += 1;
+            //msg("ret: ", ret);
             return ret;
         }
 

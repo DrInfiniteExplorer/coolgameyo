@@ -68,10 +68,12 @@ mixin template Heightmap() {
     void generateAllHeightmaps() {
         static if(compileHeightmaps) {
             static if(parallelHeightmaps) {
-                /*synchronized(heightmapTasks)*/ { // How could it not be? :)
+                //synchronized(heightmapTasks)
+                { // How could it not be? :)
                     auto tasks = heightmapTasks;
                     heightmapTasks = null;
                     foreach(task ; parallel(tasks.list)) {
+                        workerID = taskPool.workerIndex;
                         mixin(MeasureTime!"heightmap ");
                         //scope(exit) msg(task.pos);
                         generateHeightmapTaskFunc!(int.max)(task);

@@ -12,30 +12,32 @@ import std.range;
 import std.stdio;
 import std.typecons;
 
+
+
+import clan;
+
+public import entities.entity;
+import entitytypemanager;
+
+import gaia;
 import graphics.camera;
 import graphics.debugging;
 
-import scene.scenemanager;
-
-import clan;
 import json;
 import light;
-import tiletypemanager;
-import entitytypemanager;
-import unittypemanager;
 //import worldgen.worldgen;
-import worldgen.maps;
-public import unit;
-public import entities.entity;
 
+public import pos;
+
+import scene.scenemanager;
 import scheduler;
 import statistics;
 
-public import pos;
-public import worldstate.sizes;
-public import worldstate.sector;
-public import worldstate.block;
-public import worldstate.tile;
+import tiletypemanager;
+
+public import unit;
+import unittypemanager;
+
 import util.util;
 import util.intersect;
 import util.memory;
@@ -43,13 +45,17 @@ import util.rangefromto;
 import util.tileiterator;
 import util.filesystem;
 
-import worldstate.activity;
-import worldstate.ambient;
-import worldstate.floodfill;
-import worldstate.heightmap;
-import worldstate.population;
-import worldstate.time;
-import worldstate.worldproxy;
+import          worldstate.activity;
+import          worldstate.ambient;
+public import   worldstate.block;
+import          worldstate.floodfill;
+import          worldstate.heightmap;
+import          worldstate.population;
+public import   worldstate.sector;
+public import   worldstate.sizes;
+public import   worldstate.tile;
+import          worldstate.time;
+import          worldstate.worldproxy;
 
 import worldgen.maps;
 
@@ -108,12 +114,18 @@ class WorldState {
         //worldGenParams = params;
         sceneManager = _sceneManager;
 
-
         initFloodfill();
         initHeightmap();
+
+        createGaia();
+
     }
 
     void destroy() {
+    }
+
+    void createGaia() {
+        new Gaia(this);
     }
 
     void serialize() { 

@@ -1,5 +1,8 @@
 module worldgen.maps;
 
+import core.sync.rwmutex;
+import core.thread : Thread, Duration, dur;
+
 import std.algorithm;
 import std.array;
 import std.conv;
@@ -68,9 +71,9 @@ immutable StepIter = 4*25;
 
 /* pos 0 not used */
 /* pt2tile-scale*/
-immutable ptScale = [0, 32 / 4, 128 / 4, 512 / 4, 2048 / 4, /* start mipmaps */ 8192 / 4,  32768 / 4, 131072 / 4];
+immutable ptScale = [0, 8, 32, 128 , 512 , /* start mipmaps */ 2048,  8192, 32768];
 /* map2tile-scale*/ //Mipmap'ed values are farther apart, but same size as level5 (ie. worldsize)
-immutable mapScale = [0, 12800 / 4, 51200 / 4, 204800 / 4, 819200 / 4, /*start mipmaps */ 3276800 / 4,  3276800 / 4, 3276800 / 4];
+immutable mapScale = [0, 3200, 12800, 51200, 204800, /*start mipmaps */ 819200,  819200, 819200];
 
 immutable worldSize = mapScale[4];
 

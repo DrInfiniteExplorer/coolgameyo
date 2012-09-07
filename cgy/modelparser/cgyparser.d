@@ -71,21 +71,21 @@ cgyFileData parseModel(string data) {
     size_t numJoints = nums[0];
     size_t numMeshes = nums[1];
 
-    writeln("parsed header!");
-    writeln(ret.commandline);
-    writeln(numJoints);
-    writeln(numMeshes);
+    //writeln("parsed header!");
+    //writeln(ret.commandline);
+    //writeln(numJoints);
+    //writeln(numMeshes);
 
     ret.joints = parseJoints(tokens, numJoints);
 
-    writeln("parsed joints");
+    //writeln("parsed joints");
 
     cgyenforce(numJoints == ret.joints.length);
 
     while (canFindMesh(tokens)) {
         ret.meshes ~= parseMesh(tokens, ret.joints);
     }
-    writeln("parsed meshes");
+    //writeln("parsed meshes");
 
     cgyenforce(numMeshes == ret.meshes.length);
     return ret;
@@ -143,7 +143,7 @@ Joint[] parseJoints(ref string[][] tokens, size_t numJoints) {
                 "(", &j.orientation.X, &j.orientation.Y, &j.orientation.Z, ")");
         j.name = name[1 .. $-1];
 
-        writeln(j.pos);
+        //writeln(j.pos);
 
         auto tmp = 1.0f - 
             j.orientation.X*j.orientation.X -

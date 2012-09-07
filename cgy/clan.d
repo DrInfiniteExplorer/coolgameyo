@@ -17,25 +17,29 @@ import util.util;
 import worldstate.worldstate;
 import worldstate.activity;
 
-shared int g_ClanCount = 0; //Unique clan id.
+//Clan id 0 is always reserved for GAIA.
+shared int g_ClanCount = 1; //Unique clan id.
+
 
 
 Clan newClan(WorldState world) {
-    Clan clan = new Clan(world);
-    clan.clanId = g_ClanCount++;
+    Clan clan = new NormalClan(world);
+    clan._clanId = g_ClanCount++;
     return clan;
 }
 
-final class Clan {
+class Clan : WorldStateListener {
 
-    uint clanId;
+    protected uint _clanId;
+    uint clanId() const @property {
+        return _clanId;
+    }
 
-    Array!TilePos toMine;
+    protected Array!TilePos toMine;
 
-    Unit[int] clanMembers;
+    protected Unit[int] clanMembers;
 
-    int[SectorNum] activityMap;
-    WorldState world;
+    protected WorldState world;
 
     this(WorldState _world) {
         world = _world;
@@ -44,16 +48,54 @@ final class Clan {
         toMine = new Array!TilePos;
     }
 
-    Mission unsafeGetMission() {
+    abstract Mission unsafeGetMission();
+    abstract void unsafeDesignateMinePos(TilePos pos);
+
+    abstract void addUnit(Unit unit);
+
+    abstract bool activeSector(SectorNum sectorNum);
+
+    abstract bool unitMoveActivity(UnitPos from, UnitPos to);
+
+    Unit getUnitById(int unitId) {
+        Unit* unitPtr = unitId in clanMembers;
+        if(unitPtr is null) return null;
+        return *unitPtr;
+    }
+
+    abstract void serialize();
+    abstract void deserialize(int _clanId);
+
+
+    void onAddUnit(SectorNum sectorNum, Unit unit) {}
+    void onAddEntity(SectorNum sectorNum, Entity entity) {}
+    void onSectorLoad(SectorNum sectorNum) {}
+    void onSectorUnload(SectorNum sectorNum) {}
+    void onTileChange(TilePos tilePos) {}
+
+    void onUpdateGeometry(TilePos tilePos) {}
+    void onBuildGeometry(SectorNum sectorNum) {}
+}
+
+final class NormalClan : Clan {
+
+    int[SectorNum] activityMap;
+
+    this(WorldState _world) {
+        super(_world);
+    }
+
+
+    override Mission unsafeGetMission() {
         if (toMine.empty) return Mission.none;
         auto ret = Mission(Mission.Type.mine, target(toMine.removeAny()));
         return ret;
     }
-    void unsafeDesignateMinePos(TilePos pos) {
+    override void unsafeDesignateMinePos(TilePos pos) {
         toMine ~= pos;
     }
 
-    void addUnit(Unit unit) {
+    override void addUnit(Unit unit) {
         unit.clan = this;
         clanMembers[unit.id] = unit;
         auto centerSectorNum = unit.pos.getSectorNum();
@@ -61,7 +103,7 @@ final class Clan {
         world.addUnit(unit);
     }
 
-    bool activeSector(SectorNum sectorNum) {
+    override bool activeSector(SectorNum sectorNum) {
         return sectorNum in activityMap ? activityMap[sectorNum] != 0 : 0;
     }
 
@@ -85,7 +127,7 @@ final class Clan {
         }
     }
 
-    bool unitMoveActivity(UnitPos from, UnitPos to) {
+    override bool unitMoveActivity(UnitPos from, UnitPos to) {
         auto a = from.getSectorNum();
         auto b = to.getSectorNum();
         if (a == b) {
@@ -97,13 +139,7 @@ final class Clan {
         return true;
     }
 
-    Unit getUnitById(int unitId) {
-        Unit* unitPtr = unitId in clanMembers;
-        if(unitPtr is null) return null;
-        return *unitPtr;
-    }
-
-    void serialize() {
+    override void serialize() {
         auto folder = "saves/current/world/clans/" ~ to!string(clanId) ~"/";
         util.filesystem.mkdir(folder);
 
@@ -116,8 +152,8 @@ final class Clan {
 
     }
 
-    void deserialize(int _clanId) {
-        clanId = _clanId;
+    override void deserialize(int clanId) {
+        _clanId = clanId;
         auto folder = "saves/current/world/clans/" ~ to!string(clanId) ~"/";
         enforce(exists(folder), "Folder does not exist!" ~ folder);
 
@@ -131,5 +167,7 @@ final class Clan {
         }
 
     }
+
+
 
 }

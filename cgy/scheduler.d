@@ -7,7 +7,7 @@ import core.thread;
 import core.sync.mutex;
 import core.sync.condition;
 
-import std.cpuid;
+import core.cpuid;
 
 import std.algorithm;
 import std.exception;

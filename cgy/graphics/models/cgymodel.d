@@ -69,7 +69,7 @@ final class cgyModel {
             jointNames[idx] = joint.name;
             joints[idx].parent = joint.parent;
             joints[idx].position = joint.pos.convert!float();
-            writeln(joints[idx].position, " ", joint.pos.convert!float());
+            //writeln(joints[idx].position, " ", joint.pos.convert!float());
             joints[idx].rotation = joint.orientation;
         }
 

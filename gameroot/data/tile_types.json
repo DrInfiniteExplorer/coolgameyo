@@ -13,6 +13,34 @@
 	"textureCoordSides":{ "X":32, "Y":32 },
 	"textureCoordBottom":{ "X":32, "Y":64 }
   },
+  "grass":{
+    "displayName":"Grassly grass",
+    "material":"grass",
+	"group":"grass",
+	"strength":100,
+	"tintFromMaterial":1,
+	"tintColor":{ "X":192, "Y":174, "Z":192 },
+	"texturePathTop":"textures/grass.png",
+	"texturePathSides":"textures/grass.png",
+	"texturePathBottom":"textures/grass.png",
+	"textureCoordTop":{ "X":0, "Y":0 },
+	"textureCoordSides":{ "X":0, "Y":32 },
+	"textureCoordBottom":{ "X":0, "Y":0 }
+  },
+  "grass2":{
+    "displayName":"Grassly grass",
+    "material":"grass",
+	"group":"grass",
+	"strength":100,
+	"tintFromMaterial":1,
+	"tintColor":{ "X":192, "Y":160, "Z":192 },
+	"texturePathTop":"textures/grass.png",
+	"texturePathSides":"textures/grass.png",
+	"texturePathBottom":"textures/grass.png",
+	"textureCoordTop":{ "X":0, "Y":32 },
+	"textureCoordSides":{ "X":0, "Y":32 },
+	"textureCoordBottom":{ "X":0, "Y":0 }
+  },
   "stone":{
     "displayName":"Stone",
     "material":"fungus mamma",

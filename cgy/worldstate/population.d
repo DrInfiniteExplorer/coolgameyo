@@ -25,11 +25,6 @@ private mixin template WorldPopulationMixin() {
 
         util.filesystem.mkdir("saves/current/world/clans/");
 
-        int GetClanId(Clan clan) {
-            return clan.clanId;
-        }
-
-        //auto clanList = encode(array(map!GetClanId(clans)));
         auto clanList = encode(array(map!q{a.clanId}(clans)));
         auto jsonRoot = Value([
             "clanList" : clanList,
@@ -49,7 +44,7 @@ private mixin template WorldPopulationMixin() {
             readJSONObject("clanList", &clanList);
 
         foreach(clanId ; clanList) {
-            auto clan = new Clan(this);
+            auto clan = new NormalClan(this);
             clan.deserialize(clanId);
         }
     }

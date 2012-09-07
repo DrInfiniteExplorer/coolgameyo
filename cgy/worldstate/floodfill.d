@@ -53,6 +53,7 @@ mixin template FloodFill() {
             g_Statistics.FloodFillNew(0);
         }
         foreach(task ; parallel(fillingTasks)) {
+            workerID = taskPool.workerIndex;
         //foreach(task ; fillingTasks) {
                 fillingTaskFunc(task);
             /*
@@ -90,7 +91,6 @@ mixin template FloodFill() {
             }
         }
         fillingTasks.length = 0;
-
     }
 
     void fillingTaskFunc(FillingTaskState state) {

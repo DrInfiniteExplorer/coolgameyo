@@ -159,17 +159,12 @@ mixin template WorldGenerator() {
         return Tile(tileType, flags);
     }
     ushort getBasicTileType(Area area) {
-        auto group = tileSys.getGroup("dirt");
-
         randomNumber++;
+
+        auto group = tileSys.getGroup("grass");
         int idx = randomNumber % group.length;
-        //idx = 1;
-        //msg(&group, " ", &idx);
         auto id = group[idx].id;
         return id;
-
-        
-        //return tileSys.byName("dirt").id;
     }
 
     long worldRadius = worldSize;

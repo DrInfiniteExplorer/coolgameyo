@@ -32,33 +32,25 @@ final class LayerMap {
     vec2i mapNum;
     int randomSeed;
 
-    this(WorldMap _worldMap, LayerMap parent, vec2i _mapNum, int _randomSeed) {
+    this(WorldMap _worldMap, LayerMap parent, vec2i _mapNum, int _level, int _randomSeed) {
         worldMap = _worldMap;
         parentMap = parent;
-        level = parentMap.level - 1;
+        level = _level;
         mapNum = _mapNum;
         parentMapNum = negDivV(mapNum, 4);
         randomSeed = _randomSeed;
-        heightMap = new ValueMap2Dd(ptPerLayer, ptPerLayer);
         randomField = new ValueMap2Dd;
         randomField.fill(new RandSourceUniform(randomSeed), ptPerLayer, ptPerLayer);
-
-        interpolateParent();
-        featureAffection();
-
     }
 
-    this(WorldMap _worldMap, ValueMap2Dd topHeightmap, int _randomSeed) {
-        worldMap = _worldMap;
-        level = 4;
-        mapNum.set(0, 0);
-        parentMapNum.set(0, 0);
+    void setTopLayer(ValueMap2Dd height) {
+        heightMap = height;
+    }
 
-        randomSeed = _randomSeed;
-        randomField = new ValueMap2Dd;
-        randomField.fill(new RandSourceUniform(randomSeed), ptPerLayer, ptPerLayer);
-
-        heightMap = topHeightmap;
+    void generate() {
+        heightMap = new ValueMap2Dd(ptPerLayer, ptPerLayer);
+        interpolateParent();
+        featureAffection();
     }
 
     void interpolateParent() {
@@ -121,6 +113,7 @@ final class LayerMap {
         feature.affectHeightmap(this, level);
     }
 
+    
     Value saveFeatures() {
         bool[Feature] feats;
         foreach(feature ; features) {
@@ -142,7 +135,7 @@ final class LayerMap {
         auto root = loadJSON(path);
         foreach(idx, value ; root.asArray()) {
             auto feature = Feature.create(value);
-            worldMap.addFeature(feature);
+            addFeature(feature);
         }
     }
 
@@ -159,8 +152,8 @@ mixin template Layers() {
     int layerSeed;
 
     void layersInit() {
-        layer4 = new LayerMap(this, heightMap, layerSeed); //Ah.
-        //enforce(0, "Implement this here layers thing");
+        layer4 = new LayerMap(this, null, vec2i(0), 4, layerSeed);
+        layer4.setTopLayer(heightMap);
     }
 
     //These features are generated and immediately affect the heightmap of the world.
@@ -181,7 +174,7 @@ mixin template Layers() {
                     auto diff = pt.value - tp.value;
                     auto distance = max(abs(diff.X), abs(diff.Y));
                     if(distance < limit) {
-                        writeln(distance);
+                        msg(distance);
                         yes = false;
                     }
                 }
@@ -195,7 +188,7 @@ mixin template Layers() {
             soFar ~= pt;
 
             auto cone = new ConeMountainFeature(pt, cast(int)worldMax);
-            addFeature(cone);
+            addFeature(4, vec2i(0), cone);
         }
     }
 
@@ -273,9 +266,14 @@ mixin template Layers() {
 
     }
 
-    void addFeature(Feature feature) {
-        msg("Eventually add the thingy to a layer other than toplayer herp derp");
-        layer4.addFeature(feature);        
+    void addFeature(int level, vec2i mapNum, Feature feature) {
+        if(level == 4) {
+            layer4.addFeature(feature);
+            return;
+        }
+        enforce(hasMap(level, mapNum), "Tried to add a feature to a LayerMap we dont yet have");
+        auto map = getMap(level, mapNum);
+        map.addFeature(feature);
     }
 
     int hash(int level, vec2i mapNum, LayerMap parentMap) {
@@ -293,6 +291,19 @@ mixin template Layers() {
         return ptr[0] ^ ptr[1] ^ ptr[2] ^ ptr[3];
     }
 
+    int hashShit(T...)(T t) {
+        ubyte[16] digest;
+        MD5_CTX context;
+        context.start();
+        foreach(item ; t) {
+            context.update([item]);
+            //context.update([parentMap.randomField.get(local.X, local.Y)]);
+        }
+        context.finish(digest);
+        int* ptr = cast(int*)digest.ptr;
+        return ptr[0] ^ ptr[1] ^ ptr[2] ^ ptr[3];
+    }
+
     bool hasMap(int level, vec2i mapNum) {
         if(level == 4) return true;
         if(level == 0) return false;
@@ -300,6 +311,24 @@ mixin template Layers() {
         return (mapNum in layer) !is null;
     }
 
+    bool loadMap(int level, vec2i mapNum) {
+        auto path = text(featuresPath, "/", level, "/", mapNum.X, ",", mapNum.Y, "/");
+        if(!exists(path)) return false;
+
+        auto parentMapNum = negDivV(mapNum, 4);
+        auto parentMap = getMap(level+1, parentMapNum);
+        auto mapSeed = hash(level, mapNum, parentMap);
+        auto map = new LayerMap(this, parentMap, mapNum, level, mapSeed);
+        map.loadFeatures(path);
+        layers[level][mapNum] = map;
+        return true;
+    }
+
+    //This is a hack for now. Add proper synchronization when rewriting and refactoring.
+    // The problem is that two tasks may want to get the same map at aproximately the same time.
+    // Since it is a relatively long process to create a map at times,  multiple threads may start
+    // doing so. We don't want that.
+    bool generating[4][vec2i];
 
     LayerMap getMap(int level, vec2i mapNum) {
         BREAK_IF(level > 4);
@@ -310,28 +339,69 @@ mixin template Layers() {
         if(mapNum in layer) {
             return layer[mapNum];
         }
-        writeln("Generating ", mapNum, " on level ", level);
+        
+        if(mapNum in generating[level]) {
+            core.thread.Thread.sleep(dur!"msecs"(15));
+            return getMap(level, mapNum);
+        }
+        
+        generating[level][mapNum] = true;
+        if(loadMap(level, mapNum)) {
+            generating[level].remove(mapNum);
+            return layers[level][mapNum];
+        }
+
+
+        msg("Generating ", mapNum, " on level ", level);
 
         //auto map = getMap(level+1, negDivV(num, 4));
 
         auto parentMapNum = negDivV(mapNum, 4);
         auto parentMap = getMap(level+1, parentMapNum);
         auto mapSeed = hash(level, mapNum, parentMap);
-        auto map = new LayerMap(this, parentMap, mapNum, mapSeed);
-
-        /* Start by filling in the base from the previous map */
-
-        //The index where the current map begins, in the parents pt-grid
-        // Moved into constructor now.
-        //map.featureAffection();
+        auto map = new LayerMap(this, parentMap, mapNum, level, mapSeed);
+        map.generate();
 
         layers[level][mapNum] = map;
+
+        if(level == 1) {
+            populateLevel1(map);
+        }
+        generating[level].remove(mapNum);
         return map;
+    }
+
+    void populateLevel1(LayerMap map) {
+        auto mapNum = map.mapNum;
+        int cnt = 0;
+        foreach(x, y ; Range2D(vec2i(0), vec2i(mapScale[1]) / 8)) {
+            //Determine the biome. Determine forrest density. Determine what tree type.
+            auto area = getArea( TileXYPos(vec2i(x + 4, y + 4)));
+            if(area.isSea) continue;
+            auto climate = area.climateType;
+            auto density = climate;
+            int hash = abs(hashShit(mapNum.X, mapNum.Y, area.areaId, x, y));
+            int lower = hash % 0x0F;
+            //msg(lower, " ", density);
+            if(lower < density) {
+                cnt++;
+                //Add tree.
+                //Use hash to place
+                int high = (hash >> 16) & 0xFFFF;
+                int low = hash & 0xFFFF;
+                auto pos =  (vec2i(high, low).convert!double * (8.0 / 0xFFFF)).convert!int + mapNum * mapScale[1] + vec2i(x, y)*8;
+                //lawl
+
+                //Get tree-type-group from climate, use hash to determine what. use some upper bits.
+                addFeature(1, mapNum, new TreeFeature(TileXYPos(pos)));
+            }
+        }
+        msg("Added ", cnt, " trees of ", mapScale[1]^^2 / 8^^2, " possible");
     }
 
 
     double getValueInterpolated(int level, TileXYPos tilePos) {
-        //mixin(Time!("writeln(usecs, cnt);"));
+        //mixin(Time!("msg(usecs, cnt);"));
         //cnt += 1;
 
         auto ptScale = ptScale[level];

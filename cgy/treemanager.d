@@ -337,7 +337,7 @@ class TreeManager {
                     TilePos start = getTilePosOfNode(entity, branch.nodes[b]);
                     TilePos end = getTilePosOfNode(entity, branch.nodes[b+1]);
 
-                    TilePos[] tilePosArray = getTilesBetween(toVec3d(start.value), toVec3d(end.value),
+                    TilePos[] tilePosArray = getTilesBetween(start.value.convert!double, end.value.convert!double,
                                                              world.tileTypeManager.idByName(entity.type.treelike.woodMaterial), world.tileTypeManager.idByName(entity.type.treelike.leafMaterial));
 
                     for (int i = 0; i < tilePosArray.length; i++) {
@@ -363,6 +363,7 @@ class TreeManager {
 
 
     //Returns all tile that are on the line between start and end
+    //Turn into an opApply perchance?
     TilePos[] getTilesBetween(vec3d start, vec3d end, ushort acceptedTileType, ushort acceptedTileType2=0, int tileIter=255)
     {
         start += vec3d(0.5, 0.5, 0.5);
@@ -455,15 +456,6 @@ class TreeManager {
         }
 
 
-    }
-
-    vec3d toVec3d(vec3i v)
-    {
-        vec3d r;
-        r.X = v.X;
-        r.Y = v.Y;
-        r.Z = v.Z;
-        return r;
     }
 
     double getDistanceSQ(vec3i a, vec3d b)

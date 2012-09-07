@@ -34,6 +34,26 @@ const(TypeInfo_Class) isDerivedClass(string base, string derived) {
     return check(baseInfo, derivedInfo) ? derivedInfo : null;
 }
 
+BaseType safeFactory(BaseType, alias DerivedType)() {
+    auto baseClassName = BaseType.classinfo.name;
+//    pragma(msg, typeof(DerivedType));
+    static if( is( typeof(DerivedType) : string)) {
+        alias DerivedType derivedClassName;
+    } else {
+        auto derivedClassName = typeof(DerivedType).classinfo.name;
+    }
+    auto type = isDerivedClass(baseClassName, derivedClassName);
+    if(type is null) {
+
+        return null;
+    }
+    Object o = type.create();
+    enforce(o, "Could not create class of class-type " ~ derivedClassName);
+    BaseType t = cast(BaseType) o;
+    enforce(t, "Could not cast to base class-type " ~ baseClassName);
+    return t;
+}
+
 class Feature {
     abstract void affectHeightmap(LayerMap map, int level);
     abstract void init(LayerMap map);
@@ -43,11 +63,14 @@ class Feature {
 
     static Feature create(Value json) {
         auto className = json["className"].str;
+        /*
         auto typeInfo = isDerivedClass("feature.feature.Feature", className);
         enforce(typeInfo !is null, "Class " ~ className ~ " does not derive from Feature");
         auto obj = typeInfo.create();
         enforce(obj !is null, "Could not create class of type " ~ className);
         auto feature = cast(Feature) obj;
+        */
+        auto feature = safeFactory!(Feature, className);
         feature.load(json);
         return feature;
     }
@@ -192,4 +215,29 @@ class ConeMountainFeature : public Feature {
                             "height", &height,
                             "radius", &radius);
     }
+}
+
+
+
+class TreeFeature : public Feature {
+
+    TileXYPos pos;
+
+    this(TileXYPos _pos) {
+        pos = _pos;
+    }
+
+    override void affectHeightmap(LayerMap map, int level) {
+    }
+
+    override void init(LayerMap map) {
+    }
+
+    override Value save() {
+        return Value("derp");
+    }
+
+    override void load(Value jsonValue) {
+    }
+
 }
