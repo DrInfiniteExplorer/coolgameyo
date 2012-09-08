@@ -328,7 +328,7 @@ static struct PathFindState {
         }
     }
     double estimateBetween(TilePos a, TilePos b) {
-        immutable estimateFactor = 0.99;
+        immutable estimateFactor = 5.99;
         auto xx = (a.value.X - b.value.X) ^^ 2;
         auto yy = (a.value.Y - b.value.Y) ^^ 2;
         auto zz = (a.value.Z - b.value.Z) ^^ 2;

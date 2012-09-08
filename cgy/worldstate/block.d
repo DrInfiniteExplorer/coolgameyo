@@ -84,6 +84,11 @@ shared static this() {
 }
 
 Block_t alloc() {
+    Block_t block;
+    block.tiles = new typeof(*block.tiles);
+    setFlag(block.flags, BlockFlags.valid, true);
+    return block;
+
     synchronized(blockAllocatorMutex) {
 
         Block_t block;
@@ -96,6 +101,7 @@ Block_t alloc() {
     }
 }
 void free(Block_t block) {
+    return;
     synchronized(blockAllocatorMutex) {
         freeblock.returnMem(block.tiles);
     }
