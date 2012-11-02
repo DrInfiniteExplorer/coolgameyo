@@ -140,6 +140,14 @@ class TileTypeManager {
         }
         encode(typeAA).saveJSON("saves/current/tiletypeidconfiguration.json");
 
+        foreach(groupName, val ; loadJSON("data/tile_groups.json").asObject()) {
+            TileType[] group;
+            foreach(idx, typeName ; val.asArray()) {
+                group ~= byName(typeName.str());
+            }
+            tileTypeGroups[groupName] = group;
+        }
+
     }
 
     TileType byID(ushort id) {
@@ -194,7 +202,6 @@ class TileTypeManager {
         }
         
         _byName[tile.name] = tile.id;
-        tileTypeGroups[tile.group] ~= byID(tile.id);
 		
         return tile.id;
     }

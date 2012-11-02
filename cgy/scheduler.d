@@ -32,8 +32,6 @@ import modules.module_;
 import util.util;
 import util.queue;
 
-import worldstate.worldproxy;
-
 import changes.worldproxy;
 
 struct Task {
@@ -61,7 +59,7 @@ private Task syncTask() {
 }
 
 private void workerFun(shared Scheduler ssched,
-                       shared WorldChangeListProxy sproxy,
+                       shared WorldProxy sproxy,
                        int id) {
     workerID = id;
     bool should_continue = true;
@@ -70,7 +68,7 @@ private void workerFun(shared Scheduler ssched,
     setThreadName("Fun-worker thread");
 
 
-    auto proxy = cast(WorldChangeListProxy)sproxy;
+    auto proxy = cast(WorldProxy)sproxy;
     Task task;
 
     try {
@@ -86,7 +84,7 @@ private void workerFun(shared Scheduler ssched,
         msg("Thread exception!\n", o.toString());
         version(Windows) {
             MessageBoxA(null, cast(char *)toStringz(o.toString()),
-                    "Error", MB_OK | MB_ICONEXCLAMATION);
+                    "Thread Error", MB_OK | MB_ICONEXCLAMATION);
         }
     }
     if (should_continue) {
@@ -112,7 +110,7 @@ final class Scheduler {
 
     State state;
 
-    WorldChangeListProxy[] proxies;
+    WorldProxy[] proxies;
     Tid[] workers;
 
     int activeWorkers;
@@ -136,17 +134,20 @@ final class Scheduler {
         state = State.wait;
 
         cond = new Condition(new Mutex(this));
+
+        proxies ~= enforce(cast(WorldProxy)world._worldProxy, "Uh nuh!");
     }
 
     void start(int workerCount=core.cpuid.threadsPerCPU) {
         msg("using ", workerCount, " workers");
-        activeWorkers = workerCount;
+        workerCount = 1;
 
+        activeWorkers = workerCount;
         workers ~= thisTid();
-        auto myProxy = new WorldChangeListProxy(world);
+        auto myProxy = new WorldProxy(world);
         proxies ~= myProxy;
         foreach (x; 1 .. workerCount) {
-            auto p = new WorldChangeListProxy(world);
+            auto p = new WorldProxy(world);
             workers ~= spawn(&workerFun, cast(shared)this, cast(shared)p, x);
             proxies ~= p;
         }
@@ -177,7 +178,6 @@ final class Scheduler {
             modules = remove!(pred)(modules);
         }
     }
-
 
     void delegate() whenSerialized;
     void startSerialize(void delegate() whenDone) {
@@ -305,6 +305,12 @@ final class Scheduler {
                 syncTime = utime();
 
                 doUpdateShit();
+
+                if(TICK_LOL == 456) {
+                    msg("Will now sleep forever");
+                    activeWorkers++; //Enter the eternal slumber!
+                    suspendMe(sw);
+                }
 
                 wakeWorkers();
 

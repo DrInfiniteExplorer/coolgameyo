@@ -96,8 +96,16 @@ final class ShaderProgram(T...){
     }
 
     void compileFile(uint shader, string filename, string constants = ""){
-        auto content = readText(filename);
-        const char* ptr = std.string.toStringz(constants ~ content);
+
+        //Cute that the memory management for the loaded file is now manual, but the File struct allocates data via gc :P
+        import util.memory : ScopeMemory;
+        auto file = File(filename, "r");
+        auto fileSize = cast(uint)file.size();
+        auto mem = ScopeMemory!char(fileSize+1);
+        file.rawRead(mem[]);
+        mem[fileSize] = 0;
+
+        const char* ptr = mem.ptr;
         const char** ptrptr = &ptr;
         glShaderSource(shader, 1, ptrptr, null);
         glError();
@@ -107,7 +115,7 @@ final class ShaderProgram(T...){
         glGetShaderiv(shader, GL_COMPILE_STATUS, &p);
         glError();
         if(p != GL_TRUE){
-            msg(constants ~ content);
+            msg(constants ~ mem[]);
             msg(*ptrptr);
             auto error = printShaderError(shader);
 

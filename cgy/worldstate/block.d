@@ -13,7 +13,7 @@ import std.stdio;
 import core.sync.mutex;
 
 import light;
-import pos;
+import util.pos;
 import tiletypemanager : TileTypeAir;
 //import tiletypemanager;
 
@@ -89,6 +89,7 @@ Block_t alloc() {
     setFlag(block.flags, BlockFlags.valid, true);
     return block;
 
+    /*
     synchronized(blockAllocatorMutex) {
 
         Block_t block;
@@ -99,12 +100,15 @@ Block_t alloc() {
 
         return block;
     }
+    */
 }
 void free(Block_t block) {
     return;
+    /*
     synchronized(blockAllocatorMutex) {
         freeblock.returnMem(block.tiles);
     }
+    */
 }
 
 enum BlockFlags : ubyte {

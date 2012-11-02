@@ -491,6 +491,7 @@ Value makeJSONObject(T...)(T t) if( (t.length % 2) == 0) {
     ret.populateJSONObject(t);
     return ret;
 }
+//Use this one to update an existing value with new keys
 void populateJSONObject(T ...)(ref Value map, T t) if( (t.length % 2) == 0) {
     foreach(idx, what ; t) {
         static if( (idx % 2) == 0) {

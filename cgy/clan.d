@@ -5,10 +5,12 @@ import std.array;
 import std.conv;
 import std.exception;
 
+import clans;
 import json;
 import unit;
 
 import mission;
+import scheduler;
 
 import util.filesystem;
 import util.array;
@@ -20,10 +22,9 @@ import worldstate.activity;
 //Clan id 0 is always reserved for GAIA.
 shared int g_ClanCount = 1; //Unique clan id.
 
-
-
 Clan newClan(WorldState world) {
-    Clan clan = new NormalClan(world);
+    Clan clan = new NormalClan();
+    clan.init(world);
     clan._clanId = g_ClanCount++;
     return clan;
 }
@@ -38,20 +39,22 @@ class Clan : WorldStateListener {
     protected Array!TilePos toMine;
 
     protected Unit[int] clanMembers;
+    protected Entity[int] clanEntities;
 
     protected WorldState world;
 
-    this(WorldState _world) {
+    void init(WorldState _world) {
         world = _world;
-        world.addClan(this);
+        Clans().addClan(this);
 
-        toMine = new Array!TilePos;
+        //toMine = new Array!TilePos;
     }
 
     abstract Mission unsafeGetMission();
     abstract void unsafeDesignateMinePos(TilePos pos);
 
     abstract void addUnit(Unit unit);
+    abstract void addEntity(Entity entity);
 
     abstract bool activeSector(SectorNum sectorNum);
 
@@ -75,14 +78,27 @@ class Clan : WorldStateListener {
 
     void onUpdateGeometry(TilePos tilePos) {}
     void onBuildGeometry(SectorNum sectorNum) {}
+
+    void update(WorldState world, Scheduler scheduler) {
+        foreach(entity ; clanEntities) {
+            import changes.worldproxy;
+            scheduler.push(syncTask((WorldProxy worldProxy) {
+                //msg(&entity);
+                entity.tick(worldProxy);
+            }));
+        }
+    }
 }
 
 final class NormalClan : Clan {
 
     int[SectorNum] activityMap;
 
-    this(WorldState _world) {
-        super(_world);
+    this() {
+    }
+    
+    override void init(WorldState _world) {
+        super.init(_world);
     }
 
 
@@ -101,6 +117,13 @@ final class NormalClan : Clan {
         auto centerSectorNum = unit.pos.getSectorNum();
         increaseActivity(centerSectorNum);
         world.addUnit(unit);
+    }
+    override void addEntity(Entity entity) {
+        BREAKPOINT;
+        entity.clan = this;
+        clanEntities[entity.entityId] = entity;
+        auto centerSectorNum = entity.pos.getSectorNum();
+        world.addEntity(entity);
     }
 
     override bool activeSector(SectorNum sectorNum) {

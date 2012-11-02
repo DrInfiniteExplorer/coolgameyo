@@ -78,18 +78,14 @@ struct RectQuad{
     
 }
 
+
 class RectShader {
     alias ShaderProgram!("position", "color", "stripes") RectProgram;
     RectProgram rectProgram;
     
-    static RectShader rs;
-    static opCall() {
-        if (rs is null) {
-            rs = new RectShader();
-        }
-        return rs;
-    }
-    
+    import util.singleton;
+    mixin Singleton;
+
     private this() {
         rectProgram = new RectProgram("shaders/gui/rectShader.vert", "shaders/gui/rectShader.frag");
         rectProgram.position = rectProgram.getAttribLocation("position");

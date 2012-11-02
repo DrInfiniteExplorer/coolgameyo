@@ -13,8 +13,9 @@ import std.stdio;
 import std.typecons;
 
 
-
+import changes.worldproxy;
 import clan;
+import clans;
 
 public import entities.entity;
 import entitytypemanager;
@@ -27,7 +28,7 @@ import json;
 import light;
 //import worldgen.worldgen;
 
-public import pos;
+public import util.pos;
 
 import scene.scenemanager;
 import scheduler;
@@ -55,7 +56,6 @@ public import   worldstate.sector;
 public import   worldstate.sizes;
 public import   worldstate.tile;
 import          worldstate.time;
-import          worldstate.worldproxy;
 
 import worldgen.maps;
 
@@ -105,6 +105,17 @@ class WorldState {
     mixin FloodFill;
     mixin Heightmap;
 
+    bool updatePhase = true;
+    void enforceUpdate() {
+        enforce(updatePhase, "Tries to do update-code when not in update");
+    }
+
+    WorldProxy _worldProxy;
+    WorldProxy worldProxy() @property {
+        enforceUpdate();
+        return _worldProxy;
+    }
+
     this(WorldMap _worldMap, TileTypeManager tilesys, EntityTypeManager entitysys, UnitTypeManager unitsys, SceneManager _sceneManager) {
         isServer = true;
         tileTypeManager = tilesys;
@@ -113,6 +124,9 @@ class WorldState {
         unitTypeManager = unitsys;
         //worldGenParams = params;
         sceneManager = _sceneManager;
+
+        _worldProxy = new WorldProxy(this);
+        Clans().init(this);
 
         initFloodfill();
         initHeightmap();
@@ -125,7 +139,8 @@ class WorldState {
     }
 
     void createGaia() {
-        new Gaia(this);
+        Gaia().init(this);
+
     }
 
     void serialize() { 
@@ -157,7 +172,7 @@ class WorldState {
         util.filesystem.mkdir("saves/current/world/");
         std.file.write("saves/current/world/world.json", jsonString);
 
-        serializeClans();
+        Clans().serializeClans();
 
 
         foreach(xy, sectorXY ; sectorsXY) {
@@ -192,7 +207,7 @@ class WorldState {
                                 "g_entityCount",    &g_entityCount,
                                 "g_ClanCount",      &g_ClanCount);
 
-        deserializeClans();
+        Clans().deserializeClans();
 
         foreach(sectorNum, clanCount ; activeSectors) {
             if(getSector(sectorNum) !is null) continue;
@@ -520,11 +535,13 @@ class WorldState {
     ///////////////// inge mer entity kod! <- lol
 
     void update(Scheduler scheduler){
+        updatePhase = true;
+        allTilesUpdated(); //Updates lighting and triggers regeneration of geometry
+        scope(exit) updatePhase = false;
         //floodFillSome();
 
         pushFloodFillTasks(scheduler);
         pushHeightmapTasks(scheduler);
-
         //MOVE UNITS
         //TODO: Make list of only-moving units, so as to not process every unit?
         //Maybe?
@@ -592,7 +609,9 @@ class WorldState {
     }
     void addEntity(Entity entity) {
         //TODO: Make code, and make it work. Use unit as reference.
-        sceneManager.getProxy(entity);
+        if(entity.type.hasModellike()) {
+            sceneManager.getProxy(entity);
+        }
 
         auto sectorNum = entity.pos.getSectorNum();
         auto sector = getSector(sectorNum);
@@ -710,10 +729,11 @@ class WorldState {
         setTile(pos, tile);
     }
 
+    Tile[TilePos] previousTiles;
+    Tile[TilePos] newTiles;
+
     //Now only called from unsafeSetTile
     private void setTile(TilePos tilePos, const Tile newTile) {
-        //TODO: Make sure penis penis penis, penises.
-        //Durr, i mean, make sure to floodfill as well! :)
         auto sectorNum = tilePos.getSectorNum();
         SectorXY* sectorXY;
         auto sector = getSector(sectorNum, &sectorXY);
@@ -724,8 +744,14 @@ class WorldState {
         BREAKPOINT(!block.valid);
         auto oldTile = block.getTile(tilePos);
         block.setTile(tilePos, newTile);
-        bool newSolid = !newTile.isAir();
-        bool oldSolid = sector.setSolid(tilePos, newSolid);
+
+        if(tilePos !in previousTiles) {
+            previousTiles[tilePos] = oldTile;
+        }
+        newTiles[tilePos] = newTile;
+
+//        bool newSolid = !newTile.isAir();
+//        bool oldSolid = sector.setSolid(tilePos, newSolid);
 
         //Update heightmap
         //        auto sectorXY = getSectorXY(SectorXYNum(vec2i(sectorNum.value.X, sectorNum.value.Y)));
@@ -747,13 +773,44 @@ class WorldState {
             }
         }
 
-        if(oldSolid && !newSolid) { //Added air
-            removeTile(tilePos);
-        } else if( !oldSolid && newSolid ){ //Removed air
-            addTile(tilePos, oldTile);
+    }
+
+    private void allTilesUpdated() {
+
+        import util.gc : totalReservedMemory;
+        // Lots of malloc here!
+        // How much?
+        // About 6 meg in initial frame when lots of trees are created / 2012-11-02
+
+        auto start = totalReservedMemory;
+
+
+        Tile[TilePos] removed;
+        Tile[TilePos] added;
+        foreach(tp, oldTile ; previousTiles) {
+            auto newTile = newTiles[tp];
+            if(oldTile == newTile) continue;
+            bool oldSolid = !oldTile.isAir;
+            bool newSolid = !newTile.isAir;
+            if(oldSolid && !newSolid) { //Added air
+                removed[tp] = newTile;
+            } else if( !oldSolid && newSolid ){ //Removed air
+                added[tp] = oldTile;
+            }
         }
 
-        notifyTileChange(tilePos);
+        auto diff = totalReservedMemory - start;
+        msg("Memory in there: ", diff);
+
+        removeTile(removed);
+        addTile(added);
+
+        foreach(tilePos ; removed.byKey()) {
+            notifyTileChange(tilePos);
+        }
+
+        previousTiles = null;
+        newTiles = null;
     }
 
     TilePos getTopTilePos(TileXYPos xy) {
@@ -833,6 +890,7 @@ class WorldState {
         }
     }
 
+    // Notify sector load here. Try not to modify the state too much!
     void notifySectorLoad(SectorNum sectorNum) {
         if(sectorNum !in activeSectors) {
             msg("Sector no longer of interest after floodfill.");

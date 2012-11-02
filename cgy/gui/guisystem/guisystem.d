@@ -9,8 +9,9 @@ import std.exception;
 import graphics._2d.rect;
 import graphics.font;
 import graphics.ogl;
-import util.util;
+import util.memory;
 import util.rect;
+import util.util;
 
 public import gui.guisystem.element;
 
@@ -215,9 +216,7 @@ final class GuiSystem : GuiElement{
         if (eventDump !is null) {
             eventDump.tick(dTime);
         }
+        //mixin(MemDiff!("guisystem.tick"));
         super.tick(dTime);
     }
 }
-
-
-

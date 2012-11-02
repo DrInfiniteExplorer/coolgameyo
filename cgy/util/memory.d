@@ -5,6 +5,7 @@ module util.memory;
 import std.exception;
 import std.string;
 
+
 version(Windows){
     //    import std.c.windows.windows;
     //    import win32.windows : SYSTEM_INFO, GetSystemInfo, RaiseException; //Not available in std.c.windows.windows
@@ -33,6 +34,27 @@ void freeBlob(void* blob) {
     } else {
         static assert (0);
     }
+}
+
+struct ScopeMemory(T) {
+    T* ptr;
+    uint totalSize;
+    this(uint size, uint count = 1) {
+        ptr = cast(T*)allocateBlob(count, size);
+        totalSize = size * count;
+    }
+    ~this() {
+        freeBlob(ptr);
+    }
+    T[] opSlice() {
+        return ptr[0 .. totalSize];
+    }
+    ref T opIndex(size_t index) {
+        assert (index < totalSize);
+        return ptr[index];
+    }
+
+
 }
 
 version(Windows){
@@ -66,6 +88,13 @@ ulong getMemoryPageFaults() {
     enforce(getProcessMemoryInfo(GetCurrentProcess(), &data, data.sizeof), "Error calling GetProcessMemoryInfo");
     return data.PageFaultCount;
 }
+
+string MemDiff(string label, string varname = "memDiffStart")(){
+    immutable diffName = varname ~ "Diff";
+    return "auto " ~ varname ~ " = getMemoryUsage(); scope(exit) { auto "~diffName~"= getMemoryUsage() - "~varname~"; if("~diffName~") msg(\""~label~": \", "~diffName~");}";
+}
+
+
 
 
 

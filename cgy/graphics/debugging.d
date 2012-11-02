@@ -24,11 +24,15 @@ shared AABBData[int] aabbList;
 shared int aabbCount=1;
 
 int addAABB(aabbd aabb, vec3f color=vec3f(1, 0, 0), float radius=100) {
+
+/*
     auto d = AABBData(color, radius, aabb);
     auto t = aabbCount;
     aabbList[t] = cast(shared(AABBData))d;
     aabbCount++;
     return t;
+    */
+    return 0;
 }
 
 void removeAABB(int id) {

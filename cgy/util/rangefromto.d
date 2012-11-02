@@ -52,6 +52,19 @@ struct Range2D {
         return ret;
     }
 
+    vec2i front() const {
+        return vec2i(x, y);
+    }
+    void popFront() {
+        x += 1;
+        if (x <= ex) return;
+        x = bx;
+        y += 1;
+    }
+    bool empty() const {
+        return y > ey;
+    }
+
 }
 
 struct RangeFromTo {

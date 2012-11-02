@@ -5,15 +5,17 @@ import std.exception;
 import std.stdio;
 import std.math;
 
-import json;
+import clan;
+import clans;
 import changes.changelist;
-import pos;
+import entitytypemanager;
+import light;
+import json;
+import util.pos;
 import stolen.aabbox3d;
 import util.util;
 import worldstate.worldstate;
-import clan;
-import entitytypemanager;
-import light;
+import changes.worldproxy;
 
 import inventory;
 
@@ -24,13 +26,38 @@ import entities.workshop;
 
 shared int g_entityCount;
 
+WorldProxy entityCreationProxy;
+private void createEntity(Entity entity, EntityType type, WorldState world) {
+    if(entityCreationProxy is null) {
+        entityCreationProxy = new WorldProxy(world);
+    }
+    entity.type = type;
+    entity.createTreeLikeEntity(world, entityCreationProxy);
+}
 
-Entity newEntity() {
+Entity newEntity(Value serializedEntity, WorldState world) {
+    auto ent = newEntity();
+    ent.deserialize(serializedEntity, world);
+    return ent;
+}
+
+//When creating an entity trough this method, dont forget to
+// add it to a changelist with createEntity(ent, json.Value). the apply-
+// -function there deserializes, and deserialization binds and
+// creates the actual non-basic entity data and connections.
+Entity newEntity(EntityType type) {
+    auto ent = newEntity();
+    ent.type = type;
+    return ent;
+}
+
+private Entity newEntity() {
     auto entity = new Entity;
     entity.entityId = g_entityCount;
     g_entityCount++;
     return entity;
 }
+
 
 final class Entity {
 
@@ -41,6 +68,7 @@ final class Entity {
         return cast(int)sgn(cast(long)entityData.entityId
                 - cast(long)other.entityId);
     }
+
 
     struct EntityData {
         int entityId;
@@ -63,7 +91,9 @@ final class Entity {
     // these need serairarleinzlaeniton IN SOME WAY
     Workshop* workshop;
     Placeable* placeable;
-    TreelikeInstance treelike;
+
+    mixin TreeLike;
+
 
     Inventory inventory;
 
@@ -78,23 +108,40 @@ final class Entity {
     Value toJSON() {
         Value val = encode(entityData);
 
-        val["entityTypeId"] = Value(type.id);
+        val.populateJSONObject("entityTypeId", type.id);
+        if(clan !is null) {
+            val.populateJSONObject("clanId", clan.clanId);
+        }
 
         return val;
     }
-    void fromJSON(Value val, EntityTypeManager entityTypeManager) {
+
+    //Formerly this. Only allow easy encoding of entities, deserialization must go trough controlled means.
+    //void fromJSON(Value val) {
+
+    void deserialize(Value val, WorldState world) {
         val.read(entityData);
 
-        if ("entityTypeId" in val) {
-            int entityTypeId;
-            val["entityTypeId"].read(entityTypeId);
-            type = entityTypeManager.byID(cast(ushort)entityTypeId);
-        }
+        enforce("entityTypeId" in val, "Serialized entity does not have entityTypeId variable!");
+        enforce("clanId" in val, "Serialized entity does not have clanId variable!");
+        int entityTypeId;
+        int clanId;
+        val.readJSONObject("entityTypeId", &entityTypeId,
+                           "clanId", &clanId);
+        auto entityTypeManager = EntityTypeManager();
+        auto type = entityTypeManager.byID(cast(ushort)entityTypeId);
+
+        createEntity(this, type, world);
+
+        Clans().getClanById(clanId).addEntity(this);
+
+
     }
 
 
 
-    int tick(ChangeList changeList) {
+    int tick(WorldProxy proxy) {
+        treelikeTick(proxy);
 
         return 1;
     }

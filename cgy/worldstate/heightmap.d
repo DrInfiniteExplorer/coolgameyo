@@ -4,7 +4,7 @@ import std.algorithm;
 
 import util.rangefromto;
 
-import pos;
+import util.pos;
 import worldstate.sizes;
 
 
@@ -72,12 +72,14 @@ mixin template Heightmap() {
                 { // How could it not be? :)
                     auto tasks = heightmapTasks;
                     heightmapTasks = null;
-                    foreach(task ; parallel(tasks.list)) {
+                    auto range = tasks.list;
+                    foreach(task ; parallel(range)) {
                         workerID = taskPool.workerIndex;
                         mixin(MeasureTime!"heightmap ");
                         //scope(exit) msg(task.pos);
                         generateHeightmapTaskFunc!(int.max)(task);
                     }
+                    taskPool().finish();
                     tasks.list.length = 0;
                     assumeSafeAppend(tasks.list);
                     heightmapTasks = tasks;

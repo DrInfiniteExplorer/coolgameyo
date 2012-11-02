@@ -7,7 +7,7 @@ import std.exception;
 
 import feature.feature;
 import json;
-import pos;
+import util.pos;
 import random.random;
 import random.randsource;
 import random.valuemap;
@@ -296,7 +296,8 @@ mixin template Layers() {
         MD5_CTX context;
         context.start();
         foreach(item ; t) {
-            context.update([item]);
+            
+            context.update((&item)[0..1]);
             //context.update([parentMap.randomField.get(local.X, local.Y)]);
         }
         context.finish(digest);
@@ -329,7 +330,6 @@ mixin template Layers() {
     // Since it is a relatively long process to create a map at times,  multiple threads may start
     // doing so. We don't want that.
     bool generating[4][vec2i];
-
     LayerMap getMap(int level, vec2i mapNum) {
         BREAK_IF(level > 4);
         if(level == 4) {
@@ -370,13 +370,26 @@ mixin template Layers() {
         generating[level].remove(mapNum);
         return map;
     }
+    auto getMap(TileXYPos tileXYPos, int level) {
+        auto mapNum = negDivV(tileXYPos.value, mapScale[level]);
+        auto map = getMap(level, mapNum);
+        return map;
+    }
 
     void populateLevel1(LayerMap map) {
         auto mapNum = map.mapNum;
         int cnt = 0;
-        foreach(x, y ; Range2D(vec2i(0), vec2i(mapScale[1]) / 8)) {
+
+        //Place a tree about every 8'th meter
+        //A growth density value is obtained from the area type.
+        // A hash of some properties is compared to this value.
+        // If the hash is lower than the density value, a tree is placed.
+        //  Should work as long as the hash is random enough.
+        immutable treeDistance = 8;
+        foreach(x, y ; Range2D(vec2i(0), vec2i(mapScale[1]) / treeDistance)) {
+
             //Determine the biome. Determine forrest density. Determine what tree type.
-            auto area = getArea( TileXYPos(vec2i(x + 4, y + 4)));
+            auto area = getArea( TileXYPos(vec2i(x + treeDistance / 2, y + treeDistance / 2)));
             if(area.isSea) continue;
             auto climate = area.climateType;
             auto density = climate;
@@ -389,7 +402,7 @@ mixin template Layers() {
                 //Use hash to place
                 int high = (hash >> 16) & 0xFFFF;
                 int low = hash & 0xFFFF;
-                auto pos =  (vec2i(high, low).convert!double * (8.0 / 0xFFFF)).convert!int + mapNum * mapScale[1] + vec2i(x, y)*8;
+                auto pos =  (vec2i(high, low).convert!double * (cast(double)treeDistance / 0xFFFF)).convert!int + mapNum * mapScale[1] + vec2i(x, y)*treeDistance;
                 //lawl
 
                 //Get tree-type-group from climate, use hash to determine what. use some upper bits.
@@ -398,7 +411,6 @@ mixin template Layers() {
         }
         msg("Added ", cnt, " trees of ", mapScale[1]^^2 / 8^^2, " possible");
     }
-
 
     double getValueInterpolated(int level, TileXYPos tilePos) {
         //mixin(Time!("msg(usecs, cnt);"));

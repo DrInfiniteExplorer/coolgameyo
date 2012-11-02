@@ -18,8 +18,11 @@ import graphics.shader;
 
 
 import settings;
-import util.util;
 import util.rect;
+import util.singleton;
+import util.strings;
+import util.util;
+
 
 import json;
 
@@ -34,17 +37,10 @@ struct FontQuad {
 
 uint FontVert_texCoord_offset = FontVertex.texCoord.offsetof;
 
-static FontShader fontShader;
-
-void initFont() {
-    fontShader = new FontShader();
-}
-void deinitFont() {
-    fontShader.destroy();
-}
 
 class FontShader {
-    static FontShader fs;
+    //static FontShader fs;
+    mixin Singleton!();
     
     alias ShaderProgram!("position", "texcoord", "offset", "tex", "viewportInv", "color") FontShaderProgram;
     FontShaderProgram program;
@@ -75,7 +71,6 @@ class FontShader {
     void destroy() {
         program.use(false);
         program.destroy();
-        fs = null;
         destroyed = true;
     }
 
@@ -123,7 +118,9 @@ class StringTexture {
     vec3f color;
 
     FontQuad[] vertices;
-    string currentText;
+
+//    string currentText;
+    StringBuilder currentText;
 
     this(Font font) {
         this.font = font;
@@ -132,18 +129,16 @@ class StringTexture {
 
     bool destroyed;
     ~this() {
-        msg("dtor text: ", currentText, " ", vbo);
+        msg("dtor text: ", currentText.str, " ", vbo);
         BREAK_IF(!destroyed);
     }
     void destroy() {
-        msg("destroying text: ", currentText, " ", vbo);
+        msg("destroying text: ", currentText.str, " ", vbo);
         glDeleteBuffers(1, &vbo);
         glError();
         destroyed = true;
     }
-    
-    
-    
+
     void resize(uint length){
         vertices.length = length;
         if(vbo){
@@ -159,11 +154,11 @@ class StringTexture {
     }
     
     string getText() {
-        return currentText;
+        return currentText.str;
     }
 
     void setText(string text) {
-        if(text == currentText){
+        if(text == currentText.str){
             return;
         }
         auto len = text.length;
@@ -203,7 +198,8 @@ class StringTexture {
             glBindBuffer(GL_ARRAY_BUFFER, vbo);
             glError();
         }
-        currentText = text;
+        //currentText = cast(string)text.dup;
+        currentText.set(text);
         auto size = FontQuad.sizeof * len;
         glBufferSubData(GL_ARRAY_BUFFER, 0, size, vertices.ptr);
         glError();
@@ -220,7 +216,7 @@ class StringTexture {
     // In that case, compute size when generating stuff. Yeah.
     vec2i getSize() {
         auto ret = font.glyphSize();
-        ret.X *= currentText.length;
+        ret.X *= currentText.str.length;
         return ret;
     }
 
@@ -229,7 +225,7 @@ class StringTexture {
         glError();
         glBindTexture(GL_TEXTURE_2D, texId);
         glError();
-        fontShader.render(rect, vbo, currentText.length, transparent, color);
+        FontShader().render(rect, vbo, currentText.str.length, transparent, color);
     }
 };
 

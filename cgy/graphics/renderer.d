@@ -30,7 +30,8 @@ import statistics;
 import unit;
 import util.util;
 
-
+alias void delegate (vec3f color, float radius) SetDelegate;
+__gshared SetDelegate setDelegate = null;
 
 class Renderer {
     //TODO: Leave comment on what these members are use for in this class
@@ -120,15 +121,21 @@ class Renderer {
         lineShader.setUniform(lineShader.V, v);
         glEnableVertexAttribArray(0);
         glError();
-        
-        void set(vec3f color, float radius){
-            lineShader.setUniform(lineShader.color, color);
-            lineShader.setUniform(lineShader.radius, radius);            
+
+        if(setDelegate is null) {
+            void set(vec3f color, float radius){
+                lineShader.setUniform(lineShader.color, color);
+                lineShader.setUniform(lineShader.radius, radius);            
+            }
+            setDelegate = &set;
         }
+        
+        //Now set is the same always!
+        //msg("Set is same always? ", cast(void*)(setDelegate));
 
         bool oldWireframe = setWireframe(true);
-        renderAABBList(camera.getPosition(), &set);
-        renderLineList(camera.getPosition(), &set);
+        renderAABBList(camera.getPosition(), setDelegate);
+        renderLineList(camera.getPosition(), setDelegate);
         setWireframe(oldWireframe);
         glDisableVertexAttribArray(0);
         glError();

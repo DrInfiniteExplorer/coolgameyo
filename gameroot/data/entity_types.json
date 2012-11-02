@@ -3,14 +3,6 @@
     "displayName":"Kalastrad",
 	"tintFromMaterial":1,
 	"tintColor":{ "X":50, "Y":200, "Z":50 },
-    "model":{
-        "name":"dorf/dorf.cgymesh",
-        "skeletonName":"dorf/dorf.cgyanim",
-        "meshTextures":[
-            "dorf/tex.png",
-            "dorf/tex2.png",
-        ],
-    },
 	"treeable":{
 		"woodMaterial":"birchtree",
 		"leafMaterial":"birchleaf",
@@ -91,14 +83,6 @@
     "displayName":"Gran-Stor",
 	"tintFromMaterial":1,
 	"tintColor":{ "X":50, "Y":200, "Z":50 },
-    "model":{
-        "name":"dorf/dorf.cgymesh",
-        "skeletonName":"dorf/dorf.cgyanim",
-        "meshTextures":[
-            "dorf/tex.png",
-            "dorf/tex2.png",
-        ],
-    },
 	"treeable":{
 		"woodMaterial":"birchtree",
 		"leafMaterial":"birchleaf",
@@ -213,14 +197,6 @@
     "displayName":"Gran-Liten",
 	"tintFromMaterial":1,
 	"tintColor":{ "X":50, "Y":200, "Z":50 },
-    "model":{
-        "name":"dorf/dorf.cgymesh",
-        "skeletonName":"dorf/dorf.cgyanim",
-        "meshTextures":[
-            "dorf/tex.png",
-            "dorf/tex2.png",
-        ],
-    },
 	"treeable":{
 		"woodMaterial":"birchtree",
 		"leafMaterial":"birchleaf",
@@ -335,14 +311,6 @@
     "displayName":"Tall",
 	"tintFromMaterial":1,
 	"tintColor":{ "X":50, "Y":200, "Z":50 },
-    "model":{
-        "name":"dorf/dorf.cgymesh",
-        "skeletonName":"dorf/dorf.cgyanim",
-        "meshTextures":[
-            "dorf/tex.png",
-            "dorf/tex2.png",
-        ],
-    },
 	"treeable":{
 		"woodMaterial":"birchtree",
 		"leafMaterial":"birchleaf",
@@ -458,14 +426,6 @@
     "displayName":"Standard Tree",
 	"tintFromMaterial":1,
 	"tintColor":{ "X":50, "Y":200, "Z":50 },
-    "model":{
-        "name":"dorf/dorf.cgymesh",
-        "skeletonName":"dorf/dorf.cgyanim",
-        "meshTextures":[
-            "dorf/tex.png",
-            "dorf/tex2.png",
-        ],
-    },
 	"treeable":{
 		"woodMaterial":"birchtree",
 		"leafMaterial":"birchleaf",
@@ -546,14 +506,6 @@
     "displayName":"Fantasy Tree",
 	"tintFromMaterial":1,
 	"tintColor":{ "X":50, "Y":200, "Z":50 },
-    "model":{
-        "name":"dorf/dorf.cgymesh",
-        "skeletonName":"dorf/dorf.cgyanim",
-        "meshTextures":[
-            "dorf/tex.png",
-            "dorf/tex2.png",
-        ],
-    },
 	"treeable":{
 		"woodMaterial":"birchtree",
 		"leafMaterial":"birchleaf",

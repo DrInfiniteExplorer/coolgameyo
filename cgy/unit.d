@@ -4,20 +4,21 @@ module unit;
 import std.exception;
 import std.stdio;
 
-import json;
 import changes.changelist;
-import pos;
+import changes.worldproxy;
+import clan;
+import clans;
+import inventory;
+import json;
+import mission;
+import util.pos;
 import stolen.aabbox3d;
 
-import worldstate.worldstate;
-import clan;
-import util.util;
 import unittypemanager;
-import inventory;
+import util.util;
+import worldstate.worldstate;
 
-import mission;
 
-import worldstate.worldproxy;
 
 import modules.path;
 
@@ -95,31 +96,21 @@ final class Unit {
 
     Value toJSON() {
         Value val = encode(unitData);
-        if (clan !is null) {
-            //redundant AT THE MOMENT - see fromJSON
-            val["clanId"] = encode(clan.clanId);
-        }
-        if(type !is null) {
-            val["typeId"] = encode(type.name);
-        }
-
+        val.populateJSONObject("typeId", type.id,
+                               "clanId", clan.clanId);
         //Add ai
         return val;
     }
     void fromJSON(Value val) {
         val.read(unitData);
-        if ("clanId" in val) {
-            //int clanId;
-            //read(clanId, val["clanId"]);
-            //BREAKPOINT;
-            //Since units are stored with their clan, and deserialized by their clan, we dont need
-            //to care about a units serialized clanid. :)
-        }
-        if ("typeId" in val) {
-            string unitType;
-            val["typeId"].read(unitType);
-            BREAKPOINT;
-        }
+        int typeId;
+        int clanId;
+        val.readJSONObject("typeId", &typeId,
+                           "clanId", &clanId);
+
+        type = UnitTypeManager().byID(cast(ushort)typeId);
+        Clans().getClanById(clanId).addUnit(this);
+
         inventory = new Inventory(); // TODO: RAWR!!
         //Add ai
     }

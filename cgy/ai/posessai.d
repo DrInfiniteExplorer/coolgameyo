@@ -8,16 +8,15 @@ import std.math;
 import std.stdio;
 
 import changes.changes;
-import scene.scenemanager;
+import changes.worldproxy;
 import light;
+import modules.path;
+import scene.scenemanager;
 import unit;
 import util.util;
 import util.rangefromto;
 
 import worldstate.worldstate;
-import worldstate.worldproxy;
-
-import modules.path;
 
 class FPSControlAI : UnitAI, CustomChange {
     Unit unit;
@@ -63,6 +62,10 @@ class FPSControlAI : UnitAI, CustomChange {
         // :)
     }
 
+
+    immutable dirs = [vec3i(1, 0, 0), vec3i(0, 1, 0), vec3i(0, 0, 1)];
+    vec3i[3] sizes;
+
     vec3d collideMove(vec3d pos, vec3d dir){
         immutable NOOO = vec3d(0,0,0);
         if (dir == NOOO) {
@@ -87,13 +90,11 @@ class FPSControlAI : UnitAI, CustomChange {
 
         auto unitWidth = unit.unitWidth;
         auto unitHeight = unit.unitHeight;
-        immutable dirs = [vec3i(1, 0, 0), vec3i(0, 1, 0), vec3i(0, 0, 1)];
         
-        auto sizes = [
-            vec3i(1,                to!int(floor(unitWidth)+1),    to!int(ceil(unitHeight)+1)),
-            vec3i(to!int(floor(unitWidth)+1),  1,                  to!int(ceil(unitHeight)+1)),
-            vec3i(to!int(floor(unitWidth)+1),  to!int(ceil(unitWidth)+1),    1)
-        ];
+        sizes[0] = vec3i(1,                cast(int)floor(unitWidth)+1,    cast(int)ceil(unitHeight)+1);
+        sizes[1] = vec3i(cast(int)floor(unitWidth)+1,  1,                  cast(int)ceil(unitHeight)+1);
+        sizes[2] = vec3i(cast(int)floor(unitWidth)+1,  cast(int)ceil(unitWidth)+1,    1);
+
         foreach(idx ; 0 .. 3) {
             auto axis = dirs[idx];
             auto daxis = axis.convert!double();
@@ -119,12 +120,12 @@ class FPSControlAI : UnitAI, CustomChange {
             if (axisLength > 0) {
                 // 'Fails' in one case; When one starts in [0, epsilon] from the "last" wall.
                 // Works fine though, as long as one moves less than OneEps per movement.
-                wallNum = to!int(floor(axisPos+size+OneEps));
-                axisDistanceToWall = to!double(wallNum) - (axisPos + size);
+                wallNum = cast(int)floor(axisPos+size+OneEps);
+                axisDistanceToWall = cast(double)wallNum - (axisPos + size);
             } else {
                 //'Fails' when we are [0, epsilon] from the "last" wall;
                 // If so, correct the result.
-                wallNum = to!int(ceil(axisPos-size-OneEps))-1;
+                wallNum = cast(int)ceil(axisPos-size-OneEps)-1;
                 auto tmp = wallNum+1.0 -(axisPos-size);
                 if (0 < tmp && tmp < epsilon) {
                     wallNum --;
@@ -140,14 +141,14 @@ class FPSControlAI : UnitAI, CustomChange {
             vec3i start;
             vec3i stop;
             if( idx == 0 ) {
-                start = vec3i(0, to!int(floor(pos.Y - unitWidth * 0.5)), to!int(floor(pos.Z - 0.5)));
-                stop = vec3i(0, to!int(ceil(pos.Y + unitWidth * 0.5))-1, to!int(ceil(pos.Z + unitHeight - 0.5))-1);
+                start = vec3i(0, cast(int)floor(pos.Y - unitWidth * 0.5), cast(int)floor(pos.Z - 0.5));
+                stop = vec3i(0, cast(int)ceil(pos.Y + unitWidth * 0.5)-1, cast(int)ceil(pos.Z + unitHeight - 0.5)-1);
             } else if (idx == 1) {
-                start = vec3i(to!int(floor(pos.X - unitWidth * 0.5)), 0, to!int(floor(pos.Z - 0.5)));
-                stop = vec3i(to!int(ceil(pos.X + unitWidth * 0.5))-1, 0, to!int(ceil(pos.Z + unitHeight - 0.5))-1);
+                start = vec3i(cast(int)floor(pos.X - unitWidth * 0.5), 0, cast(int)floor(pos.Z - 0.5));
+                stop = vec3i(cast(int)ceil(pos.X + unitWidth * 0.5)-1, 0, cast(int)ceil(pos.Z + unitHeight - 0.5)-1);
             } else if (idx == 2) {
-                start = vec3i(to!int(floor(pos.X - unitWidth * 0.5)), to!int(floor(pos.Y - unitWidth * 0.5)), 0);
-                stop = vec3i(to!int(ceil(pos.X + unitWidth * 0.5))-1, to!int(ceil(pos.Y + unitWidth * 0.5))-1, 0);
+                start = vec3i(cast(int)floor(pos.X - unitWidth * 0.5), cast(int)floor(pos.Y - unitWidth * 0.5), 0);
+                stop = vec3i(cast(int)ceil(pos.X + unitWidth * 0.5)-1, cast(int)ceil(pos.Y + unitWidth * 0.5)-1, 0);
             }
             foreach( ppp ; RangeFromTo(start, stop)) {
                 auto p = (axis * wallNum) + ppp;

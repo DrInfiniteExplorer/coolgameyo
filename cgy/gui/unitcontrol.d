@@ -11,6 +11,7 @@ import derelict.sdl.sdl;
 
 import ai.posessai;
 import json;
+import gaia;
 import game;
 import graphics.camera;
 import graphics.debugging;
@@ -28,6 +29,8 @@ import statistics;
 import tiletypemanager;
 import unit;
 import util.intersect;
+//import util.gc;
+import util.strings;
 import util.rangefromto;
 import util.util;
 import worldstate.worldstate;
@@ -170,26 +173,59 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         "R"
             ];
 
+
+
+
+    long oldFrameTime;
+    long oldTickTime;
+    vec3d oldCamPos;
+    Tile oldTile;
+    float oldDistance;
+    int oldRenderMethod;
+    StringBuilder fpsString;
+    StringBuilder frameTimeString;
+    StringBuilder tpsString;
+    StringBuilder tickTimeString;
+    StringBuilder positionString;
+    StringBuilder tileString;
+    StringBuilder renderString;
     void updateHUD() {
+
         //We plus one microsecond to avoid division by 0.
         auto frameTime = g_Statistics.averageFPS()+1;
         auto fps = 1_000_000 / frameTime;
-        fpsText.setText(text("fps ", fps));
-        frameTimeText.setText(text("frametime ", frameTime));
+        if(frameTime != oldFrameTime) {
+            fpsText.setText(fpsString("fps %d", fps));
+            frameTimeText.setText(frameTimeString("frametime %d", frameTime));
+            oldFrameTime = frameTime;
+        }
 
         auto tickTime = g_Statistics.averageTPS()+1;
         auto tps = 1_000_000 / tickTime;
-        tickText.setText(text("tps ", tps));
-        tickTimeText.setText(text("ticktime ", tickTime));
+        if(tickTime != oldTickTime) {
+            tickText.setText(tpsString("tps %d", tps));
+            tickTimeText.setText(tickTimeString("ticktime %d", tickTime));
+            oldTickTime = tickTime;
+        }
 
         auto camPos = camera.getPosition();
-        position.setText(text("position ", camPos.X, " ", camPos.Y, " ", camPos.Z));
+        if(camPos != oldCamPos) {
+            position.setText(positionString("position %f, %f, %f", camPos.X, camPos.Y, camPos.Z));
+            oldCamPos = camPos;
+        }
 
+        if(oldTile != selectedTile && oldDistance != selectedDistance) {
+            tileInfo.setText(tileString("%s; %f", selectedTile.describe(), selectedDistance));
+            oldTile = selectedTile;
+            oldDistance = selectedDistance;
+        }
 
-        tileInfo.setText(text(selectedTile.describe(), "; ", selectedDistance));
-        timeInfo.setText(world.getDayTimeString());
+        if(oldRenderMethod != renderSettings.renderTrueWorld) {
+            renderMethodInfo.setText(renderMethods[renderSettings.renderTrueWorld]);
+            oldRenderMethod = renderSettings.renderTrueWorld;
+        }
 
-        renderMethodInfo.setText(renderMethods[renderSettings.renderTrueWorld]);
+        //timeInfo.setText(world.getDayTimeString());
 
         updateDemoPath();
     }
@@ -398,15 +434,25 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
             }
         } else if (m.middle && tileSelected) {
             //vec3d pos = TilePos(selectedTilePos.value+selectedTileNormal).toEntityPos.value; // + 0.5 * selectedTileNormal.convert!double();
-            auto o = newEntity();
-            o.pos = TilePos(selectedTilePos.value+selectedTileNormal).toEntityPos;
-            o.type = world.entityTypeManager.byName("torch");
-            world.addEntity(o);
+
+            //auto entityTypeId = world._worldProxy.entityTypeManager.byName("torch").id;
+            auto entityTypeId = world._worldProxy.entityTypeManager.byName("tree01").id;
+            auto pos = TilePos(selectedTilePos.value+selectedTileNormal).toEntityPos;
+            auto val = makeJSONObject(
+                           "entityTypeId", entityTypeId,
+                           "clanId", 0, //Gaia
+                           "pos", pos);
+
+            world._worldProxy.createEntity(val);
         }
 
     }
 
     void tick(float dTime) {
+        import util.memory;
+
+
+        //mixin(MemDiff!("hyper.tick"));
         if(runCamDemo) {
             updateCamDemo(dTime);
             updateHUD();
@@ -427,6 +473,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         //immutable speed = 4.0;
         double speed = 4.0;
         if(turbo) speed = 30.0;
+
         if(keyMap[SDLK_a]){ right-=speed; }
         if(keyMap[SDLK_d]){ right+=speed; }
         if(keyMap[SDLK_w]){ fwd+=speed; }
@@ -490,12 +537,17 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
 
 
     void rayPickEntity() {
+        return;
+        /*
+
+        Commented out now because getEntities spawns memory on the heap every frame.
+
         vec3d start, dir;
         camera.getRayFromScreenCoords(mousecoords, start, dir);
         double prevDist, dist;
         entitySelected = false;
         foreach(entity ; world.getEntities()) {
-            dist = entity.pos.value.getDistanceFromSQ(camera.position);
+            dist = entity.entityData.pos.value.getDistanceFromSQ(camera.position);
             if (entity.aabb.intersectsWithLine(start, dir) && dist>0.5f &&
                     dir.dotProduct(entity.pos.value-camera.position) > 0 &&
                     (!entitySelected || prevDist > dist)) {
@@ -504,6 +556,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
                 entitySelected = true;
             }
         }
+        */
     }
 
     void hoverRay() {

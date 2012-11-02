@@ -1,6 +1,6 @@
 module light;
 
-import pos;
+import util.pos;
 import util.util;
 
 immutable MaxLightStrength = 15;

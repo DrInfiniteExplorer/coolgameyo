@@ -1,4 +1,4 @@
-module pos;
+module util.pos;
 
 
 import std.conv;
@@ -347,6 +347,17 @@ struct SectorXYNum {
                     value.X * SectorSize.x,
                     value.Y * SectorSize.y));
     }
+
+    bool inside(TileXYPos tp) {
+        auto val = tp.value;
+        auto me = getTileXYPos().value;
+        return
+            (val.X >= me.X) &&
+            (val.X < me.X + SectorSize.x) &&
+            (val.Y >= me.Y) &&
+            (val.Y < me.Y + SectorSize.y);
+    }
+
     mixin ToStringMethod2D;
 }
 

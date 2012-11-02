@@ -52,16 +52,29 @@ struct BranchType {
 
     bool pineShape;
 }
-struct TreelikeType {
+final class TreelikeType {
     string woodMaterial; // flytta till branches
 	string leafMaterial;
     BranchType[] branches;
+
+    void fromJSON(Value val) {
+        val.readJSONObject("woodMaterial", &woodMaterial,
+                           "leafMaterial", &leafMaterial,
+                           "branches", &branches);
+    }
 }
-struct EntityModelInfo {
+
+class EntityModelInfo {
     string name;
     string[] meshTextures;
     string skeletonName;//Skeleton family
+    void fromJSON(Value val) {
+        val.readJSONObject("name", &name,
+                           "skeletonName", &skeletonName,
+                           "meshTextures", &meshTextures);
+    }
 }
+
 
 
 struct EntityType_t {
@@ -74,13 +87,30 @@ struct EntityType_t {
         ubyte lightStrength = 0;
         vec3d lightTintColor;
 
-        EntityModelInfo model;   //Model family
 	}
-
-    TreelikeType treelike;
-	
 	InnerEntityType serializableSettings;
     alias serializableSettings this;
+
+    TreelikeType treelikeType;
+    bool hasTreelike() const @property { return treelikeType !is null; }
+
+    EntityModelInfo model;
+    bool hasModellike() const @property { return model !is null; }
+
+
+    void fromJSON(Value val) {
+        val.read(serializableSettings);
+        if("treeable" in val) {
+            treelikeType = new TreelikeType;
+            val.readJSONObject("treeable", &treelikeType);
+        }
+        if("model" in val) {
+            model = new EntityModelInfo;
+            val.readJSONObject("model", &model);
+        }
+
+    }
+	
 
 	// These settings are generated in the program, not from settings file
 	string name;
@@ -97,8 +127,14 @@ class EntityTypeManager {
         //assert (types.length == _byName.length); // because of id definition file, types.length can be bigger than _byName.length
         assert (types.length < ushort.max);
     }
+
+    import util.singleton;
+    mixin Singleton;
 	
-    this() {
+    private this() {
+    }
+
+    void init() {
         mixin(LogTime!("EntityTypeManagerCreation"));
 		
         // Loads the entity type id configuration
@@ -117,8 +153,8 @@ class EntityTypeManager {
             EntityType_t tempType; // is is le working if this is here lololooo.
             // problem is tree gets light, shrubbery dont. neither should.
             // build expansion then defense it
-			rsVal.read(tempType.serializableSettings);
-			
+            rsVal.read(tempType);
+
 			tempType.name = name;
             if ( hasTypeIdConfFile == true && tempType.name in idRootVal) {
                 ushort id;

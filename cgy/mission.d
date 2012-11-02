@@ -1,4 +1,4 @@
-import pos;
+import util.pos;
 import unit;
 import entities.entity;
 

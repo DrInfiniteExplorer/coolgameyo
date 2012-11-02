@@ -8,7 +8,7 @@ import std.traits;
 
 import json;
 
-import pos;
+import util.pos;
 import random.gradientnoise;
 import random.hybridfractal;
 import random.randsource;
@@ -110,7 +110,7 @@ class ConeMountainFeature : public Feature {
     double radius;
     bool affectedLevel4 = false;
 
-    ValueMap2Dd heightMap;
+    //ValueMap2Dd heightMap;
 
     this() { //For factory.
     }
@@ -133,7 +133,7 @@ class ConeMountainFeature : public Feature {
     override void init(LayerMap map) {
         ownerMap = map;
 
-        heightMap = new ValueMap2Dd(400, 400);
+        //heightMap = new ValueMap2Dd(400, 400);
         int seed = rand(int.min, int.max) + tp.value.X + tp.value.Y;
         auto gradient = new GradientNoise01!()(400, new RandSourceUniform(seed));
 

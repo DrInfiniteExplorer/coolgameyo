@@ -25,9 +25,9 @@ mixin template Page2() {
         worldMap = new WorldMap(worldName);
         mapViz = worldMap.getVisualizer();
 
-        try {
+        if(exists("worlds/" ~ worldName ~ "/start.json")) {
             loadJSON("worlds/" ~ worldName ~ "/start.json").readJSONObject("startPos", &startPos);
-        }catch(Throwable o) {}
+        }
 
         double _400Pixels = 400.0 / renderSettings.windowWidth;
 

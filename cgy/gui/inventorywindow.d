@@ -16,7 +16,7 @@ import worldstate.sizes;
 import worldstate.block;
 import worldstate.sector;
 import random.random;
-import pos;
+import util.pos;
 import settings;
 import statistics;
 import util.util;

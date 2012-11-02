@@ -3,43 +3,64 @@ module changes.worldproxy;
 import std.traits;
 import std.typetuple;
 
-import unit;
-import entities.entity;
-import pos;
-import worldstate.worldstate;
-import worldstate.worldproxy;
 import changes.changes;
 import changes.changelist;
+import changes.worldproxy;
 import clan;
+import entities.entity;
+import entitytypemanager;
+import json;
+import unit;
+import unittypemanager;
+import util.pos;
+import tiletypemanager;
+import worldstate.worldstate;
 
 import inventory;
 
+
 string mixinChangeListAdd(string name, T)() {
     immutable T_name = T.stringof;
-    immutable params = FieldTypeTuple!T.stringof;
-        
-    return "void "~name~"(TypeTuple!"~params~" ts) {"
-        ~  "    changeList.add!"~T.stringof~"(ts);"
-        ~  "}";
+    static if( hasMember!(T, "__ctor")) {
+        string str = "";
+        alias typeof(__traits(getOverloads, T, "__ctor")) constructors;
+        foreach(overload ; constructors){ 
+            immutable params = ParameterTypeTuple!overload.stringof;
+            str ~= " void "~name~"(TypeTuple!"~params~" ts) {"
+                ~  "    changeList.add!"~T.stringof~"(ts);"
+                ~  "}\n";
+        }
+        return str;
+    } else {
+        immutable params = FieldTypeTuple!T.stringof;
+        return "void "~name~"(TypeTuple!"~params~" ts) {"
+            ~  "    changeList.add!"~T.stringof~"(ts);"
+            ~  "}";
+    }
 }
-
 //pragma (msg, mixinChangeListAdd!("setTile", SetTile)());
 //pragma (msg, FieldTypeTuple!SetTile.stringof);
 
 
 mixin template mixinAllChangeListAdd(Ts...) {
     static if (Ts.length > 0) {
-//        pragma(msg, mixinChangeListAdd!(Ts[0], Ts[1])());
+        //pragma(msg, mixinChangeListAdd!(Ts[0], Ts[1])());
         mixin(mixinChangeListAdd!(Ts[0], Ts[1])());
         mixin mixinAllChangeListAdd!(Ts[2 .. $]);
     }
 }
 
-final class WorldChangeListProxy : WorldProxy {
+final class WorldProxy {
     WorldState world;
     ChangeList changeList;
+    EntityTypeManager entityTypeManager;
+    UnitTypeManager unitTypeManager;
+    TileTypeManager tileTypeManager;
 
     this(WorldState w) {
+        entityTypeManager = w.entityTypeManager;
+        unitTypeManager = w.unitTypeManager;
+        tileTypeManager = w.tileTypeManager;
         world = w;
         changeList = new ChangeList;
     }

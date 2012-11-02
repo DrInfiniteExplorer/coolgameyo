@@ -97,14 +97,9 @@ class LineShader {
     alias ShaderProgram!("position", "color") LineProgram;
     LineProgram lineProgram;
     
-    static LineShader ls;
-    static opCall() {
-        if (ls is null) {
-            ls = new LineShader();
-        }
-        return ls;
-    }
-    
+    import util.singleton;
+    mixin Singleton;
+
     private this() {
         lineProgram = new LineProgram("shaders/gui/lineShader.vert", "shaders/gui/lineShader.frag");
         lineProgram.position = lineProgram.getAttribLocation("position");

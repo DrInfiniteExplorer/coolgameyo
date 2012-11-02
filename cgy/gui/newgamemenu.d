@@ -15,7 +15,7 @@ import gui.mainmenu;
 import gui.worldview;
 
 import json;
-import pos;
+import util.pos;
 
 import settings;
 import statistics;
@@ -23,8 +23,9 @@ import statistics;
 //import worldgen.newgen;
 import worldgen.maps;
 //import worldgen.mapviz;
-import util.util;
+import util.filesystem;
 import util.rect;
+import util.util;
 
 import gui.newgame.page1;
 import gui.newgame.page2;

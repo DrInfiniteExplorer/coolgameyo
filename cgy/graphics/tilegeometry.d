@@ -18,30 +18,86 @@ import derelict.opengl.gl;
 import derelict.opengl.glext;
 
 
+import changes.worldproxy;
 import graphics.camera;
 import graphics.debugging;
 import graphics.renderer;
 import graphics.tilerenderer;
 import light;
 import modules.module_;
-import pos;
+import util.pos;
 import scheduler;
 import settings;
 import statistics;
 import stolen.aabbox3d;
 
 import worldstate.worldstate;
-import worldstate.worldproxy;
 
-import util.util;
-import util.rangefromto;
 import util.intersect;
+import util.memory;
+import util.rangefromto;
+import util.util;
 
 alias util.util.Direction Direction;
 
-struct TileFaces
-{
+immutable GraphRegionsPerTick = 4;
+
+
+
+
+class TileFaces {
+
     GRFace[] faces;
+    bool available;
+    debug int thread;
+
+    this() {
+        faces.reserve(100);
+        faces.length = faces.capacity();
+        available = true;
+    }
+
+    void clear() {
+        //msg("Clearing");
+        available = true;
+        faces.length = 0;
+        assumeSafeAppend(faces);
+    }
+    void append(ref GRFace face) {
+        debug BREAK_IF(workerID != thread);
+        debug auto cap = faces.capacity();
+        faces ~= face; //Ugh!
+        debug{
+            if(cap != faces.capacity()) {
+                msg("Increased capacity to ", faces.capacity());
+            }
+        }
+    }
+}
+
+__gshared TileFaces[GraphRegionsPerTick] tileFaces;
+__gshared Mutex tileFaceMutex;
+
+shared static this() {
+    tileFaceMutex = new Mutex();
+    foreach(idx, tf ; tileFaces) {
+        tileFaces[idx] = new TileFaces();
+    }
+}
+
+TileFaces getTileFaces() {
+    synchronized(tileFaceMutex) {
+        int c = 0;
+        while(true) {
+            if(tileFaces[c].available) {
+                tileFaces[c].available = false;
+                debug tileFaces[c].thread = workerID;
+                //msg("Returning tileface ", c);
+                return tileFaces[c];
+            }
+            c = (c+1) % GraphRegionsPerTick;
+        }
+    }
 }
 
 struct GRVertex{
@@ -161,7 +217,6 @@ template FixLighting(const string A, const int num, const int dir, const string 
     // */
 }
 
-
 final class TileGeometry : Module, WorldStateListener
 {
     GraphRegionNum[] regionsToUpdate; //Only used in taskFunc and where we populate it, mutually exclusive locations.
@@ -188,7 +243,12 @@ final class TileGeometry : Module, WorldStateListener
     }
 
     auto buildGeometry(T...)(T t) {
+        //auto startMem = getMemoryUsage();
+        //scope(exit) msg("Mem difference: ", getMemoryUsage() - startMem);
+        //mixin(MemDiff!("tilegeometry.buildgeometry"));
+
         int smoothMethod = renderSettings.smoothSetting;
+
 
         if(smoothMethod == 0) {
             return buildGeometryImpl!0(t);
@@ -199,7 +259,6 @@ final class TileGeometry : Module, WorldStateListener
         } else {
             return buildGeometryImpl!0(t);
         }
-
     }
 
     TileFaces buildGeometryImpl(int smoothMethod)(TilePos min, TilePos max)
@@ -211,8 +270,7 @@ final class TileGeometry : Module, WorldStateListener
     body{
         //Make floor triangles
 
-        TileFaces tileFaces;
-        GRFace[] faceList;
+        TileFaces tileFaces = getTileFaces();
 
         GRFace newFace;
         vec3f tileTexSize = settings.getTileCoordSize();
@@ -295,7 +353,7 @@ final class TileGeometry : Module, WorldStateListener
 
                 mixin(FixLighting!("Xp", 0, 1, "UH", "LH", "LF", "UF"));
 
-                faceList ~= newFace;
+                tileFaces.append(newFace);
             }
             if (Xn) {
                 newFace.quad[0].vertex.set(x, y, z); //Lower hither
@@ -310,7 +368,7 @@ final class TileGeometry : Module, WorldStateListener
 
                 mixin(FixLighting!("Xn", 0,-1, "LH", "UH", "UF", "LF"));
 
-                faceList ~= newFace;
+                tileFaces.append(newFace);
             }
             if (Yp) {
                 newFace.quad[0].vertex.set(x, y+1, z); //Lower hither
@@ -325,7 +383,7 @@ final class TileGeometry : Module, WorldStateListener
 
                 mixin(FixLighting!("Yp", 1, 1, "LH", "UH", "UF", "LF"));
 
-                faceList ~= newFace;
+                tileFaces.append(newFace);
             }
             if (Yn) {
                 newFace.quad[0].vertex.set(x, y, z+1); //Hither upper
@@ -340,7 +398,7 @@ final class TileGeometry : Module, WorldStateListener
 
                 mixin(FixLighting!("Yn", 1,-1, "UH", "LH", "LF", "UF"));
 
-                faceList ~= newFace;
+                tileFaces.append(newFace);
             }
             if (Zp) {
                 newFace.quad[0].vertex.set(x, y+1, z+1); //Hither upper
@@ -355,7 +413,7 @@ final class TileGeometry : Module, WorldStateListener
 
                 mixin(FixLighting!("Zp", 2, 1, "UH", "LH", "LF", "UF"));
 
-                faceList ~= newFace;
+                tileFaces.append(newFace);
             }
             if (Zn) {
                 newFace.quad[0].vertex.set(x, y, z); //hiether lower
@@ -369,10 +427,9 @@ final class TileGeometry : Module, WorldStateListener
                 fixTex!(false, false)(newFace, tile, Direction.downCount);
 
                 mixin(FixLighting!("Zn", 2,-1, "LH", "UH", "UF", "LF"));
-                faceList ~= newFace;
+                tileFaces.append(newFace);
             }
         }
-        tileFaces.faces = faceList;
         return tileFaces;
     }
     
@@ -449,7 +506,6 @@ final class TileGeometry : Module, WorldStateListener
         }
         //writeln("after ", regionsToUpdate.length);        
         
-        immutable GraphRegionsPerTick = 4;
         auto cnt = min(regionsToUpdate.length, GraphRegionsPerTick);
         enforce(cnt > 0, "Do not get here. In fact, it is impossible!");
         auto nums = regionsToUpdate[$-cnt .. $];
@@ -550,10 +606,10 @@ final class TileGeometry : Module, WorldStateListener
         regionsToUpdate ~= newRegions;
     }
 
-    void onTileChange(TilePos tilePos) {
+    override void onTileChange(TilePos tilePos) {
         onUpdateGeometry(tilePos);
     }
-    void onSectorLoad(SectorNum sectorNum) {
+    override void onSectorLoad(SectorNum sectorNum) {
         onBuildGeometry(sectorNum);
     }
 

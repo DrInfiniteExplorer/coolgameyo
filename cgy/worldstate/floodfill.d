@@ -1,7 +1,7 @@
 module worldstate.floodfill;
 
 
-import pos;
+import util.pos;
 import util.array;
 
 static final class FillingTaskState {
@@ -52,7 +52,9 @@ mixin template FloodFill() {
         if(fillingTasks.length == 0) {
             g_Statistics.FloodFillNew(0);
         }
-        foreach(task ; parallel(fillingTasks)) {
+
+        auto range = fillingTasks.list;
+        foreach(task ; parallel(range)) {
             workerID = taskPool.workerIndex;
         //foreach(task ; fillingTasks) {
                 fillingTaskFunc(task);
@@ -65,10 +67,14 @@ mixin template FloodFill() {
             }
             */
         }
-        foreach(task ; fillingTasks) {
+        taskPool().finish();
 
+        /*
+        foreach(task ; fillingTasks) {
+            //Are apparently notified in the fillingTaskFunc
             notifySectorLoad(task.sectorNum);
         }
+        */
         fillingTasks.length = 0;
         assumeSafeAppend(fillingTasks);
         msg("Page fault count in initialFloodFill: ", getMemoryPageFaults() - startPageFaults);

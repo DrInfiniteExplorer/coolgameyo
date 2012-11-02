@@ -18,7 +18,7 @@ import feature.feature;
 import json;
 import graphics.image;
 
-import pos;
+import util.pos;
 import random.catmullrom;
 import random.combine;
 import random.gradient;

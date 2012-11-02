@@ -1,12 +1,12 @@
 module ai.minetileai;
 
-import pos;
+import ai.moveai;
+import changes.worldproxy;
+import modules.path;
+import util.pos;
 import unit;
 import util.util;
-import ai.moveai;
-import worldstate.worldproxy;
 
-import modules.path;
 
 struct MineTileAI {
 

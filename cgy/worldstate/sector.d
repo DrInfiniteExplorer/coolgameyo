@@ -12,6 +12,7 @@ import std.exception;
 import std.range;
 import std.stdio;
 
+import clans;
 import entitytypemanager;
 import json;
 import light;
@@ -20,7 +21,7 @@ import worldstate.worldstate;
 import worldstate.block;
 import worldstate.sizes;
 //import worldgen.worldgen;
-import pos;
+import util.pos;
 import unit;
 import entities.entity;
 import util.util;
@@ -175,16 +176,6 @@ class Sector {
         }
         file.close();
         
-        Value jsonRoot = encode(array(map!q{a.id}(array(units))));
-	    auto jsonString = json.prettifyJSON(jsonRoot);
-        std.file.write(folder ~ "units.json", jsonString);
-
-        Value darp(Entity entity) {
-            return encode(entity);
-        }
-        jsonRoot = Value(array(map!darp(array(entities))));
-	    jsonString = json.prettifyJSON(jsonRoot);
-        std.file.write(folder ~ "entities.json", jsonString);
     }
     
     bool deserialize(EntityTypeManager entityTypeManager, WorldState world) {
@@ -214,23 +205,6 @@ class Sector {
         }
         file.close();
                 
-        auto content = readText(folder ~ "units.json");
-        auto jsonRoot = json.parse(content);
-        foreach (unitVal ; jsonRoot.elements) {
-//            Unit unit = new Unit;
-//            unit.fromJSON(unitVal);
-//            units.insert(unit);
-            int unitId;
-            json.read(unitVal, unitId);
-            addUnit(world.getUnitById(unitId));
-        }
-        
-        foreach (idx, entityVal ; loadJSON(folder ~ "entities.json").asArray()) {
-            //Entity entity = newEntity();
-            //entity.fromJSON(entityVal, entityTypeManager);
-            //addEntity(entity);
-            //world.addLightFromEntity(entity);
-        }
         return true;
     }
     

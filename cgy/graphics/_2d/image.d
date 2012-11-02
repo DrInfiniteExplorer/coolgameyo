@@ -68,13 +68,8 @@ class ImageRectShader {
     alias ShaderProgram!("position", "texcoord", "tex") ImageProgram;
     ImageProgram imageProgram;
     
-    static ImageRectShader irs;
-    static opCall() {
-        if (irs is null) {
-            irs = new ImageRectShader();
-        }
-        return irs;
-    }
+    import util.singleton;
+    mixin Singleton;
     
     private this() {
         imageProgram = new ImageProgram("shaders/gui/imageRectShader.vert", "shaders/gui/imageRectShader.frag");

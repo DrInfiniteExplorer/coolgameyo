@@ -13,7 +13,7 @@ import std.typecons;
 import graphics.texture;
 import graphics.debugging;
 import light;
-import pos;
+import util.pos;
 import statistics;
 import util.rangefromto;
 import util.util;
@@ -161,7 +161,7 @@ mixin template WorldGenerator() {
     ushort getBasicTileType(Area area) {
         randomNumber++;
 
-        auto group = tileSys.getGroup("grass");
+        auto group = tileSys.getGroup("genericGrass");
         int idx = randomNumber % group.length;
         auto id = group[idx].id;
         return id;

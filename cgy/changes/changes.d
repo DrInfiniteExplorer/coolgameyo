@@ -1,14 +1,15 @@
 module changes.changes;
 
-import worldstate.worldstate;
-import pos;
-import unit;
+import clan;
 import entities.entity;
 import inventory;
-
-import clan;
-
+import json;
+import util.pos;
+import unit;
 import util.util;
+import worldstate.worldstate;
+
+
 
 struct SetTile {
     TilePos tp;
@@ -41,10 +42,20 @@ struct RemoveTile {
 }
 
 struct CreateUnit {
+
+    this(Unit _u) {
+        u = _u;
+        serialized = encode(u);
+    }
+
     Unit u;
+    Value serialized;
 
     void apply(WorldState world) {
-        assert(0);
+        if(u is null) {
+            import std.exception;
+            enforce(0, "Implement creating of units over network");
+        }
     }
 }
 struct RemoveUnit {
@@ -84,10 +95,29 @@ struct SetAction {
 }
 
 struct CreateEntity {
+
+    this(Value value) {
+        e = null;
+        serializedData = value;
+    }
+
+    this(Entity _e, Value params) {
+        e = _e;
+        serializedData = encode(e);
+        foreach(key, val ; params.asObject()) {
+            serializedData[key] = val;
+        }
+    }
+
     Entity e;
+    Value serializedData;
 
     void apply(WorldState world) {
-        assert(0);
+        if(e is null) {
+            auto entity = newEntity(serializedData, world);
+        } else {
+            e.deserialize(serializedData, world);
+        }
     }
 }
 struct RemoveEntity {

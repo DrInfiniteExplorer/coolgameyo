@@ -4,10 +4,10 @@ import std.array;
 import std.conv;
 import std.math;
 
+import changes.worldproxy;
+import util.pos;
 import unit;
-import pos;
 import util.util;
-import worldstate.worldproxy;
 
 import modules.path;
 

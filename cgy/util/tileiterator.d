@@ -5,7 +5,7 @@ import std.algorithm;
 import std.conv;
 import std.math;
 
-import pos;
+import util.pos;
 import util.util;
 
 struct TileIterator{

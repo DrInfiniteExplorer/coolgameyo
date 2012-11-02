@@ -10,7 +10,7 @@ import graphics.ogl;
 import graphics.shader;
 import graphics.tilegeometry;
 
-import pos;
+import util.pos;
 import statistics;
 import util.rangefromto;
 import util.util;
@@ -108,6 +108,7 @@ class TileRenderer {
         auto primitiveCount = geometry.faces.length;
         auto geometrySize = primitiveCount * GRFace.sizeof;
         info.quadCount = primitiveCount;
+        scope(exit) geometry.clear();
 
         if(oldInfo !is null && oldInfo.vbo){
             //See if VBO is reusable.
@@ -147,7 +148,7 @@ class TileRenderer {
                     RenderInfo newInfo = doUpload(oldInfo, geometry);
                     if(oldInfo !is null && newInfo.vbo == 0) {
                         vertexBuffers.remove(grNum);
-                    } else {
+                    } else if(newInfo.vbo != 0){
                         vertexBuffers[grNum] = newInfo; 
                     }
                 }

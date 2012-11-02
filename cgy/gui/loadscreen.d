@@ -34,6 +34,7 @@ class LoadScreen : GuiElementWindow {
     }
     
     override void tick(float dTime) {
+
         auto todo = g_Statistics.HeightmapsToDo;
         heightMaps.setVisible(todo != 0);
         heightMaps.setMax(todo);

@@ -5,16 +5,14 @@ import std.conv;
 import std.exception;
 import std.stdio;
 
+import changes.worldproxy;
 import json;
-
 import modules.module_;
 import modules.path;
-
 import unit;
-import util.util;
 import util.filesystem;
+import util.util;
 
-import worldstate.worldproxy;
 
 
 class AIModule : Module, WorldStateListener {

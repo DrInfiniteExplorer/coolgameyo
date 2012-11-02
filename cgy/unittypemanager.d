@@ -7,9 +7,10 @@ import std.file;
 import graphics.texture;
 
 import json;
-import util.util;
-import worldstate.tile;
 import statistics;
+import worldstate.tile;
+import util.singleton;
+import util.util;
 
 struct UnitModelInfo {
     string name;
@@ -42,8 +43,13 @@ class UnitTypeManager {
         //assert (types.length == _byName.length); // because of id definition file, types.length can be bigger than _byName.length
         assert (types.length < ushort.max);
     }
+
+    mixin Singleton!();
 	
-    this() {
+    private this() {
+    }
+
+    void init() {
         mixin(LogTime!("UnitTypeManagerCreation"));
 		
         // Loads the unit type id configuration

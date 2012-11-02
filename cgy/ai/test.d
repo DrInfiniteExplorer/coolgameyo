@@ -6,18 +6,16 @@ import std.array;
 import std.conv;
 import std.math;
 
+import ai.minetileai;
 import changes.changelist;
+import changes.worldproxy;
 import graphics.debugging;
+import mission;
 import modules.path;
+import util.pos;
 import unit;
 import util.util;
 
-import worldstate.worldproxy;
-import pos;
-
-import mission;
-
-import ai.minetileai;
 
 
 final class FuckingWrap(T) : UnitAI { // :---)

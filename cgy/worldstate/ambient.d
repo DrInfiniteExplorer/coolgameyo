@@ -130,106 +130,117 @@ mixin template LightStorageMethods() {
         }
     }
 
-    void removeTile(TilePos tilePos) {
-        auto tile = getTile(tilePos);
-        auto tileAbove = getTile(TilePos(tilePos.value + vec3i(0, 0, 1)));
-        bool belowSunlight = tileAbove.sunlight;
+    //For each removed tile:
+    //If we opened up for a ray of sunlight to shoot down a hole, set all the air in the hole
+    // to be sunlight, and add them as light-spreading-sources.
+    //Also find the brightest lit tile in the vincinity, and spread light from it if possible
+    //Then for each tile we spread from, spread the light! =)
+    //Then notify and update the geometry
+    // Remember, removing a tile will only ever increase the spread light, not remove light!
+    void removeTile(Tile[TilePos] tilePositions) {
         LightPropagationData[] lightSources;
         LightPropagationData[] sunLightSources;
         bool[BlockNum] modifiedBlocks;
-        //No need to unspread light; Removing a tile will never cause light to diminish
+        foreach(tilePos, newTile ; tilePositions) {
+            auto tileAbove = getTile(TilePos(tilePos.value + vec3i(0, 0, 1)));
+            bool belowSunlight = tileAbove.sunlight;
+            //No need to unspread light; Removing a tile will never cause light to diminish
 
-        if( belowSunlight) {
-            //If below sunlight, spread sunlight downward until we find a solid object.
-            //Will add light collumn to lights to spread
-            int z = tilePos.value.Z; 
-            while(true){
-                auto iterTilePos = TilePos(vec3i(tilePos.value.X, tilePos.value.Y, z));
-                auto iterTile = getTile(iterTilePos);
-                if(!iterTile.isAir) {
-                    break;
+            if( belowSunlight) {
+                //If below sunlight, spread sunlight downward until we find a solid object.
+                //Will add light collumn to lights to spread
+                int z = tilePos.value.Z; 
+                while(true){
+                    auto iterTilePos = TilePos(vec3i(tilePos.value.X, tilePos.value.Y, z));
+                    auto iterTile = getTile(iterTilePos);
+                    if(!iterTile.isAir) {
+                        break;
+                    }
+                    //If we dont set this, then if we get a collumn of 3 new sunlighttiles, then
+                    //when the first tile is processed, we will find that the one below isn't
+                    //the same value, thus introducing a fourth iteration, which will override
+                    //the second iteration, and so on.
+                    modifiedBlocks[iterTilePos.getBlockNum()] = true;
+                    setTileLightVal(iterTilePos, MaxLightStrength, true);
+                    sunLightSources ~= LightPropagationData(iterTilePos, MaxLightStrength);
+                    z--;
                 }
-                //If we dont set this, then if we get a collumn of 3 new sunlighttiles, then
-                //when the first tile is processed, we will find that the one below isn't
-                //the same value, thus introducing a fourth iteration, which will override
-                //the second iteration, and so on.
-                modifiedBlocks[iterTilePos.getBlockNum()] = true;
-                setTileLightVal(iterTilePos, MaxLightStrength, true);
-                sunLightSources ~= LightPropagationData(iterTilePos, MaxLightStrength);
-                z--;
             }
-        }
-        //Move this part of finding neighbor to separate function?
-        byte max = 0;
-        byte maxSun = 0;
-        LightPropagationData brightest;
-        LightPropagationData brightestSun;
-        foreach(newPos; neighbors(tilePos)) {
-            auto newTilePos = newPos;
-            auto newTile = getTile(newTilePos);
-            byte newStrength = newTile.lightValue;
-            byte newSunStrength = newTile.sunLightValue;
-            if(newStrength > max) {
-                brightest.tilePos = newTilePos;
-                brightest.strength = newStrength;
-                max = newStrength;
+            //Move this part of finding neighbor to separate function?
+            byte max = 0;
+            byte maxSun = 0;
+            LightPropagationData brightest;
+            LightPropagationData brightestSun;
+            foreach(newPos; neighbors(tilePos)) {
+                auto newTilePos = newPos;
+                auto newTile = getTile(newTilePos);
+                byte newStrength = newTile.lightValue;
+                byte newSunStrength = newTile.sunLightValue;
+                if(newStrength > max) {
+                    brightest.tilePos = newTilePos;
+                    brightest.strength = newStrength;
+                    max = newStrength;
+                }
+                if(!belowSunlight && newSunStrength > maxSun) {
+                    brightestSun.tilePos = newTilePos;
+                    brightestSun.strength = newSunStrength;
+                    maxSun = newSunStrength;
+                }
             }
-            if(!belowSunlight && newSunStrength > maxSun) {
-                brightestSun.tilePos = newTilePos;
-                brightestSun.strength = newSunStrength;
-                maxSun = newSunStrength;
+            if(max > 1) {
+                lightSources ~= brightest;
             }
-        }
-        if(max > 1) {
-            lightSources ~= brightest;
-        }
-        if(maxSun > 1) {
-            sunLightSources ~= brightestSun;
+            if(maxSun > 1) {
+                sunLightSources ~= brightestSun;
+            }
         }
 
         spreadLights(false, lightSources, modifiedBlocks);
         spreadLights(true, sunLightSources, modifiedBlocks);
 
+        //In the future, move this to after removeTile/addTile in the func allTilesUpdated.
         foreach(blockNum, trueVal ; modifiedBlocks) {
             auto tilePos = blockNum.toTilePos();
             notifyUpdateGeometry(tilePos);
         }
     }
 
-    void addTile(TilePos tilePos, Tile oldTile) {
-        LightPropagationData[] lightSources;
-        LightPropagationData[] sunLightSources;
-        LightPropagationData[] sunUnLight;
-        bool[BlockNum] modifiedBlocks;
+    void addTile(Tile[TilePos] tilePositions) {
+        foreach(tilePos, oldTile ; tilePositions) {
+            LightPropagationData[] lightSources;
+            LightPropagationData[] sunLightSources;
+            LightPropagationData[] sunUnLight;
+            bool[BlockNum] modifiedBlocks;
 
-        sunUnLight ~= LightPropagationData(tilePos, oldTile.getLight(true));
-        setTileLightVal(tilePos, 0, true);
-        if( oldTile.sunlight) {
-            //If below sunlight, spread sunlight downward until we find a solid object.
-            //Will add light collumn to lights to spread
-            int z = tilePos.value.Z-1;
-            while(true){
-                auto iterTilePos = TilePos(vec3i(tilePos.value.X, tilePos.value.Y, z));
-                auto iterTile = getTile(iterTilePos);
-                if(!iterTile.isAir) {
-                    break;
+            sunUnLight ~= LightPropagationData(tilePos, oldTile.getLight(true));
+            setTileLightVal(tilePos, 0, true);
+            if( oldTile.sunlight) {
+                //If below sunlight, spread sunlight downward until we find a solid object.
+                //Will add light collumn to lights to spread
+                int z = tilePos.value.Z-1;
+                while(true){
+                    auto iterTilePos = TilePos(vec3i(tilePos.value.X, tilePos.value.Y, z));
+                    auto iterTile = getTile(iterTilePos);
+                    if(!iterTile.isAir) {
+                        break;
+                    }
+                    setTileLightVal(iterTilePos, 0, true);
+                    modifiedBlocks[iterTilePos.getBlockNum()] = true;
+                    sunUnLight ~= LightPropagationData(iterTilePos, MaxLightStrength);
+                    z--;
                 }
-                setTileLightVal(iterTilePos, 0, true);
-                modifiedBlocks[iterTilePos.getBlockNum()] = true;
-                sunUnLight ~= LightPropagationData(iterTilePos, MaxLightStrength);
-                z--;
             }
-        }
 
-        unspreadLights(false, lightSources, [LightPropagationData(tilePos, oldTile.getLight(false))], modifiedBlocks);
-        unspreadLights(true, sunLightSources, sunUnLight, modifiedBlocks);
+            unspreadLights(false, lightSources, [LightPropagationData(tilePos, oldTile.getLight(false))], modifiedBlocks);
+            unspreadLights(true, sunLightSources, sunUnLight, modifiedBlocks);
         
-        spreadLights(false, lightSources, modifiedBlocks);
-        spreadLights(true, sunLightSources, modifiedBlocks);
+            spreadLights(false, lightSources, modifiedBlocks);
+            spreadLights(true, sunLightSources, modifiedBlocks);
 
-        foreach(blockNum, trueVal ; modifiedBlocks) {
-            auto tilePos = blockNum.toTilePos();
-            notifyUpdateGeometry(tilePos);
+            foreach(blockNum, trueVal ; modifiedBlocks) {
+                auto tilePos = blockNum.toTilePos();
+                notifyUpdateGeometry(tilePos);
+            }
         }
     }
 

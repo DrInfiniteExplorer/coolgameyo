@@ -71,11 +71,14 @@ struct Tile {
     void pathable(bool val) @property { setFlag(flags, TileFlags.pathable, val); }
 
     string describe() const {
+        return "";
+        /*
         string ret = "";
         ret ~= pathable ? "Pathable, " : "Unpathable, ";
         ret ~= valid ? "Valid, " : "Invalid, ";
         ret ~= to!string(lightValue) ~ "," ~to!string(sunLightValue) ~ ",";
         return ret;
+        */
     }
 }
 

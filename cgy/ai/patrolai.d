@@ -8,13 +8,13 @@ import std.conv;
 import std.math;
 
 import changes.changelist;
+import changes.worldproxy;
 import graphics.debugging;
 import modules.path;
+import util.pos;
 import unit;
 import util.util;
 
-import worldstate.worldproxy;
-import pos;
 
 /+
 // TODO: rewrite using moveai

@@ -255,12 +255,12 @@ final class HeightSheets : Module, WorldStateListener {
     }
     void onUpdateGeometry(TilePos tilePos) { }
 
-    void onSectorLoad(SectorNum sectorNum) {
+    override void onSectorLoad(SectorNum sectorNum) {
         synchronized(this) {
             removeList ~= sectorNum;
         }
     }
-    void onSectorUnload(SectorNum sectorNum) {
+    override void onSectorUnload(SectorNum sectorNum) {
         synchronized(this) {
             addBack ~= sectorNum;
         }

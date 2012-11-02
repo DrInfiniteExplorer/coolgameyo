@@ -89,8 +89,6 @@ void initOpenGL(bool client){
     glError();
     glDepthFunc(GL_LEQUAL);
     
-    initFont();
-
     initQuad();
 
 
@@ -105,7 +103,6 @@ void initOpenGL(bool client){
 void deinitOpenGL() {
     deinitOCL();
     deinitFBO();
-    deinitFont();
 }
 
 __gshared CLContext g_clContext;
@@ -384,6 +381,19 @@ string makeLookupTable(string[] enums) {
     return ret ~ "]";
 }
 
+__gshared string[uint] glErrorTable;
+
+shared static this() {
+    glErrorTable = mixin(makeLookupTable(
+        [
+            "GL_INVALID_ENUM",
+            "GL_INVALID_FRAMEBUFFER_OPERATION",
+            "GL_INVALID_VALUE",
+            "GL_INVALID_OPERATION",
+            "GL_OUT_OF_MEMORY",
+        ]));
+}
+
 void glError(string file = __FILE__, int line = __LINE__){
     //debug
     {
@@ -392,18 +402,9 @@ void glError(string file = __FILE__, int line = __LINE__){
 
         string str;
 
-        auto table = mixin(makeLookupTable(
-            [
-            "GL_INVALID_ENUM",
-            "GL_INVALID_FRAMEBUFFER_OPERATION",
-            "GL_INVALID_VALUE",
-            "GL_INVALID_OPERATION",
-            "GL_OUT_OF_MEMORY",
 
-            ]));
-
-        if(err in table) {
-            str = table[err];
+        if(err in glErrorTable) {
+            str = glErrorTable[err];
         } else {
             str = "Unrecognized opengl error! " ~ to!string(err);
         }

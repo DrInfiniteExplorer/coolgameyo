@@ -18,11 +18,11 @@ struct ChangeArrayCollection(Cs...) {
 
     void init() {
         foreach (i, c; Cs) {
-            arrays[i] = new typeof(arrays[i]);
+            //arrays[i] = new typeof(arrays[i]);
         }
     }
 
-    auto byType(T)() {
+    ref auto byType(T)() {
         return arrays[staticIndexOf!(T, Cs)];
     }
 
@@ -69,7 +69,7 @@ final class ChangeList {
             CustomChange
             ) changeArrays;
 
-    auto changes(T)() {
+    ref auto changes(T)() {
         return changeArrays.byType!T();
     }
 

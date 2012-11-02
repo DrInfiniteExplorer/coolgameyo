@@ -21,6 +21,7 @@ import ai.patrolai;
 import ai.test;
 
 import clan;
+import clans;
 import clientnetworking;
 
 import entitytypemanager;
@@ -40,7 +41,7 @@ import json;
 //import changes.changelist;
 import modules.ai;
 import modules.path;
-import pos;
+import util.pos;
 import scheduler;
 import scene.scenemanager;
 import settings;
@@ -66,7 +67,7 @@ string SDLError() { return to!string(SDL_GetError()); }
 
 class Game{
 
-    private WorldMap            worldMap;
+    WorldMap            worldMap;
     private WorldState          worldState;
 
     private bool            isClient;
@@ -96,6 +97,10 @@ class Game{
         isServer = serv;
         isClient = clie;
         isWorker = work;
+
+        import core.memory;
+        //GC.disable();
+
     }
 
     private bool destroyed;
@@ -132,8 +137,11 @@ class Game{
             //TODO: Find out what the above comment indicates.
         }
         tileTypeManager = new TileTypeManager(atlas);
-        entityTypeManager = new EntityTypeManager();
-        unitTypeManager = new UnitTypeManager();
+        entityTypeManager = EntityTypeManager();
+        entityTypeManager.init();
+        unitTypeManager = UnitTypeManager();
+        unitTypeManager.init();
+        
         sceneManager = new SceneManager();
 
         worldMap = new WorldMap(worldName);
@@ -147,6 +155,7 @@ class Game{
         aiModule = new AIModule(pathModule, worldState);
         scheduler.registerModule(pathModule);
         scheduler.registerModule(aiModule);
+        scheduler.registerModule(Clans());
 
         if (isClient) {
             camera = new Camera();
@@ -184,6 +193,9 @@ class Game{
 
     void populateWorld(vec2i startPos) {
 
+        import util.gc;
+        util.gc.enableMallocDebug();
+
         g_UnitCount = 0;
 
         UnitPos topOfTheWorld(TileXYPos xy) {
@@ -214,6 +226,9 @@ class Game{
         u.ai = new TestAI(u);
 
         activeUnit = uu;
+
+        worldState._worldProxy.createUnit(u);
+        worldState._worldProxy.createUnit(uu);
 
 
         // following is retarded code, ETC :d
@@ -246,6 +261,7 @@ class Game{
     } 
 
     void newGameThread(vec2i startPos, string worldName) {
+
         init(worldName);
         populateWorld(startPos);
         camera.setPosition(vec3d(0, 0, 0));

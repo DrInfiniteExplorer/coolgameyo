@@ -4,10 +4,9 @@ module worldstate.activity;
 
 import std.algorithm;
 
-
 import graphics.debugging;
 
-import pos;
+import util.pos;
 import util.rangefromto;
 import util.util;
 
@@ -60,7 +59,7 @@ private mixin template ActivityHandlerMethods() {
         foreach(sectorNum, unrelevant ; relevantSectors) {
             int count = 0;
             int oldCount = sectorNum in activeSectors ? activeSectors[sectorNum] : 0;
-            foreach(clan ; clans) {
+            foreach(clan ; Clans().getClans()) {
                 count += cast(int)clan.activeSector(sectorNum);
             }
 

@@ -37,6 +37,7 @@ class GuiElementProgressBar : public GuiElement {
     void setMax(uint val) {
         max = val;
     }
+    double oldRatio;
     void setProgress(uint val) {
         progress = val;
         progressBar = absoluteRect.diff(1,1,-1,-1);
@@ -46,8 +47,12 @@ class GuiElementProgressBar : public GuiElement {
         } else {
             ratio = 0;
         }
-        progressBar.size.X = to!int( ratio * to!double(progressBar.size.X));
-        updateText();
+        auto oldX = progressBar.size.X;
+        progressBar.size.X = cast(int)( ratio * cast(double)progressBar.size.X);
+        if(oldRatio != ratio) {
+            oldRatio = ratio;
+            updateText();
+        }
     }
     
     private void updateText() {

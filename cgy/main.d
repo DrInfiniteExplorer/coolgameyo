@@ -19,6 +19,8 @@ import derelict.sdl.sdl;
 import derelict.opengl.gl;
 import derelict.devil.il;
 
+import win32.windows;
+
 import graphics.ogl;
 
 
@@ -26,7 +28,7 @@ import gui.guisystem.guisystem;
 
 import game;
 
-import pos;
+import util.pos;
 import statistics;
 import settings;
 import util.memory;
@@ -38,8 +40,14 @@ import worldgen.maps : worldSize;
 
 import modelparser.cgyparser;
 
+
+
+extern (Windows) alias uint function(void*) btex_fptr;
+extern (C) uint* _beginthreadex(void*, uint, btex_fptr, void*, uint, uint*);
+const CREATE_SUSPENDED = 0x00000004;
+
 version (Windows) {
-import std.c.windows.windows;
+//import std.c.windows.windows;
 
     extern (Windows) int WinMain(HINSTANCE hInstance,
             HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
@@ -47,12 +55,13 @@ import std.c.windows.windows;
 
         void exceptionHandler(Throwable e)
         {
+            BREAKPOINT;
             MessageBoxA(null, e.toString().toStringz(),
                     "Error1", MB_OK | MB_ICONEXCLAMATION);
             throw e;
         }
 
-        try
+        //try
         {
             Runtime.initialize(&exceptionHandler);
 
@@ -61,6 +70,7 @@ import std.c.windows.windows;
             //exit(0); //TODO: Fix. If not here, we get bad and sad memory errors the following line :(
             Runtime.terminate(&exceptionHandler);
         }
+        /*
         catch (Throwable o) // catch any uncaught exceptions
         {
             version (NoMessageBox) {
@@ -72,6 +82,7 @@ import std.c.windows.windows;
             }
             result = 0; // failed
         }
+        */
         return result;
     }
 
@@ -125,7 +136,7 @@ class Main {
     }
     
     void createWindow() {
-        enforce(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_NOPARACHUTE) == 0,
+        std.exception.enforce(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_NOPARACHUTE) == 0,
                 SDLError());
         
         if (client) {
@@ -185,7 +196,15 @@ class Main {
     
     bool inputActive = true;
     long then;
+    bool enableGCHook = false;
+    import util.strings : StringBuilder;
+    StringBuilder fpsStringBuilder;
     void run() {
+        {
+            import util.gc;
+            //util.gc.enableGCHook();
+            util.gc.setGCHookSize(100);
+        }
         long now, nextTime = utime();
         auto exit = false;
         SDL_Event event;
@@ -193,6 +212,21 @@ class Main {
         while (!exit) {
             while (SDL_PollEvent(&event)) {
                 guiEvent.eventTimeStamp = now / 1_000_000.0;
+
+                if(event.type == SDL_KEYDOWN) {
+                    if(event.key.keysym.sym == SDLK_u){
+                        enableGCHook = !enableGCHook;
+                        if(enableGCHook) {
+                            import util.gc;
+                            util.gc.enableGCHook();
+                        } else {
+                            import util.gc;
+                            util.gc.disableGCHook();
+                        }
+                    }
+                }
+
+
                 switch (event.type){
                     case SDL_ACTIVEEVENT:
                         if(event.active.state & SDL_APPINPUTFOCUS) {
@@ -277,17 +311,24 @@ class Main {
             float deltaT = to!float(diff) / 1_000_000.0f;            
             then = now;
             if (game) {
+                //mixin(MemDiff!("game.render"));
                 game.render(diff);
             }
-            guiSystem.tick(deltaT); //Eventually add deltatime and such as well :)
-            guiSystem.render();            
-            
+            { 
+                //mixin(MemDiff!("gui.tick"));
+                guiSystem.tick(deltaT); //Eventually add deltatime and such as well :)
+            }
+            {
+                //mixin(MemDiff!("gui.render"));
+                guiSystem.render();            
+            }
+
             SDL_GL_SwapBuffers();
 
             if(nextTime < utime()) {
                 nextTime = utime() + 1_000_000; //1 sec
-                auto str = format("CoolGameYo! ~ %d", getMemoryUsage());
-                SDL_WM_SetCaption( toStringz(str), "Herp");
+                auto str = fpsStringBuilder("CoolGameYo! ~ %d\0", getMemoryUsage());
+                SDL_WM_SetCaption( cast(const char*)str, "Herp");
             }
 
             if (game) {
@@ -320,8 +361,15 @@ class Main {
     }
 }
 
+
+
 import worldstate.worldstate;
 void actualMain() {    
+
+    import util.gc;
+    util.gc.installGCHook();
+    //util.gc.enableGCHook();
+    //util.gc.enableMallocDebug();
 
     version (Windows) {
         bool client = true;
@@ -329,6 +377,27 @@ void actualMain() {
         // plols laptop cant handle the CLIENT STUFF WHOOOOAAhhhh....!!
         bool client = false;
     }
+
+    /*
+    import util.strings;
+    StringBuilder builder;
+    builder.write("Hey %s", "Hopp");
+    auto str = builder.str;
+    writeln(str);
+
+    builder.write("Hej %s", "Hopp");
+    writeln(str);
+    auto str2 = builder.str;
+    writeln(str2);
+
+    if(str2 !is null) {
+        return;
+    }
+    */
+
+    //disableDynamicAlloc();
+//    msg("Managed to reserve ", GC.reserve(1024*1024*1024) / (1024*1024), " megabytes of memory");
+
 
     msg("worldSize: ", worldSize / 1_000, " km");
     foreach(idx, size ; mapScale) {
@@ -338,8 +407,11 @@ void actualMain() {
         msg("ptScale ", idx, " : ", size);
     }
 
+
+
     Main main = new Main(client, true, true); //Be a worker? lolololol
     main.run();
     main.destroy();
+
 }
 
