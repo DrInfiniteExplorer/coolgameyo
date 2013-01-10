@@ -225,15 +225,18 @@ final class TileGeometry : Module, WorldStateListener
 
         this(GraphRegionNum num_, TileGeometry geom_) {
             num = num_;
-            assert (geom !is null);
             geom = geom_;
+            assert (geom !is null);
         }
         void taskFunc(WorldProxy world) {
             geom.buildGraphicsRegion(num);
         }
     }
 
-    NumWrapper[] regionsToUpdate; //Only used in taskFunc and where we populate it, mutually exclusive locations.
+    NumWrapper[GraphRegionsPerTick] taskedRegions;
+
+    GraphRegionNum[] regionsToUpdate; //Only used in taskFunc and where we populate it, mutually exclusive locations.
+
     Mutex updateMutex;
 
     Camera camera;
@@ -489,8 +492,7 @@ final class TileGeometry : Module, WorldStateListener
         
         mixin(LogTime!("MakeGeometryTasks"));
 
-        double computeValue(NumWrapper numw) {
-            auto num = numw.num;
+        double computeValue(GraphRegionNum num) {
             const auto graphRegionAcross = sqrt(to!double(  GraphRegionSize.x*GraphRegionSize.x +
                                                             GraphRegionSize.y*GraphRegionSize.y +
                                                             GraphRegionSize.z*GraphRegionSize.z));
@@ -520,9 +522,11 @@ final class TileGeometry : Module, WorldStateListener
         auto nums = regionsToUpdate[$-cnt .. $];
         regionsToUpdate.length -= cnt;
         assumeSafeAppend(regionsToUpdate); //Pretty safe yes
-        foreach(num ; nums) {
-            scheduler.push(asyncTask(&num.taskFunc));
-        }        
+
+        foreach(i, num; nums) {
+            taskedRegions[i] = NumWrapper(num, this);
+            scheduler.push(syncTask(&taskedRegions[i].taskFunc));
+        }
     }
 
     bool solidNearAirBorder(GraphRegionNum grNum) {
@@ -532,7 +536,7 @@ final class TileGeometry : Module, WorldStateListener
     }
 
     void onAddUnit(SectorNum, Unit) { }
-	void onAddEntity(SectorNum, Entity) { }
+    void onAddEntity(SectorNum, Entity) { }
 
     void onBuildGeometry(SectorNum sectorNum) {
         //version(Windows) auto start = GetTickCount();
@@ -547,12 +551,12 @@ final class TileGeometry : Module, WorldStateListener
         //ASSUMES THAT WE ARE IN THE UPDATE PHASE, OTHERWISE THIS MAY INTRODUCE PROBLEMS AND SUCH. :)
         //*
         assert (this !is null);
-        NumWrapper[] newRegions;
+        GraphRegionNum[] newRegions;
         foreach(pos ; RangeFromTo (grNumMin.value, grNumMax.value)) {
             auto grNum = GraphRegionNum(pos);
             if(solidNearAirBorder(grNum)){
                 //msg("Has content;", grNum);
-                newRegions ~= NumWrapper(grNum, this);
+                newRegions ~= grNum;
             }
         }
         if(newRegions.length != 0){
@@ -570,7 +574,7 @@ final class TileGeometry : Module, WorldStateListener
         int removedCount = 0;
         int count = regionsToUpdate.length;
         for(int i = 0; i < count; i++) {
-            if(regionsToUpdate[i].num.getSectorNum() == sectorNum) {
+            if(regionsToUpdate[i].getSectorNum() == sectorNum) {
                 regionsToUpdate[i] = regionsToUpdate[$-1];
                 count--;
                 removedCount++;
@@ -584,14 +588,12 @@ final class TileGeometry : Module, WorldStateListener
 
     }
     void onUpdateGeometry(TilePos tilePos) {
-        NumWrapper[] newRegions;
+        GraphRegionNum[] newRegions;
         auto tileAABB = tilePos.getAABB();
 
-        newRegions ~= NumWrapper(tilePos.getGraphRegionNum(), this); 
+        newRegions ~= tilePos.getGraphRegionNum();
         //Check neighboring graphregions as well.
-        foreach (neighbor; tilePos.getNeighboringGraphRegionNums()) {
-            newRegions ~= NumWrapper(neighbor, this);
-        }
+        newRegions ~= tilePos.getNeighboringGraphRegionNums();
 
         updateMutex.lock();
         scope(exit) updateMutex.unlock();
