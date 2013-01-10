@@ -13,6 +13,7 @@ import scheduler;
 import util.util;
 import util.filesystem;
 import util.array;
+import changes.worldproxy;
 
 alias util.array.Array Array;
 
@@ -87,7 +88,7 @@ final class PathModule : Module {
     PathID findPath(UnitPos[] from, UnitPos[] to) {
         synchronized(this) {
             auto ret = PathID(nextIDNum++);
-            activeStates[ret] = PathFindState(from, to);
+            activeStates[ret] = PathFindState(from, to, ret, &finishPath);
             return ret;
         }
     }
@@ -145,14 +146,7 @@ final class PathModule : Module {
                 i += 1;
                 if (i >= maxPathTicks) { break; }
 
-                scheduler.push(
-                        asyncTask(
-                            ((id, state) => {
-                                 if (state.tick(world)) {
-                                     assert(state.finished);
-                                     finishPath(id);
-                                 }
-                             })(id, &state)));
+                scheduler.push(asyncTask(&state.tick));
             }
         }
     }
@@ -185,10 +179,17 @@ static struct PathFindState {
 
     int tick_count;
 
-    this(UnitPos[] from_, UnitPos[] goal_) {
+    PathID id;
+    void delegate(PathID) finishPath;
+
+    this(UnitPos[] from_, UnitPos[] goal_, PathID id_, 
+            void delegate(PathID) finishPath_) {
 
         from = from_.dup;
         goal = goal_.dup;
+
+        id = id_;
+        finishPath = finishPath_;
         
         closed = new Set;
         openf = new Set;
@@ -215,7 +216,7 @@ static struct PathFindState {
         }
     }
 
-    bool tick(WorldState world) {
+    void tick(WorldProxy world) {
         assert (!finished);
         foreach (i; 0 .. stateTickCount) {
 
@@ -232,14 +233,16 @@ static struct PathFindState {
             // really care, I guess? (-:
 
             tickety!true(world);
-            if (finished) { return true; }
+            if (finished) { break; }
             tickety!false(world);
-            if (finished) { return true; }
+            if (finished) { break; }
         }
-        return false;
+        if (finished) {
+            finishPath(id);
+        }
     }
 
-    void tickety(bool fwd)(WorldState world) {
+    void tickety(bool fwd)(WorldProxy world) {
         alias CondAlias!(fwd, openf, openb) open;
         alias CondAlias!(!fwd, openf, openb) other;
 
@@ -253,7 +256,7 @@ static struct PathFindState {
         auto x = findSmallest!fwd();
 
         if (x in other) {
-            completePath(world, x);
+            completePath(x);
             finished = true;
             return;
         }
@@ -317,7 +320,7 @@ static struct PathFindState {
     immutable moveDownRegular = 2.7;
     immutable normalStep = 1.0;
 
-    double costBetween(WorldState world, TilePos a, TilePos b) {
+    double costBetween(WorldProxy world, TilePos a, TilePos b) {
 
         if (a.value.Z == b.value.Z) {
             return normalStep;
@@ -335,7 +338,7 @@ static struct PathFindState {
         return estimateFactor * sqrt(cast(real)xx + yy + zz);
     }
 
-    void completePath(WorldState world, TilePos x) {
+    void completePath(TilePos x) {
         UnitPos[] p;
         TilePos y = x;
 
@@ -375,7 +378,7 @@ static struct PathFindState {
     // BUG: TODO: I have no idea if this is correct code
     // TODO: Now only walks {n,e,s,w}, should walk diagonally as well
     private static struct AvailibleNeighbors(bool fwd) {
-        WorldState world;
+        WorldProxy world;
         TilePos around;
 
         private {
@@ -385,7 +388,7 @@ static struct PathFindState {
             TilePos below(TilePos tp) {
                 return TilePos(tp.value - vec3i(0,0,1));
             }
-            Tile tile(TilePos tp) { return world.getTile(tp, false); }
+            Tile tile(TilePos tp) { return world.getTile(tp); }
             bool clear(TilePos tp) { return tile(tp).isAir; }
             bool solid(TilePos tp) { return !clear(tp); }
             bool pathable(TilePos tp) { return clear(tp) && solid(below(tp)); }
@@ -461,7 +464,7 @@ static struct PathFindState {
         }
     }
 
-    auto availibleNeighbors(bool fwd)(WorldState world, TilePos tp) {
+    auto availibleNeighbors(bool fwd)(WorldProxy world, TilePos tp) {
         return AvailibleNeighbors!fwd(world, tp);
     }
 }
