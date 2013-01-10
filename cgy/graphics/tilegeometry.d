@@ -219,7 +219,21 @@ template FixLighting(const string A, const int num, const int dir, const string 
 
 final class TileGeometry : Module, WorldStateListener
 {
-    GraphRegionNum[] regionsToUpdate; //Only used in taskFunc and where we populate it, mutually exclusive locations.
+    static struct NumWrapper {
+        GraphRegionNum num;
+        TileGeometry geom;
+
+        this(GraphRegionNum num_, TileGeometry geom_) {
+            num = num_;
+            assert (geom !is null);
+            geom = geom_;
+        }
+        void taskFunc(WorldProxy world) {
+            geom.buildGraphicsRegion(num);
+        }
+    }
+
+    NumWrapper[] regionsToUpdate; //Only used in taskFunc and where we populate it, mutually exclusive locations.
     Mutex updateMutex;
 
     Camera camera;
@@ -454,12 +468,6 @@ final class TileGeometry : Module, WorldStateListener
         tileRenderer.updateGeometry(grNum, tileFaces);
     }
 
-    void taskFunc(WorldProxy world, GraphRegionNum grNum) {
-        //TODO: Maybe move geometry-building-timing to here?
-        buildGraphicsRegion(grNum);
-    }
-
-   
     override void serializeModule() { 
         //Do nothing. Rebuild geometry when loading instead.
         //TODO: In the future, examine saving of polygon data.
@@ -481,7 +489,8 @@ final class TileGeometry : Module, WorldStateListener
         
         mixin(LogTime!("MakeGeometryTasks"));
 
-        double computeValue(GraphRegionNum num) {
+        double computeValue(NumWrapper numw) {
+            auto num = numw.num;
             const auto graphRegionAcross = sqrt(to!double(  GraphRegionSize.x*GraphRegionSize.x +
                                                             GraphRegionSize.y*GraphRegionSize.y +
                                                             GraphRegionSize.z*GraphRegionSize.z));
@@ -512,13 +521,7 @@ final class TileGeometry : Module, WorldStateListener
         regionsToUpdate.length -= cnt;
         assumeSafeAppend(regionsToUpdate); //Pretty safe yes
         foreach(num ; nums) {
-            //Trixy trick below; if we dont do this, the value num will be shared by all pushed tasks.
-            (GraphRegionNum num){
-                scheduler.push(asyncTask(
-                    (WorldProxy world){
-                        taskFunc(world, num);
-                    }));
-            }(num);
+            scheduler.push(asyncTask(&num.taskFunc));
         }        
     }
 
@@ -543,12 +546,13 @@ final class TileGeometry : Module, WorldStateListener
         //TODO: figure out what kind of problems i was referring to.
         //ASSUMES THAT WE ARE IN THE UPDATE PHASE, OTHERWISE THIS MAY INTRODUCE PROBLEMS AND SUCH. :)
         //*
-        GraphRegionNum[] newRegions;
+        assert (this !is null);
+        NumWrapper[] newRegions;
         foreach(pos ; RangeFromTo (grNumMin.value, grNumMax.value)) {
             auto grNum = GraphRegionNum(pos);
             if(solidNearAirBorder(grNum)){
                 //msg("Has content;", grNum);
-                newRegions ~= grNum;
+                newRegions ~= NumWrapper(grNum, this);
             }
         }
         if(newRegions.length != 0){
@@ -566,7 +570,7 @@ final class TileGeometry : Module, WorldStateListener
         int removedCount = 0;
         int count = regionsToUpdate.length;
         for(int i = 0; i < count; i++) {
-            if(regionsToUpdate[i].getSectorNum() == sectorNum) {
+            if(regionsToUpdate[i].num.getSectorNum() == sectorNum) {
                 regionsToUpdate[i] = regionsToUpdate[$-1];
                 count--;
                 removedCount++;
@@ -580,27 +584,15 @@ final class TileGeometry : Module, WorldStateListener
 
     }
     void onUpdateGeometry(TilePos tilePos) {
-        GraphRegionNum[] newRegions;
+        NumWrapper[] newRegions;
         auto tileAABB = tilePos.getAABB();
-        /*
-        {
-            regionMutex.lock();
-            scope(exit) regionMutex.unlock();
-            foreach(region ; regions){
-                if(tileAABB.intersectsWithBox(region.grNum.getAABB())){
-                    newRegions ~= region.grNum;
-                }
-            }
-        }
-        */
 
-        //Example, we dug into a yet invisible area.
-        //Maybe let the floodfill take care of it instead, somehow?
-        //dunno. think it's needed here as well.
-        //if(newRegions.length == 0) {
-            newRegions ~= tilePos.getGraphRegionNum(); //Check neighboring graphregions as well.
-            newRegions ~= tilePos.getNeighboringGraphRegionNums();
-        //}
+        newRegions ~= NumWrapper(tilePos.getGraphRegionNum(), this); 
+        //Check neighboring graphregions as well.
+        foreach (neighbor; tilePos.getNeighboringGraphRegionNums()) {
+            newRegions ~= NumWrapper(neighbor, this);
+        }
+
         updateMutex.lock();
         scope(exit) updateMutex.unlock();
         regionsToUpdate ~= newRegions;
