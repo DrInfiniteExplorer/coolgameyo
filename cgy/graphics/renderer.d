@@ -123,11 +123,14 @@ class Renderer {
         glError();
 
         if(setDelegate is null) {
-            void set(vec3f color, float radius){
-                lineShader.setUniform(lineShader.color, color);
-                lineShader.setUniform(lineShader.radius, radius);            
+            static auto derp(LineShaderProgram lineShader) {
+                void set(vec3f color, float radius){
+                    lineShader.setUniform(lineShader.color, color);
+                    lineShader.setUniform(lineShader.radius, radius);            
+                }
+                return &set;
             }
-            setDelegate = &set;
+            setDelegate = derp(lineShader);
         }
         
         //Now set is the same always!

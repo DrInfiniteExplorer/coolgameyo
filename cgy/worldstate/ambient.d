@@ -4,43 +4,91 @@ module worldstate.ambient;
 
 mixin template LightStorageMethods() {
 
+    import std.container : BinaryHeap, heapify;
+    import util.array : Array;
     struct LightPropagationData {
         TilePos tilePos;
         byte strength;
     }
+    alias util.array.Array!LightPropagationData LPDArray;
+    alias BinaryHeap!(LPDArray, "a.strength < b.strength") LightHeap;
 
-    private void unspreadLights(bool sunLight, ref LightPropagationData[] lightSources, LightPropagationData[] toUnlight, ref bool[BlockNum] modifiedBlocks) {
-        LightPropagationData[] moreToUnlight;
-        foreach(data ; toUnlight) {
+    
+
+    LightHeap lightSources;
+    LightHeap sunLightSources;
+    LightHeap sunUnLight;
+    LightHeap unspread;
+
+    unittest {
+        alias util.array.ArrayClass!int ASD;
+        alias BinaryHeap!(ASD, "a < b") DSA;
+        auto arr = new ASD();
+        auto heap = DSA();
+        msg(&arr);
+        msg(&arr.storage);
+        heap.assume(arr);
+        heap.insert(1);
+        heap.insert(2);
+        heap.insert(3);
+        msg(heap.length);
+        msg(arr.length);
+
+        arr.length = 0;
+        msg(heap.length);
+        msg(arr.length);
+        heap.assume(arr);
+        msg(heap.length);
+        msg(arr.length);
+        heap.insert(1);
+        heap.insert(2);
+        heap.insert(3);
+        heap.insert(4);
+        msg(heap.length);
+        msg(arr.length);
+
+    }
+
+
+    private void unspreadLights(bool sunLight, ref LightHeap lightSources, LightHeap toUnlight, ref bool[BlockNum] modifiedBlocks) {
+
+        while(!toUnlight.empty()) {
+            auto data = toUnlight.front();
+            toUnlight.removeFront();
+
             byte oldLightValue = data.strength;
             auto tilePos = data.tilePos;
             modifiedBlocks[tilePos.getBlockNum()] = true;
-            setTileLightVal(tilePos, 0, sunLight);
+            setTileLightVal(tilePos, 0, sunLight); //Visited; Now move along, nothing to see here.
 
             foreach(newTilePos ; neighbors(data.tilePos)) {
                 modifiedBlocks[newTilePos.getBlockNum()] = true;
                 auto tile = getTile(newTilePos);
-                if(!tile.isAir) continue;
+                if(!tile.isAir) continue; //Dont affect solid tiles, in fact dont care about them at all
                 byte neighborLightValue = tile.getLight(sunLight);
-                if( neighborLightValue <= 0) continue; //Dont continue to unflood where there is no light
-                if(neighborLightValue < oldLightValue) {
+                if( neighborLightValue <= 0) continue; //Dont continue to unflood where there is no light. We might have come here earlier, from anotehr direction
+                if(neighborLightValue < oldLightValue) { //If the value is less than where we came from (and > 0), mark it and add to visit.
                     //Tile has lower light value; Add to unspread-queue
                     setTileLightVal(newTilePos, 0, sunLight);
-                    moreToUnlight ~= LightPropagationData(newTilePos, neighborLightValue);
+                    toUnlight.insert(LightPropagationData(newTilePos, neighborLightValue));
+
+                //If we encountered a value higher than our own, add it so we can flood back from it.
+                // Used to be >= but since we now support batched changes, two tiles next to each other might
+                //  have the same value, and BOTH shall be visited, so don't prematurely mark it as flood-back-from!
+                //   Although.. how does one handle cases like 5  4  3 [3] [4] [5] ...
+                //    It will not unflood into the 3. But it will not flood back either. Remarkably annoying!
                 } else if(neighborLightValue >= oldLightValue) {
                     //Floodfill back in again
-                    lightSources ~= LightPropagationData(newTilePos, neighborLightValue);
+                    lightSources.insert(LightPropagationData(newTilePos, neighborLightValue));
                 }
             }
         }
-        if(moreToUnlight.length > 0) {
-            unspreadLights(sunLight, lightSources, moreToUnlight, modifiedBlocks);
-        }
     }
 
-    private void spreadLights(bool sunLight, LightPropagationData[] lightSources, ref bool[BlockNum] modifiedBlocks) {
-        LightPropagationData[] moreLightSources;
-        foreach(source; lightSources) {
+    private void spreadLights(bool sunLight, LightHeap lightSources, ref bool[BlockNum] modifiedBlocks) {
+        while(!lightSources.empty){
+            auto source = lightSources.front;
+            lightSources.removeFront();
             auto lightStrength = source.strength;
             auto tilePos = source.tilePos;
             modifiedBlocks[tilePos.getBlockNum()] = true;
@@ -59,23 +107,21 @@ mixin template LightStorageMethods() {
                     //Case found, see http://luben.se/wiki/index.php?page=flooding_lulz
                     byte newLightVal = cast(byte)(neighborLightValue-1);
                     setTileLightVal(tilePos, newLightVal, sunLight);
-                    moreLightSources ~= LightPropagationData(tilePos, newLightVal);
+                    lightSources.insert(LightPropagationData(tilePos, newLightVal));
                 } else if(neighborLightValue < spreadLightStrength) {
                     //Else if neighbor has lower light than we want to spread, spread light! (if we can :p)
                     if(spreadLightStrength > 0) {
                         setTileLightVal(newTilePos, spreadLightStrength, sunLight);
-                        moreLightSources ~= LightPropagationData(newTilePos, cast(byte)spreadLightStrength);
+                        lightSources.insert(LightPropagationData(newTilePos, cast(byte)spreadLightStrength));
                     }
                 }
             }
         }
-        if(moreLightSources.length > 0) {
-            spreadLights(sunLight, moreLightSources, modifiedBlocks);
-        }
     }
 
     private void updateLights(bool sunLight, TilePos min, TilePos max) {
-        LightPropagationData[] toUnspread;
+        BREAKPOINT; //Is this function ever called?
+        LightHeap toUnspread;
         bool[BlockNum] modifiedBlocks;
         foreach(pos ; RangeFromTo(min.value, max.value)) {
             auto tilePos = TilePos(pos);
@@ -85,10 +131,10 @@ mixin template LightStorageMethods() {
             if(pos.X == min.value.X || pos.X == max.value.X ||
                pos.Y == min.value.Y || pos.Y == max.value.Y ||
                pos.Z == min.value.Z || pos.Z == max.value.Z) {
-                   toUnspread ~= LightPropagationData(tilePos, oldLightValue);
+                   toUnspread.insert(LightPropagationData(tilePos, oldLightValue));
                }
         }
-        LightPropagationData[] lightSources;
+        LightHeap lightSources;
         unspreadLights(sunLight, lightSources, toUnspread, modifiedBlocks);
     }
 
@@ -101,7 +147,9 @@ mixin template LightStorageMethods() {
         enforce(sector !is null, "Cant add lights to sectors that dont exist you dummy!");
         sector.addLight(light);
         
-        spreadLights(false, [LightPropagationData(tilePos, light.strength)], modifiedBlocks);
+        LightHeap lights;
+        lights.insert(LightPropagationData(tilePos, light.strength));
+        spreadLights(false, lights, modifiedBlocks);
         foreach(blockNum, trueVal ; modifiedBlocks) {
             auto tilePos = blockNum.toTilePos();
             notifyUpdateGeometry(tilePos);
@@ -120,9 +168,11 @@ mixin template LightStorageMethods() {
         enforce(sector !is null, "Cant remove lights to sectors that dont exist you dummy!");
         sector.removeLight(light);
 
-        LightPropagationData[] lightSources;
+        LightHeap lightSources;
+        LightHeap toUnspread;
+        toUnspread.insert(LightPropagationData(tilePos, light.strength));
         //unspreadLights(false, lightSources, toUnspread, modifiedBlocks);
-        unspreadLights(false, lightSources, [LightPropagationData(tilePos, light.strength)], modifiedBlocks);
+        unspreadLights(false, lightSources, toUnspread, modifiedBlocks);
         spreadLights(false, lightSources, modifiedBlocks);
         foreach(blockNum, trueVal ; modifiedBlocks) {
             auto tilePos = blockNum.toTilePos();
@@ -138,8 +188,8 @@ mixin template LightStorageMethods() {
     //Then notify and update the geometry
     // Remember, removing a tile will only ever increase the spread light, not remove light!
     void removeTile(Tile[TilePos] tilePositions) {
-        LightPropagationData[] lightSources;
-        LightPropagationData[] sunLightSources;
+        LightHeap lightSources;
+        LightHeap sunLightSources;
         bool[BlockNum] modifiedBlocks;
         foreach(tilePos, newTile ; tilePositions) {
             auto tileAbove = getTile(TilePos(tilePos.value + vec3i(0, 0, 1)));
@@ -162,7 +212,7 @@ mixin template LightStorageMethods() {
                     //the second iteration, and so on.
                     modifiedBlocks[iterTilePos.getBlockNum()] = true;
                     setTileLightVal(iterTilePos, MaxLightStrength, true);
-                    sunLightSources ~= LightPropagationData(iterTilePos, MaxLightStrength);
+                    sunLightSources.insert(LightPropagationData(iterTilePos, MaxLightStrength));
                     z--;
                 }
             }
@@ -188,10 +238,10 @@ mixin template LightStorageMethods() {
                 }
             }
             if(max > 1) {
-                lightSources ~= brightest;
+                lightSources.insert(brightest);
             }
             if(maxSun > 1) {
-                sunLightSources ~= brightestSun;
+                sunLightSources.insert(brightestSun);
             }
         }
 
@@ -206,13 +256,12 @@ mixin template LightStorageMethods() {
     }
 
     void addTile(Tile[TilePos] tilePositions) {
+        bool[BlockNum] modifiedBlocks;
         foreach(tilePos, oldTile ; tilePositions) {
-            LightPropagationData[] lightSources;
-            LightPropagationData[] sunLightSources;
-            LightPropagationData[] sunUnLight;
-            bool[BlockNum] modifiedBlocks;
+            auto oldSunLight = oldTile.getLight(true);
+            auto tile = getTile(tilePos);
 
-            sunUnLight ~= LightPropagationData(tilePos, oldTile.getLight(true));
+            sunUnLight.insert(LightPropagationData(tilePos, oldSunLight));
             setTileLightVal(tilePos, 0, true);
             if( oldTile.sunlight) {
                 //If below sunlight, spread sunlight downward until we find a solid object.
@@ -221,26 +270,30 @@ mixin template LightStorageMethods() {
                 while(true){
                     auto iterTilePos = TilePos(vec3i(tilePos.value.X, tilePos.value.Y, z));
                     auto iterTile = getTile(iterTilePos);
-                    if(!iterTile.isAir) {
+                    auto iterTileStrength = tile.getLight(true);
+                    if(!iterTile.isAir || iterTileStrength == 0) {
                         break;
                     }
-                    setTileLightVal(iterTilePos, 0, true);
-                    modifiedBlocks[iterTilePos.getBlockNum()] = true;
-                    sunUnLight ~= LightPropagationData(iterTilePos, MaxLightStrength);
+                    setTileLightVal(iterTilePos, 0, true); //LET HTERE BE NO ENLIGHETNMENT
+                    modifiedBlocks[iterTilePos.getBlockNum()] = true; //ENTAR AN ERA OF DAKRNESS
+                    sunUnLight.insert(LightPropagationData(iterTilePos, iterTileStrength));
                     z--;
                 }
             }
-
-            unspreadLights(false, lightSources, [LightPropagationData(tilePos, oldTile.getLight(false))], modifiedBlocks);
+            auto oldVal = oldTile.getLight(false);
+            if(oldVal) {
+                unspread.insert(LightPropagationData(tilePos, oldVal));
+            }
+            unspreadLights(false, lightSources, unspread, modifiedBlocks);
             unspreadLights(true, sunLightSources, sunUnLight, modifiedBlocks);
-        
+
             spreadLights(false, lightSources, modifiedBlocks);
             spreadLights(true, sunLightSources, modifiedBlocks);
+        }
 
-            foreach(blockNum, trueVal ; modifiedBlocks) {
-                auto tilePos = blockNum.toTilePos();
-                notifyUpdateGeometry(tilePos);
-            }
+        foreach(blockNum, trueVal ; modifiedBlocks) {
+            auto tilePos = blockNum.toTilePos();
+            notifyUpdateGeometry(tilePos);
         }
     }
 

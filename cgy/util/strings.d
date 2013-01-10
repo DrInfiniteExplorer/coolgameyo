@@ -39,8 +39,8 @@ struct StringBuilder {
 
     void write(T...)(T t) {
         _str.length = 0;
-        pragma(msg, "!" ~ typeof(t[0]).stringof);
-        pragma(msg, "!" ~ typeof(t[1]).stringof);
+        //pragma(msg, "!" ~ typeof(t[0]).stringof);
+        //pragma(msg, "!" ~ typeof(t[1]).stringof);
         formattedWrite!(typeof(&this), char)(&this, t);
     }
 

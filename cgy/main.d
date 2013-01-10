@@ -367,7 +367,7 @@ import worldstate.worldstate;
 void actualMain() {    
 
     import util.gc;
-    util.gc.installGCHook();
+    //util.gc.installGCHook();
     //util.gc.enableGCHook();
     //util.gc.enableMallocDebug();
 

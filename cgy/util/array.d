@@ -8,22 +8,16 @@ module util.array;
 
 import std.traits;
 
-struct Array(T) {
+//Unsafe to initialize a binaryheap with an instance of this; does a bitblit, so the storage is shared but the virtualLength is different, etc.
+
+private mixin template ArrayFunctionality(T) {
+
+    alias typeof(this) ThisType;
     T[] storage;
 
-    size_t virtualLength;
+    private size_t virtualLength;
 
-    size_t length() @property {
-        return virtualLength;
-    }
-    void length(size_t newSize) @property {
-        if(newSize > storage.length) {
-            grow(findFittingSize(newSize));
-        }
-        virtualLength = newSize;
-    }
-
-    size_t findFittingSize(size_t atLeast) {
+    private size_t findFittingSize(size_t atLeast) {
         size_t now = storage.length;
         while(now < atLeast) {
             now = (now + 1) * 2 - 1;
@@ -31,9 +25,25 @@ struct Array(T) {
         return now;
     }
 
-    void grow(size_t newSize) {
+    private void grow(size_t newSize) {
         if(newSize <= storage.length) return;
         storage.length = newSize;
+    }
+
+    ref T back() @property {
+        return storage[virtualLength-1];
+    }
+
+    ThisType dup() @property {
+        import std.exception : enforce;
+        enforce(0, "Implement util.array.Array.dup when it's really needed!");
+        return typeof(this).init;
+    }
+
+    bool empty() @property const { return virtualLength==0; }
+
+    ref T front() @property {
+        return storage[0];
     }
 
     alias insert insertBack;
@@ -56,9 +66,25 @@ struct Array(T) {
         }
     }
 
-    void reset() { virtualLength = 0; }
+
+    size_t length() @property {
+        return virtualLength;
+    }
+    void length(size_t newSize) @property {
+        if(newSize > storage.length) {
+            grow(findFittingSize(newSize));
+        }
+        virtualLength = newSize;
+    }
+
     void nuke() { storage = null; virtualLength = 0; }
 
+
+    void popBack(){
+        virtualLength -= 1;
+        import std.exception : enforce;
+        enforce(virtualLength >= 0, "Cannot pop this much!!!! =(");
+    }
 
     T removeAny() {
         virtualLength -= 1;
@@ -69,11 +95,13 @@ struct Array(T) {
         assert (virtualLength >= howMany);
         virtualLength -= howMany;
     }
-
-    bool empty() @property const { return virtualLength==0; }
+    void reset() { virtualLength = 0; }
 
     T[] opSlice() {
         return storage[0 .. virtualLength];
+    }
+    T[] opSlice(size_t lower, size_t upper) {
+        return storage[lower .. upper];
     }
 
     ref T opIndex(size_t index) {
@@ -86,3 +114,10 @@ struct Array(T) {
     }
 }
 
+struct Array(T) {
+    mixin ArrayFunctionality!T;
+}
+
+class ArrayClass(T) {
+    mixin ArrayFunctionality!T;
+}
