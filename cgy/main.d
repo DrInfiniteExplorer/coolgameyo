@@ -46,56 +46,56 @@ extern (Windows) alias uint function(void*) btex_fptr;
 extern (C) uint* _beginthreadex(void*, uint, btex_fptr, void*, uint, uint*);
 const CREATE_SUSPENDED = 0x00000004;
 
-version (Windows) {
-//import std.c.windows.windows;
-
-    extern (Windows) int WinMain(HINSTANCE hInstance,
-            HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
-        int result;
-
-        void exceptionHandler(Throwable e)
-        {
-            BREAKPOINT;
-            MessageBoxA(null, e.toString().toStringz(),
-                    "Error1", MB_OK | MB_ICONEXCLAMATION);
-            throw e;
-        }
-
-        //try
-        {
-            Runtime.initialize(&exceptionHandler);
-
-            result = myWinMain(hInstance, hPrevInstance, lpCmdLine, nCmdShow);
-
-            //exit(0); //TODO: Fix. If not here, we get bad and sad memory errors the following line :(
-            Runtime.terminate(&exceptionHandler);
-        }
-        /*
-        catch (Throwable o) // catch any uncaught exceptions
-        {
-            version (NoMessageBox) {
-                write(o, "\n\nderp: ");
-                readln();
-            } else {
-                MessageBoxA(null, o.toString().toStringz(),
-                        "Error2", MB_OK | MB_ICONEXCLAMATION);
-            }
-            result = 0; // failed
-        }
-        */
-        return result;
-    }
-
-    int myWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
-    {
-        actualMain();
-        return 0;
-    }
-} else {
+//version (Windows) {
+////import std.c.windows.windows;
+//
+//    extern (Windows) int WinMain(HINSTANCE hInstance,
+//            HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
+//        int result;
+//
+//        void exceptionHandler(Throwable e)
+//        {
+//            BREAKPOINT;
+//            MessageBoxA(null, e.toString().toStringz(),
+//                    "Error1", MB_OK | MB_ICONEXCLAMATION);
+//            throw e;
+//        }
+//
+//        //try
+//        {
+//            Runtime.initialize(&exceptionHandler);
+//
+//            result = myWinMain(hInstance, hPrevInstance, lpCmdLine, nCmdShow);
+//
+//            //exit(0); //TODO: Fix. If not here, we get bad and sad memory errors the following line :(
+//            Runtime.terminate(&exceptionHandler);
+//        }
+//        /*
+//        catch (Throwable o) // catch any uncaught exceptions
+//        {
+//            version (NoMessageBox) {
+//                write(o, "\n\nderp: ");
+//                readln();
+//            } else {
+//                MessageBoxA(null, o.toString().toStringz(),
+//                        "Error2", MB_OK | MB_ICONEXCLAMATION);
+//            }
+//            result = 0; // failed
+//        }
+//        */
+//        return result;
+//    }
+//
+//    int myWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+//    {
+//        actualMain();
+//        return 0;
+//    }
+//} else {
     void main() {
         actualMain();
     }
-}
+//}
 
 import gui.mainmenu;
 
@@ -203,7 +203,7 @@ class Main {
         {
             import util.gc;
             //util.gc.enableGCHook();
-            util.gc.setGCHookSize(100);
+//            util.gc.setGCHookSize(100);
         }
         long now, nextTime = utime();
         auto exit = false;
@@ -218,10 +218,10 @@ class Main {
                         enableGCHook = !enableGCHook;
                         if(enableGCHook) {
                             import util.gc;
-                            util.gc.enableGCHook();
+//                            util.gc.enableGCHook();
                         } else {
                             import util.gc;
-                            util.gc.disableGCHook();
+//                            util.gc.disableGCHook();
                         }
                     }
                 }
@@ -366,8 +366,8 @@ class Main {
 import worldstate.worldstate;
 void actualMain() {    
 
-    import util.gc;
-    //util.gc.installGCHook();
+//    import util.gc;
+//    util.gc.installGCHook();
     //util.gc.enableGCHook();
     //util.gc.enableMallocDebug();
 
@@ -378,25 +378,6 @@ void actualMain() {
         bool client = false;
     }
 
-    /*
-    import util.strings;
-    StringBuilder builder;
-    builder.write("Hey %s", "Hopp");
-    auto str = builder.str;
-    writeln(str);
-
-    builder.write("Hej %s", "Hopp");
-    writeln(str);
-    auto str2 = builder.str;
-    writeln(str2);
-
-    if(str2 !is null) {
-        return;
-    }
-    */
-
-    //disableDynamicAlloc();
-//    msg("Managed to reserve ", GC.reserve(1024*1024*1024) / (1024*1024), " megabytes of memory");
 
 
     msg("worldSize: ", worldSize / 1_000, " km");

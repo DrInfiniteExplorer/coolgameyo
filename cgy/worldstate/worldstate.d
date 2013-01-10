@@ -777,12 +777,12 @@ class WorldState {
 
     private void allTilesUpdated() {
 
-        import util.gc : totalReservedMemory;
+//        import util.gc : totalReservedMemory;
         // Lots of malloc here!
         // How much?
         // About 6 meg in initial frame when lots of trees are created / 2012-11-02
 
-        auto start = totalReservedMemory;
+        auto start = 0;//totalReservedMemory;
 
 
         Tile[TilePos] removed;
@@ -799,7 +799,7 @@ class WorldState {
             }
         }
 
-        auto diff = totalReservedMemory - start;
+        auto diff = 0;//totalReservedMemory - start;
         msg("Memory in there: ", diff);
 
         removeTile(removed);

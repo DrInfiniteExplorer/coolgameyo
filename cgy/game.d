@@ -194,7 +194,7 @@ class Game{
     void populateWorld(vec2i startPos) {
 
         import util.gc;
-        util.gc.enableMallocDebug();
+//        util.gc.enableMallocDebug();
 
         g_UnitCount = 0;
 
