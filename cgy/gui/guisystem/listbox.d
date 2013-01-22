@@ -49,7 +49,16 @@ class GuiElementListBox : public GuiElement {
         return selectedIndex;
     }
     string getItemText(int index) {
+        if(index >= rows.length || index < 0) {
+            msg("Trying to get item text for non existant index derp");
+            return null;
+        }
         return rows[index].text.getText();
+    }
+    void selectAny() {
+        if(rows.length) {
+            selectItem(0);
+        }
     }
 
     // Returns the first occurance of text

@@ -105,28 +105,31 @@ final class WorldMap {
 
     int voronoiSeed;
 
-    this(string name) {
+    string _worldPath;
+    string worldPath() const @property {
+        return _worldPath;
+    }
+
+    this() {
         init();
-        load(name);
     }
 
     this(int seed) {
         worldSeed = seed;
+        _worldPath = "worlds/" ~ to!string(seed) ~ "/map";
         init();
     }
 
-    string worldHash() const @property {
-        return to!string(worldSeed) ~ "_";
-    }
-
-    string worldPath(string hash = null) const @property{
-
-        return "worlds/" ~ ((hash is null) ? worldHash() : hash);
+    void loadWorld(string name) {
+        enforce(existsDir(name), "A world does not exist at: " ~ name);
+        _worldPath = name ~ "/map";
+        Load(name);
     }
 
     void save() {
         auto worldPath = worldPath;
         mkdir(worldPath);
+        makeJSONObject("worldSeed", worldSeed).saveJSON(worldPath ~ "/seed.json");
 
         getVisualizer().getClimateImage().save(worldPath ~ "/map.tga");
         saveHeightmap();
@@ -138,11 +141,13 @@ final class WorldMap {
     }
 
     //We always initialize before we call load.
-    void load(string worldHash) {
-        auto path = worldPath(worldHash);        
+    private void Load(string path) {
+
         enforce(existsDir(path), "WorldState not found:" ~ path);
 
-        worldSeed = to!int( split(worldHash, "_")[0] );
+        loadJSON(worldPath ~ "/seed.json").readJSONObject("worldSeed", &worldSeed);
+        //makeJSONObject("worldSeed", worldSeed).saveJSON();
+        //worldSeed = to!int( split(worldHash, "_")[0] );
         initSeed();
 
         loadHeightmap();
@@ -151,15 +156,6 @@ final class WorldMap {
         loadTemperatureMap();
         loadMoistureMap();
         loadAllFeatures();
-    }
-
-    public static string[] enumerateSavedWorlds() {
-        if(!exists("worlds/")) {
-            return null;
-        }
-        string[] ret;
-        dir("worlds/", (string s) {ret ~= s;});
-        return ret;
     }
 
     public static Image getWorldImage(string name) {

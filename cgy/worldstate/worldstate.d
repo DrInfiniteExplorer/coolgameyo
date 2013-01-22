@@ -87,7 +87,7 @@ class WorldState {
 
     //WorldGenParams worldGenParams;
 
-    bool isServer;  //TODO: How, exactly, does the world function differently if it actually is a server? Find out!
+    bool isServer;
 
     WorldStateListener[] listeners;
 
@@ -107,6 +107,7 @@ class WorldState {
 
     bool updatePhase = true;
     void enforceUpdate() {
+        BREAK_IF(!updatePhase);
         enforce(updatePhase, "Tries to do update-code when not in update");
     }
 
@@ -196,6 +197,9 @@ class WorldState {
         //TODO: Totally redo serialization.
         //worldGen.deserialize();
 
+        if(!exists("saves/current/world/world.json")) {
+            return; // Nothing to deserialize
+        }
         auto content = readText("saves/current/world/world.json");
         auto jsonRoot = json.parse(content);
         uint activeUnitId;
@@ -236,9 +240,9 @@ class WorldState {
     //Ensure that it only happens when no other code is running.
     // Why? This might be a problem soon.
     Sector loadSector(SectorNum num)
-        in{
-            BREAK_IF(getSector(num) !is null);
-        }
+    in{
+        BREAK_IF(getSector(num) !is null);
+    }
     body{
         void loadSectorXY(SectorXYNum xy) {
             SectorXY* xyPtr = getSectorXY(xy, false);
@@ -590,11 +594,13 @@ class WorldState {
     //TODO: Implement removeUnit?
     // These should be named unsafeAddUnit, right?
     void addUnit(Unit unit) {
+        msg("Adding unit at ", unit.pos);
         enforce(unit.clan !is null);
 
-        //pragma(msg, "We should create link between scenegraph and unit here. Programmatic creation of units reach here, and loading & change-induced creation does as well");
-        sceneManager.getProxy(unit);
-
+        if(!isServer) {
+            //pragma(msg, "We should create link between scenegraph and unit here. Programmatic creation of units reach here, and loading & change-induced creation does as well");
+            sceneManager.getProxy(unit);
+        }
 
         //Update boolean activity map
         updateActivity(unit.pos, unit.pos);
@@ -777,13 +783,9 @@ class WorldState {
 
     private void allTilesUpdated() {
 
-//        import util.gc : totalReservedMemory;
         // Lots of malloc here!
         // How much?
         // About 6 meg in initial frame when lots of trees are created / 2012-11-02
-
-        auto start = 0;//totalReservedMemory;
-
 
         Tile[TilePos] removed;
         Tile[TilePos] added;
@@ -798,9 +800,6 @@ class WorldState {
                 added[tp] = oldTile;
             }
         }
-
-        auto diff = 0;//totalReservedMemory - start;
-        msg("Memory in there: ", diff);
 
         removeTile(removed);
         addTile(added);

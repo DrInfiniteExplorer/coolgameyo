@@ -72,7 +72,6 @@ class Game{
 
     private bool            isClient;
     private bool            isServer;
-    private bool            isWorker;
 
     private AIModule            aiModule;
     private Camera              camera;
@@ -90,16 +89,8 @@ class Game{
 
 
 
-    this(bool serv, bool clie, bool work) {
-        //TODO: Move world-creation etc out of here, and put in init-function instead.
-        //We might want to load stuff, so worldgen-settings for example should be 
-        //passed elsewhere.
-        isServer = serv;
-        isClient = clie;
-        isWorker = work;
-
-        import core.memory;
-        //GC.disable();
+    this(bool server) {
+        isServer = server;
 
     }
 
@@ -130,9 +121,10 @@ class Game{
 
 
     //This and finishInit are run in the thread which becomes the scheduler thread
-    private void init(string worldName) {
+    private void init() {
+
         mixin(LogTime!("GameInit"));
-        if (isClient) {
+        if (!isServer) {
             atlas = new TileTextureAtlas; // HACK
             //TODO: Find out what the above comment indicates.
         }
@@ -142,13 +134,14 @@ class Game{
         unitTypeManager = UnitTypeManager();
         unitTypeManager.init();
         
-        sceneManager = new SceneManager();
+        if(!isServer) {
+            sceneManager = new SceneManager();
+        }
 
-        worldMap = new WorldMap(worldName);
+        worldMap = new WorldMap();
+        worldMap.loadWorld("saves/current");
         worldMap.tileSys = tileTypeManager;
         worldState = new WorldState(worldMap, tileTypeManager, entityTypeManager, unitTypeManager, sceneManager);
-
-        assert (isWorker, "otherwise wont work lol (maybe)");
 
         scheduler = new Scheduler(worldState);
         pathModule = new PathModule;
@@ -157,12 +150,14 @@ class Game{
         scheduler.registerModule(aiModule);
         scheduler.registerModule(Clans());
 
-        if (isClient) {
+        if (!isServer) {
             camera = new Camera();
             //The renderer also needs to be created in the main thread, it loads shaders and stuff.
             //Mainly all in this block of code actually :)
+            /*
             camera.setPosition(vec3d(-2, -2, 20));
             camera.setTarget(vec3d(0, 0, 20));
+            */
             //geometryCreator = new GeometryCreator(world);
             auto tileRenderer = new TileRenderer();
             tileGeometry = new TileGeometry(worldState, tileRenderer);
@@ -176,43 +171,31 @@ class Game{
     }
     //This and init are run in the thread which becomes the scheduler thread
     private void finishInit() {
-        //This line needs to be moved elsewhere, if we want to do loading in a different thread.
-        Tid mainThreadTid = locate("Main thread"); // This is set in main.d : Main.this()
-        send(mainThreadTid, "finishInit"); //This will be detected by the main loop, which calls game.loadDone
-        scheduler.start();        
-    }
-
-    //This is called when the main thread is notified that the loading thread is done loading. We upload gpu stuff here.
-    void loadDone() {
-        if (isClient) {
+        if (!isServer) {
             renderer.init();
-            msg("move atlas.upload(); //About 0 ms to renderer.init");
-        }            
-        initCallback(); //Call the registered 'tell me when your finished starting the game'-callback here.
+        }
+        scheduler.start();
     }
 
-    void populateWorld(vec2i startPos) {
 
-        import util.gc;
-//        util.gc.enableMallocDebug();
+    private void populateWorld() {
 
         g_UnitCount = 0;
 
+        vec2i startPos;
+        loadJSON("saves/current/start.json").readJSONObject("startPos", &startPos);
+
         UnitPos topOfTheWorld(TileXYPos xy) {
             auto top = worldState.getTopTilePos(xy);
-            //msg("top: ", top);
             auto ret = top.toUnitPos();
-            //ret.value.Z += 1;
-            //msg("ret: ", ret);
             return ret;
         }
 
         auto clan = newClan(worldState);
 
         // halfWorldSize_xy
-        auto offset = startPos;
-        Unit addUnitAtRelativePos(bool relative = false)(int x, int y) {
-            auto xy = TileXYPos(vec2i(x,y) + offset);
+        Unit addUnitAtPos()(vec2i pos) {
+            auto xy = TileXYPos(pos);
             auto u = newUnit();
             u.pos = topOfTheWorld(xy);
             u.type = worldState.unitTypeManager.byName("dwarf");
@@ -220,17 +203,16 @@ class Game{
             return u;
         }
 
-        auto u = addUnitAtRelativePos(3,-20);
-        auto uu = addUnitAtRelativePos(3,3);
-
-        u.ai = new TestAI(u);
-
+        auto uu = addUnitAtPos(vec2i(3,3) + startPos);
         activeUnit = uu;
-
-        worldState._worldProxy.createUnit(u);
         worldState._worldProxy.createUnit(uu);
 
+        auto u = addUnitAtPos(vec2i(3,-20) + startPos);
+        u.ai = new TestAI(u);
+        worldState._worldProxy.createUnit(u);
 
+
+        /*
         // following is retarded code, ETC :d
         EntityPos topOfTheWorld2(TileXYPos xy) {
             auto top = worldState.getTopTilePos(xy);
@@ -241,8 +223,6 @@ class Game{
 
             return ret;
         }
-
-        /*
         auto xy = TileXYPos(vec2i(1,5));
         xy.value += offset;
         auto o = newEntity();
@@ -260,12 +240,16 @@ class Game{
         */
     } 
 
-    void newGameThread(vec2i startPos, string worldName) {
+    /*
+    void newGame() {
 
-        init(worldName);
+        init();
+
         populateWorld(startPos);
+        /++
         camera.setPosition(vec3d(0, 0, 0));
         camera.setTarget(vec3d(0, 1, 0));
+        ++/
         {
             mixin(LogTime!("InitialHeightmaps"));
             worldState.generateAllHeightmaps();
@@ -276,59 +260,22 @@ class Game{
         }
         finishInit();
     }
+    */
 
-    void loadGameThread(string worldName) {
-        init(worldName);
+    void loadGame() {
+        init();
         deserialize();
         finishInit();        
-    }
-
-    //TODO: Move to better place
-    void delegate() initCallback = null;
-
-    void newGame(vec2i startPos, string worldName, void delegate() onDone) {
-        initCallback = onDone;
-        static void newGameThreadStarter(shared Game g, vec2i startPos, string worldName) {
-            try {
-                Game game = cast(Game)g;
-                game.newGameThread(startPos, worldName);
-            } catch (Throwable o) {
-                msg("Thread exception!\n", o.toString());
-                version(Windows) {
-                    MessageBoxA(null, cast(char *)toStringz(o.toString()),
-                            "Error", MB_OK | MB_ICONEXCLAMATION);
-                }
-            }
-        }        
-        spawn(&newGameThreadStarter, cast(shared)this, startPos, worldName);
-    }
-    void loadGame(string name, void delegate() onDone) {
-        string saveDir = "saves/" ~ name;
-        if (exists("saves/current")) {
-            rmdir("saves/current");
-        }
-        //Need to implement a recursive copy function, in util, perhaps?
-        util.filesystem.copy(saveDir, "saves/current");
-
-        initCallback = onDone;
-        static void loadGameThreadStarter(shared Game g, shared string s) {
-            try{
-                Game game = cast(Game)g;
-                game.loadGameThread(cast(string)s);
-            } catch (Throwable o) {
-                msg("Thread exception!\n", o.toString());
-                version(Windows) {
-                    MessageBoxA(null, cast(char *)toStringz(o.toString()),
-                            "Error", MB_OK | MB_ICONEXCLAMATION);
-                }
-            }
-        }        
-        spawn(&loadGameThreadStarter, cast(shared)this, cast(shared)name);
     }
 
     //Called in loading thread.
     private void deserialize() {
 
+        if(exists("saves/current/start.json")) {
+            populateWorld();
+            deleteFile("saves/current/start.json");
+            return;
+        }
         worldState.deserialize();
 
         auto content = readText("saves/current/game.json");
@@ -383,6 +330,7 @@ class Game{
                 });
     }
 
+    /*
     void saveGame(string name, void delegate() onDone)
         in{
             enforce( name != "current", "Invalid save name: " ~ name);
@@ -398,6 +346,7 @@ class Game{
                 onDone();
                 });
     }
+    */
 
     Camera getCamera() {
         return camera;

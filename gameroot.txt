@@ -1,0 +1,16 @@
+gameroot:
+|
+|-- saves:
+|   |
+|   |-- derp1:
+|   |-- derp2:
+|   |-- current:
+|       |
+|       |-- Allt som finns i \worlds\X\
+|       |-- gameinfo.json
+|   
+|-- worlds:
+    |
+    |-- world1:
+        |
+        |-- ?

@@ -74,7 +74,7 @@ private void workerFun(shared Scheduler ssched,
     Task task;
 
     try {
-        while (should_continue) {
+         while (should_continue) {
             should_continue = sched.getTask(task, proxy.changeList);
             if (should_continue) {
                 // try to receive message?
@@ -142,7 +142,7 @@ final class Scheduler {
 
     void start(int workerCount=core.cpuid.threadsPerCPU) {
         msg("using ", workerCount, " workers");
-        workerCount = 1;
+        //workerCount = 1;
 
         activeWorkers = workerCount;
         workers ~= thisTid();
@@ -311,11 +311,13 @@ final class Scheduler {
 
                 doUpdateShit();
 
+                /*
                 if(TICK_LOL == 456) {
                     msg("Will now sleep forever");
                     activeWorkers++; //Enter the eternal slumber!
                     suspendMe(sw);
                 }
+                */
 
                 wakeWorkers();
 

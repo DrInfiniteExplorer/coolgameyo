@@ -5,13 +5,14 @@ import std.algorithm;
 import std.array;
 import std.conv;
 import std.stdio;
-import std.file;
+//import std.file;
 
 import graphics.texture;
 
 import json;
 
 import statistics;
+import util.filesystem;
 import util.util;
 import worldstate.tile;
 
@@ -71,14 +72,16 @@ class TileTypeManager {
         air.transparent = true;
         add(invalid);
         add(air);
-		atlas.addTile("textures/001.png", vec2i(0, 0)); // Invalid tile texture
+        if(atlas !is null) {
+    		atlas.addTile("textures/001.png", vec2i(0, 0)); // Invalid tile texture
+        }
 		
         // Loads the tile type id configuration
         Value idRootVal;
         bool hasTypeIdConfFile = loadJSON("saves/current/tiletypeidconfiguration.json", idRootVal);
 
 		TileType_t tempType;
-		if(!std.file.exists("data/tile_types.json")){
+		if(!exists("data/tile_types.json")){
 			msg("Could not load tile types");
 			return;
 		}
@@ -87,18 +90,20 @@ class TileTypeManager {
 		enforce(rootVal.type == json.Value.Type.object, "rootval in tiltypejson not object roawoaowoawo: " ~ to!string(rootVal.type));
 		foreach(name, rsVal ; rootVal.pairs) {
 			rsVal.read(tempType.serializableSettings);
-			tempType.textures.top = atlas.addTile(
-					tempType.texturePathTop,
-                    tempType.textureCoordTop,
-					tempType.tintColor);
-			tempType.textures.side = atlas.addTile(
-					tempType.texturePathSides,
-                    tempType.textureCoordSides,
-					tempType.tintColor);
-            tempType.textures.bottom = atlas.addTile(
-					tempType.texturePathBottom,
-                    tempType.textureCoordBottom,
-					tempType.tintColor);
+            if(atlas) {
+			    tempType.textures.top = atlas.addTile(
+					    tempType.texturePathTop,
+                        tempType.textureCoordTop,
+					    tempType.tintColor);
+			    tempType.textures.side = atlas.addTile(
+					    tempType.texturePathSides,
+                        tempType.textureCoordSides,
+					    tempType.tintColor);
+                tempType.textures.bottom = atlas.addTile(
+					    tempType.texturePathBottom,
+                        tempType.textureCoordBottom,
+					    tempType.tintColor);
+            }
 			
 			tempType.name = name;
             if ( hasTypeIdConfFile == true && tempType.name in idRootVal) {

@@ -108,7 +108,7 @@ static assert(SolidMap.data.sizeof == 2*65536); //64k yeah :)
 
 class Sector {
 
-    private TilePos pos;
+//    private TilePos pos;
     private SectorNum sectorNum;
 
     private Block_t[BlocksPerSector.x][BlocksPerSector.y][BlocksPerSector.z] blocks;
@@ -122,14 +122,8 @@ class Sector {
     Unit[] units; //TODO: how to make this private without breaking stuff derp? :S
 	Entity[] entities;
 
-    invariant(){
-        BREAK_IF(sectorNum.toTilePos() != pos);
-        BREAK_IF(pos.getSectorNum() != sectorNum);
-    }
-
     this(SectorNum sectorNum_) {
         sectorNum = sectorNum_;
-        pos = sectorNum.toTilePos();
         solidMap.clear;
     }
 
@@ -211,7 +205,6 @@ class Sector {
     private void generateBlock(BlockNum blockNum, WorldMap worldMap)
     in{
         assert(blockNum.getSectorNum() == sectorNum, "Trying to generate a block in the wrong sector!");
-        assert(blockNum.getSectorNum.toTilePos() == pos);
         auto pos = blockNum.rel();
         assert(blocks[pos.Z][pos.Y][pos.X] == INVALID_BLOCK, 
                 text("Trying to generate a block which already contains stuff.",

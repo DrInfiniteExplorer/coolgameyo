@@ -222,6 +222,7 @@ class ConeMountainFeature : public Feature {
 class TreeFeature : public Feature {
 
     TileXYPos pos;
+    bool isPlaced = false;
 
     this(TileXYPos _pos) {
         pos = _pos;
@@ -234,10 +235,11 @@ class TreeFeature : public Feature {
     }
 
     override Value save() {
-        return Value("derp");
+        return makeJSONObject("isPlaced", isPlaced);
     }
 
     override void load(Value jsonValue) {
+        readJSONObject(jsonValue, "isPlaced", &isPlaced);
     }
 
 }

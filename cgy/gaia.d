@@ -118,9 +118,11 @@ class Gaia : public Clan {
             import feature.feature;
             auto tree = cast(TreeFeature) feature;
             if(tree is null) continue;
+            if(tree.isPlaced) continue;
             auto xyTp = tree.pos;
             auto sectorXY = SectorXYNum(sectorNum);
             if(!sectorXY.inside(xyTp)) continue;
+            tree.isPlaced = true;
             auto tp = world.getTopTilePos(xyTp);
             //msg("Got tree at ", tp);
             addTree(tp);
@@ -128,6 +130,7 @@ class Gaia : public Clan {
     }
 
     void addTree(TilePos tilePos) {
+        return;
         import entitytypemanager;
         auto treeType = EntityTypeManager().byName("tree01");
         //msg("Fix createEntity-function of awesomeness");
@@ -135,6 +138,5 @@ class Gaia : public Clan {
         auto ent = newEntity(treeType);
         ent.pos = tilePos.toEntityPos();
         world.worldProxy.createEntity(ent, makeJSONObject("clanId", 0));
-        
     }   
 }

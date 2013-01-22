@@ -1,53 +1,90 @@
 module gui.newgame.page1;
 
 
+public static string[] enumerateSavedWorlds() {
+    import util.filesystem;
+    if(!exists("worlds/")) {
+        return null;
+    }
+    string[] ret;
+    dir("worlds/", (string s) {ret ~= s;});
+    return ret;
+}
 
-
+public static string[] enumerateSaves() {
+    import util.filesystem;
+    if(!exists("saves/")) {
+        return null;
+    }
+    string[] ret;
+    dir("saves/", (string s) {if(s != "current") ret ~= s;});
+    return ret;
+}
 
 
 mixin template Page1() {
     GuiElement page1;
 
-    PushButton continueButton;
-    GuiElementText worldListLabel;
+    GuiElementWindow CurrentGames;
+    GuiElementWindow GeneratedWorlds;
+
+    PushButton newGameButton;
+    PushButton newWorldButton;
+    PushButton resumeGameButton;
+    GuiElementListBox savesList;
     GuiElementListBox worldList;
-    GuiElementImage worldImage;
     int worldSelected = -1;
+    int saveSelected = -1;
     string worldName;
+    string gameName;
 
     void initPage1() {
 
         page1 = new GuiElement(this);
         page1.setRelativeRect(Rectd(0, 0, 1, 1));
 
-        auto worlds = WorldMap.enumerateSavedWorlds();
-        if(worlds.length == 0) {
+        CurrentGames = new GuiElementWindow(page1, Rectd(0.05, 0.05, 0.4, 0.75), "Current Games", false, false);
+        GeneratedWorlds = new GuiElementWindow(page1, Rectd(0.55, 0.05, 0.4, 0.75), "Generated Worlds", false, false);
+        auto backButton = new PushButton(page1, Rectd(0.075, 0.85, 0.1, 0.1), "Back", &onBack);
+
+        auto worlds = enumerateSavedWorlds();
+        auto saves = enumerateSaves();
+        if(worlds.length + saves.length == 0) {
             noWorldsAvailable();
             return;
         }
-        page1.setVisible(true);
-        page1.bringToFront();
-        worldListLabel = new GuiElementText(page1, vec2d(0.1, 0.1), "List of generated worlds");
-        worldList = new GuiElementListBox(page1, Rectd(worldListLabel.leftOf, worldListLabel.bottomOf + 0.5 * worldListLabel.heightOf, 0.3, 0.5), 18, &onSelectWorld);
+
+        worldList = new GuiElementListBox(GeneratedWorlds, Rectd(0.1, 0.1, 0.8, 0.5), 18, &onSelectWorld);
         foreach(world ; worlds) {
             worldList.addItem(world);
         }
-        worldList.setDoubleClickCallback((int i) { onNext(); });
+        worldList.setDoubleClickCallback((int i) { onNewGame(); });
 
-        worldImage = new GuiElementImage(page1, Rectd(worldList.rightOf, worldList.topOf, worldList.widthOf, worldList.widthOf * renderSettings.widthHeightRatio));
+        savesList = new GuiElementListBox(CurrentGames, Rectd(0.1, 0.1, 0.8, 0.7), 18, &onSelectGame);
+        foreach(save ; saves) {
+            savesList.addItem(save);
+        }
+        savesList.setDoubleClickCallback((int i) { onResumeGame(); });
 
-        auto backButton = new PushButton(page1, Rectd(worldList.leftOf, worldList.bottomOf + 0.05, 0.2, 0.1), "Back", &onBack);
-        auto newWorldButton = new PushButton(page1, Rectd(backButton.rightOf, backButton.topOf, backButton.widthOf, backButton.heightOf), "New World", &newWorld);
-        continueButton = new PushButton(page1, Rectd(newWorldButton.rightOf, newWorldButton.topOf, newWorldButton.widthOf, newWorldButton.heightOf), "Next", &onNext);
-        continueButton.setEnabled(false);
+        page1.setVisible(true);
+        page1.bringToFront();
 
-        worldList.selectItem(0);
+        resumeGameButton = new PushButton(CurrentGames, Rectd(0.1, 0.85, 0.3, 0.1), "Resume game", &onResumeGame);
+        resumeGameButton.setEnabled(false);
+
+        newGameButton = new PushButton(GeneratedWorlds, Rectd(0.1, 0.85, 0.3, 0.1), "New game", &onNewGame);
+        newGameButton.setEnabled(false);
+
+        newWorldButton = new PushButton(GeneratedWorlds, Rectd(0.6, 0.85, 0.3, 0.1), "New World", &onNewWorld);
+
+        worldList.selectAny();
+        savesList.selectAny();
     }
 
     void noWorldsAvailable() {
         setEnabled(false);
         new DialogBox(this, "No worlds avaiable", "Sorry, there are no worlds avaiable. Create one or cancel?",
-                      "yes", &newWorld,
+                      "yes", &onNewWorld,
                       "no", { onBack(); },
                           "wtf?", { noWorldsAvailable(); }
                       );
@@ -66,21 +103,27 @@ mixin template Page1() {
         */
     }
 
-    void newWorld() {
-        setVisible(false);
-        new WorldMenu(this);
-    }
-
     void onSelectWorld(int idx) {
         worldSelected = idx;
         if(idx == -1) {
-            continueButton.setEnabled(false);            
+            newGameButton.setEnabled(false);            
         } else {
-            continueButton.setEnabled(true);
+            newGameButton.setEnabled(true);
             auto name = worldList.getItemText(worldSelected);
-            worldImage.setImage(WorldMap.getWorldImage(name));
+            //worldImage.setImage(WorldMap.getWorldImage(name));
             worldName = name;
         }
     }
 
+    void onSelectGame(int idx) {
+        saveSelected = idx;
+        if(idx == -1) {
+            resumeGameButton.setEnabled(false);
+        } else {
+            resumeGameButton.setEnabled(true);
+            auto name = savesList.getItemText(saveSelected);
+            gameName = name;
+
+        }
+    }
 }

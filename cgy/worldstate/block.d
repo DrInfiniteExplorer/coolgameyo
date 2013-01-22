@@ -170,8 +170,11 @@ struct Block_t {
     }
 
     Tile getTile(TilePos tilePos) {
-        assert(tilePos.getBlockNum() == this.blockNum);
-        assert(valid);
+        auto a = tilePos.getBlockNum();
+        auto b = this.blockNum;
+        BREAK_IF(a != b);
+
+        BREAK_IF(!valid);
         if (sparse) {
             return sparseTile();
         }

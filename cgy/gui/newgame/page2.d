@@ -22,7 +22,8 @@ mixin template Page2() {
         page2.setVisible(true);
         page2.bringToFront();
 
-        worldMap = new WorldMap(worldName);
+        worldMap = new WorldMap();
+        worldMap.loadWorld("worlds/" ~ worldName);
         mapViz = worldMap.getVisualizer();
 
         if(exists("worlds/" ~ worldName ~ "/start.json")) {
@@ -47,7 +48,13 @@ mixin template Page2() {
 
         auto StartButton = new PushButton(page2, Rectd(backButton.leftOf, backButton.bottomOf + 0.05, 0.2, 0.1), "Start", {
             worldMap.destroy();
-            onStartGame();
+            if(exists("saves/current")) {
+                msg("WARNING: saves/current exists. Terminating the previous existance!");
+                rmdir("saves/current");
+            }
+            move("worlds/" ~ worldName, "saves/" ~ worldName);
+            gameName = worldName;
+            onResumeGame();
         });
 
 

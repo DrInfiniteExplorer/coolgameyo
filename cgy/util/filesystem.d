@@ -74,6 +74,30 @@ body{
     }
 }
 
+//moves, recursively
+void move(string from, string to)
+in{
+    BREAK_IF(!exists(from));
+}
+body{
+    if (isDir(from)) {
+
+        mkdir(to);
+        dir(from, (string item){
+            auto too = to ~ "/" ~ item;
+            move(from ~ "/" ~ item, too);
+        });
+        rmdir(from);
+
+    } else {
+        std.file.rename(from, to);
+    }
+}
+
+void deleteFile(string path) {
+    std.file.remove(path);
+}
+
 auto dir(string path) {
     return (int delegate(ref string path) Body) {
         foreach(string name ; dirEntries(path, SpanMode.shallow)) {

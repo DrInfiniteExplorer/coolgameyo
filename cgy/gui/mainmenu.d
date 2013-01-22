@@ -23,35 +23,37 @@ import util.util;
 import util.rect;
 
 class MainMenu : GuiElementWindow {
-    Main main;
+    
+    bool done = false;
+    bool server = false;
+    string host = null;
+
     Game game;
     GuiSystem guiSystem;
-    PushButton newGameButton;
-    PushButton resumeGameButton;
-    PushButton saveGameButton;
-    PushButton loadGameButton;
+    PushButton HostButton;
+    PushButton JoinButton;
+    PushButton OptionsButton;
+    PushButton ExitButton;
+
+
     HyperUnitControlInterfaceInputManager userControl;
     LoadScreen loadScreen;
-    this(GuiSystem g, Main m) {
+    this(GuiSystem g) {
         guiSystem = g;
-        super(guiSystem, Rectd(0.1, 0.1 , 0.8, 0.8), "Main Menu~~~!", false, false);
-//*
+        super(guiSystem, Rectd(0.1, 0.1 , 0.8, 0.8), "CoolGameYo", false, false);
+
+        auto width = 0.3;
+        auto startX = 0.5 - width / 2.0;
+
+        auto height = 0.15;
+
         auto text = new GuiElementText(this, vec2d(0.1, 0.1), "CoolGameYo!!");     
         auto text2 = new GuiElementText(this, vec2d(0.1, 0.2), "Where logic comes to die");
-        newGameButton = new PushButton(this, Rectd(0.1, 0.2, 0.3, 0.2), "New gay me?", &onStartNewGame);
-  
-        auto optionsButt = new PushButton(this, Rectd(0.1, 0.4, 0.3, 0.2), "Options", &onOptions);
-
-        auto randomButt = new PushButton(this, Rectd(0.1, 0.6, 0.3, 0.2), "Random", &onRandom);
         
-        loadGameButton = new PushButton(this, Rectd(randomButt.rightOf+0.05, 0.6, 0.3, 0.2), "Load game", &onLoadGame);
-        auto viewButt = new PushButton(this, Rectd(loadGameButton.rightOf, 0.6, 0.3, 0.2), "WorldState View", &onWorldView);
-
-        new PushButton(this, Rectd(viewButt.leftOf, viewButt.bottomOf, viewButt.widthOf, viewButt.heightOf), "Color spline editor", &onColorSplineEdit);
-
-        main = m;
-        loadScreen = new LoadScreen(guiSystem);
-
+        HostButton = new PushButton(this, Rectd(startX, 0.1, width, height), "Host", &onHostGame);
+        JoinButton = new PushButton(this, Rectd(startX, 0.3, width, height), "Join", &onJoinGame);
+        OptionsButton = new PushButton(this, Rectd(startX, 0.5, width, height), "Options", &onOptions);
+        ExitButton = new PushButton(this, Rectd(startX, 0.7, width, height), "Exit", &onExitGame);
 
         void printScreen() {
             new PrintScreenMenu(this);
@@ -69,20 +71,20 @@ class MainMenu : GuiElementWindow {
         
     void onNewGame(vec2i startPos, string worldName) {
 
-        auto rect = newGameButton.getRelativeRect();        
+        auto rect = HostButton.getRelativeRect();        
         loadScreen.setLoading(true);
         void loadDone() {
             loadScreen.setLoading(false);
             userControl = new HyperUnitControlInterfaceInputManager(game, guiSystem);
-            resumeGameButton = new PushButton(this, rect, "Resume gay me?", &onResumeGame);
+            //resumeGameButton = new PushButton(this, rect, "Resume gay me?", &onResumeGame);
             rect.start.X += rect.size.X * 2;
             onResumeGame();
         }
-        game = main.startGame(startPos, worldName, &loadDone);
-        newGameButton.destroy();
-        newGameButton = null;
-        loadGameButton.destroy();
-        loadGameButton = null;
+//        game = startGame(startPos, worldName, &loadDone);
+        //newGameButton.destroy();
+        //newGameButton = null;
+        //loadGameButton.destroy();
+        //loadGameButton = null;
         setVisible(false);        
     }
 
@@ -96,7 +98,7 @@ class MainMenu : GuiElementWindow {
     }
     
     void onLoadGame() {
-        new DialogBox(this, "NO!", "You can't do this right now :(", "Ok :(", (){ onStartNewGame(); });
+        //new DialogBox(this, "NO!", "You can't do this right now :(", "Ok :(", (){ onStartNewGame(); });
         /*
         loadScreen.setLoading(true);
         auto rect = newGameButton.getRelativeRect();        
@@ -108,7 +110,7 @@ class MainMenu : GuiElementWindow {
             saveGameButton = new PushButton(this, rect, "Save gay me?", &onSaveGame);
             onResumeGame();
         }
-        game = main.loadGame("Save1", &loadDone);
+        game = loadGame("Save1", &loadDone);
         newGameButton.destroy();
         newGameButton = null;
         loadGameButton.destroy();
@@ -117,22 +119,23 @@ class MainMenu : GuiElementWindow {
         */
     }
     
-    void onRandom() {
-        setVisible(false);
-        new RandomMenu(this);
-    }
-    void onWorldView() {
-        setVisible(false);
-        new WorldMenu(this);
-    }
-    void onColorSplineEdit() {
-        setVisible(false);
-        new SplineEditor(this);
-    }
-    
-    void onStartNewGame() {
+    void onHostGame() {
         setVisible(false);
         new NewGameMenu(this);
+    }
+    
+    void onJoinGame() {
+        host = "127.0.0.1";
+    }
+    
+    void onOptions() {
+        new OptionMenu(this);
+        setVisible(false);
+    }
+
+    void onExitGame() {
+        done = true;
+        //the main menu message loop will find this. Since no saves/current, will exit.
     }
     
     void enterMenu() {
@@ -140,14 +143,7 @@ class MainMenu : GuiElementWindow {
         guiSystem.removeHotkey(SDLK_ESCAPE);
         guiSystem.setEventDump(null);
     }
-    
 
-    void onOptions() {
-        new OptionMenu(this);
-        setVisible(false);
-    }
-    
-    
 }
 
      

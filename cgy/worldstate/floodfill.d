@@ -109,6 +109,7 @@ mixin template FloodFill() {
             addFloodFillSector(state.sectorNum);
             return;
         }
+        msg("Will fill sector ", sectorNum.value);
         worldMap.fillSector(sector, heightmap);
         g_Statistics.FloodFillProgress(BlocksPerSector.total);
         notifySectorLoad(state.sectorNum);
@@ -116,6 +117,7 @@ mixin template FloodFill() {
 
     void addFloodFillSector(SectorNum num) {
         //_floodingSectors ~= num;
+        msg("Adding sector to filling queueue: ", num.value);
         synchronized(fillingTasks) {
             fillingTasks.list ~= new FillingTaskState(num);
         }

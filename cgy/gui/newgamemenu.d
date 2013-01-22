@@ -60,28 +60,12 @@ class NewGameMenu : GuiElementWindow {
     }
 
  
-    void onNext() {
-
-        if(page1.isVisible) {
-            page1.setVisible(false);
-            initPage2();
-        } else if(page2.isVisible) {
-            page2.setVisible(false);
-        } else {
-            //Start game yo!
-            destroy();
-            BREAKPOINT;
-        }
-    }
 
     void onPrev() {
         if(page2.isVisible) {
             page1.setVisible(true);
             page2.setVisible(false);
-        } /*else if(page3.isVisible) {
-            page2.setVisible(true);
-            page3.setVisible(false);
-        } */else {
+        } else {
             //Harr!
         }
     }
@@ -95,11 +79,28 @@ class NewGameMenu : GuiElementWindow {
         main.setVisible(true);
         destroy();
     }    
-    void onStartGame() {
+    void onResumeGame() {
+        if(exists("saves/current")) {
+            msg("WARNING: saves/current exists. Terminating the previous existance!");
+            rmdir("saves/current");
+        }
+        copy("saves/" ~ gameName, "saves/current");
         destroy();
-        main.onNewGame(startPos, worldMap.worldHash);
+        main.done = true;
+        main.server = true;
     }    
-    
+
+    void onNewGame() {
+        if(page1.isVisible) {
+            page1.setVisible(false);
+            initPage2();
+        }
+    }
+    void onNewWorld() {
+        setVisible(false);
+        new WorldMenu(this);
+    }
+
 }
 
      
