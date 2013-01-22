@@ -39,6 +39,9 @@ struct Path {
     UnitPos[] path;
 
     double pathLength() @property {
+        if (path.empty) {
+            return 0;
+        }
         auto m = map!q{a.value}(path);
         auto p = m.front;
         m.popFront();

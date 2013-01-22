@@ -40,6 +40,7 @@ import worldgen.maps : worldSize;
 
 import modelparser.cgyparser;
 
+import alloc;
 
 
 extern (Windows) alias uint function(void*) btex_fptr;
@@ -378,6 +379,7 @@ void actualMain() {
         bool client = false;
     }
 
+    init_temp_alloc(1024*1024);
 
 
     msg("worldSize: ", worldSize / 1_000, " km");

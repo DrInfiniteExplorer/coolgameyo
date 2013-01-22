@@ -20,6 +20,11 @@ class AIModule : Module, WorldStateListener {
     static struct UnitState {
         Unit unit;
         int restTime;
+        PathModule pathmodule;
+
+        void runState(WorldProxy world) {
+            restTime = unit.tick(world, pathmodule);
+        }
     }
 
     static struct UnitStateJson {
@@ -40,8 +45,8 @@ class AIModule : Module, WorldStateListener {
         pathmodule = pathmodule_;
         world = w;
         world.addListener(this);
-
     }
+
     bool destroyed;
     ~this(){
         BREAK_IF(!destroyed);
@@ -70,24 +75,19 @@ class AIModule : Module, WorldStateListener {
         BREAKPOINT;
     }
     override void update(WorldState world, Scheduler scheduler) { //module interface
-        void push(ref UnitState state) {
-            if (state.unit.ai is null) return;
+        foreach (ref state; states) {
+            if (state.unit.ai is null) continue;
             if (state.restTime > 0) {
                 state.restTime -= 1;
-                return;
+                continue;
             }
             assert (state.restTime == 0);
-            scheduler.push(syncTask((WorldProxy world) {
-                        state.restTime = state.unit.tick(world, pathmodule);
-                        }));
-        }
-        foreach (ref state; states) {
-            push(state);
+            scheduler.push(syncTask(&state.runState));
         }
     }
 
     void addUnit(Unit unit) {
-        states[unit] = UnitState(unit);
+        states[unit] = UnitState(unit, 0, pathmodule);
     }
     void removeUnit(Unit unit) {
         states.remove(unit);
@@ -107,6 +107,5 @@ class AIModule : Module, WorldStateListener {
     }
     void onBuildGeometry(SectorNum sectorNum) {
     }
-
 }
 

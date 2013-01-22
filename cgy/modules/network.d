@@ -3,15 +3,23 @@ import modules.module_;
 
 
 
-class NetworkModule : Module {
-    ChangeList[] changes;
+class ServerModule : Module {
+
     override void update(WorldState world, Scheduler scheduler) {
-        foreach (cl; changes) {
-            cl.apply(world);
-        }
-        changes.length = 0;
     }
     
+    override void serializeModule() {
+    }
+    override void deserializeModule() {
+    }
+}
+
+
+class ClientModule : Module {
+
+    override void update(WorldState world, Scheduler scheduler) {
+    }
+
     override void serializeModule() {
     }
     override void deserializeModule() {

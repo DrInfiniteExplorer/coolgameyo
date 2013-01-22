@@ -34,6 +34,8 @@ import util.queue;
 
 import changes.worldproxy;
 
+import alloc;
+
 struct Task {
     bool sync;
     bool syncsScheduler;
@@ -246,9 +248,12 @@ final class Scheduler {
     }
 
     void doUpdateShit() {
+        // this is the function that is the new tick in the world.
         foreach (proxy; proxies) {
             proxy.changeList.apply(world);
         }
+
+        reset_temp_alloc();
 
         world.update(this);
         foreach (mod; modules) {

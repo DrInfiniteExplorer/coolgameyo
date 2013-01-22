@@ -596,6 +596,7 @@ d:\D\ulnb0333\ulink.exe $(IntDir)\$(TargetName).obj gdi32.lib win32.lib advapi32
    <File path="worldstate\time.d" />
    <File path="worldstate\worldstate.d" />
   </Folder>
+  <File path="alloc.d" />
   <File path="clan.d" />
   <File path="clans.d" />
   <File path="clientnetworking.d" />
