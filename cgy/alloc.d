@@ -47,45 +47,6 @@ void reset_temp_alloc() {
     atomicStore(current_offset, 0);
 }
 
-
-
-
-
-
-unittest {
-    init_temp_alloc(256);
-    auto ret = temp_alloc(100);
-    writeln("ret = ", ret.ptr - arena.ptr);
-    ret = temp_alloc(100);
-    writeln("ret = ", ret.ptr - arena.ptr);
-    reset_temp_alloc();
-    ret = temp_alloc(100);
-    writeln("ret = ", ret.ptr - arena.ptr);
-    ret = temp_alloc(100);
-    writeln("ret = ", ret.ptr - arena.ptr);
-    ret = temp_alloc(100);
-    writeln("ret = ", ret.ptr - arena.ptr);
-    ret = temp_alloc(100);
-    writeln("ret = ", ret.ptr - arena.ptr);
-    ret = temp_alloc(100);
-    writeln("ret = ", ret.ptr - arena.ptr);
-    reset_temp_alloc();
-    ret = temp_alloc(100);
-    writeln("ret = ", ret.ptr - arena.ptr);
-    ret = temp_alloc(100);
-    writeln("ret = ", ret.ptr - arena.ptr);
-    ret = temp_alloc(100);
-    writeln("ret = ", ret.ptr - arena.ptr);
-    ret = temp_alloc(100);
-    writeln("ret = ", ret.ptr - arena.ptr);
-    ret = temp_alloc(100);
-    writeln("ret = ", ret.ptr - arena.ptr);
-}
-
-
-
-
-
 // DO NOT PUT THINGS WHICH POINT TO GC HEAP HERE ^_^
 struct AA(K,V, 
         alias malloc=std.c.stdlib.malloc, 
@@ -108,7 +69,7 @@ struct AA(K,V,
 
 
 
-    static hash_t delegate(const void*) nothrow @trusted hash_func;
+    static __gshared hash_t delegate(const void*) nothrow @trusted hash_func;
     
     Node*[] table;
 
@@ -176,45 +137,34 @@ struct AA(K,V,
         auto hash = hash_func(&k);
         auto index = hash % table.length;
         auto node = table[index];
+        if (node is null) {
+            return; // nothing to do
+        }
         if (node.hash == hash && node.key == k) {
             table[index] = node.next;
+            free(node);
+            return;
         }
         while (node.next !is null) {
             if (node.next.hash == hash && node.next.key == k) {
+                auto to_free = node.next;
                 node.next = node.next.next;
+                free(to_free);
+                return;
             }
             node = node.next;
         }
     }
-}
 
-
-unittest {
-
-    struct Foo {
-        int x;
-        int y;
-    }
-
-    while (true) {
-        AA!(Foo, int, temp_alloc_malloc, temp_alloc_free) aa;
-
-        aa.init(1024*1024);
-
-        foreach (x; 0 .. 1024*4) {
-            aa[Foo(2,x)] = x;
+    int opApply(scope int delegate(ref K, ref V) yield) {
+        foreach (node; table) {
+            while (node) {
+                if (yield(node.key, node.val)) return 1;
+                node = node.next;
+            }
         }
-
-        aa.destroy();
-        reset_temp_alloc();
+        return 0;
     }
 }
-
-
-
-
-
-
-
 
 

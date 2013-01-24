@@ -50,21 +50,24 @@ SDL_Surface* surface;
 
 void main() {
 
-    setThreadName("Main thread");
-    std.concurrency.register("Main thread", thisTid());
-    loadSettings();
-    saveSettings();
+    try {
+        setThreadName("Main thread");
+        std.concurrency.register("Main thread", thisTid());
+        loadSettings();
+        saveSettings();
 
-    initLibraries();
-    createWindow();
+        initLibraries();
+        createWindow();
 
-    init_temp_alloc(1024*1024);
+        init_temp_alloc(1024*1024);
 
-    mainMenu();
+        mainMenu();
 
-    saveSettings();
-    deinitLibraries();
-
+        saveSettings();
+        deinitLibraries();
+    } catch (Exception e) {
+        writeln("Exception:\n\n", e.msg);
+    }
 }
 
 void initLibraries() {

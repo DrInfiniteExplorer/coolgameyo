@@ -8,7 +8,8 @@ module util.array;
 
 import std.traits;
 
-//Unsafe to initialize a binaryheap with an instance of this; does a bitblit, so the storage is shared but the virtualLength is different, etc.
+// Unsafe to initialize a binaryheap with an instance of this; does a bitblit, 
+// so the storage is shared but the virtualLength is different, etc.
 
 private mixin template ArrayFunctionality(T) {
 
@@ -35,9 +36,7 @@ private mixin template ArrayFunctionality(T) {
     }
 
     ThisType dup() @property {
-        import std.exception : enforce;
-        enforce(0, "Implement util.array.Array.dup when it's really needed!");
-        return typeof(this).init;
+        assert (0);
     }
 
     bool empty() @property const { return virtualLength==0; }
@@ -80,11 +79,7 @@ private mixin template ArrayFunctionality(T) {
     void nuke() { storage = null; virtualLength = 0; }
 
 
-    void popBack(){
-        virtualLength -= 1;
-        import std.exception : enforce;
-        enforce(virtualLength >= 0, "Cannot pop this much!!!! =(");
-    }
+    void popBack() { removeFromEnd(1); }
 
     T removeAny() {
         virtualLength -= 1;
@@ -109,7 +104,7 @@ private mixin template ArrayFunctionality(T) {
         return storage[index];
     }
 
-    void opOpAssign(string s, T)(T t) if (s == "~") {
+    void opOpAssign(string s, U)(U t) if (s == "~") {
         insert(t);
     }
 }

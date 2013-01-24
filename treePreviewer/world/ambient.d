@@ -246,29 +246,6 @@ mixin template LightStorageMethods() {
         }
     }
 
-    LightSource[] getAffectingLights(TilePos min, TilePos max) {
-        BREAKPOINT; //Dont use this, but if uses this, recode to not be retarded!
-        //Lightstrength has max limit of MaxLightStrength, so we need only look in ±MaxLightStrength-tile vincinity.
-        bool[SectorNum] sectors; //Lets make a naive implementation!!
-        //TODO: Make fix this to determine what sectors are interesting, in a not-retarded way.
-        LightSource[] lights;
-        auto Min = TilePos(min.value-vec3i(MaxLightStrength,MaxLightStrength,MaxLightStrength));
-        auto Max = TilePos(max.value+vec3i(MaxLightStrength,MaxLightStrength,MaxLightStrength));
-        foreach(rel; RangeFromTo (Min.value, Max.value)) {
-            TilePos tp = TilePos(rel);
-            SectorNum sectorNum = tp.getSectorNum();
-            if( sectorNum in sectors) {
-                continue;
-            }
-            sectors[sectorNum] = false; //hohoho just for the kicks of it!
-            Sector sector = getSector(sectorNum);
-            if(sector !is null) {
-                lights ~= sector.getLightsWithin(Min, Max);
-            }
-        }
-        return lights;
-    }
-
     LightSource[] getLightsInRadius(UnitPos pos, float radius) {
         //TODO: Make fix this to determine what sectors are interesting, in a not-retarded way.
         LightSource[] lights;
