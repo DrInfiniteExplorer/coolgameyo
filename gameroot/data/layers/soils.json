@@ -1,0 +1,22 @@
+{
+    "basicTypes":[
+        "clay",
+        "sandy clay",
+        "clay loam",
+        "silty clay",
+        "silty clay loam",
+        "sandy clay loam",
+        "loam", 
+        "silt loam",
+        "sand",
+        "loamy sand",
+        "sandy loam",
+        "silt",
+        
+        "peat",
+        "black sand",
+        "red sand",
+        "yellow sand",
+        "white sand",
+    ],
+}

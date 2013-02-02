@@ -40,6 +40,12 @@ public:
       return vector3d!TTT(cast(TTT)(X), cast(TTT)(Y), cast(TTT)(Z));
   }
 
+  void toColor(ref ubyte r, ref ubyte g, ref ubyte b) {
+      r = cast(ubyte)X;
+      g= cast(ubyte)Y;
+      b = cast(ubyte)Z;
+  }
+
   
   ref T opIndex(uint index)
   in{

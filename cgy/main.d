@@ -61,12 +61,16 @@ void main() {
 
         init_temp_alloc(1024*1024);
 
+        import materials;
+        MaterialEditor();
         mainMenu();
 
         saveSettings();
         deinitLibraries();
     } catch (Exception e) {
+        import util.util;
         writeln("Exception:\n\n", e.msg);
+        NativeDialogBox("Exception:\n\n" ~ e.msg, "Exception", NDBAnswer.Ok);
     }
 }
 

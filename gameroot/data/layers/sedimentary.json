@@ -1,0 +1,15 @@
+{
+    "basicTypes":[
+        "sandstone",
+        "siltstone",
+        "mudstone",
+        "shale",
+        "claystone",
+        "rock salt",
+        "limestone",
+        "conglomerate",
+        "dolomite",
+        "chert",
+        "chalk",
+    ],
+}

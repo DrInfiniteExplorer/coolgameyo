@@ -1,0 +1,10 @@
+{
+    "basicTypes":[
+        "quartzite",
+        "slate",
+        "phyllite",
+        "schist",
+        "gneiss",
+        "marble",
+    ],
+}

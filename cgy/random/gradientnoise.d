@@ -14,6 +14,10 @@ class GradientNoise(string Step = "smoothStep", string Lerp = "lerp") : ValueSou
     uint size;
     vec3d[] PRNs;
     mixin Permutation!size;
+    this(uint Size, uint seed) {
+        auto source = new RandSourceUniform(seed);
+        this(Size, source);
+    }
     this(uint Size, RandSourceUniform rsu) {
         size = Size;
         PRNs.length = size;

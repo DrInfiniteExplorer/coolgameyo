@@ -245,6 +245,13 @@ version(Windows) {
             if(b == IDCANCEL) return 2;
             if(b == IDRETRY) return 1;
             enforce(0, "Derp? NOOOO! " ~ to!string(b));
+        } else if(a == NDBAnswer.Ok) {
+            auto b = MessageBox(null, msg.toStringz, title.toStringz, cast(uint)MB_OK);
+        } else if(a == NDBAnswer.Yes_No) {
+            auto b = MessageBox(null, msg.toStringz, title.toStringz, cast(uint)MB_YESNO);
+            if(b == IDYES) return 1;
+            if(b == IDNO) return 2;
+            enforce(0, "Derp? NOOOO! " ~ to!string(b));
         } else {
             enforce(0, "NDB-choice not implemented:" ~ to!string(a));
         }

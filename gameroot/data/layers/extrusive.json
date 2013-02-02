@@ -1,0 +1,9 @@
+{
+    "basicTypes":[
+        "rhyolite",
+        "basalt",
+        "andesite",
+        "dacite",
+        "obsidian"
+    ],
+}

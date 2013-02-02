@@ -131,6 +131,7 @@ class Gaia : public Clan {
 
     void addTree(TilePos tilePos) {
         return;
+        /*
         import entitytypemanager;
         auto treeType = EntityTypeManager().byName("tree01");
         //msg("Fix createEntity-function of awesomeness");
@@ -138,5 +139,6 @@ class Gaia : public Clan {
         auto ent = newEntity(treeType);
         ent.pos = tilePos.toEntityPos();
         world.worldProxy.createEntity(ent, makeJSONObject("clanId", 0));
+        */
     }   
 }
