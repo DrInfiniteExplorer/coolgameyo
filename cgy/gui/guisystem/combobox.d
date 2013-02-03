@@ -51,6 +51,10 @@ class GuiElementComboBox : public GuiElement {
         onMove();
     }
 
+    void setSelectionCallback(SelectionChangedCallback cb) {
+        selectionChangedCallback = cb;  
+    }
+
     public string getSelectedItemText() {
         if (selectedIndex == -1) return ""; // Maybe throw error instead??
         return rows[selectedIndex].text.getText();
@@ -72,8 +76,11 @@ class GuiElementComboBox : public GuiElement {
         return -1;
     }
 
+    public void selectItem(string item) {
+        selectItem(getIndex(item));
+    }
     public void selectItem(int index) {
-        selectedIndex = index;
+            selectedIndex = index;
         currentText.setText(rows[index].text.getText());
         if (selectionChangedCallback !is null) {
             selectionChangedCallback(index);

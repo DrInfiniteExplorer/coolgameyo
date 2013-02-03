@@ -1,0 +1,10 @@
+{
+  "fancyName":"Obsidian",
+  "type":"stone",
+  "name":"obsidian",
+  "color":{
+    "X":17,
+    "Y":17,
+    "Z":15
+  }
+}

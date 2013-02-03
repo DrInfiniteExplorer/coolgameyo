@@ -1,0 +1,10 @@
+{
+  "fancyName":"Basalt",
+  "type":"stone",
+  "name":"basalt",
+  "color":{
+    "X":102,
+    "Y":102,
+    "Z":91
+  }
+}

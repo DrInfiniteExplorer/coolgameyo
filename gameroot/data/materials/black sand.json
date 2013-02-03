@@ -1,0 +1,10 @@
+{
+  "fancyName":"Black sand",
+  "type":"sand",
+  "name":"black sand",
+  "color":{
+    "X":37,
+    "Y":37,
+    "Z":33
+  }
+}

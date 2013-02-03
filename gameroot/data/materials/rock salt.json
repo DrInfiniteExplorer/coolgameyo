@@ -1,0 +1,10 @@
+{
+  "fancyName":"Rock salt",
+  "type":"stone",
+  "name":"rock salt",
+  "color":{
+    "X":208,
+    "Y":208,
+    "Z":202
+  }
+}

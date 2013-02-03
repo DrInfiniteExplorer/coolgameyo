@@ -104,6 +104,35 @@ class GuiElement {
     GuiElement getParent() {
         return parent;
     }
+
+    GuiElement getNext() {
+        if(children.length) {
+            return children[0];
+        }
+        auto next = parent.getNextSibling(this);
+        if(next !is null) {
+            return next;
+        }
+        auto node = parent;
+        while(node !is null && node.parent !is null) {
+            next = node.parent.getNextSibling(node);
+            if(next) return next;
+            node = node.parent;
+        }
+        return null;
+    }
+
+    private GuiElement getNextSibling(GuiElement child) {
+        foreach(idx, ch ; children) {
+            if(ch is child) {
+                if(idx+1 == children.length) {
+                    return null;
+                }
+                return children[idx+1];
+            }
+        }
+        return null;
+    }
     
     GuiElement getGuiSystem() {
         return guiSystem;
@@ -155,7 +184,7 @@ class GuiElement {
         return this is getFocusElement();
     }
 
-    //Note: not a OnLooseFocus biut more "Relinquish focus from this element!"
+    //Note: not a OnLooseFocus but more "Relinquish focus from this element!"
     // Use GuiEvent e.type == GuiEventType.FocusOff instead
     void looseFocus() {
         foreach(child ; children) {
@@ -165,7 +194,15 @@ class GuiElement {
             setFocus(parent);
         }
     }
-    
+
+    void cycleFocus()
+    in{
+        assert(guiSystem !is null, "Element missing guisystem; cant cycle focus!");
+    }
+    body{
+        return guiSystem.cycleFocus();
+    }
+
     bool isInside(vec2i pos){
         return absoluteRect.isInside(pos);
     }

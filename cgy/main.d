@@ -48,7 +48,7 @@ bool server = true;
 bool worker = true;
 SDL_Surface* surface;     
 
-void main() {
+void main(string[] args) {
 
     try {
         setThreadName("Main thread");
@@ -61,9 +61,21 @@ void main() {
 
         init_temp_alloc(1024*1024);
 
-        import materials;
-        MaterialEditor();
-        mainMenu();
+        args ~= "MaterialEditor";
+
+        bool doneSomething = false;
+        foreach(arg ; args) {
+            if(doneSomething) break;
+            switch(arg) {
+                case "MaterialEditor":
+                    import materials;
+                    MaterialEditor(); doneSomething = true; break;
+                default:
+            }
+        }
+        if(!doneSomething) {
+            mainMenu();
+        }
 
         saveSettings();
         deinitLibraries();

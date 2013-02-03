@@ -23,7 +23,6 @@ import util.singleton;
 import util.strings;
 import util.util;
 
-
 import json;
 
 struct FontVertex{
@@ -273,11 +272,9 @@ class Font {
         assert( !endsWith(lower, ".json") && !endsWith(lower, ".bmp"), "Specify font files without ending!");
     }
     body{
-        auto lastIdx = max(lastIndexOf(fontFile, "/"), lastIndexOf(fontFile, "\\"));
-        string path = "";
-        if(-1 != lastIdx){
-            path = fontFile[0 .. lastIdx+1];
-        }
+
+        import std.path : dirName;
+        auto path = dirName(fontFile) ~ "/";
 
         loadJSON(fontFile ~ ".json").read(conf);
 
@@ -300,28 +297,28 @@ class Font {
         assert(conf.glyphStart <= ch && ch <= conf.glyphEnd, "parameter ch not in valid range!");
     }
     body{
+
+        //First we set a unmoved standard quad, then we move it.
+        //0,0 is upper left corner of quad, or we'd have to offset the text downward all the time.
+
         FontQuad quad;
         quad.v[0].vertPos.set(0, 0);
         quad.v[1].vertPos.set(0, -conf.glyphHeight);
         quad.v[2].vertPos.set(conf.glyphWidth, -conf.glyphHeight);
         quad.v[3].vertPos.set(conf.glyphWidth,  0);
 
-        /*ret[0].vertPos.set(0,  0);
-        ret[1].vertPos.set(1,  0);
-        ret[2].vertPos.set(1, 1);
-        ret[3].vertPos.set(0, 1);*/
-
         quad.v[0].texCoord.set(0, 0);
         quad.v[1].texCoord.set(0, conf.glyphHeight);
         quad.v[2].texCoord.set(conf.glyphWidth, conf.glyphHeight);
         quad.v[3].texCoord.set(conf.glyphWidth, 0);
 
+        //Find proper 'origin' for the char in the texmap
         auto where = lookup(ch).convert!float() *
             vec2f(conf.glyphWidth, conf.glyphHeight);
+        //Used to go from pixel-coordinates to normalized coordinates.
         auto invSize = vec2f(1.0/conf.textureWidth, 1.0/conf.textureHeight);
-
-        auto vertOffset = offset.convert!float() *
-            vec2f(conf.glyphWidth, -conf.glyphHeight);
+        //Move the char to it's proper position at the char-pos that is 'offset '
+        auto vertOffset = offset.convert!float() * vec2f(conf.glyphWidth, -conf.glyphHeight);
         foreach(ref vert ; quad.v){
             vert.vertPos += vertOffset;
             vert.texCoord = (vert.texCoord + where)*invSize;

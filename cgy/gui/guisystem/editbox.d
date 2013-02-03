@@ -149,6 +149,10 @@ class GuiElementEditbox : public GuiElement {
             onEnter(content);
             return GuiEventResponse.Accept;
         }
+        if( sdlSym == SDLK_TAB) {
+            cycleFocus();
+            return GuiEventResponse.Accept;
+        }
 
         bool delet = (sdlSym == SDLK_DELETE);
         bool erase = (ch == 8) || (sdlSym == SDLK_BACKSPACE);

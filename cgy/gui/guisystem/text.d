@@ -23,6 +23,7 @@ class GuiElementText : public GuiElement {
     body{        
         super(parent);
         
+        setSelectable(false);
         setText(str);
         setTransparency(transparent);
         setRelativeRect(Rectd(pos, vec2d(0,0)));
@@ -39,6 +40,11 @@ class GuiElementText : public GuiElement {
         return absoluteRect;
     }
 
+    void setPosition(vec2i absolutePos) {
+        auto rect = getAbsoluteRect();
+        rect.start = absolutePos;
+        setAbsoluteRect(rect);
+    }
     
     override void destroy() {
         super.destroy();

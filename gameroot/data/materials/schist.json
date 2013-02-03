@@ -1,0 +1,10 @@
+{
+  "fancyName":"Schist",
+  "type":"stone",
+  "name":"schist",
+  "color":{
+    "X":45,
+    "Y":57,
+    "Z":52
+  }
+}

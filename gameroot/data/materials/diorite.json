@@ -1,0 +1,10 @@
+{
+  "fancyName":"Diorite",
+  "type":"stone",
+  "name":"diorite",
+  "color":{
+    "X":84,
+    "Y":84,
+    "Z":75
+  }
+}

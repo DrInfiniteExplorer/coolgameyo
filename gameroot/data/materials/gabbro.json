@@ -1,0 +1,10 @@
+{
+  "fancyName":"Gabbro",
+  "type":"stone",
+  "name":"gabbro",
+  "color":{
+    "X":75,
+    "Y":87,
+    "Z":68
+  }
+}

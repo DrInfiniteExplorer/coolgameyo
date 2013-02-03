@@ -45,6 +45,24 @@ public:
       g= cast(ubyte)Y;
       b = cast(ubyte)Z;
   }
+  ubyte[4] toColorUByte(ubyte alpha = 255) {
+      ubyte[4] ret;
+      ret[0] = cast(ubyte)X;
+      ret[1]= cast(ubyte)Y;
+      ret[2] = cast(ubyte)Z;
+      ret[3] = alpha;
+      return ret;
+  }
+  uint toColorUInt(ubyte alpha = 255) {
+      ubyte[4] clr = toColorUByte(alpha);
+      return *cast(uint*)clr.ptr;
+  }
+  void fromColor(uint clr) {
+      ubyte[4] clr = *cast(ubyte[4]*)&clr;
+      X = cast(T)clr[0];
+      Y = cast(T)clr[1];
+      Z = cast(T)clr[2];
+  }
 
   
   ref T opIndex(uint index)

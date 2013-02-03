@@ -1,0 +1,10 @@
+{
+  "fancyName":"Andesite",
+  "type":"stone",
+  "name":"andesite",
+  "color":{
+    "X":66,
+    "Y":66,
+    "Z":60
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "fancyName":"Chalk",
+  "type":"stone",
+  "name":"chalk",
+  "color":{
+    "X":201,
+    "Y":201,
+    "Z":194
+  }
+}

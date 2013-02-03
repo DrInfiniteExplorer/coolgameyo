@@ -1,0 +1,10 @@
+{
+  "fancyName":"Loam",
+  "type":"soil",
+  "name":"loam",
+  "color":{
+    "X":192,
+    "Y":166,
+    "Z":137
+  }
+}

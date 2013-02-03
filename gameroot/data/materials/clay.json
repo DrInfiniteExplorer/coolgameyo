@@ -1,0 +1,10 @@
+{
+  "fancyName":"Clay",
+  "type":"soil",
+  "name":"clay",
+  "color":{
+    "X":192,
+    "Y":170,
+    "Z":137
+  }
+}

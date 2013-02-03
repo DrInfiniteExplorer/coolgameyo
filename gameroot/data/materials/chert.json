@@ -1,0 +1,10 @@
+{
+  "fancyName":"Chert",
+  "type":"stone",
+  "name":"chert",
+  "color":{
+    "X":214,
+    "Y":214,
+    "Z":209
+  }
+}

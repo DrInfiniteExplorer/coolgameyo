@@ -12,6 +12,16 @@ import util.util;
 version(Windows) {
     import win32.windows;
 
+    HWND getMainWindow() {
+        auto wierd_str = "I_am_a_flying_unicorn_who_farts_glitter";
+        auto strZ = wierd_str.toStringz();
+        SDL_WM_SetCaption(strZ, "derp");
+        auto mainHwnd = FindWindow(null, strZ);
+        BREAK_IF(mainHwnd == null);
+        SDL_WM_SetCaption("CoolGameYo!", "Herp");
+        return mainHwnd;
+    }
+
     void captureWindowPositions() {
         if(!windowSettings.windowsInitialized) return;
         auto wierd_str = "I_am_a_flying_unicorn_who_farts_glitter";

@@ -1,0 +1,10 @@
+{
+  "fancyName":"Peat",
+  "type":"soil",
+  "name":"peat",
+  "color":{
+    "X":123,
+    "Y":92,
+    "Z":34
+  }
+}

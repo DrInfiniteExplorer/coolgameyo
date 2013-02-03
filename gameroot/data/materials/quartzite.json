@@ -1,0 +1,10 @@
+{
+  "fancyName":"Quartzite",
+  "type":"stone",
+  "name":"quartzite",
+  "color":{
+    "X":181,
+    "Y":171,
+    "Z":149
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "fancyName":"Rhyolite",
+  "type":"stone",
+  "name":"rhyolite",
+  "color":{
+    "X":225,
+    "Y":225,
+    "Z":223
+  }
+}

@@ -78,8 +78,9 @@ struct Image {
 
     this(ubyte *data, uint width, uint height) {
         imgData.length = 4*width*height;
-        if(data !is null)
+        if(data !is null) {
             imgData[] = data[0..imgData.length];
+        }
         imgWidth = width;
         imgHeight = height;
     }
@@ -101,6 +102,7 @@ struct Image {
         toPtr += 4*toX;
         ubyte* frPtr = img.imgData.ptr;
         frPtr += 4*fromX;
+        //We seem to have forgotten about the Y variables :P
         foreach(y ; 0 .. height){
             foreach(x ; 0 .. width){
                 toPtr[4*x+0] = frPtr[4*x+0];
@@ -228,7 +230,6 @@ struct Image {
     
 
     void setPixel(int x, int y, int r, int g, int b, int a=0) {
-        //y = imgHeight - y -1;
         imgData[4*(x + y * imgWidth) + 0] = cast(ubyte)clamp(r, 0, 255);
         imgData[4*(x + y * imgWidth) + 1] = cast(ubyte)clamp(g, 0, 255);
         imgData[4*(x + y * imgWidth) + 2] = cast(ubyte)clamp(b, 0, 255);
@@ -236,19 +237,19 @@ struct Image {
     }
 
     void setPixel(int x, int y, ubyte[4] pixel) {
-        //y = imgHeight - y -1; // Why was this at all?
         imgData[4*(x + y * imgWidth) .. 4*(x + y * imgWidth) + 4] = pixel;
+    }
+    void setPixel(int x, int y, uint pixel) {
+        imgData[4*(x + y * imgWidth) .. 4*(x + y * imgWidth) + 4] = *cast(ubyte[4]*)&pixel;
     }
 
     void getPixel(int x, int y, ref ubyte r, ref ubyte g, ref ubyte b, ref ubyte a) {
-        y = imgHeight - y -1;
         r = imgData[4*(x + y * imgWidth) + 0];
         g = imgData[4*(x + y * imgWidth) + 1];
         b = imgData[4*(x + y * imgWidth) + 2];
         a = imgData[4*(x + y * imgWidth) + 3];
     }
     vec3f getPixel(int x, int y) {
-        y = imgHeight - y -1;
         ubyte r = imgData[4*(x + y * imgWidth) + 0];
         ubyte g = imgData[4*(x + y * imgWidth) + 1];
         ubyte b = imgData[4*(x + y * imgWidth) + 2];
@@ -310,6 +311,5 @@ struct Image {
         }
         return 0;
     }
-
 
 }

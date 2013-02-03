@@ -1,0 +1,10 @@
+{
+  "fancyName":"Slate",
+  "type":"stone",
+  "name":"slate",
+  "color":{
+    "X":164,
+    "Y":184,
+    "Z":146
+  }
+}

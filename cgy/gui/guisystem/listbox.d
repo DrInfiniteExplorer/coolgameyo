@@ -5,6 +5,7 @@ import std.exception;
 
 import gui.guisystem.guisystem;
 import gui.guisystem.text;
+import gui.guisystem.scrollbar;
 
 import graphics._2d.rect;
 import util.util;
@@ -13,15 +14,15 @@ import inventory;
 
 class GuiElementListBox : public GuiElement {
 
-	private struct RowItem{
-		Recti rect;
-		GuiElementText text;
-	};
-	RowItem[] rows;
-	
 	int selectedIndex = -1; // -1 is no item selected
-	int nrOfItems = 0;
+    string[] items;
     int rowHeight;
+
+    int scrollAmount = 0;
+    int canScrollAmount = 0;
+
+	GuiElementText text;
+    GuiElementScrollBar scrollBar;
 
     alias void delegate(int index) SelectionChangedCallback;
     private SelectionChangedCallback selectionChangedCallback;
@@ -36,37 +37,38 @@ class GuiElementListBox : public GuiElement {
         setRelativeRect(relative);
         selectionChangedCallback = cb;
 		rowHeight = _rowHeight;
-		rows = new RowItem[0];
+        text = new GuiElementText(this, vec2d(0, 0), "");
+        text.setVisible(false); //Manual rendering
+        scrollBar = new GuiElementScrollBar(this);
+        scrollBar.setVisible(false);
     }
 
 
 
     string getSelectedItemText() {
         if (selectedIndex == -1) return ""; // Maybe throw error instead??
-        return rows[selectedIndex].text.getText();
+        return items[selectedIndex];
     }
     int getSelectedItemIndex() {
         return selectedIndex;
     }
     string getItemText(int index) {
-        if(index >= rows.length || index < 0) {
+        if(index >= items.length || index < 0) {
             msg("Trying to get item text for non existant index derp");
             return null;
         }
-        return rows[index].text.getText();
+        return items[index];
     }
     void selectAny() {
-        if(rows.length) {
+        if(items.length) {
             selectItem(0);
         }
     }
 
     // Returns the first occurance of text
     int getIndex(string text) {
-        for (int i = 0; i < nrOfItems; i++) {
-            if (rows[i].text.getText() == text) {
-                return i;
-            }
+        foreach(idx, str ; items) {
+            if(str == text) return idx;
         }
         return -1;
     }
@@ -78,64 +80,78 @@ class GuiElementListBox : public GuiElement {
         }
     }
     void setText(string text, int index) {
-        rows[index].text.setText(text);
+        items[index] = text;
     }
 
-    void addItem(string str, int index) {
+    int addItem(string str, int index) {
         if(index < 0) {
-            index = nrOfItems;
+            index = items.length;
         }
-        if (index > nrOfItems) {
-            index = nrOfItems;
+        if (index > items.length) {
+            index = items.length;
         }
-        if (nrOfItems == rows.length) {
-            rows.length += 1;
-        }
-
-        for (int i = nrOfItems; i > index; i--) {
-            rows[i] = rows[i-1];
+        if (index == items.length) {
+            items.length += 1;
         }
 
-        rows[index].text = new GuiElementText(this, vec2d(0, 0), str);
-        nrOfItems++;
-        foreach(idx ; index .. nrOfItems) {
-            updateRowTextPos(idx);
+        for (int i = items.length-1; i > index; i--) {
+            items[i] = items[i-1];
         }
+
+        items[index] = str;
+        updateScroll();
+        return index;
     }
-	void addItem(string str) {
-        addItem(str, nrOfItems);
+	int addItem(string str) {
+        return addItem(str, -1);
 	}
+    void removeItem(string item) {
+        removeItem(getIndex(item));
+    }
     void removeItem(int index) {
-        enforce(index < nrOfItems, "ListBox error: Tried to remove out of index");
+            enforce(index < items.length, "ListBox error: Tried to remove out of index");
         if (index < selectedIndex) {
             selectedIndex--;
         }
         else if (index == selectedIndex) {
             selectedIndex = -1;
         }
-        rows[index].text.destroy();
-        nrOfItems--;
-        for (int a = index; a < nrOfItems; a++){
-            rows[a] = rows[a+1];
-            updateRowTextPos(a);
+        for (int a = index; a+1 < items.length; a++){
+            items[a] = items[a+1];
         }
+        items.length -= 1;
+        updateScroll();
     }
 
     void clear() {
-        while(nrOfItems != 0) {
-            removeItem(nrOfItems-1);
-        }
+        items.length = 0;
+        updateScroll();
     }
 
     int getItemCount() const {
-        return nrOfItems;
+        return items.length;
     }
     
     void setDoubleClickCallback(DoubleClickCallback cb) {
         doubleClickCallback = cb;
     }
 
-
+    void updateScroll() {
+        auto height = getAbsoluteRect.size.Y;
+        auto neededHeight = items.length * rowHeight;
+        import std.algorithm : max;
+        canScrollAmount = max(0, neededHeight - height);
+        if(canScrollAmount) {
+            msg("Make code to scroll so the selected item is in view");
+            scrollBar.setVisible(true);
+            scrollBar.amountScroll = 0;
+            scrollBar.totalScroll = items.length;
+            scrollBar.scrollBar = absoluteRect.size.Y / rowHeight;
+        } else {
+            scrollAmount = 0;
+            scrollBar.setVisible(false);
+        }
+    }
 
     override void render() {
         //Render background, etc, etc.
@@ -143,9 +159,28 @@ class GuiElementListBox : public GuiElement {
 		renderRect(absoluteRect, vec3f(0.7, 0.7, 0.7));
         renderOutlineRect(absoluteRect, vec3f(0.0, 0.0, 0.0));
 		
-        if (selectedIndex != -1) renderRect(rows[selectedIndex].rect, vec3f(0.7, 0.7, 0.9));
-		for (int i = 0; i < nrOfItems; i++) {
-			renderOutlineRect(rows[i].rect, vec3f(0.0, 0.0, 0.0));
+        if (selectedIndex != -1) {
+        }
+        auto height = getAbsoluteRect.size.Y;
+		foreach(idx, item ; items) {
+            auto rect = getTextRect(idx);
+            auto pos = rect.start;
+            auto relativeHeight = pos.Y - absoluteRect.start.Y;
+            if(relativeHeight < 0) {
+                //msg("Culled for being to early");
+                continue;
+            }
+            if(relativeHeight + rowHeight > height) {
+                //msg("Culled for being to late");
+                continue;
+            }
+            if(idx == selectedIndex) {
+                renderRect(rect, vec3f(0.7, 0.7, 0.9));
+            }
+            text.setPosition(pos);
+            text.setText(items[idx]);
+            text.render();
+            renderOutlineRect(rect, vec3f(0));
 		}
         
         super.render();
@@ -155,35 +190,36 @@ class GuiElementListBox : public GuiElement {
     override GuiEventResponse onEvent(GuiEvent e) {
         if (e.type == GuiEventType.MouseClick) {
             auto m = &e.mouseClick;
-            if(m.left) {
-                if (m.down) {
-                    if(absoluteRect.isInside(m.pos)) {
-						for (int i = 0; i < nrOfItems; i++) {
-							if (rows[i].rect.isInside(m.pos)) {
-                                if(selectedIndex == i && 
-                                   e.eventTimeStamp - lastClickTime < getDoubleClickTime() &&
-                                   doubleClickCallback !is null) {
-                                            doubleClickCallback(selectedIndex);
-                                } else {
-    								selectItem(i);
-                                }
-							}
+            if(m.left && m.down) {
+                if(absoluteRect.isInside(m.pos)) {
+					foreach(idx, item ; items) {
+						if (getTextRect(idx).isInside(m.pos)) {
+                            if(selectedIndex == idx && 
+                                (e.eventTimeStamp - lastClickTime) < getDoubleClickTime() &&
+                                doubleClickCallback !is null) {
+                                    doubleClickCallback(selectedIndex);
+                            } else {
+    							selectItem(idx);
+                            }
 						}
-                        lastClickTime = e.eventTimeStamp;
+					}
+                    lastClickTime = e.eventTimeStamp;
 
-                        return GuiEventResponse.Accept;
-                    }                    
-                } else {
-                    //Released mouse
-                }
+                    return GuiEventResponse.Accept;
+                }                    
+            } else if((m.wheelUp || m.wheelDown) && canScrollAmount) {
+                import std.algorithm : min, max;
+                auto wheelAmount = 4 * rowHeight;
+                scrollAmount -= (m.wheelUp ? wheelAmount : -wheelAmount);
+                scrollAmount = max(0, min(canScrollAmount, scrollAmount));
+                scrollBar.amountScroll = scrollAmount / rowHeight;
             }
         }
         return super.onEvent(e);
     }
 
-    private void updateRowTextPos(int index) {
-        rows[index].rect = Recti(absoluteRect.start.X, absoluteRect.start.Y + index * rowHeight,
-                                 absoluteRect.size.X, rowHeight);
-        rows[index].text.setAbsoluteRect(rows[index].rect); 
+    private Recti getTextRect(int idx) {
+        return Recti(absoluteRect.start.X, absoluteRect.start.Y + idx * rowHeight - scrollAmount,
+                     absoluteRect.size.X, rowHeight);
     }
 }

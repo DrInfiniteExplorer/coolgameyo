@@ -121,6 +121,25 @@ final class GuiSystem : GuiElement{
     override GuiElement getFocusElement() {
         return focusElement;
     }
+
+    override GuiElement getNext() {
+        return null;
+    }
+
+    override void cycleFocus() {
+//        BREAKPOINT; //Finish implementing later, derp
+        auto focus = focusElement;
+        if(focus is null) {
+            focus = super.getNext();
+        } else {
+            focus = focus.getNext();
+        }
+        while(focus && !focus.isSelectable) {
+            focus = focus.getNext();
+        }
+        setFocus(focus);
+    }
+
     
     private void setHover(vec2i pos) {
         auto element = getElementFromPoint(pos);

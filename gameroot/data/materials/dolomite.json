@@ -1,0 +1,10 @@
+{
+  "fancyName":"Dolomite",
+  "type":"stone",
+  "name":"dolomite",
+  "color":{
+    "X":242,
+    "Y":221,
+    "Z":149
+  }
+}

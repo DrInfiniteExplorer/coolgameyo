@@ -1,0 +1,10 @@
+{
+  "fancyName":"Dacite",
+  "type":"stone",
+  "name":"dacite",
+  "color":{
+    "X":118,
+    "Y":103,
+    "Z":92
+  }
+}

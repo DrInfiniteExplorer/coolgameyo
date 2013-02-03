@@ -1,0 +1,10 @@
+{
+  "fancyName":"Gneiss",
+  "type":"stone",
+  "name":"gneiss",
+  "color":{
+    "X":182,
+    "Y":142,
+    "Z":135
+  }
+}

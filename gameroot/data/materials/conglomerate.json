@@ -1,0 +1,10 @@
+{
+  "fancyName":"Conglomerate",
+  "type":"stone",
+  "name":"conglomerate",
+  "color":{
+    "X":200,
+    "Y":194,
+    "Z":134
+  }
+}

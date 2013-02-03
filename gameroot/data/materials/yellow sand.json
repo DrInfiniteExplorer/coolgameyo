@@ -1,0 +1,10 @@
+{
+  "fancyName":"Yellow sand",
+  "type":"sand",
+  "name":"yellow sand",
+  "color":{
+    "X":244,
+    "Y":240,
+    "Z":85
+  }
+}
