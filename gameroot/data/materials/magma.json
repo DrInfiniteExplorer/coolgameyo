@@ -1,0 +1,10 @@
+{
+  "fancyName":"Magma",
+  "type":"liquid",
+  "name":"magma",
+  "color":{
+    "X":255,
+    "Y":0,
+    "Z":0
+  }
+}

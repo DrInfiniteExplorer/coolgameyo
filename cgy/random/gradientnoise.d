@@ -14,6 +14,9 @@ class GradientNoise(string Step = "smoothStep", string Lerp = "lerp") : ValueSou
     uint size;
     vec3d[] PRNs;
     mixin Permutation!size;
+    this(uint seed) {
+        this(256, seed);
+    }
     this(uint Size, uint seed) {
         auto source = new RandSourceUniform(seed);
         this(Size, source);
@@ -22,9 +25,13 @@ class GradientNoise(string Step = "smoothStep", string Lerp = "lerp") : ValueSou
         size = Size;
         PRNs.length = size;
         initPermutations(rsu);
+        /*
+        //This is done in initPermutations i think?
         foreach(ref p ; permutations) {
             p = rsu.get!uint(0, size);
         }
+        */
+
 
         foreach(ref p ; PRNs) {
             vec3d v;
@@ -54,12 +61,12 @@ class GradientNoise(string Step = "smoothStep", string Lerp = "lerp") : ValueSou
         x += 0.012354378973;
         y += 0.834239853982;
         z += 0.359820984234;
-        int i = to!int(floor(x));
-        int j = to!int(floor(y));
-        int k = to!int(floor(z));
-        double dx = x - to!double(i);
-        double dy = y - to!double(j);
-        double dz = z - to!double(k);
+        int i = fastFloor(x);
+        int j = fastFloor(y);
+        int k = fastFloor(z);
+        double dx = x - cast(double)i;
+        double dy = y - cast(double)j;
+        double dz = z - cast(double)k;
         
         double v000 = getLattice(i  , j  , k  , dx  , dy  , dz  );
         double v100 = getLattice(i+1, j  , k  , dx-1, dy  , dz  );
@@ -88,10 +95,10 @@ class GradientNoise(string Step = "smoothStep", string Lerp = "lerp") : ValueSou
         x += 0.012354378973;
         y += 0.834239853982;
 
-        int i = to!int(floor(x));
-        int j = to!int(floor(y));
-        double dx = x - to!double(i);
-        double dy = y - to!double(j);
+        int i = fastFloor(x);
+        int j = fastFloor(y);
+        double dx = x - cast(double)i;
+        double dy = y - cast(double)j;
         
         double v00 = getLattice(i  , j  , dx  , dy  );
         double v10 = getLattice(i+1, j  , dx-1, dy  );
@@ -109,8 +116,8 @@ class GradientNoise(string Step = "smoothStep", string Lerp = "lerp") : ValueSou
     override double getValue(double x) {
         x += 0.012354378973;
 
-        int i = to!int(floor(x));
-        double dx = x - to!double(i);
+        int i = fastFloor(x);
+        double dx = x - cast(double)i;
         
         double v00 = getLattice(i  , dx  );
         double v10 = getLattice(i+1, dx-1);
@@ -164,7 +171,7 @@ unittest {
     double min = double.max;
     double max = -double.max;
     for(double t = 0; t < 123456; t += 0.1) {
-        double v = worldHeightMap.getValue(t);
+        double v = worldHeightMap.getValue(t,t+worldHeightMap.getValue(t));
         if (min > v) min = v;
         if (max < v) max = v;
     }

@@ -25,6 +25,7 @@ static void loadMaterial(string filename) {
     g_Materials[name] = mat;
 }
 
+
 void loadMaterials() {
     foreach(item ; dir("data/materials")) {
         loadMaterial(item);

@@ -32,33 +32,62 @@ class Heightmaps {
     void createWorld() {
 
         import strata;
+        import materials;
         loadStrataInfo();
+        loadMaterials();
         auto stratas = generateStratas();
 
         float depth = 0;
         int layerNum = 0;
         import graphics.image;
-        Image img = Image(null, 128, 480);
+        int height = 3000;
+        Image img = Image(null, 1280, height);
         vec3f color;
         int oldy=-1;
+        string prevMat;
         foreach(x,y, ref r, ref g, ref b, ref a ; img) {
             a = 255;
-            /*
             if(y != oldy) {
                 oldy = y;
                 if(depth < y) {
                     msg(depth);
-                    depth += stratas[layerNum].depth;
+                    depth += stratas[layerNum].thickness;
                     layerNum++;
                     color.set(0,0,0);
                 } else {
                     if(layerNum == stratas.length) layerNum--;
-                    color = stratas[layerNum].type.color;
+                    auto materialName = stratas[layerNum].materialName;
+                    if(prevMat != materialName)
+                        msg(depth, " Material: ", materialName);
+                    prevMat = materialName;
+                    color = g_Materials[materialName].color.convert!float;
                 }
             }
-            */
             color.toColor(r, g, b);
             a = 255;
+        }
+        img.save("strata_no_noise.bmp");
+
+        {
+            import statistics;
+        mixin(MeasureTime!("Time to generate "));
+        foreach(x,y, ref r, ref g, ref b, ref a ; img) {
+            a = 255;
+
+            depth = 0.0f;
+            layerNum = 0;
+            while(y > depth) {
+                depth += stratas[layerNum].getHeight(vec2f(1232+1.01728379*x+0.2f));
+                layerNum++;
+                if(layerNum == stratas.length) {
+                    layerNum--;
+                    break;
+                }
+            }
+            auto materialName = stratas[layerNum].materialName;
+            color = g_Materials[materialName].color.convert!float;
+            color.toColor(r, g, b);
+        }
         }
         img.save("strata.bmp");
 

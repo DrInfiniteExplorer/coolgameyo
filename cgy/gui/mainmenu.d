@@ -13,7 +13,7 @@ import gui.all;
 import gui.loadscreen;
 import gui.newgamemenu;
 import gui.optionmenu;
-import gui.random.menu;
+import gui.random.randommenu;
 import gui.splineedit;
 import gui.printscreenmenu;
 import gui.worldview;

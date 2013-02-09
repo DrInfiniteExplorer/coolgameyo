@@ -7,6 +7,7 @@ import std.exception;
 import std.string;
 
 import derelict.devil.il;
+import derelict.devil.ilu;
 
 import graphics.ogl;
 import util.math;
@@ -269,8 +270,12 @@ struct Image {
         ilError();
 
         ilTexImage(imgWidth, imgHeight, 1, 4, IL_RGBA, IL_UNSIGNED_BYTE, imgData.ptr);
-
         ilError();
+
+        //Is DevIL the evil one here or is it file format dependant etc?
+        iluFlipImage();
+        ilError();
+
         const char* ptr = toStringz(filename);
         ilEnable(IL_FILE_OVERWRITE);
         ilError();

@@ -1,4 +1,4 @@
-module gui.random.menu;
+module gui.random.randommenu;
 
 import std.algorithm;
 import std.conv;
@@ -20,6 +20,7 @@ import random.modmultadd;
 import random.permutation;
 import random.random;
 import random.randsource;
+import random.simplex;
 import random.valuemap;
 import random.valuesource;
 import random.xinterpolate;
@@ -65,6 +66,7 @@ class RandomMenu : GuiElementWindow {
         randomSelector = new GuiElementLabeledComboBox(this, Rectd(clientArea.leftOf, clientArea.topOf, 0.2, 0.05), "Randomness menu:", &onChangeRandom);
         randomSelector.addItem("Voronoi diagram");
         randomSelector.addItem("Perlin");
+        randomSelector.addItem("Simplex");
         randomSelector.addItem("Ridged Multifractal");
         randomSelector.addItem("Hybrid Multifractal");
         randomSelector.addItem("Back");
@@ -114,6 +116,7 @@ class RandomMenu : GuiElementWindow {
 
     mixin RandomVoronoi;
     mixin RandomPerlin;
+    mixin RandomSimplex;
     mixin RandomRidged;
     mixin RandomHybrid;
 
@@ -123,6 +126,7 @@ class RandomMenu : GuiElementWindow {
         auto init = [
             "Voronoi diagram":&initVoronoi,
             "Perlin":&initPerlin,
+            "Simplex":&initSimplex,
             "Ridged Multifractal":&initRidged,
             "Hybrid Multifractal":&initHybrid,
             "Back":&onBack
@@ -130,6 +134,7 @@ class RandomMenu : GuiElementWindow {
         auto destroy = [
             "Voronoi diagram":&destroyVoronoi,
             "Perlin":&destroyPerlin,
+            "Simplex":&destroySimplex,
             "Ridged Multifractal":&destroyRidged,
             "Hybrid Multifractal":&destroyHybrid,
             "Back":&onBack

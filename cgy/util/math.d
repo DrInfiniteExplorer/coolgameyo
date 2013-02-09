@@ -4,6 +4,26 @@ module util.math;
 import stolen.vector2d;
 import stolen.vector3d;
 
+// Awesomely much faster than std.math.floor!
+// Also seems to be correct!
+auto fastFloor(T)(T val) {
+    int ret = cast(int)val;
+    return val < ret ? ret - 1 : ret;
+}
+
+unittest {
+    import std.conv : to;
+    import std.exception : enforce;
+    import std.math : floor;
+    foreach(i ; 0 .. 1000) {
+        double d = (i-500) / 250.0;
+        enforce(fastFloor(d) == floor(d), "error in fastFloor for " ~ to!string(d));
+    }
+}
+
+
+
+
 /* Returns a/b rounded towards -inf instead of rounded towards 0 */
 int negDiv(const int a, const int b)
 in{

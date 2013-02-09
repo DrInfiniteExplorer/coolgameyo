@@ -10,7 +10,7 @@ import graphics._2d.rect;
 import gui.all;
 import gui.unitcontrol;
 import gui.optionmenu;
-import gui.random.menu;
+import gui.random.randommenu;
 import gui.newgamemenu;
 import settings;
 import statistics;

@@ -18,6 +18,7 @@ import std.file;
 import derelict.sdl.sdl;
 import derelict.opengl.gl;
 import derelict.devil.il;
+import derelict.devil.ilu;
 
 import win32.windows;
 
@@ -61,7 +62,11 @@ void main(string[] args) {
 
         init_temp_alloc(1024*1024);
 
-        args ~= "MaterialEditor";
+        import heightmap;
+        immutable mil = 10_000;
+        new Heightmaps(1 * mil);
+        
+        //args ~= "MaterialEditor";
 
         bool doneSomething = false;
         foreach(arg ; args) {
@@ -84,6 +89,7 @@ void main(string[] args) {
         writeln("Exception:\n\n", e.msg);
         NativeDialogBox("Exception:\n\n" ~ e.msg, "Exception", NDBAnswer.Ok);
     }
+
 }
 
 void initLibraries() {
@@ -92,7 +98,9 @@ void initLibraries() {
         DerelictGL.load(); //Init opengl regardless?
     }
     DerelictIL.load();
+    DerelictILU.load();
     ilInit();
+    iluInit();
 }
 
 void deinitLibraries() {
@@ -226,6 +234,8 @@ void mainMenu() {
 
     guiSystem = new GuiSystem;
     mainMenu = new MainMenu(guiSystem);
+    import gui.random.randommenu;
+    new RandomMenu(mainMenu);
 
 
     // Main loop etc
