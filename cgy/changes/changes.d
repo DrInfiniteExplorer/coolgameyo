@@ -184,3 +184,4 @@ struct DesignateMine {
 interface CustomChange {
     void apply(WorldState world);
 }
+

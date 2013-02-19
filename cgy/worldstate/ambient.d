@@ -119,28 +119,16 @@ mixin template LightStorageMethods() {
         }
     }
 
-    private void updateLights(bool sunLight, TilePos min, TilePos max) {
-        BREAKPOINT; //Is this function ever called?
-        LightHeap toUnspread;
-        BlockNumSet modifiedBlocks;
-        foreach(pos ; RangeFromTo(min.value, max.value)) {
-            auto tilePos = TilePos(pos);
-            auto tile = getTile(tilePos);
-            auto oldLightValue = tile.getLight(sunLight);
-            setTileLightVal(tilePos, 0, sunLight);
-            if(pos.X == min.value.X || pos.X == max.value.X ||
-               pos.Y == min.value.Y || pos.Y == max.value.Y ||
-               pos.Z == min.value.Z || pos.Z == max.value.Z) {
-                   toUnspread.insert(LightPropagationData(tilePos, oldLightValue));
-               }
-        }
-        LightHeap lightSources;
-        unspreadLights(sunLight, lightSources, toUnspread, modifiedBlocks);
-    }
-
     private void addLight(LightSource light) {
         TilePos tilePos = light.position.tilePos();
         BlockNumSet modifiedBlocks;
+        modifiedBlocks.init(1024);
+        scope (exit) {
+            if (modifiedBlocks.size > 1024) {
+                msg("modifiedBlocks too small :<");
+            }
+            modifiedBlocks.destroy();
+        }
 
         auto sectorNum = tilePos.getSectorNum;
         auto sector = getSector(sectorNum);
@@ -159,6 +147,13 @@ mixin template LightStorageMethods() {
     void unsafeRemoveLight(LightSource light) {
         TilePos tilePos = light.position.tilePos();
         BlockNumSet modifiedBlocks;
+        modifiedBlocks.init(1024);
+        scope (exit) {
+            if (modifiedBlocks.size > 1024) {
+                msg("modifiedBlocks too small :<");
+            }
+            modifiedBlocks.destroy();
+        }
 
         auto sectorNum = tilePos.getSectorNum;
         auto sector = getSector(sectorNum);
@@ -175,12 +170,6 @@ mixin template LightStorageMethods() {
         notifyAllUpdateGeometry(modifiedBlocks);
     }
 
-    private void notifyAllUpdateGeometry(BlockNumSet modifiedBlocks) {
-        foreach(blockNum, trueVal; modifiedBlocks) {
-            auto tilePos = blockNum.toTilePos();
-            notifyUpdateGeometry(tilePos);
-        }
-    }
 
 
     //For each removed tile:
@@ -194,6 +183,13 @@ mixin template LightStorageMethods() {
         LightHeap lightSources;
         LightHeap sunLightSources;
         BlockNumSet modifiedBlocks;
+        modifiedBlocks.init(1024);
+        scope (exit) {
+            if (modifiedBlocks.size > 1024) {
+                msg("modifiedBlocks too small :<");
+            }
+            modifiedBlocks.destroy();
+        }
         foreach(tilePos, newTile ; tilePositions) {
             auto tileAbove = getTile(TilePos(tilePos.value + vec3i(0, 0, 1)));
             bool belowSunlight = tileAbove.sunlight;
@@ -243,6 +239,7 @@ mixin template LightStorageMethods() {
             if(max > 1) {
                 lightSources.insert(brightest);
             }
+
             if(maxSun > 1) {
                 sunLightSources.insert(brightestSun);
             }
@@ -251,15 +248,18 @@ mixin template LightStorageMethods() {
         spreadLights(false, lightSources, modifiedBlocks);
         spreadLights(true, sunLightSources, modifiedBlocks);
 
-        //In the future, move this to after removeTile/addTile in the func allTilesUpdated.
-        foreach(blockNum, trueVal; modifiedBlocks) {
-            auto tilePos = blockNum.toTilePos();
-            notifyUpdateGeometry(tilePos);
-        }
+        notifyAllUpdateGeometry(modifiedBlocks);
     }
 
     void addTile(Tile[TilePos] tilePositions) {
         BlockNumSet modifiedBlocks;
+        modifiedBlocks.init(1024);
+        scope (exit) {
+            if (modifiedBlocks.size > 1024) {
+                msg("modifiedBlocks too small :<");
+            }
+            modifiedBlocks.destroy();
+        }
         foreach(tilePos, oldTile; tilePositions) {
             auto oldSunLight = oldTile.getLight(true);
             auto tile = getTile(tilePos);
@@ -295,6 +295,10 @@ mixin template LightStorageMethods() {
             spreadLights(true, sunLightSources, modifiedBlocks);
         }
 
+        notifyAllUpdateGeometry(modifiedBlocks);
+    }
+
+    private void notifyAllUpdateGeometry(ref BlockNumSet modifiedBlocks) {
         foreach(blockNum, trueVal; modifiedBlocks) {
             auto tilePos = blockNum.toTilePos();
             notifyUpdateGeometry(tilePos);
