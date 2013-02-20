@@ -68,7 +68,8 @@ class MainMenu : GuiElementWindow {
         }
         super.destroy();
     }    
-        
+
+    //Not called
     void onNewGame(vec2i startPos, string worldName) {
 
         auto rect = HostButton.getRelativeRect();        
@@ -88,6 +89,7 @@ class MainMenu : GuiElementWindow {
         setVisible(false);        
     }
 
+    //Not called
     void onResumeGame() {
         setVisible(false);
         guiSystem.addHotkey(SDLK_ESCAPE, &enterMenu);
@@ -126,6 +128,8 @@ class MainMenu : GuiElementWindow {
     
     void onJoinGame() {
         host = "127.0.0.1";
+        server = false;
+        done = true;
     }
     
     void onOptions() {

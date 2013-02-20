@@ -22,7 +22,6 @@ import ai.test;
 
 import clan;
 import clans;
-import clientnetworking;
 
 import entitytypemanager;
 
@@ -40,6 +39,7 @@ import json;
 
 //import changes.changelist;
 import modules.ai;
+import modules.network;
 import modules.path;
 import util.pos;
 import scheduler;
@@ -91,7 +91,6 @@ class Game{
 
     this(bool server) {
         isServer = server;
-
     }
 
     private bool destroyed;
@@ -138,12 +137,14 @@ class Game{
             sceneManager = new SceneManager();
         }
 
-        worldMap = new WorldMap();
-        worldMap.loadWorld("saves/current");
-        worldMap.tileSys = tileTypeManager;
+        if(isServer) {
+            worldMap = new WorldMap();
+            worldMap.loadWorld("saves/current");
+            worldMap.tileSys = tileTypeManager;
+        }
         worldState = new WorldState(worldMap, tileTypeManager, entityTypeManager, unitTypeManager, sceneManager);
 
-        scheduler = new Scheduler(worldState);
+        scheduler = new Scheduler(this);
         pathModule = new PathModule;
         aiModule = new AIModule(pathModule, worldState);
         scheduler.registerModule(pathModule);
@@ -166,6 +167,9 @@ class Game{
             scheduler.registerModule(tileGeometry);
             scheduler.registerModule(heightSheets);
             tileGeometry.setCamera(camera);
+        }
+        if(isServer) {
+            initServerModule();
         }
 
     }
@@ -268,6 +272,13 @@ class Game{
         finishInit();        
     }
 
+    void connect(string host) {
+        //clientModule = new ClientModule(host);
+        initClientModule(host);
+        init();
+        finishInit();
+    }
+
     //Called in loading thread.
     private void deserialize() {
 
@@ -294,42 +305,20 @@ class Game{
 
     }
 
-    void serializeAll(void delegate() andThen) {
-        void serialize() {
-            //private WorldState           world; Tas hand om av scheduler.
-            //private bool            isClient;
-            //private bool            isServer;
-            //private bool            isWorker;
+    void serialize() {
 
-            //Spara position för kameran?
-            //private Camera              camera;
+        //private Unit               activeUnit; //TODO: Find out when this unit dies, and tell people.
+        auto activeUnit = Value(activeUnit.id);
+        auto unitCount = Value(g_UnitCount);
+        auto jsonRoot = Value([
+                "activeUnit" : activeUnit,
+                "unitCount" : unitCount,
+                ]);
+        auto jsonString = json.prettifyJSON(jsonRoot);
 
-            //Behöver inte sparas. Eller? Kan göra det, för snabb laddning av atlas, och flera 'moddar' igång samtidigt.
-            //private TileTextureAtlas    atlas;
-            //private TileTypeManager     tileTypeManager;    
-
-            //private Unit               activeUnit; //TODO: Find out when this unit dies, and tell people.
-            auto activeUnit = Value(activeUnit.id);
-            auto unitCount = Value(g_UnitCount);
-            auto jsonRoot = Value([
-                    "activeUnit" : activeUnit,
-                    "unitCount" : unitCount,
-                    ]);
-            auto jsonString = json.prettifyJSON(jsonRoot);
-
-            std.file.write("saves/current/game.json", jsonString);
-        }
-        //Takes care of world and tasks.        
-        util.filesystem.mkdir("saves/current");
-        scheduler.startSerialize({
-                writeln("WOHOO!");
-                serialize();
-                if (andThen !is null) {
-                andThen();
-                }
-                });
+        std.file.write("saves/current/game.json", jsonString);
+        worldState.serialize();
     }
-
     /*
     void saveGame(string name, void delegate() onDone)
         in{
@@ -368,12 +357,18 @@ class Game{
         return scheduler;
     }
 
+    bool getIsServer() {
+        return this.isServer;
+    }
+
     void render(long usecs) {
         if(renderer is null) return;
         renderer.render(usecs, worldState.getDayTime());
     }
 
-    mixin NetworkCode; // from clientnetworking.d
+    mixin ServerModule;
+    mixin ClientModule;
+
 }
 
 

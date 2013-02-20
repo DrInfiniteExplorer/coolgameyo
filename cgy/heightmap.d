@@ -29,33 +29,87 @@ class Heightmaps {
         if(create) createWorld();
     }
 
-    void createWorld() {
+    import strata;
 
-        import strata;
-        import materials;
-        loadStrataInfo();
-        loadMaterials();
-        auto stratas = generateStratas();
+    //Assumes z=0 == surface of world and Z+ is upwards
+    // May have to offset with world contour first.
+    int getStrataNum(int x, int y, int z) {
+        int num = 0;
+        auto xyPos = vec2f(x, y);
+        float depth = stratas[0].getHeight(xyPos);
+        int zDepth = -z;
+        while(zDepth > depth) {
+            num++;
+            depth += stratas[num].getHeight(xyPos);
+        }
+        return num;
+    }
 
-        float depth = 0;
-        int layerNum = 0;
+    void heightOnHeight(MaterialStratum[] stratas) {
         import graphics.image;
-        int height = 3000;
+        import materials;
+        import statistics;
+
+        mixin(MeasureTime!("Time to generate "));
+        int layerNum = 0;
+        float depth = stratas[layerNum].thickness;
+        int height = 3500;
         Image img = Image(null, 1280, height);
         vec3f color;
         int oldy=-1;
         string prevMat;
-        foreach(x,y, ref r, ref g, ref b, ref a ; img) {
+        color.set(0.5,1.0,1.0);
+        color *= 255;
+        foreach(x,Y, ref r, ref g, ref b, ref a ; img) {
+            auto y = Y - 500;
+            if(y < 0) {
+                color.toColor(r, g, b);
+                continue;
+            }
+            a = 255;
+            auto layerNum = getStrataNum(x, x, -y);
+            auto materialName = stratas[layerNum].materialName;
+            color = g_Materials[materialName].color.convert!float;
+            color.toColor(r, g, b);
+        }
+        img.save("strata_height_on_height.bmp");
+    }
+
+    MaterialStratum[] stratas;
+
+    void createWorld() {
+
+        import materials;
+        import graphics.image;
+        loadStrataInfo();
+        loadMaterials();
+        stratas = generateStratas();
+
+        int layerNum = 0;
+        float depth = stratas[layerNum].thickness;
+        int height = 3500;
+        Image img = Image(null, 1280, height);
+        vec3f color;
+        int oldy=-1;
+        string prevMat;
+        color.set(0.5,1.0,1.0);
+        color *= 255;
+        foreach(x,Y, ref r, ref g, ref b, ref a ; img) {
+            auto y = Y - 500;
+            if(y < 0) {
+                color.toColor(r, g, b);
+                continue;
+            }
             a = 255;
             if(y != oldy) {
                 oldy = y;
                 if(depth < y) {
-                    msg(depth);
-                    depth += stratas[layerNum].thickness;
                     layerNum++;
+                    if(layerNum == stratas.length) layerNum--;
+                    msg(depth, " ", stratas[layerNum].thickness);
+                    depth += stratas[layerNum].thickness;
                     color.set(0,0,0);
                 } else {
-                    if(layerNum == stratas.length) layerNum--;
                     auto materialName = stratas[layerNum].materialName;
                     if(prevMat != materialName)
                         msg(depth, " Material: ", materialName);
@@ -68,29 +122,8 @@ class Heightmaps {
         }
         img.save("strata_no_noise.bmp");
 
-        {
-            import statistics;
-        mixin(MeasureTime!("Time to generate "));
-        foreach(x,y, ref r, ref g, ref b, ref a ; img) {
-            a = 255;
-
-            depth = 0.0f;
-            layerNum = 0;
-            while(y > depth) {
-                depth += stratas[layerNum].getHeight(vec2f(1232+1.01728379*x+0.2f));
-                layerNum++;
-                if(layerNum == stratas.length) {
-                    layerNum--;
-                    break;
-                }
-            }
-            auto materialName = stratas[layerNum].materialName;
-            color = g_Materials[materialName].color.convert!float;
-            color.toColor(r, g, b);
-        }
-        }
-        img.save("strata.bmp");
-
+        //heightOnHeight(stratas);
+        heightOnHeight(stratas);
 
 
         mkdir("world");
@@ -117,8 +150,8 @@ class Heightmaps {
         msg("End amplitude: ", startAmplitude * 0.5^^octaves, " | ", endAmplitude);
         msg("End intervall: ", 0.5^^octaves / baseFrequency, " | ", endIntervall);
 
-        import random.gradientnoise;
-        auto noise = new GradientNoise!()(1023, 1023);
+        import random.simplex;
+        auto noise = new SimplexNoise(1023);
 
         uint LIMIT = mapSize * mapSize;
         uint LIMIT_STEP = LIMIT / 2500;
@@ -131,9 +164,8 @@ class Heightmaps {
             }
 
             float value = 0;
-            float frequency = baseFrequency;
             auto pos = vec2f(i / mapSize, i % mapSize);
-            pos *= frequency;
+            pos *= baseFrequency;
 
             float amplitude = startAmplitude;
 
@@ -141,7 +173,6 @@ class Heightmaps {
                 value += amplitude * noise.getValue(pos.X, pos.Y);
                 amplitude *= 0.5;
                 pos *= 2;
-                frequency *= 2;
             }
 
             mapPtr[i] = value;

@@ -64,7 +64,7 @@ void main(string[] args) {
 
         import heightmap;
         immutable mil = 10_000;
-        new Heightmaps(1 * mil);
+        //new Heightmaps(1 * mil);
         
         //args ~= "MaterialEditor";
 
@@ -235,7 +235,7 @@ void mainMenu() {
     guiSystem = new GuiSystem;
     mainMenu = new MainMenu(guiSystem);
     import gui.random.randommenu;
-    new RandomMenu(mainMenu);
+    //new RandomMenu(mainMenu);
 
 
     // Main loop etc
@@ -296,14 +296,24 @@ Game loadGame(string worldName, void delegate() loadDone) {
 
 void startServer() {
     if(!exists("saves/current")) {
+        msg("Alert! Tried to main.d:startServer() without a saves/current!");
         return;
     }
 
     GuiSystem guiSystem;
     guiSystem = new GuiSystem;
 
+    string fullText = "Server log\n";
+    import gui.guisystem.text;
+    auto txt = new GuiElementText(guiSystem, vec2d(0), fullText);
+    auto handleMsg = (string s) {
+        fullText ~= s;
+        txt.setText(fullText);
+    };
+
     Game game = new Game(true);
     game.loadGame();
+
 
     // Main loop etc
     long then;
@@ -340,5 +350,45 @@ void startServer() {
 
 
 void startClient(string host) {
+    msg("Starting client...");
+
+    //Yes yes...
+    GuiSystem guiSystem;
+    guiSystem = new GuiSystem;
+
+    Game game = new Game(false);
+    game.connect(host);
+
+    // Main loop etc
+    long then;
+    long now, nextTime = utime();
+    bool exit = false;
+    SDL_Event event;
+    GuiEvent guiEvent;
+    while (!exit) {
+        while (SDL_PollEvent(&event)) {
+            guiEvent.eventTimeStamp = now / 1_000_000.0;
+            exit = handleSDLEvent(event, guiEvent, guiSystem);
+        } //Out of sdl-messages
+
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glError();
+
+        now = utime();
+        long diff = now-then;
+        float deltaT = to!float(diff) / 1_000_000.0f;            
+        then = now;
+
+        guiSystem.tick(deltaT); //Eventually add deltatime and such as well :)
+        guiSystem.render();            
+        game.render(diff);
+
+        SDL_GL_SwapBuffers();
+
+        SDL_WM_SetCaption( "CoolGameYo!\0", "CoolGameYo!\0");
+    }
+
+    game.destroy();
+    guiSystem.destroy();
 
 }

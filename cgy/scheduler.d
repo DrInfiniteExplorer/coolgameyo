@@ -29,10 +29,12 @@ import worldstate.time;
 import worldstate.worldstate;
 
 import modules.module_;
+import modules.network;
 import util.util;
 import util.queue;
 
 import changes.worldproxy;
+import game;
 
 import alloc;
 
@@ -117,6 +119,8 @@ final class Scheduler {
 
     int activeWorkers;
 
+    Game game;
+
     long asyncLeft;
 
     long syncTime;
@@ -126,8 +130,9 @@ final class Scheduler {
 
     Condition cond;
 
-    this(WorldState world_) {
-        world = world_;
+    this(Game _game) {
+        game = _game;
+        world = game.getWorld();
         sync = new Queue!Task;
         async = new Queue!Task;
 
@@ -148,7 +153,7 @@ final class Scheduler {
         workers ~= thisTid();
         auto myProxy = new WorldProxy(world);
         proxies ~= myProxy;
-        foreach (x; 1 .. workerCount) {
+        foreach (x; 0 .. workerCount) {
             auto p = new WorldProxy(world);
             workers ~= spawn(&workerFun, cast(shared)this, cast(shared)p, x);
             proxies ~= p;
@@ -156,7 +161,7 @@ final class Scheduler {
 
         syncTime = utime();
         tickWatch.start();
-        workerFun(cast(shared)this, cast(shared)myProxy, 0);
+        //workerFun(cast(shared)this, cast(shared)myProxy, 0);
     }
 
     void exit() {
@@ -181,33 +186,6 @@ final class Scheduler {
         }
     }
 
-    void delegate() whenSerialized;
-    void startSerialize(void delegate() whenDone) {
-        whenSerialized = whenDone;
-        shouldSerialize = true;
-    }
-
-    private void serialize() {
-        world.serialize();
-        foreach (task; chain(sync[], async[])) {
-            //task.writeTo(output);
-        }
-        foreach (mod; modules) {
-            mod.serializeModule();
-        }
-        if (whenSerialized !is null) {
-            whenSerialized();
-        }
-        shouldSerialize = false;
-    }
-    
-    void deserialize() {
-        world.deserialize();
-        foreach (mod; modules) {
-            mod.deserializeModule();
-        }
-    }
-
     bool getTask(ref Task task, ChangeList changeList) {
         StopWatch sw;
         sw.start();
@@ -229,10 +207,13 @@ final class Scheduler {
         if (activeWorkers > 0) {
             cond.wait();
         } else {
+            /*
             auto timeLeft = nextSync - utime();
             if (timeLeft > 0) {
-                Thread.sleep(dur!"usecs"(timeLeft));
-            }
+                //Thread.sleep(dur!"usecs"(timeLeft));
+
+            }*/
+            //serverModule.doNetworkStuffUntil(nextSync);
         }
         activeWorkers += 1;
         
@@ -249,6 +230,19 @@ final class Scheduler {
 
     void doUpdateShit() {
         // this is the function that is the new tick in the world.
+
+        if(game.getIsServer) {
+            //Send the current changes.
+            foreach (proxy; proxies) {
+                game.pushNetworkChanges(proxy.changeList);
+            }        
+            game.doNetworkStuffUntil(nextSync);
+
+            game.getNetworkChanges(proxies[0].changeList);
+        } else {
+
+        }
+        //Apply the current changes.
         foreach (proxy; proxies) {
             proxy.changeList.apply(world);
         }
@@ -270,6 +264,28 @@ final class Scheduler {
         }
     }
 
+    //Starts a save of the game yeah~
+    void saveGame() {
+        shouldSerialize = true;
+    }
+
+    private void serialize() {
+        game.serialize();
+        foreach (task; chain(sync[], async[])) {
+            //task.writeTo(output);
+        }
+        foreach (mod; modules) {
+            mod.serializeModule();
+        }
+        shouldSerialize = false;
+    }
+
+    void deserialize() {
+        world.deserialize();
+        foreach (mod; modules) {
+            mod.deserializeModule();
+        }
+    }
 
     // this is so messy :(
     private bool getTask_impl(ref Task task, ChangeList changeList,
@@ -295,7 +311,9 @@ final class Scheduler {
                 }
                 assert (alone());
 
-                suspendMe(sw);
+                //Since was last alive, waited.
+                //Now the waiting is happening in doUpdateShit -> network update shit. Yeah.
+                //suspendMe(sw);
 
                 assert (alone());
 

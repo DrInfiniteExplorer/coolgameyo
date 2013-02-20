@@ -3,8 +3,10 @@ module strata;
 
 
 import std.algorithm : min, max;
+import std.math : abs;
 
 import util.util;
+import util.math;
 import random.valuesource;
 import random.gradientnoise;
 import random.simplex;
@@ -15,8 +17,8 @@ float pmax = -12931923123.0f;
 alias SimplexNoise RandomType;
 //alias GradientNoise!() RandomType;
 
-immutable awesomeSeed = 880128;
-//alias awesomeSeed seedFunc;
+//immutable seedFunc = 880128;
+//alias seedFunc awesomeSeed;
 alias unpredictableSeed seedFunc;
 
 struct MaterialStratum {
@@ -43,8 +45,8 @@ struct MaterialStratum {
                 pos *= 2;
                 frequency *= 2;
             }
-            pmin = min(pmin, value);
-            pmax = max(pmax, value);
+            //pmin = min(pmin, value);
+            //pmax = max(pmax, value);
             //msg("01: ", value, " ", pmin, " ", pmax);
             value = (value*0.4+0.8 - threshold) * thickness; //80% guaranteed, may reach 120%
         } else {
@@ -101,7 +103,7 @@ auto generateStratas() {
     immutable max = averageThickness + 75.0f;
     immutable sedimentaryLimit = 1500.0f;
 
-    gen.seed(awesomeSeed);
+    gen.seed(seedFunc);
 
     static auto getRandomType(LayerInformation layer) {
         while(true) {
@@ -129,6 +131,9 @@ auto generateStratas() {
 
     immutable soilLayerThickness = 3.0f;
     immutable soilLayers = 5;
+
+    //Add soil after erosion???? :D
+    /*
     foreach(i ; 0 .. soilLayers) {
         stratum.materialName = getRandomType(g_SoilTypes);
         stratum.thickness = soilLayerThickness;
@@ -136,18 +141,53 @@ auto generateStratas() {
         stratum.octaves = 3;
         stratum.threshold = 0.0f;
         stratum.randSource01 = true;
-        stratum.noise = new RandomType(awesomeSeed);
+        stratum.noise = new RandomType(seedFunc);
         strata ~= stratum;
     }
     depth += soilLayers * soilLayerThickness;
+    */
 
+    static float layerDepth(float depth, ref Random gen) {
+        //About 5-10 meters the first 50 meters
+        //Then 10-15 meters until 100 meters
+        // Then 10-20 meters until 150 meters
+        // Then 10-25 meters until 200 meters
+        // Im starting to see a pattern emerging here!
+        // At 200 meters, ranges from 10 to 50 meters.
+        // At 350 meters, ranges from 25 to 150 meters
+        // Limit at above range
+        if(depth <= 50) {
+            return uniform(5, 10, gen);
+        } else if(depth <= 100) {
+            return uniform(10, 15, gen);
+        } else if(depth <= 150) {
+            return uniform(10, 20, gen);
+        } else if(depth <= 200) {
+            return uniform(10, 25, gen);
+        } else if(depth <= 350) {
+            return uniform(10, 50, gen);
+        }
+        return uniform(25, 150, gen);
+    }
+
+    float magmaDepth = 0.0;
+    string prevMaterial;
     while(depth < targetDepth) {
-        auto randTypeNum = uniform(0, 5, gen);
+        auto sedimentChance = clamp( 0.8 - depth / 3000.0, 0.0, 1.0);
+        auto extrusiveChance = clamp(0.2 - depth / 1000.0, 0.0, 1.0);
+        auto metamorphChance = clamp(0.05 + depth / 2000.0, 0.0, 0.7);
+        auto intrusiveChance = clamp(0.05 + depth / 1500.0, 0.0, 0.5);
+        auto magmaChance = clamp(0.05 + depth / 1500.0, 0.0, 0.5);
+        auto magmaDistanceMod = (depth - magmaDepth);
+        if(magmaDistanceMod > 100) magmaDistanceMod = clamp( (magmaDistanceMod-100.0)/100.0, 0.0, 1.0);
+        else magmaDistanceMod = clamp(abs(40.0-magmaDistanceMod)/13.0, 0.0, 1.0);
+        magmaChance = clamp(magmaChance * magmaDistanceMod, 0.0, 1.0);
+        auto randTypeNum = dice(gen, sedimentChance, extrusiveChance, metamorphChance, intrusiveChance, magmaChance);
         switch(randTypeNum) {
             case 0:
                 if(depth > sedimentaryLimit) continue;
                 stratum.materialName = getRandomType(g_SedimentaryTypes);
-                stratum.thickness = uniform(min, max, gen);
+                stratum.thickness = layerDepth(depth, gen);
                 stratum.baseIntervall = 1000.0f;
                 stratum.octaves = 5;
                 stratum.threshold = 0.0f;
@@ -155,7 +195,7 @@ auto generateStratas() {
                 break;
             case 1:
                 stratum.materialName = getRandomType(g_ExtrusiveTypes);
-                stratum.thickness = uniform(min, max, gen);
+                stratum.thickness = uniform(5, 15, gen);
                 stratum.baseIntervall = 1000.0f;
                 stratum.octaves = 2;
                 stratum.threshold = 0.0f;
@@ -163,7 +203,7 @@ auto generateStratas() {
                 break;
             case 2:
                 stratum.materialName = getRandomType(g_MetamorphicTypes);
-                stratum.thickness = uniform(min, max, gen);
+                stratum.thickness = layerDepth(depth, gen);
                 stratum.baseIntervall = 500.0f;
                 stratum.octaves = 5;
                 stratum.threshold = 0.0f;
@@ -173,11 +213,12 @@ auto generateStratas() {
             case 4:
                 if(randTypeNum == 3) stratum.materialName = getRandomType(g_IntrusiveTypes);
                 else stratum.materialName = "magma";
-                stratum.thickness = uniform(min, max, gen);
-                msg("Make plutonic intrusions have proper thickness");
+                import std.math : log;
+                stratum.thickness = log(depth) * 4.0;
+                //msg("Make plutonic intrusions have proper thickness");
                 stratum.baseIntervall = 1000.0f;
-                stratum.octaves = 5;
-                stratum.threshold = 0.8f;
+                stratum.octaves = 3;
+                stratum.threshold = 0.9f;
                 stratum.randSource01 = true;
                 break;
             default:
@@ -185,8 +226,10 @@ auto generateStratas() {
                 BREAKPOINT;
         }
         if(randTypeNum != 4) {
-            stratum.noise = new RandomType(awesomeSeed);
+            stratum.noise = new RandomType(seedFunc);
         }
+        if(prevMaterial == stratum.materialName) continue;
+        prevMaterial = stratum.materialName;
         strata ~= stratum;
         depth += stratum.thickness;
     }

@@ -13,38 +13,9 @@ import changes.changes;
 
 alias util.array.Array Array;
 
-struct ChangeArrayCollection(Cs...) {
-    staticMap!(Array, Cs) arrays;
-
-    void init() {
-        foreach (i, c; Cs) {
-            //arrays[i] = new typeof(arrays[i]);
-        }
-    }
-
-    ref auto byType(T)() {
-        return arrays[staticIndexOf!(T, Cs)];
-    }
-
-    void apply(WorldState world) {
-        foreach (i, c; Cs) {
-            foreach (w; arrays[i][]) {
-                w.apply(world);
-            }
-        }
-    }
-
-    void reset() {
-        foreach (i, c; Cs) {
-            arrays[i].reset();
-        }
-    }
-}
-
-
 final class ChangeList {
 
-    ChangeArrayCollection!(
+    alias TypeTuple!(
             SetTile,
             DamageTile,
             RemoveTile,
@@ -67,8 +38,11 @@ final class ChangeList {
             DesignateMine,
 
             CustomChange
-            ) changeArrays;
+            ) ChangeTypes;
 
+    ubyte[] changeListData;
+
+    /*
     ref auto changes(T)() {
         return changeArrays.byType!T();
     }
@@ -79,14 +53,46 @@ final class ChangeList {
     void addCustomChange(CustomChange c){
         changes!CustomChange().insert(c);
     }
+    */
 
     this() {
-        changeArrays.init();
     }
-    
+
+    void add(T)(ref T change) if(staticIndexOf!(T, ChangeTypes) != -1) {
+        ubyte[] asBytes = (cast(ubyte*)&change)[0..T.sizeof];
+        changeListData ~= cast(ubyte)staticIndexOf!(T, ChangeTypes) ~ asBytes;
+    }
+    void add(T, Us...)(Us us) if(!is(T : Us[0])){
+        add!T(T(us));
+    }
+
     void apply(WorldState world){
-        changeArrays.apply(world);
-        changeArrays.reset();
+        ubyte* ptr = changeListData.ptr;
+        ubyte* endPtr = ptr + changeListData.length;
+        while(ptr !is endPtr) {
+            ubyte type = *ptr;
+            ptr++;
+            switch(type) {
+            foreach(idx, T ; ChangeTypes)   {
+                case idx:
+                    {
+                        auto changePtr = cast(T*)ptr;
+                        changePtr.apply(world);
+                        ptr += (*changePtr).sizeof;
+                    }
+                    break;
+                }
+            }
+
+        }
+
+        //changeArrays.reset();
+        changeListData.length = 0;
+        assumeSafeAppend(changeListData);
+    }
+
+    void readFrom(ubyte[] bytes) {
+        changeListData ~= bytes;
     }
 }
 

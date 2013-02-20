@@ -37,6 +37,14 @@ long utime() {
     return TickDuration.currSystemTick().usecs;
 }
 
+import std.concurrency : Tid, spawn;
+Tid spawnThread(void delegate() func) {
+    static void starter(shared void delegate() _func) {
+        _func();
+    }
+    return spawn(&starter, cast(shared)func);
+}
+
 alias vector2d!(ubyte)  vec2ub;
 alias vector2d!(int)  vec2i;
 alias vector2d!(float)  vec2f;
@@ -51,11 +59,51 @@ alias vector3d!(double) vec3d;
 alias aabbox3d!double aabbd;
 
 vec3i getTilePos(T)(vector3d!T v){
+    import util.math : fastFloor;
+    return vec3i(
+                 fastFloor(v.X),
+                 fastFloor(v.Y),
+                 fastFloor(v.Z));
+                 /*
     return vec3i(
         to!int(floor(v.X)),
         to!int(floor(v.Y)),
         to!int(floor(v.Z))
     );
+    */
+}
+
+const(TypeInfo_Class) isDerivedClass(string base, string derived) {
+    bool check(const TypeInfo_Class base, const TypeInfo_Class derived) {
+        if(base is derived) {
+            return true;
+        }
+        if(derived.base is null) return false;
+        return check(base, derived.base);
+    }
+    auto baseInfo = TypeInfo_Class.find(base);
+    auto derivedInfo = TypeInfo_Class.find(derived);
+    return check(baseInfo, derivedInfo) ? derivedInfo : null;
+}
+
+BaseType safeFactory(BaseType, alias DerivedType)() {
+    auto baseClassName = BaseType.classinfo.name;
+    //    pragma(msg, typeof(DerivedType));
+    static if( is( typeof(DerivedType) : string)) {
+        alias DerivedType derivedClassName;
+    } else {
+        auto derivedClassName = typeof(DerivedType).classinfo.name;
+    }
+    auto type = isDerivedClass(baseClassName, derivedClassName);
+    if(type is null) {
+
+        return null;
+    }
+    Object o = type.create();
+    enforce(o, "Could not create class of class-type " ~ derivedClassName);
+    BaseType t = cast(BaseType) o;
+    enforce(t, "Could not cast to base class-type " ~ baseClassName);
+    return t;
 }
 
 //TODO: Replace this shit with stuff from std.bitmanip.

@@ -124,7 +124,7 @@ unittest {
     msg(fastFloor(-1.5));
     msg(fastFloor(-1.5));
 
-    auto simplex = new SimplexNoise(51234);
+    auto simplex = new SimplexNoise(5134);
     double min = double.max;
     double max = -double.max;
     for(double t = 0; t < 123456; t += 0.1) {
@@ -133,7 +133,7 @@ unittest {
         if (max < v) max = v;
     }
     writeln("Simplex unit test: min ", min, " max ", max);
-    assert(max - min > 1.8, text("Derp derp lskjdflu blommorna brinner! ", max-min));
+    assert(max - min > 1.5, text("Derp derp lskjdflu blommorna brinner! ", max-min));
 
 
 /*

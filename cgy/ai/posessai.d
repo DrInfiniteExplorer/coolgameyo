@@ -196,7 +196,7 @@ class FPSControlAI : UnitAI, CustomChange {
     //Probably send information like "Unit X is player-controlled" to set NetworkControlledAI
     //which'll work kina like this one, i suppose.
     override int tick(WorldProxy world, PathModule p) {
-        world.addCustomChange(this);
+        //world.addCustomChange(this);
         
         foreach (tilePos, tile; tilesToChange) {
             world.designateMine(unit.clan, tilePos);

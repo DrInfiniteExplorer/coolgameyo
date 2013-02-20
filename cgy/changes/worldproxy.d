@@ -93,9 +93,11 @@ final class WorldProxy {
         changeList.add!DepositEntity(e, u.inventory, e2.inventory);
     }
 
+    /*
     void addCustomChange(CustomChange c) {
         changeList.addCustomChange(c);
     }
+    */
 
     Tile getTile(TilePos tp) {
         return world.getTile(tp);

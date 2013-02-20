@@ -21,39 +21,6 @@ import util.math;
 import util.rangefromto;
 import util.util;
 
-const(TypeInfo_Class) isDerivedClass(string base, string derived) {
-    bool check(const TypeInfo_Class base, const TypeInfo_Class derived) {
-        if(base is derived) {
-            return true;
-        }
-        if(derived.base is null) return false;
-        return check(base, derived.base);
-    }
-    auto baseInfo = TypeInfo_Class.find(base);
-    auto derivedInfo = TypeInfo_Class.find(derived);
-    return check(baseInfo, derivedInfo) ? derivedInfo : null;
-}
-
-BaseType safeFactory(BaseType, alias DerivedType)() {
-    auto baseClassName = BaseType.classinfo.name;
-//    pragma(msg, typeof(DerivedType));
-    static if( is( typeof(DerivedType) : string)) {
-        alias DerivedType derivedClassName;
-    } else {
-        auto derivedClassName = typeof(DerivedType).classinfo.name;
-    }
-    auto type = isDerivedClass(baseClassName, derivedClassName);
-    if(type is null) {
-
-        return null;
-    }
-    Object o = type.create();
-    enforce(o, "Could not create class of class-type " ~ derivedClassName);
-    BaseType t = cast(BaseType) o;
-    enforce(t, "Could not cast to base class-type " ~ baseClassName);
-    return t;
-}
-
 class Feature {
     abstract void affectHeightmap(LayerMap map, int level);
     abstract void init(LayerMap map);
