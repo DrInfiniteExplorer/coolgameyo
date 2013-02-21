@@ -122,13 +122,16 @@ class MainMenu : GuiElementWindow {
     }
     
     void onHostGame() {
+        g_isServer = true;
+        g_worldPath = "saves/server";
         setVisible(false);
         new NewGameMenu(this);
     }
     
     void onJoinGame() {
+        g_isServer = false;
+        g_worldPath = "saves/client";
         host = "127.0.0.1";
-        server = false;
         done = true;
     }
     

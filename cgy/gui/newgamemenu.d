@@ -6,7 +6,7 @@ module gui.newgamemenu;
 
 import std.conv;
 
-import main;
+import game;
 
 import graphics.image;
 
@@ -80,11 +80,11 @@ class NewGameMenu : GuiElementWindow {
         destroy();
     }    
     void onResumeGame() {
-        if(exists("saves/current")) {
-            msg("WARNING: saves/current exists. Terminating the previous existance!");
-            rmdir("saves/current");
+        if(exists(g_worldPath)) {
+            msg("WARNING: " ~ g_worldPath ~ " exists. Terminating the previous existance!");
+            rmdir(g_worldPath);
         }
-        copy("saves/" ~ gameName, "saves/current");
+        copy("saves/" ~ gameName, g_worldPath); //Will keep old save until we exit deliberately or somehow else.
         destroy();
         main.done = true;
         main.server = true;

@@ -48,9 +48,9 @@ mixin template Page2() {
 
         auto StartButton = new PushButton(page2, Rectd(backButton.leftOf, backButton.bottomOf + 0.05, 0.2, 0.1), "Start", {
             worldMap.destroy();
-            if(exists("saves/current")) {
-                msg("WARNING: saves/current exists. Terminating the previous existance!");
-                rmdir("saves/current");
+            if(exists(g_worldPath)) {
+                msg("WARNING: " ~ g_worldPath ~ " exists. Terminating the previous existance!");
+                rmdir(g_worldPath ~ "");
             }
             move("worlds/" ~ worldName, "saves/" ~ worldName);
             gameName = worldName;

@@ -8,6 +8,7 @@ import std.stdio;
 import std.conv;
 
 import json;
+import game;
 import modules.module_;
 import scheduler;
 import util.util;
@@ -133,8 +134,8 @@ final class PathModule : Module {
         Value jsonRoot = Value(values);
 	    auto jsonString = json.prettifyJSON(jsonRoot);
         
-        mkdir("saves/current/modules/path");
-        std.file.write("saves/current/modules/path/states.json", jsonString);
+        mkdir(g_worldPath ~ "/modules/path");
+        std.file.write(g_worldPath ~ "/modules/path/states.json", jsonString);
         
     }
     override void deserializeModule() {

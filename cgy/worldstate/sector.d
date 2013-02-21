@@ -16,6 +16,7 @@ import clans;
 import entitytypemanager;
 import json;
 import light;
+import game;
 import worldgen.maps;
 import worldstate.worldstate;
 import worldstate.block;
@@ -155,7 +156,7 @@ class Sector {
     }
     
     void serialize() {
-        string folder = text("saves/current/world/", sectorNum.value.X, ",", sectorNum.value.Y, "/", sectorNum.value.Z, "/");
+        string folder = text(g_worldPath ~ "/world/", sectorNum.value.X, ",", sectorNum.value.Y, "/", sectorNum.value.Z, "/");
         util.filesystem.mkdir(folder);
         
         auto file = std.stdio.File(folder ~ "blocks.bin", "wb");
@@ -173,7 +174,7 @@ class Sector {
     }
     
     bool deserialize(EntityTypeManager entityTypeManager, WorldState world) {
-        string folder = text("saves/current/world/", sectorNum.value.X, ",", sectorNum.value.Y, "/", sectorNum.value.Z, "/");
+        string folder = text(g_worldPath ~ "/world/", sectorNum.value.X, ",", sectorNum.value.Y, "/", sectorNum.value.Z, "/");
         if (!std.file.exists(folder)) {
             return false;
         }

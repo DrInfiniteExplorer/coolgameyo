@@ -26,6 +26,9 @@ import graphics.debugging;
 
 import json;
 import light;
+
+import game;
+
 //import worldgen.worldgen;
 
 public import util.pos;
@@ -170,8 +173,8 @@ class WorldState {
         serializeFloodfill(jsonRoot);
 
         auto jsonString = json.prettifyJSON(jsonRoot);
-        util.filesystem.mkdir("saves/current/world/");
-        std.file.write("saves/current/world/world.json", jsonString);
+        util.filesystem.mkdir(g_worldPath ~ "/world/");
+        std.file.write(g_worldPath ~ "/world/world.json", jsonString);
 
         Clans().serializeClans();
 
@@ -186,7 +189,7 @@ class WorldState {
     }
 
     void serializeHeightmap(SectorXYNum xy, SectorXY* sectorXY) {
-        string folder = text("saves/current/world/", xy.value.X, ",", xy.value.Y, "/");
+        string folder = text(g_worldPath ~ "/world/", xy.value.X, ",", xy.value.Y, "/");
         util.filesystem.mkdir(folder);
         if (sectorXY.heightmap !is null) {
             std.file.write(folder ~ "heightmap.bin", sectorXY.heightmap.heightmap);
@@ -197,10 +200,10 @@ class WorldState {
         //TODO: Totally redo serialization.
         //worldGen.deserialize();
 
-        if(!exists("saves/current/world/world.json")) {
+        if(!exists(g_worldPath ~ "/world/world.json")) {
             return; // Nothing to deserialize
         }
-        auto content = readText("saves/current/world/world.json");
+        auto content = readText(g_worldPath ~ "/world/world.json");
         auto jsonRoot = json.parse(content);
         uint activeUnitId;
 
@@ -246,7 +249,7 @@ class WorldState {
     body{
         void loadSectorXY(SectorXYNum xy) {
             SectorXY* xyPtr = getSectorXY(xy, false);
-            string folder = text("saves/current/world/", xy.value.X, ",", xy.value.Y, "/");
+            string folder = text(g_worldPath ~ "/world/", xy.value.X, ",", xy.value.Y, "/");
             if (util.filesystem.exists(folder ~ "heightmap.bin")) {
                 SectorHeightmap heightmap = new SectorHeightmap;            
                 heightmap.heightmap = cast(int[128][])std.file.read(folder ~ "heightmap.bin");

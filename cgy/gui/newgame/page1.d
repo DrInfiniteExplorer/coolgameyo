@@ -17,7 +17,10 @@ public static string[] enumerateSaves() {
         return null;
     }
     string[] ret;
-    dir("saves/", (string s) {if(s != "current") ret ~= s;});
+    dir("saves/", (string s) {
+        if(s != "server" && s != "client") 
+            ret ~= s;
+    });
     return ret;
 }
 

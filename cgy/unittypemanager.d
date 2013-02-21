@@ -7,10 +7,11 @@ import std.file;
 import graphics.texture;
 
 import json;
+import game;
 import statistics;
-import worldstate.tile;
-import util.singleton;
+import util.singleton; 
 import util.util;
+import worldstate.tile;
 
 struct UnitModelInfo {
     string name;
@@ -54,7 +55,7 @@ class UnitTypeManager {
 		
         // Loads the unit type id configuration
         Value idRootVal;
-        bool hasTypeIdConfFile = loadJSON("saves/current/unittypeidconfiguration.json", idRootVal);
+        bool hasTypeIdConfFile = loadJSON(g_worldPath ~ "/unittypeidconfiguration.json", idRootVal);
 		
 		if(!std.file.exists("data/unit_types.json")){
 			msg("Could not load unit types");
@@ -90,15 +91,15 @@ class UnitTypeManager {
             jsonString ~= ",\n";
         }
         jsonString~="}";
-        util.filesystem.mkdir("saves/current");
-        std.file.write("saves/current/unittypeidconfiguration.json", jsonString);
+        util.filesystem.mkdir(g_worldPath ~ "");
+        std.file.write(g_worldPath ~ "/unittypeidconfiguration.json", jsonString);
         */
-        util.filesystem.mkdir("saves/current");
+        util.filesystem.mkdir(g_worldPath ~ "");
         ushort[string] typeAA;
         foreach(type ; types) {
             typeAA[type.name] = type.id;
         }
-        encode(typeAA).saveJSON("saves/current/unittypeidconfiguration.json");
+        encode(typeAA).saveJSON(g_worldPath ~ "/unittypeidconfiguration.json");
     }
 
     UnitType byID(ushort id) {

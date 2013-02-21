@@ -96,13 +96,17 @@ vec3f getTileCoordSize(){
     return vec3f(inv, inv, 0.0f);
 }
 
+__gshared string g_settingsFilePath = "settings.json";
 
 void loadSettings(){
     Value rootVal;
     
-    if(!loadJSON("settings.json", rootVal)) {
-        msg("Settings file does not exist.");
-        return;
+    if(!loadJSON(g_settingsFilePath, rootVal)) {
+        msg("Assigned settings file could not be loaded. Trying default settings file.");
+        if(!loadJSON("settings.json", rootVal)) {
+            msg("Settings file does not exist.");
+            return;
+        }
     }
 
     rootVal.readJSONObject("renderSettings", &renderSettings.serializableSettings,
@@ -116,7 +120,7 @@ void saveSettings(){
     captureWindowPositions();
     makeJSONObject("renderSettings", renderSettings.serializableSettings,
                    "controlSettings", controlSettings.serializableSettings,
-                   "windowSettings", windowSettings.serializableSettings).saveJSON("settings.json");
+                   "windowSettings", windowSettings.serializableSettings).saveJSON(g_settingsFilePath);
 
 
 }

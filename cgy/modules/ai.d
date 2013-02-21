@@ -7,6 +7,7 @@ import std.stdio;
 
 import changes.worldproxy;
 import json;
+import game;
 import modules.module_;
 import modules.path;
 import unit;
@@ -67,8 +68,8 @@ class AIModule : Module, WorldStateListener {
         }
         auto jsonRoot = Value(jsonStates);
         auto jsonString = json.prettifyJSON(jsonRoot);
-        mkdir("saves/current/modules/ai");
-        std.file.write("saves/current/modules/ai/states.json", jsonString);
+        mkdir(g_worldPath ~ "/modules/ai");
+        std.file.write(g_worldPath ~ "/modules/ai/states.json", jsonString);
 
     }
     override void deserializeModule() { //module interface

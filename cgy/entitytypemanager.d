@@ -9,10 +9,10 @@ import std.file;
 import graphics.texture;
 
 import json;
-
-import worldstate.tile;
+import game;
 import statistics;
 import util.util;
+import worldstate.tile;
 
 struct BranchType {
     ubyte id;                           // id=0 is reserved for the start branch which is NOT defined in a file. See this as the seeds or the entity.
@@ -139,7 +139,7 @@ class EntityTypeManager {
 		
         // Loads the entity type id configuration
         Value idRootVal;
-        bool hasTypeIdConfFile = loadJSON("saves/current/entitytypeidconfiguration.json", idRootVal);
+        bool hasTypeIdConfFile = loadJSON(g_worldPath ~ "/entitytypeidconfiguration.json", idRootVal);
 
 		//EntityType tempType;
 		if(!std.file.exists("data/entity_types.json")){
@@ -178,15 +178,15 @@ class EntityTypeManager {
             jsonString ~= ",\n";
         }
         jsonString~="}";
-        util.filesystem.mkdir("saves/current");
-        std.file.write("saves/current/entitytypeidconfiguration.json", jsonString);
+        util.filesystem.mkdir(g_worldPath ~ "");
+        std.file.write(g_worldPath ~ "/entitytypeidconfiguration.json", jsonString);
         */
-        util.filesystem.mkdir("saves/current");
+        util.filesystem.mkdir(g_worldPath ~ "");
         ushort[string] typeAA;
         foreach(type ; types) {
             typeAA[type.name] = type.id;
         }
-        encode(typeAA).saveJSON("saves/current/entitytypeidconfiguration.json");
+        encode(typeAA).saveJSON(g_worldPath ~ "/entitytypeidconfiguration.json");
 
     }
 

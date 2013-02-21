@@ -20,7 +20,7 @@ import graphics.shader;
 import settings;
 import util.util;
 
-void initOpenGL(bool client){
+void initOpenGL(){
     string derp = to!string(glGetString(GL_VERSION));
     auto a = split(derp, ".");
     auto major = to!int(a[0]);
@@ -34,19 +34,14 @@ void initOpenGL(bool client){
     glError();
     glFrontFace(GL_CCW);
     glError();
-    if (client) {
-        DerelictGL.loadClassicVersions(GLVersion.GL21); //BECAUSE THERE IS ONLY UP TO 2.1 IN THE CLASSIC VERSION! :s
+    DerelictGL.loadClassicVersions(GLVersion.GL21); //BECAUSE THERE IS ONLY UP TO 2.1 IN THE CLASSIC VERSION! :s
+    glError();
+
+    if(renderSettings.glVersion >= 3.0) {
+        DerelictGL.loadModernVersions(GLVersion.GL30);
         glError();
-
-        if(renderSettings.glVersion >= 3.0) {
-            DerelictGL.loadModernVersions(GLVersion.GL30);
-            glError();
-        } else {
-            msg("ALERT! Don't have opengl 3.0, stuff amy crash randomly, and probably will!");
-        }
-
     } else {
-        //Load with lesser requirements.
+        msg("ALERT! Don't have opengl 3.0, stuff amy crash randomly, and probably will!");
     }
 
     int temp;

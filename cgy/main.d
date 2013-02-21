@@ -13,8 +13,6 @@ import std.exception;
 import std.stdio;
 import std.string;
 
-import std.file;
-
 import derelict.sdl.sdl;
 import derelict.opengl.gl;
 import derelict.devil.il;
@@ -32,6 +30,7 @@ import game;
 import util.pos;
 import statistics;
 import settings;
+import util.filesystem;
 import util.memory;
 import util.util;
 import util.window;
@@ -44,9 +43,6 @@ import gui.mainmenu;
 
 import alloc;
 
-bool client = true;
-bool server = true;
-bool worker = true;
 SDL_Surface* surface;     
 
 void main(string[] args) {
@@ -54,11 +50,31 @@ void main(string[] args) {
     try {
         setThreadName("Main thread");
         std.concurrency.register("Main thread", thisTid());
+
+        //args ~= "--MaterialEditor";
+        //args ~= "--hostServer=880128";
+
+
+        bool materialEditor;
+        string joinGame;
+        import std.getopt;
+        getopt(args,
+               "MaterialEditor", &materialEditor,
+               "settingsFile", &g_settingsFilePath,
+               "hostGame", &g_worldPath,
+               "joinGame", &joinGame);
+
         loadSettings();
         saveSettings();
 
         initLibraries();
+        scope(exit) {
+            saveSettings();
+            deinitLibraries();
+        }
+
         createWindow();
+
 
         init_temp_alloc(1024*1024);
 
@@ -66,24 +82,30 @@ void main(string[] args) {
         immutable mil = 10_000;
         //new Heightmaps(1 * mil);
         
-        //args ~= "MaterialEditor";
 
-        bool doneSomething = false;
-        foreach(arg ; args) {
-            if(doneSomething) break;
-            switch(arg) {
-                case "MaterialEditor":
-                    import materials;
-                    MaterialEditor(); doneSomething = true; break;
-                default:
-            }
+
+
+        if(materialEditor) {
+            import materials;
+            MaterialEditor();
         }
-        if(!doneSomething) {
-            mainMenu();
+        if(g_worldPath) {
+            rmdir("saves/server");
+            copy("saves/" ~ g_worldPath, "saves/server");
+            g_isServer = true;
+            g_worldPath = "saves/server";
+            startServer();
+            return;
+        }
+        if(joinGame) {
+            rmdir("saves/client");
+            g_isServer = false;
+            g_worldPath = "saves/client";
+            startClient(joinGame);
+            return;
         }
 
-        saveSettings();
-        deinitLibraries();
+        mainMenu();
     } catch (Exception e) {
         import util.util;
         writeln("Exception:\n\n", e.msg);
@@ -94,9 +116,7 @@ void main(string[] args) {
 
 void initLibraries() {
     DerelictSDL.load();
-    if (client) {
-        DerelictGL.load(); //Init opengl regardless?
-    }
+    DerelictGL.load(); //Init opengl regardless?
     DerelictIL.load();
     DerelictILU.load();
     ilInit();
@@ -108,9 +128,7 @@ void deinitLibraries() {
     deinitOpenGL();
     SDL_Quit();
     DerelictIL.unload();
-    if (client) {
-        DerelictGL.unload();
-    }
+    DerelictGL.unload();
     DerelictSDL.unload();
 }
 
@@ -118,7 +136,7 @@ void createWindow() {
     std.exception.enforce(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_NOPARACHUTE) == 0,
                           SDLError());
 
-    if (client) {
+    //if (client) {
         //Initialize opengl only if client... ?
         //Prolly want to otherwise as well, or gui wont work :P:P:P
         //But make less demanding settings in that case, etc.
@@ -134,7 +152,7 @@ void createWindow() {
         //Smoothes the edges of the tiles, makes it look real nice
         SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS,  1);
         SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES,  16);
-    }
+    //}
 
     surface = SDL_SetVideoMode(
                                renderSettings.windowWidth,
@@ -145,7 +163,7 @@ void createWindow() {
     windowSettings.windowsInitialized = true;
     repositionWindows();
     enforce(surface, text("Could not set sdl video mode (" , SDLError() , ")"));                            
-    initOpenGL(client);
+    initOpenGL();
 
     //Durnt remember what this actually did.. think this enables translation of keypresses to characters? :)
     SDL_EnableUNICODE(1);
@@ -295,8 +313,9 @@ Game loadGame(string worldName, void delegate() loadDone) {
 
 
 void startServer() {
-    if(!exists("saves/current")) {
-        msg("Alert! Tried to main.d:startServer() without a saves/current!");
+
+    if(!exists(g_worldPath)) {
+        msg("Alert! Tried to main.d:startServer() without a " ~ g_worldPath ~ "!");
         return;
     }
 
@@ -381,6 +400,7 @@ void startClient(string host) {
 
         guiSystem.tick(deltaT); //Eventually add deltatime and such as well :)
         guiSystem.render();            
+
         game.render(diff);
 
         SDL_GL_SwapBuffers();

@@ -7,6 +7,7 @@ import std.exception;
 
 import clan;
 import json;
+import game;
 import modules.module_;
 import util.singleton;
 import worldstate.worldstate;
@@ -49,7 +50,7 @@ final class Clans : Module {
 
     void serializeClans() {
 
-        util.filesystem.mkdir("saves/current/world/clans/");
+        util.filesystem.mkdir(g_worldPath ~ "/world/clans/");
 
         auto clanList = encode(array(map!q{a.clanId}(clans)));
         auto jsonRoot = Value([
@@ -57,7 +58,7 @@ final class Clans : Module {
         ]);
         auto jsonString = json.prettifyJSON(jsonRoot);
 
-        std.file.write("saves/current/world/clans/clans.json", jsonString);
+        std.file.write(g_worldPath ~ "/world/clans/clans.json", jsonString);
 
         foreach(clan ; clans) {
             clan.serialize();
@@ -66,7 +67,7 @@ final class Clans : Module {
 
     void deserializeClans() {
         int[] clanList;
-        loadJSON("saves/current/world/clans/clans.json").
+        loadJSON(g_worldPath ~ "/world/clans/clans.json").
             readJSONObject("clanList", &clanList);
 
         foreach(clanId ; clanList) {

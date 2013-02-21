@@ -3,6 +3,8 @@ module util.queue;
 
 import std.exception;
 
+import util.util : BREAK_IF;
+
 class Queue(T) {
     struct Node {
         Node* next;
@@ -21,7 +23,7 @@ class Queue(T) {
         }
     }
     T removeAny() {
-        enforce(!empty);
+        BREAK_IF(empty);
         T ret = first.value;
 
         first = first.next;

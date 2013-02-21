@@ -38,6 +38,7 @@ import heightsheets.heightsheets;
 import json;
 
 //import changes.changelist;
+import main;
 import modules.ai;
 import modules.network;
 import modules.path;
@@ -58,11 +59,8 @@ import worldstate.worldstate;
 //import worldgen.worldgen;
 import worldgen.maps;
 
-
-
-
-
-
+__gshared bool g_isServer;
+__gshared string g_worldPath;
 string SDLError() { return to!string(SDL_GetError()); }
 
 class Game{
@@ -137,11 +135,9 @@ class Game{
             sceneManager = new SceneManager();
         }
 
-        if(isServer) {
-            worldMap = new WorldMap();
-            worldMap.loadWorld("saves/current");
-            worldMap.tileSys = tileTypeManager;
-        }
+        worldMap = new WorldMap();
+        worldMap.loadWorld(g_worldPath);
+        worldMap.tileSys = tileTypeManager;
         worldState = new WorldState(worldMap, tileTypeManager, entityTypeManager, unitTypeManager, sceneManager);
 
         scheduler = new Scheduler(this);
@@ -187,7 +183,7 @@ class Game{
         g_UnitCount = 0;
 
         vec2i startPos;
-        loadJSON("saves/current/start.json").readJSONObject("startPos", &startPos);
+        loadJSON(g_worldPath ~ "/start.json").readJSONObject("startPos", &startPos);
 
         UnitPos topOfTheWorld(TileXYPos xy) {
             auto top = worldState.getTopTilePos(xy);
@@ -282,14 +278,14 @@ class Game{
     //Called in loading thread.
     private void deserialize() {
 
-        if(exists("saves/current/start.json")) {
+        if(exists(g_worldPath ~ "/start.json")) {
             populateWorld();
-            deleteFile("saves/current/start.json");
+            deleteFile(g_worldPath ~ "/start.json");
             return;
         }
         worldState.deserialize();
 
-        auto content = readText("saves/current/game.json");
+        auto content = readText(g_worldPath ~ "/game.json");
         auto rootVal = json.parse(content);
         uint activeUnitId;
         uint unitCount;
@@ -316,7 +312,7 @@ class Game{
                 ]);
         auto jsonString = json.prettifyJSON(jsonRoot);
 
-        std.file.write("saves/current/game.json", jsonString);
+        std.file.write(g_worldPath ~ "/game.json", jsonString);
         worldState.serialize();
     }
     /*
@@ -331,7 +327,7 @@ class Game{
                     rmdir(saveDir);
                 }
                 //Need to implement a recursive copy function, in util, perhaps?
-                util.filesystem.copy("saves/current", saveDir);
+                util.filesystem.copy(g_worldPath ~ "", saveDir);
                 onDone();
                 });
     }

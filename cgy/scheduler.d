@@ -147,19 +147,19 @@ final class Scheduler {
 
     void start(int workerCount=core.cpuid.threadsPerCPU) {
         msg("using ", workerCount, " workers");
-        //workerCount = 1;
+        workerCount = 1;
 
         activeWorkers = workerCount;
-        workers ~= thisTid();
-        auto myProxy = new WorldProxy(world);
-        proxies ~= myProxy;
+        syncTime = utime();
+        //workers ~= thisTid();
+        //auto myProxy = new WorldProxy(world);
+        //proxies ~= myProxy;
         foreach (x; 0 .. workerCount) {
             auto p = new WorldProxy(world);
             workers ~= spawn(&workerFun, cast(shared)this, cast(shared)p, x);
             proxies ~= p;
         }
 
-        syncTime = utime();
         tickWatch.start();
         //workerFun(cast(shared)this, cast(shared)myProxy, 0);
     }
@@ -231,7 +231,7 @@ final class Scheduler {
     void doUpdateShit() {
         // this is the function that is the new tick in the world.
 
-        if(game.getIsServer) {
+        if(g_isServer) {
             //Send the current changes.
             foreach (proxy; proxies) {
                 game.pushNetworkChanges(proxy.changeList);
@@ -240,6 +240,10 @@ final class Scheduler {
 
             game.getNetworkChanges(proxies[0].changeList);
         } else {
+            auto timeLeft = nextSync - utime();
+            if (timeLeft > 0) {
+                Thread.sleep(dur!"usecs"(timeLeft));
+            }
 
         }
         //Apply the current changes.
@@ -301,21 +305,24 @@ final class Scheduler {
                     suspendMe(sw);
 
                     if (exiting) {
-                        bool pred(Tid t) {
-                            return t == thisTid();
+                        static void cleanUp(ref Tid[] workers) {
+                            bool pred(Tid t) {
+                                return t == thisTid();
+                            }
+                            workers = remove!(pred)(workers);
                         }
-                        workers = remove!(pred)(workers);
+                        cleanUp(workers);
                         return false;
                     }
                     return getTask_impl(task, changeList, sw);
                 }
-                assert (alone());
+                BREAK_IF(!alone());
 
                 //Since was last alive, waited.
                 //Now the waiting is happening in doUpdateShit -> network update shit. Yeah.
                 //suspendMe(sw);
 
-                assert (alone());
+                BREAK_IF(!alone());
 
                 state = State.update;
 
@@ -323,7 +330,7 @@ final class Scheduler {
 
             case State.update:
 
-                assert (alone());
+                BREAK_IF(!alone());
 
                 syncTime = utime();
 
@@ -337,7 +344,6 @@ final class Scheduler {
                 }
                 */
 
-                wakeWorkers();
 
                 TICK_LOL += 1;
 
@@ -347,11 +353,14 @@ final class Scheduler {
                 }
 
                 state = state.sync;
+                wakeWorkers();
                 return getTask_impl(task, changeList, sw);
 
             case State.sync:
                 auto t = sync.removeAny();
+                msg(&t);
 
+                //If synctask is only task, then will never return true.
                 if (!t.syncsScheduler) {
                     task = t;
                     return true;
@@ -359,12 +368,13 @@ final class Scheduler {
 
                 state = State.forcedAsync;
                 asyncLeft = ASYNC_COUNT;
+                push(syncTask({}));
                 sync.insert(syncTask());
                 return getTask_impl(task, changeList, sw);
 
             case State.forcedAsync:
                 asyncLeft -= 1;
-                assert (asyncLeft >= 0);
+                BREAK_IF (asyncLeft < 0);
                 if (asyncLeft == 0 || async.empty) {
                     state = State.async;
                     return getTask_impl(task, changeList, sw);

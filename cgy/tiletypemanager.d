@@ -10,6 +10,7 @@ import std.stdio;
 import graphics.texture;
 
 import json;
+import game;
 
 import statistics;
 import util.filesystem;
@@ -78,7 +79,7 @@ class TileTypeManager {
 		
         // Loads the tile type id configuration
         Value idRootVal;
-        bool hasTypeIdConfFile = loadJSON("saves/current/tiletypeidconfiguration.json", idRootVal);
+        bool hasTypeIdConfFile = loadJSON(g_worldPath ~ "/tiletypeidconfiguration.json", idRootVal);
 
 		TileType_t tempType;
 		if(!exists("data/tile_types.json")){
@@ -131,11 +132,11 @@ class TileTypeManager {
             }
         }
         jsonString~="}";
-        util.filesystem.mkdir("saves/current");
-        std.file.write("saves/current/tiletypeidconfiguration.json", jsonString);
+        util.filesystem.mkdir(g_worldPath ~ "");
+        std.file.write(g_worldPath ~ "/tiletypeidconfiguration.json", jsonString);
         */
 
-        util.filesystem.mkdir("saves/current");
+        util.filesystem.mkdir(g_worldPath ~ "");
         // don't save invalid or air
         ushort[string] typeAA;
         foreach(type ; types) {
@@ -143,7 +144,7 @@ class TileTypeManager {
                 typeAA[type.name] = type.id;
             }
         }
-        encode(typeAA).saveJSON("saves/current/tiletypeidconfiguration.json");
+        encode(typeAA).saveJSON(g_worldPath ~ "/tiletypeidconfiguration.json");
 
         foreach(groupName, val ; loadJSON("data/tile_groups.json").asObject()) {
             TileType[] group;

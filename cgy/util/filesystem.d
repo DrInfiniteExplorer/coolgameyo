@@ -52,7 +52,9 @@ void mkdir(string path) {
 
 //Removes dir, recursively
 void rmdir(string path) {
-    rmdirRecurse(path);
+    if(existsDir(path)) {
+        rmdirRecurse(path);
+    }
 }
 
 //Copies, recursively

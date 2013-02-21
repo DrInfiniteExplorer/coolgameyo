@@ -9,6 +9,7 @@ import clans;
 import json;
 import unit;
 
+import game;
 import mission;
 import scheduler;
 
@@ -163,7 +164,7 @@ final class NormalClan : Clan {
     }
 
     override void serialize() {
-        auto folder = "saves/current/world/clans/" ~ to!string(clanId) ~"/";
+        auto folder = g_worldPath ~ "/world/clans/" ~ to!string(clanId) ~"/";
         util.filesystem.mkdir(folder);
 
         Value darp(Unit unit) {
@@ -177,7 +178,7 @@ final class NormalClan : Clan {
 
     override void deserialize(int clanId) {
         _clanId = clanId;
-        auto folder = "saves/current/world/clans/" ~ to!string(clanId) ~"/";
+        auto folder = g_worldPath ~ "/world/clans/" ~ to!string(clanId) ~"/";
         enforce(exists(folder), "Folder does not exist!" ~ folder);
 
         auto content = readText(folder ~ "members.json");
