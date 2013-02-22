@@ -290,7 +290,7 @@ final class Scheduler {
     }
 
     void deserialize() {
-        world.deserialize();
+        game.deserialize();
         foreach (mod; modules) {
             mod.deserializeModule();
         }

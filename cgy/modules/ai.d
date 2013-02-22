@@ -73,7 +73,7 @@ class AIModule : Module, WorldStateListener {
 
     }
     override void deserializeModule() { //module interface
-        BREAKPOINT;
+        pragma(msg, "Implement AIModule.deserializeModule()");
     }
     override void update(WorldState world, Scheduler scheduler) { //module interface
         foreach (ref state; states) {

@@ -66,13 +66,17 @@ final class Clans : Module {
     }
 
     void deserializeClans() {
+        import gaia;
         int[] clanList;
         loadJSON(g_worldPath ~ "/world/clans/clans.json").
             readJSONObject("clanList", &clanList);
 
         foreach(clanId ; clanList) {
-            auto clan = new NormalClan();
-            clan.init(worldState);
+            Clan clan = Gaia();
+            if(clanId) {
+                clan = new NormalClan();
+                clan.init(worldState);
+            }
             clan.deserialize(clanId);
         }
     }

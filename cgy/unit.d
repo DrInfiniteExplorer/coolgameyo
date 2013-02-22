@@ -46,7 +46,7 @@ struct Demand {
 
     void tick() { current -= r; }
 
-    alias current this;
+    //alias current this;
 }
 
 Unit newUnit() {
@@ -102,6 +102,7 @@ final class Unit {
         return val;
     }
     void fromJSON(Value val) {
+        //msg(val);
         val.read(unitData);
         int typeId;
         int clanId;

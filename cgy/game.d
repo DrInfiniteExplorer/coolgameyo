@@ -272,11 +272,12 @@ class Game{
         //clientModule = new ClientModule(host);
         initClientModule(host);
         init();
+        scheduler.deserialize();
         finishInit();
     }
 
-    //Called in loading thread.
-    private void deserialize() {
+    //Herp derp will be called from scheduler.deserialize. Yeah.
+    void deserialize() {
 
         if(exists(g_worldPath ~ "/start.json")) {
             populateWorld();
@@ -302,7 +303,6 @@ class Game{
     }
 
     void serialize() {
-
         //private Unit               activeUnit; //TODO: Find out when this unit dies, and tell people.
         auto activeUnit = Value(activeUnit.id);
         auto unitCount = Value(g_UnitCount);
@@ -315,23 +315,6 @@ class Game{
         std.file.write(g_worldPath ~ "/game.json", jsonString);
         worldState.serialize();
     }
-    /*
-    void saveGame(string name, void delegate() onDone)
-        in{
-            enforce( name != "current", "Invalid save name: " ~ name);
-        }
-    body{
-        serializeAll({
-                string saveDir = "saves/" ~ name;
-                if (exists(saveDir)) {
-                    rmdir(saveDir);
-                }
-                //Need to implement a recursive copy function, in util, perhaps?
-                util.filesystem.copy(g_worldPath ~ "", saveDir);
-                onDone();
-                });
-    }
-    */
 
     Camera getCamera() {
         return camera;

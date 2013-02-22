@@ -139,7 +139,7 @@ final class PathModule : Module {
         
     }
     override void deserializeModule() {
-        BREAKPOINT;
+        pragma(msg, "Implement PathModule.deserializeModule()");
     }
 
     override void update(WorldState world, Scheduler scheduler) { //Module interface
