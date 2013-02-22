@@ -44,7 +44,7 @@ void writeBin(T)(string path, T t) {
 //Makes dir, recursively
 void mkdir(string path) {
     if (exists(path)) {
-        enforce(isDir(path), "Non-filder with name exists:" ~path);
+        enforce(isDir(path), "Non-folder with name exists:" ~path);
         return;
     }
     mkdirRecurse(path);

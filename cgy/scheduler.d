@@ -147,7 +147,9 @@ final class Scheduler {
 
     void start(int workerCount=core.cpuid.threadsPerCPU) {
         msg("using ", workerCount, " workers");
-        workerCount = 1;
+        if(!g_isServer) {
+            workerCount = 1;
+        }
 
         activeWorkers = workerCount;
         syncTime = utime();
@@ -282,6 +284,9 @@ final class Scheduler {
             mod.serializeModule();
         }
         shouldSerialize = false;
+        while(game.sendingSaveGame){
+            pragma(msg, "Fix proper thread communication for handling sending of games after sync.");
+        }
     }
 
     void deserialize() {
@@ -358,7 +363,7 @@ final class Scheduler {
 
             case State.sync:
                 auto t = sync.removeAny();
-                msg(&t);
+                //msg(&t);
 
                 //If synctask is only task, then will never return true.
                 if (!t.syncsScheduler) {

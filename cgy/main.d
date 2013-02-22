@@ -370,6 +370,10 @@ void startServer() {
 
 void startClient(string host) {
     msg("Starting client...");
+    if(exists(g_worldPath)) {
+        msg("Alert! Old client stuff lingering; EXTERMINATING");
+        rmdir(g_worldPath);
+    }
 
     //Yes yes...
     GuiSystem guiSystem;

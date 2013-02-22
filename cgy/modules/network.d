@@ -3,6 +3,7 @@ module modules.network;
 import modules.module_;
 
 import std.socket;
+import util.socket : readLine, tcpSendDir;
 import util.util;
 
 enum max_clients = 13;
@@ -45,7 +46,6 @@ mixin template ServerModule() {
             sock.close();
             return false;
         }
-        import util.socket;
         if(readLine(sock) != HANDSHAKE_B[0..$-1]) {
             sock.close();
             return false;
@@ -55,9 +55,13 @@ mixin template ServerModule() {
   
     void sendEverything(Socket sock) {
         spawnThread({
+            while(scheduler.shouldSerialize) {
+            }
             msg("Starting send all things ever thread");
             sock.send("Sending all things ever to client\n");
-            
+            tcpSendDir(sock, g_worldPath);
+            sock.send("All things sent to client\n");
+
             sendingSaveGame--;
             clients ~= Client(sock, [], 0, 0);
         });
@@ -245,6 +249,8 @@ mixin template ClientModule() {
 
         //Prepare to receiveive all the game data everrrrr!
 
+        msg(readLine(socket));
+        tcpReceiveDir(socket, g_worldPath);
         msg(readLine(socket));
 
 

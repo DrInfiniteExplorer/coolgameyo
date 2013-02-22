@@ -128,6 +128,7 @@ class Heightmaps {
 
         mkdir("world");
         auto memfile = new MmFile("world/map1", MmFile.Mode.readWriteNew, mapSizeBytes, null, 0);
+        scope(exit) delete memfile;
         auto mapPtr = cast(float[])memfile[];
         //float mapPtr[] = new float[cast(uint)mapSizeBytes / float.sizeof];
 
