@@ -61,7 +61,17 @@ import worldgen.maps;
 
 __gshared bool g_isServer;
 __gshared string g_worldPath;
+
+__gshared string g_playerName = ""; //Default player name. What should that be?
+
 string SDLError() { return to!string(SDL_GetError()); }
+
+final class PlayerInformation {
+    string name;
+    vec2d position;
+    //WHAT ELSE?? D:
+    //Information about which client he is?
+}
 
 class Game{
 
@@ -85,7 +95,8 @@ class Game{
     private UnitTypeManager     unitTypeManager;
     private Unit                activeUnit; //TODO: Find out when this unit dies, and tell people.
 
-
+    private vec2i               spawnPoint;
+    private PlayerInformation[string] players;
 
     this(bool server) {
         isServer = server;
@@ -97,21 +108,33 @@ class Game{
     }
 
     void destroy() {
-        //Wait until done. 
-        scheduler.exit();
-        while(scheduler.running()){
-            msg("Waiting for scheduler to terminate worker threads...");
-            core.thread.Thread.sleep(dur!"seconds"(1));
+        //Wait until done.
+        if(scheduler) {
+            scheduler.exit();
+            while(scheduler.running()){
+                msg("Waiting for scheduler to terminate worker threads...");
+                core.thread.Thread.sleep(dur!"seconds"(1));
+            }
         }
 
         //Also make policy on where stuff is destroyed.
         pragma(msg, "Make so that stuff that is only client, only destroys when is client");
-        tileGeometry.destroy();
-        renderer.destroy();
-        worldState.destroy();
-        worldMap.destroy();
+        if(tileGeometry) {
+            tileGeometry.destroy();
+        }
+        if(renderer) {
+            renderer.destroy();
+        }
+        if(worldState) {
+            worldState.destroy();
+        }
+        if(worldMap) {
+            worldMap.destroy();
+        }
 
-        aiModule.destroy();
+        if(aiModule) {
+           aiModule.destroy();
+        }
 
         destroyed = true;
     }
@@ -182,8 +205,7 @@ class Game{
 
         g_UnitCount = 0;
 
-        vec2i startPos;
-        loadJSON(g_worldPath ~ "/start.json").readJSONObject("startPos", &startPos);
+        loadJSON(g_worldPath ~ "/start.json").readJSONObject("startPos", &spawnPoint);
 
         UnitPos topOfTheWorld(TileXYPos xy) {
             auto top = worldState.getTopTilePos(xy);
@@ -203,73 +225,22 @@ class Game{
             return u;
         }
 
-        auto uu = addUnitAtPos(vec2i(3,3) + startPos);
+        auto uu = addUnitAtPos(vec2i(3,3) + spawnPoint);
         activeUnit = uu;
         worldState._worldProxy.createUnit(uu);
 
-        auto u = addUnitAtPos(vec2i(3,-20) + startPos);
+        auto u = addUnitAtPos(vec2i(3,-20) + spawnPoint);
         u.ai = new TestAI(u);
         worldState._worldProxy.createUnit(u);
-
-
-        /*
-        // following is retarded code, ETC :d
-        EntityPos topOfTheWorld2(TileXYPos xy) {
-            auto top = worldState.getTopTilePos(xy);
-            msg("top: ", top);
-            auto ret = top.toEntityPos();
-            ret.value.Z += 1;
-            msg("ret: ", ret);
-
-            return ret;
-        }
-        auto xy = TileXYPos(vec2i(1,5));
-        xy.value += offset;
-        auto o = newEntity();
-        o.pos = topOfTheWorld2(xy);
-        o.type = worldState.entityTypeManager.byName("tree");
-        worldState.addEntity(o);
-        msg("o.pos == ", o.pos);
-        xy = TileXYPos(vec2i(5,1));
-        xy.value += offset;
-        o = newEntity();
-        o.pos = topOfTheWorld2(xy);
-        o.type = worldState.entityTypeManager.byName("shrubbery");
-        worldState.addEntity(o);
-        msg("o.pos == ", o.pos);
-        */
     } 
-
-    /*
-    void newGame() {
-
-        init();
-
-        populateWorld(startPos);
-        /++
-        camera.setPosition(vec3d(0, 0, 0));
-        camera.setTarget(vec3d(0, 1, 0));
-        ++/
-        {
-            mixin(LogTime!("InitialHeightmaps"));
-            worldState.generateAllHeightmaps();
-        }
-        {
-            mixin(LogTime!("InitialFloodFill"));            
-            worldState.initialFloodFill();
-        }
-        finishInit();
-    }
-    */
 
     void loadGame() {
         init();
-        deserialize();
+        scheduler.deserialize();
         finishInit();        
     }
 
     void connect(string host) {
-        //clientModule = new ClientModule(host);
         initClientModule(host);
         init();
         scheduler.deserialize();

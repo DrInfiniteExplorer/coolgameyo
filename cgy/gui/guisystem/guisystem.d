@@ -35,6 +35,7 @@ final class GuiSystem : GuiElement{
     private Font standardFont;    
     
     this() {
+        guiSystem = this;
         super(null);
         standardFont = new Font("fonts/courier");
         setFont(standardFont);
@@ -42,6 +43,7 @@ final class GuiSystem : GuiElement{
         hoverElement = this;
         focusElement = this;
         getAbsoluteRect();
+
     }
     
     private bool destroyed;

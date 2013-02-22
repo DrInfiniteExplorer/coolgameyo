@@ -11,7 +11,7 @@ enum max_clients = 13;
 enum PORT = 1337;
 immutable HANDSHAKE_A = "CoolGameYo?\n";
 immutable HANDSHAKE_B = "CoolGameYo!!!\n";
-immutable HANDSHAKE_C = "Oh yeah!\n";
+immutable HANDSHAKE_C = "Oh yeah! Give me name!\n";
 
 mixin template ServerModule() {
 
@@ -57,13 +57,23 @@ mixin template ServerModule() {
         spawnThread({
             while(scheduler.shouldSerialize) {
             }
+            scope(exit) {
+                sendingSaveGame--;
+                clients ~= Client(sock, [], 0, 0);
+            }
+            auto name = readLine(sock);
+            enforce(name[0..11] == "PlayerName:", "Error in getting player name: " ~ name);
+            name = name[11..$];
+            msg("Player '", name, "' connected!");
+            sock.send("!!");
+            sock.send(g_playerName);
+            sock.send("!!\n");
+
             msg("Starting send all things ever thread");
             sock.send("Sending all things ever to client\n");
             tcpSendDir(sock, g_worldPath);
             sock.send("All things sent to client\n");
 
-            sendingSaveGame--;
-            clients ~= Client(sock, [], 0, 0);
         });
     }
 
@@ -247,11 +257,18 @@ mixin template ClientModule() {
         enforce(socket.send(HANDSHAKE_B) == HANDSHAKE_B.length, "Handshake B failed");
         enforce(readLine(socket) == HANDSHAKE_C[0..$-1], "Handshake C failed");
 
+        msg("Sending player name: '", g_playerName, "'");
+        socket.send("PlayerName:");
+        socket.send(g_playerName);
+        socket.send("\n");
+        enforce(readLine(socket) == "!!" ~ g_playerName ~ "!!", "Didnt get aknowledgement for name from server");
+
         //Prepare to receiveive all the game data everrrrr!
 
         msg(readLine(socket));
         tcpReceiveDir(socket, g_worldPath);
         msg(readLine(socket));
+        
 
 
 

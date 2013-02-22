@@ -71,7 +71,8 @@ class DialogBox : GuiElementWindow {
                 static if(is(typeof(item) : string)) {
                     options ~= item;
                 } else {
-                    callbacks ~= item;
+                    import std.functional : toDelegate;
+                    callbacks ~= toDelegate(item); //Dunno what this does with proper delegates, but should pass them on kindly i think :P
                 }
             }
             enforce(options.length == callbacks.length, "Length of options and callbacks not the same!");
