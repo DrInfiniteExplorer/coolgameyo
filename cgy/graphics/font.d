@@ -119,6 +119,7 @@ class StringTexture {
     FontQuad[] vertices;
 
 //    string currentText;
+    bool updatedText;
     StringBuilder currentText;
 
     this(Font font) {
@@ -160,48 +161,56 @@ class StringTexture {
         if(text == currentText.str){
             return;
         }
-        auto len = text.length;
-        bool resized = false;
-        if(len > vertices.length){
-            resize(len+10);
-            resized = true;
+        synchronized(this) {
+            currentText.set(text);
+            updatedText = true;
         }
-        /*
-        if(len*2 < vertices.length){
-            resize(len);
-            resized = true;
-        } 
-        */
-        
-        {
+    }
+
+    void updateText() {
+        if(!updatedText) return;
+        synchronized(this) {
+            auto len = currentText.length;
+            bool resized = false;
+            if(len > vertices.length){
+                resize(len+10);
+                resized = true;
+            }
             int cnt=0;
-            foreach(idx,ch ; text) {
+            foreach(idx,ch ; currentText.str) {
                 BREAK_IF(idx != cnt);
                 cnt++;
             }
-            BREAK_IF(cnt != text.length);
+            BREAK_IF(cnt != currentText.length);
             BREAK_IF(cnt > vertices.length);
-        }
-        foreach(cnt, ch ; text) {
-            if (cnt < 0 || cnt > text.length) {
-                writeln(text);
-                BREAKPOINT;
+            vec2i pos = vec2i(0);
+            foreach(cnt, ch ; currentText.str) {
+                if (cnt < 0 || cnt > currentText.length) {
+                    writeln(text);
+                    BREAKPOINT;
+                }
+                if (ch < 0 || ch > 128) {
+                    writeln(currentText);
+                    BREAKPOINT;
+                }
+                pos.X++;
+                if(ch == '\n') {
+                    pos.Y++;
+                    pos.X = 0;
+                }
+                vertices[cnt] = font.getQuad(ch, pos);
             }
-            if (ch < 0 || ch > 128) {
-                writeln(text);
-                BREAKPOINT;
+            if(!resized){
+                glBindBuffer(GL_ARRAY_BUFFER, vbo);
+                glError();
             }
-            vertices[cnt] = font.getQuad(ch, vec2i(cnt, 0));
-        }
-        if(!resized){
-            glBindBuffer(GL_ARRAY_BUFFER, vbo);
+            //currentText = cast(string)text.dup;
+            //currentText.set(text);
+            auto size = FontQuad.sizeof * len;
+            glBufferSubData(GL_ARRAY_BUFFER, 0, size, vertices.ptr);
             glError();
+            updatedText = true;
         }
-        //currentText = cast(string)text.dup;
-        currentText.set(text);
-        auto size = FontQuad.sizeof * len;
-        glBufferSubData(GL_ARRAY_BUFFER, 0, size, vertices.ptr);
-        glError();
     }
     
     void setTransparent(bool trans) {
@@ -215,11 +224,12 @@ class StringTexture {
     // In that case, compute size when generating stuff. Yeah.
     vec2i getSize() {
         auto ret = font.glyphSize();
-        ret.X *= currentText.str.length;
+        ret.X *= currentText.length;
         return ret;
     }
 
     void render(Recti rect) {
+        updateText();
         glActiveTexture(GL_TEXTURE1); //TODO: Make not hardcoded?
         glError();
         glBindTexture(GL_TEXTURE_2D, texId);

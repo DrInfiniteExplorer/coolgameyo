@@ -1,8 +1,13 @@
 module modules.network;
 
+import std.ascii : isAlphaNum;
+import std.random : unpredictableSeed;
+import std.socket;
+
+
+import log : Log;
 import modules.module_;
 
-import std.socket;
 import util.socket : readLine, tcpSendDir;
 import util.util;
 
@@ -41,7 +46,7 @@ mixin template ServerModule() {
         toWrite.length = 4;
     }
 
-    bool handshake(Socket sock) { // Awesome handshake :P
+    bool simpleHandshake(Socket sock) { // Awesome handshake :P
         if(sock.send(HANDSHAKE_A) != HANDSHAKE_A.length) {
             sock.close();
             return false;
@@ -53,51 +58,128 @@ mixin template ServerModule() {
         return sock.send(HANDSHAKE_C) == HANDSHAKE_C.length;
     }
   
-    void sendEverything(Socket sock) {
+    void sendEverything(PlayerInformation player) {
         spawnThread({
-            while(scheduler.shouldSerialize) {
+            try {
+                while(scheduler.shouldSerialize) {
+                }
+                auto sock = player.dataSock;
+                scope(exit) {
+                    sendingSaveGame--;
+                }
+                scope(success) {
+                    clients ~= Client(sock, [], 0, 0);
+                }
+                scope(failure) {
+                    sock.close();
+                }
+                Log("Starting send all things ever thread");
+                sock.send("Sending all things ever to client\n");
+                tcpSendDir(sock, g_worldPath);
+                sock.send("All things sent to client\n");
+            } catch(Exception e) {
+                Log("Error while sending all things ever!:");
+                Log(e.msg);
             }
-            scope(exit) {
-                sendingSaveGame--;
-                clients ~= Client(sock, [], 0, 0);
-            }
-            auto name = readLine(sock);
-            enforce(name[0..11] == "PlayerName:", "Error in getting player name: " ~ name);
-            name = name[11..$];
-            msg("Player '", name, "' connected!");
-            sock.send("!!");
-            sock.send(g_playerName);
-            sock.send("!!\n");
-
-            msg("Starting send all things ever thread");
-            sock.send("Sending all things ever to client\n");
-            tcpSendDir(sock, g_worldPath);
-            sock.send("All things sent to client\n");
-
         });
     }
 
     int sendingSaveGame;
 
     private void accept_new_client() {
-        auto newsock = listener.accept();
-        if (clients.length < max_clients) {
-            if(!handshake(newsock)) {
-                msg("Client failed handshake :(");
+        auto newSock = listener.accept();
+        if (clients.length >= max_clients) {
+            Log("Too many clients!");
+            newSock.send("Too many clients!\n");
+            newSock.close();
+            return;
+        }
+
+        auto remoteAddress = newSock.remoteAddress;
+        auto remoteName = remoteAddress.toAddrString;
+        Log("Client connection from: ", remoteName);
+
+        simpleHandshake(newSock);
+        //client or data socket: after handshake, client sends "comm" or "data".
+        auto connectionType = readLine(newSock);
+        if(connectionType == "comm") {
+            //Open communication socket:
+            // aquire user information
+            auto userInfo  = readLine(newSock);
+            // Validate user information etc
+            if(!startsWith(userInfo, "Username:")) {
+                Log("Recieved bad user information: ", userInfo);
+                newSock.send("Malformed user information: Expected 'Username:[name]\n");
+                newSock.close();
+                return;
             }
+            auto userName = userInfo[9..$];
+            if(!all!isAlphaNum(userName)) {
+                Log("Recieved bad username: ", userName);
+                newSock.send("Expects alphanumeric username.\n");
+                newSock.close();
+                return;
+            }
+            //  if already have said user, send "no" and close socket.
+            if(userName in players) {
+                Log("Player already connected!");
+                newSock.send("A player with that name is already connected.\n");
+                newSock.close();
+                return;
+            }
+            //  any other error send message etc
+            // Suggest random identification number to client
+            newSock.send("Ok!\n");
+            auto playerInfo = new PlayerInformation;
+            playerInfo.name = userName;
+            playerInfo.address = remoteName;
+            playerInfo.magicNumber = unpredictableSeed;
+            players[userName] = playerInfo;
+            playerInfo.commSock = newSock;
+            int[] magic = (&playerInfo.magicNumber)[0..1];
+            newSock.send(magic);
+            return;
+            // return; wait for new connection to be data socket.
+        } else if(connectionType == "data") {
+            //open data socket:
+            // socket sends previously randomized magic value
+            int magic;
+            int[] _magic = (&magic)[0..1];
+            if(newSock.receive(_magic) != magic.sizeof) {
+                Log("Couldn't get magic number from client data connection!");
+                newSock.send("No\n");
+                newSock.close();
+                return;
+            }
+            // if no matching comm-ip + value send "sorry no u"
+            PlayerInformation playerInfo;
+            foreach(player ; players) {
+                if(player.address == remoteName && player.magicNumber == magic) {
+                    playerInfo = player;
+                }
+            }
+            if(!playerInfo) {
+                Log("Could not identify connecting player with address '", remoteAddress, "' and magic number: ", magic);
+                newSock.send("No\n");
+                newSock.close();
+                return;
+            }
+            playerInfo.dataSock = newSock;
+            playerInfo.dataSock.send("Ok!\n");
+            // start world data transfer thread.
             if(!sendingSaveGame) {
                 scheduler.saveGame();
             }
             sendingSaveGame++;
-            sendEverything(newsock); //Spawn new thread to send stuff in the background aye?
+            sendEverything(playerInfo); //Spawn new thread to send stuff in the background aye?
+            Log("Player ", playerInfo.name, " from ", playerInfo.address, " successfully connected!");
+            return;
         } else {
-            msg("Too many clients!");
-            newsock.close();
+            newSock.send("Expected 'comm' or 'data' to identify connection type. Goodbye!\n");
+            newSock.close();
+            return;
         }
     }
-
-
-
 
     // todo:
     // figure out sizes of buffers
@@ -109,7 +191,7 @@ mixin template ServerModule() {
             client.send_index = 0;
             client.recv_index = 0;
             recv_set.add(client.socket);
-        }
+       }
 
         //When leave this all is sent/received.... ?
         int max_n = 1;
@@ -237,7 +319,9 @@ mixin template ServerModule() {
 mixin template ClientModule() {
 
     SocketSet recv_set, write_set;
-    Socket socket;
+    Socket commSock;
+    Socket dataSock;
+    int magicNumber;
     ubyte[] recv;
     ubyte[] toWrite;
     size_t send_index;
@@ -246,28 +330,39 @@ mixin template ClientModule() {
 
     ChangeList client_changes;
 
+    void simpleHandshake(Socket sock) {
+        enforce(readLine(sock) == HANDSHAKE_A[0..$-1], "Handshake A failed");
+        enforce(sock.send(HANDSHAKE_B) == HANDSHAKE_B.length, "Handshake B failed");
+        enforce(readLine(sock) == HANDSHAKE_C[0..$-1], "Handshake C failed");
+    }
+
     void initClientModule(string host) {
-        auto a = new std.socket.InternetAddress(host, PORT);
-        socket = new std.socket.TcpSocket(a);
+        import util.socket;
         recv_set = new SocketSet(1);
         write_set = new SocketSet(1);
-        import util.socket;
 
-        enforce(readLine(socket) == HANDSHAKE_A[0..$-1], "Handshake A failed");
-        enforce(socket.send(HANDSHAKE_B) == HANDSHAKE_B.length, "Handshake B failed");
-        enforce(readLine(socket) == HANDSHAKE_C[0..$-1], "Handshake C failed");
+        auto address = new std.socket.InternetAddress(host, PORT);
 
-        msg("Sending player name: '", g_playerName, "'");
-        socket.send("PlayerName:");
-        socket.send(g_playerName);
-        socket.send("\n");
-        enforce(readLine(socket) == "!!" ~ g_playerName ~ "!!", "Didnt get aknowledgement for name from server");
+        commSock = new std.socket.TcpSocket(address);
+        simpleHandshake(commSock);
+        enforce(commSock.send("comm\n") == 5, "Failed to send connection type for communication socket");
+        enforce(commSock.send("Username:" ~ g_playerName ~ "\n") == 10 + g_playerName.length, "Failed to send username");
+        auto response = readLine(commSock);
+        enforce(response == "Ok!", "Error connecting to server: " ~ response);
+        int[] _magic = (&magicNumber)[0..1];
+        enforce(commSock.receive(_magic) == 4, "Error recieving magic identification number");
+
+        dataSock = new std.socket.TcpSocket(address);
+        simpleHandshake(dataSock);
+        enforce(dataSock.send("data\n") == 5, "Failed to send connection type for data socket");
+        enforce(dataSock.send(_magic) == 4, "Error echoing magic number");
+        response = readLine(dataSock);
+        enforce(response == "Ok!", "Error recieving ack from server: " ~ response);
 
         //Prepare to receiveive all the game data everrrrr!
-
-        msg(readLine(socket));
-        tcpReceiveDir(socket, g_worldPath);
-        msg(readLine(socket));
+        msg(readLine(dataSock));
+        tcpReceiveDir(dataSock, g_worldPath);
+        msg(readLine(dataSock));
         
 
 

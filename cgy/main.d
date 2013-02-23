@@ -26,6 +26,7 @@ import graphics.ogl;
 import gui.guisystem.guisystem;
 
 import game;
+import log;
 
 import util.pos;
 import statistics;
@@ -314,9 +315,12 @@ void startServer() {
     import gui.guisystem.text;
     auto txt = new GuiElementText(guiSystem, vec2d(0), fullText);
     auto handleMsg = (string s) {
-        fullText ~= s;
-        txt.setText(fullText);
+        synchronized(txt) {
+            fullText ~= s;
+            txt.setText(fullText);
+        }
     };
+    logCallback = handleMsg;
 
     Game game = new Game(true);
     game.loadGame();

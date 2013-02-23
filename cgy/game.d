@@ -68,6 +68,11 @@ string SDLError() { return to!string(SDL_GetError()); }
 
 final class PlayerInformation {
     string name;
+    string address;     //ip address of connecting player
+    int magicNumber;    //Magic identification number of player.
+    Socket commSock;
+    Socket dataSock;
+
     vec2d position;
     //WHAT ELSE?? D:
     //Information about which client he is?
@@ -96,7 +101,7 @@ class Game{
     private Unit                activeUnit; //TODO: Find out when this unit dies, and tell people.
 
     private vec2i               spawnPoint;
-    private PlayerInformation[string] players;
+    private PlayerInformation[string] players; //Index is player name.
 
     this(bool server) {
         isServer = server;

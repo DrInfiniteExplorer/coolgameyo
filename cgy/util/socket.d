@@ -63,7 +63,7 @@ void tcpReceiveDir(Socket sock, string dirPath) {
 }
 
 
-bool tcpSendFile(Socket sock, string filePath, int bufferSize = 4096) {
+bool tcpSendFile(Socket sock, string filePath, int bufferSize = int.max) {
     import std.mmfile;
     import std.algorithm : min;
     auto memfile = new MmFile(filePath, MmFile.Mode.read, 0, null, 0);
@@ -89,7 +89,7 @@ bool tcpSendFile(Socket sock, string filePath, int bufferSize = 4096) {
     return true;
 }
 
-bool tcpReceiveFile(Socket sock, string filePath, int bufferSize = 4096) {
+bool tcpReceiveFile(Socket sock, string filePath, int bufferSize = int.max) {
     import std.algorithm : min;
     import std.mmfile;
     int readSoFar = 0;

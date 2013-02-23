@@ -49,6 +49,10 @@ struct StringBuilder {
         return cast(immutable)_str[];
     }
 
+    size_t length() @property {
+        return _str.length;
+    }
+
     auto opCall(T...)(T t) {
         write(t);
         return str;

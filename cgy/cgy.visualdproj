@@ -616,6 +616,7 @@ d:\D\ulnb0333\ulink.exe $(IntDir)\$(TargetName).obj gdi32.lib win32.lib advapi32
   <File path="inventory.d" />
   <File path="json.d" />
   <File path="light.d" />
+  <File path="log.d" />
   <File path="main.d" />
   <File path="materials.d" />
   <File path="mission.d" />
