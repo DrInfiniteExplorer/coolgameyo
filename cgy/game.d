@@ -1,11 +1,9 @@
 ﻿
 module game;
 
-import core.thread;
 
 import std.algorithm;
 import std.array;
-import std.concurrency;
 import std.conv;
 import std.exception;
 import std.math;
@@ -73,9 +71,35 @@ final class PlayerInformation {
     Socket commSock;
     Socket dataSock;
 
+    ubyte[] receiveBuffer;
+    int send_index;
+    int recv_index;
+
     vec2d position;
     //WHAT ELSE?? D:
     //Information about which client he is?
+
+
+    bool connected;
+    bool disconnected;
+
+    void disconnect() {
+        // SHUT
+        // DOWN
+        // EVERYTHING
+        if(commSock) {
+            commSock.shutdown(SocketShutdown.BOTH);
+            commSock.close();
+        }
+        if(dataSock) {
+            dataSock.shutdown(SocketShutdown.BOTH);
+            dataSock.close();
+        }
+        receiveBuffer.length = 0;
+        connected = false;
+        disconnected = true;
+    }
+
 }
 
 class Game{
@@ -98,6 +122,7 @@ class Game{
     private TileTextureAtlas    atlas;
     private TileTypeManager     tileTypeManager;
     private UnitTypeManager     unitTypeManager;
+
     private Unit                activeUnit; //TODO: Find out when this unit dies, and tell people.
 
     private vec2i               spawnPoint;
@@ -169,21 +194,18 @@ class Game{
         worldState = new WorldState(worldMap, tileTypeManager, entityTypeManager, unitTypeManager, sceneManager);
 
         scheduler = new Scheduler(this);
-        pathModule = new PathModule;
-        aiModule = new AIModule(pathModule, worldState);
-        scheduler.registerModule(pathModule);
-        scheduler.registerModule(aiModule);
         scheduler.registerModule(Clans());
+
+        if(isServer) {
+            pathModule = new PathModule;
+            aiModule = new AIModule(pathModule, worldState);
+            scheduler.registerModule(pathModule);
+            scheduler.registerModule(aiModule);
+        }
 
         if (!isServer) {
             camera = new Camera();
-            //The renderer also needs to be created in the main thread, it loads shaders and stuff.
-            //Mainly all in this block of code actually :)
-            /*
-            camera.setPosition(vec3d(-2, -2, 20));
-            camera.setTarget(vec3d(0, 0, 20));
-            */
-            //geometryCreator = new GeometryCreator(world);
+
             auto tileRenderer = new TileRenderer();
             tileGeometry = new TileGeometry(worldState, tileRenderer);
             auto heightSheets = new HeightSheets(worldMap, worldState);
@@ -230,13 +252,16 @@ class Game{
             return u;
         }
 
-        auto uu = addUnitAtPos(vec2i(3,3) + spawnPoint);
-        activeUnit = uu;
-        worldState._worldProxy.createUnit(uu);
-
+        /*
         auto u = addUnitAtPos(vec2i(3,-20) + spawnPoint);
         u.ai = new TestAI(u);
         worldState._worldProxy.createUnit(u);
+        */
+
+        auto uu = addUnitAtPos(spawnPoint);
+        activeUnit = uu;
+        worldState._worldProxy.createUnit(uu);
+
     } 
 
     void loadGame() {
@@ -262,33 +287,23 @@ class Game{
         }
         worldState.deserialize();
 
-        auto content = readText(g_worldPath ~ "/game.json");
-        auto rootVal = json.parse(content);
-        uint activeUnitId;
-        uint unitCount;
-        if("activeUnit" in rootVal){
-            activeUnitId = to!int(rootVal["activeUnit"].num);
+        if(exists(g_worldPath ~ "/game.json")) {
+            loadJSON(g_worldPath ~ "/game.json").readJSONObject(
+                "unitCount", &g_UnitCount,
+                "spawnPoint", &spawnPoint);
         }
-        if("unitCount" in rootVal){
-            unitCount = to!int(rootVal["unitCount"].num);
+        if(!isServer) {
+            auto top = worldState.getTopTilePos(TileXYPos(spawnPoint));
+            auto spawn = top.value.convert!double;
+            camera.setPosition(spawn + vec3d(0, 0, 20));
+            camera.setTargetDir(vec3d(1.0, 0.0,-1.0));
         }
-
-        g_UnitCount = unitCount;
-        activeUnit = worldState.getUnitFromId(activeUnitId);
-
     }
 
     void serialize() {
-        //private Unit               activeUnit; //TODO: Find out when this unit dies, and tell people.
-        auto activeUnit = Value(activeUnit.id);
-        auto unitCount = Value(g_UnitCount);
-        auto jsonRoot = Value([
-                "activeUnit" : activeUnit,
-                "unitCount" : unitCount,
-                ]);
-        auto jsonString = json.prettifyJSON(jsonRoot);
+        makeJSONObject("unitCount", g_UnitCount,
+                       "spawnPoint", spawnPoint).saveJSON(g_worldPath ~ "/game.json");
 
-        std.file.write(g_worldPath ~ "/game.json", jsonString);
         worldState.serialize();
     }
 
@@ -298,6 +313,10 @@ class Game{
 
     Unit getActiveUnit() {
         return activeUnit;
+    }
+
+    void setActiveUnit(Unit u) {
+        activeUnit = u;
     }
 
     WorldState getWorld() {

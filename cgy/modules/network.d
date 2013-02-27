@@ -20,18 +20,9 @@ immutable HANDSHAKE_C = "Oh yeah! Give me name!\n";
 
 mixin template ServerModule() {
 
-    static struct Client {
-        Socket socket;
-        ubyte[] recv;
-        size_t send_index;
-        size_t recv_index;
-        bool disconnected;
-    }
-
     SocketSet recv_set, write_set;
     Socket listener;
 
-    Client[] clients;
     ubyte[] toWrite;
 
     ChangeList client_changes;
@@ -46,7 +37,7 @@ mixin template ServerModule() {
         toWrite.length = 4;
     }
 
-    bool simpleHandshake(Socket sock) { // Awesome handshake :P
+    bool simpleServerHandshake(Socket sock) { // Awesome handshake :P
         if(sock.send(HANDSHAKE_A) != HANDSHAKE_A.length) {
             sock.close();
             return false;
@@ -63,20 +54,16 @@ mixin template ServerModule() {
             try {
                 while(scheduler.shouldSerialize) {
                 }
-                auto sock = player.dataSock;
                 scope(exit) {
                     sendingSaveGame--;
                 }
-                scope(success) {
-                    clients ~= Client(sock, [], 0, 0);
-                }
                 scope(failure) {
-                    sock.close();
+                    player.disconnect();
                 }
                 Log("Starting send all things ever thread");
-                sock.send("Sending all things ever to client\n");
-                tcpSendDir(sock, g_worldPath);
-                sock.send("All things sent to client\n");
+
+                tcpSendDir(player.commSock, g_worldPath);
+
             } catch(Exception e) {
                 Log("Error while sending all things ever!:");
                 Log(e.msg);
@@ -88,7 +75,7 @@ mixin template ServerModule() {
 
     private void accept_new_client() {
         auto newSock = listener.accept();
-        if (clients.length >= max_clients) {
+        if (players.length >= max_clients) {
             Log("Too many clients!");
             newSock.send("Too many clients!\n");
             newSock.close();
@@ -99,7 +86,7 @@ mixin template ServerModule() {
         auto remoteName = remoteAddress.toAddrString;
         Log("Client connection from: ", remoteName);
 
-        simpleHandshake(newSock);
+        simpleServerHandshake(newSock);
         //client or data socket: after handshake, client sends "comm" or "data".
         auto connectionType = readLine(newSock);
         if(connectionType == "comm") {
@@ -164,15 +151,40 @@ mixin template ServerModule() {
                 newSock.close();
                 return;
             }
+            Log("Player ", playerInfo.name, " from ", playerInfo.address, " successfully connected!");
+
             playerInfo.dataSock = newSock;
             playerInfo.dataSock.send("Ok!\n");
-            // start world data transfer thread.
+            playerInfo.connected = true;
+
+            //If noone was receiving a saved game already, remove old temp-changes and save game.
             if(!sendingSaveGame) {
+                if(exists("temp/changes")) {
+                    deleteFile("temp/changes");
+                }
                 scheduler.saveGame();
             }
             sendingSaveGame++;
+            if(sendingSaveGame > 1) {
+                import util.socket : tcpSendFile;
+                //Someone was already getting it. Get all changes from then till now and send to new client.
+                if(playerInfo.dataSock.send("PreChanges\n") != 11){
+                    Log("Error sending pre-changes");
+                    playerInfo.disconnect();
+                    return;
+                }
+                if(!tcpSendFile(playerInfo.dataSock, "temp/changes")) {
+                    Log("Errpr sending temp/changes");
+                    playerInfo.disconnect();
+                    return;
+                }
+            }
+            if(playerInfo.dataSock.send("SaveGame\n") != 9) {
+                Log("Error sending savegame");
+                playerInfo.disconnect();
+                return;
+            }
             sendEverything(playerInfo); //Spawn new thread to send stuff in the background aye?
-            Log("Player ", playerInfo.name, " from ", playerInfo.address, " successfully connected!");
             return;
         } else {
             newSock.send("Expected 'comm' or 'data' to identify connection type. Goodbye!\n");
@@ -181,89 +193,113 @@ mixin template ServerModule() {
         }
     }
 
+    void handleServerComm(PlayerInformation player) {
+        //falsely assume that all stuff over comm is newline terminated
+        // (In future will be async stuff like player positions as well)
+        auto line = readLine(player.commSock);
+        Log("Player sent: ", line);
+        if(line == "ProperlyConnected") {
+            auto path = g_worldPath ~ "/players/" ~ player.name ~ ".json";
+            //If has unit, send unit-id to be controlled
+            if(exists(path)) {
+                BREAKPOINT;
+            } else {
+                //Else add unit & send unit-id to be controlled.
+                //For now just ignore unit creation and assume control of unit 0
+                player.commSock.send("controlUnit:0\n");
+            }
+        }
+    }
+
     // todo:
     // figure out sizes of buffers
-
-    void doNetworkStuffUntil(long nextSync) {
-        finalizeNetworkChangePush();
+    //todo: lol buffers
+    void doServerNetworkStuffUntil(long nextSync) {
+        //We now have all changes that will be applied this tick in toWrite.
+        if(sendingSaveGame) {
+            int changeSize = toWrite.length;
+            append("temp/changes.bin", g_gameTick, changeSize, toWrite);
+        }
         recv_set.reset();
-        foreach(ref client ; clients) {
-            client.send_index = 0;
-            client.recv_index = 0;
-            recv_set.add(client.socket);
-       }
+        write_set.reset();
+        recv_set.add(listener);
+        foreach(player ; players) {
+            if(!player.connected) continue;
+            player.send_index = 0;
+            player.recv_index = 0;
+            recv_set.add(player.commSock);
+            recv_set.add(player.dataSock);
+            write_set.add(player.dataSock);
+        }
+        
+        int[2] frameInfo = [g_gameTick, toWrite.length];
+        foreach(player ; players) {
+            if(!player.connected) continue;
+            if(player.dataSock.send(frameInfo) != frameInfo.sizeof) {
+                Log("Error sending frame info to client, disconnecting");
+                recv_set.remove(player.commSock);
+                recv_set.remove(player.dataSock);
+                write_set.remove(player.dataSock);
+                player.disconnect();
+            }
+        }
+        foreach(player ; players) {
+            if(!player.connected) continue;
+            if(player.dataSock.receive(frameInfo) != frameInfo.sizeof) {
+                Log("Error receiveing frame info from client, disconnecting");
+                recv_set.remove(player.commSock);
+                recv_set.remove(player.dataSock);
+                write_set.remove(player.dataSock);
+                player.disconnect();
+                continue;
+            }
+            if(frameInfo[0] != g_gameTick) {
+                Log("Client got wrong game tick; wanted ", g_gameTick, " but got ", frameInfo[0]);
+                recv_set.remove(player.commSock);
+                recv_set.remove(player.dataSock);
+                write_set.remove(player.dataSock);
+                player.disconnect();
+                continue;
+            }
+            player.receiveBuffer.length = frameInfo[1];
+            assumeSafeAppend(player.receiveBuffer);
+        }
 
         //When leave this all is sent/received.... ?
-        int max_n = 1;
-        while (true) {
-            
-            scope (exit) {
-                recv_set.reset();
-                write_set.reset();
-            }
-
-            recv_set.add(listener);
-            foreach (ref client; clients) {
-                if(client.disconnected) continue;
-                if (client.send_index < toWrite.length) {
-                    write_set.add(client.socket);
-                    max_n += 1;
-                }
-                if (client.recv_index < client.recv.length) {
-                    max_n += 1;
-                }
-            }
-
-            //Hum.
-            // WHAT IF we dont know we should receieveveve anything yet but dont have anything to send? D:
-            // Solved by maxn = 1 on first run herp derp
-            //nooeesss it wont get added to the set D:
-            //Solved by them reads always being part of the set
-            if (max_n == 0) {
-                break; // nothing left to send/recv
-            }
-            max_n = 0;
-
+        bool stuffToTransfer = true;
+        while (stuffToTransfer) {
+            stuffToTransfer = false;
             int n = Socket.select(recv_set, write_set, null, 0);
-
-            foreach (ref client; clients) {
-                auto socket = client.socket;
-                if (recv_set.isSet(socket)) {
-                    int read;
-                    if(client.recv_index == 0) {
-                        int sizeToRead;
-                        void[] buff = (cast(void*)&sizeToRead)[0..4];
-                        read = socket.receive(buff);
-                        if(read != 4) {
-                            msg("some network error, disconnecting");
-                            client.disconnected = true;
-                            continue;
-                        }
-                        client.recv.length = sizeToRead;
-                        //assumeSafeAppend ?
-                    } else {
-                        read = socket.receive(
-                                client.recv[client.recv_index .. $]);
-                        if(read < 1) {
-                            msg("some network error, disconnecting");
-                            client.disconnected = true;
-                            continue;
-                        }
-
-                        client.recv_index += read;
-                    }
+            foreach (player ; players) {
+                if(!player.connected) continue;
+                if(recv_set.isSet(player.commSock)) {
+                    handleServerComm(player);
                 }
-                if (write_set.isSet(socket)) {
-                    int sent = socket.send(
-                            toWrite[client.send_index .. $]);
-                    if(sent < 1) {
-                        msg("some network error, disconnecting");
-                        client.disconnected = true;
+                if(recv_set.isSet(player.dataSock) && player.recv_index != player.receiveBuffer.length) {
+                    int read = player.dataSock.receive(player.receiveBuffer[player.recv_index .. $]);
+                    if(read < 1) {
+                        Log("Error reading changes from client, disconnecting");
+                        recv_set.remove(player.commSock);
+                        recv_set.remove(player.dataSock);
+                        write_set.remove(player.dataSock);
+                        player.disconnect();
                         continue;
                     }
-
-                    client.send_index += sent;
+                    player.recv_index += read;
                 }
+                if (write_set.isSet(player.dataSock) && player.send_index != toWrite.length) {
+                    int sent = player.dataSock.send(toWrite[player.send_index .. $]);
+                    if(sent < 1) {
+                        msg("Error sending changes to client, disconnecting");
+                        player.disconnect();
+                        recv_set.remove(player.commSock);
+                        recv_set.remove(player.dataSock);
+                        write_set.remove(player.dataSock);
+                        continue;
+                    }
+                    player.send_index += sent;
+                }
+                stuffToTransfer |= (player.send_index != toWrite.length) || (player.recv_index != player.receiveBuffer.length);
             }
 
             if (recv_set.isSet(listener)) {
@@ -271,19 +307,24 @@ mixin template ServerModule() {
             }
         }
 
-        clients = remove!q{a.disconnected}(clients);
+        PlayerInformation[] toRemove;
+        foreach(player ; players) {
+            if(player.disconnected) {
+                toRemove ~= player;
+            }
+        }
+        foreach(player ; toRemove) {
+            players.remove(player.name);
+        }
 
         //Changed into use of variable; have encountered race condition in previous project
         // where the time went into the next frame after the while-check, overflowing the
         // value sent to select / sleep, producing a very long wait.
         auto timeLeft = nextSync - utime();
+        recv_set.reset();
+        recv_set.add(listener);
         while (timeLeft > 0) {
-            scope (exit) {
-                recv_set.reset();
-            }
-            recv_set.add(listener);
-
-            int n = Socket.select(recv_set, null, null, timeLeft);
+           int n = Socket.select(recv_set, null, null, timeLeft);
             if (n == 0) {
                 break; // this is timeout, means we go on until next tick
             }
@@ -292,27 +333,21 @@ mixin template ServerModule() {
             accept_new_client();
             timeLeft = nextSync - utime();
         }
-        toWrite.length = 4;
+        toWrite.length = 0;
         assumeSafeAppend(toWrite);
     }
 
-    void getNetworkChanges(ref ChangeList list) {
-        foreach (client; clients) {
-            list.readFrom(client.recv);
+    void getServerNetworkChanges(ref ChangeList list) {
+        foreach (player; players) {
+            list.readFrom(player.receiveBuffer);
         }
     }
 
-    void pushNetworkChanges(ChangeList list) {
+    void pushServerNetworkChanges(ChangeList list) {
         //toWrite.length += list.changeListData.length;
         //toWrite[4 .. $] = list.changeListData[];
         toWrite ~= list.changeListData[];
     }
-
-    void finalizeNetworkChangePush() {
-        uint total_size = toWrite.length - 4;
-        toWrite[0..4] = *cast(ubyte[4]*)&total_size;
-    }
-
 }
 
 
@@ -322,15 +357,17 @@ mixin template ClientModule() {
     Socket commSock;
     Socket dataSock;
     int magicNumber;
-    ubyte[] recv;
+    ubyte[] receiveBuffer;
     ubyte[] toWrite;
     size_t send_index;
     size_t recv_index;
 
+    Thread dummyThread;
+    bool doneLoading; // maybe make shared for automagic memory barrier ?
 
     ChangeList client_changes;
 
-    void simpleHandshake(Socket sock) {
+    void simpleClientHandshake(Socket sock) {
         enforce(readLine(sock) == HANDSHAKE_A[0..$-1], "Handshake A failed");
         enforce(sock.send(HANDSHAKE_B) == HANDSHAKE_B.length, "Handshake B failed");
         enforce(readLine(sock) == HANDSHAKE_C[0..$-1], "Handshake C failed");
@@ -338,13 +375,14 @@ mixin template ClientModule() {
 
     void initClientModule(string host) {
         import util.socket;
-        recv_set = new SocketSet(1);
+        recv_set = new SocketSet(2);
         write_set = new SocketSet(1);
 
         auto address = new std.socket.InternetAddress(host, PORT);
 
+        pragma(msg, "Add code to set connection timeout");
         commSock = new std.socket.TcpSocket(address);
-        simpleHandshake(commSock);
+        simpleClientHandshake(commSock);
         enforce(commSock.send("comm\n") == 5, "Failed to send connection type for communication socket");
         enforce(commSock.send("Username:" ~ g_playerName ~ "\n") == 10 + g_playerName.length, "Failed to send username");
         auto response = readLine(commSock);
@@ -353,20 +391,152 @@ mixin template ClientModule() {
         enforce(commSock.receive(_magic) == 4, "Error recieving magic identification number");
 
         dataSock = new std.socket.TcpSocket(address);
-        simpleHandshake(dataSock);
+        simpleClientHandshake(dataSock);
         enforce(dataSock.send("data\n") == 5, "Failed to send connection type for data socket");
         enforce(dataSock.send(_magic) == 4, "Error echoing magic number");
         response = readLine(dataSock);
         enforce(response == "Ok!", "Error recieving ack from server: " ~ response);
 
-        //Prepare to receiveive all the game data everrrrr!
-        msg(readLine(dataSock));
-        tcpReceiveDir(dataSock, g_worldPath);
-        msg(readLine(dataSock));
+        scope(failure) {
+            BREAKPOINT();
+        }
+
+        //Set up thread to reveive changes in background while we receive the game state.
+        dummyThread = spawnThread(&dummyClientNetwork);
         
+        //Send pre-changes before save?
+        response = readLine(dataSock);
+        if(response == "PreChanges") {
+            //Reveive file with changes; format is same as change-frame
+            mkdir(g_worldPath ~ "/temp");
+            tcpReceiveFile(dataSock, g_worldPath ~ "/temp/changes");
 
+            response = readLine(dataSock);
+        }
+        enforce(response == "SaveGame", "Error; did not receive 'SaveGame' from server");
 
+        //Prepare to receiveive all the game data everrrrr!
+        tcpReceiveDir(commSock, g_worldPath);
 
+        //Now set up mechanism to signal the dummythread when the game is loaded
+        //and all changes up till now are applied, so that it quits 'in sync' and the real
+        //network code can run wild.
+    }
+
+    void handleClientComm() {
+        //Assume falsely that all comm is newline terminated
+        auto line = readLine(commSock);
+        msg("!!!!!! COMM MESSAGE !!!!\n", "   ", line, "\b\n\n");
+        if(line.startsWith("controlUnit:")) {
+            auto id = to!int(line[line.lastIndexOf(':')+1 .. $]);
+            auto unit = Clans().getUnitById(id);
+            setActiveUnit(unit);
+        }
+    }
+
+    void doClientNetworkStuffUntil(long nextSync) {
+        recv_set.reset();
+        write_set.reset();
+        recv_set.add(commSock);
+        recv_set.add(dataSock);
+        write_set.add(dataSock);
+
+        int[2] frameInfo = [g_gameTick, toWrite.length];
+        if(dataSock.receive(frameInfo) != frameInfo.sizeof) {
+            Log("Error receiveing frame info from server, disconnecting");
+            BREAKPOINT;
+        }
+        if(frameInfo[0] != g_gameTick) {
+            Log("Client got wrong game tick");
+            BREAKPOINT;
+        }
+        if(dataSock.send(frameInfo) != frameInfo.sizeof) {
+            Log("Error sending frame info to client, disconnecting");
+            BREAKPOINT;
+        }
+        receiveBuffer.length = frameInfo[1];
+        assumeSafeAppend(receiveBuffer);
+
+        //When leave this all is sent/received.... ?
+        bool stuffToTransfer = true;
+        while (stuffToTransfer) {
+            stuffToTransfer = false;
+            int n = Socket.select(recv_set, write_set, null, 0);
+            if(recv_set.isSet(commSock)) {
+                handleClientComm();
+            }
+            if(recv_set.isSet(dataSock) && recv_index != receiveBuffer.length) {
+                int read = dataSock.receive(receiveBuffer[recv_index .. $]);
+                if(read < 1) {
+                    Log("Error reading changes from server, disconnecting");
+                    BREAKPOINT;
+                }
+                recv_index += read;
+            }
+            if (write_set.isSet(dataSock) && send_index != toWrite.length) {
+                int sent = dataSock.send(toWrite[send_index .. $]);
+                if(sent < 1) {
+                    msg("Error sending changes to server, disconnecting");
+                    BREAKPOINT;
+                }
+                send_index += sent;
+            }
+            stuffToTransfer |= (send_index != toWrite.length) || (recv_index != receiveBuffer.length);
+        }
+
+        //Changed into use of variable; have encountered race condition in previous project
+        // where the time went into the next frame after the while-check, overflowing the
+        // value sent to select / sleep, producing a very long wait.
+        auto timeLeft = nextSync - utime();
+        recv_set.reset();
+        recv_set.add(commSock);
+        while (timeLeft > 0) {
+            int n = Socket.select(recv_set, null, null, timeLeft);
+            if (n == 0) {
+                break; // this is timeout, means we go on until next tick
+            }
+            handleClientComm();
+        }
+        toWrite.length = 0;
+        assumeSafeAppend(toWrite);
+    }
+
+    void getClientNetworkChanges(ref ChangeList list) {
+        list.readFrom(receiveBuffer);
+    }
+
+    void pushClientNetworkChanges(ChangeList list) {
+        //toWrite.length += list.changeListData.length;
+        //toWrite[4 .. $] = list.changeListData[];
+        toWrite ~= list.changeListData[];
+    }
+
+    void dummyClientNetwork() {
+        while(!doneLoading) {
+            int[2] frameInfo = [g_gameTick, 0];
+            auto ret = dataSock.receive(frameInfo);
+            if(ret != frameInfo.sizeof) {
+                Log("Pre:Error receiveing frame info from server, disconnecting");
+                BREAKPOINT;
+            }
+            receiveBuffer.length += frameInfo[1];
+            g_gameTick = frameInfo[0];
+            frameInfo[1] = 0;
+            if(dataSock.send(frameInfo) != frameInfo.sizeof) {
+                Log("Pre:Error sending frame info to client, disconnecting");
+                BREAKPOINT;
+            }
+            assumeSafeAppend(receiveBuffer);
+
+            while(recv_index != receiveBuffer.length) {
+                int read = dataSock.receive(receiveBuffer[recv_index .. $]);
+                if(read < 1) {
+                    Log("Pre:Error reading changes from server, disconnecting");
+                    BREAKPOINT;
+                }
+                recv_index += read;
+            }
+        }
     }
 
 }

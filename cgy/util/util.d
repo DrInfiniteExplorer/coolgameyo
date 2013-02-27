@@ -1,5 +1,6 @@
 module util.util;
 
+import core.thread;
 import core.time;
 
 import std.algorithm;
@@ -26,10 +27,10 @@ version (Posix) {
 
 int workerID = -1; // thread local, set by scheduler
 
-__gshared int TICK_LOL;
+__gshared int g_gameTick;
 
 void msg(string file=__FILE__, int line=__LINE__, T...)(T t) {
-    writeln(TICK_LOL % 100, ":", workerID, ": ", 
+    writeln(g_gameTick % 100, ":", workerID, ": ", 
             file, "(", line, "): ", t);
 }
 
@@ -37,12 +38,10 @@ long utime() {
     return TickDuration.currSystemTick().usecs;
 }
 
-import std.concurrency : Tid, spawn;
-Tid spawnThread(void delegate() func) {
-    static void starter(shared void delegate() _func) {
-        _func();
-    }
-    return spawn(&starter, cast(shared)func);
+Thread spawnThread(T)(T func) {
+    auto thread = new Thread(func);
+    thread.start();
+    return thread;
 }
 
 alias vector2d!(ubyte)  vec2ub;

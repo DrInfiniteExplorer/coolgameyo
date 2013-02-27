@@ -400,7 +400,7 @@ final class TileGeometry : Module, WorldStateListener
         
         auto cnt = min(regionsToUpdate.length, GraphRegionsPerTick);
         enforce(cnt > 0, "Do not get here. In fact, it is impossible!");
-        auto nums = regionsToUpdate[$-cnt .. $];
+        auto nums = regionsToUpdate[$-cnt .. $].dup; //Lol was not safe to assumesafeappend until added dup, i think?
         regionsToUpdate.length -= cnt;
         assumeSafeAppend(regionsToUpdate); //Pretty safe yes
 

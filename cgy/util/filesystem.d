@@ -36,6 +36,14 @@ void writeBin(T)(string path, T t) {
     std.file.write(path, t);
 }
 
+void append(Us...)(string path, Us us) {
+    BinaryFile file = BinaryFile(path, "a");
+    foreach(item ; us) {
+        file.write(item);
+    }
+    file.close();
+}
+
 // int[] t = [1, 3, 5]
 // writeBin("asd", t); 
 // readBin("asd", t);
@@ -136,10 +144,8 @@ body{
 struct BinaryFile {
     File file;
     this(string path, string mode) {
-        if(std.algorithm.indexOf(mode, "w") == -1) {
-            mode = "rb";
-        } else {
-            mode = "wb";
+        if(std.algorithm.indexOf(mode, "b") == -1) {
+            mode = mode ~ "b";
         }
         file = std.stdio.File(path, mode);
     }
@@ -185,4 +191,7 @@ struct BinaryFile {
         }
     }
 
+    auto close() {
+        return file.close();
+    }
 };

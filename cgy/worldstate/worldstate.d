@@ -217,7 +217,7 @@ class WorldState {
         Clans().deserializeClans();
 
         foreach(sectorNum, clanCount ; activeSectors) {
-            if(getSector(sectorNum) !is null) continue;
+            if(getSector(sectorNum) !is null) continue; //Means the sector is already loaded.
             if(!clanCount) {
                 msg("Error, nonexistent clancount for sector, ignoring. ", sectorNum);
             } else {

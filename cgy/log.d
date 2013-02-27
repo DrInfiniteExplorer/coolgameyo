@@ -13,7 +13,7 @@ enum LogLevel {
     Verbose,    
 }
 
-void LogBase(LogLevel level, Us...)(Us us) {
+void LogBase(LogLevel level = LogLevel.Information, Us...)(Us us) {
     import std.conv : to;
     foreach(item ; us) {
         write(item);
@@ -26,14 +26,17 @@ void LogBase(LogLevel level, Us...)(Us us) {
         }
     }
     write("\n");
+    stdout.flush();
     if(logCallback) {
         logCallback("\n");
     }
 }
-
+/*
 void Log(Us...)(Us us) {
     LogBase!(LogLevel.Information, Us)(us);
 }
+*/
+alias LogBase Log;
 void LogVerbose(Us...)(Us us) {
     LogBase!(LogLevel.Verbose, Us)(us);
 }

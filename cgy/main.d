@@ -382,6 +382,11 @@ bool startClient(string host) {
                       "Ok", { exit = true; });
     }
 
+    scope(exit) {
+        game.destroy();
+        guiSystem.destroy();
+    }
+
     // Main loop etc
     long then;
     long now, nextTime = utime();
@@ -412,9 +417,6 @@ bool startClient(string host) {
 
         SDL_WM_SetCaption( "CoolGameYo!\0", "CoolGameYo!\0");
     }
-
-    game.destroy();
-    guiSystem.destroy();
     return true;
 
 }

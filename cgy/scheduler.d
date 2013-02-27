@@ -12,7 +12,6 @@ import core.cpuid;
 import std.algorithm;
 import std.exception;
 import std.c.stdlib;
-import std.concurrency;
 import std.conv;
 import std.container;
 import std.datetime;
@@ -62,17 +61,17 @@ private Task syncTask() {
     return Task(true, true, null);
 }
 
-private void workerFun(shared Scheduler ssched,
-                       shared WorldProxy sproxy,
+private void workerFun(Scheduler sched,
+                       WorldProxy proxy,
                        int id) {
     workerID = id;
     bool should_continue = true;
     thread_attachThis();
-    auto sched = cast(Scheduler)ssched; // fuck the type system!
+    //auto sched = cast(Scheduler)ssched; // fuck the type system!
     setThreadName("Fun-worker thread");
 
 
-    auto proxy = cast(WorldProxy)sproxy;
+    //auto proxy = cast(WorldProxy)sproxy;
     Task task;
 
     try {
@@ -84,10 +83,11 @@ private void workerFun(shared Scheduler ssched,
                 task.run(proxy); //Fill changelist!!
             }
         }
-    } catch (Throwable o) {
-        msg("Thread exception!\n", o.toString());
+    } catch (Throwable t) {
+        Log(t);
+        msg("Thread exception!\n", t.msg);
         version(Windows) {
-            MessageBoxA(null, cast(char *)toStringz(o.toString()),
+            MessageBoxA(null, cast(char *)toStringz(t.msg),
                     "Thread Error", MB_OK | MB_ICONEXCLAMATION);
         }
     }
@@ -115,7 +115,7 @@ final class Scheduler {
     State state;
 
     WorldProxy[] proxies;
-    Tid[] workers;
+    Thread[] workers;
 
     int activeWorkers;
 
@@ -158,7 +158,15 @@ final class Scheduler {
         //proxies ~= myProxy;
         foreach (x; 0 .. workerCount) {
             auto p = new WorldProxy(world);
-            workers ~= spawn(&workerFun, cast(shared)this, cast(shared)p, x);
+            struct ThreadContext {
+                Scheduler scheduler;
+                WorldProxy proxy;
+                int threadId;
+                this(Scheduler s, WorldProxy p, int t) { scheduler = s; proxy = p; threadId = t; }
+                void run() {workerFun(scheduler, proxy, threadId);}
+            }
+            auto context = new ThreadContext(this, p, x);
+            workers ~= spawnThread(&context.run);
             proxies ~= p;
         }
 
@@ -171,6 +179,13 @@ final class Scheduler {
     }
     
     bool running() {
+        bool alive = false;
+        foreach(worker ; workers) {
+            if(worker.isRunning()) {
+                alive = true;
+            }
+        }
+        BREAK_IF(alive != (workers.length != 0));
         return workers.length != 0;
     }
     
@@ -236,17 +251,28 @@ final class Scheduler {
         if(g_isServer) {
             //Send the current changes.
             foreach (proxy; proxies) {
-                game.pushNetworkChanges(proxy.changeList);
+                game.pushServerNetworkChanges(proxy.changeList);
             }        
-            game.doNetworkStuffUntil(nextSync);
-
-            game.getNetworkChanges(proxies[0].changeList);
+            game.doServerNetworkStuffUntil(nextSync);
+            game.getServerNetworkChanges(proxies[0].changeList);
         } else {
-            auto timeLeft = nextSync - utime();
-            if (timeLeft > 0) {
-                Thread.sleep(dur!"usecs"(timeLeft));
+            if(game.doneLoading) {
+                foreach (proxy; proxies) {
+                    game.pushClientNetworkChanges(proxy.changeList);
+                }        
+                game.doClientNetworkStuffUntil(nextSync);
+                game.getClientNetworkChanges(proxies[0].changeList);
+            } else {
+                //If not done loading, but we get here, that means we have are actually done loading.
+                game.doneLoading = true;
+                auto err = game.dummyThread.join(false);
+                if(err) {
+                    Log("Caught error from client dummy thread: ", err.msg);
+                }
+                //Do one last dummy-read and then apply the stuff, and we will be in sync.
+                game.getClientNetworkChanges(proxies[0].changeList);
+                game.commSock.send("ProperlyConnected\n");
             }
-
         }
         //Apply the current changes.
         foreach (proxy; proxies) {
@@ -310,9 +336,9 @@ final class Scheduler {
                     suspendMe(sw);
 
                     if (exiting) {
-                        static void cleanUp(ref Tid[] workers) {
-                            bool pred(Tid t) {
-                                return t == thisTid();
+                        static void cleanUp(ref Thread[] workers) {
+                            bool pred(Thread t) {
+                                return t is Thread.getThis();
                             }
                             workers = remove!(pred)(workers);
                         }
@@ -343,14 +369,14 @@ final class Scheduler {
 
                 /*
                 if(TICK_LOL == 456) {
-                    msg("Will now sleep forever");
+                    msg("Will now sleep forever"); 
                     activeWorkers++; //Enter the eternal slumber!
                     suspendMe(sw);
                 }
                 */
 
 
-                TICK_LOL += 1;
+                g_gameTick += 1;
 
                 if (exiting) {
                     workers.length = 0;
