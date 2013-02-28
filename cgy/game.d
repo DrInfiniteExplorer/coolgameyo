@@ -225,7 +225,6 @@ class Game{
     }
 
     private void populateWorld() {
-        g_UnitCount = 0;
         loadJSON(g_worldPath ~ "/start.json").readJSONObject("startPos", &spawnPoint);
 
         UnitPos topOfTheWorld(TileXYPos xy) {
@@ -326,6 +325,12 @@ class Game{
     void setActiveUnitPos(UnitPos pos) {
         if(activeUnit is null) return;
         activeUnitPos = pos;
+    }
+
+    void damageTile(TilePos tp, int damage) {
+        synchronized(clientChangeProxy) {
+            clientChangeProxy.damageTile(tp, damage);
+        }
     }
 
     mixin ServerModule server;

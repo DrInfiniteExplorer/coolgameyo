@@ -41,7 +41,7 @@ final class TestAI : UnitAI {
     override int tick(WorldProxy world, PathModule pathfinder) {
         auto m = unit.mission;
         if (m.type == Mission.Type.nothing) {
-            world.getMission(unit);
+            pragma(msg, "derp world.getMission(unit);");
             return 0;
         }
         

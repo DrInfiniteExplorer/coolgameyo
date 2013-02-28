@@ -86,12 +86,14 @@ final class WorldProxy {
             "designateMine", DesignateMine,
             );
 
+    /*
     void pickupEntity(Entity e, Unit u) {
         changeList.add!PickupEntity(e, u.inventory);
     }
     void depositEntity(Entity e, Unit u, Entity e2) {
         changeList.add!DepositEntity(e, u.inventory, e2.inventory);
     }
+    */
 
     /*
     void addCustomChange(CustomChange c) {

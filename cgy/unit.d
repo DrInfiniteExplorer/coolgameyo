@@ -22,7 +22,8 @@ import worldstate.worldstate;
 
 import modules.path;
 
-shared int g_UnitCount = 0; //Global counter of units. Make shared static variable in Game-class?
+immutable INVALID_UNIT_ID = 0;
+shared int g_UnitCount = INVALID_UNIT_ID; //Global counter of units. Make shared static variable in Game-class?
 
 
 interface UnitAI {
@@ -51,8 +52,8 @@ struct Demand {
 
 Unit newUnit() {
     auto unit = new Unit;
+    g_UnitCount = core.atomic.atomicOp!"+="(g_UnitCount, 1);
     unit.id = g_UnitCount;
-    g_UnitCount++;
     unit.inventory = new Inventory();
     return unit;
 }

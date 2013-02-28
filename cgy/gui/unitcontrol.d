@@ -131,7 +131,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         if (unit) {
             auto ai = unit.ai;
             enforce(ai, "Controlled / possessed unit does not have ai? :S");
-            enforce(possesAI is ai, "Controlled / possessed unit has wrong ai! :S");
+            //enforce(possesAI is ai, "Controlled / possessed unit has wrong ai! :S");
             possesAI.destroy();
         }
         unit = u;
@@ -423,14 +423,14 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
             copiedTile = selectedTile;
             //Remove transparensiness sometime!!
 
-            possesAI.changeTile(selectedTilePos, airTile);
+            //possesAI.changeTile(selectedTilePos, airTile);
         } else if (m.right && tileSelected) {
             TilePos whereToPlace = TilePos(selectedTilePos.value + selectedTileNormal);
             auto pos = possesAI.getUnitPos();
             auto unitAABB = unit.aabb(&pos);
             auto tileAABB = whereToPlace.getAABB();
             if (! intersectsExclusive(unitAABB, tileAABB)) {
-                possesAI.changeTile(whereToPlace, copiedTile);
+                //possesAI.changeTile(whereToPlace, copiedTile);
             }
         } else if (m.middle && tileSelected) {
             //vec3d pos = TilePos(selectedTilePos.value+selectedTileNormal).toEntityPos.value; // + 0.5 * selectedTileNormal.convert!double();
@@ -438,12 +438,9 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
             //auto entityTypeId = world._worldProxy.entityTypeManager.byName("torch").id;
             auto entityTypeId = world._worldProxy.entityTypeManager.byName("tree01").id;
             auto pos = TilePos(selectedTilePos.value+selectedTileNormal).toEntityPos;
-            auto val = makeJSONObject(
-                           "entityTypeId", entityTypeId,
-                           "clanId", 0, //Gaia
-                           "pos", pos);
-
-            world._worldProxy.createEntity(val);
+            auto entityId = INVALID_ENTITY_ID;
+            auto clanId = 0; // Gaia
+            world._worldProxy.createEntity(entityId, entityTypeId, clanId, pos);
         }
 
     }

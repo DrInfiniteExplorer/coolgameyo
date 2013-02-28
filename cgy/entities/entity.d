@@ -24,7 +24,8 @@ import entities.placeable;
 import entities.workshop;
 
 
-shared int g_entityCount;
+immutable INVALID_ENTITY_ID = 0;
+shared int g_entityCount = INVALID_ENTITY_ID;
 
 WorldProxy entityCreationProxy;
 private void createEntity(Entity entity, EntityType type, WorldState world) {
@@ -53,8 +54,8 @@ Entity newEntity(EntityType type) {
 
 private Entity newEntity() {
     auto entity = new Entity;
+    g_entityCount = core.atomic.atomicOp!"+="(g_entityCount, 1);
     entity.entityId = g_entityCount;
-    g_entityCount++;
     return entity;
 }
 

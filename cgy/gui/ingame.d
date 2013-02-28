@@ -86,8 +86,11 @@ class FpsHandler : GuiEventDump {
         if (!m.down) {
             return;
         } else if (m.left) {
-        } else if (m.left) {
             msg("Add damage to tile under cursor, like.");
+            rayPickTile();
+            if(selectedTileIterations > 0) {
+                game.damageTile(selectedTilePos, 5);
+            }
         } else if (m.right) {
 
         } else if (m.middle) {
@@ -144,7 +147,7 @@ class FpsHandler : GuiEventDump {
         } else {
             updatePossesed(dTime);
         }
-        hoverRay();
+        //hoverRay();
     }
 
     void updatePossesed(float dTime) { 
@@ -187,32 +190,16 @@ class FpsHandler : GuiEventDump {
 
 
 
-    int selectedTileBox; //TODO: Implement better way to render selected tile than debug functionality
+    Tile selectedTile;
+    TilePos selectedTilePos;
+    vec3i selectedTileNormal;
+    double selectedTileDistance;
+    int selectedTileIterations; // if > 0 then valid pick
     void rayPickTile() {
         vec3d start, dir;
         camera.getRayFromScreenCoords(mousecoords, start, dir);
-        Tile tile;
-        Tile selectedTile;
-        TilePos selectedTilePos;
-        vec3i selectedTileNormal;
-        double selectedDistance;
-        auto a = world.intersectTile(start, dir, 25, selectedTile, selectedTilePos, selectedTileNormal, &selectedDistance);
-        //writeln(a);
-        /*
-        tileSelected = a > 0;
-        if(tileSelected){
-            if(selectedTileBox){
-                removeAABB(selectedTileBox);
-            }
-            auto temp = TilePos(selectedTilePos.value); //Why? :S:S :P
-            aabbd aabb = temp.getAABB();
-            aabb.scale(vec3d(1.025f));
-            selectedTileBox = addAABB(aabb);
-        }
-        */
+        selectedTileIterations = world.intersectTile(start, dir, 25, selectedTile, selectedTilePos, selectedTileNormal, &selectedTileDistance);
     }
-
-
 
     void rayPickEntity() {
         return;

@@ -36,8 +36,6 @@ final class ChangeList {
 
             GetMission,
             DesignateMine,
-
-            CustomChange
             ) ChangeTypes;
 
     ubyte[] changeListData;

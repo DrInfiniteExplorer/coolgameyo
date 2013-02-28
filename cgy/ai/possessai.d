@@ -18,7 +18,7 @@ import util.rangefromto;
 
 import worldstate.worldstate;
 
-class FPSControlAI : UnitAI, CustomChange {
+class FPSControlAI {
     Unit unit;
 
     UnitAI oldAi;
@@ -53,7 +53,7 @@ class FPSControlAI : UnitAI, CustomChange {
         }
         if (u is null) return;
         unit = u;        
-        unit.ai = this;
+        unit.ai = null;
         fallSpeed = 0.0f;
         onGround=false;
         unitPos = unit.pos.value;
@@ -191,39 +191,5 @@ class FPSControlAI : UnitAI, CustomChange {
         return unitPos;
     }
 
-    //This is now mostly used to make a 'real' commit of the movement.
-    //Moving the unit would like, break things, kinda, otherwise, and such.
-    //How/what to do when networked? Other clients will want to know where it is positioned.
-    //Probably send information like "Unit X is player-controlled" to set NetworkControlledAI
-    //which'll work kina like this one, i suppose.
-    override int tick(WorldProxy world, PathModule p) {
-        //world.addCustomChange(this);
-        
-        world.moveUnit(unit, UnitPos(unitPos), 1);
 
-        foreach (tilePos, tile; tilesToChange) {
-            world.designateMine(unit.clan, tilePos);
-        }
-        tilesToChange = null;
-        return 0;
-    }
-    
-    Tile[TilePos] tilesToChange;
-    void changeTile(TilePos pos, Tile newTile) {
-        tilesToChange[pos] = newTile;
-    }        
-
-
-    //Hax used: oldPosition, to make the world produce a delta-pos-value and load sectors
-    void apply(WorldState world) {
-        world.unsafeMoveUnit(unit, UnitPos(unitPos), 1);
-        
-        return;
-        /*
-        foreach(tilePos, tile ; tilesToChange) {
-            world.unsafeSetTile(tilePos, tile);
-        }
-        tilesToChange = null;
-        */
-    }
 }

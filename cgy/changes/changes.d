@@ -44,22 +44,28 @@ struct RemoveTile {
 struct CreateUnit {
 
     this(Unit _u) {
+        /*
         u = _u;
         serialized = encode(u);
+        */
     }
 
-    Unit u;
-    Value serialized;
+    //Unit u;
+    uint unitId;
+    //Value serialized;
 
     void apply(WorldState world) {
+        /*
         if(u is null) {
             import std.exception;
             enforce(0, "Implement creating of units over network");
         }
+        */
     }
 }
 struct RemoveUnit {
-    Unit u;
+    //Unit u;
+    uint unitId;
 
     void apply(WorldState world) {
         assert(0);
@@ -84,7 +90,8 @@ struct MoveUnit {
 }
 
 struct SetIntent {
-    Unit u;
+    //Unit u;
+    uint unitId;
     string id;
     string description;
  
@@ -93,7 +100,8 @@ struct SetIntent {
     }
 }
 struct SetAction {
-    Unit u;
+    //Unit u;
+    uint unitId;
     string id;
     string description;
 
@@ -103,7 +111,7 @@ struct SetAction {
 }
 
 struct CreateEntity {
-
+/*
     this(Value value) {
         e = null;
         serializedData = value;
@@ -127,16 +135,27 @@ struct CreateEntity {
             e.deserialize(serializedData, world);
         }
     }
+    */
+
+    uint entityId;
+    uint entityTypeId;
+    uint clanId;
+    EntityPos entityPos;
+    void apply(WorldState world) {
+        BREAKPOINT;
+    }
 }
 struct RemoveEntity {
-    Entity e;
+    //Entity e;
+    uint entityId;
 
     void apply(WorldState world) {
         assert(0);
     }
 }
 struct MoveEntity {
-    Entity e;
+    //Entity e;
+    uint entityId;
     EntityPos pos;
 
     void apply(WorldState world) {
@@ -144,24 +163,28 @@ struct MoveEntity {
     }
 }
 struct PickupEntity {
-    Entity e;
-    Inventory a;
+    //Entity e;
+    uint entityId;
+    //Inventory a;
 
     void apply(WorldState world) {
         assert(0);
     }
 }
 struct DepositEntity {
-    Entity e;
-    Inventory a, b;
+    //Entity e;
+    uint entityId;
+    //Inventory a, b;
 
     void apply(WorldState world) {
         assert(0);
     }
 }
 struct ActivateEntity {
-    Unit activator;
-    Entity e;
+    //Unit activator;
+    //Entity e;
+    uint unitId;
+    uint entityId;
 
     void apply(WorldState world) {
         assert(0);
@@ -169,27 +192,22 @@ struct ActivateEntity {
 }
 
 struct GetMission {
-    Unit unit;
+    //Unit unit;
+    uint unitId;
 
     void apply(WorldState world) {
-        unit.mission = unit.clan.unsafeGetMission();
+        //unit.mission = unit.clan.unsafeGetMission();
     }
 }
 
 struct DesignateMine {
-    Clan clan;
+    //Clan clan;
+    uint clanId;
     TilePos pos;
 
     void apply(WorldState world) {
-        clan.unsafeDesignateMinePos(pos);
+        //clan.unsafeDesignateMinePos(pos);
     }
 }
 
-
-// Only implemented by experimental or semi-hacky classes.
-// List of such classes:
-//  FPSControlAI
-interface CustomChange {
-    void apply(WorldState world);
-}
 
