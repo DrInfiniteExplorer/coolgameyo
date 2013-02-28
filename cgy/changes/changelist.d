@@ -85,8 +85,10 @@ final class ChangeList {
             }
 
         }
+        reset();
+    }
 
-        //changeArrays.reset();
+    void reset() {
         changeListData.length = 0;
         assumeSafeAppend(changeListData);
     }

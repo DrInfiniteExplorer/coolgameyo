@@ -1,6 +1,6 @@
 
 
-module ai.posessai;
+module ai.possessai;
 
 import std.conv;
 import std.exception;
@@ -26,12 +26,13 @@ class FPSControlAI : UnitAI, CustomChange {
     float fallSpeed;
     bool onGround;
     WorldState world;
-    SceneManager scene;
+    //SceneManager scene;
     vec3d unitPos;
 
-    this(WorldState w, SceneManager s) {
+    this(Unit unit, WorldState w /*, SceneManager s */) {
         world = w;
-        scene = s;
+        //scene = s;
+        setUnit(unit);
     }
     
     private bool destroyed;
@@ -48,7 +49,7 @@ class FPSControlAI : UnitAI, CustomChange {
         }
         if (unit) {
             unit.ai = oldAi;
-            scene.getProxy(u).scale = vec3f(1.0f);
+            //scene.getProxy(u).scale = vec3f(1.0f);
         }
         if (u is null) return;
         unit = u;        
@@ -56,7 +57,7 @@ class FPSControlAI : UnitAI, CustomChange {
         fallSpeed = 0.0f;
         onGround=false;
         unitPos = unit.pos.value;
-        scene.getProxy(u).scale = vec3f(0.0f);
+        //scene.getProxy(u).scale = vec3f(0.0f);
 
         //LATER: Send data to clients that this unit is possessed!!!!
         // :)
@@ -198,6 +199,8 @@ class FPSControlAI : UnitAI, CustomChange {
     override int tick(WorldProxy world, PathModule p) {
         //world.addCustomChange(this);
         
+        world.moveUnit(unit, UnitPos(unitPos), 1);
+
         foreach (tilePos, tile; tilesToChange) {
             world.designateMine(unit.clan, tilePos);
         }

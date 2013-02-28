@@ -54,13 +54,14 @@ import unit;
 import util.util;
 import util.filesystem;
 import worldstate.worldstate;
+import changes.worldproxy;
 //import worldgen.worldgen;
 import worldgen.maps;
 
 __gshared bool g_isServer;
 __gshared string g_worldPath;
 
-__gshared string g_playerName = ""; //Default player name. What should that be?
+__gshared string g_playerName = "BurntFaceMan"; //Default player name. What should that be?
 
 string SDLError() { return to!string(SDL_GetError()); }
 
@@ -98,6 +99,7 @@ final class PlayerInformation {
         receiveBuffer.length = 0;
         connected = false;
         disconnected = true;
+        Log("Disconnecting ", name);
     }
 
 }
@@ -123,10 +125,10 @@ class Game{
     private TileTypeManager     tileTypeManager;
     private UnitTypeManager     unitTypeManager;
 
-    private Unit                activeUnit; //TODO: Find out when this unit dies, and tell people.
 
     private vec2i               spawnPoint;
-    private PlayerInformation[string] players; //Index is player name.
+
+    //Client variables
 
     this(bool server) {
         isServer = server;
@@ -210,28 +212,20 @@ class Game{
             tileGeometry = new TileGeometry(worldState, tileRenderer);
             auto heightSheets = new HeightSheets(worldMap, worldState);
             renderer = new Renderer(camera, atlas, tileRenderer, sceneManager, heightSheets);
+            renderer.init();
             scheduler.registerModule(tileGeometry);
             scheduler.registerModule(heightSheets);
             tileGeometry.setCamera(camera);
+            clientChangeProxy = new WorldProxy(worldState);
         }
         if(isServer) {
-            initServerModule();
+            server.initModule();
         }
 
     }
-    //This and init are run in the thread which becomes the scheduler thread
-    private void finishInit() {
-        if (!isServer) {
-            renderer.init();
-        }
-        scheduler.start();
-    }
-
 
     private void populateWorld() {
-
         g_UnitCount = 0;
-
         loadJSON(g_worldPath ~ "/start.json").readJSONObject("startPos", &spawnPoint);
 
         UnitPos topOfTheWorld(TileXYPos xy) {
@@ -252,12 +246,6 @@ class Game{
             return u;
         }
 
-        /*
-        auto u = addUnitAtPos(vec2i(3,-20) + spawnPoint);
-        u.ai = new TestAI(u);
-        worldState._worldProxy.createUnit(u);
-        */
-
         auto uu = addUnitAtPos(spawnPoint);
         activeUnit = uu;
         worldState._worldProxy.createUnit(uu);
@@ -267,19 +255,18 @@ class Game{
     void loadGame() {
         init();
         scheduler.deserialize();
-        finishInit();        
+        scheduler.start();
     }
 
     void connect(string host) {
-        initClientModule(host);
+        client.initModule(host);
         init();
         scheduler.deserialize();
-        finishInit();
+        scheduler.start();
     }
 
     //Herp derp will be called from scheduler.deserialize. Yeah.
     void deserialize() {
-
         if(exists(g_worldPath ~ "/start.json")) {
             populateWorld();
             deleteFile(g_worldPath ~ "/start.json");
@@ -307,16 +294,9 @@ class Game{
         worldState.serialize();
     }
 
-    Camera getCamera() {
-        return camera;
-    }
-
-    Unit getActiveUnit() {
-        return activeUnit;
-    }
-
-    void setActiveUnit(Unit u) {
-        activeUnit = u;
+    void render(long usecs) {
+        if(renderer is null) return;
+        renderer.render(usecs, worldState.getDayTime());
     }
 
     WorldState getWorld() {
@@ -331,17 +311,25 @@ class Game{
         return scheduler;
     }
 
-    bool getIsServer() {
-        return this.isServer;
+    Camera getCamera() {
+        return camera;
     }
 
-    void render(long usecs) {
-        if(renderer is null) return;
-        renderer.render(usecs, worldState.getDayTime());
+    Unit getActiveUnit() {
+        return activeUnit;
     }
 
-    mixin ServerModule;
-    mixin ClientModule;
+    void setActiveUnit(Unit u) {
+        activeUnit = u;
+    }
+
+    void setActiveUnitPos(UnitPos pos) {
+        if(activeUnit is null) return;
+        activeUnitPos = pos;
+    }
+
+    mixin ServerModule server;
+    mixin ClientModule client;
 
 }
 

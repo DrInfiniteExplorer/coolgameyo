@@ -66,11 +66,19 @@ struct RemoveUnit {
     }
 }
 struct MoveUnit {
-    Unit unit;
+    uint unitId;
     UnitPos destination;
     uint ticksToArrive;
 
+    this(Unit unit, UnitPos dest, uint toArrive) {
+        unitId = unit.id;
+        destination = dest;
+        ticksToArrive = toArrive;
+    }
+
     void apply(WorldState world) {
+        import clans;
+        auto unit = Clans().getUnitById(unitId);
         world.unsafeMoveUnit(unit, destination, ticksToArrive);
     }
 }
@@ -79,7 +87,7 @@ struct SetIntent {
     Unit u;
     string id;
     string description;
-
+ 
     void apply(WorldState world) {
         assert(0);
     }

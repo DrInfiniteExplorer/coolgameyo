@@ -147,9 +147,12 @@ final class Scheduler {
 
     void start(int workerCount=core.cpuid.threadsPerCPU) {
         msg("using ", workerCount, " workers");
+
+        /*
         if(!g_isServer) {
             workerCount = 1;
         }
+        */
 
         activeWorkers = workerCount;
         syncTime = utime();
@@ -251,17 +254,17 @@ final class Scheduler {
         if(g_isServer) {
             //Send the current changes.
             foreach (proxy; proxies) {
-                game.pushServerNetworkChanges(proxy.changeList);
+                game.server.pushNetworkChanges(proxy.changeList);
             }        
-            game.doServerNetworkStuffUntil(nextSync);
-            game.getServerNetworkChanges(proxies[0].changeList);
+            game.server.doNetworkStuffUntil(nextSync);
         } else {
             if(game.doneLoading) {
                 foreach (proxy; proxies) {
-                    game.pushClientNetworkChanges(proxy.changeList);
-                }        
-                game.doClientNetworkStuffUntil(nextSync);
-                game.getClientNetworkChanges(proxies[0].changeList);
+                    game.client.pushChanges(proxy.changeList);
+                }
+                game.client.pushChanges();
+                game.client.doNetworkStuffUntil(nextSync);
+                game.client.getNetworkChanges(proxies[0].changeList);
             } else {
                 //If not done loading, but we get here, that means we have are actually done loading.
                 game.doneLoading = true;
@@ -270,8 +273,8 @@ final class Scheduler {
                     Log("Caught error from client dummy thread: ", err.msg);
                 }
                 //Do one last dummy-read and then apply the stuff, and we will be in sync.
-                game.getClientNetworkChanges(proxies[0].changeList);
-                game.commSock.send("ProperlyConnected\n");
+                game.client.getNetworkChanges(proxies[0].changeList);
+                game.client.commSock.send("ProperlyConnected\n"); 
             }
         }
         //Apply the current changes.
@@ -280,6 +283,12 @@ final class Scheduler {
         }
 
         reset_temp_alloc();
+
+        //Clients apply whatever changes they get from the server immediately,
+        // but the server applies the changes from the clients during the next tick.
+        if(g_isServer) {
+            game.server.getNetworkChanges(proxies[0].changeList);
+        }
 
         world.update(this);
         foreach (mod; modules) {

@@ -9,7 +9,7 @@ import std.stdio;
 
 import derelict.sdl.sdl;
 
-import ai.posessai;
+import ai.possessai;
 import json;
 import gaia;
 import game;
@@ -135,7 +135,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
             possesAI.destroy();
         }
         unit = u;
-        possesAI = new FPSControlAI(world, world.sceneManager);
+        possesAI = new FPSControlAI(unit, world /*, world.sceneManager*/);
         possesAI.setUnit(unit);
     }
 

@@ -371,7 +371,7 @@ bool startClient(string host) {
     //Yes yes...
     GuiSystem guiSystem;
     guiSystem = new GuiSystem;
-
+ 
     bool exit = false;
     Game game = new Game(false);
     try {
@@ -381,6 +381,9 @@ bool startClient(string host) {
         new DialogBox(guiSystem, "An error occured", e.msg,
                       "Ok", { exit = true; });
     }
+
+    import gui.ingame;
+    auto ingameGui = new InGameGui(guiSystem, game);
 
     scope(exit) {
         game.destroy();
@@ -409,7 +412,7 @@ bool startClient(string host) {
         then = now;
 
         guiSystem.tick(deltaT); //Eventually add deltatime and such as well :)
-        guiSystem.render();            
+        guiSystem.render();
 
         game.render(diff);
 

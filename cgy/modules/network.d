@@ -16,18 +16,17 @@ enum max_clients = 13;
 enum PORT = 1337;
 immutable HANDSHAKE_A = "CoolGameYo?\n";
 immutable HANDSHAKE_B = "CoolGameYo!!!\n";
-immutable HANDSHAKE_C = "Oh yeah! Give me name!\n";
+immutable HANDSHAKE_C = "Oh yeah! Give me a name!\n";
 
 mixin template ServerModule() {
 
+    PlayerInformation[string] players; //Index is player name.
     SocketSet recv_set, write_set;
     Socket listener;
 
     ubyte[] toWrite;
 
-    ChangeList client_changes;
-
-     void initServerModule() {
+     void initModule() {
         listener = new TcpSocket;
         listener.bind(new InternetAddress(PORT));
         listener.listen(10);
@@ -37,10 +36,11 @@ mixin template ServerModule() {
         toWrite.length = 4;
     }
 
-    bool simpleServerHandshake(Socket sock) { // Awesome handshake :P
+    bool simpleHandshake(Socket sock) { // Awesome handshake :P
+        //sock.setOption(SocketOptionLevel.TCP, SocketOption.TCP_NODELAY, 1); //To disable nagle
         if(sock.send(HANDSHAKE_A) != HANDSHAKE_A.length) {
             sock.close();
-            return false;
+            return false; 
         }
         if(readLine(sock) != HANDSHAKE_B[0..$-1]) {
             sock.close();
@@ -86,7 +86,7 @@ mixin template ServerModule() {
         auto remoteName = remoteAddress.toAddrString;
         Log("Client connection from: ", remoteName);
 
-        simpleServerHandshake(newSock);
+        simpleHandshake(newSock);
         //client or data socket: after handshake, client sends "comm" or "data".
         auto connectionType = readLine(newSock);
         if(connectionType == "comm") {
@@ -193,7 +193,7 @@ mixin template ServerModule() {
         }
     }
 
-    void handleServerComm(PlayerInformation player) {
+    void handleComm(PlayerInformation player) {
         //falsely assume that all stuff over comm is newline terminated
         // (In future will be async stuff like player positions as well)
         auto line = readLine(player.commSock);
@@ -214,7 +214,7 @@ mixin template ServerModule() {
     // todo:
     // figure out sizes of buffers
     //todo: lol buffers
-    void doServerNetworkStuffUntil(long nextSync) {
+    void doNetworkStuffUntil(long nextSync) {
         //We now have all changes that will be applied this tick in toWrite.
         if(sendingSaveGame) {
             int changeSize = toWrite.length;
@@ -222,14 +222,10 @@ mixin template ServerModule() {
         }
         recv_set.reset();
         write_set.reset();
-        recv_set.add(listener);
         foreach(player ; players) {
             if(!player.connected) continue;
             player.send_index = 0;
             player.recv_index = 0;
-            recv_set.add(player.commSock);
-            recv_set.add(player.dataSock);
-            write_set.add(player.dataSock);
         }
         
         int[2] frameInfo = [g_gameTick, toWrite.length];
@@ -237,9 +233,6 @@ mixin template ServerModule() {
             if(!player.connected) continue;
             if(player.dataSock.send(frameInfo) != frameInfo.sizeof) {
                 Log("Error sending frame info to client, disconnecting");
-                recv_set.remove(player.commSock);
-                recv_set.remove(player.dataSock);
-                write_set.remove(player.dataSock);
                 player.disconnect();
             }
         }
@@ -247,17 +240,11 @@ mixin template ServerModule() {
             if(!player.connected) continue;
             if(player.dataSock.receive(frameInfo) != frameInfo.sizeof) {
                 Log("Error receiveing frame info from client, disconnecting");
-                recv_set.remove(player.commSock);
-                recv_set.remove(player.dataSock);
-                write_set.remove(player.dataSock);
                 player.disconnect();
                 continue;
             }
             if(frameInfo[0] != g_gameTick) {
                 Log("Client got wrong game tick; wanted ", g_gameTick, " but got ", frameInfo[0]);
-                recv_set.remove(player.commSock);
-                recv_set.remove(player.dataSock);
-                write_set.remove(player.dataSock);
                 player.disconnect();
                 continue;
             }
@@ -266,18 +253,28 @@ mixin template ServerModule() {
         }
 
         //When leave this all is sent/received.... ?
-        bool stuffToTransfer = true;
+        bool stuffToTransfer = true; 
         while (stuffToTransfer) {
             stuffToTransfer = false;
+            recv_set.reset();
+            write_set.reset();
+            recv_set.add(listener);
+            foreach(player ; players) {
+                if(!player.connected) continue;
+                recv_set.add(player.commSock);
+                recv_set.add(player.dataSock);
+                write_set.add(player.dataSock);
+            }
             int n = Socket.select(recv_set, write_set, null, 0);
+            BREAK_IF(n == -1);
             foreach (player ; players) {
                 if(!player.connected) continue;
                 if(recv_set.isSet(player.commSock)) {
-                    handleServerComm(player);
+                    server.handleComm(player);
                 }
-                if(recv_set.isSet(player.dataSock) && player.recv_index != player.receiveBuffer.length) {
+                if(recv_set.isSet(player.dataSock)) {
                     int read = player.dataSock.receive(player.receiveBuffer[player.recv_index .. $]);
-                    if(read < 1) {
+                    if(read < 1) { 
                         Log("Error reading changes from client, disconnecting");
                         recv_set.remove(player.commSock);
                         recv_set.remove(player.dataSock);
@@ -287,19 +284,22 @@ mixin template ServerModule() {
                     }
                     player.recv_index += read;
                 }
-                if (write_set.isSet(player.dataSock) && player.send_index != toWrite.length) {
-                    int sent = player.dataSock.send(toWrite[player.send_index .. $]);
-                    if(sent < 1) {
-                        msg("Error sending changes to client, disconnecting");
-                        player.disconnect();
-                        recv_set.remove(player.commSock);
-                        recv_set.remove(player.dataSock);
-                        write_set.remove(player.dataSock);
-                        continue;
+                if (write_set.isSet(player.dataSock)) {
+                    auto asd = toWrite.length;
+                    if(player.send_index != asd) {
+                        int sent = player.dataSock.send(toWrite[player.send_index .. $]);
+                        if(sent < 1) {
+                            recv_set.remove(player.commSock);
+                            recv_set.remove(player.dataSock);
+                            write_set.remove(player.dataSock);
+                            player.disconnect();
+                            continue;
+                        }
+                        player.send_index += sent;
                     }
-                    player.send_index += sent;
                 }
-                stuffToTransfer |= (player.send_index != toWrite.length) || (player.recv_index != player.receiveBuffer.length);
+                stuffToTransfer |= player.send_index != toWrite.length;
+                stuffToTransfer |= player.recv_index != player.receiveBuffer.length;
             }
 
             if (recv_set.isSet(listener)) {
@@ -337,15 +337,13 @@ mixin template ServerModule() {
         assumeSafeAppend(toWrite);
     }
 
-    void getServerNetworkChanges(ref ChangeList list) {
+    void getNetworkChanges(ref ChangeList list) {
         foreach (player; players) {
             list.readFrom(player.receiveBuffer);
         }
     }
 
-    void pushServerNetworkChanges(ChangeList list) {
-        //toWrite.length += list.changeListData.length;
-        //toWrite[4 .. $] = list.changeListData[];
+    void pushNetworkChanges(ChangeList list) {
         toWrite ~= list.changeListData[];
     }
 }
@@ -362,18 +360,22 @@ mixin template ClientModule() {
     size_t send_index;
     size_t recv_index;
 
+
+    WorldProxy  clientChangeProxy;
+    Unit        activeUnit;
+    UnitPos     activeUnitPos;
+
     Thread dummyThread;
     bool doneLoading; // maybe make shared for automagic memory barrier ?
 
-    ChangeList client_changes;
-
-    void simpleClientHandshake(Socket sock) {
+    void simpleHandshake(Socket sock) {
+        //sock.setOption(SocketOptionLevel.TCP, SocketOption.TCP_NODELAY, 1); //To disable nagle
         enforce(readLine(sock) == HANDSHAKE_A[0..$-1], "Handshake A failed");
         enforce(sock.send(HANDSHAKE_B) == HANDSHAKE_B.length, "Handshake B failed");
         enforce(readLine(sock) == HANDSHAKE_C[0..$-1], "Handshake C failed");
     }
 
-    void initClientModule(string host) {
+    void initModule(string host) {
         import util.socket;
         recv_set = new SocketSet(2);
         write_set = new SocketSet(1);
@@ -382,7 +384,7 @@ mixin template ClientModule() {
 
         pragma(msg, "Add code to set connection timeout");
         commSock = new std.socket.TcpSocket(address);
-        simpleClientHandshake(commSock);
+        simpleHandshake(commSock);
         enforce(commSock.send("comm\n") == 5, "Failed to send connection type for communication socket");
         enforce(commSock.send("Username:" ~ g_playerName ~ "\n") == 10 + g_playerName.length, "Failed to send username");
         auto response = readLine(commSock);
@@ -391,7 +393,7 @@ mixin template ClientModule() {
         enforce(commSock.receive(_magic) == 4, "Error recieving magic identification number");
 
         dataSock = new std.socket.TcpSocket(address);
-        simpleClientHandshake(dataSock);
+        simpleHandshake(dataSock);
         enforce(dataSock.send("data\n") == 5, "Failed to send connection type for data socket");
         enforce(dataSock.send(_magic) == 4, "Error echoing magic number");
         response = readLine(dataSock);
@@ -423,9 +425,12 @@ mixin template ClientModule() {
         //network code can run wild.
     }
 
-    void handleClientComm() {
+    void handleComm() {
         //Assume falsely that all comm is newline terminated
         auto line = readLine(commSock);
+        if(line is null) {
+            BREAKPOINT;
+        }
         msg("!!!!!! COMM MESSAGE !!!!\n", "   ", line, "\b\n\n");
         if(line.startsWith("controlUnit:")) {
             auto id = to!int(line[line.lastIndexOf(':')+1 .. $]);
@@ -434,12 +439,9 @@ mixin template ClientModule() {
         }
     }
 
-    void doClientNetworkStuffUntil(long nextSync) {
-        recv_set.reset();
-        write_set.reset();
-        recv_set.add(commSock);
-        recv_set.add(dataSock);
-        write_set.add(dataSock);
+    void doNetworkStuffUntil(long nextSync) {
+        recv_index = 0;
+        send_index = 0;
 
         int[2] frameInfo = [g_gameTick, toWrite.length];
         if(dataSock.receive(frameInfo) != frameInfo.sizeof) {
@@ -450,38 +452,49 @@ mixin template ClientModule() {
             Log("Client got wrong game tick");
             BREAKPOINT;
         }
+        receiveBuffer.length = frameInfo[1];
+        assumeSafeAppend(receiveBuffer);
+        frameInfo[1] = toWrite.length;
         if(dataSock.send(frameInfo) != frameInfo.sizeof) {
             Log("Error sending frame info to client, disconnecting");
             BREAKPOINT;
-        }
-        receiveBuffer.length = frameInfo[1];
-        assumeSafeAppend(receiveBuffer);
+        } 
 
         //When leave this all is sent/received.... ?
         bool stuffToTransfer = true;
         while (stuffToTransfer) {
-            stuffToTransfer = false;
+            stuffToTransfer = false; 
+            recv_set.reset();
+            write_set.reset();
+            recv_set.add(commSock);
+            recv_set.add(dataSock);
+            write_set.add(dataSock);
             int n = Socket.select(recv_set, write_set, null, 0);
             if(recv_set.isSet(commSock)) {
-                handleClientComm();
+                handleComm();
             }
-            if(recv_set.isSet(dataSock) && recv_index != receiveBuffer.length) {
-                int read = dataSock.receive(receiveBuffer[recv_index .. $]);
-                if(read < 1) {
-                    Log("Error reading changes from server, disconnecting");
-                    BREAKPOINT;
+            if(recv_set.isSet(dataSock)) {
+                if(recv_index != receiveBuffer.length) {
+                    int read = dataSock.receive(receiveBuffer[recv_index .. $]);
+                    if(read < 1) {
+                        Log("Error reading changes from server, disconnecting");
+                        BREAKPOINT;
+                    }
+                    recv_index += read;
                 }
-                recv_index += read;
             }
-            if (write_set.isSet(dataSock) && send_index != toWrite.length) {
-                int sent = dataSock.send(toWrite[send_index .. $]);
-                if(sent < 1) {
-                    msg("Error sending changes to server, disconnecting");
-                    BREAKPOINT;
+            if (write_set.isSet(dataSock)) {
+                if(send_index != toWrite.length) {
+                    auto len = toWrite.length;
+                    int sent = dataSock.send(toWrite[send_index .. $]);
+                    if(sent < 1) {
+                        BREAKPOINT;
+                    }
+                    send_index += sent;
                 }
-                send_index += sent;
             }
-            stuffToTransfer |= (send_index != toWrite.length) || (recv_index != receiveBuffer.length);
+            stuffToTransfer |= send_index != toWrite.length;
+            stuffToTransfer |= recv_index != receiveBuffer.length;
         }
 
         //Changed into use of variable; have encountered race condition in previous project
@@ -495,19 +508,27 @@ mixin template ClientModule() {
             if (n == 0) {
                 break; // this is timeout, means we go on until next tick
             }
-            handleClientComm();
+            handleComm();
         }
         toWrite.length = 0;
         assumeSafeAppend(toWrite);
     }
 
-    void getClientNetworkChanges(ref ChangeList list) {
+    void getNetworkChanges(ref ChangeList list) {
         list.readFrom(receiveBuffer);
     }
 
-    void pushClientNetworkChanges(ChangeList list) {
-        //toWrite.length += list.changeListData.length;
-        //toWrite[4 .. $] = list.changeListData[];
+    void pushChanges() {
+        synchronized(clientChangeProxy) {
+            if(activeUnit) {
+                clientChangeProxy.moveUnit(activeUnit, activeUnitPos, 1);
+            }
+            pushChanges(clientChangeProxy.changeList);
+            clientChangeProxy.changeList.reset(); //Think reset here is the right place?
+        }
+    }
+
+    void pushChanges(ChangeList list) {
         toWrite ~= list.changeListData[];
     }
 

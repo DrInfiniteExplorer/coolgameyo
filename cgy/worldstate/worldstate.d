@@ -90,7 +90,6 @@ class WorldState {
 
     //WorldGenParams worldGenParams;
 
-    bool isServer;
 
     WorldStateListener[] listeners;
 
@@ -121,7 +120,6 @@ class WorldState {
     }
 
     this(WorldMap _worldMap, TileTypeManager tilesys, EntityTypeManager entitysys, UnitTypeManager unitsys, SceneManager _sceneManager) {
-        isServer = true;
         tileTypeManager = tilesys;
         worldMap = _worldMap;
         entityTypeManager = entitysys;
@@ -577,8 +575,10 @@ class WorldState {
         unit.ticksToArrive = ticksToArrive;
         //Maybe add to list of moving units? Maybe all units are moving?
         //Consider this later. Related to comment in world.update
-        auto proxy = sceneManager.getProxy(unit);
-        proxy.setDestination(destination.value, ticksToArrive);
+        if(!g_isServer) {
+            auto proxy = sceneManager.getProxy(unit);
+            proxy.setDestination(destination.value, ticksToArrive);
+        }
     }
 
 
@@ -600,7 +600,7 @@ class WorldState {
         msg("Adding unit at ", unit.pos);
         enforce(unit.clan !is null);
 
-        if(!isServer) {
+        if(!g_isServer) {
             //pragma(msg, "We should create link between scenegraph and unit here. Programmatic creation of units reach here, and loading & change-induced creation does as well");
             sceneManager.getProxy(unit);
         }
@@ -618,8 +618,10 @@ class WorldState {
     }
     void addEntity(Entity entity) {
         //TODO: Make code, and make it work. Use unit as reference.
-        if(entity.type.hasModellike()) {
-            sceneManager.getProxy(entity);
+        if(!g_isServer) {
+            if(entity.type.hasModellike()) {
+                sceneManager.getProxy(entity);
+            }
         }
 
         auto sectorNum = entity.pos.getSectorNum();
