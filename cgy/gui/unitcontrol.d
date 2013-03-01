@@ -135,7 +135,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
             possesAI.destroy();
         }
         unit = u;
-        possesAI = new FPSControlAI(unit, world /*, world.sceneManager*/);
+        possesAI = new FPSControlAI(unit, world , world.sceneManager);
         possesAI.setUnit(unit);
     }
 

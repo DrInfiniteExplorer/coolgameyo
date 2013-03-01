@@ -26,12 +26,12 @@ class FPSControlAI {
     float fallSpeed;
     bool onGround;
     WorldState world;
-    //SceneManager scene;
+    SceneManager scene;
     vec3d unitPos;
 
-    this(Unit unit, WorldState w /*, SceneManager s */) {
+    this(Unit unit, WorldState w , SceneManager s ) {
         world = w;
-        //scene = s;
+        scene = s;
         setUnit(unit);
     }
     
@@ -49,7 +49,7 @@ class FPSControlAI {
         }
         if (unit) {
             unit.ai = oldAi;
-            //scene.getProxy(u).scale = vec3f(1.0f);
+            scene.getProxy(u).scale = vec3f(1.0f);
         }
         if (u is null) return;
         unit = u;        
@@ -57,7 +57,7 @@ class FPSControlAI {
         fallSpeed = 0.0f;
         onGround=false;
         unitPos = unit.pos.value;
-        //scene.getProxy(u).scale = vec3f(0.0f);
+        scene.getProxy(u).scale = vec3f(0.0f);
 
         //LATER: Send data to clients that this unit is possessed!!!!
         // :)

@@ -110,35 +110,5 @@ class Gaia : public Clan {
     }
 
     override void onSectorLoad(SectorNum sectorNum) {
-        //If first time feature is actually in sector, make the feature affect the tiles.
-        // For trees for example this means to grow the tree the first time.
-        //  But, But..! What if we go away and the tree grows and... uääärgh!
-        auto layer = world.worldMap.getMap(TileXYPos(sectorNum.toTilePos()), 1);
-        foreach(feature ; layer.getFeatures()) {
-            import feature.feature;
-            auto tree = cast(TreeFeature) feature;
-            if(tree is null) continue;
-            if(tree.isPlaced) continue;
-            auto xyTp = tree.pos;
-            auto sectorXY = SectorXYNum(sectorNum);
-            if(!sectorXY.inside(xyTp)) continue;
-            tree.isPlaced = true;
-            auto tp = world.getTopTilePos(xyTp);
-            //msg("Got tree at ", tp);
-            addTree(tp);
-        }
     }
-
-    void addTree(TilePos tilePos) {
-        return;
-        /*
-        import entitytypemanager;
-        auto treeType = EntityTypeManager().byName("tree01");
-        //msg("Fix createEntity-function of awesomeness");
-        //treeManager.createTreeEntity(tilePos, treeType);
-        auto ent = newEntity(treeType);
-        ent.pos = tilePos.toEntityPos();
-        world.worldProxy.createEntity(ent, makeJSONObject("clanId", 0));
-        */
-    }   
 }

@@ -60,7 +60,8 @@ mixin template WorldGenerator() {
         double[SectorSize.x][SectorSize.y] heightValues;
         auto sectorStart = sector.getSectorNum().toTileXYPos();
         foreach(int x, int y ; Range2D(vec2i(0, 0), vec2i(SectorSize.x, SectorSize.y))) {
-            heightValues[y][x] = getValueInterpolated(1, TileXYPos(sectorStart.value + vec2i(x, y)));
+            auto pos = TileXYPos(sectorStart.value + vec2i(x, y));
+            heightValues[y][x] = heightMaps.getHeight(pos); //getValueInterpolated(1, ));
         }
 
         auto heightmap = heightmap.getMaxPerBlock();
@@ -135,9 +136,8 @@ mixin template WorldGenerator() {
     }
 
     Tile getTile(TilePos pos) {
-        BREAKPOINT;
-        return getTile(pos,
-                getValueInterpolated(1, TileXYPos(pos)));
+        auto height = heightMaps.getHeight(TileXYPos(pos));
+        return getTile(pos, height);
     }
 
     Tile getTile(TilePos pos, double z) {
@@ -153,12 +153,11 @@ mixin template WorldGenerator() {
         }
 
         //For now just use basic climate types to determine tile types.
-        auto area = getArea(pos.toTileXYPos());
-        auto tileType = getBasicTileType(area);
+        auto tileType = getBasicTileType();
 
         return Tile(tileType, flags);
     }
-    ushort getBasicTileType(Area area) {
+    ushort getBasicTileType() {
         randomNumber++;
 
         auto group = tileSys.getGroup("genericGrass");
@@ -179,8 +178,8 @@ mixin template WorldGenerator() {
 
     //This returns a pessimistiv top value, there may be air-tiles below but no solid above.
     int maxZ(TileXYPos xyPos) {
-        auto z = getValueInterpolated(1, xyPos);
-        return cast(int)ceil(z);
+        auto height = heightMaps.getHeight(xyPos);
+        return cast(int)ceil(height);
     }
 
     //This returns the real, actual top tile pos.
@@ -188,8 +187,11 @@ mixin template WorldGenerator() {
         return maxZ(xyPos);
     }
 
-    double getHeight01(TilePos t) {
-        return cast(double)maxZ(TileXYPos(t)) / 500.0;
+    float getApproxHeight(TileXYPos pos, int level) {
+        pos.value.X = clamp(pos.value.X, 0, worldSize-sampleIntervall);
+        pos.value.Y = clamp(pos.value.Y, 0, worldSize-sampleIntervall);
+        auto height = heightMaps.getHeight!false(pos);
+        return cast(int)ceil(height);
     }
 
 }

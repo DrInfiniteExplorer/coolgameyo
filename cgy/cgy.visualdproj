@@ -392,9 +392,6 @@ d:\D\ulnb0333\ulink.exe $(IntDir)\$(TargetName).obj gdi32.lib win32.lib advapi32
    <File path="entities\treelikeinstance.d" />
    <File path="entities\workshop.d" />
   </Folder>
-  <Folder name="feature">
-   <File path="feature\feature.d" />
-  </Folder>
   <Folder name="graphics">
    <Folder name="_2d">
     <File path="graphics\_2d\image.d" />
@@ -584,15 +581,9 @@ d:\D\ulnb0333\ulink.exe $(IntDir)\$(TargetName).obj gdi32.lib win32.lib advapi32
    <File path="util\window.d" />
   </Folder>
   <Folder name="worldgen">
-   <File path="worldgen\areas.d" />
-   <File path="worldgen\biomes.d" />
    <File path="worldgen\heightmap.d" />
-   <File path="worldgen\layers.d" />
    <File path="worldgen\maps.d" />
-   <File path="worldgen\mapviz.d" />
-   <File path="worldgen\moisture.d" />
-   <File path="worldgen\temperature.d" />
-   <File path="worldgen\wind.d" />
+   <File path="worldgen\strata.d" />
    <File path="worldgen\worldgen.d" />
   </Folder>
   <Folder name="worldstate">
@@ -614,7 +605,6 @@ d:\D\ulnb0333\ulink.exe $(IntDir)\$(TargetName).obj gdi32.lib win32.lib advapi32
   <File path="entitytypemanager.d" />
   <File path="gaia.d" />
   <File path="game.d" />
-  <File path="heightmap.d" />
   <File path="inventory.d" />
   <File path="json.d" />
   <File path="light.d" />
@@ -625,7 +615,6 @@ d:\D\ulnb0333\ulink.exe $(IntDir)\$(TargetName).obj gdi32.lib win32.lib advapi32
   <File path="scheduler.d" />
   <File path="settings.d" />
   <File path="statistics.d" />
-  <File path="strata.d" />
   <File path="tiletypemanager.d" />
   <File path="treemanager.d" />
   <File path="unit.d" />

@@ -49,7 +49,6 @@ class WorldMenu : GuiElementWindow {
     Rectd oldPos;
 
     WorldMap worldMap;
-    WorldMap.MapVisualizer mapViz;
     int seed;
 
     this(GuiElement _creator) {
@@ -80,7 +79,6 @@ class WorldMenu : GuiElementWindow {
 
         worldMap = new WorldMap(880128);
         worldMap.generate();
-        mapViz = worldMap.getVisualizer();
 
         auto button = new PushButton(this, Rectd(vec2d(0.75, 0.75), vec2d(0.2, 0.10)), "Back", &onBack);
 
@@ -185,53 +183,7 @@ class WorldMenu : GuiElementWindow {
             worldMap = new WorldMap(seed);
 
             worldMap.generate();
-            mapViz = worldMap.getVisualizer();
         }
-        heightImg.setImage(mapViz.getHeightmapImage());
-
-        temperatureImg.setImage(mapViz.getTemperatureImage());
-
-        windImg.setImage(mapViz.getWindImage());
-
-        moistureImg.setImage(mapViz.getMoistureImage());
-
-
-
-        voronoiImage.clear(0, 0, 0, 0);
-
-/*
-        foreach(edge ; worldMap.areaVoronoi.poly.edges) {
-            auto start = edge.getStartPoint();
-            auto end = edge.getEndPoint();
-
-            auto height1 = worldMap.heightMap.getValue(start.pos.X, start.pos.Y);
-            auto height2 = worldMap.heightMap.getValue(end.pos.X, end.pos.Y);
-            if(height1 <= 0 || height2 <= 0) {
-                continue;
-            }
-            if(renderClimateBorders) {
-                climateMap.drawLine(start.pos.convert!int, end.pos.convert!int, vec3i(0));
-            }
-            int site1 = edge.halfLeft.left.siteId;
-            int site2 = edge.halfRight.left.siteId;
-            if(!renderEveryCell) {
-                if((worldMap.areas[site1].climateType) == (worldMap.areas[site2].climateType)) continue;
-            }
-            if(renderRegionBorders || renderEveryCell) {
-                voronoiImage.drawLine(start.pos.convert!int, end.pos.convert!int, vec3i(0));
-            }
-        }
-*/
-        climateMapImg.setImage(mapViz.getClimateImage(climateTypes, renderClimateBorders));
-
-        if(renderRegions) {
-            voronoiImg.setImage(mapViz.getRegionImage(renderRegionBorders));
-        } else {
-            voronoiImg.setImage(mapViz.getAreaImage(climateTypes, renderRegionBorders, renderEveryCell));
-        }
-
-
-
     }
 
     void onBack() {

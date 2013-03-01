@@ -1,99 +1,131 @@
 module worldgen.heightmap;
 
-mixin template Heightmap() {
+import std.parallelism;
+import std.mmfile;
+import std.math;
 
-    int heightSeed; //generated in initSeed, no need to serialize.
 
-    ValueMap heightMap;
+import util.filesystem;
+import util.pos;
+import util.util;
+import worldgen.maps;
+import worldgen.strata;
 
-    double worldHeight = 8_848/0.7; //Twice half mt everest, then some. ( /0.7 ???? :S ) ah, to make worldMax = that.
-    double worldMin;
-    double worldMax;
+enum sampleIntervall = 10; //10 meters between each sample
 
-    RandSourceUniform randSource;
+class HeightMaps {
+    int worldSize; //In meters
+    int mapSize; //In samples
+    long mapSizeBytes;
+    WorldMap worldMap;
 
-    void heightmapInit() {
-        worldMin = -0.3*worldHeight;
-        worldMax =  0.7*worldHeight;
-        heightMap = new ValueMap(Dim, Dim);
-        randSource = new RandSourceUniform(heightSeed);
-    }
-
-    string heightmapJSONPath() const @property {
-        return worldPath ~ "/height.json";
-    }
-    string heightmapImagePath() const @property {
-        return worldPath ~ "/height.bin";
-    }
-
-    void saveHeightmap() {
-        makeJSONObject(
-                       "worldHeight", worldHeight,
-                       "worldMin", worldMin,
-                       "worldMax", worldMax).saveJSON(heightmapJSONPath);
-        heightMap.saveBin(heightmapImagePath);
-    }
-
-    void loadHeightmap() {
-        loadJSON(heightmapJSONPath).readJSONObject(
-                                "worldHeight", &worldHeight,
-                                "worldMin", &worldMin,
-                                "worldMax", &worldMax);
-        heightMap.loadBin(heightmapImagePath);
-    }
-
-    void generateHeightMap() {
-
-        auto randomField = new ValueMap;
-        auto gradient = new GradientNoise01!()(Dim, randSource);
-        auto hybrid = new HybridMultiFractal(gradient, 0.1, 2, 6, 0.1);
-        hybrid.setBaseWaveLength(120);
-
-        auto test = new DelegateSource((double x, double y, double z) {
-            auto height = hybrid.getValue(x, y);
-            auto xDist =  abs(200 - x);
-            auto xBorderDistance = 200 - xDist;
-            auto yDist =  abs(200 - y);
-            auto yBorderDistance = 200 - yDist;
-
-            immutable limit = 25.0;
-            immutable limitSQ = limit ^^ 2.0;
-            if(xBorderDistance < limit) {
-                auto xLimitDistance = limit - xBorderDistance;
-                auto ratio = (limitSQ - xLimitDistance^^2.0) / limitSQ;
-                height *= ratio;
-            }
-            if(yBorderDistance < limit) {
-                auto yLimitDistance = limit - yBorderDistance;
-                auto ratio = (limitSQ - yLimitDistance^^2.0) / limitSQ;
-                height *= ratio;
-            }
-            return height;
-        });
-
-        heightMap.fill(test, Dim, Dim);
-        heightMap.normalize(worldMin * 0.1 , worldMax * 0.1); 
-
-        auto hybrid2 = new HybridMultiFractal(gradient, 0.1, 2, 6, 0.1);
-        hybrid2.setBaseWaveLength(40);
-        auto heightMap2 = new typeof(heightMap)(Dim, Dim);
-        heightMap2.fill(hybrid2, Dim, Dim);
-        heightMap2.normalize(worldMin * 0.2 , worldMax * 0.2); 
-
-        heightMap.data[] += heightMap2.data[];
-
-        //heightMap.data = array(map!(a => a > 0 ? 10.0 : -10.0)(heightMap.data));
-    }
-
+    MmFile heightmapFile;
+    float[] mapData; // Pointer to memory in heightmapfile.
     
-    TileXYPos getRandomPointOnLand() {
-        auto x = randSource.get!int(0, worldSize-1);
-        auto y = randSource.get!int(0, worldSize-1);
-        auto X = x * Dim / worldSize;
-        auto Y = y * Dim / worldSize;
-        if(heightMap.get(X, Y) > 0) return TileXYPos(vec2i(x, y));
-        return getRandomPointOnLand();
-
+    this(WorldMap _worldMap) {
+        worldMap = _worldMap;
+        auto size = .worldSize; // 1 mil
+        worldSize = size; // In meters woah.
+        mapSize = worldSize / sampleIntervall;
+        mapSizeBytes = mapSize * mapSize * float.sizeof;
+        msg("mapSize(kilo)Bytes: ", mapSizeBytes / 1024);
     }
 
+    bool destroyed = false;
+    ~this() {
+        BREAK_IF(!destroyed);
+    }
+    void destroy() {
+        destroyed = true;
+        delete heightmapFile;
+        mapData = null;
+    }
+
+    void load() {
+        auto heightPath = worldMap.worldPath ~ "/map1";
+        msg("Loading heightmap at: ", heightPath);
+        heightmapFile = new MmFile(heightPath, MmFile.Mode.readWrite, mapSizeBytes, null, 0);
+        mapData = cast(float[])heightmapFile[];
+    }
+
+    void generate(int seed) {
+
+        auto heightPath = worldMap.worldPath ~ "/map1";
+        msg("Creating heightmap at: ", heightPath);
+        BREAK_IF(heightmapFile !is null);
+        heightmapFile = new MmFile(heightPath, MmFile.Mode.readWriteNew, mapSizeBytes, null, 0);
+        mapData = cast(float[])heightmapFile[];
+
+        auto startTime = utime();
+
+        float maxHeight = 10_000;
+        float startAmplitude = maxHeight / 2;
+        float endAmplitude = 0.5;
+        int octaves = cast(int)logb(startAmplitude / endAmplitude);
+
+        float endIntervall = 3;
+        float startIntervall = endIntervall * 2^^octaves;
+
+        startIntervall = 6000;
+
+        float baseFrequency = 1.0f / startIntervall;
+
+
+        msg("Octaves: ", octaves);
+        msg("Start amplitude: ", startAmplitude);
+        msg("Start intervall: ", 1.0f / baseFrequency, " | ", startIntervall);
+        msg("End amplitude: ", startAmplitude * 0.5^^octaves, " | ", endAmplitude);
+        msg("End intervall: ", 0.5^^octaves / baseFrequency, " | ", endIntervall);
+
+        import random.simplex;
+        auto noise = new SimplexNoise(seed);
+
+        uint LIMIT = mapSize * mapSize;
+        uint LIMIT_STEP = LIMIT / 2500;
+        //for(uint i = 0; i < LIMIT; i++) {
+        uint progress = 0;
+        foreach(uint i, ref value ; parallel(mapData)) {
+            if( (i % LIMIT_STEP) == 0) {
+                progress += LIMIT_STEP;
+                msg("Progress: ", 100.0f * cast(float)progress / LIMIT);
+            }
+
+            float value = 0;
+            auto pos = vec2f(i % mapSize, i / mapSize);
+            pos *= baseFrequency;
+
+            float amplitude = startAmplitude;
+
+            for(int iter = 0; iter < octaves; iter++) {
+                value += amplitude * noise.getValue(pos.X, pos.Y);
+                amplitude *= 0.5;
+                pos *= 2;
+            }
+
+            mapData[i] = value;
+        }
+
+        msg("Time to make heightmap: ", (utime() - startTime) / 1_000_000.0);
+    }
+
+    ref float getHeightValue(int x, int y) {
+        BREAK_IF(x < 0);
+        BREAK_IF(y < 0);
+        BREAK_IF(x >= mapSize);
+        BREAK_IF(y >= mapSize);
+        auto idx = y * mapSize + x;
+        return mapData[idx];
+    }
+
+    float getHeight(bool interpolate = true)(TileXYPos pos) {
+        import random.random : BSpline;
+        import random.xinterpolate4 : XInterpolate4;
+        vec2f pt = pos.value.convert!float / cast(float)sampleIntervall;
+        auto get = &getHeightValue;
+        static if(interpolate) {
+            return XInterpolate4!(float, BSpline, get)(pt.X, pt.Y);
+        } else {
+            return get(cast(int)pt.X, cast(int)pt.Y);
+        }
+    }
 }

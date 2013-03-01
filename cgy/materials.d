@@ -1,7 +1,10 @@
 module materials;
 
 import std.path;
+
+
 import json;
+import log;
 import util.filesystem;
 import util.util;
 
@@ -25,10 +28,20 @@ static void loadMaterial(string filename) {
     g_Materials[name] = mat;
 }
 
-
+shared static bool materialsLoaded = false;
 void loadMaterials() {
-    foreach(item ; dir("data/materials")) {
-        loadMaterial(item);
+    if(materialsLoaded) {
+        Log("Trying to load materials twice");
+        return;
+    }
+    materialsLoaded = true;
+    try {
+        foreach(item ; dir("data/materials")) {
+            loadMaterial(item);
+        }
+    }
+    catch(Exception e) {
+        LogError("Error trying to load materials: ", e.msg);
     }
 }
 

@@ -79,13 +79,6 @@ void main(string[] args) {
 
         init_temp_alloc(1024*1024);
 
-        import heightmap;
-        immutable mil = 10_000;
-        //new Heightmaps(1 * mil);
-        
-
-
-
         if(materialEditor) {
             import materials;
             MaterialEditor();

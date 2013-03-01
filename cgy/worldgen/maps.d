@@ -14,11 +14,11 @@ import std.stdio;
 
 //import worldgen.newgen;
 
-import feature.feature;
 import json;
 import graphics.image;
 
-import util.pos;
+import materials;
+
 import random.catmullrom;
 import random.combine;
 import random.gradient;
@@ -40,6 +40,7 @@ import tiletypemanager;
 import util.filesystem;
 import util.math;
 import util.memory;
+import util.pos;
 import util.rangefromto;
 import util.rect;
 import util.util;
@@ -47,14 +48,8 @@ import util.voronoi.fortune;
 import util.voronoi.lattice;
 import util.voronoi.voronoi;
 
-import worldgen.areas;
-import worldgen.biomes;
 import worldgen.heightmap;
-import worldgen.layers;
-import worldgen.mapviz;
-import worldgen.moisture;
-import worldgen.temperature;
-import worldgen.wind;
+import worldgen.strata;
 import worldgen.worldgen;
 
 import worldstate.worldstate;
@@ -71,11 +66,12 @@ immutable StepIter = 4*25;
 
 /* pos 0 not used */
 /* pt2tile-scale*/
-immutable ptScale = [0, 8, 32, 128 , 512 , /* start mipmaps */ 2048,  8192, 32768];
+//immutable ptScale = [0, 8, 32, 128 , 512 , /* start mipmaps */ 2048,  8192, 32768];
 /* map2tile-scale*/ //Mipmap'ed values are farther apart, but same size as level5 (ie. worldsize)
-immutable mapScale = [0, 3200, 12800, 51200, 204800, /*start mipmaps */ 819200,  819200, 819200];
+//immutable mapScale = [0, 3200, 12800, 51200, 204800, /*start mipmaps */ 819200,  819200, 819200];
 
-immutable worldSize = mapScale[4];
+//1 mil värt av värld. Yeah.
+immutable worldSize = 10 * 10_000;
 
 immutable halfWorldSize = vec3i(worldSize/2, worldSize/2, 0);
 immutable halfWorldSize_xy = vec2i(worldSize/2);
@@ -83,129 +79,160 @@ immutable halfWorldSize_xy = vec2i(worldSize/2);
 
 final class WorldMap {
 
-    mixin Moisture;
-    mixin worldgen.heightmap.Heightmap;
-    mixin Wind;
-    mixin Temperature;
-
-    mixin Areas;
-    mixin Biomes;
-
-    mixin MapViz;
-    mixin Layers;
     mixin WorldGenerator;
 
-    //Eventually make a mixin for climate?
-    Image climates;
-
-    //Figure out a better datastructure for this. bits 0-3 holds climate information, bit 4 holds isSea'ness, bit 5 wether or not it has been sorted into a region, etc.
-
-
+    HeightMaps heightMaps;
+    MaterialStratum[] stratas;
     int worldSeed;
-
-    int voronoiSeed;
-
-    string _worldPath;
-    string worldPath() const @property {
-        return _worldPath;
-    }
+    int strataSeed;
+    int heightmapSeed;
+    string worldPath;
 
     this() {
-        init();
+        //Try load stuff if not already loaded
+        loadStrataInfo();
+        loadMaterials();
+        heightMaps = new HeightMaps(this);
     }
 
     this(int seed) {
         worldSeed = seed;
-        _worldPath = "worlds/" ~ to!string(seed) ~ "/map";
-        init();
-    }
-
-    void loadWorld(string name) {
-        enforce(existsDir(name), "A world does not exist at: " ~ name);
-        _worldPath = name ~ "/map";
-        Load(name);
-    }
-
-    void save() {
-        auto worldPath = worldPath;
-        mkdir(worldPath);
-        makeJSONObject("worldSeed", worldSeed).saveJSON(worldPath ~ "/seed.json");
-
-        getVisualizer().getClimateImage().save(worldPath ~ "/map.tga");
-        saveHeightmap();
-        saveAreas();
-        saveWindMap();
-        saveTemperatureMap();
-        saveMoistureMap();
-        saveAllFeatures();
-    }
-
-    //We always initialize before we call load.
-    private void Load(string path) {
-
-        enforce(existsDir(path), "WorldState not found:" ~ path);
-
-        loadJSON(worldPath ~ "/seed.json").readJSONObject("worldSeed", &worldSeed);
-        //makeJSONObject("worldSeed", worldSeed).saveJSON();
-        //worldSeed = to!int( split(worldHash, "_")[0] );
-        initSeed();
-
-        loadHeightmap();
-        loadAreas();
-        loadWindMap();
-        loadTemperatureMap();
-        loadMoistureMap();
-        loadAllFeatures();
-    }
-
-    public static Image getWorldImage(string name) {
-        return Image("worlds/" ~ name ~ "/map.tga");
-    }
-
-    // We always initialize, then we call either generate or load.
-    void init() {
-        climates = Image("climateMap.bmp");
-        mixin(MeasureTime!"Time to init world:");
-        //Spans 1.0*worldHeight
-        initSeed();
-
-        heightmapInit();
-        windInit();
-        temperatureInit();
-        moistureInit();
-        areasInit();
-        layersInit();
-
-    }
-
-    // We always call init before generate.
-    void generate() {
-
-        generateHeightMap();
-        generateWindMap();
-        generateTemperatureMap();
-        generateMoistureMap();
-        generateAreas(); //Also classifies them.
-        generateTopLayerFeatures();
-    }
-
-    void initSeed() {
-        auto rnd = new RandSourceUniform(worldSeed);
-        heightSeed = rnd.get(int.min, int.max);
-        windSeed = rnd.get(int.min, int.max);
-        voronoiSeed = rnd.get(int.min, int.max);
-        layerSeed = rnd.get(int.min, int.max);
+        worldPath = "worlds/" ~ to!string(seed) ~ "/map";
+        this();
     }
 
     bool destroyed = false;
     ~this() {
         BREAK_IF(!destroyed);
     }
-
     void destroy() {
+        if(heightMaps) {
+            heightMaps.destroy();
+        }
         destroyed = true;
     }
 
+    void generate() {
+        setSeeds();
+        if(exists(worldPath)) {
+            import log : LogWarning;
+            LogWarning("A folder already exists at '", worldPath, "'. Will ignore totally ignore that.");
+            BREAKPOINT;
+        }
+        mkdir(worldPath);
+
+        stratas = generateStratas(strataSeed);
+        heightMaps.generate(heightmapSeed);
+
+    }
+
+    void loadWorld(string path) {
+        enforce(existsDir(path), "A world does not exist at: " ~ path);
+        worldPath = path ~ "/map";
+        loadJSON(worldPath ~ "/seed.json").
+            readJSONObject("worldSeed", &worldSeed);
+        setSeeds();
+        stratas = generateStratas(strataSeed);
+        heightMaps.load();
+    }
+
+    void setSeeds() {
+        mixin(MeasureTime!"Time to init world:");
+        auto rnd = new RandSourceUniform(worldSeed);
+        strataSeed = rnd.get(int.min, int.max);
+        heightmapSeed = rnd.get(int.min, int.max);
+    }
+
+    void save() {
+        auto worldPath = worldPath;
+        mkdir(worldPath);
+        makeJSONObject("worldSeed", worldSeed).saveJSON(worldPath ~ "/seed.json");
+    }
+
+
+
+
+
+    //Assumes z=0 == surface of world and Z+ is upwards
+    // May have to offset with world contour first.
+    int getStrataNum(int x, int y, int z) {
+        int num = 0;
+        auto xyPos = vec2f(x, y);
+        float depth = stratas[0].getHeight(xyPos);
+        int zDepth = -z;
+        while(zDepth > depth) {
+            num++;
+            depth += stratas[num].getHeight(xyPos);
+        }
+        return num;
+    }
+    void heightOnHeight() {
+        import graphics.image;
+        import materials;
+        import statistics;
+
+        mixin(MeasureTime!("Time to generate "));
+        int layerNum = 0;
+        float depth = stratas[layerNum].thickness;
+        int height = 3500;
+        Image img = Image(null, 1280, height);
+        vec3f color;
+        int oldy=-1;
+        string prevMat;
+        color.set(0.5,1.0,1.0);
+        color *= 255;
+        foreach(x,Y, ref r, ref g, ref b, ref a ; img) {
+            auto y = Y - 500;
+            if(y < 0) {
+                color.toColor(r, g, b);
+                continue;
+            }
+            a = 255;
+            auto layerNum = getStrataNum(x, x, -y);
+            auto materialName = stratas[layerNum].materialName;
+            color = g_Materials[materialName].color.convert!float;
+            color.toColor(r, g, b);
+        }
+        img.save("strata_height_on_height.bmp");
+    }
+    void strataNoNoise() {
+        int layerNum = 0;
+        float depth = stratas[layerNum].thickness;
+        int height = 3500;
+        Image img = Image(null, 1280, height);
+        vec3f color;
+        int oldy=-1;
+        string prevMat;
+        color.set(0.5,1.0,1.0);
+        color *= 255;
+        foreach(x,Y, ref r, ref g, ref b, ref a ; img) {
+            auto y = Y - 500;
+            if(y < 0) {
+                color.toColor(r, g, b);
+                continue;
+            }
+            a = 255;
+            if(y != oldy) {
+                oldy = y;
+                if(depth < y) {
+                    layerNum++;
+                    if(layerNum == stratas.length) layerNum--;
+                    msg(depth, " ", stratas[layerNum].thickness);
+                    depth += stratas[layerNum].thickness;
+                    color.set(0,0,0);
+                } else {
+                    auto materialName = stratas[layerNum].materialName;
+                    if(prevMat != materialName)
+                        msg(depth, " Material: ", materialName);
+                    prevMat = materialName;
+                    color = g_Materials[materialName].color.convert!float;
+                }
+            }
+            color.toColor(r, g, b);
+            a = 255;
+        }
+        img.save("strata_no_noise.bmp");
+    }
 
 }
 

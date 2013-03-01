@@ -91,13 +91,14 @@ final class Level1Sheet {
                 float Y = cast(float) tp.Y;
                 float Z;
                 if(x == 0 || x == level1QuadCount || y == 0 || y == level1QuadCount) {
-                    Z = cast(float) worldMap.getValueInterpolated(2, TileXYPos(tp));
+                    Z = worldMap.getApproxHeight(TileXYPos(tp), 2);
                 } else {
-                    Z = cast(float) worldMap.getValueRaw(1, tp);
+                    Z = worldMap.getApproxHeight(TileXYPos(tp), 1);
                 }
                 vertices[y][x].set(X,Y,Z);
                 vertices[y][x] -= centerTp;
-                colors[y][x] = worldMap.getAreaColor(TileXYPos(tp));
+                //colors[y][x] = worldMap.getAreaColor(TileXYPos(tp));
+                colors[y][x] = worldMap.isInsideWorld(TileXYPos(tp).toTilePos(0)) ? vec3f(0.4) : vec3f(0.8, 0.1, 0.1);
             }
         }
 

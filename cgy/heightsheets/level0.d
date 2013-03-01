@@ -213,7 +213,7 @@ final class Level0Sheet {
                     xyTp = TileXYPos(thisTp.value + vec2i(x, y));
                     tp = worldState.getTopTilePos(xyTp);
                     z = min(tp.value.Z, firstLoadedTilepos.value.Z);
-                    color = worldMap.getAreaColor(TileXYPos(tp));
+                    color = vec3f(0.4);
                 }
 
                 vec3ub col = (color * 255.0f).convert!ubyte;

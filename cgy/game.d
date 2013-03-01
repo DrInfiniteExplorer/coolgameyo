@@ -310,6 +310,10 @@ class Game{
         return scheduler;
     }
 
+    SceneManager getSceneManager() {
+        return sceneManager;
+    }
+
     Camera getCamera() {
         return camera;
     }

@@ -133,7 +133,7 @@ class StringTexture {
         BREAK_IF(!destroyed);
     }
     void destroy() {
-        msg("destroying text: ", currentText.str, " ", vbo);
+        msg("destroying text: '", currentText.str, "' vbo:", vbo);
         glDeleteBuffers(1, &vbo);
         glError();
         destroyed = true;

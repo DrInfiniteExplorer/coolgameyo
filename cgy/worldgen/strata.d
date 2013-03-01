@@ -1,25 +1,20 @@
-module strata;
-
+module worldgen.strata;
 
 
 import std.algorithm : min, max;
 import std.math : abs;
 
-import util.util;
-import util.math;
-import random.valuesource;
+import log;
 import random.gradientnoise;
 import random.simplex;
+import random.valuesource;
+import util.math;
+import util.util;
 
 float pmin = 12931923123.0f;
 float pmax = -12931923123.0f;
 
 alias SimplexNoise RandomType;
-//alias GradientNoise!() RandomType;
-
-//immutable seedFunc = 880128;
-//alias seedFunc awesomeSeed;
-alias unpredictableSeed seedFunc;
 
 struct MaterialStratum {
     string materialName;
@@ -80,21 +75,29 @@ import json;
 import util.filesystem;
 import std.path;
 
-
+shared static bool strataLoaded = false;
 void loadStrataInfo() {
-
-    loadJSON("data/layers/soils.json").read(g_SoilTypes);
-    loadJSON("data/layers/sedimentary.json").read(g_SedimentaryTypes);
-    loadJSON("data/layers/extrusive.json").read(g_ExtrusiveTypes);
-    loadJSON("data/layers/metamorphic.json").read(g_MetamorphicTypes);
-    loadJSON("data/layers/intrusive.json").read(g_IntrusiveTypes);
+    if(strataLoaded) {
+        Log("Attempting to load layer info twice");
+        return;
+    }
+    strataLoaded = true;
+    try {
+        loadJSON("data/layers/soils.json").read(g_SoilTypes);
+        loadJSON("data/layers/sedimentary.json").read(g_SedimentaryTypes);
+        loadJSON("data/layers/extrusive.json").read(g_ExtrusiveTypes);
+        loadJSON("data/layers/metamorphic.json").read(g_MetamorphicTypes);
+        loadJSON("data/layers/intrusive.json").read(g_IntrusiveTypes);
+    } catch(Exception e) {
+        LogError("Exception loading layer information: ", e.msg);
+    }
 }
 
 import std.random;
 Random gen;
 string prevMaterialName;
 
-auto generateStratas() {
+auto generateStratas(int seed) {
 
 
     immutable targetDepth = 5000.0f; //Lets say 2 kilometers worth of depth is enough for now! :p
@@ -103,7 +106,14 @@ auto generateStratas() {
     immutable max = averageThickness + 75.0f;
     immutable sedimentaryLimit = 1500.0f;
 
-    gen.seed(seedFunc);
+    //alias GradientNoise!() RandomType;
+
+    //immutable seedFunc = 880128;
+    //alias seedFunc awesomeSeed;
+    alias unpredictableSeed seedFunc;
+
+    //seed = seedFunc
+    gen.seed(seed);
 
     static auto getRandomType(LayerInformation layer) {
         while(true) {
@@ -111,7 +121,7 @@ auto generateStratas() {
             auto selected = layer.basicTypes[id];
             if(selected != prevMaterialName) {
                 prevMaterialName = selected;
-                msg("Selected ", selected);
+                //msg("Selected ", selected);
                 return selected;
             }
         }
@@ -173,6 +183,7 @@ auto generateStratas() {
     float magmaDepth = 0.0;
     string prevMaterial;
     while(depth < targetDepth) {
+        msg("depth: ", depth, " ", targetDepth);
         auto sedimentChance = clamp( 0.8 - depth / 3000.0, 0.0, 1.0);
         auto extrusiveChance = clamp(0.2 - depth / 1000.0, 0.0, 1.0);
         auto metamorphChance = clamp(0.05 + depth / 2000.0, 0.0, 0.7);

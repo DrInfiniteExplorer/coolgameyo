@@ -66,7 +66,15 @@ void tcpReceiveDir(Socket sock, string dirPath) {
 bool tcpSendFile(Socket sock, string filePath, int bufferSize = int.max) {
     import std.mmfile;
     import std.algorithm : min;
-    auto memfile = new MmFile(filePath, MmFile.Mode.read, 0, null, 0);
+
+    // Shouldn't need the write-part, but it seems that if it is first opened
+    // as readwrite (for example the heightmap) then it can't be opened for
+    // read after that, but a readwrite is fine.
+    // read = GENERIC_READ, FILE_SHARE_READ
+    // readwride = GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE
+    // see http://msdn.microsoft.com/en-us/library/windows/desktop/aa363874%28v=vs.85%29.aspx
+    // for a table of compabilities.
+    auto memfile = new MmFile(filePath, MmFile.Mode.readWrite, 0, null, 0);
     scope(exit) delete memfile;
     auto filePtr = cast(byte[])memfile[];
     int sentSoFar = 0;

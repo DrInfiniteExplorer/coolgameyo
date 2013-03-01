@@ -1,4 +1,4 @@
-module heightmap;
+module worldgen.heightmap;
 
 import std.parallelism;
 import std.mmfile;
@@ -182,9 +182,6 @@ class Heightmaps {
         //auto data = memfile[];
         //data[] = mapPtr[];
         msg("Time to make heightmap: ", (utime() - startTime) / 1_000_000.0);
-
-
-
     }
 }
 

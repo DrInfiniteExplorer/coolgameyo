@@ -25,6 +25,13 @@ class InGameGui : public GuiElement{
         game = _game;
     }
 
+    override void destroy() {
+        if(fpsHandler) {
+            fpsHandler.destroy();
+        }
+        super.destroy();
+    }
+
 
     override void tick(float dTime) {
         auto activeUnit = game.getActiveUnit();
@@ -59,13 +66,24 @@ class FpsHandler : GuiEventDump {
         world = game.getWorld;
         camera = game.getCamera;
 
-        possessAI = new FPSControlAI(game.getActiveUnit, world);
+        possessAI = new FPSControlAI(game.getActiveUnit, world, game.getSceneManager);
         game.setActiveUnitPos(UnitPos(possessAI.unitPos));
 
         middleX = cast(ushort)renderSettings.windowWidth / 2;
         middleY = cast(ushort)renderSettings.windowHeight / 2;
     }
-    
+
+    bool destroyed = false;
+    ~this() {
+        BREAK_IF(!destroyed);
+    }
+
+    void destroy() {
+        if(possessAI) {
+            possessAI.destroy();
+        }
+        destroyed = true;
+    }
 
 
     void mouseMove(GuiEvent e){
@@ -180,6 +198,7 @@ class FpsHandler : GuiEventDump {
     void updateCamera(double dTime) {
         double speed = 10.0;
         speed *= dTime;
+        if(keyMap[SDLK_LSHIFT]) speed *= 30;
         if(keyMap[SDLK_a]){ camera.axisMove(-speed, 0.0, 0.0); }
         if(keyMap[SDLK_d]){ camera.axisMove( speed, 0.0, 0.0); }
         if(keyMap[SDLK_w]){ camera.axisMove( 0.0, speed, 0.0); }

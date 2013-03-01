@@ -31,12 +31,15 @@ void LogBase(LogLevel level = LogLevel.Information, Us...)(Us us) {
         logCallback("\n");
     }
 }
-/*
-void Log(Us...)(Us us) {
-    LogBase!(LogLevel.Information, Us)(us);
-}
-*/
+
 alias LogBase Log;
+
+void LogError(Us...)(Us us) {
+    Log!(LogLevel.Error, string, Us)("ERROR: ",us);
+}
+void LogWarning(Us...)(Us us) {
+    Log!(LogLevel.Warning, string, Us)("WARNING: ",us);
+}
 void LogVerbose(Us...)(Us us) {
-    LogBase!(LogLevel.Verbose, Us)(us);
+    Log!(LogLevel.Verbose,string, Us)("VERBOSE: ", us);
 }

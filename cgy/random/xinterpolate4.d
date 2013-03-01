@@ -95,29 +95,30 @@ double XInterpolate4(alias Mixer)(ValueSource source, double x, double y, double
     return typeof(return).init;
 }
 
-double XInterpolate4(alias Mixer)(ValueSource source, double x, double y) {
+Type XInterpolate4(Type, alias Mixer, alias get)(Type x, Type y) {
     //TODO: Do not assume that the source is a lattice with grid of size 1,1
     // Ie. dX dY may span [0, 1] over a range that is 4 long instead of current length 1.
-    int loX = to!int(floor(x));
-    int loY = to!int(floor(y));
-    float dX = x - to!float(loX);
-    float dY = y - to!float(loY);
-    auto v00 = source.getValue(loX-1, loY-1);
-    auto v01 = source.getValue(loX-1, loY+0);
-    auto v02 = source.getValue(loX-1, loY+1);
-    auto v03 = source.getValue(loX-1, loY+2);
-    auto v10 = source.getValue(loX, loY-1);
-    auto v11 = source.getValue(loX, loY+0);
-    auto v12 = source.getValue(loX, loY+1);
-    auto v13 = source.getValue(loX, loY+2);
-    auto v20 = source.getValue(loX+1, loY-1);
-    auto v21 = source.getValue(loX+1, loY+0);
-    auto v22 = source.getValue(loX+1, loY+1);
-    auto v23 = source.getValue(loX+1, loY+2);
-    auto v30 = source.getValue(loX+2, loY-1);
-    auto v31 = source.getValue(loX+2, loY+0);
-    auto v32 = source.getValue(loX+2, loY+1);
-    auto v33 = source.getValue(loX+2, loY+2);
+    import util.math: fastFloor;
+    int loX = fastFloor(x);
+    int loY = fastFloor(y);
+    Type dX = x - cast(Type)loX;
+    Type dY = y - cast(Type)loY;
+    auto v00 = get(loX-1, loY-1);
+    auto v10 = get(loX, loY-1);
+    auto v20 = get(loX+1, loY-1);
+    auto v30 = get(loX+2, loY-1);
+    auto v01 = get(loX-1, loY+0);
+    auto v11 = get(loX, loY+0);
+    auto v21 = get(loX+1, loY+0);
+    auto v31 = get(loX+2, loY+0);
+    auto v02 = get(loX-1, loY+1);
+    auto v12 = get(loX, loY+1);
+    auto v22 = get(loX+1, loY+1);
+    auto v32 = get(loX+2, loY+1);
+    auto v03 = get(loX-1, loY+2);
+    auto v13 = get(loX, loY+2);
+    auto v23 = get(loX+1, loY+2);
+    auto v33 = get(loX+2, loY+2);
     auto v0 = Mixer(v00, v01, v02, v03, dY);
     auto v1 = Mixer(v10, v11, v12, v13, dY);
     auto v2 = Mixer(v20, v21, v22, v23, dY);
@@ -147,7 +148,8 @@ final class XInterpolation4(alias Mixer) : ValueSource{
         return XInterpolate4!Mixer(source, x,y,z);
     }
     override double getValue(double x, double y) {
-        return XInterpolate4!Mixer(source, x,y);
+        double delegate(double, double) get = &source.getValue;
+        return XInterpolate4!(double, Mixer, get)(x,y);
     }
     override double getValue(double x) {
         return XInterpolate4!Mixer(source, x);
