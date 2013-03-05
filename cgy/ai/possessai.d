@@ -97,7 +97,7 @@ class FPSControlAI {
         sizes[2] = vec3i(cast(int)floor(unitWidth)+1,  cast(int)ceil(unitWidth)+1,    1);
 
         foreach(idx ; 0 .. 3) {
-            auto axis = dirs[idx];
+            vec3i axis = dirs[idx];
             auto daxis = axis.convert!double();
             auto axisLength = daxis.dotProduct(dir); //The length we want to move along this axis, and direction.
             auto sign = axisLength > 0 ? 1.0 : -1.0;
@@ -142,14 +142,14 @@ class FPSControlAI {
             vec3i start;
             vec3i stop;
             if( idx == 0 ) {
-                start = vec3i(0, cast(int)floor(pos.Y - unitWidth * 0.5), cast(int)floor(pos.Z - 0.5));
-                stop = vec3i(0, cast(int)ceil(pos.Y + unitWidth * 0.5)-1, cast(int)ceil(pos.Z + unitHeight - 0.5)-1);
+                start = vec3i(0, cast(int)floor(pos.y - unitWidth * 0.5), cast(int)floor(pos.z - 0.5));
+                stop = vec3i(0, cast(int)ceil(pos.y + unitWidth * 0.5)-1, cast(int)ceil(pos.z + unitHeight - 0.5)-1);
             } else if (idx == 1) {
-                start = vec3i(cast(int)floor(pos.X - unitWidth * 0.5), 0, cast(int)floor(pos.Z - 0.5));
-                stop = vec3i(cast(int)ceil(pos.X + unitWidth * 0.5)-1, 0, cast(int)ceil(pos.Z + unitHeight - 0.5)-1);
+                start = vec3i(cast(int)floor(pos.x - unitWidth * 0.5), 0, cast(int)floor(pos.z - 0.5));
+                stop = vec3i(cast(int)ceil(pos.x + unitWidth * 0.5)-1, 0, cast(int)ceil(pos.z + unitHeight - 0.5)-1);
             } else if (idx == 2) {
-                start = vec3i(cast(int)floor(pos.X - unitWidth * 0.5), cast(int)floor(pos.Y - unitWidth * 0.5), 0);
-                stop = vec3i(cast(int)ceil(pos.X + unitWidth * 0.5)-1, cast(int)ceil(pos.Y + unitWidth * 0.5)-1, 0);
+                start = vec3i(cast(int)floor(pos.x - unitWidth * 0.5), cast(int)floor(pos.y - unitWidth * 0.5), 0);
+                stop = vec3i(cast(int)ceil(pos.x + unitWidth * 0.5)-1, cast(int)ceil(pos.y + unitWidth * 0.5)-1, 0);
             }
             foreach( ppp ; RangeFromTo(start, stop)) {
                 auto p = (axis * wallNum) + ppp;

@@ -204,19 +204,19 @@ final class ShaderProgram(T...){
     }
     //Count != 1 for arrays
     void setUniform(uint location, vec3i vec){
-        glUniform3iv(location, 1, &vec.X);
+        glUniform3iv(location, 1, &vec.x);
         glError();
     }
     void setUniform(uint location, vec3f vec){
-        glUniform3fv(location, 1, &vec.X);
+        glUniform3fv(location, 1, &vec.x);
         glError();
     }
     void setUniform(uint location, vec2i vec){
-        glUniform2iv(location, 1, &vec.X);
+        glUniform2iv(location, 1, &vec.x);
         glError();
     }
     void setUniform(uint location, vec2f vec){
-        glUniform2fv(location, 1, &vec.X);
+        glUniform2fv(location, 1, &vec.x);
         glError();
     }
     void setUniform(uint location, vec2d vec){

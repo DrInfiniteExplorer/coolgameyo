@@ -23,12 +23,12 @@ immutable(char[]) fixRect = q{
     auto start = (vec2f(offset, offset) + r.start.convert!float()) / screenSize;
 //    auto start = (r.start.convert!float()) / screenSize;
 //    auto start = (r.start.convert!float());
-    start.Y = 1.0 - start.Y;
+    start.y = 1.0 - start.y;
     auto size = r.size.convert!float() / screenSize;
 //    auto size = r.size.convert!float();
-    size.Y = - size.Y;
-    auto x = vec2f(size.X, 0);
-    auto y = vec2f(0, size.Y);
+    size.y = - size.y;
+    auto x = vec2f(size.x, 0);
+    auto y = vec2f(0, size.y);
 };
 
 struct ImageRectQuad{
@@ -58,8 +58,8 @@ struct ImageRectQuad{
         vertices[1].texcoord    = imgSource.start;
         vertices[2].texcoord    = imgSource.start + imgSource.size;
         vertices[3].texcoord    = imgSource.start;
-        vertices[1].texcoord.Y += imgSource.size.Y;
-        vertices[3].texcoord.X += imgSource.size.X;
+        vertices[1].texcoord.y += imgSource.size.y;
+        vertices[3].texcoord.x += imgSource.size.x;
     }
 
 }
@@ -90,7 +90,7 @@ class ImageRectShader {
         //glDisable(GL_DEPTH_TEST);
         //glDepthMask(0);
         imageProgram.use();
-        //rect.start.Y = 1.0 - rect.start.Y;
+        //rect.start.y = 1.0 - rect.start.y;
         imageProgram.setUniform(imageProgram.tex, 2); //TODO: Make not hardcoded to texunit 2   .
         //TODO: Use rest of rect for clipping?
         glEnableVertexAttribArray(imageProgram.position);
@@ -99,9 +99,9 @@ class ImageRectShader {
         glError();
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glError();
-        glVertexAttribPointer(imageProgram.position, 2, GL_FLOAT, GL_FALSE, ImageRectVertex.sizeof, &q.vertices[0].pos.X);
+        glVertexAttribPointer(imageProgram.position, 2, GL_FLOAT, GL_FALSE, ImageRectVertex.sizeof, &q.vertices[0].pos.x);
         glError();
-        glVertexAttribPointer(imageProgram.texcoord, 2, GL_FLOAT, GL_FALSE, ImageRectVertex.sizeof, cast(void*)&q.vertices[0].texcoord.X);
+        glVertexAttribPointer(imageProgram.texcoord, 2, GL_FLOAT, GL_FALSE, ImageRectVertex.sizeof, cast(void*)&q.vertices[0].texcoord.x);
         glError();
         glDrawArrays(GL_QUADS, 0, 4);
         glError();

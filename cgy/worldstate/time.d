@@ -23,8 +23,8 @@ mixin template WorldTimeClockCode() {
     //Returns 
     double getDayTime() const {
         return 0.3;
-        ulong localDayTime = worldTime % TicksPerDay;
-        return (cast(double)localDayTime) / (cast(double)TicksPerDay);
+        //ulong localDayTime = worldTime % TicksPerDay;
+        //return (cast(double)localDayTime) / (cast(double)TicksPerDay);
     }
 
     string getDayTimeString() const {

@@ -246,9 +246,9 @@ final class TileGeometry : Module, WorldStateListener
                 Zp = tileZp.isAir;
                 Zn = tileZn.isAir;
             }
-            auto x = pos.X;
-            auto y = pos.Y;
-            auto z = pos.Z;
+            auto x = pos.x;
+            auto y = pos.y;
+            auto z = pos.z;
             if (Xp) {
                 newFace.quad[0].vertex.set(x+1, y, z+1); //Upper 'hither' corner
                 newFace.quad[1].vertex.set(x+1, y, z); //Lower 'hither' corner
@@ -400,7 +400,7 @@ final class TileGeometry : Module, WorldStateListener
         
         auto cnt = min(regionsToUpdate.length, GraphRegionsPerTick);
         enforce(cnt > 0, "Do not get here. In fact, it is impossible!");
-        auto nums = regionsToUpdate[$-cnt .. $].dup; //Lol was not safe to assumesafeappend until added dup, i think?
+        auto nums = regionsToUpdate[$-cnt .. $].array; //Lol was not safe to assumesafeappend until added dup, i think?
         regionsToUpdate.length -= cnt;
         assumeSafeAppend(regionsToUpdate); //Pretty safe yes
 

@@ -35,7 +35,7 @@ struct MaterialStratum {
         if(randSource01) {
             amplitude = 0.5; //Max will be 1.0 then, minimum will be 0.0
             for(int iter = 0; iter < octaves; iter++) {
-                value += amplitude * (noise.getValue(pos.X, pos.Y) * 0.5f + 0.5f);
+                value += amplitude * (noise.getValue2(pos.convert!double) * 0.5f + 0.5f);
                 amplitude *= 0.5;
                 pos *= 2;
                 frequency *= 2;
@@ -47,7 +47,7 @@ struct MaterialStratum {
         } else {
             amplitude = 0.5; //Max will be 1.0 then, minimum will be -1.0
             for(int iter = 0; iter < octaves; iter++) {
-                value += amplitude * noise.getValue(pos.X, pos.Y);
+                value += amplitude * noise.getValue2(pos.convert!double);
                 amplitude *= 0.5;
                 pos *= 2;
                 frequency *= 2;

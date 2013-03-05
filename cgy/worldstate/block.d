@@ -179,7 +179,7 @@ struct Block_t {
             return sparseTile();
         }
         auto pos = tilePos.rel();
-        return tiles.tiles[pos.Z][pos.Y][pos.X];
+        return tiles.tiles[pos.z][pos.y][pos.x];
     }
 
     void unsparsify() {
@@ -202,7 +202,7 @@ struct Block_t {
         if (sparse) {
             unsparsify();
         }
-        tiles.tiles[p.Z][p.Y][p.X] = tile;
+        tiles.tiles[p.z][p.y][p.x] = tile;
     }
 
     void setTileLight(TilePos pos, const byte newVal, const bool isSunLight)
@@ -217,7 +217,7 @@ struct Block_t {
             unsparsify();
         }
 
-        tiles.tiles[p.Z][p.Y][p.X].setLight(isSunLight, newVal);
+        tiles.tiles[p.z][p.y][p.x].setLight(isSunLight, newVal);
     }
 
     bool valid() const @property { return (flags & BlockFlags.valid) != 0; }

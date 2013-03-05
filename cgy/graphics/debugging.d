@@ -3,6 +3,7 @@
 
 module graphics.debugging;
 
+import std.array : array;
 
 import graphics.ogl;
 import util.util;
@@ -79,7 +80,7 @@ shared LineData[int] lineList;
 shared int lineCount=1;
 
 int addLine(vec3d[] points, vec3f color = vec3f(0, 0, 1), float radius = 50){
-    auto d = LineData(points.dup, color, radius);
+    auto d = LineData(points.array, color, radius);
     auto t = lineCount;
     lineList[t] = cast(shared)d;
     lineCount++;
@@ -94,9 +95,10 @@ void renderLineList(vec3d camPos, void delegate (vec3f color, float radius) set)
     foreach(data ; lineList) {
         foreach(ref pt ; data.points) {
             auto a = (cast(vec3d)pt)-camPos;
-            pt.X = a.X;
-            pt.Y = a.Y;
-            pt.Z = a.Z;
+            pt = a;
+            //pt.x = a.x;
+            //pt.y = a.y;
+            //pt.z = a.z;
         }
         glVertexAttribPointer(0, 3, GL_DOUBLE, GL_FALSE, vec3d.sizeof, cast(const void*)data.points.ptr);
         glError();
@@ -104,9 +106,10 @@ void renderLineList(vec3d camPos, void delegate (vec3f color, float radius) set)
         glDrawArrays(GL_LINE_STRIP, 0, data.points.length);
         foreach(ref pt ; data.points) {
             auto a = (cast(vec3d)pt)+camPos;
-            pt.X = a.X;
-            pt.Y = a.Y;
-            pt.Z = a.Z;
+            //pt.x = a.x;
+            //pt.y = a.y;
+            //pt.z = a.z;
+            pt = a;
         }
     }
 }

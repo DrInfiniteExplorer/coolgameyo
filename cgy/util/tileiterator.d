@@ -29,13 +29,13 @@ struct TileIterator{
         tile.value = getTilePos(start);
         travelDir = _dir;
         startPos = start;
-        dir.X = travelDir.X >= 0 ? 1 : -1;
-        dir.Y = travelDir.Y >= 0 ? 1 : -1;
-        dir.Z = travelDir.Z >= 0 ? 1 : -1;
+        dir.x = travelDir.x >= 0 ? 1 : -1;
+        dir.y = travelDir.y >= 0 ? 1 : -1;
+        dir.z = travelDir.z >= 0 ? 1 : -1;
                 
-        tDelta.X = abs(1.0f / travelDir.X);
-        tDelta.Y = abs(1.0f / travelDir.Y);
-        tDelta.Z = abs(1.0f / travelDir.Z);
+        tDelta.x = abs(1.0f / travelDir.x);
+        tDelta.y = abs(1.0f / travelDir.y);
+        tDelta.z = abs(1.0f / travelDir.z);
         
         //How long 'time' until next collision
         double inter(double start, int dir, double vel, double delta){
@@ -46,9 +46,9 @@ struct TileIterator{
             return dist/vel;
         }
         
-        tMax.X = inter(start.X, dir.X, travelDir.X, tDelta.X);
-        tMax.Y = inter(start.Y, dir.Y, travelDir.Y, tDelta.Y);
-        tMax.Z = inter(start.Z, dir.Z, travelDir.Z, tDelta.Z);
+        tMax.x = inter(start.x, dir.x, travelDir.x, tDelta.x);
+        tMax.y = inter(start.y, dir.y, travelDir.y, tDelta.y);
+        tMax.z = inter(start.z, dir.z, travelDir.z, tDelta.z);
     }
 
     TilePos front() @property {
@@ -56,27 +56,27 @@ struct TileIterator{
     }
     void popFront() {
         if (tPrevIntersection !is null) {
-            *tPrevIntersection = min(tMax.X, tMax.Y, tMax.Z);
+            *tPrevIntersection = min(tMax.x, tMax.y, tMax.z);
         }
-        if (tMax.X < tMax.Y) {
-            if (tMax.X < tMax.Z) {
+        if (tMax.x < tMax.y) {
+            if (tMax.x < tMax.z) {
                 //INCREMENT X WOOO
-                tile.value.X += dir.X;
-                tMax.X += tDelta.X;
+                tile.value.x += dir.x;
+                tMax.x += tDelta.x;
             } else {
                 //INCREMENT Z WOOO
-                tile.value.Z += dir.Z;
-                tMax.Z += tDelta.Z;                
+                tile.value.z += dir.z;
+                tMax.z += tDelta.z;                
             }
         } else {
-            if (tMax.Y < tMax.Z) {
+            if (tMax.y < tMax.z) {
                 //INCREMENT Y WOOO
-                tile.value.Y += dir.Y;
-                tMax.Y += tDelta.Y;
+                tile.value.y += dir.y;
+                tMax.y += tDelta.y;
             } else {
                 //Increment Z WOOO
-                tile.value.Z += dir.Z;
-                tMax.Z += tDelta.Z;                
+                tile.value.z += dir.z;
+                tMax.z += tDelta.z;                
             }
         }
         cnt++;

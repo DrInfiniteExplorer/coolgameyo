@@ -31,13 +31,13 @@ version(Windows) {
         auto mainHwnd = FindWindow(null, strZ);
         BREAK_IF(mainHwnd == null);
         GetWindowRect(mainHwnd, &rect);
-        windowSettings.mainCoordinates.X = rect.left;
-        windowSettings.mainCoordinates.Y = rect.top;
+        windowSettings.mainCoordinates.x = rect.left;
+        windowSettings.mainCoordinates.y = rect.top;
 
         auto consoleHwnd = GetConsoleWindow();
         GetWindowRect(consoleHwnd, &rect);
-        windowSettings.consoleCoordinates.X = rect.left;
-        windowSettings.consoleCoordinates.Y = rect.top;
+        windowSettings.consoleCoordinates.x = rect.left;
+        windowSettings.consoleCoordinates.y = rect.top;
 
         SDL_WM_SetCaption("CoolGameYo!", "Herp");
     }
@@ -47,8 +47,8 @@ version(Windows) {
         if(!windowSettings.windowsInitialized) return;
         int x;
         int y;
-        x = windowSettings.mainCoordinates.X;
-        y = windowSettings.mainCoordinates.Y;
+        x = windowSettings.mainCoordinates.x;
+        y = windowSettings.mainCoordinates.y;
 
         if(x != -1 || y != -1) {
             auto wierd_str = "I_am_a_flying_unicorn_who_farts_glitter";
@@ -63,8 +63,8 @@ version(Windows) {
             MoveWindow(mainHwnd, x, y, width, height, true);
             SDL_WM_SetCaption("CoolGameYo!", "Herp");
         }
-        x = windowSettings.consoleCoordinates.X;
-        y = windowSettings.consoleCoordinates.Y;
+        x = windowSettings.consoleCoordinates.x;
+        y = windowSettings.consoleCoordinates.y;
         if(x != -1 || y != -1) {
             auto consoleHwnd = GetConsoleWindow();
             RECT rect;

@@ -1,8 +1,7 @@
 
 module util.math;
 
-import stolen.vector2d;
-import stolen.vector3d;
+import math.vector;
 
 // Awesomely much faster than std.math.floor!
 // Also seems to be correct!
@@ -118,6 +117,7 @@ unittest {
     assert(posMod( 8, 8) == 0);
 }
 
+/*
 Type clamp(Type=double)(Type val, Type min, Type max)
 in{
     assert(min <= max, "Min must be less than or equal to max!");
@@ -131,67 +131,107 @@ body {
     }
     return val;
 }
+*/
 
-vector3d!(A) clampV(A)(const vector3d!(A) wap, const vector3d!(A) a, const vector3d!(A) b){
-    return vector3d!A(clamp(wap.X, a.X, b.X), clamp(wap.Y,a.Y, b.Y), clamp(wap.Z, a.Z, b.Z));
-}
-vector2d!(A) clampV(A)(const vector2d!(A) wap, const vector2d!(A) a, const vector2d!(A) b){
-    return vector2d!A(clamp(wap.X, a.X, b.X), clamp(wap.Y,a.Y, b.Y));
-}
-
-vector3d!(A) snapV(A)(const vector3d!(A) wap, const A b){
-    return vector3d!A(snap(wap.X, b), snap(wap.Y,b), snap(wap.Z, b));
+T clamp(T, Y, U)(T value, Y low, U high) {
+    import std.algorithm : max, min;
+	return min(max(value,cast(T)low), cast(T)high);
 }
 
-vector2d!(A) snapV(A)(const vector2d!(A) wap, const A b){
-    return vector2d!A(snap(wap.X, b), snap(wap.Y,b));
+
+auto clampV(A)(const vector3!A wap, const vector3!(A) a, const vector3!(A) b){
+    return vector3!A(clamp(wap.x, a.x, b.x), clamp(wap.y,a.y, b.y), clamp(wap.z, a.z, b.z));
+}
+auto clampV(A)(const vector2!A wap, const vector2!(A) a, const vector2!(A) b){
+    return vector2!A(clamp(wap.x, a.x, b.x), clamp(wap.y,a.y, b.y));
 }
 
-vector3d!(A) negDivV(A)(const vector3d!(A) wap, const A b){
-    return vector3d!A(negDiv(wap.X, b), negDiv(wap.Y,b), negDiv(wap.Z, b));
-}
-vector2d!(A) negDivV(A)(const vector2d!(A) wap, const A b){
-    return vector2d!A(negDiv(wap.X, b), negDiv(wap.Y,b));
-}
-vector3d!(A) posModV(A)(const vector3d!(A) wap, const A b){
-    return vector3d!A(posMod(wap.X, b), posMod(wap.Y,b), posMod(wap.Z, b));
-}
-vector2d!(A) posModV(A)(const vector2d!(A) wap, const A b){
-    return vector2d!A(posMod(wap.X, b), posMod(wap.Y,b));
+auto snapV(A)(const vector3!A wap, const A b){
+    return vector3!A(snap(wap.x, b), snap(wap.y,b), snap(wap.z, b));
 }
 
-vector2d!T CircumCircle(T)(vector2d!T a, vector2d!T b, vector2d!T c) {
-    T tx = (a.X + c.X)/2;
-    T ty = (a.Y + c.Y)/2;
+auto snapV(A)(const vector2!A wap, const A b){
+    return vector2!A(snap(wap.x, b), snap(wap.y,b));
+}
 
-    T vx = (b.X + c.X)/2;
-    T vy = (b.Y + c.Y)/2;
+auto negDivV(A)(const vector3!A wap, const A b){
+    return vector3!A(negDiv(wap.x, b), negDiv(wap.y,b), negDiv(wap.z, b));
+}
+auto negDivV(A)(const vector2!A wap, const A b){
+    return vector2!A(negDiv(wap.x, b), negDiv(wap.y,b));
+}
+auto posModV(A)(const vector3!A wap, const A b){
+    return vector3!A(posMod(wap.x, b), posMod(wap.y,b), posMod(wap.z, b));
+}
+auto posModV(A)(const vec2!A wap, const vec2i b){
+    return vector2!A(posMod( cast(int)wap.x, b.x), posMod(cast(int)wap.y,b.y));
+}
+auto posModV(A)(const vec2!A wap, const A b){
+    return vector2!A(posMod(wap.x, b), posMod(wap.y,b));
+}
+
+vector2!T CircumCircle(T)(vector2!T a, vector2!T b, vector2!T c) {
+    T tx = (a.x + c.x)/2;
+    T ty = (a.y + c.y)/2;
+
+    T vx = (b.x + c.x)/2;
+    T vy = (b.y + c.y)/2;
 
     T ux,uy,wx,wy;
 
-    if(a.X == c.X)
+    if(a.x == c.x)
     {
         ux = 1;
         uy = 0;
     }
     else
     {
-        ux = (c.Y - a.Y)/(a.X - c.X);
+        ux = (c.y - a.y)/(a.x - c.x);
         uy = 1;
     }
 
-    if(b.X == c.X)
+    if(b.x == c.x)
     {
         wx = -1;
         wy = 0;
     }
     else
     {
-        wx = (b.Y - c.Y)/(b.X - c.X);
+        wx = (b.y - c.y)/(b.x - c.x);
         wy = -1;
     }
 
     T alpha = (wy*(vx-tx)-wx*(vy - ty))/(ux*wy-wx*uy);
 
-    return vector2d!T(tx+alpha*ux,ty+alpha*uy);
+    return vector2!T(tx+alpha*ux,ty+alpha*uy);
 }
+
+auto RungeKutta2(Func, T, D)(T value, D h) {
+    auto k1 = func(value) * h;
+    auto k2 = func(value + k1) * h;
+    return value + 0.5 * (k1 + k2);
+}
+auto RungeKutta4(Func, T, D, int order = 4)(T value, D h) {
+    auto k1 = func(value) * h;
+    auto k2 = func(value + 0.5 * k1) * h;
+    auto k3 = func(value + 0.5 * k2) * h;
+    auto k4 = func(value + k3) * h;
+    return value + 1.0/6.0 * (k1 + 2*k2 + 2*k3 + k4);
+}
+
+T trace(vectorField, T)(T pos, float time) {
+    // Make more elaborate at a later time.
+    //Like, detect if extreme velocities etc.
+    pos = RungeKutta2!vectorField(pos, time);
+    return pos;
+}
+
+void advect(vectorField, get, set)(time) {
+    foreach(x, y ; range) {
+        auto startPos = vec2f(x, y);
+        auto prevPos = trace!vectorField(startPos, -time);
+        set(x, y) = get(prevPos);
+    }
+}
+
+

@@ -198,9 +198,9 @@ mixin template LightStorageMethods() {
             if( belowSunlight) {
                 //If below sunlight, spread sunlight downward until we find a solid object.
                 //Will add light collumn to lights to spread
-                int z = tilePos.value.Z; 
+                int z = tilePos.value.z; 
                 while(true){
-                    auto iterTilePos = TilePos(vec3i(tilePos.value.X, tilePos.value.Y, z));
+                    auto iterTilePos = TilePos(vec3i(tilePos.value.x, tilePos.value.y, z));
                     auto iterTile = getTile(iterTilePos);
                     if(!iterTile.isAir) {
                         break;
@@ -269,10 +269,10 @@ mixin template LightStorageMethods() {
             if (oldTile.sunlight) {
                 //If below sunlight, spread sunlight downward until we find a solid object.
                 //Will add light collumn to lights to spread
-                int z = tilePos.value.Z-1;
+                int z = tilePos.value.z-1;
                 while (true) {
                     auto iterTilePos = TilePos(vec3i(
-                                tilePos.value.X, tilePos.value.Y, z));
+                                tilePos.value.x, tilePos.value.y, z));
                     auto iterTile = getTile(iterTilePos);
                     auto iterTileStrength = tile.getLight(true);
                     if(!iterTile.isAir || iterTileStrength == 0) {
@@ -329,7 +329,7 @@ mixin template LightStorageMethods() {
             Sector sector = getSector(sectorNum);
             if(sector !is null) {
                 foreach(light ; sector.lights) {
-                    if(pos.value.getDistanceFromSQ(light.position.value) < radius2) {
+                    if(pos.value.getDistanceSQ(light.position.value) < radius2) {
                         lights ~= light;
                     }
                 }

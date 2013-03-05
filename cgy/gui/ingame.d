@@ -88,8 +88,8 @@ class FpsHandler : GuiEventDump {
 
     void mouseMove(GuiEvent e){
         auto m = e.mouseMove;
-        auto x = m.pos.X;
-        auto y = m.pos.Y;
+        auto x = m.pos.x;
+        auto y = m.pos.y;
         auto diffX = x - middleX;
         auto diffY = y - middleY;
         if((diffX != 0 || diffY != 0) && useMouse){
@@ -189,7 +189,7 @@ class FpsHandler : GuiEventDump {
         pos += vec3d(0, 0, 0.50); //Unit is 1.5 big now; unitpos is at 0.5 above feets
         camera.setPosition(pos);
         import std.math : atan2;
-        auto rad = atan2(dir.Y, dir.X);
+        auto rad = atan2(dir.y, dir.x);
         possessAI.setRotation(rad);
         game.setActiveUnitPos(UnitPos(possessAI.unitPos));
     }
@@ -231,7 +231,7 @@ class FpsHandler : GuiEventDump {
         double prevDist, dist;
         entitySelected = false;
         foreach(entity ; world.getEntities()) {
-        dist = entity.entityData.pos.value.getDistanceFromSQ(camera.position);
+        dist = entity.entityData.pos.value.getDistanceSQ(camera.position);
         if (entity.aabb.intersectsWithLine(start, dir) && dist>0.5f &&
         dir.dotProduct(entity.pos.value-camera.position) > 0 &&
         (!entitySelected || prevDist > dist)) {
@@ -248,8 +248,8 @@ class FpsHandler : GuiEventDump {
         rayPickEntity();
         /*
         if (entitySelected && 
-            selectedEntity.pos.value.getDistanceFromSQ(camera.position) <
-            selectedTilePos.toUnitPos().value.getDistanceFromSQ(camera.position)) { // fulhaxxs
+            selectedEntity.pos.value.getDistanceSQ(camera.position) <
+            selectedTilePos.toUnitPos().value.getDistanceSQ(camera.position)) { // fulhaxxs
                 tileSelected = false;
             }
         else {

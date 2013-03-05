@@ -68,12 +68,12 @@ struct Image {
         }
         ilError();
 
-        imgWidth = min(ilGetInteger(IL_IMAGE_WIDTH)- offset.X, size.X);
-        imgHeight = min(ilGetInteger(IL_IMAGE_HEIGHT)- offset.Y, size.Y);
+        imgWidth = min(ilGetInteger(IL_IMAGE_WIDTH)- offset.x, size.x);
+        imgHeight = min(ilGetInteger(IL_IMAGE_HEIGHT)- offset.y, size.y);
 
         imgData = new ubyte[](4*imgWidth*imgHeight);
 
-        ilCopyPixels( offset.X, offset.Y, 0, imgWidth, imgHeight, 1, IL_RGBA, IL_UNSIGNED_BYTE, imgData.ptr);
+        ilCopyPixels( offset.x, offset.y, 0, imgWidth, imgHeight, 1, IL_RGBA, IL_UNSIGNED_BYTE, imgData.ptr);
         ilError();
     }
 
@@ -120,26 +120,26 @@ struct Image {
     // And retardedly much less retarded :P
     void drawLine(vec2i start, vec2i end, vec3i color) {
         vec3ub col = color.convert!ubyte;
-        start.X = clamp(start.X, 0, imgWidth-1);
-        end.X = clamp(end.X, 0, imgWidth-1);
-        start.Y = clamp(start.Y, 0, imgHeight-1);
-        end.Y = clamp(end.Y, 0, imgHeight-1);
+        start.x = clamp(start.x, 0, imgWidth-1);
+        end.x = clamp(end.x, 0, imgWidth-1);
+        start.y = clamp(start.y, 0, imgHeight-1);
+        end.y = clamp(end.y, 0, imgHeight-1);
 
-        if(end.X < start.X) {
+        if(end.x < start.x) {
             swap(start, end);
         }
-        if(start.X == end.X) {
-            if(end.Y < start.Y) {
+        if(start.x == end.x) {
+            if(end.y < start.y) {
                 swap(start, end);
             }
-            foreach(y ; start.Y .. end.Y) {
-                vec3ub* ptr = cast(vec3ub*) (imgData.ptr + 4*( start.X + imgWidth * y));
+            foreach(y ; start.y .. end.y) {
+                vec3ub* ptr = cast(vec3ub*) (imgData.ptr + 4*( start.x + imgWidth * y));
                 *ptr = col;
             }
         }
-        else if(start.Y == end.Y) {
-            foreach(x ; start.X .. end.X) {
-                vec3ub* ptr = cast(vec3ub*) (imgData.ptr + 4*( x + imgWidth * start.Y));
+        else if(start.y== end.y) {
+            foreach(x ; start.x .. end.x) {
+                vec3ub* ptr = cast(vec3ub*) (imgData.ptr + 4*( x + imgWidth * start.y));
                 *ptr = col;
             }
         } else {
@@ -158,9 +158,9 @@ struct Image {
             auto maxIter = cast(int) dir.getLength() / step;
             dir.setLength(step);
             int iter = 0;
-            while(start.getDistanceFromSQ(end) != 0) {
+            while(start.getDistanceSQ(end) != 0) {
                 start = pt.convert!int;
-                set(start.X, start.Y);
+                set(start.x, start.y);
                 pt += dir;
                 iter++;
                 if(iter >= maxIter) return;
@@ -285,9 +285,9 @@ struct Image {
 
     void tint(vec3i _color)
     in{
-        assert(_color.X>=0 && _color.X <=255, "Bad color sent to Image.tint");
-        assert(_color.Y>=0 && _color.Y <=255, "Bad color sent to Image.tint");
-        assert(_color.Z>=0 && _color.Z <=255, "Bad color sent to Image.tint");
+        assert(_color.x>=0 && _color.x <=255, "Bad color sent to Image.tint");
+        assert(_color.y>=0 && _color.y <=255, "Bad color sent to Image.tint");
+        assert(_color.z>=0 && _color.z <=255, "Bad color sent to Image.tint");
     }
     body{
         if(_color == vec3i(255, 255, 255)){
@@ -295,9 +295,9 @@ struct Image {
         }
         auto color = _color.convert!float() * (1.0/255.0);
         for(int i=0; i < imgData.length; i+=4){
-            imgData[i+0] *= color.X;
-            imgData[i+1] *= color.Y;
-            imgData[i+2] *= color.Z;
+            imgData[i+0] *= color.x;
+            imgData[i+1] *= color.y;
+            imgData[i+2] *= color.z;
         }
     }
 

@@ -13,18 +13,34 @@ struct MaterialInformation {
     string fancyName;
     vec3ub color;
     string type;
+
+    float dissolutionConstant; // Or associate this with type? HUERR HUERR HUERR
 }
 
 __gshared MaterialInformation[string] g_Materials;
 
+float getDissolutionConstantFromType(string type) {
+    switch(type) {
+        case "stone": return 0.01; // Dunno random value D:
+        default:
+    }
+
+    return 0.1; // Use generic something something-value.
+}
 
 static void loadMaterial(string filename) {
     auto path = "data/materials/" ~ filename;
     auto name = filename.stripExtension();
 
     MaterialInformation mat;
+    mat.dissolutionConstant = -1;
     loadJSON(path).read(mat);
     mat.name = name;
+    mat.fancyName = mat.fancyName.idup; // Since strings loaded from json will ever never release the json file string D:
+    mat.type = mat.type.idup;
+    if(mat.dissolutionConstant == -1) {
+        mat.dissolutionConstant = getDissolutionConstantFromType(mat.type);
+    }
     g_Materials[name] = mat;
 }
 

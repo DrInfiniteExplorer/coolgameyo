@@ -3,8 +3,8 @@
   "type":"stone",
   "name":"obsidian",
   "color":{
-    "X":17,
-    "Y":17,
-    "Z":15
+    "x":17,
+    "y":17,
+    "z":15
   }
 }

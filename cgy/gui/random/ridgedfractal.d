@@ -59,7 +59,7 @@ mixin template RandomRidged() {
         auto gradient = new GradientNoise01!()(400, new RandSourceUniform(seed));
         auto ridged = new RidgedMultiFractal(gradient, H, lacuna, octaves, offset, gain);
         ridged.setBaseWaveLength(50);
-        heightMap.fill(ridged, 400, 400);
+        heightMap.fill(&ridged.getValue2, 400, 400);
         heightMap.normalize(0, 1.0);
         heightImg.setImage(heightMap.toImage(0, 1, true, colorMode));
     }

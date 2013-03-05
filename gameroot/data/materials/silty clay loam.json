@@ -3,8 +3,8 @@
   "type":"soil",
   "name":"silty clay loam",
   "color":{
-    "X":151,
-    "Y":187,
-    "Z":142
+    "x":151,
+    "y":187,
+    "z":142
   }
 }

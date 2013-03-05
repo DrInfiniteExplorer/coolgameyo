@@ -181,7 +181,7 @@ class SplineEditor : GuiElementWindow {
         listBox.clear();
         foreach(color ; SkyColors) {
             vec3i icol = (color*255.0f).convert!int();
-            listBox.addItem(text(icol.X, ", ", icol.Y, ", ", icol.Z));
+            listBox.addItem(text(icol.x, ", ", icol.y, ", ", icol.z));
         }
         redraw();
     }
@@ -222,11 +222,11 @@ class SplineEditor : GuiElementWindow {
         foreach(idx ; 0 .. width) {
             float time = cast(float)idx/cast(float)width;
             color = bspline(time, colors);
-            r ~= color.X;
-            g ~= color.Y;
-            b ~= color.Z;
+            r ~= color.x;
+            g ~= color.y;
+            b ~= color.z;
             vec3i icol = (color*255.0f).convert!int();
-            img.setPixel(idx, 0, icol.X, icol.Y, icol.Z);
+            img.setPixel(idx, 0, icol.x, icol.y, icol.z);
         }
         redGraph.setData(r, 0.0, 1.0);
         greenGraph.setData(g, 0.0, 1.0);

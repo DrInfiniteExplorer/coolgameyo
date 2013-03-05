@@ -532,7 +532,7 @@ mixin template ClientModule() {
         toWrite ~= list.changeListData[];
     }
 
-    void dummyClientNetwork() {
+    void dummyClientNetwork() { 
         while(!doneLoading) {
             int[2] frameInfo = [g_gameTick, 0];
             auto ret = dataSock.receive(frameInfo);

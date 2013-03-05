@@ -14,32 +14,6 @@ import util.util;
 import util.math;
 
 
-//TODO: Make interface, etc laters
-
-
-auto getValue(Source)(Source s, double x, double y) {
-    static if(__traits(compiles, s.getValue(x, y))) {    
-        return s.getValue(x, y);
-    } else static if(__traits(compiles, s(x, y))) {
-        return s(x, y);
-    } else {
-        pragma(error, "error error error");
-        pragma(msg, "Error: Cant use type ", Source, " as a value source");
-        assert(0);
-    }
-}
-auto getValue(Source)(Source s, double x) {
-    static if(__traits(compiles, s.getValue(x))) {    
-        return s.getValue(x);
-    } else static if(__traits(compiles, s(x))) {
-        return s(x);
-    } else {
-        pragma(error, "error error error");
-        pragma(msg, "Error: Cant use type ", Source, " as a value source");
-        assert(0);
-    }
-}
-
 
 T lerpCorrect(T)(T x0, T x1, double t) {
     return (1.0 - t) * x0 + t * x1;

@@ -48,7 +48,7 @@ class GuiElementSimpleGraph(Type) : public GuiElement {
         setAbsoluteRect(absoluteRect);
     }
     void setSize(uint height) {
-        absoluteRect.size.Y = height;
+        absoluteRect.size.y = height;
         setAbsoluteRect(absoluteRect);
     }
     

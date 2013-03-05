@@ -66,7 +66,7 @@ final class Level4Sheet {
         // That is (10*4+1)x(10*4+1) vertices
         //Dont be surprised if it doesnt!
 
-        auto snapCenter = SectorXYNum((SectorXYNum(center).value/64 )*64).getSectorNum(center.value.Z);
+        auto snapCenter = SectorXYNum((SectorXYNum(center).value/64 )*64).getSectorNum(center.value.z);
         this.snapCenter = snapCenter;
         this.center = center;
 
@@ -79,8 +79,8 @@ final class Level4Sheet {
         foreach(y ; 0 .. level4VertexCount) {
             foreach(x ; 0 .. level4VertexCount) {
                 vec2i tp = baseTp + vec2i(2048) * vec2i(x, y);
-                float X = cast(float) tp.X;
-                float Y = cast(float) tp.Y;
+                float X = cast(float) tp.x;
+                float Y = cast(float) tp.y;
                 float Z;
                 if(x == 0 || x == level4QuadCount || y == 0 || y == level4QuadCount) {
                     Z = worldMap.getApproxHeight(TileXYPos(tp), 5);
@@ -118,9 +118,9 @@ final class Level4Sheet {
                 x = x > level4QuadCount ? level4QuadCount : x;
                 y = y < 0 ? 0 : y;
                 y = y > level4QuadCount ? level4QuadCount : y;
-                return vertices[y][x].Z;
+                return vertices[y][x].z;
             } else {
-                return vertices[y][x].Z;
+                return vertices[y][x].z;
             }
         }
 
@@ -206,8 +206,8 @@ final class Level4Sheet {
 
         quadNum = quadNum + SectorXYNum(snapCenter).value/16 - level3Center/16 - vec2i(level4QuadCount/2);
         //As expected this makes a line of quads per axis intersect. But it doesn't really matter ;P
-        if(abs(quadNum.X) >= 8) return true;
-        if(abs(quadNum.Y) >= 8) return true;
+        if(abs(quadNum.x) >= 8) return true;
+        if(abs(quadNum.y) >= 8) return true;
 
         return false;
     }
@@ -216,8 +216,8 @@ final class Level4Sheet {
     bool shouldMakeHeightSheet(vec2i num) {
         //Ignore the sectors in the middle. We have level1&0 there, possibly tiles as well.
         num -= vec2i(level3QuadCount/2);
-        if(abs(num.X) >= 8) return true;
-        if(abs(num.Y) >= 8) return true;
+        if(abs(num.x) >= 8) return true;
+        if(abs(num.y) >= 8) return true;
         return false;
     }
     */

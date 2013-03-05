@@ -32,7 +32,7 @@ class SimplexNoise : ValueSource {
     }
 
 
-    override double getValue(double x, double y, double z) {
+    override double getValue3(vec3d pos) {
         BREAKPOINT;
         return double.init;
     }
@@ -43,21 +43,20 @@ class SimplexNoise : ValueSource {
 
     immutable F2 = 0.5 * (sqrt(3.0) - 1.0);
     immutable G2 = (3.0 - sqrt(3.0)) / 6.0;
-    override double getValue(double x, double y) {
-        x *= 0.5; //To scale it somewhat into being more like perlin noise
-        y *= 0.5;
+    override double getValue2(vec2d pos) {
+        pos *= 0.5; //To scale it somewhat into being more like perlin noise
 
-        auto s = (x + y) * F2;
+        auto s = (pos.x + pos.y) * F2;
 
-        int i = fastFloor(x + s);
-        int j = fastFloor(y + s);
+        int i = fastFloor(pos.x + s);
+        int j = fastFloor(pos.y + s);
 
         double t = (i + j) * G2;
 
         double X0 = i - t;
         double Y0 = j - t;
-        double x0 = x - X0;
-        double y0 = y - Y0;
+        double x0 = pos.x - X0;
+        double y0 = pos.y - Y0;
         int i1, j1; // Offsets for second (middle) corner of simplex in (i,j) coords
         if(x0>y0) {i1=1; j1=0;} // lower triangle, XY order: (0,0)->(1,0)->(1,1)
         else {i1=0; j1=1;}      // upper triangle, YX order: (0,0)->(0,1)->(1,1)
@@ -74,7 +73,7 @@ class SimplexNoise : ValueSource {
 
 
         static auto dot(T)(const ref T t, double x, double y) {
-            return t.X * x + t.Y * y;
+            return t.x * x + t.y * y;
         }
 
         // Calculate the contribution from the three corners
@@ -128,7 +127,7 @@ unittest {
     double min = double.max;
     double max = -double.max;
     for(double t = 0; t < 123456; t += 0.1) {
-        double v = simplex.getValue(t,t+simplex.getValue(t, t));
+        double v = simplex.getValue2(vec2d(t,t+simplex.getValue2(vec2d(t, t))));
         if (min > v) min = v;
         if (max < v) max = v;
     }

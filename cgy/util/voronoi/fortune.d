@@ -85,7 +85,7 @@ final class FortuneVoronoi {
             //Locate existing arc (if any) directly above new site
             //delete potential cirlce event
             TreeLeaf leaf;
-            leaf = tree.getLeafNode(e.pos.X, e.pos.Y);
+            leaf = tree.getLeafNode(e.pos.x, e.pos.y);
             if(leaf.event) {
                 queue.remove(leaf.event);
                 leaf.event = null;
@@ -169,15 +169,15 @@ final class FortuneVoronoi {
         if(leaf.site is right.site || right.site == left.site || left.site == leaf.site) return null;
 
         double dx1, dx2, dy1, dy2;
-		dx1 = leaf.site.pos.X - left.site.pos.X;
-        dy1 = leaf.site.pos.Y - left.site.pos.Y;
-		dx2 = right.site.pos.X - left.site.pos.X;
-        dy2 = right.site.pos.Y - left.site.pos.Y;
+		dx1 = leaf.site.pos.x - left.site.pos.x;
+        dy1 = leaf.site.pos.y - left.site.pos.y;
+		dx2 = right.site.pos.x - left.site.pos.x;
+        dy2 = right.site.pos.y - left.site.pos.y;
 		if (dx1*dy2 <= dy1*dx2) {
 		    return null;
         }
         auto event = newCircle(left, leaf, right);
-        if(event.pos.Y < y) return null;
+        if(event.pos.y < y) return null;
         return event;
     }
 
@@ -191,7 +191,7 @@ final class FortuneVoronoi {
 
         //Potentially destroyed some circles!!
         //and potentially haz new circles too.
-        auto y = e.pos.Y; //duh!
+        auto y = e.pos.y; //duh!
         foreach(TreeLeaf leaf ; checkCircle) {
             if(leaf in currentCircles) {
                 currentCircles[leaf]._valid = false;
@@ -210,7 +210,7 @@ final class FortuneVoronoi {
         //Did we just destroyed a circle?
         if(cast(SiteEvent)e !is null) {
             foreach(circle ; currentCircles) {
-                if(circle.center.getDistanceFromSQ(e.pos) < (circle.radius*circle.radius) - 1E10) {
+                if(circle.center.getDistanceSQ(e.pos) < (circle.radius*circle.radius) - 1E10) {
                     //writeln("FALSE CIRCLE FOUND with stuff in it!");
                     circle._valid = false;
                 }
@@ -309,10 +309,10 @@ public:
     vec2d pos;
     override int opCmp(Object _o) {
         auto o = cast(Event)_o;
-        if(pos.Y < o.pos.Y) return 1;
-        if(pos.Y == o.pos.Y) {
-            if(pos.X < o.pos.X) return 1;
-            if(pos.X == o.pos.X) return 0;
+        if(pos.y < o.pos.y) return 1;
+        if(pos.y == o.pos.y) {
+            if(pos.x < o.pos.x) return 1;
+            if(pos.x == o.pos.x) return 0;
         }
         return -1;
     }
@@ -342,7 +342,7 @@ final class CircleEvent : Event {
         leaf = _leaf;
         right = _right;
         center = CircumCircle(left.site.pos, leaf.site.pos, right.site.pos);
-        radius = center.getDistanceFrom(left.site.pos);
+        radius = center.getDistance(left.site.pos);
         _valid = true;
         pos = center + vec2d(0.0, radius);
     }
@@ -466,11 +466,11 @@ final class TreeNode : TreePart {
     double cut(double x, double y) {
         double cut(vec2d left, vec2d right, double y)
         {
-            BREAK_IF(left.getDistanceFrom(right) < 1E-10);
-            auto x1 = left.X;
-            auto x2 = right.X;
-            auto y1 = left.Y;
-            auto y2 = right.Y;
+            BREAK_IF(left.getDistance(right) < 1E-10);
+            auto x1 = left.x;
+            auto x2 = right.x;
+            auto y1 = left.y;
+            auto y2 = right.y;
 
             auto toPoint1 = y1 - y;
             auto toPoint2 = y2 - y;

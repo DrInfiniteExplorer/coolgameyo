@@ -210,7 +210,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
 
         auto camPos = camera.getPosition();
         if(camPos != oldCamPos) {
-            position.setText(positionString("position %f, %f, %f", camPos.X, camPos.Y, camPos.Z));
+            position.setText(positionString("position %f, %f, %f", camPos.x, camPos.y, camPos.z));
             oldCamPos = camPos;
         }
 
@@ -337,7 +337,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
                     auto top = world.getTopTilePos(xy);
                     msg("top: ", top);
                     auto ret = top.toEntityPos();
-                    ret.value.Z += 1;
+                    ret.value.z += 1;
                     msg("ret: ", ret);
 
                     return ret;
@@ -393,8 +393,8 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
 
     void mouseMove(GuiEvent e){
         auto m = e.mouseMove;
-        auto x = m.pos.X;
-        auto y = m.pos.Y;
+        auto x = m.pos.x;
+        auto y = m.pos.y;
         auto diffX = x - middleX;
         auto diffY = y - middleY;
         if((diffX != 0 || diffY != 0) && useMouse){
@@ -492,7 +492,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
             pos += vec3d(0, 0, 0.50); //Unit is 1.5 big now; unitpos is at 0.5 above feets
         }
         camera.setPosition(pos);
-        auto rad = atan2(dir.Y, dir.X);
+        auto rad = atan2(dir.y, dir.x);
         possesAI.setRotation(rad);
     }
 
@@ -544,7 +544,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         double prevDist, dist;
         entitySelected = false;
         foreach(entity ; world.getEntities()) {
-            dist = entity.entityData.pos.value.getDistanceFromSQ(camera.position);
+            dist = entity.entityData.pos.value.getDistanceSQ(camera.position);
             if (entity.aabb.intersectsWithLine(start, dir) && dist>0.5f &&
                     dir.dotProduct(entity.pos.value-camera.position) > 0 &&
                     (!entitySelected || prevDist > dist)) {
@@ -560,8 +560,8 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         rayPickTile();
         rayPickEntity();
         if (entitySelected && 
-                selectedEntity.pos.value.getDistanceFromSQ(camera.position) <
-                selectedTilePos.toUnitPos().value.getDistanceFromSQ(camera.position)) { // fulhaxxs
+                selectedEntity.pos.value.getDistanceSQ(camera.position) <
+                selectedTilePos.toUnitPos().value.getDistanceSQ(camera.position)) { // fulhaxxs
             tileSelected = false;
         }
         else {

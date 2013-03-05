@@ -34,13 +34,14 @@ final class ValueMap2D(StorageType, bool Wrap = true) : ValueSource {
     }
 
     //Gets values 0.._sizeX, 0.._sizeY from source and puts in place.
-    void fill(Source)(Source source, uint _sizeX, uint _sizeY) {
+    void fill(Source)(Source get, uint _sizeX, uint _sizeY) {
         sizeX = _sizeX;
         sizeY = _sizeY;
         auto mul = sizeX * sizeY;
         data.length = mul;
         foreach(i ; 0 .. mul) {
-            data[i] = random.random.getValue(source, cast(double)(i % sizeX), cast(double)(i / sizeX));
+            auto pos = vec2d(cast(double)(i % sizeX), cast(double)(i / sizeX));
+            data[i] = get( pos );
         }
     }
 
@@ -83,15 +84,14 @@ final class ValueMap2D(StorageType, bool Wrap = true) : ValueSource {
     }
 
     
-    override StorageType getValue(double x, double y, double z) { return 0; }
+    override StorageType getValue3(vec3d pos) { return 0; }
     override StorageType getValue(double x) { return 0; }
-    override StorageType getValue(double x, double y) {
+    override StorageType getValue2(vec2d pos) {
                 //writeln(text(x, " ", y));
         static if(Wrap) {
-            x = posMod(cast(int)x, sizeX);
-            y = posMod(cast(int)y, sizeY);
+            pos = posModV(pos, vec2i(sizeX, sizeY));
         }
-        return data[cast(uint)y * sizeX + cast(uint)x];
+        return data[cast(uint)pos.y * sizeX + cast(uint)pos.x];
     }
 
     void set(int x, int y, StorageType value) {
@@ -159,11 +159,11 @@ Image toImage(ValueSource source, double lx, double ly, double hx, double hy, ui
     ValueMap2Dd map = new ValueMap2Dd();
     auto rx = (hx - lx) / to!double(px);
     auto ry = (hy - ly) / to!double(py);
-    map.fill((double  x, double y)
+    map.fill((vec2d pos)
              {
-                 auto xx = lx + rx * x;
-                 auto yy = ly + ry * y;
-                 return source.getValue(xx, yy);
+                 auto xx = lx + rx * pos.x;
+                 auto yy = ly + ry * pos.y;
+                 return source.getValue2(vec2d(xx, yy));
              }
              , px, py);
     return map.toImage(low, high, true, color);

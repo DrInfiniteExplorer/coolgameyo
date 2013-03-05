@@ -47,19 +47,19 @@ class VoronoiLattice {
 
     int identifyCell(vec2d pt) {
         pt *= scale;
-        if(pt.X < 0) pt.X = 0;
-        if(pt.Y < 0) pt.Y = 0;
-        if(pt.X > width) pt.X = width;
-        if(pt.Y > height) pt.Y = height;
+        if(pt.x < 0) pt.x = 0;
+        if(pt.y < 0) pt.y = 0;
+        if(pt.x > width) pt.x = width;
+        if(pt.y > height) pt.y = height;
 
-        int X = cast(int) pt.X;
-        int Y = cast(int) pt.Y;
+        int X = cast(int) pt.x;
+        int Y = cast(int) pt.y;
 
         double distance = 10.0;
         int ret = 0;
         foreach(y ; Y-1 .. Y+2) {
             foreach(x ; X-1 .. X+2) {
-                auto dist = get(x, y).getDistanceFromSQ(pt);
+                auto dist = get(x, y).getDistanceSQ(pt);
                 if(dist < distance) {
                     distance = dist;
                     ret = y * width + x;

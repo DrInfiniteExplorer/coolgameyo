@@ -187,7 +187,7 @@ class WorldState {
     }
 
     void serializeHeightmap(SectorXYNum xy, SectorXY* sectorXY) {
-        string folder = text(g_worldPath ~ "/world/", xy.value.X, ",", xy.value.Y, "/");
+        string folder = text(g_worldPath ~ "/world/", xy.value.x, ",", xy.value.y, "/");
         util.filesystem.mkdir(folder);
         if (sectorXY.heightmap !is null) {
             std.file.write(folder ~ "heightmap.bin", sectorXY.heightmap.heightmap);
@@ -231,8 +231,8 @@ class WorldState {
         auto sector = getSector(sectorNum, &sectorXY);
         sector.destroy();
 
-        enforce(sectorNum.value.Z in sectorXY.sectors, "Terp yerp lerp");
-        sectorXY.sectors.remove(sectorNum.value.Z);
+        enforce(sectorNum.value.z in sectorXY.sectors, "Terp yerp lerp");
+        sectorXY.sectors.remove(sectorNum.value.z);
         sectorList.remove(sectorNum);
         return sectorXY.sectors.length == 0;
     }
@@ -247,7 +247,7 @@ class WorldState {
     body{
         void loadSectorXY(SectorXYNum xy) {
             SectorXY* xyPtr = getSectorXY(xy, false);
-            string folder = text(g_worldPath ~ "/world/", xy.value.X, ",", xy.value.Y, "/");
+            string folder = text(g_worldPath ~ "/world/", xy.value.x, ",", xy.value.y, "/");
             if (util.filesystem.exists(folder ~ "heightmap.bin")) {
                 SectorHeightmap heightmap = new SectorHeightmap;            
                 heightmap.heightmap = cast(int[128][])std.file.read(folder ~ "heightmap.bin");
@@ -257,7 +257,7 @@ class WorldState {
             }
         }
 
-        auto xyNum = SectorXYNum(vec2i(num.value.X, num.value.Y));
+        auto xyNum = SectorXYNum(vec2i(num.value.x, num.value.y));
         SectorXY* xyPtr = xyNum in sectorsXY;
         if (xyPtr is null) {
             loadSectorXY(xyNum);
@@ -296,7 +296,7 @@ class WorldState {
                         0, BlockSize.y-1,
                         0, 0)) {
                 auto heightmapIndex = rel + sectToBlock;
-                if (tp.value.Z <= heightmap[heightmapIndex.X, heightmapIndex.Y]){
+                if (tp.value.z <= heightmap[heightmapIndex.x, heightmapIndex.y]){
                     above = false;
                     break;
                 }
@@ -337,8 +337,8 @@ class WorldState {
     }
 
     Sector allocateSector(SectorNum sectorNum, SectorXY** xy = null) {
-        auto xyNum = SectorXYNum(vec2i(sectorNum.value.X, sectorNum.value.Y));
-        auto z = sectorNum.value.Z;
+        auto xyNum = SectorXYNum(vec2i(sectorNum.value.x, sectorNum.value.y));
+        auto z = sectorNum.value.z;
 
         //If has not has sectorXY, make one
         SectorXY* xyPtr = getSectorXY(xyNum);
@@ -358,8 +358,8 @@ class WorldState {
 
     //Returns a sector. Does not allocate sectors.
     Sector getSector(SectorNum sectorNum, SectorXY** xy=null) {
-        auto xyNum = SectorXYNum(vec2i(sectorNum.value.X, sectorNum.value.Y));
-        auto z = sectorNum.value.Z;
+        auto xyNum = SectorXYNum(vec2i(sectorNum.value.x, sectorNum.value.y));
+        auto z = sectorNum.value.z;
 
         SectorXY* xyPtr = xyNum in sectorsXY;
         Sector* ptr;
@@ -649,7 +649,7 @@ class WorldState {
         if (entity.type.lightStrength > 0) {
             LightSource light = new LightSource;
             light.position = entity.pos;
-            light.tint.set(entity.type.lightTintColor);
+            light.tint = entity.type.lightTintColor;
             light.strength = entity.type.lightStrength;
             entity.light = light;
             unsafeAddLight(light);
@@ -700,7 +700,7 @@ class WorldState {
         auto dir = end - start;
         auto len = dir.getLength();
         dir.normalize();
-        int tileIter = cast(int)(ceil(abs(dir.X)) + ceil(abs(dir.Y)) + ceil(abs(dir.Z)));
+        int tileIter = cast(int)(ceil(abs(dir.x)) + ceil(abs(dir.y)) + ceil(abs(dir.z)));
         double intersectionTime;
         foreach(tilePos ; TileIterator(start, dir, tileIter, &intersectionTime)) {
             if(intersectionTime > len) {
@@ -765,22 +765,22 @@ class WorldState {
 //        bool oldSolid = sector.setSolid(tilePos, newSolid);
 
         //Update heightmap
-        //        auto sectorXY = getSectorXY(SectorXYNum(vec2i(sectorNum.value.X, sectorNum.value.Y)));
+        //        auto sectorXY = getSectorXY(SectorXYNum(vec2i(sectorNum.value.x, sectorNum.value.y)));
         auto heightmap = sectorXY.heightmap;
         auto sectRel = tilePos.sectorRel();
-        auto heightmapZ = heightmap[sectRel.X, sectRel.Y];
-        if (heightmapZ == tilePos.value.Z) {
+        auto heightmapZ = heightmap[sectRel.x, sectRel.y];
+        if (heightmapZ == tilePos.value.z) {
             if (newTile.type is TileTypeAir) {
                 auto pos = tilePos;
                 //Iterate down until find ground, set Z
                 while (getTile(pos, false).type is TileTypeAir) { //Create geometry if we need to
-                    pos.value.Z -= 1;
+                    pos.value.z -= 1;
                 }
-                heightmap[sectRel.X, sectRel.Y] = pos.value.Z;
+                heightmap[sectRel.x, sectRel.y] = pos.value.z;
             }
-        } else if (heightmapZ < tilePos.value.Z) {
+        } else if (heightmapZ < tilePos.value.z) {
             if (newTile.type !is TileTypeAir) {
-                heightmap[sectRel.X, sectRel.Y] = tilePos.value.Z;
+                heightmap[sectRel.x, sectRel.y] = tilePos.value.z;
             }
         }
 
@@ -819,8 +819,8 @@ class WorldState {
 
     TilePos getTopTilePos(TileXYPos xy) {
         auto rel = xy.sectorRel();
-        auto x = rel.X;
-        auto y = rel.Y;
+        auto x = rel.x;
+        auto y = rel.y;
 
         auto t = xy.getSectorXYNum();
         auto sectorXY = getSectorXY(t);
@@ -829,11 +829,11 @@ class WorldState {
         auto heightmap = sectorXY.heightmap;
         if (heightmap is null ) {
             int z = worldMap.getRealTopTilePos(xy);
-            auto tp = TilePos(vec3i(xy.value.X, xy.value.Y, z));
+            auto tp = TilePos(vec3i(xy.value.x, xy.value.y, z));
             return tp;
         }
         assert(heightmap !is null, "heightmap == null! :(");
-        auto pos = vec3i(xy.value.X, xy.value.Y, heightmap[x, y]);
+        auto pos = vec3i(xy.value.x, xy.value.y, heightmap[x, y]);
         return TilePos(pos);
     }
 
@@ -860,13 +860,13 @@ class WorldState {
             auto sectorNum = SectorNum(rel);
             auto sectorStartTilePos = sectorNum.toTilePos();
             auto sectorStopTilePos = TilePos(sectorStartTilePos.value + vec3i(SectorSize.x-1, SectorSize.y-1, SectorSize.z-1));
-            int minX = std.algorithm.max(sectorStartTilePos.value.X, min.value.X);
-            int minY = std.algorithm.max(sectorStartTilePos.value.Y, min.value.Y);
-            int minZ = std.algorithm.max(sectorStartTilePos.value.Z, min.value.Z);
+            int minX = std.algorithm.max(sectorStartTilePos.value.x, min.value.x);
+            int minY = std.algorithm.max(sectorStartTilePos.value.y, min.value.y);
+            int minZ = std.algorithm.max(sectorStartTilePos.value.z, min.value.z);
 
-            int maxX = std.algorithm.min(sectorStopTilePos.value.X, max.value.X);
-            int maxY = std.algorithm.min(sectorStopTilePos.value.Y, max.value.Y);
-            int maxZ = std.algorithm.min(sectorStopTilePos.value.Z, max.value.Z);
+            int maxX = std.algorithm.min(sectorStopTilePos.value.x, max.value.x);
+            int maxY = std.algorithm.min(sectorStopTilePos.value.y, max.value.y);
+            int maxZ = std.algorithm.min(sectorStopTilePos.value.z, max.value.z);
             auto sector = getSector(sectorNum);
             if (sector.hasContent(TilePos(vec3i(minX, minY, minZ)), TilePos(vec3i(maxX, maxY, maxZ)))) {
                 return true;

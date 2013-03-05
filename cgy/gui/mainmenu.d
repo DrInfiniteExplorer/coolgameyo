@@ -78,7 +78,7 @@ class MainMenu : GuiElementWindow {
             loadScreen.setLoading(false);
             userControl = new HyperUnitControlInterfaceInputManager(game, guiSystem);
             //resumeGameButton = new PushButton(this, rect, "Resume gay me?", &onResumeGame);
-            rect.start.X += rect.size.X * 2;
+            rect.start.x += rect.size.x * 2;
             onResumeGame();
         }
 //        game = startGame(startPos, worldName, &loadDone);
@@ -108,7 +108,7 @@ class MainMenu : GuiElementWindow {
             loadScreen.setLoading(false);
             userControl = new HyperUnitControlInterfaceInputManager(game, guiSystem);
             resumeGameButton = new PushButton(this, rect, "Resume gay me?", &onResumeGame);
-            rect.start.X += rect.size.X * 2;
+            rect.start.x += rect.size.x * 2;
             saveGameButton = new PushButton(this, rect, "Save gay me?", &onSaveGame);
             onResumeGame();
         }

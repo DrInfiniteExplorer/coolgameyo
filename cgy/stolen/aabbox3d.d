@@ -10,7 +10,8 @@ import std.math;
 
 import std.traits;
 
-import stolen.vector3d;
+import math.vector;
+
 import stolen.line3d;
 import stolen.plane3d;
 
@@ -27,17 +28,17 @@ struct aabbox3d(T)
   public:
 
   //! Constructor with min edge and max edge.
-  this(const vector3d!(T) min, const vector3d!(T) max) {MinEdge = min; MaxEdge = max;}
+  this(const vector3!T min, const vector3!T max) {MinEdge = min; MaxEdge = max;}
 
   //! Constructor with only one point.
-  this(const vector3d!(T) init) {MinEdge = init; MaxEdge = init;}
+  this(const vector3!T init) {MinEdge = init; MaxEdge = init;}
   //! Constructor with min edge and max edge as single values, not vectors.
-  this(T minx, T miny, T minz, T maxx, T maxy, T maxz) {MinEdge = vector3d!(T)(minx, miny, minz); MaxEdge = vector3d!(T)(maxx, maxy, maxz);}
+  this(T minx, T miny, T minz, T maxx, T maxy, T maxz) {MinEdge = vector3!T(minx, miny, minz); MaxEdge = vector3!T(maxx, maxy, maxz);}
 
   this(ref const aabbox3d!(T) other)
   {
-    MinEdge = vector3d!(T)(other.MinEdge);
-    MaxEdge = vector3d!(T)(other.MaxEdge);
+    MinEdge = other.MinEdge;
+    MaxEdge = other.MaxEdge;
   }
 
   // operators
@@ -67,7 +68,7 @@ struct aabbox3d(T)
 
   //! Resets the bounding box to a one-point box.
   /** \param initValue New point. */
-  void reset(const vector3d!(T) initValue)
+  void reset(const vector3!T initValue)
   {
     MaxEdge = initValue;
     MinEdge = initValue;
@@ -76,9 +77,9 @@ struct aabbox3d(T)
   //! Adds a point to the bounding box
   /** The box grows bigger, if point was outside of the box.
   \param p: Point to add into the box. */
-  void addInternalPoint(const vector3d!(T) p)
+  void addInternalPoint(const vector3!T p)
   {
-    addInternalPoint(p.X, p.Y, p.Z);
+    addInternalPoint(p.x, p.y, p.z);
   }
 
   //! Adds another bounding box
@@ -97,30 +98,30 @@ struct aabbox3d(T)
   \param z Z coordinate of the point to add to this box. */
   void addInternalPoint(T x, T y, T z)
   {
-    if (x>MaxEdge.X) MaxEdge.X = x;
-    if (y>MaxEdge.Y) MaxEdge.Y = y;
-    if (z>MaxEdge.Z) MaxEdge.Z = z;
+    if (x>MaxEdge.x) MaxEdge.x = x;
+    if (y>MaxEdge.y) MaxEdge.y = y;
+    if (z>MaxEdge.z) MaxEdge.z = z;
 
-    if (x<MinEdge.X) MinEdge.X = x;
-    if (y<MinEdge.Y) MinEdge.Y = y;
-    if (z<MinEdge.Z) MinEdge.Z = z;
+    if (x<MinEdge.x) MinEdge.x = x;
+    if (y<MinEdge.y) MinEdge.y = y;
+    if (z<MinEdge.z) MinEdge.z = z;
   }
 
   //! Get center of the bounding box
   /** \return Center of the bounding box. */
-  vector3d!(T) getCenter() const
+  vector3!T getCenter() const
   {
     return (MinEdge + MaxEdge) / 2;
   }
 
   //! Get extent of the box (maximal distance of two points in the box)
   /** \return Extent of the bounding box. */
-  vector3d!(T) getExtent() const
+  vector3!T getExtent() const
   {
     return MaxEdge - MinEdge;
   }
 
-  aabbox3d!T move(vector3d!T offset) {
+  aabbox3d!T move(vector3!T offset) {
       return aabbox3d!T( MinEdge+offset, MaxEdge+offset);
   }
 
@@ -136,23 +137,23 @@ struct aabbox3d(T)
   //! Get the volume enclosed by the box in cubed units
   T getVolume() const
   {
-    const vector3d!(T) e = getExtent();
-    return e.X * e.Y * e.Z;
+    const vector3!T e = getExtent();
+    return e.x * e.y * e.z;
   }
 
   //! Get the surface area of the box in squared units
   T getArea() const
   {
-    const vector3d!(T) e = getExtent();
-    return 2*(e.X*e.Y + e.X*e.Z + e.Y*e.Z);
+    const vector3!T e = getExtent();
+    return 2*(e.x*e.y + e.x*e.z + e.y*e.z);
   }
 
   //! Stores all 8 edges of the box into an array
   /** \param edges: Pointer to array of 8 edges. */
-  void getEdges(ref vector3d!(T)[8] edges) const
+  void getEdges(ref vector3!T[8] edges) const
   {
-    const vector3d!(T) middle = getCenter();
-    const vector3d!(T) diag = middle - MaxEdge;
+    const vector3!T middle = getCenter();
+    const vector3!T diag = middle - MaxEdge;
 
     /*
     Edges are stored in this way:
@@ -167,14 +168,14 @@ struct aabbox3d(T)
             0---------4/
     */
 
-    edges[0].set(middle.X + diag.X, middle.Y + diag.Y, middle.Z + diag.Z);
-    edges[1].set(middle.X + diag.X, middle.Y - diag.Y, middle.Z + diag.Z);
-    edges[2].set(middle.X + diag.X, middle.Y + diag.Y, middle.Z - diag.Z);
-    edges[3].set(middle.X + diag.X, middle.Y - diag.Y, middle.Z - diag.Z);
-    edges[4].set(middle.X - diag.X, middle.Y + diag.Y, middle.Z + diag.Z);
-    edges[5].set(middle.X - diag.X, middle.Y - diag.Y, middle.Z + diag.Z);
-    edges[6].set(middle.X - diag.X, middle.Y + diag.Y, middle.Z - diag.Z);
-    edges[7].set(middle.X - diag.X, middle.Y - diag.Y, middle.Z - diag.Z);
+    edges[0].set(middle.x + diag.x, middle.y + diag.y, middle.z + diag.z);
+    edges[1].set(middle.x + diag.x, middle.y - diag.y, middle.z + diag.z);
+    edges[2].set(middle.x + diag.x, middle.y + diag.y, middle.z - diag.z);
+    edges[3].set(middle.x + diag.x, middle.y - diag.y, middle.z - diag.z);
+    edges[4].set(middle.x - diag.x, middle.y + diag.y, middle.z + diag.z);
+    edges[5].set(middle.x - diag.x, middle.y - diag.y, middle.z + diag.z);
+    edges[6].set(middle.x - diag.x, middle.y + diag.y, middle.z - diag.z);
+    edges[7].set(middle.x - diag.x, middle.y - diag.y, middle.z - diag.z);
   }
 
   //! Repairs the box.
@@ -183,12 +184,12 @@ struct aabbox3d(T)
   {
     T t;
 
-    if (MinEdge.X > MaxEdge.X)
-      { t=MinEdge.X; MinEdge.X = MaxEdge.X; MaxEdge.X=t; }
-    if (MinEdge.Y > MaxEdge.Y)
-      { t=MinEdge.Y; MinEdge.Y = MaxEdge.Y; MaxEdge.Y=t; }
-    if (MinEdge.Z > MaxEdge.Z)
-      { t=MinEdge.Z; MinEdge.Z = MaxEdge.Z; MaxEdge.Z=t; }
+    if (MinEdge.x > MaxEdge.x)
+      { t=MinEdge.x; MinEdge.x = MaxEdge.x; MaxEdge.x=t; }
+    if (MinEdge.y > MaxEdge.y)
+      { t=MinEdge.y; MinEdge.y = MaxEdge.y; MaxEdge.y=t; }
+    if (MinEdge.z > MaxEdge.z)
+      { t=MinEdge.z; MinEdge.z = MaxEdge.z; MaxEdge.z=t; }
   }
 
   //! Calculates a new interpolated bounding box.
@@ -208,22 +209,22 @@ struct aabbox3d(T)
   /** Border is included (IS part of the box)!
   \param p: Point to check.
   \return True if the point is within the box and false if not */
-  bool isPointInside(const vector3d!(T) p) const
+  bool isPointInside(const vector3!T p) const
   {
-    return (p.X >= MinEdge.X && p.X <= MaxEdge.X &&
-      p.Y >= MinEdge.Y && p.Y <= MaxEdge.Y &&
-      p.Z >= MinEdge.Z && p.Z <= MaxEdge.Z);
+    return (p.x >= MinEdge.x && p.x <= MaxEdge.x &&
+      p.y >= MinEdge.y && p.y <= MaxEdge.y &&
+      p.z >= MinEdge.z && p.z <= MaxEdge.z);
   }
 
   //! Determines if a point is within this box and not its borders.
   /** Border is excluded (NOT part of the box)!
   \param p: Point to check.
   \return True if the point is within the box and false if not. */
-  bool isPointTotalInside(const vector3d!(T) p) const
+  bool isPointTotalInside(const vector3!T p) const
   {
-    return (p.X > MinEdge.X && p.X < MaxEdge.X &&
-      p.Y > MinEdge.Y && p.Y < MaxEdge.Y &&
-      p.Z > MinEdge.Z && p.Z < MaxEdge.Z);
+    return (p.x > MinEdge.x && p.x < MaxEdge.x &&
+      p.y > MinEdge.y && p.y < MaxEdge.y &&
+      p.z > MinEdge.z && p.z < MaxEdge.z);
   }
 
   //! Check if this box is completely inside the 'other' box.
@@ -232,8 +233,8 @@ struct aabbox3d(T)
   otherwise false. */
   bool isFullInside(const aabbox3d!(T) other) const
   {
-    return (MinEdge.X >= other.MinEdge.X && MinEdge.Y >= other.MinEdge.Y && MinEdge.Z >= other.MinEdge.Z &&
-      MaxEdge.X <= other.MaxEdge.X && MaxEdge.Y <= other.MaxEdge.Y && MaxEdge.Z <= other.MaxEdge.Z);
+    return (MinEdge.x >= other.MinEdge.x && MinEdge.y >= other.MinEdge.y && MinEdge.z >= other.MinEdge.z &&
+      MaxEdge.x <= other.MaxEdge.x && MaxEdge.y <= other.MaxEdge.y && MaxEdge.z <= other.MaxEdge.z);
   }
 
   //! Determines if the axis-aligned box intersects with another axis-aligned box.
@@ -242,13 +243,13 @@ struct aabbox3d(T)
   otherwise false. */
   bool intersectsWithBox(const aabbox3d!(T) other) const
   {
-    return (MinEdge.X <= other.MaxEdge.X && MinEdge.Y <= other.MaxEdge.Y && MinEdge.Z <= other.MaxEdge.Z &&
-      MaxEdge.X >= other.MinEdge.X && MaxEdge.Y >= other.MinEdge.Y && MaxEdge.Z >= other.MinEdge.Z);
+    return (MinEdge.x <= other.MaxEdge.x && MinEdge.y <= other.MaxEdge.y && MinEdge.z <= other.MaxEdge.z &&
+      MaxEdge.x >= other.MinEdge.x && MaxEdge.y >= other.MinEdge.y && MaxEdge.z >= other.MinEdge.z);
   }
 
     //Derp luben makes fix yeah
     //Returns true if intersects, and then the time when it intersected. Returns false if does not intersect.
-    bool intersectsWithBox(const aabbox3d!(T) other, vector3d!(T) dir, out float time, out vector3d!(T) normal) const
+    bool intersectsWithBox(const aabbox3d!(T) other, vector3!T dir, out float time, out vector3!T normal) const
     {
         float epsilon = 10*float.min;
         float interpolate(float a, float b, float t){
@@ -257,7 +258,7 @@ struct aabbox3d(T)
 
         float start = 0.0f;
         float stop = 1.0f;
-        bool intersects(float dir, float min, float max, float omin, float omax, vector3d!(T) side){
+        bool intersects(float dir, float min, float max, float omin, float omax, vector3!T side){
             if(abs(dir) < epsilon){
                 if( (max <= omin) || (min >= omax) ){
                     return false; //No intersection, thus none at all!
@@ -280,14 +281,14 @@ struct aabbox3d(T)
             }
             return true;
         }
-        return  intersects(dir.X, MinEdge.X, MaxEdge.X, other.MinEdge.X, other.MaxEdge.X, vector3d!(T)(-sgn(dir.X), 0, 0)) &&
-                intersects(dir.Y, MinEdge.Y, MaxEdge.Y, other.MinEdge.Y, other.MaxEdge.Y, vector3d!(T)(0, -sgn(dir.Y), 0)) &&
-                intersects(dir.Z, MinEdge.Z, MaxEdge.Z, other.MinEdge.Z, other.MaxEdge.Z, vector3d!(T)(0, 0, -sgn(dir.Z))) &&
+        return  intersects(dir.x, MinEdge.x, MaxEdge.x, other.MinEdge.x, other.MaxEdge.x, vector3!T(-sgn(dir.x), 0, 0)) &&
+                intersects(dir.y, MinEdge.y, MaxEdge.y, other.MinEdge.y, other.MaxEdge.y, vector3!T(0, -sgn(dir.y), 0)) &&
+                intersects(dir.z, MinEdge.z, MaxEdge.z, other.MinEdge.z, other.MaxEdge.z, vector3!T(0, 0, -sgn(dir.z))) &&
                 start != stop; //If start == stop then intersection-space is like small, very small, infinitely small?
 
     }
 
-    void scale(vector3d!(T) scale){
+    void scale(vector3!T scale){
         auto center = getCenter();
         auto extent = getExtent() * scale;
         extent /= 2;
@@ -295,7 +296,7 @@ struct aabbox3d(T)
         MaxEdge = center + extent;
     }
     
-    bool intersectsWithLine(const vector3d!T startPos, const vector3d!T dir) {
+    bool intersectsWithLine(const vector3!T startPos, const vector3!T dir) {
         static if (!isIntegral!T){
             T start = -T.infinity;
             T stop = T.infinity;
@@ -303,24 +304,24 @@ struct aabbox3d(T)
             T start = T.min;
             T stop = T.max;
         }
-        T firstX = dir.X > 0 ? MinEdge.X : MaxEdge.X;
-        T lastX = dir.X > 0 ? MaxEdge.X : MinEdge.X;
-        T tMinX = (firstX - startPos.X) / dir.X;
-        T tMaxX = (lastX - startPos.X) / dir.X;
+        T firstX = dir.x > 0 ? MinEdge.x : MaxEdge.x;
+        T lastX = dir.x > 0 ? MaxEdge.x : MinEdge.x;
+        T tMinX = (firstX - startPos.x) / dir.x;
+        T tMaxX = (lastX - startPos.x) / dir.x;
         start = max(start, tMinX);
         stop = min(stop, tMaxX);
         if (stop < start) return false;
-        T firstY = dir.Y > 0 ? MinEdge.Y : MaxEdge.Y;
-        T lastY = dir.Y > 0 ? MaxEdge.Y : MinEdge.Y;
-        T tMinY = (firstY - startPos.Y) / dir.Y;
-        T tMaxY = (lastY - startPos.Y) / dir.Y;
+        T firstY = dir.y > 0 ? MinEdge.y : MaxEdge.y;
+        T lastY = dir.y > 0 ? MaxEdge.y : MinEdge.y;
+        T tMinY = (firstY - startPos.y) / dir.y;
+        T tMaxY = (lastY - startPos.y) / dir.y;
         start = max(start, tMinY);
         stop = min(stop, tMaxY);
         if (stop < start) return false;
-        T firstZ = dir.Z > 0 ? MinEdge.Z : MaxEdge.Z;
-        T lastZ = dir.Z > 0 ? MaxEdge.Z : MinEdge.Z;
-        T tMinZ = (firstZ - startPos.Z) / dir.Z;
-        T tMaxZ = (lastZ - startPos.Z) / dir.Z;
+        T firstZ = dir.z > 0 ? MinEdge.z : MaxEdge.z;
+        T lastZ = dir.z > 0 ? MaxEdge.z : MinEdge.z;
+        T tMinZ = (firstZ - startPos.z) / dir.z;
+        T tMaxZ = (lastZ - startPos.z) / dir.z;
         start = max(start, tMinZ);
         stop = min(stop, tMaxZ);
         return stop >= start;
@@ -340,27 +341,27 @@ struct aabbox3d(T)
   \param linevect Vector of the line.
   \param halflength Half length of the line.
   \return True if there is an intersection, else false. */
-  bool intersectsWithLine(const vector3d!(T) linemiddle,
-        const vector3d!(T) linevect, T halflength) const
+  bool intersectsWithLine(const vector3!T linemiddle,
+        const vector3!T linevect, T halflength) const
   {
-    const vector3d!(T) e = getExtent() * cast(T)0.5;
-    const vector3d!(T) t = getCenter() - linemiddle;
+    const vector3!T e = getExtent() * cast(T)0.5;
+    const vector3!T t = getCenter() - linemiddle;
 
-    if ((fabs(t.X) > e.X + halflength * fabs(linevect.X)) ||
-      (fabs(t.Y) > e.Y + halflength * fabs(linevect.Y)) ||
-      (fabs(t.Z) > e.Z + halflength * fabs(linevect.Z)) )
+    if ((fabs(t.x) > e.x + halflength * fabs(linevect.x)) ||
+      (fabs(t.y) > e.y + halflength * fabs(linevect.y)) ||
+      (fabs(t.z) > e.z + halflength * fabs(linevect.z)) )
       return false;
 
-    T r = e.Y * cast(T)fabs(linevect.Z) + e.Z * cast(T)fabs(linevect.Y);
-    if (fabs(t.Y*linevect.Z - t.Z*linevect.Y) > r )
+    T r = e.y * cast(T)fabs(linevect.z) + e.z * cast(T)fabs(linevect.y);
+    if (fabs(t.y*linevect.z - t.z*linevect.y) > r )
       return false;
 
-    r = e.X * cast(T)fabs(linevect.Z) + e.Z * cast(T)fabs(linevect.X);
-    if (fabs(t.Z*linevect.X - t.X*linevect.Z) > r )
+    r = e.x * cast(T)fabs(linevect.z) + e.z * cast(T)fabs(linevect.x);
+    if (fabs(t.z*linevect.x - t.x*linevect.z) > r )
       return false;
 
-    r = e.X * cast(T)fabs(linevect.Y) + e.Y * cast(T)fabs(linevect.X);
-    if (fabs(t.X*linevect.Y - t.Y*linevect.X) > r)
+    r = e.x * cast(T)fabs(linevect.y) + e.y * cast(T)fabs(linevect.x);
+    if (fabs(t.x*linevect.y - t.y*linevect.x) > r)
       return false;
 
     return true;
@@ -373,25 +374,25 @@ struct aabbox3d(T)
   ISREL3D_CLIPPED if it is on both sides of the plane. */
   EIntersectionRelation3D classifyPlaneRelation(const plane3d!(T) plane) const
   {
-    vector3d!(T) nearPoint = vector3d!(T)(MaxEdge);
-    vector3d!(T) farPoint = vector3d!(T)(MinEdge);
+    vector3!T nearPoint = MaxEdge;
+    vector3!T farPoint = MinEdge;
 
-    if (plane.Normal.X > cast(T)0)
+    if (plane.Normal.x > cast(T)0)
     {
-      nearPoint.X = MinEdge.X;
-      farPoint.X = MaxEdge.X;
+      nearPoint.x = MinEdge.x;
+      farPoint.x = MaxEdge.x;
     }
 
-    if (plane.Normal.Y > cast(T)0)
+    if (plane.Normal.y > cast(T)0)
     {
-      nearPoint.Y = MinEdge.Y;
-      farPoint.Y = MaxEdge.Y;
+      nearPoint.y = MinEdge.y;
+      farPoint.y = MaxEdge.y;
     }
 
-    if (plane.Normal.Z > cast(T)0)
+    if (plane.Normal.z > cast(T)0)
     {
-      nearPoint.Z = MinEdge.Z;
-      farPoint.Z = MaxEdge.Z;
+      nearPoint.z = MinEdge.z;
+      farPoint.z = MaxEdge.z;
     }
 
     if (plane.Normal.dotProduct(nearPoint) + plane.D > cast(T)0)
@@ -404,10 +405,10 @@ struct aabbox3d(T)
   }
 
   //! The near edge
-  vector3d!(T) MinEdge = vector3d!(T)(-1,-1,-1);
+  vector3!T MinEdge = vector3!T(-1,-1,-1);
 
   //! The far edge
-  vector3d!(T) MaxEdge = vector3d!(T)(1,1,1);
+  vector3!T MaxEdge = vector3!T(1,1,1);
 };
 
 //! Typedef for a f32 3d bounding box.

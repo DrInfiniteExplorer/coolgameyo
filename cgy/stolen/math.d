@@ -4,7 +4,6 @@
 
 module stolen.math;
 
-import stolen.vector3d;
 import std.algorithm;
 public import std.math;
 
@@ -206,7 +205,3 @@ float fract ( float x )
 	return x - floor ( x );
 }
 
-vector3df lerp(vector3df a, vector3df b, float t)
-{
-	return (a*(1.0f-t)) + (b*t);
-}

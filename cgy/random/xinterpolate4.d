@@ -5,11 +5,12 @@ import std.exception;
 import std.math;
 
 import util.util;
+import util.math: fastFloor;
 import random.random;
 import random.valuesource;
 
 
-double XInterpolate4(alias Mixer)(ValueSource source, double x, double y, double z) {
+double XInterpolate34(alias Mixer, alias get)(vec3d pos) {
     //TODO: Do not assume that the source is a lattice with grid of size 1,1
     // Ie. dX dY may span [0, 1] over a range that is 4 long instead of current length 1.
     /*
@@ -95,14 +96,26 @@ double XInterpolate4(alias Mixer)(ValueSource source, double x, double y, double
     return typeof(return).init;
 }
 
-Type XInterpolate4(Type, alias Mixer, alias get)(Type x, Type y) {
+auto XInterpolate24(alias Mixer, alias _get, T)(vec2!T pos) {
     //TODO: Do not assume that the source is a lattice with grid of size 1,1
     // Ie. dX dY may span [0, 1] over a range that is 4 long instead of current length 1.
-    import util.math: fastFloor;
-    int loX = fastFloor(x);
-    int loY = fastFloor(y);
-    Type dX = x - cast(Type)loX;
-    Type dY = y - cast(Type)loY;
+    int loX = fastFloor(pos.x);
+    int loY = fastFloor(pos.y);
+    float dX = pos.x - cast(float)loX;
+    float dY = pos.y - cast(float)loY;
+
+    import std.traits : ParameterTypeTuple;
+    alias ParameterTypeTuple!_get PTT;
+    static if( is(PTT[0] : int)) {
+        alias _get get;
+    } else {
+        auto get(int x, int y) {
+            return _get(PTT[0](x,y));
+        }
+    }
+
+
+
     auto v00 = get(loX-1, loY-1);
     auto v10 = get(loX, loY-1);
     auto v20 = get(loX+1, loY-1);
@@ -144,12 +157,13 @@ final class XInterpolation4(alias Mixer) : ValueSource{
     this(ValueSource _source) {
         source = _source;
     }
-    override double getValue(double x, double y, double z) {
-        return XInterpolate4!Mixer(source, x,y,z);
+    override double getValue3(vec3d pos) {
+        auto get = &source.getValue3;
+        return XInterpolate34!(Mixer, get)(pos);
     }
-    override double getValue(double x, double y) {
-        double delegate(double, double) get = &source.getValue;
-        return XInterpolate4!(double, Mixer, get)(x,y);
+    override double getValue2(vec2d pos) {
+        auto get = &source.getValue2;
+        return XInterpolate24!(Mixer, get)(pos);
     }
     override double getValue(double x) {
         return XInterpolate4!Mixer(source, x);
@@ -167,10 +181,10 @@ void upsampleX4(alias Mixer, alias get, alias set)(vec2i local, int ptPerLayer) 
     double i0, i1, i2, i3;
     double deltaX = 0.0;
     double deltaY = 0.0;
-    int parentY = local.Y;
+    int parentY = local.y;
     int parentX;
     foreach(y ; 0 .. ptPerLayer) {
-        parentX = local.X;
+        parentX = local.x;
 
         v00 = get(parentX-1, parentY-1);
         v01 = get(parentX-1, parentY+0);

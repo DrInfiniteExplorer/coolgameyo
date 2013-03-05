@@ -19,7 +19,7 @@ mixin template RandomPerlin() {
         auto gradient = new GradientNoise01!()(400, new RandSourceUniform(seed));
         import random.modscaleoffset;
         auto derp = new ModScaleOffset(gradient, vec3d(1.0/40.0), vec3d(0));
-        heightMap.fill(derp, 400, 400);
+        heightMap.fill(&derp.getValue2, 400, 400);
         heightMap.normalize(0, 1.0);
         perlinImg.setImage(heightMap.toImage(0, 1, true, colorMode));
     }
@@ -51,7 +51,7 @@ mixin template RandomSimplex() {
         auto gradient = new SimplexNoise(seed);
         import random.modscaleoffset;
         auto derp = new ModScaleOffset(gradient, vec3d(1.0/40.0), vec3d(0));
-        heightMap.fill(derp, 400, 400);
+        heightMap.fill(&derp.getValue2, 400, 400);
         heightMap.normalize(0, 1.0);
         simplexImg.setImage(heightMap.toImage(0, 1, true, colorMode));
     }

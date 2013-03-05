@@ -401,7 +401,7 @@ mixin template TreeLike() {
             else {
                 return output;
             }
-            if (getDistanceSQ(tilePos.value, end) < 1.0) {
+            if (tilePos.value.getDistanceSQ(end.convert!int) < 1.0) {
                 return output;
             }
         }
@@ -437,9 +437,9 @@ mixin template TreeLike() {
                                     if ((x*x+y*y) < type.leafRadius*type.leafRadius*r*r &&
                                         uniform(0.0, 1.0, leafRandom) < type.leafDensity) {
                                             TilePos tilePos = getTilePosOfNode(branch.nodes[i]);
-                                            tilePos.value.X += x;
-                                            tilePos.value.Y += y;
-                                            tilePos.value.Z += z;
+                                            tilePos.value.x += x;
+                                            tilePos.value.y += y;
+                                            tilePos.value.z += z;
                                             auto tile = proxy.getTile(tilePos);
                                             if (tile.type == TileTypeAir) {
                                                 auto tileType = proxy.tileTypeManager.idByName(this.type.treelikeType.leafMaterial);
@@ -463,9 +463,9 @@ mixin template TreeLike() {
                                     if ((x*x+y*y+z*z) < type.leafRadius*type.leafRadius*r*r &&
                                         uniform(0.0, 1.0, leafRandom) < type.leafDensity) {
                                             TilePos tilePos = getTilePosOfNode(branch.nodes[i]);
-                                            tilePos.value.X += x;
-                                            tilePos.value.Y += y;
-                                            tilePos.value.Z += z;
+                                            tilePos.value.x += x;
+                                            tilePos.value.y += y;
+                                            tilePos.value.z += z;
                                             auto tile = proxy.getTile(tilePos);
                                             if (tile.type == TileTypeAir) {
                                                 auto tileType = proxy.tileTypeManager.idByName(this.type.treelikeType.leafMaterial);
@@ -483,11 +483,6 @@ mixin template TreeLike() {
         }
 
 
-    }
-
-    double getDistanceSQ(vec3i a, vec3d b)
-    {
-        return (a.X-b.X)*(a.X-b.X) + (a.Y-b.Y)*(a.Y-b.Y) + (a.Z-b.Z)*(a.Z-b.Z);
     }
 
     ubyte cap(float a, int lower, int upper)
@@ -511,22 +506,22 @@ mixin template TreeLike() {
     {
         vec3i v;
 
-        v.X = node.pos[0];
-        v.Y = node.pos[1];
-        v.Z = node.pos[2];
+        v.x = node.pos[0];
+        v.y = node.pos[1];
+        v.z = node.pos[2];
 
         NodeInstance n = node;
         while (n.parentNode !is null) {
             n = n.parentNode;
-            v.X += n.pos[0];
-            v.Y += n.pos[1];
-            v.Z += n.pos[2];
+            v.x += n.pos[0];
+            v.y += n.pos[1];
+            v.z += n.pos[2];
         }
 
         auto t = entityData.pos.tilePos;
-        t.value.X += to!(int)(v.X/NODE_DISTANCE_SCALE);
-        t.value.Y += to!(int)(v.Y/NODE_DISTANCE_SCALE);
-        t.value.Z += to!(int)(v.Z/NODE_DISTANCE_SCALE);
+        t.value.x += to!(int)(v.x/NODE_DISTANCE_SCALE);
+        t.value.y += to!(int)(v.y/NODE_DISTANCE_SCALE);
+        t.value.z += to!(int)(v.z/NODE_DISTANCE_SCALE);
         return t;
     }
 
@@ -564,22 +559,22 @@ mixin template TreeLike() {
     {
         vec3d v;
 
-        v.X = node.pos[0];
-        v.Y = node.pos[1];
-        v.Z = node.pos[2];
+        v.x = node.pos[0];
+        v.y = node.pos[1];
+        v.z = node.pos[2];
 
         NodeInstance n = node;
         while (n.parentNode !is null) {
             n = n.parentNode;
-            v.X += n.pos[0];
-            v.Y += n.pos[1];
-            v.Z += n.pos[2];
+            v.x += n.pos[0];
+            v.y += n.pos[1];
+            v.z += n.pos[2];
         }
 
         v /= NODE_DISTANCE_SCALE;
-        v.X += entityData.pos.tilePos().value.X + 0.5;
-        v.Y += entityData.pos.tilePos().value.Y + 0.5;
-        v.Z += entityData.pos.tilePos().value.Z + 0.5;
+        v.x += entityData.pos.tilePos().value.x + 0.5;
+        v.y += entityData.pos.tilePos().value.y + 0.5;
+        v.z += entityData.pos.tilePos().value.z + 0.5;
         return v;
     }
 

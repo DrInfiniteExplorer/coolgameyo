@@ -193,10 +193,10 @@ class StringTexture {
                     writeln(currentText);
                     BREAKPOINT;
                 }
-                pos.X++;
+                pos.x++;
                 if(ch == '\n') {
-                    pos.Y++;
-                    pos.X = 0;
+                    pos.y++;
+                    pos.x = 0;
                 }
                 vertices[cnt] = font.getQuad(ch, pos);
             }
@@ -204,7 +204,7 @@ class StringTexture {
                 glBindBuffer(GL_ARRAY_BUFFER, vbo);
                 glError();
             }
-            //currentText = cast(string)text.dup;
+            //currentText = cast(string)text.array;
             //currentText.set(text);
             auto size = FontQuad.sizeof * len;
             glBufferSubData(GL_ARRAY_BUFFER, 0, size, vertices.ptr);
@@ -224,7 +224,7 @@ class StringTexture {
     // In that case, compute size when generating stuff. Yeah.
     vec2i getSize() {
         auto ret = font.glyphSize();
-        ret.X *= currentText.length;
+        ret.x *= currentText.length;
         return ret;
     }
 

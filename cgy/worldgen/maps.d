@@ -71,7 +71,7 @@ immutable StepIter = 4*25;
 //immutable mapScale = [0, 3200, 12800, 51200, 204800, /*start mipmaps */ 819200,  819200, 819200];
 
 //1 mil värt av värld. Yeah.
-immutable worldSize = 10 * 10_000;
+immutable worldSize = 10 * 1_000;
 
 immutable halfWorldSize = vec3i(worldSize/2, worldSize/2, 0);
 immutable halfWorldSize_xy = vec2i(worldSize/2);
@@ -83,6 +83,7 @@ final class WorldMap {
 
     HeightMaps heightMaps;
     MaterialStratum[] stratas;
+    MaterialInformation*[] materials;
     int worldSeed;
     int strataSeed;
     int heightmapSeed;
@@ -122,6 +123,10 @@ final class WorldMap {
         mkdir(worldPath);
 
         stratas = generateStratas(strataSeed);
+        materials.length = stratas.length;
+        foreach(idx, stratum ; stratas) {
+            materials[idx] = &g_Materials[stratum.materialName];
+        }
         heightMaps.generate(heightmapSeed);
 
     }
@@ -156,6 +161,7 @@ final class WorldMap {
     //Assumes z=0 == surface of world and Z+ is upwards
     // May have to offset with world contour first.
     int getStrataNum(int x, int y, int z) {
+        BREAK_IF(z > 0);
         int num = 0;
         auto xyPos = vec2f(x, y);
         float depth = stratas[0].getHeight(xyPos);

@@ -42,7 +42,7 @@ class GuiElementComboBox : public GuiElement {
         selectionChangedCallback = cb;
         mainElementRect = absoluteRect;
         droppedDownRect = absoluteRect;
-        rowHeight = absoluteRect.size.Y;
+        rowHeight = absoluteRect.size.y;
         
         currentText = new GuiElementText(this, vec2d(0, 0), "");
         currentText.setAbsoluteRect(absoluteRect);
@@ -130,10 +130,10 @@ class GuiElementComboBox : public GuiElement {
 
     override void onMove() {
         absoluteRect = getAbsoluteRect();
-        mainElementRect.start.X = absoluteRect.start.X;
-        mainElementRect.start.Y = absoluteRect.start.Y;
-        separatorRect =  Recti(mainElementRect.start.X, mainElementRect.start.Y + mainElementRect.size.Y,
-                               mainElementRect.size.X, separatorHeight);
+        mainElementRect.start.x = absoluteRect.start.x;
+        mainElementRect.start.y = absoluteRect.start.y;
+        separatorRect =  Recti(mainElementRect.start.x, mainElementRect.start.y + mainElementRect.size.y,
+                               mainElementRect.size.x, separatorHeight);
         updateDroppedDownRect();
         for (int i = 0; i < nrOfItems; i++) {
             updateRowTextPos(i);
@@ -189,13 +189,13 @@ class GuiElementComboBox : public GuiElement {
 
 
     private void updateDroppedDownRect() {
-        droppedDownRect = Recti(mainElementRect.start.X, mainElementRect.start.Y,
-                                mainElementRect.size.X, mainElementRect.size.Y * (nrOfItems+1) + separatorHeight);
+        droppedDownRect = Recti(mainElementRect.start.x, mainElementRect.start.y,
+                                mainElementRect.size.x, mainElementRect.size.y * (nrOfItems+1) + separatorHeight);
     }
 
     private void updateRowTextPos(int index) {
-        rows[index].rect = Recti(mainElementRect.start.X, mainElementRect.start.Y + (index+1) * rowHeight + separatorHeight,
-                                 mainElementRect.size.X, rowHeight);
+        rows[index].rect = Recti(mainElementRect.start.x, mainElementRect.start.y + (index+1) * rowHeight + separatorHeight,
+                                 mainElementRect.size.x, rowHeight);
         rows[index].text.setAbsoluteRect(rows[index].rect); 
         /*auto buttonSize = buttonText.getSize();
         auto newTextRect = absoluteRect.centerRect(Recti(vec2i(0, 0), buttonSize));
@@ -220,7 +220,7 @@ class GuiElementLabeledComboBox : GuiElementComboBox {
         // ~ " " to make space between label/edit in a simpel manner xD
         label = new GuiElementText(parent, relative.start, _label ~ " ");
         auto labelRect = label.getRelativeRect();
-        relative.start.X += labelRect.size.X;
+        relative.start.x += labelRect.size.x;
 
         //These lines commented out because when combobox expanded it borks things.
         //label.setRelativeRect(Rectd(0,0,1,1).getSubRectInv(labelRect));

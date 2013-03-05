@@ -84,9 +84,9 @@ shared WindowSettings windowSettings;
 vec3f getTileCoords(uint tileNum){
     vec3i tmp;
     uint TilesPerTexDim = renderSettings.maxTextureSize / renderSettings.pixelsPerTile;
-    tmp.X = tileNum % TilesPerTexDim;
-    tmp.Y = (tileNum / TilesPerTexDim) % TilesPerTexDim;
-    tmp.Z = tileNum / (TilesPerTexDim*TilesPerTexDim);        
+    tmp.x = tileNum % TilesPerTexDim;
+    tmp.y = (tileNum / TilesPerTexDim) % TilesPerTexDim;
+    tmp.z = tileNum / (TilesPerTexDim*TilesPerTexDim);        
     vec3f ret = tmp.convert!float();
     float tileScale = 1.0f / to!float(TilesPerTexDim);    
     return ret * vec3f(tileScale, tileScale, 1.0f);

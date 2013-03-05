@@ -44,6 +44,8 @@ Thread spawnThread(T)(T func) {
     return thread;
 }
 
+public import math.vector;
+/*
 alias vector2d!(ubyte)  vec2ub;
 alias vector2d!(int)  vec2i;
 alias vector2d!(float)  vec2f;
@@ -54,20 +56,22 @@ alias vector3d!(short)  vec3s;
 alias vector3d!(int)  vec3i;
 alias vector3d!(float)  vec3f;
 alias vector3d!(double) vec3d;
+*/
 
+import stolen.aabbox3d;
 alias aabbox3d!double aabbd;
 
-vec3i getTilePos(T)(vector3d!T v){
+vec3i getTilePos(T)(vector3!T v){
     import util.math : fastFloor;
     return vec3i(
-                 fastFloor(v.X),
-                 fastFloor(v.Y),
-                 fastFloor(v.Z));
+                 fastFloor(v.x),
+                 fastFloor(v.y),
+                 fastFloor(v.z));
                  /*
     return vec3i(
-        to!int(floor(v.X)),
-        to!int(floor(v.Y)),
-        to!int(floor(v.Z))
+        to!int(floor(v.x)),
+        to!int(floor(v.y)),
+        to!int(floor(v.z))
     );
     */
 }
@@ -163,7 +167,7 @@ T[6] neighbors(T)(T t) {
 }
 
 
-enum Direction{ //DERP DERP POLLUTING STUFF YEAH!
+enum Direction{ //DERP DERP POLLUTING STUFF YEAH! // <--wat
     eastCount=0,
     westCount=1,
     northCount=2,

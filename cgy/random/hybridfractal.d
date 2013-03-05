@@ -45,36 +45,33 @@ final class HybridMultiFractal : ValueSource {
     }
 
 
-    override double getValue(double x, double y, double z) {
-        x *= baseFrequency;
-        y *= baseFrequency;
-        z *= baseFrequency;
-        double result = (source.getValue(x, y, z) + offset) * exponents[0]; //[0] should be 1...
+    override double getValue3(vec3d pos) {
+        pos *= baseFrequency;
+        double result = (source.getValue3(pos) + offset) * exponents[0]; //[0] should be 1...
         double weight = result;
-        x *= lacunarity; y *= lacunarity; z *= lacunarity;
+        pos *= lacunarity;
         foreach(int i; 1 .. cast(int)octaves) {
             if (weight > 1) weight = 1;
-            double value = (source.getValue(x, y, z) + offset) * exponents[i];
+            double value = (source.getValue3(pos) + offset) * exponents[i];
 
             result += weight * value;
             weight *= value;
-            x *= lacunarity; y *= lacunarity; z *= lacunarity;
+            pos *= lacunarity;
         }
         return result;
     }
-    override double getValue(double x, double y) {
-        x *= baseFrequency;
-        y *= baseFrequency;
-        double result = (source.getValue(x, y) + offset) * exponents[0]; //[0] should be 1...
+    override double getValue2(vec2d pos) {
+        pos *= baseFrequency;
+        double result = (source.getValue2(pos) + offset) * exponents[0]; //[0] should be 1...
         double weight = result;
-        x *= lacunarity; y *= lacunarity;
+        pos *= lacunarity;
         foreach(int i; 1 .. cast(int)octaves) {
             if (weight > 1) weight = 1;
-            double value = (source.getValue(x, y) + offset) * exponents[i];
+            double value = (source.getValue2(pos) + offset) * exponents[i];
 
             result += weight * value;
             weight *= value;
-            x *= lacunarity; y *= lacunarity;
+            pos *= lacunarity;
 
         }
         return result;

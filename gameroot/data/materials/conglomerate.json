@@ -3,8 +3,8 @@
   "type":"stone",
   "name":"conglomerate",
   "color":{
-    "X":200,
-    "Y":194,
-    "Z":134
+    "x":200,
+    "y":194,
+    "z":134
   }
 }

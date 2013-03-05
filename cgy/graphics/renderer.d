@@ -217,7 +217,7 @@ class Renderer {
         //TODO: Make function setWireframe(bool yes) that does this.
         //Render world
         glBindFramebuffer(GL_FRAMEBUFFER, g_FBO); glError();
-        glClearColor(skyColor.X, skyColor.Y, skyColor.Z, 0.0f); glError();
+        glClearColor(skyColor.x, skyColor.y, skyColor.z, 0.0f); glError();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); glError();
 
         setWireframe(renderSettings.renderWireframe);

@@ -470,6 +470,11 @@ d:\D\ulnb0333\ulink.exe $(IntDir)\$(TargetName).obj gdi32.lib win32.lib advapi32
    <File path="heightsheets\level4.d" />
    <File path="heightsheets\level5.d" />
   </Folder>
+  <Folder name="math">
+   <File path="math\math.d" />
+   <File path="math\quat.d" />
+   <File path="math\vector.d" />
+  </Folder>
   <Folder name="modelparser">
    <File path="modelparser\cgyparser.d" />
   </Folder>
@@ -552,8 +557,6 @@ d:\D\ulnb0333\ulink.exe $(IntDir)\$(TargetName).obj gdi32.lib win32.lib advapi32
    <File path="stolen\matrix4.d" />
    <File path="stolen\plane3d.d" />
    <File path="stolen\quaternion.d" />
-   <File path="stolen\vector2d.d" />
-   <File path="stolen\vector3d.d" />
   </Folder>
   <Folder name="util">
    <Folder name="voronoi">
@@ -577,6 +580,7 @@ d:\D\ulnb0333\ulink.exe $(IntDir)\$(TargetName).obj gdi32.lib win32.lib advapi32
    <File path="util\socket.d" />
    <File path="util\strings.d" />
    <File path="util\tileiterator.d" />
+   <File path="util\traits.d" />
    <File path="util\util.d" />
    <File path="util\window.d" />
   </Folder>

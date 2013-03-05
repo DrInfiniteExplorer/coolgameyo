@@ -15,7 +15,7 @@ class Fractal(uint Count) : ValueSource { //TODO: Think of better name than Frac
         amps = a;
     }
     
-    double getValue(double x, double y, double z) {
+    double getValue3(vec3d pos) {
         double ret = 0;
         foreach(idx; 0 .. Count) {
             auto freq = freqs[idx];
@@ -24,7 +24,7 @@ class Fractal(uint Count) : ValueSource { //TODO: Think of better name than Frac
         }
         return ret;
     }
-    double getValue(double x, double y) {
+    double getValue2(vec2d pos) {
         double ret = 0;
         foreach(idx; 0 .. Count) {
             auto freq = freqs[idx];

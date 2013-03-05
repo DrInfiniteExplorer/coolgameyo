@@ -16,17 +16,17 @@ import util.math;
 mixin template ToStringMethod3D() {
     string toString() {
         return typeof(this).stringof ~
-            " (" ~ to!string(value.X)
-            ~ ", " ~ to!string(value.Y)
-            ~ ", " ~ to!string(value.Z) ~ ")";
+            " (" ~ to!string(value.x)
+            ~ ", " ~ to!string(value.y)
+            ~ ", " ~ to!string(value.z) ~ ")";
     }
 }
 
 mixin template ToStringMethod2D() {
     string toString(){
         return typeof(this).stringof ~
-            " (" ~ to!string(value.X)
-            ~ ", " ~ to!string(value.Y) ~ ")";
+            " (" ~ to!string(value.x)
+            ~ ", " ~ to!string(value.y) ~ ")";
     }
 }
 
@@ -77,21 +77,21 @@ struct SectorNum {
 
     BlockNum toBlockNum() const {
         return BlockNum(vec3i(
-                    value.X * BlocksPerSector.x,
-                    value.Y * BlocksPerSector.y,
-                    value.Z * BlocksPerSector.z));
+                    value.x * BlocksPerSector.x,
+                    value.y * BlocksPerSector.y,
+                    value.z * BlocksPerSector.z));
     }
     TilePos toTilePos() const {
         return TilePos(vec3i(
-                    value.X * SectorSize.x,
-                    value.Y * SectorSize.y,
-                    value.Z * SectorSize.z));
+                    value.x * SectorSize.x,
+                    value.y * SectorSize.y,
+                    value.z * SectorSize.z));
     }
 
     TileXYPos toTileXYPos() const{
         return TileXYPos(vec2i(
-                             value.X * SectorSize.x,
-                             value.Y * SectorSize.y));
+                             value.x * SectorSize.x,
+                             value.y * SectorSize.y));
     }
     aabbox3d!double getAABB(){
         auto minPos = toTilePos().value.convert!double();
@@ -108,15 +108,15 @@ struct BlockNum {
 
     SectorNum getSectorNum() const {
         return SectorNum(vec3i(
-                    negDiv(value.X, BlocksPerSector.x),
-                    negDiv(value.Y, BlocksPerSector.y),
-                    negDiv(value.Z, BlocksPerSector.z)));
+                    negDiv(value.x, BlocksPerSector.x),
+                    negDiv(value.y, BlocksPerSector.y),
+                    negDiv(value.z, BlocksPerSector.z)));
     }
     TilePos toTilePos() const {
         return TilePos(vec3i(
-                    value.X * BlockSize.x,
-                    value.Y * BlockSize.y,
-                    value.Z * BlockSize.z));
+                    value.x * BlockSize.x,
+                    value.y * BlockSize.y,
+                    value.z * BlockSize.z));
     }
 
     aabbox3d!double getAABB(){
@@ -128,18 +128,18 @@ struct BlockNum {
     // Relative index
     vec3i rel() const
     out(x){
-        assert(0 <= x.X);
-        assert(0 <= x.Y);
-        assert(0 <= x.Z);
-        assert(x.X < BlocksPerSector.x);
-        assert(x.Y < BlocksPerSector.y);
-        assert(x.Z < BlocksPerSector.z);
+        assert(0 <= x.x);
+        assert(0 <= x.y);
+        assert(0 <= x.z);
+        assert(x.x < BlocksPerSector.x);
+        assert(x.y < BlocksPerSector.y);
+        assert(x.z < BlocksPerSector.z);
     }
     body{
         return vec3i(
-            posMod(value.X, BlocksPerSector.x),
-            posMod(value.Y, BlocksPerSector.y),
-            posMod(value.Z, BlocksPerSector.z)
+            posMod(value.x, BlocksPerSector.x),
+            posMod(value.y, BlocksPerSector.y),
+            posMod(value.z, BlocksPerSector.z)
           );
     }
 
@@ -152,95 +152,95 @@ struct TilePos {
 
     SectorNum getSectorNum() const {
         return SectorNum(vec3i(
-                    negDiv(value.X, SectorSize.x),
-                    negDiv(value.Y, SectorSize.y),
-                    negDiv(value.Z, SectorSize.z)));
+                    negDiv(value.x, SectorSize.x),
+                    negDiv(value.y, SectorSize.y),
+                    negDiv(value.z, SectorSize.z)));
     }
     BlockNum getBlockNum() const {
         return BlockNum(vec3i(
-                    negDiv(value.X, BlockSize.x),
-                    negDiv(value.Y, BlockSize.y),
-                    negDiv(value.Z, BlockSize.z)));
+                    negDiv(value.x, BlockSize.x),
+                    negDiv(value.y, BlockSize.y),
+                    negDiv(value.z, BlockSize.z)));
     }
     BlockNum[] getNeighboringBlockNums() const {
         BlockNum[] ret;
         auto thisNum = getBlockNum();
         auto rel = vec3i(
-                         posMod(value.X, BlockSize.x),
-                         posMod(value.Y, BlockSize.y),
-                         posMod(value.Z, BlockSize.z),
+                         posMod(value.x, BlockSize.x),
+                         posMod(value.y, BlockSize.y),
+                         posMod(value.z, BlockSize.z),
                          );
-        if (rel.X == 0) {
-            auto tmp = thisNum; tmp.value.X -= 1; ret ~= tmp;
+        if (rel.x == 0) {
+            auto tmp = thisNum; tmp.value.x -= 1; ret ~= tmp;
         }
-        else if (rel.X == BlockSize.x-1) {
-            auto tmp = thisNum; tmp.value.X += 1; ret ~= tmp;
+        else if (rel.x == BlockSize.x-1) {
+            auto tmp = thisNum; tmp.value.x += 1; ret ~= tmp;
         }
-        if (rel.Y == 0) {
-            auto tmp = thisNum; tmp.value.Y -= 1; ret ~= tmp;
+        if (rel.y == 0) {
+            auto tmp = thisNum; tmp.value.y -= 1; ret ~= tmp;
         }
-        else if (rel.Y == BlockSize.y-1) {
-            auto tmp = thisNum; tmp.value.Y += 1; ret ~= tmp;
+        else if (rel.y == BlockSize.y-1) {
+            auto tmp = thisNum; tmp.value.y += 1; ret ~= tmp;
         }
-        if (rel.Z == 0) {
-            auto tmp = thisNum; tmp.value.Z -= 1; ret ~= tmp;
+        if (rel.z == 0) {
+            auto tmp = thisNum; tmp.value.z -= 1; ret ~= tmp;
         }
-        else if (rel.Z == BlockSize.z-1) {
-            auto tmp = thisNum; tmp.value.Z += 1; ret ~= tmp;
+        else if (rel.z == BlockSize.z-1) {
+            auto tmp = thisNum; tmp.value.z += 1; ret ~= tmp;
         }
         return ret;
     }
 
     GraphRegionNum getGraphRegionNum() const{
         return GraphRegionNum(vec3i(
-                    negDiv(value.X, GraphRegionSize.x),
-                    negDiv(value.Y, GraphRegionSize.y),
-                    negDiv(value.Z, GraphRegionSize.z),
+                    negDiv(value.x, GraphRegionSize.x),
+                    negDiv(value.y, GraphRegionSize.y),
+                    negDiv(value.z, GraphRegionSize.z),
                     ));
     }
     GraphRegionNum[] getNeighboringGraphRegionNums() const {
         GraphRegionNum[] ret;
         auto thisNum = getGraphRegionNum();
         auto rel = vec3i(
-                    posMod(value.X, GraphRegionSize.x),
-                    posMod(value.Y, GraphRegionSize.y),
-                    posMod(value.Z, GraphRegionSize.z),
+                    posMod(value.x, GraphRegionSize.x),
+                    posMod(value.y, GraphRegionSize.y),
+                    posMod(value.z, GraphRegionSize.z),
                     );
-        if (rel.X == 0) {
-            auto tmp = thisNum; tmp.value.X -= 1; ret ~= tmp;
+        if (rel.x == 0) {
+            auto tmp = thisNum; tmp.value.x -= 1; ret ~= tmp;
         }
-        else if (rel.X == GraphRegionSize.x-1) {
-            auto tmp = thisNum; tmp.value.X += 1; ret ~= tmp;
+        else if (rel.x == GraphRegionSize.x-1) {
+            auto tmp = thisNum; tmp.value.x += 1; ret ~= tmp;
         }
-        if (rel.Y == 0) {
-            auto tmp = thisNum; tmp.value.Y -= 1; ret ~= tmp;
+        if (rel.y == 0) {
+            auto tmp = thisNum; tmp.value.y -= 1; ret ~= tmp;
         }
-        else if (rel.Y == GraphRegionSize.y-1) {
-            auto tmp = thisNum; tmp.value.Y += 1; ret ~= tmp;
+        else if (rel.y == GraphRegionSize.y-1) {
+            auto tmp = thisNum; tmp.value.y += 1; ret ~= tmp;
         }
-        if (rel.Z == 0) {
-            auto tmp = thisNum; tmp.value.Z -= 1; ret ~= tmp;
+        if (rel.z == 0) {
+            auto tmp = thisNum; tmp.value.z -= 1; ret ~= tmp;
         }
-        else if (rel.Z == GraphRegionSize.z-1) {
-            auto tmp = thisNum; tmp.value.Z += 1; ret ~= tmp;
+        else if (rel.z == GraphRegionSize.z-1) {
+            auto tmp = thisNum; tmp.value.z += 1; ret ~= tmp;
         }
         return ret;
     }
 
     UnitPos toUnitPos() const{
-        return UnitPos(vec3d(value.X + 0.5,
-                             value.Y + 0.5,
-                             value.Z + 0.5));
+        return UnitPos(vec3d(value.x + 0.5,
+                             value.y + 0.5,
+                             value.z + 0.5));
     }
     
     EntityPos toEntityPos() const{
-        return EntityPos(vec3d(value.X + 0.5,
-                             value.Y + 0.5,
-                             value.Z + 0.5));
+        return EntityPos(vec3d(value.x + 0.5,
+                             value.y + 0.5,
+                             value.z + 0.5));
     }
 
     TileXYPos toTileXYPos() const{
-        return TileXYPos(vec2i(value.X, value.Y));
+        return TileXYPos(vec2i(value.x, value.y));
     }
 
     aabbox3d!double getAABB(){
@@ -253,35 +253,35 @@ struct TilePos {
     // Relative index
     vec3i rel() const
     out(x){
-        assert(x.X >= 0, "rel.X < 0!!! :(");
-        assert(x.Y >= 0, "rel.Y < 0!!! :(");
-        assert(x.Z >= 0, "rel.Z < 0!!! :(");
-        assert(x.X < TilesPerBlock.x, "rel.X > TilesPerBlock.x!!! :(");
-        assert(x.Y < TilesPerBlock.y, "rel.Y > TilesPerBlock.y!!! :(");
-        assert(x.Z < TilesPerBlock.z, "rel.Z > TilesPerBlock.z!!! :(");
+        assert(x.x >= 0, "rel.x < 0!!! :(");
+        assert(x.y >= 0, "rel.y < 0!!! :(");
+        assert(x.z >= 0, "rel.z < 0!!! :(");
+        assert(x.x < TilesPerBlock.x, "rel.x > TilesPerBlock.x!!! :(");
+        assert(x.y < TilesPerBlock.y, "rel.y > TilesPerBlock.y!!! :(");
+        assert(x.z < TilesPerBlock.z, "rel.z > TilesPerBlock.z!!! :(");
     }
     body{
         return vec3i(
-            posMod(value.X, TilesPerBlock.x),
-            posMod(value.Y, TilesPerBlock.y),
-            posMod(value.Z, TilesPerBlock.z)
+            posMod(value.x, TilesPerBlock.x),
+            posMod(value.y, TilesPerBlock.y),
+            posMod(value.z, TilesPerBlock.z)
             );
     }
 
     vec3i sectorRel() const
     out(x){
-        assert(x.X >= 0, "rel.X < 0!!! :(");
-        assert(x.Y >= 0, "rel.Y < 0!!! :(");
-        assert(x.Z >= 0, "rel.Z < 0!!! :(");
-        assert(x.X < SectorSize.x, "rel.X > SectorSize.x!!! :(");
-        assert(x.Y < SectorSize.y, "rel.Y > SectorSize.y!!! :(");
-        assert(x.Z < SectorSize.z, "rel.Z > SectorSize.z!!! :(");
+        assert(x.x >= 0, "rel.x < 0!!! :(");
+        assert(x.y >= 0, "rel.y < 0!!! :(");
+        assert(x.z >= 0, "rel.z < 0!!! :(");
+        assert(x.x < SectorSize.x, "rel.x > SectorSize.x!!! :(");
+        assert(x.y < SectorSize.y, "rel.y > SectorSize.y!!! :(");
+        assert(x.z < SectorSize.z, "rel.z > SectorSize.z!!! :(");
     }
     body{
         return vec3i(
-            posMod(value.X, SectorSize.x),
-            posMod(value.Y, SectorSize.y),
-            posMod(value.Z, SectorSize.z)
+            posMod(value.x, SectorSize.x),
+            posMod(value.y, SectorSize.y),
+            posMod(value.z, SectorSize.z)
             );
     }
     
@@ -297,9 +297,9 @@ struct GraphRegionNum{
         immutable divY = SectorSize.y / GraphRegionSize.y;
         immutable divZ = SectorSize.z / GraphRegionSize.z;
         return SectorNum(vec3i(
-                           negDiv(value.X, divX),
-                           negDiv(value.Y, divY),
-                           negDiv(value.Z, divZ)));
+                           negDiv(value.x, divX),
+                           negDiv(value.y, divY),
+                           negDiv(value.z, divZ)));
     }
 
     TilePos max() const {
@@ -312,9 +312,9 @@ struct GraphRegionNum{
     }
     TilePos min() const {
         return TilePos(vec3i(
-                             GraphRegionSize.x * value.X,
-                             GraphRegionSize.y * value.Y,
-                             GraphRegionSize.z * value.Z
+                             GraphRegionSize.x * value.x,
+                             GraphRegionSize.y * value.y,
+                             GraphRegionSize.z * value.z
                              ));
     }
     alias min toTilePos;
@@ -335,27 +335,27 @@ struct SectorXYNum {
         value = v;
     }
     this(SectorNum num) {
-        value.set(num.value.X, num.value.Y);
+        value.set(num.value.x, num.value.y);
     }
 
     SectorNum getSectorNum(int z) const {
-        return SectorNum(vec3i( value.X, value.Y, z));
+        return SectorNum(vec3i( value.x, value.y, z));
     }
 
     TileXYPos getTileXYPos() const {
         return TileXYPos(vec2i(
-                    value.X * SectorSize.x,
-                    value.Y * SectorSize.y));
+                    value.x * SectorSize.x,
+                    value.y * SectorSize.y));
     }
 
     bool inside(TileXYPos tp) {
         auto val = tp.value;
         auto me = getTileXYPos().value;
         return
-            (val.X >= me.X) &&
-            (val.X < me.X + SectorSize.x) &&
-            (val.Y >= me.Y) &&
-            (val.Y < me.Y + SectorSize.y);
+            (val.x >= me.x) &&
+            (val.x < me.x + SectorSize.x) &&
+            (val.y >= me.y) &&
+            (val.y < me.y + SectorSize.y);
     }
 
     mixin ToStringMethod2D;
@@ -368,21 +368,21 @@ struct TileXYPos {
         value = pos;
     }
     this(TilePos pos) {
-        value.set(pos.value.X, pos.value.Y);
+        value.set(pos.value.x, pos.value.y);
     }
 
     SectorXYNum getSectorXYNum() const {
         return SectorXYNum(vec2i(
-                    negDiv(value.X, SectorSize.x),
-                    negDiv(value.Y, SectorSize.y)));
+                    negDiv(value.x, SectorSize.x),
+                    negDiv(value.y, SectorSize.y)));
     }
 
     vec2i sectorRel() const{
-        return vec2i(posMod(value.X, SectorSize.x),
-                     posMod(value.Y, SectorSize.y));
+        return vec2i(posMod(value.x, SectorSize.x),
+                     posMod(value.y, SectorSize.y));
     }
     TilePos toTilePos(int z) const {
-        return TilePos(vec3i(value.X, value.Y, z));
+        return TilePos(vec3i(value.x, value.y, z));
     }
     mixin ToStringMethod2D;
     mixin SerializeValue;

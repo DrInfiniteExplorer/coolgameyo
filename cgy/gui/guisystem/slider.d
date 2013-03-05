@@ -45,13 +45,13 @@ class GuiElementSlider(ValueType) : public GuiElement {
         renderRect(absoluteRect, vec3f(0.75, 0.75, 0.75)); //Background color
         renderOutlineRect(absoluteRect, vec3f(0.0, 0.0, 0.0));
         
-        Recti lineRect = Recti(0, 0, absoluteRect.size.X, 4);
+        Recti lineRect = Recti(0, 0, absoluteRect.size.x, 4);
         lineRect = absoluteRect.centerRect(lineRect);
         renderRect(lineRect, vec3f(0, 0, 0) );
         
-        Recti sliderRect = Recti(-2, 0, 4, absoluteRect.size.Y);
+        Recti sliderRect = Recti(-2, 0, 4, absoluteRect.size.y);
         sliderRect.start += absoluteRect.start;
-        sliderRect.start.X += to!int(to!ValueType(absoluteRect.size.X) * ((value-min) / (max-min)));
+        sliderRect.start.x += to!int(to!ValueType(absoluteRect.size.x) * ((value-min) / (max-min)));
         renderRect(sliderRect, vec3f(0.75, 0.75, 0.75));
 
         if(pushedDown) {
@@ -103,7 +103,7 @@ class GuiElementSlider(ValueType) : public GuiElement {
                         //auto fAbs = absoluteRect.convert!float();
                         //auto fPos = m.pos.convert!float();
                         auto relative = fAbs.getRelative(fPos);
-                        repositionSlider(relative.X);
+                        repositionSlider(relative.x);
                         return GuiEventResponse.Accept;
                     }                    
                 } else {
@@ -117,7 +117,7 @@ class GuiElementSlider(ValueType) : public GuiElement {
                 auto fAbs = absoluteRect.convert!double;
                 auto fPos = m.pos.convert!double();
                 auto relative = fAbs.getRelative(fPos);
-                repositionSlider(relative.X);
+                repositionSlider(relative.x);
                 return GuiEventResponse.Accept;
             }
         }

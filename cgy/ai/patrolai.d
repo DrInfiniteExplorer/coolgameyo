@@ -44,7 +44,7 @@ class PatrolAI : UnitAI {
             auto goal = toa ? a : b;
             auto p = path.path.back;
             //write("going to ", toa ? "a=" : "b=", p, ", ");
-            auto d = p.value.getDistanceFrom(unit.pos.value);
+            auto d = p.value.getDistance(unit.pos.value);
 
             //if (d <= unit.speed) {
             if (true) {

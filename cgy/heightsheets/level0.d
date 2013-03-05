@@ -80,8 +80,8 @@ final class Level0Sheet {
                     int lastLoadedZ = int.min;
                     int[] notLoaded;
 
-                    double maxZ = level1.sectorMax[y * level1SectorCount + x] + center.toTilePos.value.Z;
-                    double minZ = level1.sectorMin[y * level1SectorCount + x] + center.toTilePos.value.Z;
+                    double maxZ = level1.sectorMax[y * level1SectorCount + x] + center.toTilePos.value.z;
+                    double minZ = level1.sectorMin[y * level1SectorCount + x] + center.toTilePos.value.z;
 
                     SectorXYNum thisSect = SectorXYNum(startSect.value + vec2i(x, y));
                     TileXYPos tp = thisSect.getTileXYPos;
@@ -90,7 +90,7 @@ final class Level0Sheet {
 
                     auto maxSector = maxTP.getSectorNum();
                     auto minSector = minTP.getSectorNum();
-                    foreach(z ; minSector.value.Z .. maxSector.value.Z+1) {
+                    foreach(z ; minSector.value.z .. maxSector.value.z+1) {
                         auto testNum = thisSect.getSectorNum(z);
                         bool isLoaded = worldState.isActiveSector(testNum) && !worldState.isAirSector(testNum);
 
@@ -107,7 +107,7 @@ final class Level0Sheet {
                     if(firstLoadedZ != int.min) {
                         buildLower(vec2i(x,y), firstLoadedZ); //firstLoadedZ is first loaded block, all under ok
                     }
-                    if(lastLoadedZ < maxSector.value.Z) {
+                    if(lastLoadedZ < maxSector.value.z) {
                         buildUpper(vec2i(x,y), lastLoadedZ+1); //lastLoadedZ+1 is first free block, then all
                     }
                     foreach(z ; notLoaded) { //These are the odd ones, who are in the middle.
@@ -212,26 +212,26 @@ final class Level0Sheet {
                 if(x == 0) {
                     xyTp = TileXYPos(thisTp.value + vec2i(x, y));
                     tp = worldState.getTopTilePos(xyTp);
-                    z = min(tp.value.Z, firstLoadedTilepos.value.Z);
+                    z = min(tp.value.z, firstLoadedTilepos.value.z);
                     color = vec3f(0.4);
                 }
 
                 vec3ub col = (color * 255.0f).convert!ubyte;
 
-                tp.value.Z = min(tp.value.Z, firstLoadedTilepos.value.Z);
+                tp.value.z = min(tp.value.z, firstLoadedTilepos.value.z);
                 //Build top
                 vec3s southWest = (tp.value-centerTp).convert!short;
                 auto northWest = southWest + vec3s(0, cast(short)scale, 0);
                 auto northEast = southWest + vec3s(cast(short)scale, cast(short)scale, 0);
                 auto southEast = southWest + vec3s(cast(short)scale, 0, 0);
-                if(z < firstLoadedTilepos.value.Z) {
+                if(z < firstLoadedTilepos.value.z) {
                     addQuad(southWest, southEast, northEast, northWest);
                     addQuadC(col, col, col, col);
                 }
 
                 xyTp = TileXYPos(thisTp.value + vec2i(x+scale, y));
                 tp = worldState.getTopTilePos(xyTp);
-                nextZ = min(tp.value.Z, firstLoadedTilepos.value.Z);
+                nextZ = min(tp.value.z, firstLoadedTilepos.value.z);
                 pragma(msg, "color = layerManager.getClimateColor(xyTp.value);");
 
                 if(z != nextZ) {
@@ -246,7 +246,7 @@ final class Level0Sheet {
 
                 xyTp = TileXYPos(thisTp.value + vec2i(x, y+scale));
                 auto tp_derp = worldState.getTopTilePos(xyTp);
-                auto northZ = min(tp_derp.value.Z, firstLoadedTilepos.value.Z);
+                auto northZ = min(tp_derp.value.z, firstLoadedTilepos.value.z);
                 if(z != northZ) {
                     auto dZ = northZ - z;
                     auto a = northWest;

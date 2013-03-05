@@ -4,8 +4,8 @@
 
 module stolen.matrix4;
 
-import stolen.vector3d;
-import stolen.vector2d;
+import math.vector;
+
 import stolen.plane3d;
 import stolen.aabbox3d;
 import stolen.math;
@@ -325,40 +325,40 @@ struct CMatrix4(T)
     }
 
     //! Set the translation of the current matrix. Will erase any previous values.
-    CMatrix4!(T) setTranslation( const vector3d!(T) translation )
+    CMatrix4!(T) setTranslation( const vector3!T translation )
     {
-      M[12] = translation.X;
-      M[13] = translation.Y;
-      M[14] = translation.Z;
+      M[12] = translation.x;
+      M[13] = translation.y;
+      M[14] = translation.z;
 
       return this;
     }
 
     //! Gets the current translation
-    vector3d!(T) getTranslation() const
+    vector3!T getTranslation() const
     {
-      return vector3d!(T)(M[12], M[13], M[14]);
+      return vector3!T(M[12], M[13], M[14]);
     }
 
     //! Set the inverse translation of the current matrix. Will erase any previous values.
-    CMatrix4!(T) setInverseTranslation( const vector3d!(T) translation )
+    CMatrix4!(T) setInverseTranslation( const vector3!T translation )
     {
-      M[12] = -translation.X;
-      M[13] = -translation.Y;
-      M[14] = -translation.Z;
+      M[12] = -translation.x;
+      M[13] = -translation.y;
+      M[14] = -translation.z;
 
       return this;
     }
 
     //! Make a rotation matrix from Euler angles. The 4th row and column are unmodified.
-    CMatrix4!(T) setRotationRadians( const vector3d!(T) rotation )
+    CMatrix4!(T) setRotationRadians( const vector3!T rotation )
     {
-      const double cr = cos( rotation.X );
-      const double sr = sin( rotation.X );
-      const double cp = cos( rotation.Y );
-      const double sp = sin( rotation.Y );
-      const double cy = cos( rotation.Z );
-      const double sy = sin( rotation.Z );
+      const double cr = cos( rotation.x );
+      const double sr = sin( rotation.x );
+      const double cp = cos( rotation.y );
+      const double sp = sin( rotation.y );
+      const double cy = cos( rotation.z );
+      const double sy = sin( rotation.z );
 
       M[0] = cast(T)( cp*cy );
       M[1] = cast(T)( cp*sy );
@@ -379,20 +379,25 @@ struct CMatrix4(T)
     }
 
     //! Make a rotation matrix from Euler angles. The 4th row and column are unmodified.
-    CMatrix4!(T) setRotationDegrees( const vector3d!(T) rotation )
+    CMatrix4!(T) setRotationDegrees( const vector3!T rotation )
     {
-      return setRotationRadians( (vector3d!(T)(rotation)) * cast(T) DEGTORAD );
+        BREAKPOINT;
+        assert(0);
+        //return setRotationRadians( (vector3!T(rotation)) * cast(T) DEGTORAD );
     }
 
     //! Returns the rotation, as set by setRotation().
     /** This code was orginally written by by Chev. */
-    vector3d!(T) getRotationDegrees() const
+    vector3!T getRotationDegrees() const
     {
+        BREAKPOINT;
+        assert(0);
+        /*
       const CMatrix4!(T) mat = this;
-      const vector3d!(T) scale = getScale();
-      const vector3d!(double) invScale = vector3d!(double)(reciprocal(scale.X),reciprocal(scale.Y),reciprocal(scale.Z));
+      const vector3!T scale = getScale();
+      const vector3d!(double) invScale = vector3d!(double)(reciprocal(scale.x),reciprocal(scale.y),reciprocal(scale.z));
 
-      double Y = -asin(mat[2]*invScale.X);
+      double Y = -asin(mat[2]*invScale.x);
       const double C = cos(Y);
       Y *= RADTODEG64;
 
@@ -401,18 +406,18 @@ struct CMatrix4(T)
       if (!iszero(C))
       {
         const double invC = reciprocal(C);
-        rotx = mat[10] * invC * invScale.Z;
-        roty = mat[6] * invC * invScale.Y;
+        rotx = mat[10] * invC * invScale.z;
+        roty = mat[6] * invC * invScale.y;
         X = atan2( roty, rotx ) * RADTODEG64;
-        rotx = mat[0] * invC * invScale.X;
-        roty = mat[1] * invC * invScale.X;
+        rotx = mat[0] * invC * invScale.x;
+        roty = mat[1] * invC * invScale.x;
         Z = atan2( roty, rotx ) * RADTODEG64;
       }
       else
       {
         X = 0.0;
-        rotx = mat[5] * invScale.Y;
-        roty = -mat[4] * invScale.Y;
+        rotx = mat[5] * invScale.y;
+        roty = -mat[4] * invScale.y;
         Z = atan2( roty, rotx ) * RADTODEG64;
       }
 
@@ -423,19 +428,20 @@ struct CMatrix4(T)
       if (Y < 0.0) Y += 360.0;
       if (Z < 0.0) Z += 360.0;
 
-      return vector3d!(T)(cast(T)X,cast(T)Y,cast(T)Z);
+      return vector3!T(cast(T)X,cast(T)Y,cast(T)Z);
+        */
     }
 
     //! Make an inverted rotation matrix from Euler angles.
     /** The 4th row and column are unmodified. */
-    CMatrix4!(T) setInverseRotationRadians( const vector3d!(T) rotation )
+    CMatrix4!(T) setInverseRotationRadians( const vector3!T rotation )
     {
-      double cr = cos( rotation.X );
-      double sr = sin( rotation.X );
-      double cp = cos( rotation.Y );
-      double sp = sin( rotation.Y );
-      double cy = cos( rotation.Z );
-      double sy = sin( rotation.Z );
+      double cr = cos( rotation.x );
+      double sr = sin( rotation.x );
+      double cp = cos( rotation.y );
+      double sp = sin( rotation.y );
+      double cy = cos( rotation.z );
+      double sy = sin( rotation.z );
 
       M[0] = cast(T)( cp*cy );
       M[4] = cast(T)( cp*sy );
@@ -457,26 +463,28 @@ struct CMatrix4(T)
 
     //! Make an inverted rotation matrix from Euler angles.
     /** The 4th row and column are unmodified. */
-    CMatrix4!(T) setInverseRotationDegrees( const vector3d!(T) rotation )
+    CMatrix4!(T) setInverseRotationDegrees( const vector3!T rotation )
     {
-      return setInverseRotationRadians( (vector3d!(T)(rotation)) * DEGTORAD );
+        BREAKPOINT;
+        assert(0);
+        //return setInverseRotationRadians( (vector3!T(rotation)) * DEGTORAD );
     }
 
     //! Set Scale
-    CMatrix4!(T) setScale( const vector3d!(T) scale )
+    CMatrix4!(T) setScale( const vector3!T scale )
     {
-      M[0] = scale.X;
-      M[5] = scale.Y;
-      M[10] = scale.Z;
+      M[0] = scale.x;
+      M[5] = scale.y;
+      M[10] = scale.z;
 
       return this;
     }
 
     //! Set Scale
-    CMatrix4!(T) setScale( const T scale ) { return setScale(vector3d!(T)(scale,scale,scale)); }
+    CMatrix4!(T) setScale( const T scale ) { return setScale(vector3!T(scale,scale,scale)); }
 
     //! Get Scale
-    vector3d!(T) getScale() const
+    vector3!T getScale() const
     {
       // See http://www.robertblum.com/articles/2005/02/14/decomposing-matrices
 
@@ -485,105 +493,105 @@ struct CMatrix4(T)
       if(iszero(M[1]) && iszero(M[2]) &&
         iszero(M[4]) && iszero(M[6]) &&
         iszero(M[8]) && iszero(M[9]))
-        return vector3d!(T)(M[0], M[5], M[10]);
+        return vector3!T(M[0], M[5], M[10]);
 
       // We have to do the full calculation.
-      return vector3d!(T)(sqrt(M[0] * M[0] + M[1] * M[1] + M[2] * M[2]),
+      return vector3!T(sqrt(M[0] * M[0] + M[1] * M[1] + M[2] * M[2]),
                 sqrt(M[4] * M[4] + M[5] * M[5] + M[6] * M[6]),
                 sqrt(M[8] * M[8] + M[9] * M[9] + M[10] * M[10]));
     }
 
     //! Translate a vector by the inverse of the translation part of this matrix.
-    void inverseTranslateVect( ref vector3df vect ) const
+    void inverseTranslateVect( ref vector3!float vect ) const
     {
-      vect.X = vect.X-M[12];
-      vect.Y = vect.Y-M[13];
-      vect.Z = vect.Z-M[14];
+      vect.x = vect.x-M[12];
+      vect.y = vect.y-M[13];
+      vect.z = vect.z-M[14];
     }
 
     //! Rotate a vector by the inverse of the rotation part of this matrix.
-    void inverseRotateVect( ref vector3df vect ) const
+    void inverseRotateVect( ref vector3!float vect ) const
     {
-      vector3df tmp = vect;
-      vect.X = tmp.X*M[0] + tmp.Y*M[1] + tmp.Z*M[2];
-      vect.Y = tmp.X*M[4] + tmp.Y*M[5] + tmp.Z*M[6];
-      vect.Z = tmp.X*M[8] + tmp.Y*M[9] + tmp.Z*M[10];
+      vector3!float tmp = vect;
+      vect.x = tmp.x*M[0] + tmp.y*M[1] + tmp.z*M[2];
+      vect.y = tmp.x*M[4] + tmp.y*M[5] + tmp.z*M[6];
+      vect.z = tmp.x*M[8] + tmp.y*M[9] + tmp.z*M[10];
     }
 
     //! Rotate a vector by the rotation part of this matrix.
-    void rotateVect( ref vector3df vect ) const
+    void rotateVect( ref vector3!float vect ) const
     {
-      vector3df tmp = vect;
-      vect.X = tmp.X*M[0] + tmp.Y*M[4] + tmp.Z*M[8];
-      vect.Y = tmp.X*M[1] + tmp.Y*M[5] + tmp.Z*M[9];
-      vect.Z = tmp.X*M[2] + tmp.Y*M[6] + tmp.Z*M[10];
+      vector3!float tmp = vect;
+      vect.x = tmp.x*M[0] + tmp.y*M[4] + tmp.z*M[8];
+      vect.y = tmp.x*M[1] + tmp.y*M[5] + tmp.z*M[9];
+      vect.z = tmp.x*M[2] + tmp.y*M[6] + tmp.z*M[10];
     }
 
     //! An alternate transform vector method, writing into a second vector
-    void rotateVect(ref vector3df vout, const vector3df vin) const
+    void rotateVect(ref vector3!float vout, const vector3!float vin) const
     {
-      vout.X = vin.X*M[0] + vin.Y*M[4] + vin.Z*M[8];
-      vout.Y = vin.X*M[1] + vin.Y*M[5] + vin.Z*M[9];
-      vout.Z = vin.X*M[2] + vin.Y*M[6] + vin.Z*M[10];
+      vout.x = vin.x*M[0] + vin.y*M[4] + vin.z*M[8];
+      vout.y = vin.x*M[1] + vin.y*M[5] + vin.z*M[9];
+      vout.z = vin.x*M[2] + vin.y*M[6] + vin.z*M[10];
     }
 
     //! An alternate transform vector method, writing into an array of 3 floats
-    void rotateVect(T* vout,const vector3df vin) const
+    void rotateVect(T* vout,const vector3!float vin) const
     {
-      vout[0] = vin.X*M[0] + vin.Y*M[4] + vin.Z*M[8];
-      vout[1] = vin.X*M[1] + vin.Y*M[5] + vin.Z*M[9];
-      vout[2] = vin.X*M[2] + vin.Y*M[6] + vin.Z*M[10];
+      vout[0] = vin.x*M[0] + vin.y*M[4] + vin.z*M[8];
+      vout[1] = vin.x*M[1] + vin.y*M[5] + vin.z*M[9];
+      vout[2] = vin.x*M[2] + vin.y*M[6] + vin.z*M[10];
     }
 
     //! Transforms the vector by this matrix
-    void transformVect( ref vector3df vect) const
+    void transformVect( ref vector3!float vect) const
     {
       float vector[3];
 
-      vector[0] = vect.X*M[0] + vect.Y*M[4] + vect.Z*M[8] + M[12];
-      vector[1] = vect.X*M[1] + vect.Y*M[5] + vect.Z*M[9] + M[13];
-      vector[2] = vect.X*M[2] + vect.Y*M[6] + vect.Z*M[10] + M[14];
+      vector[0] = vect.x*M[0] + vect.y*M[4] + vect.z*M[8] + M[12];
+      vector[1] = vect.x*M[1] + vect.y*M[5] + vect.z*M[9] + M[13];
+      vector[2] = vect.x*M[2] + vect.y*M[6] + vect.z*M[10] + M[14];
 
-      vect.X = vector[0];
-      vect.Y = vector[1];
-      vect.Z = vector[2];
+      vect.x = vector[0];
+      vect.y = vector[1];
+      vect.z = vector[2];
     }
 
     //! Transforms input vector by this matrix and stores result in output vector
-    void transformVect(ref vector3df vout, const vector3df vin ) const
+    void transformVect(ref vector3!float vout, const vector3!float vin ) const
     {
-      vout.X = vin.X*M[0] + vin.Y*M[4] + vin.Z*M[8] + M[12];
-      vout.Y = vin.X*M[1] + vin.Y*M[5] + vin.Z*M[9] + M[13];
-      vout.Z = vin.X*M[2] + vin.Y*M[6] + vin.Z*M[10] + M[14];
+      vout.x = vin.x*M[0] + vin.y*M[4] + vin.z*M[8] + M[12];
+      vout.y = vin.x*M[1] + vin.y*M[5] + vin.z*M[9] + M[13];
+      vout.z = vin.x*M[2] + vin.y*M[6] + vin.z*M[10] + M[14];
     }
 
     //! An alternate transform vector method, writing into an array of 4 floats
-    void transformVect(T* vout,const vector3df vin) const
+    void transformVect(T* vout,const vector3!float vin) const
     {
-      vout[0] = vin.X*M[0] + vin.Y*M[4] + vin.Z*M[8] + M[12];
-      vout[1] = vin.X*M[1] + vin.Y*M[5] + vin.Z*M[9] + M[13];
-      vout[2] = vin.X*M[2] + vin.Y*M[6] + vin.Z*M[10] + M[14];
-      vout[3] = vin.X*M[3] + vin.Y*M[7] + vin.Z*M[11] + M[15];
+      vout[0] = vin.x*M[0] + vin.y*M[4] + vin.z*M[8] + M[12];
+      vout[1] = vin.x*M[1] + vin.y*M[5] + vin.z*M[9] + M[13];
+      vout[2] = vin.x*M[2] + vin.y*M[6] + vin.z*M[10] + M[14];
+      vout[3] = vin.x*M[3] + vin.y*M[7] + vin.z*M[11] + M[15];
     }
 
     //! Translate a vector by the translation part of this matrix.
-    void translateVect( ref vector3df vect ) const
+    void translateVect( ref vector3!float vect ) const
     {
-      vect.X = vect.X+M[12];
-      vect.Y = vect.Y+M[13];
-      vect.Z = vect.Z+M[14];
+      vect.x = vect.x+M[12];
+      vect.y = vect.y+M[13];
+      vect.z = vect.z+M[14];
     }
 
     //! Transforms a plane by this matrix
     void transformPlane( ref plane3d!(float) plane) const
     {
-      vector3df member;
+      vector3!float member;
       // Transform the plane member point, i.e. rotate, translate and scale it.
       transformVect(member, plane.getMemberPoint());
 
       // Transform the normal by the transposed inverse of the matrix
       CMatrix4!(T) transposedInverse = CMatrix4!(T)(this, eConstructor.EM4CONST_INVERSE_TRANSPOSED);
-      vector3df normal = plane.Normal;
+      vector3!float normal = plane.Normal;
       transposedInverse.transformVect(normal);
 
       plane.setPlane(member, normal);
@@ -611,8 +619,8 @@ struct CMatrix4(T)
     is slower than transformBox(). */
     void transformBoxEx(ref aabbox3d!(float) box) const
     {
-      const float Amin[3] = [box.MinEdge.X, box.MinEdge.Y, box.MinEdge.Z];
-      const float Amax[3] = [box.MaxEdge.X, box.MaxEdge.Y, box.MaxEdge.Z];
+      const float Amin[3] = [box.MinEdge.x, box.MinEdge.y, box.MinEdge.z];
+      const float Amax[3] = [box.MaxEdge.x, box.MaxEdge.y, box.MaxEdge.z];
 
       float Bmin[3];
       float Bmax[3];
@@ -643,13 +651,13 @@ struct CMatrix4(T)
         }
       }
 
-      box.MinEdge.X = Bmin[0];
-      box.MinEdge.Y = Bmin[1];
-      box.MinEdge.Z = Bmin[2];
+      box.MinEdge.x = Bmin[0];
+      box.MinEdge.y = Bmin[1];
+      box.MinEdge.z = Bmin[2];
 
-      box.MaxEdge.X = Bmax[0];
-      box.MaxEdge.Y = Bmax[1];
-      box.MaxEdge.Z = Bmax[2];
+      box.MaxEdge.x = Bmax[0];
+      box.MaxEdge.y = Bmax[1];
+      box.MaxEdge.z = Bmax[2];
     }
 
     //! Multiplies this matrix by a 1x4 matrix
@@ -1006,31 +1014,31 @@ struct CMatrix4(T)
 
     //! Builds a left-handed look-at matrix.
     CMatrix4!(T) buildCameraLookAtMatrixLH(
-        const vector3df position,
-        const vector3df target,
-        const vector3df upVector)
+        const vector3!float position,
+        const vector3!float target,
+        const vector3!float upVector)
     {
-      vector3df zaxis = target - position;
+      vector3!float zaxis = target - position;
       zaxis.normalize();
 
-      vector3df xaxis = upVector.crossProduct(zaxis);
+      vector3!float xaxis = upVector.crossProduct(zaxis);
       xaxis.normalize();
 
-      vector3df yaxis = zaxis.crossProduct(xaxis);
+      vector3!float yaxis = zaxis.crossProduct(xaxis);
 
-      M[0] = cast(T)xaxis.X;
-      M[1] = cast(T)yaxis.X;
-      M[2] = cast(T)zaxis.X;
+      M[0] = cast(T)xaxis.x;
+      M[1] = cast(T)yaxis.x;
+      M[2] = cast(T)zaxis.x;
       M[3] = 0;
 
-      M[4] = cast(T)xaxis.Y;
-      M[5] = cast(T)yaxis.Y;
-      M[6] = cast(T)zaxis.Y;
+      M[4] = cast(T)xaxis.y;
+      M[5] = cast(T)yaxis.y;
+      M[6] = cast(T)zaxis.y;
       M[7] = 0;
 
-      M[8] = cast(T)xaxis.Z;
-      M[9] = cast(T)yaxis.Z;
-      M[10] = cast(T)zaxis.Z;
+      M[8] = cast(T)xaxis.z;
+      M[9] = cast(T)yaxis.z;
+      M[10] = cast(T)zaxis.z;
       M[11] = 0;
 
       M[12] = cast(T)-xaxis.dotProduct(position);
@@ -1043,31 +1051,31 @@ struct CMatrix4(T)
 
     //! Builds a right-handed look-at matrix.
     CMatrix4!(T) buildCameraLookAtMatrixRH(
-        const vector3df position,
-        const vector3df target,
-        const vector3df upVector)
+        const vector3!float position,
+        const vector3!float target,
+        const vector3!float upVector)
     {
-      vector3df zaxis = position - target;
+      vector3!float zaxis = position - target;
       zaxis.normalize();
 
-      vector3df xaxis = upVector.crossProduct(zaxis);
+      vector3!float xaxis = upVector.crossProduct(zaxis);
       xaxis.normalize();
 
-      vector3df yaxis = zaxis.crossProduct(xaxis);
+      vector3!float yaxis = zaxis.crossProduct(xaxis);
 
-      M[0] = cast(T)xaxis.X;
-      M[1] = cast(T)yaxis.X;
-      M[2] = cast(T)zaxis.X;
+      M[0] = cast(T)xaxis.x;
+      M[1] = cast(T)yaxis.x;
+      M[2] = cast(T)zaxis.x;
       M[3] = 0;
 
-      M[4] = cast(T)xaxis.Y;
-      M[5] = cast(T)yaxis.Y;
-      M[6] = cast(T)zaxis.Y;
+      M[4] = cast(T)xaxis.y;
+      M[5] = cast(T)yaxis.y;
+      M[6] = cast(T)zaxis.y;
       M[7] = 0;
 
-      M[8] = cast(T)xaxis.Z;
-      M[9] = cast(T)yaxis.Z;
-      M[10] = cast(T)zaxis.Z;
+      M[8] = cast(T)xaxis.z;
+      M[9] = cast(T)yaxis.z;
+      M[10] = cast(T)zaxis.z;
       M[11] = 0;
 
       M[12] = cast(T)-xaxis.dotProduct(position);
@@ -1083,29 +1091,29 @@ struct CMatrix4(T)
     \param plane: plane into which the geometry if flattened into
     \param point: value between 0 and 1, describing the light source.
     If this is 1, it is a point light, if it is 0, it is a directional light. */
-    CMatrix4!(T) buildShadowMatrix(const vector3df light, plane3df plane, float point=1.0f)
+    CMatrix4!(T) buildShadowMatrix(const vector3!float light, plane3df plane, float point=1.0f)
     {
       plane.Normal.normalize();
       const float d = plane.Normal.dotProduct(light);
 
-      M[ 0] = cast(T)(-plane.Normal.X * light.X + d);
-      M[ 1] = cast(T)(-plane.Normal.X * light.Y);
-      M[ 2] = cast(T)(-plane.Normal.X * light.Z);
-      M[ 3] = cast(T)(-plane.Normal.X * point);
+      M[ 0] = cast(T)(-plane.Normal.x * light.x + d);
+      M[ 1] = cast(T)(-plane.Normal.x * light.y);
+      M[ 2] = cast(T)(-plane.Normal.x * light.z);
+      M[ 3] = cast(T)(-plane.Normal.x * point);
 
-      M[ 4] = cast(T)(-plane.Normal.Y * light.X);
-      M[ 5] = cast(T)(-plane.Normal.Y * light.Y + d);
-      M[ 6] = cast(T)(-plane.Normal.Y * light.Z);
-      M[ 7] = cast(T)(-plane.Normal.Y * point);
+      M[ 4] = cast(T)(-plane.Normal.y * light.x);
+      M[ 5] = cast(T)(-plane.Normal.y * light.y + d);
+      M[ 6] = cast(T)(-plane.Normal.y * light.z);
+      M[ 7] = cast(T)(-plane.Normal.y * point);
 
-      M[ 8] = cast(T)(-plane.Normal.Z * light.X);
-      M[ 9] = cast(T)(-plane.Normal.Z * light.Y);
-      M[10] = cast(T)(-plane.Normal.Z * light.Z + d);
-      M[11] = cast(T)(-plane.Normal.Z * point);
+      M[ 8] = cast(T)(-plane.Normal.z * light.x);
+      M[ 9] = cast(T)(-plane.Normal.z * light.y);
+      M[10] = cast(T)(-plane.Normal.z * light.z + d);
+      M[11] = cast(T)(-plane.Normal.z * point);
 
-      M[12] = cast(T)(-plane.D * light.X);
-      M[13] = cast(T)(-plane.D * light.Y);
-      M[14] = cast(T)(-plane.D * light.Z);
+      M[12] = cast(T)(-plane.D * light.x);
+      M[13] = cast(T)(-plane.D * light.y);
+      M[14] = cast(T)(-plane.D * light.z);
       M[15] = cast(T)(-plane.D * point + d);
 
       return this;
@@ -1165,44 +1173,44 @@ struct CMatrix4(T)
     /** \param from: vector to rotate from
     \param to: vector to rotate to
       */
-    CMatrix4!(T) buildRotateFromTo(const vector3df from, const vector3df to)
+    CMatrix4!(T) buildRotateFromTo(const vector3!float from, const vector3!float to)
     {
       // unit vectors
-      vector3df f = vector3df(from);
-      vector3df t = vector3df(to);
+      vector3!float f = from;
+      vector3!float t = to;
       f.normalize ();
       t.normalize ();
 
       // axis multiplication by sin
-      vector3df vs = t.crossProduct ( f );
+      vector3!float vs = t.crossProduct ( f );
 
       // axis of rotation
-      vector3df v = vs;
+      vector3!float v = vs;
       v.normalize();
 
       // cosinus angle
       T ca = f.dotProduct ( t );
 
-      vector3df vt = v * ( cast(T) 1 - ca );
+      vector3!float vt = v * ( cast(T) 1 - ca );
 
-      M[0] = vt.X * v.X + ca;
-      M[5] = vt.Y * v.Y + ca;
-      M[10] = vt.Z * v.Z + ca;
+      M[0] = vt.x * v.x + ca;
+      M[5] = vt.y * v.y + ca;
+      M[10] = vt.z * v.z + ca;
 
-      vt.X *= v.Y;
-      vt.Z *= v.X;
-      vt.Y *= v.Z;
+      vt.x *= v.y;
+      vt.z *= v.x;
+      vt.y *= v.z;
 
-      M[1] = vt.X - vs.Z;
-      M[2] = vt.Z + vs.Y;
+      M[1] = vt.x - vs.z;
+      M[2] = vt.z + vs.y;
       M[3] = cast(T) 0;
 
-      M[4] = vt.X + vs.Z;
-      M[6] = vt.Y - vs.X;
+      M[4] = vt.x + vs.z;
+      M[6] = vt.y - vs.x;
       M[7] = cast(T) 0;
 
-      M[8] = vt.Z - vs.Y;
-      M[9] = vt.Y + vs.X;
+      M[8] = vt.z - vs.y;
+      M[9] = vt.y + vs.x;
       M[11] = cast(T) 0;
 
       M[12] = cast(T) 0;
@@ -1217,11 +1225,11 @@ struct CMatrix4(T)
     /** \param center Position to rotate around
     \param translate Translation applied after the rotation
       */
-    void setRotationCenter(const vector3df center, const vector3df translation)
+    void setRotationCenter(const vector3!float center, const vector3!float translation)
     {
-      M[12] = -M[0]*center.X - M[4]*center.Y - M[8]*center.Z + (center.X - translation.X );
-      M[13] = -M[1]*center.X - M[5]*center.Y - M[9]*center.Z + (center.Y - translation.Y );
-      M[14] = -M[2]*center.X - M[6]*center.Y - M[10]*center.Z + (center.Z - translation.Z );
+      M[12] = -M[0]*center.x - M[4]*center.y - M[8]*center.z + (center.x - translation.x );
+      M[13] = -M[1]*center.x - M[5]*center.y - M[9]*center.z + (center.y - translation.y );
+      M[14] = -M[2]*center.x - M[6]*center.y - M[10]*center.z + (center.z - translation.z );
       M[15] = cast (T) 1.0;
     }
 
@@ -1232,53 +1240,53 @@ struct CMatrix4(T)
     \param axis: axis to rotate about
     \param from: source vector to rotate from
       */
-    void buildAxisAlignedBillboard(const vector3df camPos,
-          const vector3df center,
-          const vector3df translation,
-          const vector3df axis,
-          const vector3df from)
+    void buildAxisAlignedBillboard(const vector3!float camPos,
+          const vector3!float center,
+          const vector3!float translation,
+          const vector3!float axis,
+          const vector3!float from)
     {
       // axis of rotation
-      vector3df up = vector3df(axis);
+      vector3!float up = axis;
       up.normalize ();
 
-      vector3df forward = camPos - center;
+      vector3!float forward = camPos - center;
       forward.normalize();
 
-      vector3df right = up.crossProduct ( forward );
+      vector3!float right = up.crossProduct ( forward );
       right.normalize ();
 
       // correct look vector
-      vector3df look = right.crossProduct ( up );
+      vector3!float look = right.crossProduct ( up );
 
       // rotate from to
 
       // axis multiplication by sin
-      vector3df vs = look.crossProduct ( from );
+      vector3!float vs = look.crossProduct ( from );
 
       // cosinus angle
       float ca = from.dotProduct ( look );
 
-      vector3df vt = up * ( 1.0f - ca );
+      vector3!float vt = up * ( 1.0f - ca );
 
-      M[0] = vt.X * up.X + ca;
-      M[5] = vt.Y * up.Y + ca;
-      M[10] = vt.Z * up.Z + ca;
+      M[0] = vt.x * up.x + ca;
+      M[5] = vt.y * up.y + ca;
+      M[10] = vt.z * up.z + ca;
 
-      vt.X *= up.Y;
-      vt.Z *= up.X;
-      vt.Y *= up.Z;
+      vt.x *= up.y;
+      vt.z *= up.x;
+      vt.y *= up.z;
 
-      M[1] = vt.X - vs.Z;
-      M[2] = vt.Z + vs.Y;
+      M[1] = vt.x - vs.z;
+      M[2] = vt.z + vs.y;
       M[3] = cast(T) 0;
 
-      M[4] = vt.X + vs.Z;
-      M[6] = vt.Y - vs.X;
+      M[4] = vt.x + vs.z;
+      M[6] = vt.y - vs.x;
       M[7] = cast(T) 0;
 
-      M[8] = vt.Z - vs.Y;
-      M[9] = vt.Y + vs.X;
+      M[8] = vt.z - vs.y;
+      M[9] = vt.y + vs.x;
       M[11] = cast(T) 0;
 
       setRotationCenter ( center, translation );
@@ -1290,25 +1298,25 @@ struct CMatrix4(T)
     */
     //! Set to a texture transformation matrix with the given parameters.
     CMatrix4!(T) buildTextureTransform( float rotateRad,
-        const vector2df rotatecenter,
-        const vector2df translate,
-        const vector2df scale)
+        const vector2!float rotatecenter,
+        const vector2!float translate,
+        const vector2!float scale)
     {
       const float c = cos(rotateRad);
       const float s = sin(rotateRad);
 
-      M[0] = cast(T)(c * scale.X);
-      M[1] = cast(T)(s * scale.Y);
+      M[0] = cast(T)(c * scale.x);
+      M[1] = cast(T)(s * scale.y);
       M[2] = 0;
       M[3] = 0;
 
-      M[4] = cast(T)(-s * scale.X);
-      M[5] = cast(T)(c * scale.Y);
+      M[4] = cast(T)(-s * scale.x);
+      M[5] = cast(T)(c * scale.y);
       M[6] = 0;
       M[7] = 0;
 
-      M[8] = cast(T)(c * scale.X * rotatecenter.X + -s * rotatecenter.Y + translate.X);
-      M[9] = cast(T)(s * scale.Y * rotatecenter.X +  c * rotatecenter.Y + translate.Y);
+      M[8] = cast(T)(c * scale.x * rotatecenter.x + -s * rotatecenter.y + translate.x);
+      M[9] = cast(T)(s * scale.y * rotatecenter.x +  c * rotatecenter.y + translate.y);
       M[10] = 1;
       M[11] = 0;
 

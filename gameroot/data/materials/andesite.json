@@ -3,8 +3,8 @@
   "type":"stone",
   "name":"andesite",
   "color":{
-    "X":66,
-    "Y":66,
-    "Z":60
+    "x":66,
+    "y":66,
+    "z":60
   }
 }

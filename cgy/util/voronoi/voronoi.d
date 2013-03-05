@@ -78,7 +78,7 @@ final class HalfEdge {
         l.halfEdges ~= this;
 
         if(right !is null) {
-            angle = atan2(right.pos.Y - left.pos.Y, right.pos.X - left.pos.X);
+            angle = atan2(right.pos.y - left.pos.y, right.pos.x - left.pos.x);
         }
     }
 
@@ -155,7 +155,7 @@ final class HalfEdge {
         }
         if(_reverse !is null) {
             auto tmp = _reverse.left.pos - left.pos;
-            return vec2d(-tmp.Y, tmp.X).normalize();
+            return vec2d(-tmp.y, tmp.x).normalize();
         }
         BREAKPOINT;
         return vec2d.init;
@@ -300,7 +300,7 @@ final class Edge {
         }
 
         auto ortho = halfRight.left.pos - halfLeft.left.pos;
-        ortho = vec2d(-ortho.Y, ortho.X);
+        ortho = vec2d(-ortho.y, ortho.x);
         //if(derp) ortho = -ortho;
         return ortho.normalize();
     }
@@ -501,25 +501,25 @@ final class VoronoiPoly {
     void cutDiagram(vec2d min, vec2d max) {
         mixin(MeasureTime!"Time to cut diagram:");
 
-        auto minX = min.X;
-        auto minY = min.Y;
-        auto maxX = max.X;
-        auto maxY = max.Y;
+        auto minX = min.x;
+        auto minY = min.y;
+        auto maxX = max.x;
+        auto maxY = max.y;
 
         bool inside(vec2d pos) {
             immutable epsilon = 1E-6;
-            return (pos.X+epsilon >= minX && pos.X-epsilon <= maxX &&
-                    pos.Y+epsilon >= minY && pos.Y-epsilon <= maxY);
+            return (pos.x+epsilon >= minX && pos.x-epsilon <= maxX &&
+                    pos.y+epsilon >= minY && pos.y-epsilon <= maxY);
         }
 
         vec2d intersect(vec2d start, vec2d dir) {
             BREAK_IF(!inside(start));
             double dx;
             double dy;
-            dx = (dir.X > 0) ? maxX - start.X : start.X - minX;
-            dy = (dir.Y > 0) ? maxY - start.Y : start.Y - minY;
-            double tx = dx / abs(dir.X);
-            double ty = dy / abs(dir.Y);
+            dx = (dir.x > 0) ? maxX - start.x : start.x - minX;
+            dy = (dir.y > 0) ? maxY - start.y : start.y - minY;
+            double tx = dx / abs(dir.x);
+            double ty = dy / abs(dir.y);
             double t = std.algorithm.min(tx, ty);
             BREAK_IF(t < 0);
             return start + dir * t;
@@ -529,15 +529,15 @@ final class VoronoiPoly {
             BREAK_IF(inside(start));
             double dx1, dy1;
             double dx2, dy2;
-            dx1 = (start.X < minX) ? minX - start.X : maxX - start.X;
-            dx2 = (start.X < minX) ? maxX - start.X : minX - start.X;
-            dy1 = (start.Y < minY) ? minY - start.Y : maxY - start.Y;
-            dy2 = (start.Y < minY) ? maxY - start.Y : minY - start.Y;
+            dx1 = (start.x < minX) ? minX - start.x : maxX - start.x;
+            dx2 = (start.x < minX) ? maxX - start.x : minX - start.x;
+            dy1 = (start.y < minY) ? minY - start.y : maxY - start.y;
+            dy2 = (start.y < minY) ? maxY - start.y : minY - start.y;
 
-            double txMin = dx1 / dir.X;
-            double txMax = dx2 / dir.X;
-            double tyMin = dy1 / dir.Y;
-            double tyMax = dy2 / dir.Y;
+            double txMin = dx1 / dir.x;
+            double txMax = dx2 / dir.x;
+            double tyMin = dy1 / dir.y;
+            double tyMax = dy2 / dir.y;
             if(txMin < 0 || txMax < 0 || tyMin < 0 || tyMax < 0) return false;
             return (tyMax > txMin) || (txMax > tyMin);
         }
@@ -618,7 +618,7 @@ final class VoronoiPoly {
             auto a = A.pos;
             auto b = B.pos;
             immutable epsilon = 1E-4;
-            return (abs(a.X-b.X) < epsilon) && (abs(a.Y-b.Y) < epsilon);
+            return (abs(a.x-b.x) < epsilon) && (abs(a.y-b.y) < epsilon);
         }
         bool aboutSame(double a, double b) {
             immutable epsilon = 1E-4;
@@ -640,10 +640,10 @@ final class VoronoiPoly {
                     c++; //If we've gone a lap around the box, something is wrong.
                     BREAK_IF(c > 4);
 
-                    bool right = aboutSame(currEnd.pos.X, maxX);
-                    bool up = aboutSame(currEnd.pos.Y, maxY);
-                    bool left = aboutSame(currEnd.pos.X, minX);
-                    bool down = aboutSame(currEnd.pos.Y, minY);
+                    bool right = aboutSame(currEnd.pos.x, maxX);
+                    bool up = aboutSame(currEnd.pos.y, maxY);
+                    bool left = aboutSame(currEnd.pos.x, minX);
+                    bool down = aboutSame(currEnd.pos.y, minY);
 
                     //Ensure is @ about edge of bb - otherwise error! :S
                     BREAK_IF(!right && !up && !left && !down);
@@ -651,7 +651,7 @@ final class VoronoiPoly {
                     HalfEdge newHalf;
 
                     if(right && !up) {
-                        if(aboutSame(nextStart.pos.X, maxX)) {
+                        if(aboutSame(nextStart.pos.x, maxX)) {
                             newHalf = new HalfEdge(curr, currEnd, nextStart);
                         } else {
                             auto newVert = new Vertex(vec2d(maxX, maxY));
@@ -660,7 +660,7 @@ final class VoronoiPoly {
                         }
                     }
                     else if(up && !left) {
-                        if(aboutSame(nextStart.pos.Y, maxY)) {
+                        if(aboutSame(nextStart.pos.y, maxY)) {
                             newHalf = new HalfEdge(curr, currEnd, nextStart);
                         } else {
                             auto newVert = new Vertex(vec2d(minX, maxY));
@@ -669,7 +669,7 @@ final class VoronoiPoly {
                         }
                     }
                     else if(left && !down) {
-                        if(aboutSame(nextStart.pos.X, minX)) {
+                        if(aboutSame(nextStart.pos.x, minX)) {
                             newHalf = new HalfEdge(curr, currEnd, nextStart);
                         } else {
                             auto newVert = new Vertex(vec2d(minX, minY));
@@ -678,7 +678,7 @@ final class VoronoiPoly {
                         }
                     }
                     else if(down && !right) {
-                        if(aboutSame(nextStart.pos.Y, minY)) {
+                        if(aboutSame(nextStart.pos.y, minY)) {
                             newHalf = new HalfEdge(curr, currEnd, nextStart);
                         } else {
                             auto newVert = new Vertex(vec2d(maxX, minY));

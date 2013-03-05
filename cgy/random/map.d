@@ -12,11 +12,11 @@ final class Map : ValueSource { //Like the higher order function map, this maps 
         f = _f;
     }
 
-    override double getValue(double x, double y, double z) {
-        return f(source.getValue(x, y, z));
+    override double getValue3(vec3d pos) {
+        return f(source.getValue3(pos));
     }
-    override double getValue(double x, double y) {
-        return f(source.getValue(x, y));
+    override double getValue2(vec2d pos) {
+        return f(source.getValue2(pos));
     }
     override double getValue(double x) {
         return f(source.getValue(x));
@@ -32,11 +32,11 @@ final class Map2D : ValueSource2D { //Like the higher order function map, this m
         f = _f;
     }
 
-    override vec2d getValue(double x, double y, double z) {
-        return f(source.getValue(x, y, z));
+    override vec2d getValue3(vec3d pos) {
+        return f(source.getValue3(pos));
     }
-    override vec2d getValue(double x, double y) {
-        return f(source.getValue(x, y));
+    override vec2d getValue2(vec2d pos) {
+        return f(source.getValue2(pos));
     }
     override vec2d getValue(double x) {
         return f(source.getValue(x));

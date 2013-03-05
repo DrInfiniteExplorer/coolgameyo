@@ -65,10 +65,10 @@ class PermMap(uint SIZE = 128) : ValueSource {
         }
     }
     
-    double getValue(double x, double y, double z) {
+    double getValue3(vec3d pos) {
         return PRNs[Index(x, y, z)];
     }
-    double getValue(double x, double y) {
+    double getValue2(vec2d pos) {
         return PRNs[Index(x, y)];
     }
     double getValue(double x) {

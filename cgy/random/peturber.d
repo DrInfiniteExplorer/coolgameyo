@@ -18,30 +18,32 @@ final class Peturber : ValueSource {
         power = p;
     }
     
-    override double getValue(double x, double y, double z) {
+    override double getValue3(vec3d pos) {
+        vec3d newPos = pos;
         if (petX !is null) {
-            x += petX.getValue(x, y, z) * power.X;
+            newPos.x += petX.getValue3(pos) * power.x;
         }
         if (petY !is null) {
-            y += petY.getValue(x, y, z) * power.Y;
+            newPos.y += petY.getValue3(pos) * power.y;
         }
         if (petZ !is null) {
-            z += petZ.getValue(x, y, z) * power.Z;
+            newPos.z += petZ.getValue3(pos) * power.z;
         }
-        return source.getValue(x, y, z);
+        return source.getValue3(newPos);
     }
-    override double getValue(double x, double y) {
+    override double getValue2(vec2d pos) {
+        vec2d newPos = pos;
         if (petX !is null) {
-            x += petX.getValue(x, y) * power.X;
+            newPos.x += petX.getValue2(pos) * power.x;
         }
         if (petY !is null) {
-            y += petY.getValue(x, y) * power.Y;
+            newPos.y += petY.getValue2(pos) * power.y;
         }
-        return source.getValue(x, y);
+        return source.getValue2(newPos);
     }
     override double getValue(double x) {
         if (petX !is null) {
-            x += petX.getValue(x) * power.X;
+            x += petX.getValue(x) * power.x;
         }
         return source.getValue(x);
     }    

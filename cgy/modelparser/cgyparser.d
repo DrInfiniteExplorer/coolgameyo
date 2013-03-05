@@ -139,7 +139,7 @@ Joint[] parseJoints(ref string[][] tokens, size_t numJoints) {
         string name;
         int parent_index;
         extract(line, &name, &j.parent, 
-                "(", &j.pos.X, &j.pos.Y, &j.pos.Z, ")", 
+                "(", &j.pos.x, &j.pos.y, &j.pos.z, ")", 
                 "(", &j.orientation.X, &j.orientation.Y, &j.orientation.Z, ")");
         j.name = name[1 .. $-1];
 
@@ -191,7 +191,7 @@ Mesh parseMesh(ref string[][] tokens, Joint[] joints) {
 
         size_t index, length;
         extract(tokens[i], 
-                "vert", to!string(i), &v.pos.X, &v.pos.Y, &v.pos.Z,
+                "vert", to!string(i), &v.pos.x, &v.pos.y, &v.pos.z,
                 "(", &v.s, &v.t, ")",
                 "(", &v.jointId[0], &v.jointId[1], &v.jointId[2], &v.jointId[3],
                 &v.weight[0], &v.weight[1], &v.weight[2], &v.weight[3], ")");

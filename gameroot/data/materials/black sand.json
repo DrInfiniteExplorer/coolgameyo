@@ -3,8 +3,8 @@
   "type":"sand",
   "name":"black sand",
   "color":{
-    "X":37,
-    "Y":37,
-    "Z":33
+    "x":37,
+    "y":37,
+    "z":33
   }
 }

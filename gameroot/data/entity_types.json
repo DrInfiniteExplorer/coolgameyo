@@ -2,7 +2,7 @@
   "debug":{
     "displayName":"Kalastrad",
 	"tintFromMaterial":1,
-	"tintColor":{ "X":50, "Y":200, "Z":50 },
+	"tintColor":{ "x":50, "y":200, "z":50 },
 	"treeable":{
 		"woodMaterial":"birchtree",
 		"leafMaterial":"birchleaf",
@@ -82,7 +82,7 @@
   "gran-stor":{
     "displayName":"Gran-Stor",
 	"tintFromMaterial":1,
-	"tintColor":{ "X":50, "Y":200, "Z":50 },
+	"tintColor":{ "x":50, "y":200, "z":50 },
 	"treeable":{
 		"woodMaterial":"birchtree",
 		"leafMaterial":"birchleaf",
@@ -196,7 +196,7 @@
   "gran-liten":{
     "displayName":"Gran-Liten",
 	"tintFromMaterial":1,
-	"tintColor":{ "X":50, "Y":200, "Z":50 },
+	"tintColor":{ "x":50, "y":200, "z":50 },
 	"treeable":{
 		"woodMaterial":"birchtree",
 		"leafMaterial":"birchleaf",
@@ -310,7 +310,7 @@
   "Tall":{
     "displayName":"Tall",
 	"tintFromMaterial":1,
-	"tintColor":{ "X":50, "Y":200, "Z":50 },
+	"tintColor":{ "x":50, "y":200, "z":50 },
 	"treeable":{
 		"woodMaterial":"birchtree",
 		"leafMaterial":"birchleaf",
@@ -425,7 +425,7 @@
   "tree01":{
     "displayName":"Standard Tree",
 	"tintFromMaterial":1,
-	"tintColor":{ "X":50, "Y":200, "Z":50 },
+	"tintColor":{ "x":50, "y":200, "z":50 },
 	"treeable":{
 		"woodMaterial":"birchtree",
 		"leafMaterial":"birchleaf",
@@ -505,7 +505,7 @@
   "fantasytree01":{
     "displayName":"Fantasy Tree",
 	"tintFromMaterial":1,
-	"tintColor":{ "X":50, "Y":200, "Z":50 },
+	"tintColor":{ "x":50, "y":200, "z":50 },
 	"treeable":{
 		"woodMaterial":"birchtree",
 		"leafMaterial":"birchleaf",
@@ -585,7 +585,7 @@
   "shrubbery":{
     "displayName":"SHRUBBERY!!!",
 	"tintFromMaterial":1,
-	"tintColor":{ "X":200, "Y":50, "Z":50 },
+	"tintColor":{ "x":200, "y":50, "z":50 },
     "model":{
         "name":"dorf/dorf.cgymesh",
         "skeletonName":"dorf/dorf.cgyanim",
@@ -598,9 +598,9 @@
   "torch":{
     "displayName":"Torch",
 	"tintFromMaterial":1,
-	"tintColor":{ "X":255, "Y":255, "Z":255 },
+	"tintColor":{ "x":255, "y":255, "z":255 },
 	"lightStrength":10,
-	"lightTintColor":{ "X":255, "Y":145, "Z":45 },
+	"lightTintColor":{ "x":255, "y":145, "z":45 },
     "model":{
         "name":"dorf/dorf.cgymesh",
         "skeletonName":"dorf/dorf.cgyanim",

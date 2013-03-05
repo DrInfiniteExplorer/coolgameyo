@@ -71,7 +71,7 @@ mixin template WorldGenerator() {
         Block_t tempBlock = Block.allocBlock();
         foreach(rel ; RangeFromTo( 0, BlocksPerSector.x - 1, 0, BlocksPerSector.y - 1, 0, BlocksPerSector.z - 1)) {
             auto blockNum = BlockNum(abs + rel);
-            if(blockNum.toTilePos().value.Z > heightmap[rel.Y][rel.X]) {
+            if(blockNum.toTilePos().value.z > heightmap[rel.y][rel.x]) {
                 sector.makeAirBlock(blockNum);
                 continue;
             }
@@ -92,8 +92,8 @@ mixin template WorldGenerator() {
         auto blockRel = blockNum.rel();
         auto tp0 = blockNum.toTilePos();
 
-        int tileOffset_x = blockRel.X * BlockSize.x;
-        int tileOffset_y = blockRel.Y * BlockSize.y;
+        int tileOffset_x = blockRel.x * BlockSize.x;
+        int tileOffset_y = blockRel.y * BlockSize.y;
 
         block.hasAir = false;
         block.hasNonAir = false;
@@ -105,9 +105,9 @@ mixin template WorldGenerator() {
                                         0, BlockSize.z-1)) {
             auto tp = tp0;
             tp.value += relPos;
-            auto groundValue = groundValueMap[tileOffset_y + relPos.Y][tileOffset_x + relPos.X];
+            auto groundValue = groundValueMap[tileOffset_y + relPos.y][tileOffset_x + relPos.x];
             auto tile = getTile(tp, groundValue);
-            block.tiles.tiles[relPos.Z][relPos.Y][relPos.X] = tile;
+            block.tiles.tiles[relPos.z][relPos.y][relPos.x] = tile;
 
             if (first) {
                 first = false;
@@ -146,7 +146,7 @@ mixin template WorldGenerator() {
         if(! isInsideWorld(pos)) {
             return Tile(TileTypeAir, flags);
         }
-        if(pos.value.Z > z) {
+        if(pos.value.z > z) {
             auto tile = Tile(TileTypeAir, flags);
             tile.sunLightValue = 15;
             return tile;
@@ -169,8 +169,8 @@ mixin template WorldGenerator() {
     long worldRadius = worldSize;
     long worldRadiusSquare = (cast(long)worldSize) ^^2;
     bool isInsideWorld(TilePos pos) {
-        if(pos.value.X < 0 || pos.value.X >= worldSize ||
-           pos.value.Y < 0 || pos.value.Y >= worldSize) {
+        if(pos.value.x < 0 || pos.value.x >= worldSize ||
+           pos.value.y < 0 || pos.value.y >= worldSize) {
             return false;
         }
         return true;
@@ -188,8 +188,8 @@ mixin template WorldGenerator() {
     }
 
     float getApproxHeight(TileXYPos pos, int level) {
-        pos.value.X = clamp(pos.value.X, 0, worldSize-sampleIntervall);
-        pos.value.Y = clamp(pos.value.Y, 0, worldSize-sampleIntervall);
+        pos.value.x = clamp(pos.value.x, 0, worldSize-sampleIntervall);
+        pos.value.y = clamp(pos.value.y, 0, worldSize-sampleIntervall);
         auto height = heightMaps.getHeight!false(pos);
         return cast(int)ceil(height);
     }

@@ -50,22 +50,20 @@ final class RidgedMultiFractal : ValueSource {
         baseFrequency = 1.0 / waveLength;
     }
 
-    override double getValue(double x, double y, double z) {
-        x *= baseFrequency;
-        y *= baseFrequency;
-        z *= baseFrequency;
+    override double getValue3(vec3d pos) {
+        pos *= baseFrequency;
 
-        double signal = source.getValue(x, y, z);
+        double signal = source.getValue3(pos);
         signal = offset - abs(signal);
         signal *= signal; //Increase sharpness of rigdes
         double result = signal;
         double weight = 1.0;
         foreach(int i; 1 .. cast(int)octaves) {
-            x *= lacunarity; y *= lacunarity; z *= lacunarity;
+            pos *= lacunarity;
             weight = signal * gain;
             if (weight > 1) weight = 1;
             if (weight < 0) weight = 0;
-            signal = source.getValue(x, y, z);
+            signal = source.getValue3(pos);
             signal = offset - abs(signal);
             signal *= signal; //Increase sharpness of rigdes
             signal *= weight;
@@ -74,21 +72,20 @@ final class RidgedMultiFractal : ValueSource {
         }
         return result;
     }
-    override double getValue(double x, double y) {
-        x *= baseFrequency;
-        y *= baseFrequency;
+    override double getValue2(vec2d pos) {
+        pos *= baseFrequency;
 
-        double signal = source.getValue(x, y);
+        double signal = source.getValue2(pos);
         signal = offset - abs(signal);
         signal *= signal; //Increase sharpness of rigdes
         double result = signal;
         double weight = 1.0;
         foreach(int i; 1 .. cast(int)octaves) {
-            x *= lacunarity; y *= lacunarity;
+            pos *= lacunarity;
             weight = signal * gain;
             if (weight > 1) weight = 1;
             if (weight < 0) weight = 0;
-            signal = source.getValue(x, y);
+            signal = source.getValue2(pos);
             signal = offset - abs(signal);
             signal *= signal; //Increase sharpness of rigdes
             signal *= weight;

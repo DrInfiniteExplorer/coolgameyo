@@ -3,8 +3,8 @@
   "type":"stone",
   "name":"diorite",
   "color":{
-    "X":84,
-    "Y":84,
-    "Z":75
+    "x":84,
+    "y":84,
+    "z":75
   }
 }

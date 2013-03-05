@@ -25,10 +25,10 @@ final class Combine(string operation) : ValueSource {
         source2 = s2;
     }
 
-    override double getValue(double x, double y, double z) {
+    override double getValue3(vec3d pos) {
 
-        double a = source.getValue(x, y, z);
-        double b = source2.getValue(x, y, z);
+        double a = source.getValue3(pos);
+        double b = source2.getValue3(pos);
 
         static if(__traits(compiles, "return " ~ operation ~ ";")) {
             mixin("return " ~ operation ~ ";");
@@ -36,9 +36,9 @@ final class Combine(string operation) : ValueSource {
             pragma(error, "DERP NOOOOO!!!");
         }
     }
-    override double getValue(double x, double y) {
-        double a = source.getValue(x, y);
-        double b = source2.getValue(x, y);
+    override double getValue2(vec2d pos) {
+        double a = source.getValue2(pos);
+        double b = source2.getValue2(pos);
 
         static if(__traits(compiles, "return " ~ operation ~ ";")) {
             mixin("return " ~ operation ~ ";");

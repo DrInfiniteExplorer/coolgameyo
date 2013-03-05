@@ -154,9 +154,12 @@ final class Entity {
         if(v is null){
             v = &entityData.pos.value;
         }
-        auto minPos = (*v)  - vec3d(entityData.entityWidth * 0.5, entityData.entityWidth*0.5, 0.5); // Unitpos is from center of tile
+        auto width = vec3d(entityData.entityWidth * 0.5, entityData.entityWidth*0.5, 0.5);
+        auto minPos = (*v)  - width; // Unitpos is from center of tile
         auto maxPos = minPos + vec3d(entityData.entityWidth, entityData.entityWidth, entityData.entityHeight);
-        return aabbox3d!double(minPos, maxPos);
+        BREAKPOINT;
+        assert(0);
+        //return aabbox3d!double(minPos, maxPos);
     }
 }
 

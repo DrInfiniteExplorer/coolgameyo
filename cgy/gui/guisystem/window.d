@@ -80,13 +80,13 @@ class GuiElementWindow : public GuiElement {
         getAbsoluteRect();
         barRect = absoluteRect;
         clientRect = absoluteRect;
-        barRect.size.Y = size.Y;
-        clientRect.start.Y += size.Y;
-        clientRect.size.Y -= size.Y;
+        barRect.size.y = size.y;
+        clientRect.start.y += size.y;
+        clientRect.size.y -= size.y;
         
         closeRect = barRect;
-        closeRect.start.X += closeRect.size.X - closeRect.size.Y;
-        closeRect.size.X = closeRect.size.Y;
+        closeRect.start.x += closeRect.size.x - closeRect.size.y;
+        closeRect.size.x = closeRect.size.y;
         closeRect.diff(vec2i(2, 2), vec2i(-2, -2));
     }
     

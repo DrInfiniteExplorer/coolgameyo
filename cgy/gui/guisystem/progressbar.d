@@ -47,8 +47,8 @@ class GuiElementProgressBar : public GuiElement {
         } else {
             ratio = 0;
         }
-        auto oldX = progressBar.size.X;
-        progressBar.size.X = cast(int)( ratio * cast(double)progressBar.size.X);
+        auto oldX = progressBar.size.x;
+        progressBar.size.x = cast(int)( ratio * cast(double)progressBar.size.x);
         if(oldRatio != ratio) {
             oldRatio = ratio;
             updateText();

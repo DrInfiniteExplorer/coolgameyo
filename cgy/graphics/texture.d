@@ -45,7 +45,7 @@ class TileTextureAtlas{
     }
 
     int tileNumberFromIndex(vec3i index){
-        return index.X + tilesPerAxis*index.Y + tilesPerLayer*index.Z;
+        return index.x + tilesPerAxis*index.y + tilesPerLayer*index.z;
     }
 
     this() {
@@ -152,11 +152,11 @@ class TileTextureAtlas{
         ubyte* dataPtr = atlasData.ptr;
         foreach(uint num ; 0 .. tileMap.length){
             auto index = tileIndexFromNumber(num);
-            auto offsetX = tileSize.X * index.X;
-            auto offsetY = tileSize.Y * index.Y;
-            auto layer = index.Z;
-            glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, offsetX, offsetY, layer, tileSize.X, tileSize.Y, 1, GL_RGBA, GL_UNSIGNED_BYTE, dataPtr);
-            dataPtr += 4*tileSize.X*tileSize.Y;
+            auto offsetX = tileSize.x * index.x;
+            auto offsetY = tileSize.y * index.y;
+            auto layer = index.z;
+            glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, offsetX, offsetY, layer, tileSize.x, tileSize.y, 1, GL_RGBA, GL_UNSIGNED_BYTE, dataPtr);
+            dataPtr += 4*tileSize.x*tileSize.y;
         }
 
         atlasData = null;
@@ -169,7 +169,8 @@ class TileTextureAtlas{
         }
     }
 
-    ushort addTile(string filename, vec2i offset=vec2i(0,0),
+    ushort addTile(string filename,
+                   vec2i offset=vec2i(0,0),
             vec3i tint=vec3i(255,255,255)) {
 
         ushort tileCount = to!ushort(tileMap.length);
@@ -187,7 +188,7 @@ class TileTextureAtlas{
         img.tint(tint);
         atlasData ~= img.imgData;
 
-        //glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, offsetX, offsetY, layer, tileSize.X, tileSize.Y, 1, GL_RGBA, GL_UNSIGNED_BYTE, img.imgData.ptr);
+        //glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, offsetX, offsetY, layer, tileSize.x, tileSize.y, 1, GL_RGBA, GL_UNSIGNED_BYTE, img.imgData.ptr);
 
         return tileMap[wtf(index)] = tileCount;
     }

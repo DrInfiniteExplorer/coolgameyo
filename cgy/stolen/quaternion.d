@@ -6,7 +6,7 @@ module stolen.quaternion;
 
 import std.conv;
 
-import stolen.vector3d;
+import math.vector;
 import stolen.matrix4;
 import stolen.math;
 
@@ -24,7 +24,7 @@ public:
 	this(float x, float y, float z) { set(x,y,z); }
 
 	//! Constructor which converts euler angles (radians) to a quaternion
-	this(const vector3df vec) { set(vec.X,vec.Y,vec.Z); }
+	this(const vector3!float vec) { set(vec.x,vec.y,vec.z); }
 
 	//! Constructor which converts a matrix to a quaternion
 	this(const matrix4 mat) { this = mat; }
@@ -142,12 +142,12 @@ public:
 	}
 
 	//! Multiplication operator
-	vector3df opMul(const vector3df v) const
+	vector3!float opMul(const vector3!float v) const
 	{
 		// nVidia SDK implementation
 
-		vector3df uv, uuv;
-		vector3df qvec = vector3df(X, Y, Z);
+		vector3!float uv, uuv;
+		vector3!float qvec = vector3!float(X, Y, Z);
 		uv = qvec.crossProduct(v);
 		uuv = qvec.crossProduct(uv);
 		uv *= (2.0f * W);
@@ -209,9 +209,9 @@ public:
 	}
 
 	//! Sets quaternion based on euler angles (radians)
-	quaternion set(const vector3df vec)
+	quaternion set(const vector3!float vec)
 	{
-		return set(vec.X, vec.Y, vec.Z);	
+		return set(vec.x, vec.y, vec.z);	
 	}
 
 	//! Sets quaternion from other quaternion
@@ -251,7 +251,7 @@ public:
 	}
 
 	//! Creates a matrix from this quaternion
-	void getMatrix(ref matrix4 dest, const vector3df center ) const
+	void getMatrix(ref matrix4 dest, const vector3!float center ) const
 	{
 		float * m = dest.pointer();
 
@@ -270,9 +270,9 @@ public:
 		m[10] = 1.0f - 2.0f*X*X - 2.0f*Y*Y;
 		m[11] = 0.0f;
 
-		m[12] = center.X;
-		m[13] = center.Y;
-		m[14] = center.Z;
+		m[12] = center.x;
+		m[13] = center.y;
+		m[14] = center.z;
 		m[15] = 1.0f;
 
 		//dest.setDefinitelyIdentityMatrix ( matrix4::BIT_IS_NOT_IDENTITY );
@@ -296,7 +296,7 @@ public:
 		lookat *= m3;
 
 	*/
-	void getMatrixCenter(ref matrix4 dest, const vector3df center, const vector3df translation ) const
+	void getMatrixCenter(ref matrix4 dest, const vector3!float center, const vector3!float translation ) const
 	{
 		float * m = dest.pointer();
 
@@ -396,41 +396,41 @@ public:
 	q = cos(A/2)+sin(A/2)*(x*i+y*j+z*k).
 	\param angle Rotation Angle in radians.
 	\param axis Rotation axis. */
-	quaternion fromAngleAxis (float angle, const vector3df axis)
+	quaternion fromAngleAxis (float angle, const vector3!float axis)
 	{
 		const float fHalfAngle = 0.5f*angle;
 		const float fSin = sin(fHalfAngle);
 		W = cos(fHalfAngle);
-		X = fSin*axis.X;
-		Y = fSin*axis.Y;
-		Z = fSin*axis.Z;
+		X = fSin*axis.x;
+		Y = fSin*axis.y;
+		Z = fSin*axis.z;
 		return this;	
 	}
 
 	//! Fills an angle (radians) around an axis (unit vector)
-	void toAngleAxis (ref float angle, ref vector3df axis) const
+	void toAngleAxis (ref float angle, ref vector3!float axis) const
 	{
 		const float scale = sqrt(X*X + Y*Y + Z*Z);
 
 		if (iszero(scale) || W > 1.0f || W < -1.0f)
 		{
 			angle = 0.0f;
-			axis.X = 0.0f;
-			axis.Y = 1.0f;
-			axis.Z = 0.0f;
+			axis.x = 0.0f;
+			axis.y = 1.0f;
+			axis.z = 0.0f;
 		}
 		else
 		{
 			const float invscale = reciprocal(scale);
 			angle = 2.0f * acos(W);
-			axis.X = X * invscale;
-			axis.Y = Y * invscale;
-			axis.Z = Z * invscale;
+			axis.x = X * invscale;
+			axis.y = Y * invscale;
+			axis.z = Z * invscale;
 		}	
 	}
 
 	//! Output this quaternion to an euler angle (radians)
-	void toEuler(ref vector3df euler) const
+	void toEuler(ref vector3!float euler) const
 	{
 		const double sqw = W*W;
 		const double sqx = X*X;
@@ -438,13 +438,13 @@ public:
 		const double sqz = Z*Z;
 
 		// heading = rotation about z-axis
-		euler.Z = cast (float) (atan2(2.0 * (X*Y +Z*W),(sqx - sqy - sqz + sqw)));
+		euler.z = cast (float) (atan2(2.0 * (X*Y +Z*W),(sqx - sqy - sqz + sqw)));
 
 		// bank = rotation about x-axis
-		euler.X = cast (float) (atan2(2.0 * (Y*Z +X*W),(-sqx - sqy + sqz + sqw)));
+		euler.x = cast (float) (atan2(2.0 * (Y*Z +X*W),(-sqx - sqy + sqz + sqw)));
 
 		// attitude = rotation about y-axis
-		euler.Y = asin( clamp(-2.0f * (X*Z - Y*W), -1.0f, 1.0f) );	
+		euler.y = asin( clamp(-2.0f * (X*Z - Y*W), -1.0f, 1.0f) );	
 	}
 
 	//! Set quaternion to identity
@@ -458,12 +458,12 @@ public:
 	}
 
 	//! Set quaternion to represent a rotation from one vector to another.
-	quaternion rotationFromTo(const vector3df from, const vector3df to)
+	quaternion rotationFromTo(const vector3!float from, const vector3!float to)
 	{
 		// Based on Stan Melax's article in Game Programming Gems
 		// Copy, since cannot modify local
-		vector3df v0 = vector3df(from);
-		vector3df v1 = vector3df(to);
+		vector3!float v0 = from;
+		vector3!float v1 = to;
 		v0.normalize();
 		v1.normalize();
 
@@ -474,22 +474,22 @@ public:
 		}
 		else if (d <= -1.0f) // exactly opposite
 		{
-			vector3df axis = vector3df(1.0f, 0.0f, 0.0f);
-			axis = axis.crossProduct(vector3df(X,Y,Z));
+			vector3!float axis = vector3!float(1.0f, 0.0f, 0.0f);
+			axis = axis.crossProduct(vector3!float(X,Y,Z));
 			if (axis.getLength()==0)
 			{
 				axis.set(0.0f,1.0f,0.0f);
-				axis.crossProduct(vector3df(X,Y,Z));
+				axis.crossProduct(vector3!float(X,Y,Z));
 			}
 			return this.fromAngleAxis(PI, axis);
 		}
 
 		const float s = sqrt( (1+d)*2 ); // optimize inv_sqrt
 		const float invs = 1.0f / s;
-		const vector3df c = v0.crossProduct(v1)*invs;
-		X = c.X;
-		Y = c.Y;
-		Z = c.Z;
+		const vector3!float c = v0.crossProduct(v1)*invs;
+		X = c.x;
+		Y = c.y;
+		Z = c.z;
 		W = s * 0.5f;
 
 		return this;	

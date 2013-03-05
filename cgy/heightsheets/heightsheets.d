@@ -105,16 +105,16 @@ final class HeightSheets : Module, WorldStateListener {
             SectorXYNum startSect = SectorXYNum(SectorXYNum(center).value - vec2i(5,5));
             foreach(sect ; addBack) {
                 auto localId = SectorXYNum(sect).value - startSect.value;
-                if(localId.X < 0 || localId.X >= 10 || localId.Y < 0 || localId.Y >= 10) continue;
-                if(loaded[localId.Y][localId.X]) continue;
+                if(localId.x < 0 || localId.x >= 10 || localId.y < 0 || localId.y >= 10) continue;
+                if(loaded[localId.y][localId.x]) continue;
                 if(! shouldMakeHeightSheet(localId)) continue;
                 updated = true;
-                loaded[localId.Y][localId.X] = true;
+                loaded[localId.y][localId.x] = true;
 
                 foreach(Y ; 0 .. 4) {
                     foreach(X ; 0 .. 4) {
-                        int x = X + localId.X * 4;
-                        int y = Y + localId.Y * 4;
+                        int x = X + localId.x * 4;
+                        int y = Y + localId.y * 4;
                         int newBaseIdx = 6*(40*y + x);
                         indices[newBaseIdx + 1] = cast(ushort)(41 * (y + 0) + x + 0);
                         indices[newBaseIdx + 0] = cast(ushort)(41 * (y + 1) + x + 0);
@@ -146,18 +146,18 @@ final class HeightSheets : Module, WorldStateListener {
 
             foreach(sect ; removeList) {
                 auto localId = SectorXYNum(sect).value - startSect.value;
-                if(localId.X < 0 || localId.X >= 10 || localId.Y < 0 || localId.Y >= 10) continue;
-                if(!loaded[localId.Y][localId.X]) continue;
+                if(localId.x < 0 || localId.x >= 10 || localId.y < 0 || localId.y >= 10) continue;
+                if(!loaded[localId.y][localId.x]) continue;
 
-                auto bottom = sect.toTilePos().value.Z;
+                auto bottom = sect.toTilePos().value.z;
                 auto top = bottom + SectorSize.z;
-                if(bottom > sectorMax[localId.Y * 10 + localId.X]) continue;
-                if(top < sectorMin[localId.Y * 10 + localId.X]) continue;
+                if(bottom > sectorMax[localId.y * 10 + localId.x]) continue;
+                if(top < sectorMin[localId.y * 10 + localId.x]) continue;
                 updated = true;
-                loaded[localId.Y][localId.X] = false;
+                loaded[localId.y][localId.x] = false;
 
                 foreach(y ; 0 .. 4) {
-                    int newBaseIdx = 6*(40*(localId.Y*4 + y) + localId.X*4);
+                    int newBaseIdx = 6*(40*(localId.y*4 + y) + localId.x*4);
                     indices[newBaseIdx .. newBaseIdx + 6*4] = 0;
                 }
             }

@@ -94,7 +94,7 @@ class DialogBox : GuiElementWindow {
 
         //The dialog is now sized and positioned.
 
-        auto a = Recti(vec2i(0, clientAreaAbsolute.topOf + message.getSize().Y / 2 ), message.getSize());
+        auto a = Recti(vec2i(0, clientAreaAbsolute.topOf + message.getSize().y / 2 ), message.getSize());
         auto newRect = clientAreaAbsolute.centerRect(a, true, false);
         message.setAbsoluteRect(newRect);
         

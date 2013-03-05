@@ -159,19 +159,19 @@ struct WallBetweenSectors {
         auto bb = active.toBlockNum.value;
 
         auto start = vec3i(
-                           delta.X == 0 ? 0
-                           : (delta.X == 1 ? BlocksPerSector.x - 1 : 0),
-                           delta.Y == 0 ? 0
-                           : (delta.Y == 1 ? BlocksPerSector.y - 1 : 0),
-                           delta.Z == 0 ? 0
-                           : (delta.Z == 1 ? BlocksPerSector.z - 1 : 0));
+                           delta.x == 0 ? 0
+                           : (delta.x == 1 ? BlocksPerSector.x - 1 : 0),
+                           delta.y == 0 ? 0
+                           : (delta.y == 1 ? BlocksPerSector.y - 1 : 0),
+                           delta.z == 0 ? 0
+                           : (delta.z == 1 ? BlocksPerSector.z - 1 : 0));
         auto end = vec3i( 
-                         delta.X == 0 ? BlocksPerSector.x
-                         : (delta.X == 1 ? BlocksPerSector.x-1 : 0),
-                         delta.Y == 0 ? BlocksPerSector.y
-                         : (delta.Y == 1 ? BlocksPerSector.y-1 : 0),
-                         delta.Z == 0 ? BlocksPerSector.z
-                         : (delta.Z == 1 ? BlocksPerSector.z-1 : 0));
+                         delta.x == 0 ? BlocksPerSector.x
+                         : (delta.x == 1 ? BlocksPerSector.x-1 : 0),
+                         delta.y == 0 ? BlocksPerSector.y
+                         : (delta.y == 1 ? BlocksPerSector.y-1 : 0),
+                         delta.z == 0 ? BlocksPerSector.z
+                         : (delta.z == 1 ? BlocksPerSector.z-1 : 0));
         BlockNum b(vec3i v) {
             return BlockNum(v);
         }

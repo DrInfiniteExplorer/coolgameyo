@@ -57,8 +57,8 @@ class GuiElementScrollBar : public GuiElement {
         scope(exit) moving = false;
         setRelativeRect(Rectd(0,0,1,1));
         auto abs = getAbsoluteRect();
-        abs.start.X += (abs.size.X - scrollWidth);
-        abs.size.X = scrollWidth;
+        abs.start.x += (abs.size.x - scrollWidth);
+        abs.size.x = scrollWidth;
         setAbsoluteRect(abs);
         super.onMove();
     }
@@ -70,12 +70,12 @@ class GuiElementScrollBar : public GuiElement {
 
         auto abs = absoluteRect;
         auto rect = abs;
-        rect.size.Y = scrollWidth;
+        rect.size.y = scrollWidth;
         renderRect(rect, vec3f(0.1));
-        rect.start.Y += abs.size.Y - scrollWidth;
+        rect.start.y += abs.size.y - scrollWidth;
         renderRect(rect, vec3f(0.1));
 
-        int totalScrollSize = abs.size.Y - 2 * scrollWidth;
+        int totalScrollSize = abs.size.y - 2 * scrollWidth;
 
         float percentScrollBar = cast(float)scrollBar / cast(float)totalScroll;
         int scrollBarHeight = cast(int)(totalScrollSize * percentScrollBar);
@@ -84,8 +84,8 @@ class GuiElementScrollBar : public GuiElement {
         float percentScrolled = cast(float)amountScroll / cast(float)(totalScroll - scrollBar);
         int scrollBarStart = cast(int)(percentScrolled * scrollableHeight);
 
-        rect.size.Y = scrollBarHeight;
-        rect.start.Y = abs.start.Y + scrollWidth + scrollBarStart;
+        rect.size.y = scrollBarHeight;
+        rect.start.y = abs.start.y + scrollWidth + scrollBarStart;
 
         renderRect(rect.diff(3, 0, -4, 0), vec3f(0.3));
 
@@ -108,7 +108,7 @@ class GuiElementScrollBar : public GuiElement {
                         //auto fAbs = absoluteRect.convert!float();
                         //auto fPos = m.pos.convert!float();
                         auto relative = fAbs.getRelative(fPos);
-                        repositionSlider(relative.X);
+                        repositionSlider(relative.x);
                         return GuiEventResponse.Accept;
                     }                    
                 } else {
@@ -122,7 +122,7 @@ class GuiElementScrollBar : public GuiElement {
                 auto fAbs = absoluteRect.convert!double;
                 auto fPos = m.pos.convert!double();
                 auto relative = fAbs.getRelative(fPos);
-                repositionSlider(relative.X);
+                repositionSlider(relative.x);
                 return GuiEventResponse.Accept;
             }
         }

@@ -9,8 +9,8 @@ struct Range2D {
     int bx,ex,by,ey;
     int x,y;
     this(vec2i min, vec2i max){
-        this(min.X, max.X,
-             min.Y, max.Y);
+        this(min.x, max.x,
+             min.y, max.y);
     }
 
     //TODO: Recode this and all that uses this, so that it follows the convention of the one above which is more sensemakeing
@@ -71,9 +71,9 @@ struct RangeFromTo {
     int bx,ex,by,ey,bz,ez;
     int x,y,z;
     this(vec3i min, vec3i max){
-        this(min.X, max.X,
-             min.Y, max.Y,
-             min.Z, max.Z);
+        this(min.x, max.x,
+             min.y, max.y,
+             min.z, max.z);
     }
 
     //TODO: Recode this and all that uses this, so that it follows the convention of the one above which is more sensemakeing
@@ -129,7 +129,7 @@ unittest {
     int[5][5][5] x;
     cast(int[])(x[0][0])[] = 0;
     foreach (p; RangeFromTo (0,4,0,4,0,4)) {
-        x[p.Z][p.Y][p.X] = 1;
+        x[p.z][p.y][p.x] = 1;
     }
     auto xx = &x[0][0][0];
     for (int i = 0; i < (x.sizeof / x[0].sizeof ); i += 1) {

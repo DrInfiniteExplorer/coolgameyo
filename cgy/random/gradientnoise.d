@@ -49,24 +49,22 @@ class GradientNoise(string Step = "smoothStep", string Lerp = "lerp") : ValueSou
 
     double getLattice(int i, int j, double dx, double dy) {
         auto v = PRNs[Index(i, j)];
-        return v.X * dx + v.Y * dy; // TODO: Make use of all values eventually, not only x,y but z as well. Same for 1D-version
+        return v.x * dx + v.y * dy; // TODO: Make use of all values eventually, not only x,y but z as well. Same for 1D-version
     }
 
     double getLattice(int i, double dx) {
         auto v = PRNs[Index(i)];
-        return v.X * dx;
+        return v.x * dx;
     }
     
-    override double getValue(double x, double y, double z) {
-        x += 0.012354378973;
-        y += 0.834239853982;
-        z += 0.359820984234;
-        int i = fastFloor(x);
-        int j = fastFloor(y);
-        int k = fastFloor(z);
-        double dx = x - cast(double)i;
-        double dy = y - cast(double)j;
-        double dz = z - cast(double)k;
+    override double getValue3(vec3d pos) {
+        pos += vec3d(0.012354378973, 0.834239853982, 0.359820984234);
+        int i = fastFloor(pos.x);
+        int j = fastFloor(pos.y);
+        int k = fastFloor(pos.z);
+        double dx = pos.x - cast(double)i;
+        double dy = pos.y - cast(double)j;
+        double dz = pos.z - cast(double)k;
         
         double v000 = getLattice(i  , j  , k  , dx  , dy  , dz  );
         double v100 = getLattice(i+1, j  , k  , dx-1, dy  , dz  );
@@ -91,14 +89,13 @@ class GradientNoise(string Step = "smoothStep", string Lerp = "lerp") : ValueSou
         
         return 2.0 * Interpolate(v0, v1, wx);
     }    
-    override double getValue(double x, double y) {
-        x += 0.012354378973;
-        y += 0.834239853982;
+    override double getValue2(vec2d pos) {
+        pos += vec2d(0.012354378973, 0.834239853982);
 
-        int i = fastFloor(x);
-        int j = fastFloor(y);
-        double dx = x - cast(double)i;
-        double dy = y - cast(double)j;
+        int i = fastFloor(pos.x);
+        int j = fastFloor(pos.y);
+        double dx = pos.x - cast(double)i;
+        double dy = pos.y - cast(double)j;
         
         double v00 = getLattice(i  , j  , dx  , dy  );
         double v10 = getLattice(i+1, j  , dx-1, dy  );
@@ -133,11 +130,11 @@ class GradientNoise01(string Step = "smoothStep", string Lerp = "lerp") : Gradie
         super(Size, rsu);
     }
 
-    override double getValue(double x, double y, double z) {
-        return super.getValue(x,y,z) + 0.5;
+    override double getValue3(vec3d pos) {
+        return super.getValue3(pos) + 0.5;
     }    
-    override double getValue(double x, double y) {
-        return super.getValue(x,y) + 0.5;
+    override double getValue2(vec2d pos) {
+        return super.getValue2(pos) + 0.5;
     }
 
     override double getValue(double x) {
@@ -150,11 +147,11 @@ class OffsetGradientNoise(string Step = "smoothStep", string Lerp = "lerp") : Gr
         super(Size, rsu);
     }
 
-    override double getValue(double x, double y, double z) {
-        return super.getValue(x+0.51235456,y+0.554378989,z+0.545723);
+    override double getValue3(vec3d pos) {
+        return super.getValue3(pos + vec3d(0.51235456,0.554378989,0.545723));
     }    
-    override double getValue(double x, double y) {
-        return super.getValue(x+0.2512454,y+0.258673);
+    override double getValue2(vec2d pos) {
+        return super.getValue2(pos + vec2d(0.2512454,0.258673));
     }
 
     override double getValue(double x) {
@@ -171,7 +168,7 @@ unittest {
     double min = double.max;
     double max = -double.max;
     for(double t = 0; t < 123456; t += 0.1) {
-        double v = worldHeightMap.getValue(t,t+worldHeightMap.getValue(t));
+        double v = worldHeightMap.getValue2(vec2d(t,t+worldHeightMap.getValue(t)));
         if (min > v) min = v;
         if (max < v) max = v;
     }

@@ -4,26 +4,27 @@ import std.conv;
 import std.math;
 
 import util.util;
+import util.math : fastFloor;
 import random.random;
 import random.valuesource;
 
-auto XInterpolate(alias Lerp, Source)(Source source, double x, double y, double z) {
+auto XInterpolate3(alias Lerp, alias get)(vec3d pos) {
     //TODO: Do not assume that the source is a lattice with grid of size 1,1
     // Ie. dX dY may span [0, 1] over a range that is 4 long instead of current length 1.
-    int loX = to!int(floor(x));
-    int loY = to!int(floor(y));
-    int loZ = to!int(floor(z));
-    float dX = x - to!float(loX);
-    float dY = y - to!float(loY);
-    float dZ = z - to!float(loZ);
-    double v000 = source.getValue(loX  , loY  , loZ  );
-    double v100 = source.getValue(loX+1, loY  , loZ  );
-    double v010 = source.getValue(loX  , loY+1, loZ  );
-    double v110 = source.getValue(loX+1, loY+1, loZ  );
-    double v001 = source.getValue(loX  , loY  , loZ+1);
-    double v101 = source.getValue(loX+1, loY  , loZ+1);
-    double v011 = source.getValue(loX  , loY+1, loZ+1);
-    double v111 = source.getValue(loX+1, loY+1, loZ+1);
+    int loX = fastFloor(pos.x);
+    int loY = fastFloor(pos.y);
+    int loZ = fastFloor(pos.z);
+    float dX = pos.x - cast(float)loX;
+    float dY = pos.y - cast(float)loY;
+    float dZ = pos.z - cast(float)loZ;
+    double v000 = get(vec3d(loX  , loY  , loZ  ));
+    double v100 = get(vec3d(loX+1, loY  , loZ  ));
+    double v010 = get(vec3d(loX  , loY+1, loZ  ));
+    double v110 = get(vec3d(loX+1, loY+1, loZ  ));
+    double v001 = get(vec3d(loX  , loY  , loZ+1));
+    double v101 = get(vec3d(loX+1, loY  , loZ+1));
+    double v011 = get(vec3d(loX  , loY+1, loZ+1));
+    double v111 = get(vec3d(loX+1, loY+1, loZ+1));
     auto v00 = Lerp(v000, v001, dZ);
     auto v01 = Lerp(v010, v011, dZ);
     auto v11 = Lerp(v110, v111, dZ);
@@ -33,15 +34,17 @@ auto XInterpolate(alias Lerp, Source)(Source source, double x, double y, double 
     return Lerp(v0, v1, dX);
 }
 
-auto XInterpolate(alias Lerp, Source)(Source source, double x, double y) {
+auto XInterpolate2(alias Lerp, alias get)(vec2d pos) {
     //TODO: Do not assume that the source is a lattice with grid of size 1,1
     // Ie. dX dY may span [0, 1] over a range that is 4 long instead of current length 1.
-    int loX = to!int(floor(x));
-    int loY = to!int(floor(y));
-    float dX = x - to!float(loX);
-    float dY = y - to!float(loY);
-    auto tx1 = Lerp(source.getValue(loX, loY),   source.getValue(loX+1, loY), dX);
-    auto tx2 = Lerp(source.getValue(loX, loY+1), source.getValue(loX+1, loY+1), dX);
+
+    int loX = fastFloor(pos.x);
+    int loY = fastFloor(pos.y);
+    float dX = pos.x - cast(float)loX;
+    float dY = pos.y - cast(float)loY;
+
+    auto tx1 = Lerp(get(vec2d(loX, loY)),   get(vec2d(loX+1, loY)), dX);
+    auto tx2 = Lerp(get(vec2d(loX, loY+1)), get(vec2d(loX+1, loY+1)), dX);
     return Lerp(tx1, tx2, dY);
 }
 
@@ -59,11 +62,13 @@ final class XInterpolation(alias Lerp) : ValueSource {
     this(ValueSource _source) {
         source = _source;
     }
-    override double getValue(double x, double y, double z) {
-        return XInterpolate!(Lerp, ValueSource)(source, x,y,z);
+    override double getValue3(vec3d pos) {
+        auto get = &source.getValue3;
+        return XInterpolate3!(Lerp, get)(pos);
     }
-    override double getValue(double x, double y) {
-        return XInterpolate!(Lerp, ValueSource)(source, x,y);
+    override double getValue2(vec2d pos) {
+        auto get = &source.getValue2;
+        return XInterpolate2!(Lerp, get)(pos);
     }
     override double getValue(double x) {
         return XInterpolate!(Lerp, ValueSource)(source, x);

@@ -7,7 +7,7 @@ import std.math;
 import std.stdio;
 import std.string;
 
-import stolen.vector2d;
+import math.vector;
 
 import util.util;
 import util.filesystem;
@@ -19,7 +19,7 @@ import graphics.image;
 
 final class Vector2DMap2D(T, bool Wrap = true) {
 
-    alias vector2d!T StorageType;
+    alias vector2!T StorageType;
     StorageType[] map;
     uint sizeX, sizeY;
 
@@ -152,7 +152,7 @@ final class Vector2DMap2D(T, bool Wrap = true) {
                 auto len = (v.getLength() - min) / range;
                 len *= arrowSize;
                 v.normalize();
-                auto v_cross = vec2d(-v.Y, v.X);
+                auto v_cross = vec2d(-v.y, v.x);
 
                 auto center = vec2d(x, y);
                 auto start = center - v * len;
@@ -186,6 +186,7 @@ final class Vector2DMap2D(T, bool Wrap = true) {
         return 1.0f;
     }
 
+    // Real simple shit.
     void advectValueField(MapType)(MapType inMap, MapType outMap) {
         enforce(inMap.sizeX == sizeX, "Can't advect maps of different X-sizes");
         enforce(inMap.sizeY == sizeY, "Can't advect maps of different Y-sizes");
@@ -196,7 +197,7 @@ final class Vector2DMap2D(T, bool Wrap = true) {
             foreach(x ; 0 .. sizeX) {
                 auto where = StorageType(x, y);
                 auto dir = get(x, y);
-                auto grad = inMap.upwindGradient(x, y, dir.X, dir.Y, 1.0);
+                auto grad = inMap.upwindGradient(x, y, dir.x, dir.y, 1.0);
                 outMap.set(x, y, -dir.dotProduct(grad));
             }
         }
@@ -219,9 +220,9 @@ final class Vector2DMap2D(T, bool Wrap = true) {
                 auto where = StorageType(x, y);
                 foreach(step ; 0 .. steps) {
                     
-                    where = where - XInterpolate!lerp(this, where.X, where.Y) * dt;
+                    where = where - XInterpolate!lerp(this, where.x, where.y) * dt;
                 }
-                auto value = XInterpolate!lerp(this, where.X, where.Y);
+                auto value = XInterpolate!lerp(this, where.x, where.y);
                 outMap.set(x, y, value);
             }
         }

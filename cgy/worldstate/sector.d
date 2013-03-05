@@ -44,10 +44,10 @@ struct SolidMap {
     bool dirty = false;
 
     bool set(vec3i idx, bool val) {
-        int x   = idx.X/BitCount;
-        int bit = idx.X%BitCount;
-        int y   = idx.Y;
-        int z   = idx.Z;
+        int x   = idx.x/BitCount;
+        int bit = idx.x%BitCount;
+        int y   = idx.y;
+        int z   = idx.z;
 
         StorageType value = data[z][y][x];
         StorageType bitMask = cast(StorageType)(1<<bit);
@@ -58,10 +58,10 @@ struct SolidMap {
         return oldVal;
     }
     bool get(vec3i idx) const {
-        int x   = idx.X/BitCount;
-        int bit = idx.X%BitCount;
-        int y   = idx.Y;
-        int z   = idx.Z;
+        int x   = idx.x/BitCount;
+        int bit = idx.x%BitCount;
+        int y   = idx.y;
+        int z   = idx.z;
 
         return 0 != (data[z][y][x] & (1<<bit));
     }
@@ -80,15 +80,15 @@ struct SolidMap {
         auto blockNum = b.blockNum;
         auto relNum = blockNum.rel();
         auto blockTilePos = blockNum.toTilePos();
-        int x = relNum.X * BlockSize.x;
-        int y = relNum.Y * BlockSize.y;
-        int z = relNum.Z * BlockSize.z;
+        int x = relNum.x * BlockSize.x;
+        int y = relNum.y * BlockSize.y;
+        int z = relNum.z * BlockSize.z;
 
 
         foreach(rel ; RangeFromTo(vec3i(0), vec3i(BlockSize.x-1, BlockSize.y-1, BlockSize.z-1))) {
-            int xx = x + rel.X;
-            int yy = y + rel.Y;
-            int zz = z + rel.Z;
+            int xx = x + rel.x;
+            int yy = y + rel.y;
+            int zz = z + rel.z;
             set(vec3i(xx, yy, zz), !b.getTile(TilePos(blockTilePos.value + rel)).isAir);
         }
     }
@@ -156,7 +156,7 @@ class Sector {
     }
     
     void serialize() {
-        string folder = text(g_worldPath ~ "/world/", sectorNum.value.X, ",", sectorNum.value.Y, "/", sectorNum.value.Z, "/");
+        string folder = text(g_worldPath ~ "/world/", sectorNum.value.x, ",", sectorNum.value.y, "/", sectorNum.value.z, "/");
         util.filesystem.mkdir(folder);
         
         auto file = std.stdio.File(folder ~ "blocks.bin", "wb");
@@ -174,7 +174,7 @@ class Sector {
     }
     
     bool deserialize(EntityTypeManager entityTypeManager, WorldState world) {
-        string folder = text(g_worldPath ~ "/world/", sectorNum.value.X, ",", sectorNum.value.Y, "/", sectorNum.value.Z, "/");
+        string folder = text(g_worldPath ~ "/world/", sectorNum.value.x, ",", sectorNum.value.y, "/", sectorNum.value.z, "/");
         if (!std.file.exists(folder)) {
             return false;
         }
@@ -193,8 +193,8 @@ class Sector {
             Block_t block;
             block.deserialize(&read);
             auto num = block.blockNum.rel();
-            enforce(blocks[num.Z][num.Y][num.X].tiles is null, "DERP!");
-            blocks[num.Z][num.Y][num.X] = block;
+            enforce(blocks[num.z][num.y][num.x].tiles is null, "DERP!");
+            blocks[num.z][num.y][num.x] = block;
             solidMap.updateBlock(block);
             block.tiles = null;
         }
@@ -207,7 +207,7 @@ class Sector {
     in{
         assert(blockNum.getSectorNum() == sectorNum, "Trying to generate a block in the wrong sector!");
         auto pos = blockNum.rel();
-        assert(blocks[pos.Z][pos.Y][pos.X] == INVALID_BLOCK, 
+        assert(blocks[pos.z][pos.y][pos.x] == INVALID_BLOCK, 
                 text("Trying to generate a block which already contains stuff.",
                     blockNum));
     }
@@ -218,7 +218,7 @@ class Sector {
         /*
         auto pos = blockNum.rel();
         auto block = Block.generateBlock(blockNum, worldMap);
-        blocks[pos.Z][pos.Y][pos.X] = block;
+        blocks[pos.z][pos.y][pos.x] = block;
         solidMap.updateBlock(block);
         */
     }
@@ -226,7 +226,7 @@ class Sector {
     void makeAirBlock(BlockNum blockNum) {
         auto pos = blockNum.rel();
         auto airBlock = AirBlock(blockNum);
-        blocks[pos.Z][pos.Y][pos.X] = airBlock;
+        blocks[pos.z][pos.y][pos.x] = airBlock;
         solidMap.updateBlock(airBlock); //Can make a clearBlock ? 
     }
 
@@ -236,12 +236,12 @@ class Sector {
     }
     body{
         auto pos = blockNum.rel();
-        return &blocks[pos.Z][pos.Y][pos.X];
+        return &blocks[pos.z][pos.y][pos.x];
     }
 
     void unsafe_setBlock(Block_t block) {
         auto pos = block.blockNum.rel();        
-        Block blockPtr = &blocks[pos.Z][pos.Y][pos.X];
+        Block blockPtr = &blocks[pos.z][pos.y][pos.x];
         blockPtr.destroy;
         *blockPtr = block;
 

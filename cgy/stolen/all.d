@@ -7,6 +7,6 @@ public import stolen.line3d;
 public import stolen.math;
 public import stolen.matrix4;
 public import stolen.plane3d;
-public import stolen.vector3d;
-public import stolen.vector2d;
+
+public import math.vector;
 

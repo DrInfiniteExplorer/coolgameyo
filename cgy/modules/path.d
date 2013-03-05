@@ -49,7 +49,7 @@ struct Path {
 
         double ret = 0;
         foreach (x; m) {
-            ret += x.getDistanceFrom(p);
+            ret += x.getDistance(p);
             p = x;
         }
         return ret;
@@ -189,8 +189,8 @@ static struct PathFindState {
     this(UnitPos[] from_, UnitPos[] goal_, PathID id_, 
             void delegate(PathID) finishPath_) {
 
-        from = from_.dup;
-        goal = goal_.dup;
+        from = from_.array;
+        goal = goal_.array;
 
         id = id_;
         finishPath = finishPath_;
@@ -326,9 +326,9 @@ static struct PathFindState {
 
     double costBetween(WorldProxy world, TilePos a, TilePos b) {
 
-        if (a.value.Z == b.value.Z) {
+        if (a.value.z == b.value.z) {
             return normalStep;
-        } else if (a.value.Z > b.value.Z) {
+        } else if (a.value.z > b.value.z) {
             return moveDownRegular;
         } else {
             return moveUpRegular;
@@ -336,9 +336,9 @@ static struct PathFindState {
     }
     double estimateBetween(TilePos a, TilePos b) {
         immutable estimateFactor = 5.99;
-        auto xx = (a.value.X - b.value.X) ^^ 2;
-        auto yy = (a.value.Y - b.value.Y) ^^ 2;
-        auto zz = (a.value.Z - b.value.Z) ^^ 2;
+        auto xx = (a.value.x - b.value.x) ^^ 2;
+        auto yy = (a.value.y - b.value.y) ^^ 2;
+        auto zz = (a.value.z - b.value.z) ^^ 2;
         return estimateFactor * sqrt(cast(real)xx + yy + zz);
     }
 
@@ -400,17 +400,17 @@ static struct PathFindState {
 
             bool test_from_to(TilePos a, TilePos b)
             in{
-                assert (a.value.X != b.value.X
-                        || a.value.Y != b.value.Y
-                        || a.value.Z != b.value.Z, "a and b are the same tile!");
+                assert (a.value.x != b.value.x
+                        || a.value.y != b.value.y
+                        || a.value.z != b.value.z, "a and b are the same tile!");
             }
             body{
                 if (!avail(a) || !avail(b)) return false;
                 return true;
                 /*
-                if (a.value.Z == b.value.Z) {
+                if (a.value.z == b.value.z) {
                     return true;
-                } else if (a.value.Z < b.value.Z) {
+                } else if (a.value.z < b.value.z) {
                     return true;
                 } else {
                     return true;

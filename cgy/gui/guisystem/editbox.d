@@ -99,13 +99,13 @@ class GuiElementEditbox : public GuiElement {
     
     int getPixelFromPos(size_t pos) {
         vec2i charSize = font.glyphSize();
-        return 2 + pos * charSize.X;
+        return 2 + pos * charSize.x;
     }
     size_t determineCharPos(vec2i pos) {
         vec2i relative = pos - absoluteRect.start - 2;
         vec2i charSize = font.glyphSize();
-        relative.X += charSize.X / 2;
-        int slot = relative.X / charSize.X;
+        relative.x += charSize.x / 2;
+        int slot = relative.x / charSize.x;
         return max(0, min(slot, content.length));
     }    
     
@@ -125,8 +125,8 @@ class GuiElementEditbox : public GuiElement {
             }
             auto marked = absoluteRect.diff(vec2i(0, 2), vec2i(0, -2));
             auto dx = getPixelFromPos(start);
-            marked.start.X += dx;
-            marked.size.X = getPixelFromPos(stop)-dx;    
+            marked.start.x += dx;
+            marked.size.x = getPixelFromPos(stop)-dx;    
             
             renderRect(marked, hasFocus ?   vec3f(0.25, 0.25, 0.75) :
                                             vec3f(0.5, 0.5, 0.5) );
@@ -136,7 +136,7 @@ class GuiElementEditbox : public GuiElement {
         if (hasFocus) {
             auto dx = getPixelFromPos(startMarker);
             auto mark = absoluteRect.diff(vec2i(dx, 3), vec2i(0,-3));
-            mark.size.X = 1;
+            mark.size.x = 1;
             renderRect(mark, markerColor);
         }
         
@@ -327,7 +327,7 @@ class GuiElementLabeledEdit : GuiElementEditbox {
          // ~ " " to make space between label/edit in a simpel manner xD
         label = new GuiElementText(parent, relative.start, _label ~ " ");
         auto labelRect = label.getRelativeRect();
-        relative.start.X += labelRect.size.X;
+        relative.start.x += labelRect.size.x;
         
         label.setRelativeRect(Rectd(0,0,1,1).getSubRectInv(labelRect));
         super(parent, relative, str);

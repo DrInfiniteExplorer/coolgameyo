@@ -3,8 +3,8 @@
   "type":"soil",
   "name":"sandy clay loam",
   "color":{
-    "X":193,
-    "Y":194,
-    "Z":135
+    "x":193,
+    "y":194,
+    "z":135
   }
 }

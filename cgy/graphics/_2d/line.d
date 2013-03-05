@@ -23,11 +23,11 @@ struct LineVertex {
 immutable(char[]) fixRect = "
     auto screenSize = vec2f(renderSettings.windowWidth-1, renderSettings.windowHeight-1);
     auto start = (vec2f(offset, offset) + r.start.convert!float()) / screenSize;
-    start.Y = 1.0 - start.Y;
+    start.y = 1.0 - start.y;
     auto size = r.size.convert!float() / screenSize;
-    start.Y -= size.Y;
-    auto x = vec2f(size.X, 0);
-    auto y = vec2f(0, size.Y);
+    start.y -= size.y;
+    auto x = vec2f(size.x, 0);
+    auto y = vec2f(0, size.y);
     ";
 
 struct Lines{
@@ -60,23 +60,23 @@ struct Lines{
         double maxY = maxX;
 
         if(_min != _max) {
-            minX = _min.X;
-            maxX = _max.X;
-            minY = _min.Y;
-            maxY = _max.Y;
+            minX = _min.x;
+            maxX = _max.x;
+            minY = _min.y;
+            maxY = _max.y;
         } else {
             foreach(pt ; points) {
-                minX = min(pt.X, minX);
-                minY = min(pt.Y, minY);
-                maxX = max(pt.X, maxX);
-                maxY = max(pt.Y, maxY);
+                minX = min(pt.x, minX);
+                minY = min(pt.y, minY);
+                maxX = max(pt.x, maxX);
+                maxY = max(pt.y, maxY);
             }
         }
 
         double width = maxX - minX;
         double height = maxY - minY;
         vec2f fix(vec2d pt) {
-            return start + (x+y).mult(pt.convert!float - vec2f(minX, minY)).divide(vec2f(width, height));
+            return start + (x+y) * (pt.convert!float - vec2f(minX, minY)) / vec2f(width, height);
         }
         foreach(pt ; points) {
             vertices ~= LineVertex(fix(pt), color);
@@ -117,7 +117,7 @@ class LineShader {
         //glDisable(GL_DEPTH_TEST);
         //glDepthMask(0);
         lineProgram.use();
-        //rect.start.Y = 1.0 - rect.start.Y;
+        //rect.start.y = 1.0 - rect.start.y;
         //program.setUniform(program.offset, rect.start);        
         //TODO: Use rest of rect for clipping?
         glEnableVertexAttribArray(lineProgram.position);
@@ -126,9 +126,9 @@ class LineShader {
         glError();
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glError();
-        glVertexAttribPointer(lineProgram.position, 2, GL_FLOAT, GL_FALSE, LineVertex.sizeof, &l.vertices[0].pos.X);
+        glVertexAttribPointer(lineProgram.position, 2, GL_FLOAT, GL_FALSE, LineVertex.sizeof, &l.vertices[0].pos.x);
         glError();
-        glVertexAttribPointer(lineProgram.color, 3, GL_FLOAT, GL_FALSE, LineVertex.sizeof, cast(void*)&l.vertices[0].color.X);
+        glVertexAttribPointer(lineProgram.color, 3, GL_FLOAT, GL_FALSE, LineVertex.sizeof, cast(void*)&l.vertices[0].color.x);
         glError();
 
         glDrawArrays(GL_LINE_STRIP, 0, l.vertices.length);

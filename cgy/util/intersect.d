@@ -10,23 +10,23 @@ import util.rangefromto;
 
 // Penetrating intersection
 bool intersectsExclusive(aabbox3d!double a, aabbox3d!double b){
-    auto minx = max(a.MinEdge.X, b.MinEdge.X);
-    auto miny = max(a.MinEdge.Y, b.MinEdge.Y);
-    auto minz = max(a.MinEdge.Z, b.MinEdge.Z);
-    auto maxx = min(a.MaxEdge.X, b.MaxEdge.X);
-    auto maxy = min(a.MaxEdge.Y, b.MaxEdge.Y);
-    auto maxz = min(a.MaxEdge.Z, b.MaxEdge.Z);
+    auto minx = max(a.MinEdge.x, b.MinEdge.x);
+    auto miny = max(a.MinEdge.y, b.MinEdge.y);
+    auto minz = max(a.MinEdge.z, b.MinEdge.z);
+    auto maxx = min(a.MaxEdge.x, b.MaxEdge.x);
+    auto maxy = min(a.MaxEdge.y, b.MaxEdge.y);
+    auto maxz = min(a.MaxEdge.z, b.MaxEdge.z);
 
     return minx < maxx && miny<maxy && minz<maxz;
 }
 //And this one intersects for all intersecting ones, and ones which are right next to each other as well.
 bool intersectsInclusive(aabbox3d!double a, aabbox3d!double b){
-    auto minx = max(a.MinEdge.X, b.MinEdge.X);
-    auto miny = max(a.MinEdge.Y, b.MinEdge.Y);
-    auto minz = max(a.MinEdge.Z, b.MinEdge.Z);
-    auto maxx = min(a.MaxEdge.X, b.MaxEdge.X);
-    auto maxy = min(a.MaxEdge.Y, b.MaxEdge.Y);
-    auto maxz = min(a.MaxEdge.Z, b.MaxEdge.Z);
+    auto minx = max(a.MinEdge.x, b.MinEdge.x);
+    auto miny = max(a.MinEdge.y, b.MinEdge.y);
+    auto minz = max(a.MinEdge.z, b.MinEdge.z);
+    auto maxx = min(a.MaxEdge.x, b.MaxEdge.x);
+    auto maxy = min(a.MaxEdge.y, b.MaxEdge.y);
+    auto maxz = min(a.MaxEdge.z, b.MaxEdge.z);
 
     return minx <= maxx && miny <= maxy && minz <= maxz;
 }
@@ -76,7 +76,7 @@ unittest{
 //Returns a quick check if a pos is within the limits.
 //The limits are inclusive.
 bool within(T)(T pos, T min, T max) {
-    return !(pos.X < min.X || pos.X > max.X ||
-       pos.Y < min.Y || pos.Y > max.Y ||
-       pos.Z < min.Z || pos.Z > max.Z);
+    return !(pos.x < min.x || pos.x > max.x ||
+       pos.y < min.y || pos.y > max.y ||
+       pos.z < min.z || pos.z > max.z);
 }

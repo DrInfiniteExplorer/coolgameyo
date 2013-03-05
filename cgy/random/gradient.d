@@ -12,14 +12,14 @@ final class GradientField : ValueSource {
         d = normal.dotProduct(zero);
     }
 
-    override double getValue(double x, double y, double z) {
-        return normal.dotProduct(vec3d(x, y, z)) - d;
+    override double getValue3(vec3d pos) {
+        return normal.dotProduct(pos) - d;
     }
-    override double getValue(double x, double y) {
-        return getValue(x, y, 0);
+    override double getValue2(vec2d pos) {
+        return getValue3(pos.v3(0));
     }
     override double getValue(double x) {
-        return getValue(x, 0, 0);
+        return getValue3(vec3d(x, 0, 0));
     }    
 }
 
@@ -32,14 +32,14 @@ final class PlanarDistanceField : ValueSource {
         d = normal.dotProduct(zero);
     }
 
-    override double getValue(double x, double y, double z) {
-        return normal.dotProduct(vec3d(x, y, z)) - d;
+    override double getValue3(vec3d pos) {
+        return normal.dotProduct(pos) - d;
     }
-    override double getValue(double x, double y) {
-        return getValue(x, y, 0);
+    override double getValue2(vec2d pos) {
+        return getValue3(pos.v3(0));
     }
     override double getValue(double x) {
-        return getValue(x, 0, 0);
+        return getValue3(vec3d(x, 0, 0));
     }    
 }
 
@@ -74,9 +74,9 @@ final class ConicalGradientField : ValueSource {
         falloff = _falloff;
     }
 
-    override double getValue(double x, double y, double z) {
+    override double getValue3(vec3d pos) {
 
-        auto pt = vec3d(x, y, z);
+        auto pt = pos;
         auto projected = axis.dotProduct(pt);
         auto distanceOnAxis = projected - d;
         auto projectedPt = zero + distanceOnAxis * axis;
@@ -85,10 +85,10 @@ final class ConicalGradientField : ValueSource {
         auto density = distanceOnAxis - distanceFromAxis * falloff;
         return density;
     }
-    override double getValue(double x, double y) {
-        return getValue(x, y, 0);
+    override double getValue2(vec2d pos) {
+        return getValue3(pos.v3(0));
     }
     override double getValue(double x) {
-        return getValue(x, 0, 0);
+        return getValue3(vec3d(x, 0, 0));
     }    
 }

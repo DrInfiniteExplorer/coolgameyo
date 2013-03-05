@@ -87,8 +87,8 @@ final class Level1Sheet {
         foreach(y ; 0 .. level1VertexCount) {
             foreach(x ; 0 .. level1VertexCount) {
                 vec2i tp = baseTp + vec2i(level1SampleDistance) * vec2i(x, y);
-                float X = cast(float) tp.X;
-                float Y = cast(float) tp.Y;
+                float X = cast(float) tp.x;
+                float Y = cast(float) tp.y;
                 float Z;
                 if(x == 0 || x == level1QuadCount || y == 0 || y == level1QuadCount) {
                     Z = worldMap.getApproxHeight(TileXYPos(tp), 2);
@@ -110,8 +110,8 @@ final class Level1Sheet {
                         // It may be possible that within our 2d-neighborhood we are above
                         // or below the ground, and the heightsheet for the ground may need to be built depending on that,
                         // so we find where the ground is(here) and uses it to compare with what is loaded (later)
-                        sectorMin[level1SectorCount * y + x] = min(sectorMin[level1SectorCount * y + x], vertices[y*4+dx][x*4+dy].Z);
-                        sectorMax[level1SectorCount * y + x] = max(sectorMax[level1SectorCount * y + x], vertices[y*4+dx][x*4+dy].Z);
+                        sectorMin[level1SectorCount * y + x] = min(sectorMin[level1SectorCount * y + x], vertices[y*4+dx][x*4+dy].z);
+                        sectorMax[level1SectorCount * y + x] = max(sectorMax[level1SectorCount * y + x], vertices[y*4+dx][x*4+dy].z);
                     }
                 }
             }
@@ -151,9 +151,9 @@ final class Level1Sheet {
                 x = x > level1QuadCount ? level1QuadCount : x;
                 y = y < 0 ? 0 : y;
                 y = y > level1QuadCount ? level1QuadCount : y;
-                return vertices[y][x].Z;
+                return vertices[y][x].z;
             } else {
-                return vertices[y][x].Z;
+                return vertices[y][x].z;
             }
         }
 
@@ -237,8 +237,8 @@ final class Level1Sheet {
     //checks if it is part of the current world, if not then we are free to make heightsheets.
     bool shouldMakeHeightSheet(vec2i sectorNum) {
 
-        double maxZ = sectorMax[sectorNum.Y * level1SectorCount + sectorNum.X] + center.toTilePos.value.Z;
-        double minZ = sectorMin[sectorNum.Y * level1SectorCount + sectorNum.X] + center.toTilePos.value.Z;
+        double maxZ = sectorMax[sectorNum.y * level1SectorCount + sectorNum.x] + center.toTilePos.value.z;
+        double minZ = sectorMin[sectorNum.y * level1SectorCount + sectorNum.x] + center.toTilePos.value.z;
 
         SectorXYNum startSect = SectorXYNum(SectorXYNum(center).value - vec2i(level1SectorCount / 2));
         SectorXYNum thisSect = SectorXYNum(startSect.value + sectorNum);
@@ -248,7 +248,7 @@ final class Level1Sheet {
 
         auto maxSector = maxTP.getSectorNum();
         auto minSector = minTP.getSectorNum();
-        foreach(z ; minSector.value.Z .. maxSector.value.Z+1) {
+        foreach(z ; minSector.value.z .. maxSector.value.z+1) {
             auto testNum = thisSect.getSectorNum(z);
             if(worldState.isActiveSector(testNum)) {
                 if(worldState.isAirSector(testNum)) continue;

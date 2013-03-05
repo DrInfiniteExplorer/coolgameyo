@@ -120,27 +120,27 @@ void uploadTileData(WorldState world, Camera camera) {
         bool dirty = tileMap.dirty;
 
         vec3i rel = vec3i(
-                posMod(num.X, 3),
-                posMod(num.Y, 3),
-                posMod(num.Z, 3)
+                posMod(num.x, 3),
+                posMod(num.y, 3),
+                posMod(num.z, 3)
                 );
 
         bool sameSector = oldSectorNum
-            [rel.Z]
-            [rel.Y]
-            [rel.X] == sectorNum;
+            [rel.z]
+            [rel.y]
+            [rel.x] == sectorNum;
         if(!dirty && sameSector) { //If not dirty and same sector
             continue;
         }
         writeln("Uploading sector data! ", to!string(sectorNum));
         tileMap.dirty = false;
         oldSectorNum
-            [rel.Z]
-            [rel.Y]
-            [rel.X] = sectorNum;
+            [rel.z]
+            [rel.y]
+            [rel.x] = sectorNum;
 
         rel *= vec3i(SolidMap.sizeX, SolidMap.sizeY, SolidMap.sizeZ);
-        const size_t[3] origin = [rel.X,rel.Y,rel.Z];
+        const size_t[3] origin = [rel.x,rel.y,rel.z];
         const size_t[3] region = [SolidMap.sizeX, SolidMap.sizeY, SolidMap.sizeZ];
         g_clCommandQueue.enqueueWriteImage(g_tileBuffer, CL_TRUE, origin, region, tileMap.data.ptr);
     }
@@ -162,10 +162,10 @@ void interactiveComputeYourFather(WorldState world, Camera camera) {
 
     camera.getRayParameters(upperLeft, toRight, toDown);
     CLCamera clCamera;
-    clCamera.position   = [startPos.X, startPos.Y, startPos.Z, 0];
-    clCamera.upperLeft  = [upperLeft.X, upperLeft.Y, upperLeft.Z, 0];
-    clCamera.toRight    = [toRight.X, toRight.Y, toRight.Z, 0];
-    clCamera.toDown     = [toDown.X, toDown.Y, toDown.Z, 0];
+    clCamera.position   = [startPos.x, startPos.y, startPos.z, 0];
+    clCamera.upperLeft  = [upperLeft.x, upperLeft.y, upperLeft.z, 0];
+    clCamera.toRight    = [toRight.x, toRight.y, toRight.z, 0];
+    clCamera.toDown     = [toDown.x, toDown.y, toDown.z, 0];
     clCamera.width = width;
     clCamera.height= height;
     clCamera.windowWidth = renderSettings.windowWidth;
@@ -181,12 +181,12 @@ void interactiveComputeYourFather(WorldState world, Camera camera) {
     CLLight[] clLight;
     clLight.length = lights.length;
     for (int i = 0; i < lights.length; i++) {
-        long currentTimePosition = currentTime+ cast(long)((lights[i].position.value.X + lights[i].position.value.Y)*1000);
+        long currentTimePosition = currentTime+ cast(long)((lights[i].position.value.x + lights[i].position.value.y)*1000);
 
         clLight[i].position = [
-            lights[i].position.value.X + 0.05f * sin(currentTimePosition/300f)^^3,
-            lights[i].position.value.Y + 0.05f * cos(currentTimePosition/500f)^^3,
-            lights[i].position.value.Z + 0.05f * sin(currentTimePosition/700f)^^3, 0];
+            lights[i].position.value.x + 0.05f * sin(currentTimePosition/300f)^^3,
+            lights[i].position.value.y + 0.05f * cos(currentTimePosition/500f)^^3,
+            lights[i].position.value.z + 0.05f * sin(currentTimePosition/700f)^^3, 0];
         
         float asdf = sin(cast(float)(currentTimePosition)/400f);
         float fdsa = sin(cast(float)(currentTimePosition)/100f);
@@ -194,7 +194,7 @@ void interactiveComputeYourFather(WorldState world, Camera camera) {
                         ((abs(asdf) * 0.4f + 0.6f) +
                          (abs(fdsa) * 0.2f + 0.8f)) / 2f;
         
-        float dist = lights[i].position.value.getDistanceFrom(startPos);
+        float dist = lights[i].position.value.getDistance(startPos);
         if(dist > FadeLightTraceDistance) {
             float range = (MaxLightTraceDistance - FadeLightTraceDistance);
             float fadeRatio = 1f - (dist - FadeLightTraceDistance) / range;
@@ -202,9 +202,9 @@ void interactiveComputeYourFather(WorldState world, Camera camera) {
         } else {
             clLight[i].strength = lights[i].strength * flickerRatio;
         }
-        clLight[i].color[0] = lights[i].tint.X / 255f;
-        clLight[i].color[1] = lights[i].tint.Y / 255f;
-        clLight[i].color[2] = lights[i].tint.Z / 255f;
+        clLight[i].color[0] = lights[i].tint.x / 255f;
+        clLight[i].color[1] = lights[i].tint.y / 255f;
+        clLight[i].color[2] = lights[i].tint.z / 255f;
     }
 
     uploadTileData(world, camera);

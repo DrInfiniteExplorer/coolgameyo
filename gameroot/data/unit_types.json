@@ -1,7 +1,7 @@
 {
   "dwarf":{
     "displayName":"Dwarf",
-	"tintColor":{ "X":150, "Y":0, "Z":100 },
+	"tintColor":{ "x":150, "y":0, "z":100 },
     "model":{
         "name":"dorf/dorf.cgymesh",
         "skeletonName":"dorf/dorf.cgyanim",
@@ -13,7 +13,7 @@
   },
   "elf":{
     "displayName":"Hippie",
-	"tintColor":{ "X":0, "Y":150, "Z":0 },
+	"tintColor":{ "x":0, "y":150, "z":0 },
     "model":{
         "name":"dorf/dorf.cgymesh",
         "skeletonName":"dorf/dorf.cgyanim",

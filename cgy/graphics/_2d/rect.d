@@ -19,11 +19,11 @@ struct RectVertex {
 immutable(char[]) fixRect = "
     auto screenSize = vec2f(renderSettings.windowWidth-1, renderSettings.windowHeight-1);
     auto start = (vec2f(offset, offset) + r.start.convert!float()) / screenSize;
-    start.Y = 1.0 - start.Y;
+    start.y = 1.0 - start.y;
     auto size = r.size.convert!float() / screenSize;
-    size.Y = - size.Y;
-    auto x = vec2f(size.X, 0);
-    auto y = vec2f(0, size.Y);
+    size.y = - size.y;
+    auto x = vec2f(size.x, 0);
+    auto y = vec2f(0, size.y);
     ";
 
 struct RectQuad{
@@ -105,7 +105,7 @@ class RectShader {
         //glDepthMask(0);
         rectProgram.use();
         rectProgram.setUniform(rectProgram.stripes, stripes);
-        //rect.start.Y = 1.0 - rect.start.Y;
+        //rect.start.y = 1.0 - rect.start.y;
         //program.setUniform(program.offset, rect.start);        
         //TODO: Use rest of rect for clipping?
         glEnableVertexAttribArray(rectProgram.position);
@@ -114,9 +114,9 @@ class RectShader {
         glError();
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glError();
-        glVertexAttribPointer(rectProgram.position, 2, GL_FLOAT, GL_FALSE, RectVertex.sizeof, &q.vertices[0].pos.X);
+        glVertexAttribPointer(rectProgram.position, 2, GL_FLOAT, GL_FALSE, RectVertex.sizeof, &q.vertices[0].pos.x);
         glError();
-        glVertexAttribPointer(rectProgram.color, 3, GL_FLOAT, GL_FALSE, RectVertex.sizeof, cast(void*)&q.vertices[0].color.X);
+        glVertexAttribPointer(rectProgram.color, 3, GL_FLOAT, GL_FALSE, RectVertex.sizeof, cast(void*)&q.vertices[0].color.x);
         glError();
         if (lines) {
             glDrawArrays(GL_LINES, 0, 4);

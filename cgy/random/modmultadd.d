@@ -9,12 +9,12 @@ class ModMultAdd(double mult, double offset) : ValueSource {
         source = s;
     }
     
-    double getValue(double x, double y, double z) {
+    double getValue3(vec3d pos) {
         auto v = source.getValue(x, y, z) * mult + offset;
         return v;
     }
     
-    double getValue(double x, double y) {
+    double getValue2(vec2d pos) {
         auto v = source.getValue(x, y) * mult + offset;
         return v;
     }

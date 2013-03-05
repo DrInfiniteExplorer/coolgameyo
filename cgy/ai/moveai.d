@@ -41,7 +41,7 @@ struct MoveAI {
         this(unit, pathfinder);
     }
     this(Unit unit, Near near, PathModule pathfinder) {
-        goal = neighbors(near.pos).dup;
+        goal = neighbors(near.pos).array;
         this(unit, pathfinder);
     }
 
@@ -61,7 +61,7 @@ struct MoveAI {
 
         auto next = path.path.back;
 
-        auto d = next.value.getDistanceFrom(unit.pos.value);
+        auto d = next.value.getDistance(unit.pos.value);
         int ticks = to!int(ceil(d / unit.speed));
         world.moveUnit(unit, next, ticks);
 

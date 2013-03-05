@@ -4,8 +4,8 @@
 
 module stolen.plane3d;
 
-import stolen.vector3d;
 import stolen.math;
+import math.vector;
 
 //! Enumeration for intersection relations of 3d objects
 enum EIntersectionRelation3D
@@ -23,14 +23,14 @@ struct plane3d(T)
 	public:
 		// Constructors
 	
-		this(const vector3d!(T) MPoint, const vector3d!(T) aNormal) { Normal=aNormal; recalculateD(MPoint); }
+		this(const vector3!T MPoint, const vector3!T aNormal) { Normal=aNormal; recalculateD(MPoint); }
 		
-		this(T px, T py, T pz, T nx, T ny, T nz) { Normal= vector3d!(T)(nx, ny, nz); recalculateD(vector3d!(T)(px, py, pz)); }
+		this(T px, T py, T pz, T nx, T ny, T nz) { Normal= vector3!T(nx, ny, nz); recalculateD(vector3!T(px, py, pz)); }
 		
-		this(const vector3d!(T) point1, const vector3d!(T) point2, const vector3d!(T) point3)
+		this(const vector3!T point1, const vector3!T point2, const vector3!T point3)
 		{ setPlane(point1, point2, point3); }
 		
-		this(const vector3d!(T) normal, const T d) {  Normal = normal; D = d; }
+		this(const vector3!T normal, const T d) {  Normal = normal; D = d; }
 
 		// operators
 
@@ -38,19 +38,19 @@ struct plane3d(T)
 
 		// functions
 
-		void setPlane(const vector3d!(T) point, const vector3d!(T) nvector)
+		void setPlane(const vector3!T point, const vector3!T nvector)
 		{
 			Normal = nvector;
 			recalculateD(point);
 		}
 
-		void setPlane(const vector3d!(T) nvect, T d)
+		void setPlane(const vector3!T nvect, T d)
 		{
 			Normal = nvect;
 			D = d;
 		}
 
-		void setPlane(const vector3d!(T) point1, const vector3d!(T) point2, const vector3d!(T) point3)
+		void setPlane(const vector3!T point1, const vector3!T point2, const vector3!T point3)
 		{
 			// creates the plane from 3 memberpoints
 			Normal = (point2 - point1).crossProduct(point3 - point1);
@@ -66,9 +66,9 @@ struct plane3d(T)
 		\param outIntersection Place to store the intersection point, if there is one.
 		\return True if there was an intersection, false if there was not.
 		*/
-		bool getIntersectionWithLine(const vector3d!(T) linePoint,
-				const vector3d!(T) lineVect,
-				ref vector3d!(T) outIntersection) const
+		bool getIntersectionWithLine(const vector3!T linePoint,
+				const vector3!T lineVect,
+				ref vector3!T outIntersection) const
 		{
 			T t2 = Normal.dotProduct(lineVect);
 
@@ -76,7 +76,7 @@ struct plane3d(T)
 				return false;
 
 			T t =- (Normal.dotProduct(linePoint) + D) / t2;
-			outIntersection = linePoint + ((vector3d!(T)(lineVect)) * t);
+			outIntersection = linePoint + (lineVect * t);
 			return true;
 		}
 
@@ -87,10 +87,10 @@ struct plane3d(T)
 		\return Where on a line between two points an intersection with this plane happened.
 		For example, 0.5 is returned if the intersection happened exactly in the middle of the two points.
 		*/
-		float getKnownIntersectionWithLine(const vector3d!(T) linePoint1,
-			const vector3d!(T) linePoint2) const
+		float getKnownIntersectionWithLine(const vector3!T linePoint1,
+			const vector3!T linePoint2) const
 		{
-			vector3d!(T) vect = linePoint2 - linePoint1;
+			vector3!T vect = linePoint2 - linePoint1;
 			T t2 = cast(float)Normal.dotProduct(vect);
 			return cast(float)-((Normal.dotProduct(linePoint1) + D) / t2);
 		}
@@ -102,9 +102,9 @@ struct plane3d(T)
 		\return True if there was an intersection, false if there was not.
 		*/
 		bool getIntersectionWithLimitedLine(
-				const vector3d!(T) linePoint1,
-				const vector3d!(T) linePoint2,
-				ref vector3d!(T) outIntersection) const
+				const vector3!T linePoint1,
+				const vector3!T linePoint2,
+				ref vector3!T outIntersection) const
 		{
 			return (getIntersectionWithLine(linePoint1, linePoint2 - linePoint1, outIntersection) &&
 					outIntersection.isBetweenPoints(linePoint1, linePoint2));
@@ -115,7 +115,7 @@ struct plane3d(T)
 		\return ISREL3D_FRONT if the point is in front of the plane,
 		ISREL3D_BACK if the point is behind of the plane, and
 		ISREL3D_PLANAR if the point is within the plane. */
-		EIntersectionRelation3D classifyPointRelation(const vector3d!(T) point) const
+		EIntersectionRelation3D classifyPointRelation(const vector3!T point) const
 		{
 			const T d = Normal.dotProduct(point) + D;
 
@@ -129,13 +129,13 @@ struct plane3d(T)
 		}
 
 		//! Recalculates the distance from origin by applying a new member point to the plane.
-		void recalculateD(const vector3d!(T) MPoint)
+		void recalculateD(const vector3!T MPoint)
 		{
 			D = - MPoint.dotProduct(Normal);
 		}
 
 		//! Gets a member point of the plane.
-		vector3d!(T) getMemberPoint()
+		vector3!T getMemberPoint()
 		{
 			return Normal * -D;
 		}
@@ -144,7 +144,7 @@ struct plane3d(T)
 		/** \return True if there is a intersection. */
 		bool existsIntersection(const plane3d!(T) other) const
 		{
-			vector3d!(T) cross = other.Normal.crossProduct(Normal);
+			vector3!T cross = other.Normal.crossProduct(Normal);
 			return cross.getLength() > ROUNDING_ERROR_f32;
 		}
 
@@ -154,8 +154,8 @@ struct plane3d(T)
 		\param outLineVect Vector of intersection.
 		\return True if there is a intersection, false if not. */
 		bool getIntersectionWithPlane(plane3d!(T) other,
-				ref vector3d!(T) outLinePoint,
-				ref vector3d!(T) outLineVect)
+				ref vector3!T outLinePoint,
+				ref vector3!T outLineVect)
 		{
 			const T fn00 = Normal.getLength();
 			const T fn01 = Normal.dotProduct(other.Normal);
@@ -176,10 +176,10 @@ struct plane3d(T)
 
 		//! Get the intersection point with two other planes if there is one.
 		bool getIntersectionWithPlanes(plane3d!(T) o1,
-				ref plane3d!(T) o2, ref vector3d!(T) outPoint)
+				ref plane3d!(T) o2, ref vector3!T outPoint)
 		{
-			vector3d!(T) linePoint;
-			vector3d!(T) lineVect;
+			vector3!T linePoint;
+			vector3!T lineVect;
 			if (getIntersectionWithPlane(o1, linePoint, lineVect))
 				return o2.getIntersectionWithLine(linePoint, lineVect, outPoint);
 
@@ -195,7 +195,7 @@ struct plane3d(T)
 		\param lookDirection: Look direction.
 		\return True if the plane is front facing and
 		false if it is backfacing. */
-		bool isFrontFacing(const vector3d!(T) lookDirection) const
+		bool isFrontFacing(const vector3!T lookDirection) const
 		{
 			const float d = Normal.dotProduct(lookDirection);
 			return F32_LOWER_EQUAL_0 ( d );
@@ -203,16 +203,16 @@ struct plane3d(T)
 
 		//! Get the distance to a point.
 		/** Note that this only works if the normal is normalized. */
-		T getDistanceTo(const vector3d!(T) point) const
+		T getDistanceTo(const vector3!T point) const
 		{
 			return point.dotProduct(Normal) + D;
 		}
 
 		//! Normal vector of the plane.
-		vector3d!(T) Normal = vector3d!(T)(0,1,0);
+		vector3!T Normal = vector3!T(0,1,0);
 
 		//! Distance from origin.
-		T D = - (vector3d!(T)(0,0,0)).dotProduct(vector3d!(T)(0,1,0));
+		T D = - (vector3!T(0,0,0)).dotProduct(vector3!T(0,1,0));
 };
 
 

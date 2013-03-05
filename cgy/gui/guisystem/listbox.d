@@ -137,7 +137,7 @@ class GuiElementListBox : public GuiElement {
     }
 
     void updateScroll() {
-        auto height = getAbsoluteRect.size.Y;
+        auto height = getAbsoluteRect.size.y;
         auto neededHeight = items.length * rowHeight;
         import std.algorithm : max;
         canScrollAmount = max(0, neededHeight - height);
@@ -146,7 +146,7 @@ class GuiElementListBox : public GuiElement {
             scrollBar.setVisible(true);
             scrollBar.amountScroll = 0;
             scrollBar.totalScroll = items.length;
-            scrollBar.scrollBar = absoluteRect.size.Y / rowHeight;
+            scrollBar.scrollBar = absoluteRect.size.y / rowHeight;
         } else {
             scrollAmount = 0;
             scrollBar.setVisible(false);
@@ -161,11 +161,11 @@ class GuiElementListBox : public GuiElement {
 		
         if (selectedIndex != -1) {
         }
-        auto height = getAbsoluteRect.size.Y;
+        auto height = getAbsoluteRect.size.y;
 		foreach(idx, item ; items) {
             auto rect = getTextRect(idx);
             auto pos = rect.start;
-            auto relativeHeight = pos.Y - absoluteRect.start.Y;
+            auto relativeHeight = pos.y - absoluteRect.start.y;
             if(relativeHeight < 0) {
                 //msg("Culled for being to early");
                 continue;
@@ -219,7 +219,7 @@ class GuiElementListBox : public GuiElement {
     }
 
     private Recti getTextRect(int idx) {
-        return Recti(absoluteRect.start.X, absoluteRect.start.Y + idx * rowHeight - scrollAmount,
-                     absoluteRect.size.X, rowHeight);
+        return Recti(absoluteRect.start.x, absoluteRect.start.y + idx * rowHeight - scrollAmount,
+                     absoluteRect.size.x, rowHeight);
     }
 }

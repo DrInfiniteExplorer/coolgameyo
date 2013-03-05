@@ -70,7 +70,7 @@ final class Level2Sheet {
         //Snap to every 4'th sector. Dont update unless!
         //4 comes from that a quad in level3 is 4 sectors big,
         // so we snap to every 4'th sector, yeah.
-        auto snapCenter = SectorXYNum(snapV(center.value.vec2, 4)).getSectorNum(center.value.Z);
+        auto snapCenter = SectorXYNum(snapV(center.value.v2, 4)).getSectorNum(center.value.z);
         this.snapCenter = snapCenter;
         this.center = center;
 
@@ -83,8 +83,8 @@ final class Level2Sheet {
         foreach(y ; 0 .. level2VertexCount) {
             foreach(x ; 0 .. level2VertexCount) {
                 vec2i tp = baseTp + vec2i(level2SampleDistance) * vec2i(x, y);
-                float X = cast(float) tp.X;
-                float Y = cast(float) tp.Y;
+                float X = cast(float) tp.x;
+                float Y = cast(float) tp.y;
                 float Z;
                 if(x == 0 || x == level2QuadCount || y == 0 || y == level2QuadCount) {
                     Z = worldMap.getApproxHeight(TileXYPos(tp), 3);
@@ -123,9 +123,9 @@ final class Level2Sheet {
                 x = x > level2QuadCount ? level2QuadCount : x;
                 y = y < 0 ? 0 : y;
                 y = y > level2QuadCount ? level2QuadCount : y;
-                return vertices[y][x].Z;
+                return vertices[y][x].z;
             } else {
-                return vertices[y][x].Z;
+                return vertices[y][x].z;
             }
         }
 
@@ -210,8 +210,8 @@ final class Level2Sheet {
 
         immutable numCoveringQuads = level1SectorCount * level2QuadCount / level2SectorCount;
 
-        if(abs(quadNum.X) >= numCoveringQuads) return true;
-        if(abs(quadNum.Y) >= numCoveringQuads) return true;
+        if(abs(quadNum.x) >= numCoveringQuads) return true;
+        if(abs(quadNum.y) >= numCoveringQuads) return true;
         return false;
     }
 }

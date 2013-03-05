@@ -3,16 +3,16 @@ module util.rect;
 
 import std.conv;
 
-import stolen.vector2d;
+import math.vector;
 
 import util.util;
 
 
 struct Rect(T) {
-    vector2d!T start;
-    vector2d!T size;
+    vector2!T start;
+    vector2!T size;
     
-    this(vector2d!T _start, vector2d!T _size){
+    this(vector2!T _start, vector2!T _size){
         start = _start;
         size = _size;
     }
@@ -28,17 +28,17 @@ struct Rect(T) {
             size.convert!To);
     }
         
-    bool isInside(vector2d!T pos) {
-        return !(pos.X < start.X ||
-            pos.X > start.X+size.X ||
-            pos.Y < start.Y ||
-            pos.Y > start.Y+size.Y);
+    bool isInside(vector2!T pos) {
+        return !(pos.x < start.x ||
+            pos.x > start.x+size.x ||
+            pos.y < start.y ||
+            pos.y > start.y+size.y);
     }
     
-    vector2d!T getRelative(vector2d!T pos){
-        return vector2d!T(
-            (pos.X - start.X) / size.X,
-            (pos.Y - start.Y) / size.Y,
+    vector2!T getRelative(vector2!T pos){
+        return vector2!T(
+            (pos.x - start.x) / size.x,
+            (pos.y - start.y) / size.y,
         );
     }
     
@@ -59,23 +59,23 @@ struct Rect(T) {
     
     Rect!T centerRect(Rect!T toCenter, bool centerHorizontal = true, bool centerVertical = true) {
         auto newStart = start + (size - toCenter.size) / 2;
-        auto tmp = vector2d!T( centerHorizontal ? newStart.X : toCenter.start.X,
-                          centerVertical ? newStart.Y : toCenter.start.Y);
+        auto tmp = vector2!T( centerHorizontal ? newStart.x : toCenter.start.x,
+                          centerVertical ? newStart.y : toCenter.start.y);
         return Rect!T(tmp, toCenter.size);
     }
 
 /*
     Rect!T diff(int a, int b, int c, int d){
-        return diff(vector2d!T(a,b), vector2d!T(c,d));
+        return diff(vector2!T(a,b), vector2!T(c,d));
     }
 */
-    Rect!T diff(vector2d!T dStart, vector2d!T dSize){
+    Rect!T diff(vector2!T dStart, vector2!T dSize){
         return Rect!T(  start + dStart,
                       size - dStart + dSize);
     }
     Rect!T diff(T dStartX, T dStartY, T dSizeX, T dSizeY){
         
-        return diff(vector2d!T(dStartX, dStartY), vector2d!T(dSizeX, dSizeY));
+        return diff(vector2!T(dStartX, dStartY), vector2!T(dSizeX, dSizeY));
     }
 
     Rect!T pad(T width, T height) {
@@ -83,7 +83,7 @@ struct Rect(T) {
     }
     
     string toString() const {
-        return text(typeof(this).stringof , "(" ,start.X ," ", start.Y , ", ", size.X, " ", size.Y, ")");
+        return text(typeof(this).stringof , "(" ,start.x ," ", start.y , ", ", size.x, " ", size.y, ")");
     }
     
     const bool opEquals(ref const(Rect!T) o) {
@@ -91,22 +91,22 @@ struct Rect(T) {
     }
     
     T bottomOf() const {
-        return start.Y + size.Y;
+        return start.y + size.y;
     }
     T topOf() const {
-        return start.Y;
+        return start.y;
     }
     T rightOf() const {
-        return start.X + size.X;
+        return start.x + size.x;
     }
     T leftOf() const {
-        return start.X;
+        return start.x;
     }
     T widthOf() const {
-        return size.X;
+        return size.x;
     }
     T heightOf() const {
-        return size.Y;
+        return size.y;
     }
 }
 

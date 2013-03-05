@@ -13,11 +13,11 @@ final class RandSourceUniform : ValueSource {
         min = _min;
         max = _max;
     }
-    override double getValue(double x, double y, double z) {
-        return getValue(x);
+    override double getValue3(vec3d pos) {
+        return getValue(pos.x);
     }
-    override double getValue(double x, double y) {
-        return getValue(x);
+    override double getValue2(vec2d pos) {
+        return getValue(pos.x);
     }
     override double getValue(double x) {
         return uniform(min, max, gen);
