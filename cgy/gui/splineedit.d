@@ -16,11 +16,12 @@ import graphics.image;
 import graphics.ogl;
 import graphics.renderconstants;
 
+import math.math;
+
 import random.catmullrom;
 import random.random;
 
 import settings;
-import util.math;
 import util.rect;
 import util.util;
 

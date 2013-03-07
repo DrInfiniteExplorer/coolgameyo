@@ -1,6 +1,6 @@
 module random.permutation;
 
-
+import math.math;
 import util.util;
 import random.random;
 import random.randsource;
@@ -27,7 +27,8 @@ import util.math;
     }
     
     uint Perm(int i) {
-        return permutations[posMod(i, SIZE)]; //Move posmod to getValue, cast to uint, then use % ?
+        BREAK_IF(i < 0);
+        return permutations[i % SIZE]; //Move posmod to getValue, cast to uint, then use % ?
     }
     
     uint Index(int i, int j, int k) {

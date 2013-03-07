@@ -55,13 +55,22 @@ mixin template WorldGenerator() {
 
     TileTypeManager tileSys;
 
+    auto getHeight(TileXYPos pos) {
+        return heightMaps.getHeight!false(pos);
+    }
+    auto getSoil(TileXYPos pos) {
+        return heightMaps.getSoil!false(pos);
+    }
+
     void fillSector(Sector sector, SectorHeightmap heightmap) {
 
         double[SectorSize.x][SectorSize.y] heightValues;
+        double[SectorSize.x][SectorSize.y] soilValues;
         auto sectorStart = sector.getSectorNum().toTileXYPos();
         foreach(int x, int y ; Range2D(vec2i(0, 0), vec2i(SectorSize.x, SectorSize.y))) {
             auto pos = TileXYPos(sectorStart.value + vec2i(x, y));
-            heightValues[y][x] = heightMaps.getHeight(pos); //getValueInterpolated(1, ));
+            heightValues[y][x] = getHeight(pos); //getValueInterpolated(1, ));
+            soilValues[y][x] = getSoil(pos); //getValueInterpolated(1, ));
         }
 
         auto heightmap = heightmap.getMaxPerBlock();
@@ -77,7 +86,7 @@ mixin template WorldGenerator() {
             }
             Block_t block = tempBlock;
             block.blockNum = blockNum;
-            if(fillBlockInternal(&block, heightValues)) {
+            if(fillBlockInternal(&block, heightValues, soilValues)) {
                 tempBlock = block.allocBlock();
             }
             sector.unsafe_setBlock(block);
@@ -87,7 +96,9 @@ mixin template WorldGenerator() {
 
     //Returns true if the block is solid, false if it is sparse.
     //It is the callers responsibility to make sure the block is free'd
-    private bool fillBlockInternal(Block block, ref double[SectorSize.x][SectorSize.y] groundValueMap) {
+    private bool fillBlockInternal(Block block,
+                                   ref double[SectorSize.x][SectorSize.y] heightMap,
+                                   ref double[SectorSize.x][SectorSize.y] soilMap) {
         auto blockNum = block.blockNum;
         auto blockRel = blockNum.rel();
         auto tp0 = blockNum.toTilePos();
@@ -105,8 +116,9 @@ mixin template WorldGenerator() {
                                         0, BlockSize.z-1)) {
             auto tp = tp0;
             tp.value += relPos;
-            auto groundValue = groundValueMap[tileOffset_y + relPos.y][tileOffset_x + relPos.x];
-            auto tile = getTile(tp, groundValue);
+            auto heightValue = heightMap[tileOffset_y + relPos.y][tileOffset_x + relPos.x];
+            auto soilValue = soilMap[tileOffset_y + relPos.y][tileOffset_x + relPos.x];
+            auto tile = getTile(tp, heightValue, soilValue);
             block.tiles.tiles[relPos.z][relPos.y][relPos.x] = tile;
 
             if (first) {
@@ -136,31 +148,42 @@ mixin template WorldGenerator() {
     }
 
     Tile getTile(TilePos pos) {
-        auto height = heightMaps.getHeight(TileXYPos(pos));
-        return getTile(pos, height);
+        auto height = getHeight(TileXYPos(pos));
+        auto soil = getHeight(TileXYPos(pos));
+        return getTile(pos, height, soil);
     }
 
-    Tile getTile(TilePos pos, double z) {
+    Tile getTile(TilePos pos, double heightValue, double soilValue) {
 
         TileFlags flags = cast(TileFlags)(TileFlags.valid);
         if(! isInsideWorld(pos)) {
             return Tile(TileTypeAir, flags);
         }
-        if(pos.value.z > z) {
+        float distanceAboveGround = pos.value.z - (heightValue + soilValue);
+        if(distanceAboveGround > 0) {
             auto tile = Tile(TileTypeAir, flags);
             tile.sunLightValue = 15;
             return tile;
         }
-
-        //For now just use basic climate types to determine tile types.
-        auto tileType = getBasicTileType();
-
+        float distanceBelowGround = -distanceAboveGround;
+        if(pos.value.z > heightValue) { // Soil tile, determine soil type yeah!
+            if(distanceBelowGround < 1) {
+                auto tileType = getBasicTileType!"genericGrass"();
+                return Tile(tileType, flags);
+            } else {
+                auto tileType = getBasicTileType!"genericDirt"();
+                return Tile(tileType, flags);
+            }
+        }
+        // Below soil. Lets make it interesting!
+        auto tileType = getBasicTileType!"genericStone"();
         return Tile(tileType, flags);
+
     }
-    ushort getBasicTileType() {
+    ushort getBasicTileType(string group)() { 
         randomNumber++;
 
-        auto group = tileSys.getGroup("genericGrass");
+        auto group = tileSys.getGroup(group);
         int idx = randomNumber % group.length;
         auto id = group[idx].id;
         return id;
@@ -178,8 +201,10 @@ mixin template WorldGenerator() {
 
     //This returns a pessimistiv top value, there may be air-tiles below but no solid above.
     int maxZ(TileXYPos xyPos) {
-        auto height = heightMaps.getHeight(xyPos);
-        return cast(int)ceil(height);
+        if(!isInsideWorld(xyPos.toTilePos(0))) return -500;
+        auto height = getHeight(xyPos);
+        auto soil = getSoil(xyPos);
+        return cast(int)ceil(height + soil);
     }
 
     //This returns the real, actual top tile pos.
@@ -191,7 +216,8 @@ mixin template WorldGenerator() {
         pos.value.x = clamp(pos.value.x, 0, worldSize-sampleIntervall);
         pos.value.y = clamp(pos.value.y, 0, worldSize-sampleIntervall);
         auto height = heightMaps.getHeight!false(pos);
-        return cast(int)ceil(height);
+        auto soil = heightMaps.getSoil!false(pos);
+        return cast(int)ceil(height + soil);
     }
 
 }

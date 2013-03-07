@@ -1,5 +1,7 @@
 module math.quat;
 
+import std.math : sin, cos, PI, acos;
+
 import math.vector;
 import math.math;
 
@@ -8,7 +10,10 @@ import util.util : BREAK_IF;
 alias quaternion!double quatd;
 alias quaternion!float quatf;
 
-struct quaternion(T) {
+import stolen.matrix4 : matrix4;
+
+
+struct quaternion(T) if( isFloatingPoint!T) {
     T w = void;
     T x = void;
     T y = void;
@@ -59,14 +64,34 @@ struct quaternion(T) {
     }
 
     vec3!T rotate(const vec3!T _pt) const {
+        /*
         quat pt = quat(0, _pt.tupleof);
         pt = this * pt * conjugate;
         return vec3!T(pt.x, pt.y, pt.z);
+        /*/
+
+		// nVidia SDK implementation
+
+		vec3!T uv = void;
+        vec3!T uuv = void;
+		vec3!T qvec = vec3!T(x, y, z);
+		uv = qvec.crossProduct(_pt);
+		uuv = qvec.crossProduct(uv);
+		uv *= (2.0f * w);
+		uuv *= 2.0f;
+		return _pt + uv + uuv;	
+        //*/
     }
-    vec3!T rotateDerp(const vec3!T _pt) const {
-        quat pt = quat(0, _pt.tupleof);
-        pt = this * pt;// * pt.conjugate;
-        return vec3!T(pt.x, pt.y, pt.z);
+
+    static quat stealRotation(vec3!T from, vec3!T to) {
+        from.normalize();
+        to.normalize();
+        auto dot = from.dotProduct(to);
+        if(equals(dot, 1)) return quat(1, 0, 0, 0);
+        if(equals(dot, -1)) return rotationQuat(PI, 1, 0, 0);
+        vec3!T cross = from.crossProduct(to).normalize();
+        auto angle = acos(dot);
+        return rotationQuat(angle, cross.tupleof);
     }
 
     static quat rotationQuat(T angle, T axisX, T axisY, T axisZ) {
@@ -83,7 +108,6 @@ struct quaternion(T) {
 
 
     auto toMatrix() const {
-        import stolen.matrix4;
         matrix4 ret = void;
         immutable magSQ = w^^2 + x^^2 + y^^2 + z^^2;
         if(equals(magSQ, 1)) {
@@ -129,5 +153,29 @@ struct quaternion(T) {
         }
         return ret;
     }
+
+}
+
+unittest {
+    import std.stdio;
+    import std.math;
+    import math.vector;
+
+    immutable x = vec3f(1,0,0);
+    immutable y = vec3f(0,1,0);
+    immutable z = vec3f(0,0,1);
+
+    auto x2y = quatf.stealRotation(x, y);
+    BREAK_IF(!y.equals(x2y.rotate(x)));
+    x2y = quatf.rotationQuat(PI_2, 0, 0, 1);
+    BREAK_IF(!y.equals(x2y.rotate(x)));
+
+    x2y = quatf.rotationQuat(PI_4, 0, 0, 1);
+    writeln(x2y.rotate(x));
+
+    auto x2z = quatf.stealRotation(x, z);
+    BREAK_IF(!z.equals(x2z.rotate(x)));
+    x2z = quatf.rotationQuat(-PI_2, 0, 1, 0);
+    BREAK_IF(!z.equals(x2z.rotate(x)));
 
 }

@@ -10,7 +10,7 @@ import derelict.devil.il;
 import derelict.devil.ilu;
 
 import graphics.ogl;
-import util.math;
+import math.math;
 import util.rect;
 import util.util;
 

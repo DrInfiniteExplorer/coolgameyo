@@ -4,7 +4,6 @@ import std.traits : isFloatingPoint;
 import std.math : atan2, sqrt, sin, cos;
 
 import math.math;
-import util.math : fastFloor;
 import util.util : BREAKPOINT;
 
 alias vector3 vec3;
@@ -170,10 +169,9 @@ struct vector3(T) {
 
     bool equals(const vec o, const T tolerance = cast(T)0.000001f) const
     {
-        import stolen.math : equals;
-        return equals(x, o.x, tolerance) &&
-            equals(y, o.y, tolerance) &&
-            equals(z, o.z, tolerance);
+        return  .equals(x, o.x, tolerance) &&
+                .equals(y, o.y, tolerance) &&
+                .equals(z, o.z, tolerance);
     }
 
     T dotProduct(const vec o) const {
@@ -200,9 +198,18 @@ struct vector3(T) {
         z *= constant;
     }
 
-    vec normalize() {
-        setLength(1);
-        return this;
+    static if(isFloatingPoint!T) {
+        vec normalize() {
+            immutable lenSQ = x^^2 + y^^2 + z^^2;
+            if(.equals(lenSQ, 1.0)) return this;
+            immutable len = sqrt(lenSQ);
+            immutable constant = 1.0 / len;
+            x *= constant;
+            y *= constant;
+            z *= constant;
+
+            return this;
+        }
     }
 
     T getDistance(const vec o) const {
@@ -297,6 +304,10 @@ struct vector2(T) {
         }
         return ret;
     }
+    auto opBinaryRight(string op, O)(O o) const if(! is(O : vec)) {
+        return opBinary!op(o);
+    }
+
     void opOpAssign(string op, O)(const O o) {
         static if( is( O : vec)) {
             x = cast(T) mixin("x " ~ op ~ " o.x");

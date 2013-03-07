@@ -117,6 +117,7 @@ mixin template FloodFill() {
 
     void addFloodFillSector(SectorNum num) {
         //_floodingSectors ~= num;
+        BREAK_IF(num.value.getLengthSQ() == 0);
         msg("Adding sector to filling queueue: ", num.value);
         synchronized(fillingTasks) {
             fillingTasks.list ~= new FillingTaskState(num);

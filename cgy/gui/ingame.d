@@ -133,6 +133,12 @@ class FpsHandler : GuiEventDump {
                 renderSettings.renderTrueWorld = (renderSettings.renderTrueWorld+1)%6;
             }
 
+            if (k.SdlSym == SDLK_t) { // TELEPORT WOOOH
+                if(!freeFlight) return;
+                possessAI.unitPos = camera.getPosition;
+                game.setActiveUnitPos(UnitPos(possessAI.unitPos));
+                freeFlight = false;
+            }
             if (k.SdlSym == SDLK_k) {
                 camera.setPosition(camera.getPosition() + vec3d(0.0, 0.0, 1000.0));
             }

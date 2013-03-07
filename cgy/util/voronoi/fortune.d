@@ -6,8 +6,8 @@ import std.math;
 import std.range;
 import std.stdio;
 
+import math.math : CircumCircle;
 import statistics;
-import util.math;
 import util.util;
 import util.voronoi.voronoi;
 

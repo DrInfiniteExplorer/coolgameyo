@@ -98,26 +98,29 @@ public:
 		return start + v;
 	}
 
-	//! Check if the line intersects with a shpere
-	/** \param sorigin: Origin of the shpere.
-	\param sradius: Radius of the sphere.
-	\param outdistance: The distance to the first intersection point.
-	\return True if there is an intersection.
-	If there is one, the distance to the first intersection point
-	is stored in outdistance. */
-	bool getIntersectionWithSphere(vector3!T sorigin, T sradius, ref double outdistance) const
-	{
-		const vector3!T q = sorigin - start;
-		T c = q.getLength();
-		T v = q.dotProduct(getVector().normalize());
-		T d = sradius * sradius - (c*c - v*v);
+    static if(isFloatingPoint!T) {
 
-		if (d < 0.0)
-			return false;
+	    //! Check if the line intersects with a shpere
+	    /** \param sorigin: Origin of the shpere.
+	    \param sradius: Radius of the sphere.
+	    \param outdistance: The distance to the first intersection point.
+	    \return True if there is an intersection.
+	    If there is one, the distance to the first intersection point
+	    is stored in outdistance. */
+	    bool getIntersectionWithSphere(vector3!T sorigin, T sradius, ref double outdistance) const
+	    {
+		    const vector3!T q = sorigin - start;
+		    T c = q.getLength();
+		    T v = q.dotProduct(getVector().normalize());
+		    T d = sradius * sradius - (c*c - v*v);
 
-		outdistance = v - sqrt (cast(real) d );
-		return true;
-	}
+		    if (d < 0.0)
+			    return false;
+
+		    outdistance = v - sqrt (cast(real) d );
+		    return true;
+	    }
+    }
 
 	// member variables
 

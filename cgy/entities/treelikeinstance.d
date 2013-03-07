@@ -410,7 +410,7 @@ mixin template TreeLike() {
 
     void makeLeafs(WorldProxy proxy)
     {
-        import util.math;
+        import math.math;
 
         if (TreeManager().drawLeafs == false) return;
         auto drawBranchId = TreeManager().drawBranchId;

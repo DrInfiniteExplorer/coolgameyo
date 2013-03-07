@@ -404,6 +404,7 @@ d:\D\ulnb0333\ulink.exe $(IntDir)\$(TargetName).obj gdi32.lib win32.lib advapi32
    <File path="graphics\camera.d" />
    <File path="graphics\debugging.d" />
    <File path="graphics\font.d" />
+   <File path="graphics\heightmap.d" />
    <File path="graphics\image.d" />
    <File path="graphics\misc.d" />
    <File path="graphics\obj.d" />
@@ -459,6 +460,7 @@ d:\D\ulnb0333\ulink.exe $(IntDir)\$(TargetName).obj gdi32.lib win32.lib advapi32
    <File path="gui\splineedit.d" />
    <File path="gui\statistics.d" />
    <File path="gui\unitcontrol.d" />
+   <File path="gui\util.d" />
    <File path="gui\worldview.d" />
   </Folder>
   <Folder name="heightsheets">
@@ -536,8 +538,6 @@ d:\D\ulnb0333\ulink.exe $(IntDir)\$(TargetName).obj gdi32.lib win32.lib advapi32
    <File path="..\gameroot\shaders\heightsheets.vert" />
    <File path="..\gameroot\shaders\heightsheetsI.frag" />
    <File path="..\gameroot\shaders\heightsheetsI.vert" />
-   <File path="..\gameroot\shaders\JklA.frag" />
-   <File path="..\gameroot\shaders\JklA.vert" />
    <File path="..\gameroot\shaders\lightMixer.frag" />
    <File path="..\gameroot\shaders\lineShader.frag" />
    <File path="..\gameroot\shaders\lineShader.vert" />

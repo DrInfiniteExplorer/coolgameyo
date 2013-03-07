@@ -6,10 +6,10 @@ import std.conv;
 import json;
 import stolen.aabbox3d;
 
+import math.math : negDiv, posMod;
 //import worldstate.sector;
 import worldstate.sizes;
 import util.util;
-import util.math;
 
 
 
@@ -105,6 +105,10 @@ struct SectorNum {
 
 struct BlockNum {
     vec3i value;
+
+    invariant() {
+        BREAK_IF(value.x < 0 || value.y < 0 || value.z < 0);
+    }
 
     SectorNum getSectorNum() const {
         return SectorNum(vec3i(

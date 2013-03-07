@@ -20,12 +20,12 @@ import graphics.camera;
 import graphics.ogl;
 import graphics.image;
 import light;
-import worldstate.ambient;
+import math.math;
 import settings;
 import statistics;
-import util.math;
 import util.rangefromto;
 import util.util;
+import worldstate.ambient;
 import worldstate.worldstate;
 
 immutable MaxLightTraceDistance = 100f;

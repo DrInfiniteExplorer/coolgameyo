@@ -6,11 +6,11 @@ import std.parallelism;
 import std.mmfile;
 import std.math;
 
-
+import math.math : equals;
+import math.math : advect, clamp, fastFloor;
 import random.random : BSpline;
 import random.xinterpolate4 : XInterpolate24;
 import util.filesystem;
-import util.math : advect, clamp, fastFloor;
 import util.pos;
 import util.util;
 import worldgen.maps;
@@ -27,7 +27,9 @@ class HeightMaps {
 
     MmFile heightmapFile;
     float[] mapData; // Pointer to memory in heightmapfile.
-    
+    MmFile soilFile;
+    float[] soilData; // Pointer to memory in heightmapfile.
+
     this(WorldMap _worldMap) {
         worldMap = _worldMap;
         auto size = .worldSize; // 1 mil
@@ -45,7 +47,9 @@ class HeightMaps {
     void destroy() {
         destroyed = true;
         delete heightmapFile;
+        delete soilFile;
         mapData = null;
+        soilData = null;
     }
 
     void load() {
@@ -53,6 +57,10 @@ class HeightMaps {
         msg("Loading heightmap at: ", heightPath);
         heightmapFile = new MmFile(heightPath, MmFile.Mode.readWrite, mapSizeBytes, null, 0);
         mapData = cast(float[])heightmapFile[];
+
+        auto soilPath = worldMap.worldPath ~ "/map2";
+        soilFile = new MmFile(soilPath, MmFile.Mode.readWrite, mapSizeBytes, null, 0);
+        soilData = cast(float[])soilFile[];
     }
 
     void generate(int seed) {
@@ -62,6 +70,10 @@ class HeightMaps {
         BREAK_IF(heightmapFile !is null);
         heightmapFile = new MmFile(heightPath, MmFile.Mode.readWriteNew, mapSizeBytes, null, 0);
         mapData = cast(float[])heightmapFile[];
+
+        auto soilPath = worldMap.worldPath ~ "/map2";
+        soilFile = new MmFile(soilPath, MmFile.Mode.readWrite, mapSizeBytes, null, 0);
+        soilData = cast(float[])soilFile[];
 
         auto startTime = utime();
 
@@ -121,7 +133,18 @@ class HeightMaps {
 
         msg("Time to make heightmap: ", (utime() - startTime) / 1_000_000.0);
 
-        applyErosion();
+
+        foreach(uint i, ref value ; parallel(mapData)) {
+            auto x = i % mapSize;
+            auto y = i / mapSize;
+            auto dst = vec2f(x,y).getDistance(vec2f(mapSize * 0.5));
+
+            mapData[i] = dst < mapSize*0.25 ? 100 : 0;
+        }
+
+
+
+        applyErosion(seed);
     }
 
 
@@ -130,7 +153,7 @@ class HeightMaps {
     int left (int idx) { return idx - 1; }
     int right(int idx) { return idx + 1; }
 
-    void applyErosion() {
+    void applyErosion(int seed) {
         /// HO HO HO :D
         float[] height = mapData.array;    // Read from during iteration, copy to from newHeight at end.
         float[] newHeight = mapData.array; //Updated during fluid ground stealing and talus-falling.
@@ -181,23 +204,42 @@ class HeightMaps {
         float force;
         float acceleration;
         float mass;
-        float cellLength = sampleIntervall;
-        float cellArea = cellLength ^^ 2;
-        float pipeArea = 1.0;
-        float pipeLength = cellLength; // Huerr dunno.
-        immutable fluidDensity = 1.0;
-        immutable gravity = 1.0;
+        immutable cellLength = 1.0;
+        immutable cellArea = cellLength ^^ 2;
+        immutable pipeArea = 1.0;
+        immutable pipeLength = cellLength; // Huerr dunno.
+        immutable fluidDensity = 1000.0;
+        immutable gravity = 9.8;
         immutable deltaTime = 1.0;
 
-        immutable capacityConstant = 0.1;
-        immutable minSlopeConstant = 0.1;
-        immutable depositionConstant = 0.1;
-        immutable soilDissolutionConstant = 0.1;
-        immutable evaporationConstant = 0.05;
-        foreach(iteration ; 0 .. 50) {
+        immutable minSlopeConstant = 0.2;
+
+        immutable capacityConstant = 0.5;
+
+        immutable depositionConstant = 0.5;
+        immutable soilDissolutionConstant = 0.5;
+
+        immutable evaporationConstant = 0.15; // 15% of water will evaporate hurr durr.
+        immutable rainWaterAmount = 0.125; // It will rain on 12,5% of the world all the time. Uhr..
+        immutable randomWaterCount = mapSizeSQ * rainWaterAmount;
+        immutable rainFallConstant = 1.0; // Will randomly fall 1 ton of water on shit.
+        import std.random;
+        Random r;
+        r.seed(seed);
+
+        foreach(iteration ; 0 .. 5000) {
+            msg("Erosion! Iteration ", iteration);
+
+            // Add random water
+            // Maybe need more random water.
+            foreach(i ; 0 .. randomWaterCount) {
+                int idx = uniform(0, mapSizeSQ-1, r);
+                water[idx] += rainFallConstant;
+            }
 
             //Update flows
-            foreach(idx ; 0 .. mapSizeSQ) {
+            import std.range : iota;
+            foreach(idx ; parallel(iota(0, mapSizeSQ))) {
                 float[4] flows; // Out-flows. Flow * time = volume.
                 float flowSum = 0;
                 foreach(dir ; 0 .. 4) {
@@ -221,7 +263,7 @@ class HeightMaps {
                     flows[] *= availableWater / flowVolumeSum;
                     flowVolumeSum = availableWater;
                 }
-                BREAK_IF(flowVolumeSum > 0); // Huerr until further notice there IS no water in the systems at all!! :S
+                //BREAK_IF(flowVolumeSum > 0); // Huerr until further notice there IS no water in the systems at all!! :S
                 //msg(idx, ":", flowVolumeSum);
                 waterFlow[idx] = flows;
             }
@@ -230,8 +272,9 @@ class HeightMaps {
             //Add water running into the cell.
             //Then compute velocity in cell as well since all prerequicites are met (all flows)
             //Might as well deposit / erode some sediment during this phase, yeah.
-            foreach(idx; 0 .. mapSizeSQ) {
-                // Can here use average of volume out sum and previous volume out sum
+            //foreach(idx; parallel(iota(0, mapSizeSQ))) {
+            foreach(idx; iota(0, mapSizeSQ)) {
+                    // Can here use average of volume out sum and previous volume out sum
                 //   See page 8 of Mei 2007+
                 // In case of that also do that
                 
@@ -271,7 +314,10 @@ class HeightMaps {
                 }
                 float flowVolume = flowDiff * deltaTime;
                 float endWaterHeight = startWaterHeight + flowVolume / cellArea;
-                BREAK_IF(endWaterHeight < 0);
+                if(endWaterHeight < 0) {
+                    //BREAK_IF(!equals(endWaterHeight, 0));
+                    endWaterHeight = 0;
+                }
                 water[idx] = endWaterHeight;
                 // velo city!
                 float averageWaterHeight = 0.5 * ( startWaterHeight + endWaterHeight);
@@ -285,6 +331,7 @@ class HeightMaps {
                 float velocityToDown = averageWaterHeight ? flowToDown / (cellLength * averageWaterHeight) : 0;
                 auto vel = vec2f(velocityToRight, velocityToDown);
                 velocity[idx] = vel;
+                //msg(vel.getLength);
 
                 float slopeX, slopeY;
                 //For the time being use a simple kind of slope calculation.
@@ -315,13 +362,14 @@ class HeightMaps {
                 // Why does this compile? :S
                 vec2f slope = vec2f(slopeX, slopeY).dotProduct(asd);
 
-                float minSlope = min(minSlopeConstant, slope.getLength);
+                float minSlope = max(minSlopeConstant, slope.getLength);
                 float sedimentCapacity = vel.getLength() * capacityConstant * minSlope;
+                //msg("sed ", sedimentCapacity);
 
 
                 int x = idx % mapSize;
                 int y = idx / mapSize;
-                int z = fastFloor(mapData[idx] - height[idx]); // Depth under 'normal' generated world
+                int z = fastFloor(height[idx] - mapData[idx]); // Depth under 'normal' generated world
                 BREAK_IF(z > 0);
                 int materialNum = worldMap.getStrataNum(x, y, z);
                 auto material = worldMap.materials[materialNum];
@@ -349,6 +397,7 @@ class HeightMaps {
                         carriedSediment += materialToAbsorb;
                         newHeight[idx] -= materialToAbsorb;
                     }
+                    sediment[idx] = carriedSediment;
                 }
             }
             //We now have running water. Yay.
@@ -357,8 +406,8 @@ class HeightMaps {
 
             //Advect (move) sediment
             float getSediment(vec2f pos) {
-                int x = cast(int)clamp(pos.x, 0, mapSize);
-                int y = cast(int)clamp(pos.y, 0, mapSize);
+                int x = cast(int)clamp(pos.x, 0, mapSize-1);
+                int y = cast(int)clamp(pos.y, 0, mapSize-1);
                 int idx = y * mapSize + x;
                 return sediment[idx];
             }
@@ -366,43 +415,88 @@ class HeightMaps {
                 int idx = y * mapSize + x;
                 sedimentOut[idx] = value;
             }
-            vec2f getVelocity(vec2f pos) {
-                int x = cast(int)clamp(pos.x, 0, mapSize);
-                int y = cast(int)clamp(pos.y, 0, mapSize);
+            vec2f getVelocity(int x, int y) {
+                if(x < 0 || y < 0 || x >= mapSize || y >= mapSize) return vec2f(0);
                 int idx = y * mapSize + x;
                 return velocity[idx];
             }
-            BREAKPOINT;
-            return;
-            /*
-            import random.xinterpolate : XInterpolate;
+
+            import random.xinterpolate : XInterpolate2;
             import random.random : lerp;
-            advect!(XInterpolate!(lerp, getSediment),
-                    setSediment,
-                    XInterpolate!(lerp, getVelocity))
-                (deltaTime);
+            //import util.traits : tryCall;
+            alias XInterpolate2!(lerp, getVelocity, vec2f) getVel;
+
+            auto derp(vec2f pt){ return getVel(pt - vec2f(0.5));}
+            //alias XInterpolate2!(lerp, getSediment, vec2f) getSed;
+            alias XInterpolate2!(lerp, getSediment, vec2f) getSed;
+
+            //advect(&getVel, &getSed, &setSediment, mapSize, mapSize, deltaTime);
+            advect(&derp, &getSed, &setSediment, mapSize, mapSize, deltaTime);
 
             // EVAPORATE WATER YEAH
             water[] *= (1-evaporationConstant * deltaTime);
-            // Do some shifting of stuff, where angles are too steep.
-            */
 
-            foreach(idx ; 0 .. mapSizeSQ) {
+            if((iteration % 5) == 0) {
 
+                // Do some shifting of stuff, where angles are too steep.
+                import std.conv : to;
+                float[] derp = mapData[].array;
+                derp[] -= height[];
+                import std.algorithm;
+                auto pred = map!abs(derp); 
+                auto ma = reduce!(max)(pred);
+                msg("max diff: ", ma);
+                ma = reduce!(max)(map!"a.getLength()"(velocity));
+                msg("max velocity: ", ma);
+                msg("max water: ", reduce!max(water));
+                msg("min water: ", reduce!min(water));
+                msg("avg water: ", reduce!"a+b"(water) / mapSizeSQ);
+                msg("max carried: ", reduce!max(sediment));
+                msg("min carried: ", reduce!min(sediment));
+                msg("avg carried: ", reduce!"a+b"(sediment) / mapSizeSQ);
             }
+
         }
+        mapData[] = height[];
+        soilData[] = soil[];
+
+
 
 
 
     }
 
-    ref float getHeightValue(int x, int y) {
+    ref float getMapValue(string which)(int x, int y) {
         BREAK_IF(x < 0);
         BREAK_IF(y < 0);
         BREAK_IF(x >= mapSize);
         BREAK_IF(y >= mapSize);
         auto idx = y * mapSize + x;
-        return mapData[idx];
+        return mixin(which)[idx];
+    }
+
+    alias getMapValue!"mapData" getHeightValue;
+    alias getMapValue!"soilData" getSoilValue;
+
+    float getMap(string which, bool interpolate = true)(TileXYPos pos) {
+        vec2f pt = pos.value.convert!float / cast(float)sampleIntervall;
+        auto get = &getMapValue!which;
+        static if(interpolate) {
+            return XInterpolate24!(BSpline, get)(pt);
+        } else {
+            return get(cast(int)pt.x, cast(int)pt.y);
+        }
+    }
+
+    auto getHeight(bool interpolate = true)(TileXYPos pt) {
+        return getMap!("mapData", interpolate)(pt);
+    }
+    auto getSoil(bool interpolate = true)(TileXYPos pt) {
+        return getMap!("soilData", interpolate)(pt);
+    }
+
+    /*
+    ref float getHeightValue(int x, int y) {
     }
 
     float getHeight(bool interpolate = true)(TileXYPos pos) {
@@ -414,4 +508,6 @@ class HeightMaps {
             return get(cast(int)pt.x, cast(int)pt.y);
         }
     }
+    */
 }
+

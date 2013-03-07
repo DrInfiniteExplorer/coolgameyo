@@ -10,6 +10,7 @@ import std.c.stdlib;
 import std.conv;
 import std.concurrency;
 import std.exception;
+import std.getopt;
 import std.stdio;
 import std.string;
 
@@ -46,7 +47,81 @@ import alloc;
 
 SDL_Surface* surface;     
 
+void testAdvect() {
+    import graphics.image;
+    import math.math;
+    Image Img = Image("climateMap_name.bmp");
+    vec2f[] forceField;
+    vec3f[] img;
+    vec3f[] imgTo;
+    forceField.length = 500^^2;
+    img.length = 500^^2;
+    imgTo.length = 500^^2;
+
+    import util.rangefromto : Range2D;
+    foreach(x, y ; Range2D(0, 500, 0, 500)) {
+        img[x + y * 500] = Img.getPixel(x, y) * 255;
+        auto toCenter = vec2f(250, 250) - vec2f(x, y);
+        auto len = toCenter.getLength;
+        import std.math : PI;
+        toCenter.setLength(len * 2 * PI * 0.01);
+        toCenter.set(-toCenter.y, toCenter.x);
+        forceField[x + y * 500] = toCenter;
+    }
+
+    import random.xinterpolate;
+    vec2f getForce(int x, int y) {
+        if(x < 0 || y < 0 || x >= 500 || y >= 500) return vec2f(0);
+        return forceField[x + y * 500];
+    }
+    auto get(int x, int y) {
+        x = cast(int)clamp(x, 0, 499);
+        y = cast(int)clamp(y, 0, 499);
+        return img[x + y * 500];
+    }
+    void set(int x, int y, vec3f c) {
+        imgTo[x + y * 500] = c;
+    }
+    import random.random;
+    import std.conv : to;
+    alias XInterpolate2!(lerp, getForce, vec2f) getF;
+    alias XInterpolate2!(lerp, get, vec2f) getC;
+
+    rmdir("advectTest");
+    mkdir("advectTest");
+    foreach(iter ; 0 .. 100) {
+        advect(&getF, &getC, &set, 500, 500, 1.0);
+        import std.algorithm;
+        swap(img, imgTo);
+        foreach(x, y ; Range2D(0, 500, 0, 500)) {
+            Img.setPixel(x, y, img[x + y * 500].toColorUInt);
+        }
+        import util.filesystem;
+        string name = "advectTest//";
+        if(iter < 10) name ~= "00";
+        else if(iter < 100) name ~= "0";
+        name ~= to!string(iter) ~ ".bmp";
+        Img.save(name);
+
+    }
+
+
+}
+
+__gshared string[] g_commandLine;
+
 void main(string[] args) {
+
+    args ~= "--HeightMap=saves/880128/map/map1";
+    args ~= "--HeightMapType=float";
+
+    /*
+    g_commandLine.length = args.length;
+    foreach(i ; 0 .. args.length) {
+        g_commandLine[i] = args[i];
+    }
+    */
+    g_commandLine = args.dup;
 
     try {
         setThreadName("Main thread");
@@ -58,9 +133,11 @@ void main(string[] args) {
 
         bool materialEditor;
         string joinGame;
-        import std.getopt;
+        string heightmap;
         getopt(args,
+               std.getopt.config.passThrough,
                "MaterialEditor", &materialEditor,
+               "HeightMap", &heightmap,
                "settingsFile", &g_settingsFilePath,
                "hostGame", &g_worldPath,
                "joinGame", &joinGame);
@@ -76,8 +153,15 @@ void main(string[] args) {
 
         createWindow();
 
+        //testAdvect();
+
 
         init_temp_alloc(1024*1024);
+
+        if(heightmap) {
+            import graphics.heightmap;
+            displayHeightmap(heightmap);
+        }
 
         if(materialEditor) {
             import materials;

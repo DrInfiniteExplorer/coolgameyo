@@ -73,7 +73,7 @@ final class Unit {
         float rotation = 0; //radians
         float speed = 1.0;
         UnitPos destination;
-        uint ticksToArrive;
+        uint ticksToArrive = 0;
         vec3d velocity;
         bool panics;
         float unitWidth = 0.7;

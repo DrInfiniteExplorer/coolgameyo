@@ -4,8 +4,8 @@ module random.simplex;
 import std.math;
 import std.random;
 
+import math.math : fastFloor;
 import random.valuesource;
-import util.math;
 import util.util;
 
 

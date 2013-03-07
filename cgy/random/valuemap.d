@@ -5,9 +5,9 @@ import std.algorithm;
 import std.stdio;
 import std.string;
 
+import math.math : posModV;
 import util.util;
 import util.filesystem;
-import util.math;
 import random.random;
 import random.valuesource;
 import graphics.image;

@@ -4,9 +4,9 @@ import std.conv;
 import std.exception;
 import std.traits;
 
-import util.math;
-import util.util;
+import math.math;
 import random.random;
+import util.util;
 
 
 // The Catmull Rom spline is a spline that is C2-continous spline.

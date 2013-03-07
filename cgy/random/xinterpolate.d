@@ -3,8 +3,9 @@ module random.xinterpolate;
 import std.conv;
 import std.math;
 
+import math.math : fastFloor;
+import util.traits;
 import util.util;
-import util.math : fastFloor;
 import random.random;
 import random.valuesource;
 
@@ -34,7 +35,7 @@ auto XInterpolate3(alias Lerp, alias get)(vec3d pos) {
     return Lerp(v0, v1, dX);
 }
 
-auto XInterpolate2(alias Lerp, alias get)(vec2d pos) {
+auto XInterpolate2(alias Lerp, alias _get, T)(T pos) {
     //TODO: Do not assume that the source is a lattice with grid of size 1,1
     // Ie. dX dY may span [0, 1] over a range that is 4 long instead of current length 1.
 
@@ -43,8 +44,15 @@ auto XInterpolate2(alias Lerp, alias get)(vec2d pos) {
     float dX = pos.x - cast(float)loX;
     float dY = pos.y - cast(float)loY;
 
-    auto tx1 = Lerp(get(vec2d(loX, loY)),   get(vec2d(loX+1, loY)), dX);
-    auto tx2 = Lerp(get(vec2d(loX, loY+1)), get(vec2d(loX+1, loY+1)), dX);
+    alias tryCall!(_get, int, int) get;
+
+    auto v00 = get(loX, loY);
+    auto v10 = get(loX+1, loY);
+    auto v01 = get(loX, loY+1);
+    auto v11 = get(loX+1, loY+1);
+
+    auto tx1 = Lerp(v00, v10, dX);
+    auto tx2 = Lerp(v01, v11, dX);
     return Lerp(tx1, tx2, dY);
 }
 

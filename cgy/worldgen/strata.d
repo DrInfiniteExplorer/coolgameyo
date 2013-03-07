@@ -5,10 +5,10 @@ import std.algorithm : min, max;
 import std.math : abs;
 
 import log;
+import math.math : clamp;
 import random.gradientnoise;
 import random.simplex;
 import random.valuesource;
-import util.math;
 import util.util;
 
 float pmin = 12931923123.0f;

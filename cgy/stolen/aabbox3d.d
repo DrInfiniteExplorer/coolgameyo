@@ -25,7 +25,13 @@ import stolen.plane3d;
 */
 struct aabbox3d(T)
 {
-  public:
+
+    //! The near edge
+    vector3!T MinEdge = vector3!T(-1,-1,-1);
+
+    //! The far edge
+    vector3!T MaxEdge = vector3!T(1,1,1);
+
 
   //! Constructor with min edge and max edge.
   this(const vector3!T min, const vector3!T max) {MinEdge = min; MaxEdge = max;}
@@ -327,14 +333,6 @@ struct aabbox3d(T)
         return stop >= start;
     }
 
-  //! Tests if the box intersects with a line
-  /** \param line: Line to test intersection with.
-  \return True if there is an intersection , else false. */
-  bool intersectsWithLine(const line3d!(T) line) const
-  {
-    return intersectsWithLine(line.getMiddle(), line.getVector().normalize(),
-        cast(T)(line.getLength() * 0.5));
-  }
 
   //! Tests if the box intersects with a line
   /** \param linemiddle Center of the line.
@@ -367,49 +365,55 @@ struct aabbox3d(T)
     return true;
   }
 
-  //! Classifies a relation with a plane.
-  /** \param plane Plane to classify relation to.
-  \return Returns ISREL3D_FRONT if the box is in front of the plane,
-  ISREL3D_BACK if the box is behind the plane, and
-  ISREL3D_CLIPPED if it is on both sides of the plane. */
-  EIntersectionRelation3D classifyPlaneRelation(const plane3d!(T) plane) const
-  {
-    vector3!T nearPoint = MaxEdge;
-    vector3!T farPoint = MinEdge;
+  static if(isFloatingPoint!T) {
 
-    if (plane.Normal.x > cast(T)0)
-    {
-      nearPoint.x = MinEdge.x;
-      farPoint.x = MaxEdge.x;
+      //! Tests if the box intersects with a line
+      /** \param line: Line to test intersection with.
+      \return True if there is an intersection , else false. */
+      bool intersectsWithLine(const line3d!(T) line) const
+      {
+          return intersectsWithLine(line.getMiddle(), line.getVector().normalize(),
+                                    cast(T)(line.getLength() * 0.5));
+      }
+
+      //! Classifies a relation with a plane.
+      /** \param plane Plane to classify relation to.
+      \return Returns ISREL3D_FRONT if the box is in front of the plane,
+      ISREL3D_BACK if the box is behind the plane, and
+      ISREL3D_CLIPPED if it is on both sides of the plane. */
+      EIntersectionRelation3D classifyPlaneRelation(const plane3d!(T) plane) const
+      {
+        vector3!T nearPoint = MaxEdge;
+        vector3!T farPoint = MinEdge;
+
+        if (plane.Normal.x > cast(T)0)
+        {
+          nearPoint.x = MinEdge.x;
+          farPoint.x = MaxEdge.x;
+        }
+
+        if (plane.Normal.y > cast(T)0)
+        {
+          nearPoint.y = MinEdge.y;
+          farPoint.y = MaxEdge.y;
+        }
+
+        if (plane.Normal.z > cast(T)0)
+        {
+          nearPoint.z = MinEdge.z;
+          farPoint.z = MaxEdge.z;
+        }
+
+        if (plane.Normal.dotProduct(nearPoint) + plane.D > cast(T)0)
+          return EIntersectionRelation3D.ISREL3D_FRONT;
+
+        if (plane.Normal.dotProduct(farPoint) + plane.D > cast(T)0)
+          return EIntersectionRelation3D.ISREL3D_CLIPPED;
+
+        return EIntersectionRelation3D.ISREL3D_BACK;
+      }
     }
-
-    if (plane.Normal.y > cast(T)0)
-    {
-      nearPoint.y = MinEdge.y;
-      farPoint.y = MaxEdge.y;
-    }
-
-    if (plane.Normal.z > cast(T)0)
-    {
-      nearPoint.z = MinEdge.z;
-      farPoint.z = MaxEdge.z;
-    }
-
-    if (plane.Normal.dotProduct(nearPoint) + plane.D > cast(T)0)
-      return EIntersectionRelation3D.ISREL3D_FRONT;
-
-    if (plane.Normal.dotProduct(farPoint) + plane.D > cast(T)0)
-      return EIntersectionRelation3D.ISREL3D_CLIPPED;
-
-    return EIntersectionRelation3D.ISREL3D_BACK;
-  }
-
-  //! The near edge
-  vector3!T MinEdge = vector3!T(-1,-1,-1);
-
-  //! The far edge
-  vector3!T MaxEdge = vector3!T(1,1,1);
-};
+}
 
 //! Typedef for a f32 3d bounding box.
 alias aabbox3d!(float) aabbox3df;

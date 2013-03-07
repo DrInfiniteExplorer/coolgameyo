@@ -13,6 +13,8 @@ import std.traits;
 import std.typecons;
 import std.typetuple;
 
+import math.math : fastFloor;
+
 //public import std.datetime;
 
 //TODO: Got order-dependant bugs here. If doing pos, stolen, worldparts, then we get bugs and bugs. sadface.
@@ -62,7 +64,6 @@ import stolen.aabbox3d;
 alias aabbox3d!double aabbd;
 
 vec3i getTilePos(T)(vector3!T v){
-    import util.math : fastFloor;
     return vec3i(
                  fastFloor(v.x),
                  fastFloor(v.y),
@@ -117,6 +118,8 @@ void setFlag(A,B)(ref A flags, B flag, bool value) {
         flags &= ~flag;
     }
 }
+
+
 
 void BREAKPOINT(uint doBreak=1) {
     if(doBreak) {

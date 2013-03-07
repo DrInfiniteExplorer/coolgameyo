@@ -9,9 +9,9 @@ import std.random;
 import std.stdio;
 import std.typecons;
 
+import math.math : clamp;
 import graphics.image;
 import util.util;
-import util.math;
 
 
 

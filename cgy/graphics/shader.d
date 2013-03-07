@@ -20,7 +20,7 @@ string makeUints(T...)() {
     return ret;
 }
 
-final class ShaderProgram(T...){
+class ShaderProgram(T...){
     mixin(makeUints!T());
 
     uint program=0;
@@ -45,8 +45,8 @@ final class ShaderProgram(T...){
 
     this(string constants, string vertex, string fragment){
         this();
-        compileFile(vert, vertex, constants);
-        compileFile(frag, fragment, constants);
+        compileFile!true(vertex, constants);
+        compileFile!false(fragment, constants);
         link();
     }
 
@@ -73,7 +73,7 @@ final class ShaderProgram(T...){
             arr[len]=0;
             glGetShaderInfoLog(shader, len, &len2, arr.ptr);
             glError();
-            msg("!!! %s", arr);
+            msg("!!!\n", arr);
             return to!string(arr);
         }
         return "";
@@ -95,45 +95,48 @@ final class ShaderProgram(T...){
         return "";
     }
 
-    void compileFile(uint shader, string filename, string constants = ""){
+    void compileFile(bool vertexShader)(string filename, string constants = ""){
 
         //Cute that the memory management for the loaded file is now manual, but the File struct allocates data via gc :P
+        // ^ lololol :P
+        // HOW TO MAKE less irritating?
+        // maek totally own file derps? D:
         import util.memory : ScopeMemory;
         auto file = File(filename, "r");
         auto fileSize = cast(uint)file.size();
-        auto mem = ScopeMemory!char(fileSize+1);
+        auto mem = ScopeMemory!char(fileSize);
         file.rawRead(mem[]);
-        mem[fileSize] = 0;
+        compileSource!vertexShader(cast(string)mem[]);
+    }
 
-        const char* ptr = mem.ptr;
-        const char** ptrptr = &ptr;
-        glShaderSource(shader, 1, ptrptr, null);
-        glError();
-        glCompileShader(shader);
-        glError();
-        int p;
-        glGetShaderiv(shader, GL_COMPILE_STATUS, &p);
-        glError();
-        if(p != GL_TRUE){
-            msg(constants ~ mem[]);
-            msg(*ptrptr);
-            auto error = printShaderError(shader);
-
-            if(1 == NativeDialogBox("Shader compilation failed: " ~ filename ~"\n" ~error, "Error", NDBAnswer.Retry_Cancel)) {
-                return compileFile(shader, filename, constants);
-            } else {
-                //derp
-            }
+    void compileSource(bool vertexShader)(string source) {
+        static if(vertexShader) {
+            alias vert shader;
+        } else {
+            alias frag shader;
+        }
+        immutable(char)*[1] ptr;
+        int[1] length;
+        ptr[0] = source.ptr;
+        length[0] = source.length;
+        glShaderSource(shader, 1, ptr, length); glError();
+        glCompileShader(shader); glError();
+        int error;
+        glGetShaderiv(shader, GL_COMPILE_STATUS, &error); glError();
+        if(error != GL_TRUE) {
+            msg(source);
+            printShaderError(shader);
+            BREAKPOINT;
         }
     }
 
     void vertex(string filename) @property{
         vertexShader = filename;
-        compileFile(vert, filename);
+        compileFile!true(filename);
     }
     void fragment(string filename) @property{
         fragmentShader = filename;
-        compileFile(frag, filename);
+        compileFile!false(filename);
     }
 
     void bindAttribLocation(uint location, string name){

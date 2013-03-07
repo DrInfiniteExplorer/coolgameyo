@@ -117,7 +117,7 @@ mixin template Heightmap() {
                     yStart = 0;
                     auto tmp = p.value + vec2i(x, y);
                     int z;
-                    auto posXY = TileXYPos(tmp);
+                    auto posXY = TileXYPos(tmp); 
 
                     z = worldMap.getRealTopTilePos(posXY);
                     static if(iterationLimit != int.max) {

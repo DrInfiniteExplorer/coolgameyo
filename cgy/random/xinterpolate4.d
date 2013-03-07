@@ -4,10 +4,12 @@ import std.conv;
 import std.exception;
 import std.math;
 
-import util.util;
-import util.math: fastFloor;
 import random.random;
 import random.valuesource;
+
+import math.math: fastFloor;
+import util.traits;
+import util.util;
 
 
 double XInterpolate34(alias Mixer, alias get)(vec3d pos) {
@@ -96,7 +98,7 @@ double XInterpolate34(alias Mixer, alias get)(vec3d pos) {
     return typeof(return).init;
 }
 
-auto XInterpolate24(alias Mixer, alias _get, T)(vec2!T pos) {
+auto XInterpolate24(alias Mixer, alias _get, T)(T pos) {
     //TODO: Do not assume that the source is a lattice with grid of size 1,1
     // Ie. dX dY may span [0, 1] over a range that is 4 long instead of current length 1.
     int loX = fastFloor(pos.x);
@@ -104,17 +106,7 @@ auto XInterpolate24(alias Mixer, alias _get, T)(vec2!T pos) {
     float dX = pos.x - cast(float)loX;
     float dY = pos.y - cast(float)loY;
 
-    import std.traits : ParameterTypeTuple;
-    alias ParameterTypeTuple!_get PTT;
-    static if( is(PTT[0] : int)) {
-        alias _get get;
-    } else {
-        auto get(int x, int y) {
-            return _get(PTT[0](x,y));
-        }
-    }
-
-
+    alias tryCall!(_get, int, int) get;
 
     auto v00 = get(loX-1, loY-1);
     auto v10 = get(loX, loY-1);

@@ -56,9 +56,7 @@ class Camera{
         getRayParameters(UL, toRight, toDown);
         double percentX = to!double(coords.x) / to!double(renderSettings.windowWidth);
         double percentY = to!double(coords.y) / to!double(renderSettings.windowHeight);
-        dir = (UL + percentX*toRight + percentY * toDown).normalize();   
-        //dir = (targetDir + leftmost + upper).normalize();   
-        //msg(percentX, " ", percentY);
+        dir = (UL + percentX*toRight + percentY * toDown).normalize();
         start = position;
     }
     
@@ -100,12 +98,24 @@ class Camera{
     }
 
     void setTargetDir(vec3d dir){
+        //dir.set(1,1,1);
         targetDir = dir.normalize();
         auto xyLen = sqrt(dir.x^^2 + dir.y^^2);
         pitch = atan2(dir.z, xyLen);
+
+        auto pitchQuat = quatd.rotationQuat(pitch, 0, -1, 0);
+        viewQuat = quatd(1, 0, 0, 0);
+        viewQuat = viewQuat * pitchQuat;
+
+        msg(pitchQuat.rotate(vec3d(1,0,0)));
+
         auto rot = atan2(dir.y, dir.x);
-        viewQuat = quatd.rotationQuat(pitch, 1, 0, 0);
-        viewQuat = viewQuat * quatd.rotationQuat(rot, 0, 0, 1);
+        auto rotQuat = quatd.rotationQuat(rot, 0, 0, 1);
+        msg(rotQuat.rotate(vec3d(1,0,0)));
+        viewQuat = rotQuat * pitchQuat;
+
+        //Does not work perfectly, since it's done as one rotation, messing up stuff sortof like :P
+        //viewQuat = quatd.stealRotation(vec3d(0, 1, 0), targetDir);
     }
     void setTarget(vec3d target){
         setTargetDir((target-position).normalize());
@@ -122,8 +132,6 @@ class Camera{
         degZ = -dx * controlSettings.mouseSensitivityX;
         degX = -dy * controlSettings.mouseSensitivityY;
 
-        auto rotQuat = quaternion!double.rotationQuat(degZ * DegToRad, 0, 0, 1);
-
         degX *= DegToRad;
         if(pitch + degX + 0.05 > PI_2) {
             degX = PI_2 - pitch - 0.05;
@@ -133,17 +141,10 @@ class Camera{
         }
         pitch += degX;
 
-        auto pitchQuat = quaternion!double.rotationQuat(degX, 1, 0, 0);
-
-        //auto rot = pitchQuat * rotQuat;
-        //targetDir = rot.rotate(targetDir);
-        //targetDir = rotQuat.rotate(targetDir);
-        //targetDir = pitchQuat.rotateDerp(targetDir);
+        auto rotQuat = quaternion!double.rotationQuat(degZ * DegToRad, 0, 0, 1);
+        auto pitchQuat = quaternion!double.rotationQuat(degX, 0, -1, 0);
         viewQuat = rotQuat * viewQuat * pitchQuat;
-        //viewQuat = pitchQuat * viewQuat;
-        targetDir = viewQuat.rotate(vec3d(0, 1, 0));
-
-
+        targetDir = viewQuat.rotate(vec3d(1, 0, 0));
     }
 
     void axisMove(double right, double forward, double up){

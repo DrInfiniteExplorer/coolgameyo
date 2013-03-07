@@ -324,6 +324,7 @@ class Game{
 
     void setActiveUnit(Unit u) {
         activeUnit = u;
+        activeUnitPos = u.pos;
     }
 
     void setActiveUnitPos(UnitPos pos) {

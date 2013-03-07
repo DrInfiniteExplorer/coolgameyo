@@ -2,6 +2,7 @@ module random.gradientnoise;
 
 import std.math;
 
+import math.math : fastFloor;
 import util.util;
 import random.random;
 import random.permutation;

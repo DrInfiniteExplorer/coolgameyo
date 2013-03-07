@@ -39,7 +39,7 @@ mixin template WorldTimeClockCode() {
 
         auto sincos = expi(2*PI*getDayTime());
         immutable double worldSize = worldSize;
-        immutable worldSize2 = 2 * worldSize;
+        immutable worldSize2 = 2 * worldSize * 100;
         return vec3d(worldSize2*sincos.im, 0, abs(worldSize2*sincos.re));
     }
 

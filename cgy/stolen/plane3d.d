@@ -18,7 +18,7 @@ enum EIntersectionRelation3D
 };
 
 //! Template plane class with some intersection testing methods.
-struct plane3d(T)
+struct plane3d(T) if( isFloatingPoint!T)
 {
 	public:
 		// Constructors
@@ -220,4 +220,4 @@ struct plane3d(T)
 alias plane3d!(float) plane3df;
 
 //! Typedef for an integer 3d plane.
-alias plane3d!(int) plane3di;
+//alias plane3d!(int) plane3di; <-- makes no sense?

@@ -71,7 +71,8 @@ immutable StepIter = 4*25;
 //immutable mapScale = [0, 3200, 12800, 51200, 204800, /*start mipmaps */ 819200,  819200, 819200];
 
 //1 mil värt av värld. Yeah.
-immutable worldSize = 10 * 1_000;
+// Nu bara 1 km. Yeaaa
+immutable worldSize = 1 * 1_000;
 
 immutable halfWorldSize = vec3i(worldSize/2, worldSize/2, 0);
 immutable halfWorldSize_xy = vec2i(worldSize/2);
@@ -118,7 +119,8 @@ final class WorldMap {
         if(exists(worldPath)) {
             import log : LogWarning;
             LogWarning("A folder already exists at '", worldPath, "'. Will ignore totally ignore that.");
-            BREAKPOINT;
+            rmdir(worldPath);
+            //BREAKPOINT;
         }
         mkdir(worldPath);
 

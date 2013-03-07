@@ -13,7 +13,11 @@ layout(location = 1) out vec4 light;
 layout(location = 2) out vec4 depth;
 void main() {
     vec3 up = sunDir; //vec3(0, 0, 1);
-    float dt = clamp(dot(up, normalize(interp_normal)), 0.0, 1.0);
+    float dt = clamp(
+        dot(
+            up, normalize(interp_normal)
+            ),
+        0.0, 1.0);
     frag_color = vec4(interp_color * dt, 1.0);
 
     //frag_color = vec4(mod(interp_normal.x, 10.0)/10.0);

@@ -155,6 +155,7 @@ struct BinaryFile {
         write(t);
     }
     solved with auto ref which takes ref if possible and not otherwise (according to plol)
+    More info under templates -page on dlang language reference
     */
     void write(T)(auto ref T t) {
 
@@ -189,6 +190,9 @@ struct BinaryFile {
             T[] tmp2 = ((&t)[0..1]);
             file.rawRead(tmp2);
         }
+    }
+    ulong size() @property {
+        return file.size;
     }
 
     auto close() {
