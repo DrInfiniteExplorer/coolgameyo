@@ -380,9 +380,11 @@ mixin template ClientModule() {
         recv_set = new SocketSet(2);
         write_set = new SocketSet(1);
 
+        msg("Looking up address...");
         auto address = new std.socket.InternetAddress(host, PORT);
 
         pragma(msg, "Add code to set connection timeout");
+        msg("Trying to connect...");
         commSock = new std.socket.TcpSocket(address);
         simpleHandshake(commSock);
         enforce(commSock.send("comm\n") == 5, "Failed to send connection type for communication socket");
@@ -391,6 +393,7 @@ mixin template ClientModule() {
         enforce(response == "Ok!", "Error connecting to server: " ~ response);
         int[] _magic = (&magicNumber)[0..1];
         enforce(commSock.receive(_magic) == 4, "Error recieving magic identification number");
+        msg("Connected! ½-way there!");
 
         dataSock = new std.socket.TcpSocket(address);
         simpleHandshake(dataSock);
@@ -398,6 +401,7 @@ mixin template ClientModule() {
         enforce(dataSock.send(_magic) == 4, "Error echoing magic number");
         response = readLine(dataSock);
         enforce(response == "Ok!", "Error recieving ack from server: " ~ response);
+        msg("Fully connected yeah!");
 
         scope(failure) {
             BREAKPOINT();
@@ -407,8 +411,10 @@ mixin template ClientModule() {
         dummyThread = spawnThread(&dummyClientNetwork);
         
         //Send pre-changes before save?
+        msg("Will read response from servoar");
         response = readLine(dataSock);
         if(response == "PreChanges") {
+            msg("Will download stuff");
             //Reveive file with changes; format is same as change-frame
             mkdir(g_worldPath ~ "/temp");
             tcpReceiveFile(dataSock, g_worldPath ~ "/temp/changes");
@@ -417,8 +423,10 @@ mixin template ClientModule() {
         }
         enforce(response == "SaveGame", "Error; did not receive 'SaveGame' from server");
 
+        msg("Will download gamestate from server");
         //Prepare to receiveive all the game data everrrrr!
         tcpReceiveDir(commSock, g_worldPath);
+        msg("Gamestate downloaded, starting game yeah!");
 
         //Now set up mechanism to signal the dummythread when the game is loaded
         //and all changes up till now are applied, so that it quits 'in sync' and the real
@@ -533,6 +541,7 @@ mixin template ClientModule() {
     }
 
     void dummyClientNetwork() { 
+        msg("Starting dummy client network work");
         while(!doneLoading) {
             int[2] frameInfo = [g_gameTick, 0];
             auto ret = dataSock.receive(frameInfo);
