@@ -168,18 +168,18 @@ mixin template ServerModule() {
             if(sendingSaveGame > 1) {
                 import util.socket : tcpSendFile;
                 //Someone was already getting it. Get all changes from then till now and send to new client.
-                if(playerInfo.dataSock.send("PreChanges\n") != 11){
+                if(playerInfo.commSock.send("PreChanges\n") != 11){
                     Log("Error sending pre-changes");
                     playerInfo.disconnect();
                     return;
                 }
-                if(!tcpSendFile(playerInfo.dataSock, "temp/changes")) {
+                if(!tcpSendFile(playerInfo.commSock, "temp/changes")) {
                     Log("Errpr sending temp/changes");
                     playerInfo.disconnect();
                     return;
                 }
             }
-            if(playerInfo.dataSock.send("SaveGame\n") != 9) {
+            if(playerInfo.commSock.send("SaveGame\n") != 9) {
                 Log("Error sending savegame");
                 playerInfo.disconnect();
                 return;
@@ -409,17 +409,18 @@ mixin template ClientModule() {
 
         //Set up thread to reveive changes in background while we receive the game state.
         dummyThread = spawnThread(&dummyClientNetwork);
+        // WILL READ FROM DATASOCK
         
         //Send pre-changes before save?
         msg("Will read response from servoar");
-        response = readLine(dataSock);
+        response = readLine(commSock);
         if(response == "PreChanges") {
             msg("Will download stuff");
             //Reveive file with changes; format is same as change-frame
             mkdir(g_worldPath ~ "/temp");
-            tcpReceiveFile(dataSock, g_worldPath ~ "/temp/changes");
+            tcpReceiveFile(commSock, g_worldPath ~ "/temp/changes");
 
-            response = readLine(dataSock);
+            response = readLine(commSock);
         }
         enforce(response == "SaveGame", "Error; did not receive 'SaveGame' from server");
 
