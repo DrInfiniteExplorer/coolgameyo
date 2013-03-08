@@ -139,7 +139,7 @@ final class Level4Sheet {
                 vec3f Ny1 = vec3f(0.0f, Yn - c, 2048.0f);
                 vec3f Ny2 = vec3f(0.0f, c - Yp, 2048.0f);
 
-                normals[y][x] = (Nx1 + Nx2 + Ny1 + Ny2).normalize();
+                normals[y][x] = (Nx1 + Nx2 + Ny1 + Ny2).normalizeThis();
             }
         }
 

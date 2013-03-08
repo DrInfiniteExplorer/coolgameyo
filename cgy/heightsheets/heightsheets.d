@@ -198,7 +198,7 @@ final class HeightSheets : Module, WorldStateListener {
         vec3f toCam = (center.toTilePos.value.convert!double - camera.getPosition()).convert!float;
         shader.setUniform(shader.offset, toCam);
 
-        auto sunDir = (worldState.getSunPosition() - camera.getPosition()).normalize().convert!float;
+        auto sunDir = (worldState.getSunPosition() - camera.getPosition()).normalizeThis().convert!float;
         shader.setUniform(shader.sunDir, sunDir);
 
 

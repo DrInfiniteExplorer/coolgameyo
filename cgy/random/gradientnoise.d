@@ -39,7 +39,7 @@ class GradientNoise(string Step = "smoothStep", string Lerp = "lerp") : ValueSou
             do {
                 v = vec3d(rsu.getValue(0), rsu.getValue(0), rsu.getValue(0));
             }while(v.getLengthSQ() > 1.0);
-            p = v.normalize();
+            p = v.normalizeThis();
             
         }
     }

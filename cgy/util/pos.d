@@ -104,10 +104,10 @@ struct SectorNum {
 }
 
 struct BlockNum {
-    vec3i value;
+    vec3i value = vec3i(0,0,0);
 
     invariant() {
-        BREAK_IF(value.x < 0 || value.y < 0 || value.z < 0);
+        BREAK_IF(value.x < 0 || value.y < 0);
     }
 
     SectorNum getSectorNum() const {

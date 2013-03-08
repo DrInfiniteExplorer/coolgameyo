@@ -56,10 +56,12 @@ mixin template WorldGenerator() {
     TileTypeManager tileSys;
 
     auto getHeight(TileXYPos pos) {
-        return heightMaps.getHeight!false(pos);
+        //return heightMaps.getHeight!false(pos);
+        return heightMaps.getHeight!true(pos);
     }
     auto getSoil(TileXYPos pos) {
-        return heightMaps.getSoil!false(pos);
+        //return heightMaps.getSoil!false(pos);
+        return heightMaps.getSoil!true(pos);
     }
 
     void fillSector(Sector sector, SectorHeightmap heightmap) {

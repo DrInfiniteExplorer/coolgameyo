@@ -111,7 +111,7 @@ public:
 	    {
 		    const vector3!T q = sorigin - start;
 		    T c = q.getLength();
-		    T v = q.dotProduct(getVector().normalize());
+		    T v = q.dotProduct(getVector().normalizeThis());
 		    T d = sradius * sradius - (c*c - v*v);
 
 		    if (d < 0.0)

@@ -145,6 +145,9 @@ void colorize(int num, int count, ref ubyte r, ref ubyte g, ref ubyte b) {
     b = ptr[2];
 }
 
+// Makes a tuple of tuples.
+// First item in tuple will be a tuple, n long
+// Second item in tuple will be a tuple, 2 long, same layout as first. I think?
 template tuples(int n, Rest...) {
     static assert (Rest.length % n == 0);
     static if (Rest.length == 0) {

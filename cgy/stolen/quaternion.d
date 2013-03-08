@@ -103,7 +103,7 @@ public:
 			}
 		}
 
-		return normalize();	
+		return normalizeThis();	
 	}
 
 	//! Add operator
@@ -205,7 +205,7 @@ public:
 		Z = cast(float)(cr * cpsy - sr * spcy);
 		W = cast(float)(cr * cpcy + sr * spsy);
 
-		return normalize();	
+		return normalizeThis();	
 	}
 
 	//! Sets quaternion based on euler angles (radians)
@@ -231,7 +231,7 @@ public:
 	}
 
 	//! Normalizes the quaternion
-	quaternion normalize()
+	quaternion normalizeThis()
 	{
 		const float n = X*X + Y*Y + Z*Z + W*W;
 
@@ -464,8 +464,8 @@ public:
 		// Copy, since cannot modify local
 		vector3!float v0 = from;
 		vector3!float v1 = to;
-		v0.normalize();
-		v1.normalize();
+		v0.normalizeThis();
+		v1.normalizeThis();
 
 		const float d = v0.dotProduct(v1);
 		if (d >= 1.0f) // If dot == 1, vectors are the same

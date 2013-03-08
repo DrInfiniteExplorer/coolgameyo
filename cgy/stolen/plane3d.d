@@ -54,7 +54,7 @@ struct plane3d(T) if( isFloatingPoint!T)
 		{
 			// creates the plane from 3 memberpoints
 			Normal = (point2 - point1).crossProduct(point3 - point1);
-			Normal.normalize();
+			Normal.normalizeThis();
 
 			recalculateD(point1);
 		}

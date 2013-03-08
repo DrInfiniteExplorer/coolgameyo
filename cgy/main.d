@@ -112,8 +112,10 @@ __gshared string[] g_commandLine;
 
 void main(string[] args) {
 
-    args ~= "--HeightMap=saves/880128/map/map1";
-    args ~= "--HeightMapType=float";
+    //args ~= "--HeightMap=saves/880128/map/map1";
+    //args ~= "--HeightMapType=float";
+    //args ~= "--MaterialEditor";
+    //args ~= "--hostServer=880128";
 
     /*
     g_commandLine.length = args.length;
@@ -127,8 +129,6 @@ void main(string[] args) {
         setThreadName("Main thread");
         std.concurrency.register("Main thread", thisTid());
 
-        //args ~= "--MaterialEditor";
-        //args ~= "--hostServer=880128";
 
 
         bool materialEditor;
@@ -139,6 +139,7 @@ void main(string[] args) {
                "MaterialEditor", &materialEditor,
                "HeightMap", &heightmap,
                "settingsFile", &g_settingsFilePath,
+               "playerName", &g_playerName,
                "hostGame", &g_worldPath,
                "joinGame", &joinGame);
 

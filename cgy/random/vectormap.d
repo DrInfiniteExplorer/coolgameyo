@@ -151,7 +151,7 @@ final class Vector2DMap2D(T, bool Wrap = true) {
                 auto v = get(x, y);
                 auto len = (v.getLength() - min) / range;
                 len *= arrowSize;
-                v.normalize();
+                v.normalizeThis();
                 auto v_cross = vec2d(-v.y, v.x);
 
                 auto center = vec2d(x, y);

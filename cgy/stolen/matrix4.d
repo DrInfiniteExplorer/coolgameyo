@@ -1019,10 +1019,10 @@ struct CMatrix4(T)
         const vector3!float upVector)
     {
       vector3!float zaxis = target - position;
-      zaxis.normalize();
+      zaxis.normalizeThis();
 
       vector3!float xaxis = upVector.crossProduct(zaxis);
-      xaxis.normalize();
+      xaxis.normalizeThis();
 
       vector3!float yaxis = zaxis.crossProduct(xaxis);
 
@@ -1056,10 +1056,10 @@ struct CMatrix4(T)
         const vector3!float upVector)
     {
       vector3!float zaxis = position - target;
-      zaxis.normalize();
+      zaxis.normalizeThis();
 
       vector3!float xaxis = upVector.crossProduct(zaxis);
-      xaxis.normalize();
+      xaxis.normalizeThis();
 
       vector3!float yaxis = zaxis.crossProduct(xaxis);
 
@@ -1093,7 +1093,7 @@ struct CMatrix4(T)
     If this is 1, it is a point light, if it is 0, it is a directional light. */
     CMatrix4!(T) buildShadowMatrix(const vector3!float light, plane3df plane, float point=1.0f)
     {
-      plane.Normal.normalize();
+      plane.Normal.normalizeThis();
       const float d = plane.Normal.dotProduct(light);
 
       M[ 0] = cast(T)(-plane.Normal.x * light.x + d);
@@ -1178,15 +1178,15 @@ struct CMatrix4(T)
       // unit vectors
       vector3!float f = from;
       vector3!float t = to;
-      f.normalize ();
-      t.normalize ();
+      f.normalizeThis();
+      t.normalizeThis();
 
       // axis multiplication by sin
       vector3!float vs = t.crossProduct ( f );
 
       // axis of rotation
       vector3!float v = vs;
-      v.normalize();
+      v.normalizeThis();
 
       // cosinus angle
       T ca = f.dotProduct ( t );
@@ -1248,13 +1248,13 @@ struct CMatrix4(T)
     {
       // axis of rotation
       vector3!float up = axis;
-      up.normalize ();
+      up.normalizeThis();
 
       vector3!float forward = camPos - center;
-      forward.normalize();
+      forward.normalizeThis();
 
       vector3!float right = up.crossProduct ( forward );
-      right.normalize ();
+      right.normalizeThis();
 
       // correct look vector
       vector3!float look = right.crossProduct ( up );

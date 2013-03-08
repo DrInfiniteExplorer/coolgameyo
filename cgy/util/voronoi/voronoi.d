@@ -151,11 +151,11 @@ final class HalfEdge {
 
     vec2d dir() @property {
         if(vertex !is null && _reverse.vertex !is null) {
-            return (_reverse.vertex.pos - vertex.pos).normalize();
+            return (_reverse.vertex.pos - vertex.pos).normalizeThis();
         }
         if(_reverse !is null) {
             auto tmp = _reverse.left.pos - left.pos;
-            return vec2d(-tmp.y, tmp.x).normalize();
+            return vec2d(-tmp.y, tmp.x).normalizeThis();
         }
         BREAKPOINT;
         return vec2d.init;
@@ -302,7 +302,7 @@ final class Edge {
         auto ortho = halfRight.left.pos - halfLeft.left.pos;
         ortho = vec2d(-ortho.y, ortho.x);
         //if(derp) ortho = -ortho;
-        return ortho.normalize();
+        return ortho.normalizeThis();
     }
 
     vec2d center() @property {

@@ -199,7 +199,7 @@ struct vector3(T) {
     }
 
     static if(isFloatingPoint!T) {
-        vec normalize() {
+        vec normalizeThis() {
             immutable lenSQ = x^^2 + y^^2 + z^^2;
             if(.equals(lenSQ, 1.0)) return this;
             immutable len = sqrt(lenSQ);
@@ -209,6 +209,10 @@ struct vector3(T) {
             z *= constant;
 
             return this;
+        }
+        vec normalized() const {
+            vec ret = this;
+            return ret.normalizeThis();
         }
     }
 
@@ -266,8 +270,8 @@ struct vector3(T) {
 }
 
 struct vector2(T) {
-    T x = void;
-    T y = void;
+    T x;
+    T y;
 
     alias vector2!T vec;
 
@@ -356,9 +360,20 @@ struct vector2(T) {
         y *= constant;
     }
 
-    vec normalize() {
-        setLength(1);
-        return this;
+    static if(isFloatingPoint!T) {
+        vec normalizeThis() {
+            immutable lenSQ = x^^2 + y^^2;
+            if(.equals(lenSQ, 1.0)) return this;
+            immutable len = sqrt(lenSQ);
+            immutable constant = 1.0 / len;
+            x *= constant;
+            y *= constant;
+            return this;
+        }
+        vec normalized() const {
+            vec ret = this;
+            return ret.normalizeThis();
+        }
     }
 
     T getDistance(const vec o) const {

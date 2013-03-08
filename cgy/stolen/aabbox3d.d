@@ -372,7 +372,7 @@ struct aabbox3d(T)
       \return True if there is an intersection , else false. */
       bool intersectsWithLine(const line3d!(T) line) const
       {
-          return intersectsWithLine(line.getMiddle(), line.getVector().normalize(),
+          return intersectsWithLine(line.getMiddle(), line.getVector().normalizeThis(),
                                     cast(T)(line.getLength() * 0.5));
       }
 

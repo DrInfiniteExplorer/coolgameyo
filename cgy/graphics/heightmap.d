@@ -21,10 +21,10 @@ immutable vertShaderSource = q{
     #version 150 core
     in vec3 vert;
     in vec3 norm;
-    in vec3 col;
+    in vec4 col;
     uniform mat4 transform;
     out vec3 normal;
-    out vec3 color;
+    out vec4 color;
     void main() {
         gl_Position = (transform * vec4(vert, 1.0));
         normal = norm;
@@ -35,15 +35,15 @@ immutable fragShaderSource = q{
     #version 150 core
     #extension GL_ARB_explicit_attrib_location : enable
     in vec3 normal;
-    in vec3 color;
+    in vec4 color;
     layout(location = 0) out vec4 frag_color;
     layout(location = 1) out vec4 light;
     //layout(location = 2) out vec4 depth;
     void main() {
         vec3 n = normalize(normal);
-        vec3 sun = vec3(0, 0, 1);
-        light = vec4(dot(n, sun));
-        frag_color = vec4(1.0, 1.0, 1.0, 1.0) * vec4(color, 1.0);
+        vec3 sun = normalize(vec3(0.1, 0.1, 1));
+        light = vec4(1.0, 1.0, 1.0, 1.0);
+        frag_color = dot(n, sun) * color;
     }
 };
 
@@ -109,6 +109,7 @@ class Heightmap : ShaderProgram!() {
         auto len = data.length;
         auto sqrtLen = sqrt(cast(real)len);
         sizeY = sizeX = cast(int)sqrtLen;
+        width = height = sizeX;
         BREAK_IF(sqrtLen != sizeX);
         BREAK_IF(sizeX ^^ 2 != len);
         map = data.dup;
@@ -142,9 +143,29 @@ class Heightmap : ShaderProgram!() {
         float[3] ret = void;
         vec3f toX = vec3f(2*widthPerCell, 0, getVal(x-1, y) - getVal(x+1, y));
         vec3f toY = vec3f(0, 2*heightPerCell, getVal(x, y-1) - getVal(x, y+1));
-        return [toX.normalize.crossProduct(toY.normalize).tupleof];
+        auto normal = toX.normalizeThis.crossProduct(toY.normalizeThis);
+        //normal.z += 0.05;
+        normal.normalizeThis;
+        ret[0] = normal.x;
+        ret[1] = normal.y;
+        ret[2] = normal.z;
+        return ret;
+    }
+    float alpha = 0.0;
+    float[4] getColor(int x, int y) {
+        auto c = colorMap[y * sizeX + x].tupleof;
+        float[4] ret;
+        ret[0] = c[0];
+        ret[1] = c[1];
+        ret[2] = c[2];
+        ret[3] = alpha;
+        return ret;
     }
 
+    void setColor(vec3f[] colors) {
+        colorMap = colors;
+        rebuild = true;
+    }
     void setColor(vec3f color) {
         colorMap.length = 1;
         colorMap[0] = color;
@@ -153,19 +174,38 @@ class Heightmap : ShaderProgram!() {
 
     void build() {
         rebuild = false;
-        triangles.length = 6 * (sizeX-1)*(sizeY-1);
-        normals.length = (sizeX-1)*(sizeY-1);
+        int len = 6 * (sizeX-1)*(sizeY-1);
+        triangles.length = len;
+        normals.length = len;
+        float[4][] colors;
+        if(colorMap.length > 1) {
+            colors.length = len;
+        }
 
         foreach(x, y ; Range2D(0, sizeX-1, 0, sizeY-1)) {
             auto idx = x + y * (sizeX-1);
-            auto triIdx = idx * 6;
+            auto Idx = idx * 6;
             normals[x + y * (sizeX-1)] = getNormal(x, y);
-            triangles[triIdx+0] = [x, y, getVal(x, y)];
-            triangles[triIdx+1] = [x, y+1, getVal(x, y+1)];
-            triangles[triIdx+2] = [x+1, y, getVal(x+1, y)];
-            triangles[triIdx+3] = [x, y+1, getVal(x, y+1)];
-            triangles[triIdx+4] = [x+1, y+1, getVal(x+1, y+1)];
-            triangles[triIdx+5] = [x+1, y, getVal(x+1, y)];
+            triangles[Idx+0] = [x, y, getVal(x, y)];
+            triangles[Idx+1] = [x+1, y, getVal(x+1, y)];
+            triangles[Idx+2] = [x, y+1, getVal(x, y+1)];
+            triangles[Idx+3] = [x, y+1, getVal(x, y+1)];
+            triangles[Idx+4] = [x+1, y, getVal(x+1, y)];
+            triangles[Idx+5] = [x+1, y+1, getVal(x+1, y+1)];
+            normals[Idx+0] = getNormal(x, y);
+            normals[Idx+1] = getNormal(x+1, y);
+            normals[Idx+2] = getNormal(x+1, y+1);
+            normals[Idx+3] = getNormal(x, y+1);
+            normals[Idx+4] = getNormal(x+1, y);
+            normals[Idx+5] = getNormal(x+1, y+1);
+            if(colorMap.length > 1) {
+                colors[Idx+0] = getColor(x, y);
+                colors[Idx+1] = getColor(x+1, y);
+                colors[Idx+2] = getColor(x+1, y+1);
+                colors[Idx+3] = getColor(x, y+1);
+                colors[Idx+4] = getColor(x+1, y);
+                colors[Idx+5] = getColor(x+1, y+1);
+            }
         }
         if(triVbo) {
             glDeleteBuffers(1, &triVbo); glError();
@@ -185,7 +225,7 @@ class Heightmap : ShaderProgram!() {
         glBindVertexArray(vao);
         auto triSize = triangles.length * triangles[0].sizeof;
         auto normSize = normals.length * normals[0].sizeof;
-        auto colorSize = colorMap.length * colorMap[0].sizeof;
+        auto colorSize = colors.length * colors[0].sizeof;
 
         glGenBuffers(1, &triVbo); glError();
         glBindBuffer(GL_ARRAY_BUFFER, triVbo); glError();
@@ -202,11 +242,11 @@ class Heightmap : ShaderProgram!() {
         if(colorMap.length > 1) {
             glGenBuffers(1, &colorVbo); glError();
             glBindBuffer(GL_ARRAY_BUFFER, colorVbo); glError();
-            glBufferData(GL_ARRAY_BUFFER, colorSize, colorMap.ptr, GL_STATIC_DRAW); glError();
-            glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, colorMap[0].sizeof, null); glError();
+            glBufferData(GL_ARRAY_BUFFER, colorSize, colors.ptr, GL_STATIC_DRAW); glError();
+            glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, colors[0].sizeof, null); glError();
             glEnableVertexAttribArray(2); glError();
         } else if(colorMap.length == 1) {
-            glVertexAttrib3f(2, colorMap[0].x, colorMap[0].y, colorMap[0].z);
+            glVertexAttrib4f(2, colorMap[0].x, colorMap[0].y, colorMap[0].z, alpha);
             glDisableVertexAttribArray(2); glError();
         } else {
             glVertexAttrib3f(2, 1, 1, 1);
@@ -222,6 +262,7 @@ class Heightmap : ShaderProgram!() {
         if(rebuild) {
             build();
         }
+        if(!vao) return;
         use(true);
         auto transform = camera.getProjectionMatrix * camera.getViewMatrix;
         setUniform(getUniformLocation("transform"), transform);
@@ -323,5 +364,40 @@ bool displayHeightmap(T)(T t) {
 }
 
 
+void renderLoop(Camera camera, bool delegate() exitWhen, void delegate() render) {
+    GuiSystem guiSystem;
+    guiSystem = new GuiSystem;
+    auto freeFlight = new FreeFlightCamera(camera);
+    guiSystem.setEventDump(freeFlight);
+
+    scope(exit) {
+        guiSystem.destroy();
+    }
+
+    long then;
+    long now, nextTime = utime();
+    SDL_Event event;
+    GuiEvent guiEvent;
+    while (!exitWhen()) {
+        while (SDL_PollEvent(&event)) {
+            guiEvent.eventTimeStamp = now / 1_000_000.0;
+            if(handleSDLEvent(event, guiEvent, guiSystem)) {
+                return;
+            }
+        } //Out of sdl-messages
+
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glError();
+
+        now = utime();
+        long diff = now-then;
+        float deltaT = cast(float)(diff) / 1_000_000.0f;            
+        then = now;
+        guiSystem.tick(deltaT); //Eventually add deltatime and such as well :)
+        guiSystem.render();
+        render();
+        SDL_GL_SwapBuffers();
+    }
+}
 
 

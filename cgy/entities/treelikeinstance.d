@@ -392,7 +392,7 @@ mixin template TreeLike() {
         start += vec3d(0.5, 0.5, 0.5);
         end += vec3d(0.5, 0.5, 0.5);
         TilePos[] output;
-        vec3d dir = (end-start).normalize();
+        vec3d dir = (end-start).normalizeThis();
         foreach(tilePos ; TileIterator(start, dir, tileIter)) {
             auto tile = proxy.getTile(tilePos);
             if (tile.type == TileTypeAir || tile.type == acceptedTileType || (acceptedTileType2 != 0 && tile.type == acceptedTileType2)) {

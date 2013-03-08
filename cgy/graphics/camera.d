@@ -37,8 +37,8 @@ class Camera{
 
     void getRayParameters(ref vec3d UpperLeft, ref vec3d _toRight, ref vec3d _toDown){
         immutable vec3d _up = vec3d(0.0f, 0.0f, 1.0f);
-        vec3d right = targetDir.crossProduct(_up).normalize();
-        vec3d up = right.crossProduct(targetDir).normalize();
+        vec3d right = targetDir.crossProduct(_up).normalizeThis();
+        vec3d up = right.crossProduct(targetDir).normalizeThis();
         auto dX = tan(degToRad(renderSettings.fieldOfView * 0.5f));
         auto leftmost = right * -dX;
         auto toRight = 2.0f * dX * right;
@@ -56,7 +56,7 @@ class Camera{
         getRayParameters(UL, toRight, toDown);
         double percentX = to!double(coords.x) / to!double(renderSettings.windowWidth);
         double percentY = to!double(coords.y) / to!double(renderSettings.windowHeight);
-        dir = (UL + percentX*toRight + percentY * toDown).normalize();
+        dir = (UL + percentX*toRight + percentY * toDown).normalizeThis();
         start = position;
     }
     
@@ -99,7 +99,7 @@ class Camera{
 
     void setTargetDir(vec3d dir){
         //dir.set(1,1,1);
-        targetDir = dir.normalize();
+        targetDir = dir.normalizeThis();
         auto xyLen = sqrt(dir.x^^2 + dir.y^^2);
         pitch = atan2(dir.z, xyLen);
 
@@ -107,18 +107,17 @@ class Camera{
         viewQuat = quatd(1, 0, 0, 0);
         viewQuat = viewQuat * pitchQuat;
 
-        msg(pitchQuat.rotate(vec3d(1,0,0)));
-
         auto rot = atan2(dir.y, dir.x);
         auto rotQuat = quatd.rotationQuat(rot, 0, 0, 1);
-        msg(rotQuat.rotate(vec3d(1,0,0)));
         viewQuat = rotQuat * pitchQuat;
+        msg(targetDir);
+        msg(viewQuat.rotate(vec3d(1, 0, 0)));
 
         //Does not work perfectly, since it's done as one rotation, messing up stuff sortof like :P
         //viewQuat = quatd.stealRotation(vec3d(0, 1, 0), targetDir);
     }
     void setTarget(vec3d target){
-        setTargetDir((target-position).normalize());
+        setTargetDir((target-position).normalizeThis());
     }
     vec3d getTargetDir() const {
         return targetDir;
@@ -150,7 +149,7 @@ class Camera{
     void axisMove(double right, double forward, double up){
         vec3d _fwd = targetDir.convert!double();
             vec3d _up = vec3d(0.0, 0.0, 1.0);
-        vec3d _right = _fwd.crossProduct(_up).normalize();
+        vec3d _right = _fwd.crossProduct(_up).normalizeThis();
         vec3d movement = _fwd*forward + _up*up + _right*right;
         position += movement;
     }

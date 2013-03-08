@@ -172,7 +172,7 @@ final class Level1Sheet {
                 vec3f Ny1 = vec3f(0.0f, Yn - c, level1SampleDistance);
                 vec3f Ny2 = vec3f(0.0f, c - Yp, level1SampleDistance);
 
-                normals[y][x] = (Nx1 + Nx2 + Ny1 + Ny2).normalize();
+                normals[y][x] = (Nx1 + Nx2 + Ny1 + Ny2).normalizeThis();
             }
         }
 

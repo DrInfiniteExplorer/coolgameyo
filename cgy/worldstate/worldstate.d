@@ -699,7 +699,7 @@ class WorldState {
     bool rayCollides(vec3d start, vec3d end) {
         auto dir = end - start;
         auto len = dir.getLength();
-        dir.normalize();
+        dir.normalizeThis();
         int tileIter = cast(int)(ceil(abs(dir.x)) + ceil(abs(dir.y)) + ceil(abs(dir.z)));
         double intersectionTime;
         foreach(tilePos ; TileIterator(start, dir, tileIter, &intersectionTime)) {

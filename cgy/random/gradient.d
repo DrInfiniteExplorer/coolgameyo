@@ -68,7 +68,7 @@ final class ConicalGradientField : ValueSource {
 
     this(vec3d _axis, vec3d _zero, double _falloff) {
         axis = _axis;
-        axis.normalize;
+        axis.normalizeThis;
         zero = _zero;
         d = axis.dotProduct(zero);
         falloff = _falloff;

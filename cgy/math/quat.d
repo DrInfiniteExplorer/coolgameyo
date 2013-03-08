@@ -42,7 +42,7 @@ struct quaternion(T) if( isFloatingPoint!T) {
         return sqrt(magSQ);
     }
 
-    quat normalize() {
+    quat normalizeThis() {
         BREAK_IF(x == 0 && y == 0 && z == 0 && w == 0);
         immutable magSQ = w^^2 + x^^2 + y^^2 + z^^2;
         if(equals(magSQ, 1)) return this;
@@ -84,12 +84,12 @@ struct quaternion(T) if( isFloatingPoint!T) {
     }
 
     static quat stealRotation(vec3!T from, vec3!T to) {
-        from.normalize();
-        to.normalize();
+        from.normalizeThis();
+        to.normalizeThis();
         auto dot = from.dotProduct(to);
         if(equals(dot, 1)) return quat(1, 0, 0, 0);
         if(equals(dot, -1)) return rotationQuat(PI, 1, 0, 0);
-        vec3!T cross = from.crossProduct(to).normalize();
+        vec3!T cross = from.crossProduct(to).normalizeThis();
         auto angle = acos(dot);
         return rotationQuat(angle, cross.tupleof);
     }

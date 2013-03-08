@@ -15,6 +15,11 @@ bool equals(T, Y)(T a, Y b, T tolerance = cast(T)0.000001) {
 import math.vector;
 import util.rangefromto : Range2D;
 
+auto fastCeil(T)(T val) {
+    int ret = cast(int)val;
+    return val > ret ? ret + 1 : ret;
+}
+
 // Awesomely much faster than std.math.floor!
 // Also seems to be correct!
 auto fastFloor(T)(T val) {
@@ -29,6 +34,7 @@ unittest {
     foreach(i ; 0 .. 1000) {
         double d = (i-500) / 250.0;
         enforce(fastFloor(d) == floor(d), "error in fastFloor for " ~ to!string(d));
+        enforce(fastCeil(d) == ceil(d), "error in fastCeil for " ~ to!string(d));
     }
 }
 
@@ -240,7 +246,7 @@ T trace(alias vectorField, T)(T pos, float time) {
 
 void advect(Q, W, E)(Q vectorField, W get, E set, int sizeX, int sizeY, float time) {
     foreach(x, y ; Range2D(0, sizeX, 0, sizeY)) {
-        auto startPos = vec2f(x, y) + vec2f(0.5);
+        auto startPos = vec2f(x, y); // + vec2f(0.5);
         auto prevPos = trace!(vectorField, typeof(startPos))(startPos, -time);
         set(x, y, get(prevPos));
     }
