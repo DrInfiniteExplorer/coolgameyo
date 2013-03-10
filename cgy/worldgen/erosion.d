@@ -1,7 +1,7 @@
 
 module worldgen.erosion;
 
-import std.algorithm : abs, max, reduce, swap;
+import std.algorithm : abs, max, min, reduce, swap;
 import std.array : array;
 import std.typecons : Tuple;
 import std.range : iota;
@@ -14,13 +14,13 @@ import random.random : lerp;
 import random.xinterpolate : XInterpolate2;
 import util.util : BREAK_IF, msg;
 
-immutable cellLength = 1.0;
+immutable cellLength = 10.0;
 immutable cellArea = cellLength ^^ 2;
 immutable pipeArea = 0.5;
 immutable pipeLength = cellLength; // Huerr dunno.
 immutable gravity = 9.8;
 
-immutable deltaTime = 0.1;
+immutable deltaTime = 0.01;
 
 immutable minSlopeConstant = 0.2;
 
@@ -29,10 +29,15 @@ immutable capacityConstant = 0.05;
 immutable depositionConstant = 0.1;
 immutable soilDissolutionConstant = 0.05;
 
-immutable evaporationConstant = 0.01; //  5% of water will evaporate hurr durr.
+immutable evaporationConstant = 0.05; //  5% of water will evaporate hurr durr.
+
+immutable SoilTalus = 1.5;
+
 immutable rainWaterAmount = 0.125; // It will rain on 12,5% of the world all the time. Uhr..
 //immutable randomWaterCount = mapSizeSQ * rainWaterAmount;
 immutable rainFallConstant = 1.0; // Will randomly fall 1 ton of water on shit.
+
+
 
 class Erosion {
     int seed = void;
@@ -159,6 +164,7 @@ class Erosion {
         // averageWater(water[0]), waterFlows[0](global)   ->   velocity[0]
         // height[0](global), soil[0](global), velocity[0](local), sediment[0](local) -> height[1], soil[1], sediment[0]
         transportWaterVelocitySediment();
+        msg("vel ", reduce!"a+b"(map!"a.getLength"(velocity))/sizeSQ);
 
         // sediment[0](global), velocity[0](global) -> sediment[1]
         transportSediment();
@@ -183,7 +189,7 @@ class Erosion {
             synchronized(soilMap) {
                 temp = height.array;
                 temp[] += soil[];
-                temp[] -= 0.05; // To fight z-fighting with normal rock.
+                temp[] -= 0.5; // To fight z-fighting with normal rock.
                 soilMap.load(temp);
                 soilMap.setColor(vec3f(0.0, 0.6, 0.0));
             }
@@ -195,7 +201,7 @@ class Erosion {
                     temp[] += soil[];
                 }
                 temp[] += water[] * 5;
-                temp[] -= 0.05; //To fight z-fighting with rock, soil.
+                temp[] -= 0.5; //To fight z-fighting with rock, soil.
                 waterMap.load(temp);
                 vec3f[] colors;
                 colors.length = sizeSQ;
@@ -320,6 +326,9 @@ class Erosion {
             float velocityToDown = averageWaterHeight ? flowToDown / (cellLength * averageWaterHeight) : 0;
             auto vel = vec2f(velocityToRight, velocityToDown);
             velocity[idx] = vel;
+            if(vel.getLength > 5) {
+                msg(vel.getLength(), "\t\t", averageWaterHeight, "\t", flowToRight);
+            }
             // averageWater(water[0]), waterFlows[0](global)   ->   velocity[0]
             //// END VELOCITY ////
 
@@ -331,22 +340,7 @@ class Erosion {
             int  leftSlopeIdx =  leftBorder ? idx : leftIdx;
             int aboveSlopeIdx = aboveBorder ? idx : aboveIdx;
             int belowSlopeIdx = belowBorder ? idx : belowIdx;
-            /*
-            slopeX = height[leftSlopeIdx] - height[rightSlopeIdx] + soil[leftSlopeIdx] - soil[rightSlopeIdx];
-            slopeY = height[aboveSlopeIdx] + soil[aboveSlopeIdx] - height[belowSlopeIdx] - soil[belowSlopeIdx];
-            slopeX *= 0.5 / cellLength;
-            slopeY *= 0.5 / cellLength;
-            auto velNorm = vel.normalized;
-            // Why does this compile? :S
-            float slope = vec2f(slopeX, slopeY).dotProduct(velNorm);
-            float minSlope = max(minSlopeConstant, -slope); // Positive slope -> uphill. Negate to get positive value for downhill.
-            float sedimentCapacity = vel.getLength() * capacityConstant * minSlope;
-            if(sedimentCapacity > 0.5) {
-                msg("sed ", sedimentCapacity);
-                msg("vel ", vel.getLength);
-                msg("slo ", minSlope);
-            }
-            */
+
             float myHeight = height[idx];
 
             vec2f heightDiff;
@@ -359,19 +353,14 @@ class Erosion {
             velNorm.y = abs(velNorm.y);
             float heightDiffScalar = max(0, -heightDiff.dotProduct(velNorm));
             //ang = atan(minslope)
-            //sin ang -> yeah
-            //sin ang = heightDiff / dist
-            // height = minSlope
-            //dist = sqrt(pipeLength^^2 + slope^^2)
+            //sin ang = heightDiff / dist; height = minSlope; dist = sqrt(pipeLength^^2 + slope^^2)
             float sinAng = heightDiffScalar / sqrt(pipeLength^^2 + heightDiffScalar^^2);
             float sedimentCapacity = vel.getLength() * capacityConstant * max(minSlopeConstant, sinAng);
-
 
             int x = idx % sizeX;
             int y = idx / sizeX;
             int z = fastFloor(myHeight - sourceHeight[idx]); // Depth under 'normal' generated world
             BREAK_IF(z > 0); // We shan't have added height. English? Real Proper English or just LIES?
-
             auto materialConstants = getMaterialConstants(x, y, z);
             float materialDissolutionConstant = materialConstants[0];
 
@@ -384,7 +373,6 @@ class Erosion {
             finalSoil = soilLevel;
             finalSediment = carriedSediment;
 
-            //*
             if(sedimentExcess >= 0) {
                 //Deposit percentage of excess
                 float toDeposit = depositionConstant * sedimentExcess;
@@ -393,15 +381,14 @@ class Erosion {
             } else {
                 float stuffToAbsorb = -sedimentExcess; // -sedímentExcess = how much more we can carry
                 float soilToAbsorb = soilDissolutionConstant * stuffToAbsorb;
-                float newSoilLevel = max(0, soilLevel - soilToAbsorb);
-                float soilAbsorbed = soilLevel - newSoilLevel;
-                carriedSediment += soilAbsorbed;
+                if(soilToAbsorb < soilLevel) {
+                    carriedSediment += soilToAbsorb;
+                    finalSoil = soilLevel - soilToAbsorb;
+                } else {
+                    carriedSediment += soilLevel;
+                    stuffToAbsorb -= soilLevel;
+                    finalSoil = 0;
 
-                finalSoil = newSoilLevel;
-                finalHeight = myHeight;
-
-                stuffToAbsorb -= soilAbsorbed;
-                if(stuffToAbsorb > 0) {
                     float materialToAbsorb = materialDissolutionConstant * stuffToAbsorb;
                     materialToAbsorb = soilDissolutionConstant * stuffToAbsorb;
                     carriedSediment += materialToAbsorb;
@@ -409,7 +396,6 @@ class Erosion {
                 }
                 finalSediment = carriedSediment;
             }
-            //*/
             newHeight[idx] = finalHeight;
             sediment[idx] = finalSediment;
             newSoil[idx] = finalSoil;
@@ -460,8 +446,72 @@ class Erosion {
     // height[1](global), soil[1](global) -> height[0](global), soil[0](global)
     void talus() {
         //Until further notice, just transport data to next iteration :P
+        //return;
+
+
         swap(newHeight, height);
         swap(newSoil, soil);
+
+        // To do it properly, one should probably iterate all the materials within the height difference
+        // and talus-move them, but since only soil/nonsoil is handled it'd break stuff. Sortof.
+        foreach(idx ; 0 .. sizeSQ) {
+            float myHeight = height[idx];
+            //Outward flow of material.
+            int x = idx % sizeX;
+            int y = idx / sizeX;
+            int z = fastFloor(myHeight - sourceHeight[idx]); // Depth under 'normal' generated world
+            BREAK_IF(z > 0); // We shan't have added height. English? Real Proper English or just LIES?
+            auto materialConstants = getMaterialConstants(x, y, z);
+            float materialTalus = materialConstants[1];
+            float materialTalusLimit = materialTalus * cellLength;
+
+            foreach(dir ; 0 .. 4) {
+                if(border(idx, dir)) continue;
+                int otherIdx = dirToIdx(idx, dir);
+                float heightDiff = myHeight - newHeight[otherIdx];
+                if(heightDiff > materialTalusLimit) {
+                    float diff = deltaTime * (heightDiff - materialTalusLimit);
+                    soil[otherIdx] += diff;
+                    height[idx] -= diff;
+                }
+            }
+        }
+        float soilTalusLimit = SoilTalus * cellLength;
+
+        foreach(idx ; 0 .. sizeSQ) {
+            float mySoil = soil[idx];
+            float myHeight = height[idx] + mySoil;
+            float[4] outSoil;
+            outSoil[] = 0;
+            foreach(dir ; 0 .. 4) {
+                if(border(idx, dir)) continue;
+                int otherIdx = dirToIdx(idx, dir);
+                float heightDiff = myHeight - height[otherIdx] - soil[otherIdx];
+                if(heightDiff > soilTalusLimit) {
+                    float diff = deltaTime * (heightDiff - soilTalusLimit);
+                    outSoil[dir] = diff;
+                }
+            }
+            float outSum = reduce!"a+b"(outSoil);
+            if(outSum > mySoil) {
+                outSoil[] *= mySoil/outSum;
+                soil[idx] = 0;
+            } else {
+                soil[idx] -= outSum;
+            }
+            foreach(dir ; 0 .. 4) {
+                if(border(idx, dir)) continue;
+                int otherIdx = dirToIdx(idx, dir);
+                soil[otherIdx] += outSoil[dir];
+            }
+            /*
+            if(-diff > mySoil) {
+                soil[idx] = 0;
+            } else {
+                soil[idx] = mySoil + diff;
+            }
+            */
+        }
     }
 
 

@@ -163,7 +163,8 @@ class HeightMaps {
         auto getMaterialConstants(int x, int y, int z) {
             int materialNum = worldMap.getStrataNum(x, y, z);
             auto material = worldMap.materials[materialNum];
-            return tuple(material.dissolutionConstant, 0.0f);
+
+            return tuple(material.dissolutionConstant, material.talusConstant);
         }
 
         auto ero = new Erosion();
@@ -177,17 +178,28 @@ class HeightMaps {
         ero.soilMap = soil;
         ero.waterMap = water;
         water.alpha = 0.5;
+        height.depth = mapSize * sampleIntervall;
+        height.width = mapSize * sampleIntervall;
+        soil.width = mapSize * sampleIntervall;
+        soil.depth = mapSize * sampleIntervall;
+        water.width = mapSize * sampleIntervall;
+        water.depth = mapSize * sampleIntervall;
         // ERODE ERODE ERODE
 
         // Start erosion thread.
         bool done = false;
         spawnThread({
-            foreach(iter ; 0 .. 5000) {
-                ero.erode();
+            try {
+                foreach(iter ; 0 .. 5000) {
+                    ero.erode();
+                }
+                mapData[] = ero.height[];
+                soilData[] = ero.soil[];
+                done = true;
+            }catch(Throwable t) {
+                msg("Error:\n", t);
+                BREAKPOINT;
             }
-            mapData[] = ero.height[];
-            soilData[] = ero.soil[];
-            done = true;
         });
         Camera camera = new Camera;
         camera.setPosition(vec3d(0, 0, 20));
