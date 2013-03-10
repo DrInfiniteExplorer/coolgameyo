@@ -22,6 +22,6 @@ auto tryCall(alias Func, Us...)(Us us) {
     }
 }
 
-
-
-
+T DownwardDelegate(T)(scope T t) if( is(T == delegate)) {
+    return t;
+}

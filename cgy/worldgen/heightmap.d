@@ -147,8 +147,12 @@ class HeightMaps {
             auto x = i % mapSize;
             auto y = i / mapSize;
             auto dst = vec2f(x,y).getDistance(vec2f(mapSize * 0.5));
+            dst /= (mapSize*0.25);
 
-            mapData[i] = dst < mapSize*0.25 ? 100 : 0;
+            mapData[i] = dst < 1 ? 100 : 0;
+
+            //mapData[i] = dst < 1 ? sqrt(1-dst^^2)*100 : 0;
+            //mapData[i] = dst < 1 ? (1-dst)*100 : 0;
         }
 
 
@@ -172,18 +176,9 @@ class HeightMaps {
         ero.init(mapData, soilData, &getMaterialConstants, mapSize, mapSize, seed);
 
         HMap height = new HMap;
-        HMap soil = new HMap;
-        HMap water = new HMap;
         ero.heightMap = height;
-        ero.soilMap = soil;
-        ero.waterMap = water;
-        water.alpha = 0.5;
         height.depth = mapSize * sampleIntervall;
         height.width = mapSize * sampleIntervall;
-        soil.width = mapSize * sampleIntervall;
-        soil.depth = mapSize * sampleIntervall;
-        water.width = mapSize * sampleIntervall;
-        water.depth = mapSize * sampleIntervall;
         // ERODE ERODE ERODE
 
         // Start erosion thread.
@@ -207,14 +202,8 @@ class HeightMaps {
         renderLoop(camera, 
                    { return done; },
                    {
-                       import derelict.opengl.gl;
-                       synchronized(height, soil, water) {
+                       synchronized(height) {
                            height.render(camera);
-                           soil.render(camera);
-                           glEnable(GL_BLEND);
-                           glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-                           water.render(camera);
-                           glDisable(GL_BLEND);
                        }
                    });
     }
@@ -242,8 +231,11 @@ class HeightMaps {
         static if(interpolate) {
             import random.xinterpolate;
             import random.random;
+            //*
             return XInterpolate2!(SmootherInter, get)(pt);
+            /*/
             return XInterpolate24!(BSpline, get)(pt);
+            //*/
         } else {
             return get(cast(int)pt.x, cast(int)pt.y);
         }

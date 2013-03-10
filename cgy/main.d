@@ -18,32 +18,28 @@ import derelict.sdl.sdl;
 import derelict.opengl.gl;
 import derelict.devil.il;
 import derelict.devil.ilu;
-
 import win32.windows;
 
-import graphics.ogl;
-
-
-import gui.guisystem.guisystem;
-
+import alloc;
 import game;
+import graphics.ogl;
+import gui.guisystem.guisystem;
+import gui.joinmenu;
+import gui.mainmenu;
 import log;
 
-import util.pos;
 import statistics;
 import settings;
 import util.filesystem;
 import util.memory;
+import util.pos;
 import util.util;
 import util.window;
-import worldgen.maps;
 import worldgen.maps : worldSize;
 
 
 import modelparser.cgyparser;
-import gui.mainmenu;
 
-import alloc;
 
 SDL_Surface* surface;     
 
@@ -183,8 +179,21 @@ void main(string[] args) {
             startClient(joinGame);
             return;
         }
-
-        mainMenu();
+        string menu = "main";
+        while(menu != "exit") {
+            switch(menu) {
+                case "main":
+                    menu = mainMenu();
+                    break;
+                case "join":
+                    menu = joinMenu();
+                    break;
+                case "host":
+                    //menu = hostMenu();
+                    startServer();
+                    break;
+            }
+        }
     } catch (Exception e) {
         import util.util;
         writeln("Exception:\n\n", e.msg);
@@ -250,7 +259,9 @@ void createWindow() {
 }
 
 bool inputActive = true;
-bool handleSDLEvent(in SDL_Event event, out GuiEvent guiEvent, GuiSystem guiSystem) {
+bool handleSDLEvent(in SDL_Event event, float now, GuiSystem guiSystem) {
+    GuiEvent guiEvent;
+    guiEvent.eventTimeStamp = now;
     bool exit = false;
     switch (event.type){
         case SDL_ACTIVEEVENT:
@@ -325,56 +336,32 @@ bool handleSDLEvent(in SDL_Event event, out GuiEvent guiEvent, GuiSystem guiSyst
     return exit;
 }
 
-void mainMenu() {
+void EventAndDrawLoop(GuiSystem guiSystem, scope void delegate(float) render, scope bool delegate() endLoop = null) {
+    long then;
+    long now = utime();
+    bool exit = false;
+    SDL_Event event;
+    while (!exit) {
+        while (SDL_PollEvent(&event)) {
+            exit = handleSDLEvent(event, now / 1_000_000.0, guiSystem);
+        } //Out of sdl-messages
 
-    while(true) {
-        GuiSystem guiSystem;
-        MainMenu mainMenu;
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glError();
 
-        guiSystem = new GuiSystem;
-        mainMenu = new MainMenu(guiSystem);
-        import gui.random.randommenu;
-        //new RandomMenu(mainMenu);
+        now = utime();
+        long diff = now-then;
+        float deltaT = cast(float)diff / 1_000_000.0f;            
+        then = now;
 
-
-        // Main loop etc
-        long then;
-        long now, nextTime = utime();
-        bool exit = false;
-        SDL_Event event;
-        GuiEvent guiEvent;
-        while (!mainMenu.done) {
-            while (SDL_PollEvent(&event)) {
-                guiEvent.eventTimeStamp = now / 1_000_000.0;
-                if(handleSDLEvent(event, guiEvent, guiSystem)) {
-                    return;
-                }
-            } //Out of sdl-messages
-
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            glError();
-
-            now = utime();
-            long diff = now-then;
-            float deltaT = to!float(diff) / 1_000_000.0f;            
-            then = now;
-
-            guiSystem.tick(deltaT); //Eventually add deltatime and such as well :)
-            guiSystem.render();            
-
-            SDL_GL_SwapBuffers();
-
-            SDL_WM_SetCaption( "CoolGameYo!\0", "CoolGameYo!\0");
+        if(render) {
+            render(deltaT);
         }
-        guiSystem.destroy();
-
-        if(mainMenu.server) {
-            startServer();
-            return;
-        } else {
-            if(!startClient(mainMenu.host)) {
-                return;
-            }
+        guiSystem.tick(deltaT); //Eventually add deltatime and such as well :)
+        guiSystem.render();
+        SDL_GL_SwapBuffers();
+        if(endLoop) {
+            exit = endLoop();
         }
     }
 }
@@ -402,102 +389,10 @@ void startServer() {
 
     Game game = new Game(true);
     game.loadGame();
-
-
-    // Main loop etc
-    long then;
-    long now, nextTime = utime();
-    bool exit = false;
-    SDL_Event event;
-    GuiEvent guiEvent;
-    while (!exit) {
-        while (SDL_PollEvent(&event)) {
-            guiEvent.eventTimeStamp = now / 1_000_000.0;
-            exit = handleSDLEvent(event, guiEvent, guiSystem);
-        } //Out of sdl-messages
-
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glError();
-
-        now = utime();
-        long diff = now-then;
-        float deltaT = to!float(diff) / 1_000_000.0f;            
-        then = now;
-
-        guiSystem.tick(deltaT); //Eventually add deltatime and such as well :)
-        guiSystem.render();            
-
-        SDL_GL_SwapBuffers();
-
-        SDL_WM_SetCaption( "CoolGameYo!\0", "CoolGameYo!\0");
-    }
+    EventAndDrawLoop(guiSystem,  null);
 
     game.destroy();
     guiSystem.destroy();
 
 }
 
-
-//Return true to return to main menu.
-bool startClient(string host) {
-    msg("Starting client...");
-    if(exists(g_worldPath)) {
-        msg("Alert! Old client stuff lingering; EXTERMINATING");
-        rmdir(g_worldPath);
-    }
-
-    //Yes yes...
-    GuiSystem guiSystem;
-    guiSystem = new GuiSystem;
- 
-    bool exit = false;
-    Game game = new Game(false);
-    try {
-        game.connect(host);
-    } catch(Exception e) {
-        import gui.guisystem.dialogbox;
-        new DialogBox(guiSystem, "An error occured", e.msg,
-                      "Ok", { exit = true; });
-    }
-
-    import gui.ingame;
-    auto ingameGui = new InGameGui(guiSystem, game);
-
-    scope(exit) {
-        game.destroy();
-        guiSystem.destroy();
-    }
-
-    // Main loop etc
-    long then;
-    long now, nextTime = utime();
-    SDL_Event event;
-    GuiEvent guiEvent;
-    while (!exit) {
-        while (SDL_PollEvent(&event)) {
-            guiEvent.eventTimeStamp = now / 1_000_000.0;
-            if(handleSDLEvent(event, guiEvent, guiSystem)) {
-                return false;
-            }
-        } //Out of sdl-messages
-
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glError();
-
-        now = utime();
-        long diff = now-then;
-        float deltaT = to!float(diff) / 1_000_000.0f;            
-        then = now;
-
-        guiSystem.tick(deltaT); //Eventually add deltatime and such as well :)
-        guiSystem.render();
-
-        game.render(diff);
-
-        SDL_GL_SwapBuffers();
-
-        SDL_WM_SetCaption( "CoolGameYo!\0", "CoolGameYo!\0");
-    }
-    return true;
-
-}

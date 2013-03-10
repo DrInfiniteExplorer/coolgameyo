@@ -137,8 +137,8 @@ class GuiElementListBox : public GuiElement {
     }
 
     void updateScroll() {
-        auto height = getAbsoluteRect.size.y;
-        auto neededHeight = items.length * rowHeight;
+        int height = getAbsoluteRect.size.y;
+        int neededHeight = items.length * rowHeight;
         import std.algorithm : max;
         canScrollAmount = max(0, neededHeight - height);
         if(canScrollAmount) {

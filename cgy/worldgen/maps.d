@@ -1,7 +1,7 @@
 module worldgen.maps;
 
 import core.sync.rwmutex;
-import core.thread : Thread, Duration, dur;
+import core.thread : Thread;
 
 import std.algorithm;
 import std.array;

@@ -10,7 +10,7 @@ import graphics.ogl;
 import graphics.shader;
 import gui.all;
 import gui.util;
-import main : g_commandLine, handleSDLEvent;
+import main : g_commandLine, EventAndDrawLoop;
 import math.math;
 import math.vector;
 import util.filesystem;
@@ -333,36 +333,7 @@ bool displayHeightmap(T)(T t) {
     }
 
 
-    // Main loop etc
-    long then;
-    long now, nextTime = utime();
-    SDL_Event event;
-    GuiEvent guiEvent;
-    while (!exit) {
-        while (SDL_PollEvent(&event)) {
-            guiEvent.eventTimeStamp = now / 1_000_000.0;
-            if(handleSDLEvent(event, guiEvent, guiSystem)) {
-                return false;
-            }
-        } //Out of sdl-messages
-
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glError();
-
-        now = utime();
-        long diff = now-then;
-        float deltaT = cast(float)(diff) / 1_000_000.0f;            
-        then = now;
-
-        guiSystem.tick(deltaT); //Eventually add deltatime and such as well :)
-        guiSystem.render();
-        
-        heightmap.render(camera);
-
-        SDL_GL_SwapBuffers();
-
-        SDL_WM_SetCaption( "CoolGameYo! heightmap render\0", "CoolGameYo! heightmap render\0");
-    }
+    EventAndDrawLoop(guiSystem, (float deltaT){ heightmap.render(camera);});
     return true;
 
 }
@@ -378,6 +349,8 @@ void renderLoop(Camera camera, bool delegate() exitWhen, void delegate() render)
         guiSystem.destroy();
     }
 
+    EventAndDrawLoop(guiSystem, (float deltaT){ render(); }, exitWhen);
+/*
     long then;
     long now, nextTime = utime();
     SDL_Event event;
@@ -402,6 +375,8 @@ void renderLoop(Camera camera, bool delegate() exitWhen, void delegate() render)
         render();
         SDL_GL_SwapBuffers();
     }
+
+    */
 }
 
 

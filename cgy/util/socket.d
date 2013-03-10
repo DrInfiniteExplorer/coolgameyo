@@ -123,3 +123,19 @@ bool tcpReceiveFile(Socket sock, string filePath, int bufferSize = int.max) {
     }
     return true;
 }
+
+// Manually create socket, set as nonblocking, connect and/or wait for the timeout.
+TcpSocket connectTimeout(std.socket.Address addr, Duration timeout) {
+
+    TcpSocket sock = new TcpSocket(addr.addressFamily());
+    sock.blocking = false;
+    SocketSet set = new SocketSet(1);
+    set.reset();
+    set.add(sock);
+    if( 1 == Socket.select(null, set, null, timeout) ) {
+        sock.blocking = true;
+        return sock;
+    }
+    sock.close();
+    return null;
+}

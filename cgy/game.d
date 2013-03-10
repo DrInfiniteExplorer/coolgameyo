@@ -61,8 +61,6 @@ import worldgen.maps;
 __gshared bool g_isServer;
 __gshared string g_worldPath;
 
-__gshared string g_playerName = "BurntFaceMan"; //Default player name. What should that be?
-
 string SDLError() { return to!string(SDL_GetError()); }
 
 final class PlayerInformation {
@@ -293,9 +291,9 @@ class Game{
         worldState.serialize();
     }
 
-    void render(long usecs) {
+    void render(float deltaT) {
         if(renderer is null) return;
-        renderer.render(usecs, worldState.getDayTime());
+        renderer.render(deltaT, worldState.getDayTime());
     }
 
     WorldState getWorld() {

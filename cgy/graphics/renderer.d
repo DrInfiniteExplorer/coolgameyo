@@ -206,11 +206,11 @@ class Renderer {
         //Render stuff, make things.
     }
     
-    void render(long usecs, double timeOfDay)
+    void render(float deltaT, double timeOfDay)
     {
         if(!initialized) return;
         
-        g_Statistics.addFPS(usecs);
+        //g_Statistics.addFPS(usecs);
 
         vec3f skyColor = CatmullRomSpline(timeOfDay, SkyColors);
 

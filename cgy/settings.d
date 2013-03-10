@@ -10,6 +10,48 @@ import json;
 import util.util;
 import util.window;
 
+// No need to make these shared, gshared works fine? IM A COWBOY
+__gshared RenderSettings renderSettings;
+__gshared ControlSettings controlSettings;
+__gshared WindowSettings windowSettings;
+__gshared string g_playerName = "BurntFaceMan"; //Default player name
+
+__gshared string g_settingsFilePath = "settings.json";
+__gshared string[] g_serverList;
+
+void loadSettings(){
+    Value rootVal;
+
+    if(!loadJSON(g_settingsFilePath, rootVal)) {
+        msg("Assigned settings file could not be loaded. Trying default settings file.");
+        if(!loadJSON("settings.json", rootVal)) {
+            msg("Settings file does not exist.");
+            return;
+        }
+    }
+
+    rootVal.readJSONObject("renderSettings", &renderSettings.serializableSettings,
+                           "controlSettings", &controlSettings.serializableSettings,
+                           "windowSettings", &windowSettings.serializableSettings,
+                           "playerName", &g_playerName,
+                           "serverList", &g_serverList);
+}
+
+
+void saveSettings(){
+
+    captureWindowPositions();
+    makeJSONObject("renderSettings", renderSettings.serializableSettings,
+                   "controlSettings", controlSettings.serializableSettings,
+                   "windowSettings", windowSettings.serializableSettings,
+                   "playerName", g_playerName,
+                   "serverList", g_serverList
+                   ).saveJSON(g_settingsFilePath);
+
+
+}
+
+
 struct RenderSettings {
     static struct InnerRenderSettings {
         // Just user settings.
@@ -40,7 +82,7 @@ struct RenderSettings {
     alias serializableSettings this;
 
 	// These settings are generated in the program, not from settings file
-    double widthHeightRatio() shared @property {
+    double widthHeightRatio() @property {
         return cast(double)windowWidth / cast(double)windowHeight;
     }
 	
@@ -77,10 +119,6 @@ struct WindowSettings {
     bool windowsInitialized = false;
 }
 
-shared RenderSettings renderSettings;
-shared ControlSettings controlSettings;
-shared WindowSettings windowSettings;
-
 vec3f getTileCoords(uint tileNum){
     vec3i tmp;
     uint TilesPerTexDim = renderSettings.maxTextureSize / renderSettings.pixelsPerTile;
@@ -94,33 +132,4 @@ vec3f getTileCoords(uint tileNum){
 vec3f getTileCoordSize(){
     float inv = to!float(renderSettings.pixelsPerTile) / to!float(renderSettings.maxTextureSize);
     return vec3f(inv, inv, 0.0f);
-}
-
-__gshared string g_settingsFilePath = "settings.json";
-
-void loadSettings(){
-    Value rootVal;
-    
-    if(!loadJSON(g_settingsFilePath, rootVal)) {
-        msg("Assigned settings file could not be loaded. Trying default settings file.");
-        if(!loadJSON("settings.json", rootVal)) {
-            msg("Settings file does not exist.");
-            return;
-        }
-    }
-
-    rootVal.readJSONObject("renderSettings", &renderSettings.serializableSettings,
-                           "controlSettings", &controlSettings.serializableSettings,
-                           "windowSettings", &windowSettings.serializableSettings);
-}
-
-
-void saveSettings(){
-
-    captureWindowPositions();
-    makeJSONObject("renderSettings", renderSettings.serializableSettings,
-                   "controlSettings", controlSettings.serializableSettings,
-                   "windowSettings", windowSettings.serializableSettings).saveJSON(g_settingsFilePath);
-
-
 }

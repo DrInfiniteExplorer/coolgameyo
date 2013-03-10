@@ -383,9 +383,9 @@ mixin template ClientModule() {
         msg("Looking up address...");
         auto address = new std.socket.InternetAddress(host, PORT);
 
-        pragma(msg, "Add code to set connection timeout");
         msg("Trying to connect...");
-        commSock = new std.socket.TcpSocket(address);
+        commSock = connectTimeout(address, dur!"seconds"(10));
+        enforce(commSock, "Timeout connecting comm sock to server!");
         simpleHandshake(commSock);
         enforce(commSock.send("comm\n") == 5, "Failed to send connection type for communication socket");
         enforce(commSock.send("Username:" ~ g_playerName ~ "\n") == 10 + g_playerName.length, "Failed to send username");
@@ -395,7 +395,8 @@ mixin template ClientModule() {
         enforce(commSock.receive(_magic) == 4, "Error recieving magic identification number");
         msg("Connected! ½-way there!");
 
-        dataSock = new std.socket.TcpSocket(address);
+        dataSock = connectTimeout(address, dur!"seconds"(10));
+        enforce(dataSock, "Timeout connecting datasock to server!");
         simpleHandshake(dataSock);
         enforce(dataSock.send("data\n") == 5, "Failed to send connection type for data socket");
         enforce(dataSock.send(_magic) == 4, "Error echoing magic number");

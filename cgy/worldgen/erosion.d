@@ -64,8 +64,6 @@ class Erosion {
 
 
     Heightmap heightMap;
-    Heightmap soilMap;
-    Heightmap waterMap;
 
     int above(int idx) { return idx - sizeX; }
     int below(int idx) { return idx + sizeX; }
@@ -178,37 +176,25 @@ class Erosion {
         // sediment[1] -> sediment[0];
         swap(sediment, newSediment);
 
-        float[] temp;
+        vec3f[] colors;
+        colors.length = sizeSQ;
         if(heightMap) {
             synchronized(heightMap) {
                 heightMap.load(height);
-                heightMap.setColor(vec3f(0.4, 0.4, 0.4));
-            }
-        }
-        if(soilMap) {
-            synchronized(soilMap) {
-                temp = height.array;
-                temp[] += soil[];
-                temp[] -= 0.5; // To fight z-fighting with normal rock.
-                soilMap.load(temp);
-                soilMap.setColor(vec3f(0.0, 0.6, 0.0));
-            }
-        }
-        if(waterMap) {
-            synchronized(waterMap) {
-                if(temp is null) {
-                    temp = height.array;
-                    temp[] += soil[];
-                }
-                temp[] += water[] * 5;
-                temp[] -= 0.5; //To fight z-fighting with rock, soil.
-                waterMap.load(temp);
-                vec3f[] colors;
-                colors.length = sizeSQ;
                 foreach(idx, ref color ; colors) {
-                    color.set(0, 0.0 , 0.6);
+                    vec3f col;
+                    if(soil[idx] > 0) {
+                        col.set(0, 0.6, 0);
+                    } else {
+                        col.set(0,0,0);
+                    }
+                    float wat = water[idx] * 25;
+                    float t = clamp(wat, 0, 1);
+                    col = lerp(col, vec3f(0, 0, 0.6), t);
+                    col.x = sediment[idx];
+                    color = col;
                 }
-                waterMap.setColor(colors);
+                heightMap.setColor(colors);
             }
         }
 }

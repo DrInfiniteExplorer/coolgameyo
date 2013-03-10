@@ -25,6 +25,7 @@ import util.rect;
 class MainMenu : GuiElementWindow {
     
     bool done = false;
+    bool exit = false;
     bool server = false;
     string host = null;
 
@@ -35,9 +36,6 @@ class MainMenu : GuiElementWindow {
     PushButton OptionsButton;
     PushButton ExitButton;
 
-
-    HyperUnitControlInterfaceInputManager userControl;
-    LoadScreen loadScreen;
     this(GuiSystem g) {
         guiSystem = g;
         super(guiSystem, Rectd(0.1, 0.1 , 0.8, 0.8), "CoolGameYo", false, false);
@@ -61,66 +59,6 @@ class MainMenu : GuiElementWindow {
         guiSystem.addHotkey(SDLK_PRINT, &printScreen);
     }
     
-    override void destroy() {
-        if (userControl !is null) {
-            userControl.destroy();
-            userControl = null;
-        }
-        super.destroy();
-    }    
-
-    //Not called
-    void onNewGame(vec2i startPos, string worldName) {
-
-        auto rect = HostButton.getRelativeRect();        
-        loadScreen.setLoading(true);
-        void loadDone() {
-            loadScreen.setLoading(false);
-            userControl = new HyperUnitControlInterfaceInputManager(game, guiSystem);
-            //resumeGameButton = new PushButton(this, rect, "Resume gay me?", &onResumeGame);
-            rect.start.x += rect.size.x * 2;
-            onResumeGame();
-        }
-//        game = startGame(startPos, worldName, &loadDone);
-        //newGameButton.destroy();
-        //newGameButton = null;
-        //loadGameButton.destroy();
-        //loadGameButton = null;
-        setVisible(false);        
-    }
-
-    //Not called
-    void onResumeGame() {
-        setVisible(false);
-        guiSystem.addHotkey(SDLK_ESCAPE, &enterMenu);
-        guiSystem.setEventDump(userControl);
-        ushort middleX = cast(ushort)renderSettings.windowWidth/2;
-        ushort middleY = cast(ushort)renderSettings.windowHeight/2;
-        SDL_WarpMouse(middleX, middleY);
-    }
-    
-    void onLoadGame() {
-        //new DialogBox(this, "NO!", "You can't do this right now :(", "Ok :(", (){ onStartNewGame(); });
-        /*
-        loadScreen.setLoading(true);
-        auto rect = newGameButton.getRelativeRect();        
-        void loadDone() {
-            loadScreen.setLoading(false);
-            userControl = new HyperUnitControlInterfaceInputManager(game, guiSystem);
-            resumeGameButton = new PushButton(this, rect, "Resume gay me?", &onResumeGame);
-            rect.start.x += rect.size.x * 2;
-            saveGameButton = new PushButton(this, rect, "Save gay me?", &onSaveGame);
-            onResumeGame();
-        }
-        game = loadGame("Save1", &loadDone);
-        newGameButton.destroy();
-        newGameButton = null;
-        loadGameButton.destroy();
-        loadGameButton = null;
-        setVisible(false);        
-        */
-    }
-    
     void onHostGame() {
         g_isServer = true;
         g_worldPath = "saves/server";
@@ -131,7 +69,7 @@ class MainMenu : GuiElementWindow {
     void onJoinGame() {
         g_isServer = false;
         g_worldPath = "saves/client";
-        host = "127.0.0.1";
+        setVisible(false);
         done = true;
     }
     
@@ -142,7 +80,7 @@ class MainMenu : GuiElementWindow {
 
     void onExitGame() {
         done = true;
-        //the main menu message loop will find this. Since no saves/current, will exit.
+        exit = true;
     }
     
     void enterMenu() {
@@ -153,4 +91,24 @@ class MainMenu : GuiElementWindow {
 
 }
 
-     
+string mainMenu() {
+    GuiSystem guiSystem;
+    guiSystem = new GuiSystem;
+    scope(exit) {
+        guiSystem.destroy();
+    }
+
+    MainMenu mainMenu;
+    mainMenu = new MainMenu(guiSystem);
+
+    EventAndDrawLoop(guiSystem, null, { return mainMenu.done; } );
+    if(mainMenu.exit) {
+        return "exit";
+    }
+    if(mainMenu.server) {
+        return "host";
+    }
+    return "join";
+}
+
+

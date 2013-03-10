@@ -28,7 +28,7 @@ float getDissolutionConstantFromType(string type) {
     return 0.1; // Use generic something something-value.
 }
 float getTalusConstantFromType(string type) {
-    return 40; // Use generic something something-value.
+    return 3; // Use generic something something-value.
 }
 
 static void loadMaterial(string filename) {
@@ -215,35 +215,7 @@ void MaterialEditor() {
     */
 
 
-    // Main loop etc
-    long then;
-    long now, nextTime = utime();
-    bool exit = false;
-    SDL_Event event;
-    GuiEvent guiEvent;
-    while (!exit) {
-        while (SDL_PollEvent(&event)) {
-            guiEvent.eventTimeStamp = now / 1_000_000.0;
-            exit = handleSDLEvent(event, guiEvent, guiSystem);
-        } //Out of sdl-messages
-
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glError();
-
-        now = utime();
-        long diff = now-then;
-        float deltaT = cast(float)diff / 1_000_000.0f;            
-        then = now;
-
-        guiSystem.tick(deltaT); //Eventually add deltatime and such as well :)
-        guiSystem.render();            
-
-        SDL_GL_SwapBuffers();
-
-        SDL_WM_SetCaption( "CoolGameYo!\0", "CoolGameYo!\0");
-    }
-
-    guiSystem.destroy();
+    EventAndDrawLoop(guiSystem, null);
 }
 
 
