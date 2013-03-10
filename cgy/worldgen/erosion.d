@@ -20,7 +20,7 @@ immutable pipeArea = 0.5;
 immutable pipeLength = cellLength; // Huerr dunno.
 immutable gravity = 9.8;
 
-immutable deltaTime = 0.01;
+immutable deltaTime = 0.1;
 
 immutable minSlopeConstant = 0.2;
 
@@ -164,7 +164,7 @@ class Erosion {
         // averageWater(water[0]), waterFlows[0](global)   ->   velocity[0]
         // height[0](global), soil[0](global), velocity[0](local), sediment[0](local) -> height[1], soil[1], sediment[0]
         transportWaterVelocitySediment();
-        msg("vel ", reduce!"a+b"(map!"a.getLength"(velocity))/sizeSQ);
+        //msg("vel ", reduce!"a+b"(map!"a.getLength"(velocity))/sizeSQ);
 
         // sediment[0](global), velocity[0](global) -> sediment[1]
         transportSediment();
@@ -327,7 +327,7 @@ class Erosion {
             auto vel = vec2f(velocityToRight, velocityToDown);
             velocity[idx] = vel;
             if(vel.getLength > 5) {
-                msg(vel.getLength(), "\t\t", averageWaterHeight, "\t", flowToRight);
+                //msg(vel.getLength(), "\t\t", averageWaterHeight, "\t", flowToRight);
             }
             // averageWater(water[0]), waterFlows[0](global)   ->   velocity[0]
             //// END VELOCITY ////

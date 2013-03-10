@@ -14,6 +14,7 @@ struct MaterialInformation {
     vec3ub color;
     string type;
 
+    float talusConstant;
     float dissolutionConstant; // Or associate this with type? HUERR HUERR HUERR
 }
 
@@ -24,8 +25,10 @@ float getDissolutionConstantFromType(string type) {
         case "stone": return 0.01; // Dunno random value D:
         default:
     }
-
     return 0.1; // Use generic something something-value.
+}
+float getTalusConstantFromType(string type) {
+    return 40; // Use generic something something-value.
 }
 
 static void loadMaterial(string filename) {
@@ -34,12 +37,16 @@ static void loadMaterial(string filename) {
 
     MaterialInformation mat;
     mat.dissolutionConstant = -1;
+    mat.talusConstant = -1;
     loadJSON(path).read(mat);
     mat.name = name;
     mat.fancyName = mat.fancyName.idup; // Since strings loaded from json will ever never release the json file string D:
     mat.type = mat.type.idup;
     if(mat.dissolutionConstant == -1) {
         mat.dissolutionConstant = getDissolutionConstantFromType(mat.type);
+    }
+    if(mat.talusConstant == -1) {
+        mat.talusConstant= getTalusConstantFromType(mat.type);
     }
     g_Materials[name] = mat;
 }

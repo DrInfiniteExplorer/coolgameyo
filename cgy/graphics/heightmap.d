@@ -51,10 +51,10 @@ class Heightmap : ShaderProgram!() {
 
     float[] map;
     vec3f[] colorMap;
-    float[3][] triangles;
-    float[3][] normals;
+    vec3f[] triangles;
+    vec3f[] normals;
 
-    float width;
+    float width = -1;
     float depth;
     float height;
 
@@ -101,15 +101,17 @@ class Heightmap : ShaderProgram!() {
     float widthPerCell() const {
         return width / sizeX;
     }
-    float heightPerCell() const {
-        return height / sizeY;
+    float depthPerCell() const {
+        return depth / sizeY;
     }
 
     void load(float[] data) {
         auto len = data.length;
         auto sqrtLen = sqrt(cast(real)len);
         sizeY = sizeX = cast(int)sqrtLen;
-        width = height = sizeX;
+        if(width == -1) {
+            width = depth = sizeX;
+        }
         BREAK_IF(sqrtLen != sizeX);
         BREAK_IF(sizeX ^^ 2 != len);
         map = data.dup;
@@ -139,17 +141,13 @@ class Heightmap : ShaderProgram!() {
         return map[x + y * sizeX];
     }
 
-    float[3] getNormal(int x, int y) {
-        float[3] ret = void;
+    vec3f getNormal(int x, int y) {
+        vec3f ret = void;
         vec3f toX = vec3f(2*widthPerCell, 0, getVal(x-1, y) - getVal(x+1, y));
-        vec3f toY = vec3f(0, 2*heightPerCell, getVal(x, y-1) - getVal(x, y+1));
-        auto normal = toX.normalizeThis.crossProduct(toY.normalizeThis);
+        vec3f toY = vec3f(0, 2*depthPerCell, getVal(x, y-1) - getVal(x, y+1));
+        ret = toX.normalizeThis.crossProduct(toY.normalizeThis);
         //normal.z += 0.05;
-        normal.normalizeThis;
-        ret[0] = normal.x;
-        ret[1] = normal.y;
-        ret[2] = normal.z;
-        return ret;
+        return ret.normalized;
     }
     float alpha = 0.0;
     float[4] getColor(int x, int y) {
@@ -185,13 +183,12 @@ class Heightmap : ShaderProgram!() {
         foreach(x, y ; Range2D(0, sizeX-1, 0, sizeY-1)) {
             auto idx = x + y * (sizeX-1);
             auto Idx = idx * 6;
-            normals[x + y * (sizeX-1)] = getNormal(x, y);
-            triangles[Idx+0] = [x, y, getVal(x, y)];
-            triangles[Idx+1] = [x+1, y, getVal(x+1, y)];
-            triangles[Idx+2] = [x, y+1, getVal(x, y+1)];
-            triangles[Idx+3] = [x, y+1, getVal(x, y+1)];
-            triangles[Idx+4] = [x+1, y, getVal(x+1, y)];
-            triangles[Idx+5] = [x+1, y+1, getVal(x+1, y+1)];
+            triangles[Idx+0] = vec3f(x, y, getVal(x, y));
+            triangles[Idx+1] = vec3f(x+1, y, getVal(x+1, y));
+            triangles[Idx+2] = vec3f(x, y+1, getVal(x, y+1));
+            triangles[Idx+3] = vec3f(x, y+1, getVal(x, y+1));
+            triangles[Idx+4] = vec3f(x+1, y, getVal(x+1, y));
+            triangles[Idx+5] = vec3f(x+1, y+1, getVal(x+1, y+1));
             normals[Idx+0] = getNormal(x, y);
             normals[Idx+1] = getNormal(x+1, y);
             normals[Idx+2] = getNormal(x+1, y+1);
@@ -206,6 +203,13 @@ class Heightmap : ShaderProgram!() {
                 colors[Idx+4] = getColor(x+1, y);
                 colors[Idx+5] = getColor(x+1, y+1);
             }
+        }
+
+        float wPerCell = widthPerCell;
+        float dPerCell = depthPerCell;
+        foreach(ref tri ; triangles) {
+            tri[0] *= wPerCell;
+            tri[1] *= dPerCell;
         }
         if(triVbo) {
             glDeleteBuffers(1, &triVbo); glError();
