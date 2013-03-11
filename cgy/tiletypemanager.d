@@ -5,12 +5,13 @@ import std.algorithm;
 import std.array;
 import std.conv;
 import std.stdio;
-//import std.file;
+import std.string;
 
 import graphics.texture;
 
 import json;
 import game;
+import materials;
 
 import statistics;
 import util.filesystem;
@@ -29,10 +30,10 @@ struct TileType_t {
 	static struct InnerTileType {
 		string displayName;
 		string material;
-        string group;
+        //string group; // Not needededed.
 		int strength;
-		float tintFromMaterial;
-		vec3i tintColor;
+		float tintFromMaterial; // Hurr durr used is supposed to how?
+		vec3ub tintColor;
 		string texturePathTop;
 		string texturePathSides;
 		string texturePathBottom;
@@ -54,6 +55,7 @@ alias TileType_t* TileType;
 
 
 class TileTypeManager {
+    TileTextureAtlas atlas;
     TileType_t[] types;
     ushort[string] _byName;
 
@@ -64,7 +66,8 @@ class TileTypeManager {
         assert (types.length < ushort.max);
     }
 
-    this(TileTextureAtlas atlas) {
+    this(TileTextureAtlas _atlas) {
+        atlas = _atlas;
         mixin(LogTime!("TileTypeManagerCreation"));
 
 		TileType_t invalid;
@@ -91,20 +94,6 @@ class TileTypeManager {
 		enforce(rootVal.type == json.Value.Type.object, "rootval in tiltypejson not object roawoaowoawo: " ~ to!string(rootVal.type));
 		foreach(name, rsVal ; rootVal.pairs) {
 			rsVal.read(tempType.serializableSettings);
-            if(atlas) {
-			    tempType.textures.top = atlas.addTile(
-					    tempType.texturePathTop,
-                        tempType.textureCoordTop,
-					    tempType.tintColor);
-			    tempType.textures.side = atlas.addTile(
-					    tempType.texturePathSides,
-                        tempType.textureCoordSides,
-					    tempType.tintColor);
-                tempType.textures.bottom = atlas.addTile(
-					    tempType.texturePathBottom,
-                        tempType.textureCoordBottom,
-					    tempType.tintColor);
-            }
 			
 			tempType.name = name;
             if ( hasTypeIdConfFile == true && tempType.name in idRootVal) {
@@ -117,24 +106,6 @@ class TileTypeManager {
                 add(tempType);
             }
 		}
-
-        /*
-        // This should be done with some fancy json function...
-        // Saves the tile type id configuration
-        string jsonString = "{\n";
-        for (int i = 0; i < types.length; i++) {
-            if (types[i].id > 1) {
-                jsonString ~= "\"";
-                jsonString ~= types[i].name;
-                jsonString ~= "\":";
-                jsonString ~= to!string(types[i].id);
-                jsonString ~= ",\n";
-            }
-        }
-        jsonString~="}";
-        util.filesystem.mkdir(g_worldPath ~ "");
-        std.file.write(g_worldPath ~ "/tiletypeidconfiguration.json", jsonString);
-        */
 
         util.filesystem.mkdir(g_worldPath ~ "");
         // don't save invalid or air
@@ -167,13 +138,36 @@ class TileTypeManager {
     }
 
     TileType[] getGroup(string groupName) {
+        BREAK_IF(! (groupName in tileTypeGroups));
         enforce(groupName in tileTypeGroups, "Cant find group for group-name:" ~ groupName);
         return tileTypeGroups[groupName];
+    }
+
+
+    void loadTextures(ref TileType_t type) {
+        BREAK_IF(type.textures.top || type.textures.side || type.textures.bottom);
+        if(type.texturePathTop is null) return; // MIGHT BE AIR OR INVALID OMG!
+        if(atlas) {
+            type.textures.top = atlas.addTile(
+                                              type.texturePathTop,
+                                              type.textureCoordTop,
+                                              type.tintColor);
+            type.textures.side = atlas.addTile(
+                                               type.texturePathSides,
+                                               type.textureCoordSides,
+                                               type.tintColor);
+            type.textures.bottom = atlas.addTile(
+                                                 type.texturePathBottom,
+                                                 type.textureCoordBottom,
+                                                 type.tintColor);
+        }
     }
 
     // Adds tile to the tile list. If we want to we can force an id.
     ushort add(TileType_t tile, ushort id = 0, bool isSendingId = false) {
         enforce(!(tile.name in _byName));
+
+        loadTextures(tile);
 		
         if (isSendingId) {
             tile.id = id;
@@ -210,6 +204,39 @@ class TileTypeManager {
         _byName[tile.name] = tile.id;
 		
         return tile.id;
+    }
+
+    void generateMaterials() {
+        foreach(material ; g_materials) {
+            auto name = material.name;
+            if(name in _byName) continue;
+            auto group = name in tileTypeGroups;
+            if(group) continue; // Seems unlikely.. maybe manually defined by someone later.
+            // NOT LOADED WE MUST CREATE IT BY OURSELVES
+            auto type = material.type;
+            auto groupName = "generic" ~ toUpper(type[0..1]) ~ type[1 .. $];
+            auto typeGroup = getGroup(groupName);
+            BREAK_IF(!typeGroup);
+            // Create tiles for this group hurr hurr! and also create the group for this derpherp!
+            TileType[] newGroup;
+            TileType_t tmpType;
+            char c = 'a';
+            foreach(origTile ; typeGroup) {
+                tmpType = *origTile;
+                tmpType.name = name ~ "_" ~ c; // Hurr durr durr.
+                tmpType.displayName = name;
+                tmpType.material = name;
+                tmpType.strength = material.tileStrength;
+                tmpType.tintColor = material.color;
+                tmpType.textures = TileTextureID.init;
+                tmpType.id = 0;
+                c++;
+                
+                auto id = add(tmpType);
+                newGroup ~= byID(id);
+            }
+            tileTypeGroups[name] = newGroup;
+        }
     }
 }
 

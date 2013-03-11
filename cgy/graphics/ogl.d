@@ -12,8 +12,6 @@ public import derelict.opengl.glext;
 import derelict.opengl.wgl;
 import opencl.all;
 
-import graphics.renderer;
-import graphics.font;
 import graphics.image;
 import graphics.raycastgpu;
 import graphics.shader;

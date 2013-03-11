@@ -1,6 +1,10 @@
 {
-  "genericDirt":[
+  "genericSoil":[
 	"dirt",
+  ],
+  "genericSand":[
+    "birchtree",
+    "birchleaf"
   ],
   "genericGrass":[
 	"grass",
@@ -15,7 +19,7 @@
   "genericSnow":[
 	"snow",
   ],
-  "genericWater":[
+  "genericLiquid":[
 	"water",
   ],
   "randomWoodMaterials":[

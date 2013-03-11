@@ -170,19 +170,33 @@ mixin template WorldGenerator() {
         float distanceBelowGround = -distanceAboveGround;
         if(pos.value.z > heightValue) { // Soil tile, determine soil type yeah!
             if(distanceBelowGround < 1) {
-                auto tileType = getBasicTileType!"genericGrass"();
+                auto tileType = getBasicTileType("genericGrass");
                 return Tile(tileType, flags);
             } else {
-                auto tileType = getBasicTileType!"genericDirt"();
+                auto tileType = getBasicTileType("genericSoil");
                 return Tile(tileType, flags);
             }
         }
         // Below soil. Lets make it interesting!
-        auto tileType = getBasicTileType!"genericStone"();
+
+        //auto tileType = getBasicTileType!"genericStone"();
+        //return Tile(tileType, flags);
+
+        int x = pos.value.x;
+        int y = pos.value.y;
+        int z = pos.value.z;
+        z = fastFloor(z - heightMaps.getOriginalHeight(pos.value.v2)); // Depth under 'normal' generated world
+        int materialNum = getStrataNum(x, y, z);
+        BREAK_IF(materialNum < 0);
+        BREAK_IF(materialNum >= materials.length);
+        auto material = materials[materialNum];
+
+        auto tileType = getBasicTileType(material.name);
         return Tile(tileType, flags);
 
+
     }
-    ushort getBasicTileType(string group)() { 
+    ushort getBasicTileType(string group) { 
         randomNumber++;
 
         auto group = tileSys.getGroup(group);

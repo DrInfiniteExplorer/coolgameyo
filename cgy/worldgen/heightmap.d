@@ -17,6 +17,7 @@ alias graphics.heightmap.Heightmap HMap;
 import math.math : equals;
 import math.math : advect, clamp, fastFloor;
 import random.random : BSpline;
+import random.simplex;
 import random.xinterpolate4 : XInterpolate24;
 import util.filesystem;
 import util.pos;
@@ -26,6 +27,20 @@ import worldgen.maps;
 import worldgen.strata;
 
 enum sampleIntervall = 10; //10 meters between each sample
+
+immutable maxHeight = 10_000;
+immutable startAmplitude = maxHeight / 2;
+immutable startIntervall = 6000;
+immutable endIntervall = sampleIntervall;
+immutable baseFrequency = 1.0f / startIntervall;
+int octaves;
+float endAmplitude;
+
+shared static this() {
+    octaves = cast(int)logb(startIntervall / endIntervall);
+    endAmplitude = startAmplitude * (0.5 ^^ octaves);
+}
+
 
 class HeightMaps {
     int worldSize; //In meters
@@ -38,6 +53,8 @@ class HeightMaps {
     float[] mapData; // Pointer to memory in heightmapfile.
     MmFile soilFile;
     float[] soilData; // Pointer to memory in heightmapfile.
+
+    SimplexNoise baseHeightNoise;
 
     this(WorldMap _worldMap) {
         worldMap = _worldMap;
@@ -61,7 +78,7 @@ class HeightMaps {
         soilData = null;
     }
 
-    void load() {
+    void load(int seed) {
         auto heightPath = worldMap.worldPath ~ "/map1";
         msg("Loading heightmap at: ", heightPath);
         heightmapFile = new MmFile(heightPath, MmFile.Mode.readWrite, mapSizeBytes, null, 0);
@@ -70,9 +87,35 @@ class HeightMaps {
         auto soilPath = worldMap.worldPath ~ "/map2";
         soilFile = new MmFile(soilPath, MmFile.Mode.readWrite, mapSizeBytes, null, 0);
         soilData = cast(float[])soilFile[];
+
+        baseHeightNoise = new SimplexNoise(seed);
+    }
+
+    float getOriginalHeight(vec2i _pos) {
+        float value = 0;
+        vec2f pos = _pos.convert!float;
+        pos *= baseFrequency;
+
+        float amplitude = startAmplitude;
+
+        for(int iter = 0; iter < octaves; iter++) {
+            value += amplitude * baseHeightNoise.getValue2(pos.convert!double);
+            amplitude *= 0.5;
+            pos *= 2;
+        }
+
+        auto dst = _pos.convert!float.getDistance(vec2f(mapSize * 0.5 * sampleIntervall));
+        dst /= (mapSize*0.25 * sampleIntervall);
+        //msg(dst);
+
+        //return value;
+        return dst < 1 ? 100 : 0;
+        //return dst < 1 ? sqrt(1-dst^^2)*100 : 0;
+        //return dst < 1 ? (1-dst)*100 : 0;
     }
 
     void generate(int seed) {
+        baseHeightNoise = new SimplexNoise(seed);
 
         auto heightPath = worldMap.worldPath ~ "/map1";
         msg("Creating heightmap at: ", heightPath);
@@ -84,78 +127,18 @@ class HeightMaps {
         soilFile = new MmFile(soilPath, MmFile.Mode.readWrite, mapSizeBytes, null, 0);
         soilData = cast(float[])soilFile[];
 
-        auto startTime = utime();
-
-        float maxHeight = 10_000;
-        float startAmplitude = maxHeight / 2;
-
-        /*
-        float endAmplitude = 0.5;
-        int octaves = cast(int)logb(startAmplitude / endAmplitude);
-        
-
-        float endIntervall = 3;
-        float startIntervall = endIntervall * 2^^octaves;
-        */
-
-        float startIntervall = 6000;
-        float endIntervall = sampleIntervall;
-        int octaves = cast(int)logb(startIntervall / endIntervall);
-        float endAmplitude = startAmplitude * (0.5 ^^ octaves);
-
-        float baseFrequency = 1.0f / startIntervall;
-
-
-        msg("Octaves: ", octaves);
-        msg("Start amplitude: ", startAmplitude);
-        msg("Start intervall: ", 1.0f / baseFrequency, " | ", startIntervall);
-        msg("End amplitude: ", startAmplitude * 0.5^^octaves, " | ", endAmplitude);
-        msg("End intervall: ", 0.5^^octaves / baseFrequency, " | ", endIntervall);
-
-        import random.simplex;
-        auto noise = new SimplexNoise(seed);
-
-        uint LIMIT = mapSize * mapSize;
-        uint LIMIT_STEP = LIMIT / 2500;
+        uint LIMIT_STEP = mapSizeSQ / 2500;
         //for(uint i = 0; i < LIMIT; i++) {
         uint progress = 0;
-        foreach(uint i, ref value ; parallel(mapData)) {
-            if( (i % LIMIT_STEP) == 0) {
+        //foreach(uint i, ref value ; parallel(mapData)) {
+        foreach(uint i, ref value ; mapData) {
+                if( (i % LIMIT_STEP) == 0) {
                 progress += LIMIT_STEP;
-                msg("Progress: ", 100.0f * cast(float)progress / LIMIT);
+                msg("Progress: ", 100.0f * cast(float)progress / mapSizeSQ);
             }
-
-            float value = 0;
-            auto pos = vec2f(i % mapSize, i / mapSize);
-            pos *= baseFrequency;
-
-            float amplitude = startAmplitude;
-
-            for(int iter = 0; iter < octaves; iter++) {
-                value += amplitude * noise.getValue2(pos.convert!double);
-                amplitude *= 0.5;
-                pos *= 2;
-            }
-
-            mapData[i] = value;
+            auto pos = vec2i(i % mapSize, i / mapSize);
+            value = getOriginalHeight(pos*sampleIntervall);
         }
-
-        msg("Time to make heightmap: ", (utime() - startTime) / 1_000_000.0);
-
-
-        foreach(uint i, ref value ; parallel(mapData)) {
-            auto x = i % mapSize;
-            auto y = i / mapSize;
-            auto dst = vec2f(x,y).getDistance(vec2f(mapSize * 0.5));
-            dst /= (mapSize*0.25);
-
-            mapData[i] = dst < 1 ? 100 : 0;
-
-            //mapData[i] = dst < 1 ? sqrt(1-dst^^2)*100 : 0;
-            //mapData[i] = dst < 1 ? (1-dst)*100 : 0;
-        }
-
-
 
         applyErosion(seed);
     }
@@ -247,20 +230,5 @@ class HeightMaps {
     auto getSoil(bool interpolate = true)(TileXYPos pt) {
         return getMap!("soilData", interpolate)(pt);
     }
-
-    /*
-    ref float getHeightValue(int x, int y) {
-    }
-
-    float getHeight(bool interpolate = true)(TileXYPos pos) {
-        vec2f pt = pos.value.convert!float / cast(float)sampleIntervall;
-        auto get = &getHeightValue;
-        static if(interpolate) {
-            return XInterpolate24!(BSpline, get)(pt);
-        } else {
-            return get(cast(int)pt.x, cast(int)pt.y);
-        }
-    }
-    */
 }
 

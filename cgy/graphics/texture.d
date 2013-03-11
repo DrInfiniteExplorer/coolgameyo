@@ -27,7 +27,7 @@ class TileTextureAtlas{
 
     ubyte[] atlasData;
     static struct wtf {
-        Tuple!(string, vec2i, vec3i) data;
+        Tuple!(string, vec2i, vec3ub) data;
         alias data this;
 
         bool opEquals(ref const wtf o) const {
@@ -171,7 +171,7 @@ class TileTextureAtlas{
 
     ushort addTile(string filename,
                    vec2i offset=vec2i(0,0),
-            vec3i tint=vec3i(255,255,255)) {
+            vec3ub tint=vec3ub(255,255,255)) {
 
         ushort tileCount = to!ushort(tileMap.length);
         assert(tileCount < maxTileCount, "Implement code to reallocate etc, or recode caller to reserve properly!!");

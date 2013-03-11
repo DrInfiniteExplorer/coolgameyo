@@ -50,6 +50,8 @@ struct Image {
     }
     this(string _filename, vec2i offset, vec2i size) {
         filename = _filename;
+        BREAK_IF(filename is null);
+        BREAK_IF(filename.length == 0);
 
         uint ilImgID;
         ilGenImages(1, &ilImgID);
@@ -283,14 +285,14 @@ struct Image {
         ilError();
     }
 
-    void tint(vec3i _color)
+    void tint(vec3ub _color)
     in{
         assert(_color.x>=0 && _color.x <=255, "Bad color sent to Image.tint");
         assert(_color.y>=0 && _color.y <=255, "Bad color sent to Image.tint");
         assert(_color.z>=0 && _color.z <=255, "Bad color sent to Image.tint");
     }
     body{
-        if(_color == vec3i(255, 255, 255)){
+        if(_color == vec3ub(255, 255, 255)){
             return;
         }
         auto color = _color.convert!float() * (1.0/255.0);

@@ -183,11 +183,8 @@ class Erosion {
                 heightMap.load(height);
                 foreach(idx, ref color ; colors) {
                     vec3f col;
-                    if(soil[idx] > 0) {
-                        col.set(0, 0.6, 0);
-                    } else {
-                        col.set(0,0,0);
-                    }
+                    float s = clamp(soil[idx], 0, 1);
+                    col = lerp(vec3f(0.4), vec3f(0, 0.6, 0), s);
                     float wat = water[idx] * 25;
                     float t = clamp(wat, 0, 1);
                     col = lerp(col, vec3f(0, 0, 0.6), t);

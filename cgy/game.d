@@ -203,6 +203,8 @@ class Game{
             scheduler.registerModule(aiModule);
         }
 
+        tileTypeManager.generateMaterials();
+
         if (!isServer) {
             camera = new Camera();
 

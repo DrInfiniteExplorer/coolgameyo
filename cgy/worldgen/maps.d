@@ -127,7 +127,7 @@ final class WorldMap {
         stratas = generateStratas(strataSeed);
         materials.length = stratas.length;
         foreach(idx, stratum ; stratas) {
-            materials[idx] = &g_Materials[stratum.materialName];
+            materials[idx] = &g_materials[stratum.materialName];
         }
         heightMaps.generate(heightmapSeed);
 
@@ -140,7 +140,11 @@ final class WorldMap {
             readJSONObject("worldSeed", &worldSeed);
         setSeeds();
         stratas = generateStratas(strataSeed);
-        heightMaps.load();
+        materials.length = stratas.length;
+        foreach(idx, stratum ; stratas) {
+            materials[idx] = &g_materials[stratum.materialName];
+        }
+        heightMaps.load(heightmapSeed);
     }
 
     void setSeeds() {
@@ -163,7 +167,8 @@ final class WorldMap {
     //Assumes z=0 == surface of world and Z+ is upwards
     // May have to offset with world contour first.
     int getStrataNum(int x, int y, int z) {
-        BREAK_IF(z > 0);
+        BREAK_IF(z > 20);
+        z = min(z, 0); // Allow for some retardedness in calculations.
         int num = 0;
         auto xyPos = vec2f(x, y);
         float depth = stratas[0].getHeight(xyPos);
@@ -198,7 +203,7 @@ final class WorldMap {
             a = 255;
             auto layerNum = getStrataNum(x, x, -y);
             auto materialName = stratas[layerNum].materialName;
-            color = g_Materials[materialName].color.convert!float;
+            color = g_materials[materialName].color.convert!float;
             color.toColor(r, g, b);
         }
         img.save("strata_height_on_height.bmp");
@@ -233,7 +238,7 @@ final class WorldMap {
                     if(prevMat != materialName)
                         msg(depth, " Material: ", materialName);
                     prevMat = materialName;
-                    color = g_Materials[materialName].color.convert!float;
+                    color = g_materials[materialName].color.convert!float;
                 }
             }
             color.toColor(r, g, b);

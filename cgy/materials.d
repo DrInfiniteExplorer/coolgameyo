@@ -13,12 +13,13 @@ struct MaterialInformation {
     string fancyName;
     vec3ub color;
     string type;
+    int tileStrength = 5; // Hurr durr random value.
 
     float talusConstant;
     float dissolutionConstant; // Or associate this with type? HUERR HUERR HUERR
 }
 
-__gshared MaterialInformation[string] g_Materials;
+__gshared MaterialInformation[string] g_materials;
 
 float getDissolutionConstantFromType(string type) {
     switch(type) {
@@ -41,14 +42,14 @@ static void loadMaterial(string filename) {
     loadJSON(path).read(mat);
     mat.name = name;
     mat.fancyName = mat.fancyName.idup; // Since strings loaded from json will ever never release the json file string D:
-    mat.type = mat.type.idup;
+    mat.type = mat.type.idup;    
     if(mat.dissolutionConstant == -1) {
         mat.dissolutionConstant = getDissolutionConstantFromType(mat.type);
     }
     if(mat.talusConstant == -1) {
         mat.talusConstant= getTalusConstantFromType(mat.type);
     }
-    g_Materials[name] = mat;
+    g_materials[name] = mat;
 }
 
 shared static bool materialsLoaded = false;
@@ -70,7 +71,7 @@ void loadMaterials() {
 
 void saveMaterials() {
     mkdir("data/materials");
-    foreach(mat ; g_Materials) {
+    foreach(mat ; g_materials) {
         auto path = "data/materials/" ~ mat.name ~ ".json";
         encode(mat).saveJSON(path);
     }
@@ -111,20 +112,20 @@ void MaterialEditor() {
         auto fancyName = fancyEdit.getText();
         auto type = typeEdit.getSelectedItemText();
         if(selectedMaterial.name != name) {
-            if(name in g_Materials) {
+            if(name in g_materials) {
                 new DialogBox(mainMenu, "Error!", "A material with that name already exists!",
                               "cancle", { msg("derp " ~ name ); }
                               );
                 return;
             }
-            g_Materials.remove(selectedMaterial.name);
+            g_materials.remove(selectedMaterial.name);
             materialsList.removeItem(selectedMaterial.name);
             materialsList.addItem(name);
         }
         selectedMaterial.name = name;
         selectedMaterial.fancyName = fancyName;
         selectedMaterial.type = type;
-        g_Materials[name] = selectedMaterial;
+        g_materials[name] = selectedMaterial;
     }
 
     void onMaterialSelect(int idx) {
@@ -132,7 +133,7 @@ void MaterialEditor() {
         saveMaterial();
 
         auto selected = materialsList.getItemText(idx);
-        auto mat = g_Materials[selected];
+        auto mat = g_materials[selected];
         nameEdit.setText(mat.name);
         fancyEdit.setText(mat.fancyName);
         typeEdit.selectItem(mat.type);
@@ -147,7 +148,7 @@ void MaterialEditor() {
     }
     materialsList = new GuiElementListBox(mainMenu, Rectd(0.05, 0.05, 0.2, 0.6), 18, &onMaterialSelect);
     loadMaterials();
-    foreach(material ; g_Materials) {
+    foreach(material ; g_materials) {
         materialsList.addItem(material.name);
     }
     colorEdit.setMouseClickCallback((GuiElement _, GuiEvent.MouseClick mc){
@@ -187,7 +188,7 @@ void MaterialEditor() {
     auto newMaterial = new PushButton(mainMenu, Rectd(0.3, colorEdit.bottomOf + 0.05, defaultWidth, 0.025), "New material", (){
         saveMaterial();
         string name = "NewMaterial";
-        while(name in g_Materials) {
+        while(name in g_materials) {
             name ~= "l";
         }
 
@@ -196,7 +197,7 @@ void MaterialEditor() {
         mat.fancyName = "fancy" ~ name;
         mat.type = "stone";
         mat.color.set(170,170,160);
-        g_Materials[name] = mat;
+        g_materials[name] = mat;
         materialsList.selectItem(materialsList.addItem(name));
     }); 
 

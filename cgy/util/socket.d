@@ -132,6 +132,7 @@ TcpSocket connectTimeout(std.socket.Address addr, Duration timeout) {
     SocketSet set = new SocketSet(1);
     set.reset();
     set.add(sock);
+    sock.connect(addr);
     if( 1 == Socket.select(null, set, null, timeout) ) {
         sock.blocking = true;
         return sock;
