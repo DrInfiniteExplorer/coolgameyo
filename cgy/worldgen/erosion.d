@@ -305,8 +305,25 @@ class Erosion {
             // Hoho! Error in description in Stava 2008 p 205 (5).
             // By reading Mei 2007+ one can understand what is supposed to happen when
             // calculating velocity. (regarding averageWaterHeight)
-            float velocityToRight = averageWaterHeight ? flowToRight / (cellLength * averageWaterHeight) : 0;
-            float velocityToDown = averageWaterHeight ? flowToDown / (cellLength * averageWaterHeight) : 0;
+            float velocityToRight = 0;
+            float velocityToDown = 0;
+            //msg(*cast(uint*)&averageWaterHeight);
+            if(averageWaterHeight == 0) {
+                velocityToRight = 0;
+                velocityToDown = 0;
+            } else {
+                if(averageWaterHeight != 0) {
+                    velocityToRight = flowToRight / (cellLength * averageWaterHeight);
+                    velocityToDown = flowToDown / (cellLength * averageWaterHeight);
+                }
+                
+            }
+
+            if(velocityToRight && averageWaterHeight == 0) {
+                msg(velocityToRight, " ", averageWaterHeight, " ", flowToRight, " ", cellLength);
+                BREAKPOINT;
+            }
+
             auto vel = vec2f(velocityToRight, velocityToDown);
             velocity[idx] = vel;
             if(vel.getLength > 5) {

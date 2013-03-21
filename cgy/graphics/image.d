@@ -173,12 +173,10 @@ struct Image {
     void fromGLTex(uint tex) {
         int width, height;
 
-        glBindTexture(GL_TEXTURE_2D, tex);
-        glError();
-        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
-        glError();
-        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
-        glError();
+        glBindTexture(GL_TEXTURE_2D, tex); glError();
+        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width); glError();
+        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height); glError();
+
 
         if(width * height <= 0) {
             msg("ALERT! Image captured is not very interesting, it has 0 area! Making it 1x1");

@@ -13,7 +13,6 @@ import derelict.opengl.wgl;
 import opencl.all;
 
 import graphics.image;
-import graphics.raycastgpu;
 import graphics.shader;
 import settings;
 import util.util;
@@ -137,13 +136,13 @@ void initOCL() {
 
         g_clRayCastMemories = CLMemories([g_clDepthBuffer, g_clRayCastOutput]);
 
-        initInteractiveComputeYourFather();
+//        initInteractiveComputeYourFather();
     }
 }
 
 void deinitOCL() {
     if(renderSettings.canUseFBO) {
-        deinitInteractiveComputeYourFather();
+//        deinitInteractiveComputeYourFather();
     }
 }
 
@@ -366,6 +365,94 @@ void renderQuad() {
 
 }
 
+
+
+int BufferSize(uint buffer) {
+    int bufferSize;
+    glBindBuffer(GL_ARRAY_BUFFER, buffer); glError();
+    glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &bufferSize); glError();
+    return bufferSize;    
+}
+
+uint TypeToGLTypeEnum(Type)() {
+    static if( is(Type == ubyte)) return GL_UNSIGNED_BYTE;
+    else static if( is(Type == byte)) return GL_BYTE;
+    else static if( is(Type == ushort)) return GL_UNSIGNED_SHORT;
+    else static if( is(Type == short)) return GL_SHORT;
+    else static if( is(Type == uint)) return GL_UNSIGNED_INT;
+    else static if( is(Type == int)) return GL_INT;
+    else static if( is(Type == float)) return GL_FLOAT;
+    else {
+        static assert(0, "Cant produce opengl type enum from type " ~ Type);
+    }
+}
+
+uint InternalTypeToFormatType(uint Type) {
+    if(Type == GL_RGBA8) return GL_RGBA;
+    else if(Type == GL_R32F) return GL_RED;
+    else if(Type == GL_RG32F) return GL_RG;
+    else if(Type == GL_RGBA32F) return GL_RGBA;
+    else {
+        BREAKPOINT;
+        assert(0, "Unknown mapping: " ~ Type.stringof);
+    }
+}
+//textureType: for example GL_RGB8, GL_R32F, etc
+uint Create2DTexture(uint textureType, DataType = void)(uint width, uint height, DataType* data = null) {
+
+    uint format = InternalTypeToFormatType(textureType);
+    uint dataType = TypeToGLTypeEnum!DataType;
+
+    uint tex = 0;
+    glGenTextures(1, &tex); glError();
+    glBindTexture(GL_TEXTURE_2D, tex); glError();
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); glError();
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); glError();
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); glError();
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); glError();
+    // automatic mipmap
+    glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_FALSE); glError();
+    glTexImage2D(GL_TEXTURE_2D, 0, textureType, width, height, 0,
+                 format, dataType, data);
+    glError();
+    //glBindTexture(GL_TEXTURE_2D, 0);
+    return tex;
+}
+
+void BindTexture(uint tex, uint textureUnit) {
+    glActiveTexture(GL_TEXTURE0 + textureUnit);
+    glBindTexture(GL_TEXTURE_2D, tex);
+}
+
+vec2i GetTextureSize(uint tex) {
+    int width, height;
+    glBindTexture(GL_TEXTURE_2D, tex); glError();
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width); glError();
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height); glError();
+    //glBindTexture(GL_TEXTURE_2D, 0); glError();
+    return vec2i(width, height);
+}
+
+void FillTexture(uint tex, float r, float g, float b, float a) {
+    int width, height, rs, gs, bs, as;
+    glBindTexture(GL_TEXTURE_2D, tex); glError();
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width); glError();
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height); glError();
+    int totalSize = width * height;
+    uint count = totalSize;
+    float[4][] tmp;
+    tmp.length = count;
+    float[4] rgba;
+    rgba[0] = r;
+    rgba[1] = g;
+    rgba[2] = b;
+    rgba[3] = a;
+    tmp[] = rgba;
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_FLOAT, tmp.ptr); glError();
+    delete tmp;
+    glBindTexture(GL_TEXTURE_2D, 0); glError();
+}
+
 string makeLookupTable(string[] enums) {
     string ret = "[";
     foreach(str ; enums) {
@@ -373,9 +460,7 @@ string makeLookupTable(string[] enums) {
     }
     return ret ~ "]";
 }
-
 __gshared string[uint] glErrorTable;
-
 shared static this() {
     glErrorTable = mixin(makeLookupTable(
         [
@@ -386,44 +471,19 @@ shared static this() {
             "GL_OUT_OF_MEMORY",
         ]));
 }
-
 void glError(string file = __FILE__, int line = __LINE__){
-    //debug
-    {
-        uint err = glGetError();
-        if(GL_NO_ERROR == err) return;
-
-        string str;
-
-
-        if(err in glErrorTable) {
-            str = glErrorTable[err];
-        } else {
-            str = "Unrecognized opengl error! " ~ to!string(err);
-        }
-
-/*
-        switch(err){
-        case GL_NO_ERROR:
-            return;
-        case GL_INVALID_ENUM:
-            str = "GL ERROR: Invalid enum"; break;
-        case GL_INVALID_VALUE:
-            str = "GL ERROR: Invalid value"; break;
-        case GL_INVALID_OPERATION:
-            str = "GL ERROR: Invalid operation"; break;
-        case GL_OUT_OF_MEMORY:
-            str = "GL ERROR: Out of memory"; break;
-        default:
-            str = "Got unrecognized gl error; "~ to!string(err);
-            break;
-        }
-        */
-        auto derp = file ~ to!string(line) ~ "\n" ~str;
-        writeln(derp);
-        BREAKPOINT;
-        assert(0, derp);
+    uint err = glGetError();
+    if(GL_NO_ERROR == err) return;
+    string str;
+    if(err in glErrorTable) {
+        str = glErrorTable[err];
+    } else {
+        str = "Unrecognized opengl error! " ~ to!string(err);
     }
+    auto derp = file ~":" ~ to!string(line) ~ "\n" ~str;
+    writeln(derp);
+    BREAKPOINT;
+    assert(0, derp);
 }
 
 static bool oldValue = false;

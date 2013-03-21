@@ -19,11 +19,19 @@ class Camera{
     float pitch = 0;
     vec3d targetDir = vec3d(0, 1, 0);
 
+    float farPlane;
+    float nearPlane;
+
+    this() {
+        farPlane = renderSettings.farPlane;
+        nearPlane = renderSettings.nearPlane;
+    }
+
     matrix4 getProjectionMatrix(float Near = -1.0f, float Far = -1.0f){
         float FOV_Radians = degToRad(cast(float)renderSettings.fieldOfView);
         float aspect = renderSettings.aspectRatio;
-        float _near = renderSettings.nearPlane;
-        float _far = renderSettings.farPlane;
+        float _near = nearPlane;
+        float _far = farPlane;
         if(Near != -1.0f) {
             _near = Near;
         }

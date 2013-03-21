@@ -5,9 +5,10 @@ import std.conv;
 import std.exception;
 import std.file;
 import std.stdio;
+import std.string : splitLines;
 
 import graphics.ogl;
-import graphics.renderer;
+import log : LogWarning, LogError;
 import stolen.all;
 import util.util;
 
@@ -15,38 +16,63 @@ import util.util;
 string makeUints(T...)() {
     string ret;
     foreach(s ; T) {
-        ret ~= "uint " ~ s ~ ";";       
+        ret ~= "uint " ~ s ~ " = -1;";       
     }
     return ret;
+}
+
+enum ShaderType {
+    Vertex,
+    Fragment,
+    Compute
+}
+
+enum UniformMissingPolicy {
+    Halt,
+    Warning,
+    Ignore
 }
 
 class ShaderProgram(T...){
     mixin(makeUints!T());
 
-    uint program=0;
-    uint vert=0;
-    uint frag=0;
+    alias typeof(this) SP;
+
+    uint program = 0;
+    uint vert = 0;
+    uint frag = 0;
+    uint compute = 0;
     
     string vertexShader;
     string fragmentShader;
+    string computeShader;
+
+    struct UniformMagic {
+        SP outer;
+        void opDispatch(string name, T)(T t) {
+            static if(__traits(hasMember, SP, name)) {
+                static assert( is(typeof(__traits(getMember, this.outer, name)) : uint), " variable " ~ name ~ " is not of type uint, bailing out!");
+                if(__traits(getMember, this.outer, name) == -1) {
+                    __traits(getMember, this.outer, name) = this.outer.getUniformLocation(name);
+                }
+                this.outer.setUniform(__traits(getMember, this.outer, name), t);
+            } else {
+                uint location = this.outer.getUniformLocation!(UniformMissingPolicy.Ignore)(name);
+                this.outer.setUniform(location, t);
+            }
+        }
+    };
+    UniformMagic uniform;
 
     this(){
-        vert = glCreateShader(GL_VERTEX_SHADER);
-        glGetError();
-        frag = glCreateShader(GL_FRAGMENT_SHADER);
-        glError();
-        program = glCreateProgram();
-        glError();
-        glAttachShader(program, vert);
-        glError();
-        glAttachShader(program, frag);
-        glError();
+        uniform = UniformMagic(this);
+        program = glCreateProgram(); glError();
     }
 
     this(string constants, string vertex, string fragment){
         this();
-        compileFile!true(vertex, constants);
-        compileFile!false(fragment, constants);
+        compileFile!(ShaderType.Vertex)(vertex, constants);
+        compileFile!(ShaderType.Fragment)(fragment, constants);
         link();
     }
 
@@ -60,6 +86,7 @@ class ShaderProgram(T...){
     void destroy(){
         if(vert){ glDeleteShader(vert); }
         if(frag){ glDeleteShader(frag); }
+        if(compute) { glDeleteShader(compute); }
         if(program){ glDeleteProgram(program); }
     }
 
@@ -95,7 +122,7 @@ class ShaderProgram(T...){
         return "";
     }
 
-    void compileFile(bool vertexShader)(string filename, string constants = ""){
+    void compileFile(ShaderType shaderType)(string filename, string constants = ""){
 
         //Cute that the memory management for the loaded file is now manual, but the File struct allocates data via gc :P
         // ^ lololol :P
@@ -106,14 +133,25 @@ class ShaderProgram(T...){
         auto fileSize = cast(uint)file.size();
         auto mem = ScopeMemory!char(fileSize);
         file.rawRead(mem[]);
-        compileSource!vertexShader(cast(string)mem[]);
+        compileSource!shaderType(cast(string)mem[]);
     }
 
-    void compileSource(bool vertexShader)(string source) {
-        static if(vertexShader) {
+    void compileSource(ShaderType shaderType)(string source) {
+        static if(shaderType == ShaderType.Vertex) {
             alias vert shader;
-        } else {
+            alias GL_VERTEX_SHADER TypeEnum;
+        } else static if(shaderType == ShaderType.Fragment){
             alias frag shader;
+            alias GL_FRAGMENT_SHADER TypeEnum;
+        } else static if(shaderType == ShaderType.Compute) {
+            alias compute shader;
+            alias GL_COMPUTE_SHADER TypeEnum;
+        }
+        if(shader == 0) {
+            shader = glCreateShader(TypeEnum);
+            glGetError();
+            glAttachShader(program, shader);
+            glError();
         }
         immutable(char)*[1] ptr;
         int[1] length;
@@ -124,7 +162,9 @@ class ShaderProgram(T...){
         int error;
         glGetShaderiv(shader, GL_COMPILE_STATUS, &error); glError();
         if(error != GL_TRUE) {
-            msg(source);
+            foreach(idx, line ; source.splitLines) {
+                LogError(idx+1, ":", line);
+            }
             printShaderError(shader);
             BREAKPOINT;
         }
@@ -132,11 +172,11 @@ class ShaderProgram(T...){
 
     void vertex(string filename) @property{
         vertexShader = filename;
-        compileFile!true(filename);
+        compileFile!(ShaderType.Vertex)(filename);
     }
     void fragment(string filename) @property{
         fragmentShader = filename;
-        compileFile!false(filename);
+        compileFile!(ShaderType.Fragment)(filename);
     }
 
     void bindAttribLocation(uint location, string name){
@@ -190,47 +230,61 @@ class ShaderProgram(T...){
         return ret;
     }
 
-    int getUniformLocation(string name){
+    int getUniformLocation(UniformMissingPolicy policy = UniformMissingPolicy.Warning)(string name){
         auto ret = glGetUniformLocation(program, name.ptr);
         glError();
-        assert(ret != -1, "Could not get uniform: " ~ name);
+        if(ret == -1) {
+            static if(policy == UniformMissingPolicy.Halt) {
+                BREAKPOINT;
+                assert(0, "Could not get uniform " ~ name);
+            } else static if(policy == UniformMissingPolicy.Warning) {
+                LogWarning("Could not get uniform " ~ name);
+            } else static if(policy == UniformMissingPolicy.Ignore) {
+            } else {
+                static assert(0, "Huh error in uniformmissingpolicies");
+            }
+        }
         return ret;
     }
 
-    void setUniform(uint location, int i){
+    void setUniform(UniformMissingPolicy policy = UniformMissingPolicy.Warning, T...)(string name, T t) {
+        int location = getUniformLocation!policy(name);
+        setUniform(location, t);
+    }
+
+    void setUniform()(uint location, int i){
         glUniform1i(location, i);
         glError();
     }
-    void setUniform(uint location, float f){
+    void setUniform()(uint location, float f){
         glUniform1f(location, f);
         glError();
     }
     //Count != 1 for arrays
-    void setUniform(uint location, vec3i vec){
+    void setUniform()(uint location, vec3i vec){
         glUniform3iv(location, 1, &vec.x);
         glError();
     }
-    void setUniform(uint location, vec3f vec){
+    void setUniform()(uint location, vec3f vec){
         glUniform3fv(location, 1, &vec.x);
         glError();
     }
-    void setUniform(uint location, vec2i vec){
+    void setUniform()(uint location, vec2i vec){
         glUniform2iv(location, 1, &vec.x);
         glError();
     }
-    void setUniform(uint location, vec2f vec){
+    void setUniform()(uint location, vec2f vec){
         glUniform2fv(location, 1, &vec.x);
         glError();
     }
-    void setUniform(uint location, vec2d vec){
+    void setUniform()(uint location, vec2d vec){
         setUniform(location, vec.convert!float());
     }
 
-    void setUniform(uint location, matrix4 mat){
+    void setUniform()(uint location, matrix4 mat){
         glUniformMatrix4fv(location, 1, false, mat.pointer());
         glError();
     }
-
 
     void use(bool set=true){
         glUseProgram(set?program:0);

@@ -1,6 +1,6 @@
 module worldgen.heightmap;
 
-import std.algorithm : swap;
+import std.algorithm : swap, min, max, reduce;
 import std.array : array;
 import std.parallelism;
 import std.mmfile;
@@ -22,7 +22,7 @@ import random.xinterpolate4 : XInterpolate24;
 import util.filesystem;
 import util.pos;
 import util.util;
-import worldgen.erosion;
+import worldgen.gpuerosion;
 import worldgen.maps;
 import worldgen.strata;
 
@@ -30,7 +30,7 @@ enum sampleIntervall = 10; //10 meters between each sample
 
 immutable maxHeight = 10_000;
 immutable startAmplitude = maxHeight / 2;
-immutable startIntervall = 6000;
+immutable startIntervall = 6000 * sampleIntervall;
 immutable endIntervall = sampleIntervall;
 immutable baseFrequency = 1.0f / startIntervall;
 int octaves;
@@ -108,8 +108,8 @@ class HeightMaps {
         dst /= (mapSize*0.25 * sampleIntervall);
         //msg(dst);
 
-        //return value;
-        return dst < 1 ? 100 : 0;
+        return value;
+        //return dst < 1 ? 100 : 0;
         //return dst < 1 ? sqrt(1-dst^^2)*100 : 0;
         //return dst < 1 ? (1-dst)*100 : 0;
     }
@@ -140,6 +140,9 @@ class HeightMaps {
             value = getOriginalHeight(pos*sampleIntervall);
         }
 
+        msg("h max", reduce!max(mapData));
+        msg("h min", reduce!min(mapData));
+
         applyErosion(seed);
     }
 
@@ -154,40 +157,48 @@ class HeightMaps {
             return tuple(material.dissolutionConstant, material.talusConstant);
         }
 
-        auto ero = new Erosion();
+        auto ero = new GPUErosion();
         soilData[] = 2.0; // 2 meters worth of soil to begin with.
-        ero.init(mapData, soilData, &getMaterialConstants, mapSize, mapSize, seed);
+        ero.init(mapData, soilData, mapSize, mapSize, seed);
 
         HMap height = new HMap;
+        HMap wtr = new HMap;
         ero.heightMap = height;
-        height.depth = mapSize * sampleIntervall;
-        height.width = mapSize * sampleIntervall;
+        ero.waterMap = wtr;
+        height.depth = wtr.depth = mapSize * sampleIntervall;
+        height.width = wtr.width = mapSize * sampleIntervall;
         // ERODE ERODE ERODE
 
         // Start erosion thread.
         bool done = false;
-        spawnThread({
-            try {
-                foreach(iter ; 0 .. 5000) {
-                    ero.erode();
-                }
-                mapData[] = ero.height[];
-                soilData[] = ero.soil[];
-                done = true;
-            }catch(Throwable t) {
-                msg("Error:\n", t);
-                BREAKPOINT;
-            }
-        });
         Camera camera = new Camera;
+        camera.farPlane *= 10;
         camera.setPosition(vec3d(0, 0, 20));
         camera.setTargetDir(vec3d(0.7, 0.7, 0));
+        int c = 0;
+        immutable limit = 35000;
         renderLoop(camera, 
-                   { return done; },
+                   { return c > limit; },
                    {
                        synchronized(height) {
                            height.render(camera);
                        }
+                       synchronized(wtr) {
+                           import derelict.opengl.gl;
+                           
+                           glEnable( GL_POLYGON_OFFSET_FILL );      
+                           glPolygonOffset( 1f, 1f );
+
+                           wtr.alpha = 0.85;
+                           glEnable(GL_BLEND);
+                           glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                           
+                           wtr.render(camera);
+                           glDisable(GL_BLEND);
+                           glDisable( GL_POLYGON_OFFSET_FILL );      
+                       }
+                       ero.erode();
+                       c++;
                    });
     }
 

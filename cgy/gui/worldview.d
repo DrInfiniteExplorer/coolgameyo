@@ -77,7 +77,7 @@ class WorldMenu : GuiElementWindow {
 
         voronoiImage = Image(null, Dim, Dim);
 
-        worldMap = new WorldMap(880128);
+        worldMap = new WorldMap(880127);
         worldMap.generate();
 
         auto button = new PushButton(this, Rectd(vec2d(0.75, 0.75), vec2d(0.2, 0.10)), "Back", &onBack);

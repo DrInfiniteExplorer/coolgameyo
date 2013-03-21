@@ -18,16 +18,52 @@ import util.rangefromto : Range2D;
 import util.util : BREAK_IF, msg, utime;
 
 immutable vertShaderSource = q{
-    #version 150 core
-    in vec3 vert;
-    in vec3 norm;
-    in vec4 col;
+    #version 430
+    layout(location = 0) in ivec2 pos;
+    layout(location = 2) in vec4 col;
+
     uniform mat4 transform;
+    layout(binding=0, r32f) readonly uniform image2D height;
+    layout(binding=1, r32f) readonly uniform image2D h2;
+    layout(binding=2, r32f) readonly uniform image2D h3;
+    layout(binding=3, r32f) readonly uniform image2D h4;
+    uniform vec2 cellSize;
+    uniform int count;
+
     out vec3 normal;
     out vec4 color;
+
+    float get(ivec2 pos) {
+        float h = imageLoad(height, pos);
+        if(count > 1) {
+            h += imageLoad(h2, pos);
+            if(count > 2) {
+                h += imageLoad(h3, pos);
+                if(count > 3) {
+                    h += imageLoad(h4, pos);
+                }
+            }
+        }
+        return h;
+    }
+
     void main() {
+        float h = get(pos);
+        vec3 vert = vec3(pos * cellSize, h);
         gl_Position = (transform * vec4(vert, 1.0));
-        normal = norm;
+
+        //*
+        vec3 x_n = vec3(2.0 * cellSize.x, 0.0, get(pos + ivec2(-1, 0)) - get(pos + ivec2(1, 0)));
+        vec3 y_n = vec3(0.0, 2.0 * cellSize.y, get(pos + ivec2(0, -1)) - get(pos + ivec2(0, 1)));
+        normal = normalize(
+                           cross(
+                                 normalize(x_n),
+                                 normalize(y_n)
+                                 )
+                           );
+        /*/
+        normal = vec3(0.1, 0.0, 1.0);
+        //*/
         color = col;
     }
 };
@@ -51,8 +87,6 @@ class Heightmap : ShaderProgram!() {
 
     float[] map;
     vec3f[] colorMap;
-    vec3f[] triangles;
-    vec3f[] normals;
 
     float width = -1;
     float depth;
@@ -61,8 +95,9 @@ class Heightmap : ShaderProgram!() {
     int sizeX;
     int sizeY;
 
-    uint triVbo;
-    uint normVbo;
+    uint posVbo;
+    uint heightImg;
+    uint[] _loadTextures;
     uint colorVbo;
     uint vao;
 
@@ -70,8 +105,8 @@ class Heightmap : ShaderProgram!() {
 
     this() {
         super();
-        compileSource!true(vertShaderSource);
-        compileSource!false(fragShaderSource);
+        compileSource!(ShaderType.Vertex)(vertShaderSource);
+        compileSource!(ShaderType.Fragment)(fragShaderSource);
         link();
     }
     bool destroyed = false;
@@ -81,11 +116,14 @@ class Heightmap : ShaderProgram!() {
     override void destroy() {
         super.destroy();
         glBindBuffer(GL_ARRAY_BUFFER, 0);
-        if(triVbo) {
-            glDeleteBuffers(1, &triVbo);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+        if(posVbo) {
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
+            glDeleteBuffers(1, &posVbo);
         }
-        if(normVbo) {
-            glDeleteBuffers(1, &normVbo);
+        if(heightImg && heightImg != _loadTextures[0]) {
+            glBindTexture(GL_TEXTURE_2D, 0);
+            glDeleteTextures(1, &heightImg);
         }
         if(colorVbo) {
             glDeleteBuffers(1, &colorVbo);
@@ -105,6 +143,11 @@ class Heightmap : ShaderProgram!() {
         return depth / sizeY;
     }
 
+    void load(string path) {
+        BREAKPOINT;
+        // Load image, convert to heightmap.
+        rebuild = true;
+    }
     void load(float[] data) {
         auto len = data.length;
         auto sqrtLen = sqrt(cast(real)len);
@@ -117,6 +160,13 @@ class Heightmap : ShaderProgram!() {
         map = data.dup;
         rebuild = true;
     }
+    void loadTexture(uint[] tex, int w, int h) {
+        _loadTextures = tex.dup;
+        heightImg = tex[0];
+        sizeX = w;
+        sizeY = h;
+        rebuild = true;
+    }
 
     float maxHeight() {
         return reduce!max(map);
@@ -127,12 +177,6 @@ class Heightmap : ShaderProgram!() {
         float posZ = reduce!"a+b"(map);
         posZ /= ((sizeX-1) * (sizeY-1));
         return vec3f(posX, posY, posZ); 
-    }
-
-    void load(string path) {
-        BREAKPOINT;
-        // Load image, convert to heightmap.
-        rebuild = true;
     }
 
     float getVal(int x, int y) {
@@ -172,83 +216,65 @@ class Heightmap : ShaderProgram!() {
 
     void build() {
         rebuild = false;
-        int len = 6 * (sizeX-1)*(sizeY-1);
-        triangles.length = len;
-        normals.length = len;
+        int len = 4 * (sizeX-1)*(sizeY-1);
         float[4][] colors;
         if(colorMap.length > 1) {
             colors.length = len;
         }
 
-        foreach(x, y ; Range2D(0, sizeX-1, 0, sizeY-1)) {
-            auto idx = x + y * (sizeX-1);
-            auto Idx = idx * 6;
-            triangles[Idx+0] = vec3f(x, y, getVal(x, y));
-            triangles[Idx+1] = vec3f(x+1, y, getVal(x+1, y));
-            triangles[Idx+2] = vec3f(x, y+1, getVal(x, y+1));
-            triangles[Idx+3] = vec3f(x, y+1, getVal(x, y+1));
-            triangles[Idx+4] = vec3f(x+1, y, getVal(x+1, y));
-            triangles[Idx+5] = vec3f(x+1, y+1, getVal(x+1, y+1));
-            normals[Idx+0] = getNormal(x, y);
-            normals[Idx+1] = getNormal(x+1, y);
-            normals[Idx+2] = getNormal(x+1, y+1);
-            normals[Idx+3] = getNormal(x, y+1);
-            normals[Idx+4] = getNormal(x+1, y);
-            normals[Idx+5] = getNormal(x+1, y+1);
-            if(colorMap.length > 1) {
-                colors[Idx+0] = getColor(x, y);
-                colors[Idx+1] = getColor(x+1, y);
-                colors[Idx+2] = getColor(x+1, y+1);
-                colors[Idx+3] = getColor(x, y+1);
-                colors[Idx+4] = getColor(x+1, y);
-                colors[Idx+5] = getColor(x+1, y+1);
-            }
-        }
-
-        float wPerCell = widthPerCell;
-        float dPerCell = depthPerCell;
-        foreach(ref tri ; triangles) {
-            tri[0] *= wPerCell;
-            tri[1] *= dPerCell;
-        }
-        if(triVbo) {
-            glDeleteBuffers(1, &triVbo); glError();
-            triVbo = 0;
-        }
-        if(normVbo) {
-            glDeleteBuffers(1, &normVbo); glError();
-            normVbo = 0;
-        }
-        if(colorVbo) {
-            glDeleteBuffers(1, &colorVbo); glError();
-            colorVbo = 0;
-        }
         if(!vao) {
             glGenVertexArrays(1, &vao); glError();
         }
         glBindVertexArray(vao);
-        auto triSize = triangles.length * triangles[0].sizeof;
-        auto normSize = normals.length * normals[0].sizeof;
-        auto colorSize = colors.length * colors[0].sizeof;
 
-        glGenBuffers(1, &triVbo); glError();
-        glBindBuffer(GL_ARRAY_BUFFER, triVbo); glError();
-        glBufferData(GL_ARRAY_BUFFER, triSize, triangles.ptr, GL_STATIC_DRAW); glError();
-        glVertexAttribPointer(0u, 3, GL_FLOAT, GL_FALSE, triangles[0].sizeof, null); glError();
+        if(_loadTextures.length == 0) {
+            if(heightImg && GetTextureSize(heightImg) != vec2i(sizeX, sizeY)) {
+                glBindTexture(GL_TEXTURE_2D, 0);
+                glDeleteTextures(1, &heightImg);
+                heightImg = 0;
+            }
+            if(!heightImg) {
+                heightImg = Create2DTexture!(GL_R32F,float)(sizeX, sizeY, map.ptr);
+            } else {
+                glBindTexture(GL_TEXTURE_2D, heightImg); glError();
+                glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, sizeX, sizeY, GL_RED, GL_FLOAT, map); glError();
+            }
+        }
+        immutable size = len * vec2i.sizeof;
+        if(posVbo && BufferSize(posVbo) != size) {
+            glDeleteBuffers(1, &posVbo); glError();
+            posVbo = 0;
+        }
+        if(!posVbo) {
+            glGenBuffers(1, &posVbo); glError();
+            glBindBuffer(GL_ARRAY_BUFFER, posVbo); glError();
+            vec2i[] positions;
+            positions.length = len;
+            foreach(x, y ; Range2D(0, sizeX-1, 0, sizeY-1)) {
+                int idx = 4*(y * (sizeX-1) + x);
+                positions[idx + 0].set(x  ,   y);
+                positions[idx + 1].set(x+1,   y);
+                positions[idx + 2].set(x+1, 1+y);
+                positions[idx + 3].set(x  , 1+y);
+            }
+            glBufferData(GL_ARRAY_BUFFER, size, positions.ptr, GL_STATIC_DRAW); glError();
+        }
+
+        glVertexAttribIPointer(0u, 2, GL_INT, vec2i.sizeof, cast(void*)0); glError();
         glEnableVertexAttribArray(0); glError();
 
-        glGenBuffers(1, &normVbo); glError();
-        glBindBuffer(GL_ARRAY_BUFFER, normVbo); glError();
-        glBufferData(GL_ARRAY_BUFFER, normSize, normals.ptr, GL_STATIC_DRAW); glError();
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, normals[0].sizeof, null); glError();
-        glEnableVertexAttribArray(1); glError();
-
         if(colorMap.length > 1) {
-            glGenBuffers(1, &colorVbo); glError();
+            /*
             glBindBuffer(GL_ARRAY_BUFFER, colorVbo); glError();
-            glBufferData(GL_ARRAY_BUFFER, colorSize, colors.ptr, GL_STATIC_DRAW); glError();
+            if(newColor) {
+                glBufferData(GL_ARRAY_BUFFER, size, colors.ptr, GL_STATIC_DRAW); glError();
+            } else {
+                glBufferSubData(GL_ARRAY_BUFFER, 0, size, colors.ptr); glError();
+            }
             glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, colors[0].sizeof, null); glError();
             glEnableVertexAttribArray(2); glError();
+            */
+            BREAKPOINT;
         } else if(colorMap.length == 1) {
             glVertexAttrib4f(2, colorMap[0].x, colorMap[0].y, colorMap[0].z, alpha);
             glDisableVertexAttribArray(2); glError();
@@ -259,21 +285,33 @@ class Heightmap : ShaderProgram!() {
 
         glBindVertexArray(0); glError();
         glBindBuffer(GL_ARRAY_BUFFER, 0); glError();
+
+        use(true);
+        uniform.cellSize = vec2f(widthPerCell, depthPerCell);
+        uniform.count = max(1, _loadTextures.length);
+        use(false);
     }
 
 
     void render(Camera camera) {
+        if(map.length == 0 && _loadTextures.length == 0) return;
         if(rebuild) {
             build();
         }
+        //setWireframe(true);
         if(!vao) return;
         use(true);
         auto transform = camera.getProjectionMatrix * camera.getViewMatrix;
-        setUniform(getUniformLocation("transform"), transform);
+        uniform.transform = transform;
         glBindVertexArray(vao); glError();
-        glDrawArrays(GL_TRIANGLES, 0, (sizeX-1)*(sizeY-1)*6); glError();
+        glBindImageTexture(0, heightImg, 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F); glError();
+        foreach(idx ; 1 .. _loadTextures.length) {
+            glBindImageTexture(idx, _loadTextures[idx], 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F); glError();
+        }
+        glDrawArrays(GL_QUADS, 0, (sizeX-1)*(sizeY-1)*4); glError();
         glBindVertexArray(0); glError();
         use(false);
+        //setWireframe(false);
     }
 
 }
