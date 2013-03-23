@@ -190,7 +190,7 @@ mixin template LightStorageMethods() {
             }
             modifiedBlocks.destroy();
         }
-        foreach(tilePos, newTile ; tilePositions) {
+        foreach(tilePos, _newTile ; tilePositions) {
             auto tileAbove = getTile(TilePos(tilePos.value + vec3i(0, 0, 1)));
             bool belowSunlight = tileAbove.sunlight;
             //No need to unspread light; Removing a tile will never cause light to diminish

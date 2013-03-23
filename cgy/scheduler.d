@@ -199,10 +199,7 @@ final class Scheduler {
     }
     void unregisterModule(Module mod) {
         synchronized(this){
-            bool pred(Module m) {
-                return m == mod;
-            }
-            modules = remove!(pred)(modules);
+            modules = modules.remove(modules.countUntil(mod));
         }
     }
 
@@ -346,10 +343,7 @@ final class Scheduler {
 
                     if (exiting) {
                         static void cleanUp(ref Thread[] workers) {
-                            bool pred(Thread t) {
-                                return t is Thread.getThis();
-                            }
-                            workers = remove!(pred)(workers);
+                            workers = workers.remove(workers.countUntil(Thread.getThis));
                         }
                         cleanUp(workers);
                         return false;

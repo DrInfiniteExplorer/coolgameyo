@@ -257,7 +257,7 @@ struct aabbox3d(T)
     //Returns true if intersects, and then the time when it intersected. Returns false if does not intersect.
     bool intersectsWithBox(const aabbox3d!(T) other, vector3!T dir, out float time, out vector3!T normal) const
     {
-        float epsilon = 10*float.min;
+        float epsilon = 10*float.min_normal;
         float interpolate(float a, float b, float t){
             return a * t + b * (t-1); //numerically stable, yeah!
         }

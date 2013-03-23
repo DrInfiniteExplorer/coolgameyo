@@ -56,13 +56,18 @@ final class ChangeList {
     this() {
     }
 
-    void add(T)(ref T change) if(staticIndexOf!(T, ChangeTypes) != -1) {
+    void add(T)(auto ref T change) if(staticIndexOf!(T, ChangeTypes) != -1) {
         ubyte[] asBytes = (cast(ubyte*)&change)[0..T.sizeof];
         changeListData ~= cast(ubyte)staticIndexOf!(T, ChangeTypes) ~ asBytes;
     }
+    
     void add(T, Us...)(Us us) if(!is(T : Us[0])){
+        //pragma(msg, T);
+        //pragma(msg, Us);
+        //pragma(msg, ChangeTypes);
         add!T(T(us));
     }
+    
 
     void apply(WorldState world){
         ubyte* ptr = changeListData.ptr;

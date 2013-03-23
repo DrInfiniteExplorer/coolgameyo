@@ -67,7 +67,7 @@ final class TextureArray {
 
     private void reupload() {
         synchronized(this) {
-            uint oldCount = imgCount - toUpload.length;
+            uint oldCount = imgCount - cast(int)toUpload.length;
             if(imgCount > capacity) {
                 capacity = imgCount + 5;
 
@@ -98,7 +98,7 @@ final class TextureArray {
             }
             glBindTexture(GL_TEXTURE_2D_ARRAY, textureId);
             foreach(idx, img ; toUpload) {
-                uint targetIdx = oldCount + idx;
+                uint targetIdx = oldCount + cast(int)idx;
                 auto offsetX = 0;
                 auto offsetY = 0;
                 auto dataPtr = img.imgData.ptr;

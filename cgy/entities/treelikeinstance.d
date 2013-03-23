@@ -443,8 +443,8 @@ mixin template TreeLike() {
                                             auto tile = proxy.getTile(tilePos);
                                             if (tile.type == TileTypeAir) {
                                                 auto tileType = proxy.tileTypeManager.idByName(this.type.treelikeType.leafMaterial);
-                                                Tile tile = Tile(tileType, TileFlags.valid);
-                                                proxy.setTile(tilePos, tile);
+                                                Tile newTile = Tile(tileType, TileFlags.valid);
+                                                proxy.setTile(tilePos, newTile);
                                                 ownedTiles ~= tilePos;
                                             }
                                         }
@@ -469,8 +469,8 @@ mixin template TreeLike() {
                                             auto tile = proxy.getTile(tilePos);
                                             if (tile.type == TileTypeAir) {
                                                 auto tileType = proxy.tileTypeManager.idByName(this.type.treelikeType.leafMaterial);
-                                                Tile tile = Tile(tileType, TileFlags.valid);
-                                                proxy.setTile(tilePos, tile);
+                                                Tile newTile = Tile(tileType, TileFlags.valid);
+                                                proxy.setTile(tilePos, newTile);
                                                 ownedTiles ~= tilePos;
                                             }
                                         }

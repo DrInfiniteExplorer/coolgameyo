@@ -10,13 +10,17 @@ import util.util;
 
 
 version(Windows) {
-    import win32.windows;
+    import windows;
+}
+
+
+version(Windows) {
 
     HWND getMainWindow() {
         auto wierd_str = "I_am_a_flying_unicorn_who_farts_glitter";
         auto strZ = wierd_str.toStringz();
         SDL_WM_SetCaption(strZ, "derp");
-        auto mainHwnd = FindWindow(null, strZ);
+        auto mainHwnd = FindWindowA(null, strZ);
         BREAK_IF(mainHwnd == null);
         SDL_WM_SetCaption("CoolGameYo!", "Herp");
         return mainHwnd;
@@ -28,7 +32,7 @@ version(Windows) {
         auto strZ = wierd_str.toStringz();
         RECT rect;
         SDL_WM_SetCaption(strZ, "derp");
-        auto mainHwnd = FindWindow(null, strZ);
+        auto mainHwnd = FindWindowA(null, strZ);
         BREAK_IF(mainHwnd == null);
         GetWindowRect(mainHwnd, &rect);
         windowSettings.mainCoordinates.x = rect.left;
@@ -55,7 +59,7 @@ version(Windows) {
             auto strZ = wierd_str.toStringz();
             RECT rect;
             SDL_WM_SetCaption(strZ, "derp");
-            auto mainHwnd = FindWindow(null, strZ);
+            auto mainHwnd = FindWindowA(null, strZ);
             BREAK_IF(mainHwnd == null);
             GetWindowRect(mainHwnd, &rect);
             auto width = rect.right - rect.left;

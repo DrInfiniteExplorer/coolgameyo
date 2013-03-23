@@ -122,14 +122,14 @@ class TileTextureAtlas{
     void upload(){
         mixin(LogTime!("AtlasUpload"));
         enforce(!texId, "texId != 0, error error error crying babies");
-        int tileCount = tileMap.length();
+        int tileCount = cast(int)tileMap.length();
         enforce(tileCount <= maxTileCount, "Derp e ti derp! can't allocate space for all tiles!");
         int layerCount = (tileCount / tilesPerLayer) + tileCount%tilesPerLayer==0 ? 0 : 1;
         genTex();
         auto size = renderSettings.maxTextureSize;
 
         uint bytesPerLayer = layerCount*(size^^2)*4;
-        uint now = atlasData.length;
+        uint now = cast(uint)atlasData.length;
         version(none){
             uint d = now % bytesPerLayer;
             uint padCount = d == 0 ? 0 : bytesPerLayer - d;
@@ -150,8 +150,8 @@ class TileTextureAtlas{
 
         vec2i tileSize = vec2i(1,1)*renderSettings.pixelsPerTile;
         ubyte* dataPtr = atlasData.ptr;
-        foreach(uint num ; 0 .. tileMap.length){
-            auto index = tileIndexFromNumber(num);
+        foreach(ulong num ; 0 .. tileMap.length){
+            auto index = tileIndexFromNumber(cast(uint)num);
             auto offsetX = tileSize.x * index.x;
             auto offsetY = tileSize.y * index.y;
             auto layer = index.z;

@@ -217,7 +217,7 @@ mixin template ServerModule() {
     void doNetworkStuffUntil(long nextSync) {
         //We now have all changes that will be applied this tick in toWrite.
         if(sendingSaveGame) {
-            int changeSize = toWrite.length;
+            int changeSize = cast(int)toWrite.length;
             append("temp/changes.bin", g_gameTick, changeSize, toWrite);
         }
         recv_set.reset();
@@ -228,7 +228,7 @@ mixin template ServerModule() {
             player.recv_index = 0;
         }
         
-        int[2] frameInfo = [g_gameTick, toWrite.length];
+        int[2] frameInfo = [g_gameTick, cast(int)toWrite.length];
         foreach(player ; players) {
             if(!player.connected) continue;
             if(player.dataSock.send(frameInfo) != frameInfo.sizeof) {
@@ -273,7 +273,7 @@ mixin template ServerModule() {
                     server.handleComm(player);
                 }
                 if(recv_set.isSet(player.dataSock)) {
-                    int read = player.dataSock.receive(player.receiveBuffer[player.recv_index .. $]);
+                    ptrdiff_t read = player.dataSock.receive(player.receiveBuffer[player.recv_index .. $]);
                     if(read < 1) { 
                         Log("Error reading changes from client, disconnecting");
                         recv_set.remove(player.commSock);
@@ -287,7 +287,7 @@ mixin template ServerModule() {
                 if (write_set.isSet(player.dataSock)) {
                     auto asd = toWrite.length;
                     if(player.send_index != asd) {
-                        int sent = player.dataSock.send(toWrite[player.send_index .. $]);
+                        ptrdiff_t sent = player.dataSock.send(toWrite[player.send_index .. $]);
                         if(sent < 1) {
                             recv_set.remove(player.commSock);
                             recv_set.remove(player.dataSock);
@@ -453,7 +453,7 @@ mixin template ClientModule() {
         recv_index = 0;
         send_index = 0;
 
-        int[2] frameInfo = [g_gameTick, toWrite.length];
+        int[2] frameInfo = [g_gameTick, cast(int)toWrite.length];
         if(dataSock.receive(frameInfo) != frameInfo.sizeof) {
             Log("Error receiveing frame info from server, disconnecting");
             BREAKPOINT;
@@ -464,7 +464,7 @@ mixin template ClientModule() {
         }
         receiveBuffer.length = frameInfo[1];
         assumeSafeAppend(receiveBuffer);
-        frameInfo[1] = toWrite.length;
+        frameInfo[1] = cast(int)toWrite.length;
         if(dataSock.send(frameInfo) != frameInfo.sizeof) {
             Log("Error sending frame info to client, disconnecting");
             BREAKPOINT;
@@ -485,7 +485,7 @@ mixin template ClientModule() {
             }
             if(recv_set.isSet(dataSock)) {
                 if(recv_index != receiveBuffer.length) {
-                    int read = dataSock.receive(receiveBuffer[recv_index .. $]);
+                    ptrdiff_t read = dataSock.receive(receiveBuffer[recv_index .. $]);
                     if(read < 1) {
                         Log("Error reading changes from server, disconnecting");
                         BREAKPOINT;
@@ -496,7 +496,7 @@ mixin template ClientModule() {
             if (write_set.isSet(dataSock)) {
                 if(send_index != toWrite.length) {
                     auto len = toWrite.length;
-                    int sent = dataSock.send(toWrite[send_index .. $]);
+                    ptrdiff_t sent = dataSock.send(toWrite[send_index .. $]);
                     if(sent < 1) {
                         BREAKPOINT;
                     }
@@ -561,7 +561,7 @@ mixin template ClientModule() {
             assumeSafeAppend(receiveBuffer);
 
             while(recv_index != receiveBuffer.length) {
-                int read = dataSock.receive(receiveBuffer[recv_index .. $]);
+                ptrdiff_t read = dataSock.receive(receiveBuffer[recv_index .. $]);
                 if(read < 1) {
                     Log("Pre:Error reading changes from server, disconnecting");
                     BREAKPOINT;

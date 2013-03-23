@@ -21,7 +21,6 @@ import gui.guisystem.window;
 import graphics.ogl;
 import graphics.image;
 import graphics.camera;
-import graphics.raycastgpu;
 
 import settings;
 import util.httpupload;

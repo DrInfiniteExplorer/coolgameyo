@@ -66,7 +66,7 @@ class GuiElementListBox : public GuiElement {
     }
 
     // Returns the first occurance of text
-    int getIndex(string text) {
+    ptrdiff_t getIndex(string text) {
         foreach(idx, str ; items) {
             if(str == text) return idx;
         }
@@ -85,16 +85,16 @@ class GuiElementListBox : public GuiElement {
 
     int addItem(string str, int index) {
         if(index < 0) {
-            index = items.length;
+            index = cast(int)items.length;
         }
         if (index > items.length) {
-            index = items.length;
+            index = cast(int)items.length;
         }
         if (index == items.length) {
             items.length += 1;
         }
 
-        for (int i = items.length-1; i > index; i--) {
+        for (int i = cast(int)items.length-1; i > index; i--) {
             items[i] = items[i-1];
         }
 
@@ -108,7 +108,7 @@ class GuiElementListBox : public GuiElement {
     void removeItem(string item) {
         removeItem(getIndex(item));
     }
-    void removeItem(int index) {
+    void removeItem(ptrdiff_t index) {
             enforce(index < items.length, "ListBox error: Tried to remove out of index");
         if (index < selectedIndex) {
             selectedIndex--;
@@ -116,7 +116,7 @@ class GuiElementListBox : public GuiElement {
         else if (index == selectedIndex) {
             selectedIndex = -1;
         }
-        for (int a = index; a+1 < items.length; a++){
+        for (int a = cast(int)index; a+1 < items.length; a++){
             items[a] = items[a+1];
         }
         items.length -= 1;
@@ -128,7 +128,7 @@ class GuiElementListBox : public GuiElement {
         updateScroll();
     }
 
-    int getItemCount() const {
+    size_t getItemCount() const {
         return items.length;
     }
     
@@ -138,14 +138,14 @@ class GuiElementListBox : public GuiElement {
 
     void updateScroll() {
         int height = getAbsoluteRect.size.y;
-        int neededHeight = items.length * rowHeight;
+        int neededHeight = cast(int)items.length * rowHeight;
         import std.algorithm : max;
         canScrollAmount = max(0, neededHeight - height);
         if(canScrollAmount) {
             msg("Make code to scroll so the selected item is in view");
             scrollBar.setVisible(true);
             scrollBar.amountScroll = 0;
-            scrollBar.totalScroll = items.length;
+            scrollBar.totalScroll = cast(int)items.length;
             scrollBar.scrollBar = absoluteRect.size.y / rowHeight;
         } else {
             scrollAmount = 0;
@@ -163,7 +163,7 @@ class GuiElementListBox : public GuiElement {
         }
         auto height = getAbsoluteRect.size.y;
 		foreach(idx, item ; items) {
-            auto rect = getTextRect(idx);
+            auto rect = getTextRect(cast(int)idx);
             auto pos = rect.start;
             auto relativeHeight = pos.y - absoluteRect.start.y;
             if(relativeHeight < 0) {
@@ -193,13 +193,13 @@ class GuiElementListBox : public GuiElement {
             if(m.left && m.down) {
                 if(absoluteRect.isInside(m.pos)) {
 					foreach(idx, item ; items) {
-						if (getTextRect(idx).isInside(m.pos)) {
+						if (getTextRect(cast(int)idx).isInside(m.pos)) {
                             if(selectedIndex == idx && 
                                 (e.eventTimeStamp - lastClickTime) < getDoubleClickTime() &&
                                 doubleClickCallback !is null) {
                                     doubleClickCallback(selectedIndex);
                             } else {
-    							selectItem(idx);
+    							selectItem(cast(int)idx);
                             }
 						}
 					}

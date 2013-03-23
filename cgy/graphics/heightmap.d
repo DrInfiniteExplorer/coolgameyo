@@ -288,7 +288,7 @@ class Heightmap : ShaderProgram!() {
 
         use(true);
         uniform.cellSize = vec2f(widthPerCell, depthPerCell);
-        uniform.count = max(1, _loadTextures.length);
+        uniform.count = cast(int)max(1, _loadTextures.length);
         use(false);
     }
 
@@ -306,7 +306,7 @@ class Heightmap : ShaderProgram!() {
         glBindVertexArray(vao); glError();
         glBindImageTexture(0, heightImg, 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F); glError();
         foreach(idx ; 1 .. _loadTextures.length) {
-            glBindImageTexture(idx, _loadTextures[idx], 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F); glError();
+            glBindImageTexture(cast(int)idx, _loadTextures[idx], 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F); glError();
         }
         glDrawArrays(GL_QUADS, 0, (sizeX-1)*(sizeY-1)*4); glError();
         glBindVertexArray(0); glError();

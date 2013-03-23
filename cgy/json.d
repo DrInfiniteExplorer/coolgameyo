@@ -36,7 +36,7 @@ struct Value {
 
     union { // tagged by type
         string str_;
-        real num_;
+        double num_;
         Value[string] pairs;
         Value[] elements;   // TODO: Make getter setter range thing
         bool boolval;
@@ -47,12 +47,22 @@ struct Value {
                     "Attempted to opIn_r a non-object (", this, ")")));
         return !!(name in pairs); //TODO: WTF is !! ????
     }
+
+    void opIndexAssign(Value v, string name) {
+        enforce (type == Type.object, new JsonException(text(
+            "Attempted to index a non-object with string (",
+            this, ")")));
+        pairs[name] = v;
+    }
+    
     ref Value opIndex(string name) {
         enforce (type == Type.object, new JsonException(text(
                     "Attempted to index a non-object with string (",
                     this, ")")));
+        BREAK_IF(name !in pairs);
         return pairs[name];
     }
+    
     ref Value opIndex(size_t index) {
         enforce (type == Type.array);
         return elements[index];
@@ -63,7 +73,7 @@ struct Value {
         enforce(0, new JsonException("Not a string or null"));
         return "";
     }
-    real num() @property const {
+    double num() @property const {
         enforce (type == Type.number, new JsonException("Not a number"));
         return num_;
     }
@@ -83,9 +93,9 @@ struct Value {
     //Could "return elements" for the same effect. Weight the pros and cons for it. Maybe version(...) it?
     auto asArray() {
         enforce (type == Type.array, new JsonException(text("Cant do asArray on json-value when type is ", type)));
-        return (int delegate(ref int i, ref Value v) Body) {
+        return (int delegate(ref size_t i, ref Value v) Body) {
             int ret;
-            foreach(int i ; 0 .. elements.length) {
+            foreach(size_t i ; 0 .. elements.length) {
                 ret = Body(i, elements[i]);
                 if(ret) return ret;
             }
@@ -127,7 +137,7 @@ struct Value {
     }
 
     this(string s) { type = Type.string; str_ = s; }
-    this(real n) { type = Type.number; num_ = n; }
+    this(double n) { type = Type.number; num_ = n; }
     this(Value[string] p) { type = Type.object; pairs = p; }
     this(Value[] e) { type = Type.array; elements = e; }
     this(bool b) { type = Type.bool_; boolval = b; }
@@ -167,7 +177,7 @@ static:
         colon, true_, false_, null_, comma
     }
 
-    real eatReal(ref string s, bool negative, real n) {
+    double eatReal(ref string s, bool negative, char n) {
         auto old = s;
         bool end;
         while (!end) {
@@ -179,20 +189,40 @@ static:
                           end = true;
             }
         }
+        /*
         auto r = text(negative ? "-" : "", n, old[0 .. old.length - s.length]);
-        //msg(s);
+        msg(old.length);
+        msg(s.length);
+        msg(old.length - s.length);
+        ptrdiff_t d = old.length - s.length;
+        msg(s);
+        msg(r);
+        msg(old[0 .. d]);
         return to!real(r); // BUG LINE?
+        */
+
+        ptrdiff_t diff = old.length - s.length;
+        if(negative) {
+            string numStr = old[0 .. diff];
+            double ret = to!double(numStr);
+            return -ret;
+        } else {
+            string numStr = n ~ old[0 .. diff];
+            double ret = to!double(numStr);
+            return ret;
+        }
+
     }
 
     struct Token {
         Tag tag;
         union {
             string str; 
-            real num;
+            double num;
         }
         this(Tag t) { tag = t; }
         this(string s) { tag = Tag.string; str = s; }
-        this(real n) { tag = Tag.number; num = n; }
+        this(double n) { tag = Tag.number; num = n; }
         static Token get(ref string s) {
             auto old = s;
             auto c = s.front;
@@ -229,7 +259,7 @@ static:
                 case '-':
                           return Token(eatReal(s, true, 0));
                 case '0': .. case '9':
-                          return Token(eatReal(s, false, c-'0'));
+                          return Token(eatReal(s, false, cast(char)c));
                 default:
                           enforce(false, new JsonException(
                                       text("invalid json, no case for ", c)));
@@ -269,7 +299,7 @@ static:
 
     Value parseValue(string s) { return parseValue(new Input(s)); }
     Value parseValue(Input i) {
-        string s; real n;
+        string s; double n;
         //msg(to!string(i.front.tag));
         switch (i.front.tag) {
             case Tag.string: s = i.front.str; i.popFront(); return Value(s);

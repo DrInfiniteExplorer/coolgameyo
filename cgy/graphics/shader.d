@@ -156,7 +156,7 @@ class ShaderProgram(T...){
         immutable(char)*[1] ptr;
         int[1] length;
         ptr[0] = source.ptr;
-        length[0] = source.length;
+        length[0] = cast(int)source.length;
         glShaderSource(shader, 1, ptr, length); glError();
         glCompileShader(shader); glError();
         int error;

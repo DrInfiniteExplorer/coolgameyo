@@ -75,16 +75,16 @@ final class cgyModel {
 
         meshes.length = meshData.meshes.length;
 
-        foreach(idx, mesh ; meshData.meshes) {
+        foreach(meshIdx, mesh ; meshData.meshes) {
             auto newMesh = new CGYMesh();
-            meshes[idx] = newMesh;
+            meshes[meshIdx] = newMesh;
             //TODO: Fix thingy mahjingy
             //newMesh.shader = mesh.shader;
             newMesh.name = mesh.name;
 
             newMesh.vertices.length = mesh.verts.length;
-            foreach(idx, vertex ; mesh.verts) {
-                cgyVertex* vert = &newMesh.vertices[idx];
+            foreach(vertIdx, vertex ; mesh.verts) {
+                cgyVertex* vert = &newMesh.vertices[vertIdx];
                 vert.pos = vertex.pos;
                 vert.st[0] = vertex.s;
                 vert.st[1] = vertex.t;
@@ -96,8 +96,8 @@ final class cgyModel {
 
 
             newMesh.triangles.length = mesh.tris.length;
-            foreach(idx, triangle ; mesh.tris) {
-                cgyTri* tri = &newMesh.triangles[idx];
+            foreach(triIdx, triangle ; mesh.tris) {
+                cgyTri* tri = &newMesh.triangles[triIdx];
                 tri.idx[] = triangle.verts[];
             }
         }
@@ -173,7 +173,7 @@ final class cgyModel {
         foreach(mesh ; meshes) {
             glBindBuffer(GL_ARRAY_BUFFER, mesh.meshVBO); glError();
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.idxVBO); glError();
-            glDrawElements(GL_TRIANGLES, mesh.triangles.length, GL_UNSIGNED_INT, /*offset in idx-vbo*/cast(void*)0); glError();
+            glDrawElements(GL_TRIANGLES, cast(int)mesh.triangles.length, GL_UNSIGNED_INT, /*offset in idx-vbo*/cast(void*)0); glError();
         }
 
         glDisableVertexAttribArray(0); glError();

@@ -28,7 +28,7 @@ class GuiElementSimpleGraph(Type) : public GuiElement {
     }    
     
     void setData(const(Type)[] data,  Type _min, Type _max) {
-        length = data.length;
+        length = cast(int)data.length;
         min = _min;
         max = _max;
         lines.makeGraph(absoluteRect, data, min, max);

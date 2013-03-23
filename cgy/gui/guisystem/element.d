@@ -149,10 +149,7 @@ class GuiElement {
     }
     
     void removeChild(GuiElement e){
-        bool b(GuiElement a){
-            return a is e;
-        }
-        children = remove!(b)(children);
+        children = children.remove(countUntil(children, e));
         e.parent = null;
     }
     void addChild(GuiElement e) {

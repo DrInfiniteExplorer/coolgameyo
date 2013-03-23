@@ -5,11 +5,12 @@ module util.memory;
 import std.exception;
 import std.string;
 
+import windows;
+
 
 version(Windows){
     //    import std.c.windows.windows;
     //    import win32.windows : SYSTEM_INFO, GetSystemInfo, RaiseException; //Not available in std.c.windows.windows
-    import win32.windows;
 }
 
 void[] allocateBlob(size_t count, size_t blobSize) {
@@ -60,16 +61,16 @@ struct ScopeMemory(T) {
 version(Windows){
     //    import std.c.windows.windows;
     //    import win32.windows : SYSTEM_INFO, GetSystemInfo, RaiseException; //Not available in std.c.windows.windows
-    import win32.psapi;
+
 }
 
 alias typeof(GetProcessMemoryInfo)* GetProcessMemoryInfoPtr;
 
 extern(Windows) BOOL initGPMI(HANDLE h, PPROCESS_MEMORY_COUNTERS p, DWORD d) {
-    HANDLE hh = LoadLibrary("kernel32.dll");
+    HANDLE hh = LoadLibraryA("kernel32.dll");
     getProcessMemoryInfo = cast(typeof(getProcessMemoryInfo))GetProcAddress(hh, "GetProcessMemoryInfo");
     if(getProcessMemoryInfo is null) {
-        hh = LoadLibrary("psapi.dll");
+        hh = LoadLibraryA("psapi.dll");
         getProcessMemoryInfo = cast(typeof(getProcessMemoryInfo))GetProcAddress(hh, "GetProcessMemoryInfo");
     }
     return getProcessMemoryInfo(h,p,d);

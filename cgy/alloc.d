@@ -44,7 +44,7 @@ void reset_temp_alloc() {
         arena = malloc2(x);
     }
 
-    atomicStore(current_offset, 0);
+    atomicStore(current_offset, 0L);
 }
 
 // DO NOT PUT THINGS WHICH POINT TO GC HEAP HERE ^_^

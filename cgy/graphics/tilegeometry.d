@@ -49,7 +49,7 @@ class TileFaces {
 
     GRFace[] faces;
     bool available;
-    debug int thread;
+    debug ptrdiff_t thread;
 
     this() {
         faces.reserve(100);
@@ -394,7 +394,7 @@ final class TileGeometry : Module, WorldStateListener
         regionsToUpdate = array(uniq(regionsToUpdate));
         auto diff = len - regionsToUpdate.length;
         if(diff != 0) {
-            g_Statistics.GraphRegionsProgress(diff);
+            g_Statistics.GraphRegionsProgress(cast(int)diff);
         }
         //writeln("after ", regionsToUpdate.length);        
         
@@ -443,7 +443,7 @@ final class TileGeometry : Module, WorldStateListener
         if(newRegions.length != 0){
             updateMutex.lock();
             scope(exit) updateMutex.unlock();
-            g_Statistics.GraphRegionsNew(newRegions.length);
+            g_Statistics.GraphRegionsNew(cast(int)newRegions.length);
             regionsToUpdate ~= newRegions;
         }
     }
@@ -453,7 +453,7 @@ final class TileGeometry : Module, WorldStateListener
         updateMutex.lock();
         scope(exit) updateMutex.unlock();
         int removedCount = 0;
-        int count = regionsToUpdate.length;
+        int count = cast(int)regionsToUpdate.length;
         for(int i = 0; i < count; i++) {
             if(regionsToUpdate[i].getSectorNum() == sectorNum) {
                 regionsToUpdate[i] = regionsToUpdate[$-1];

@@ -155,14 +155,13 @@ void MaterialEditor() {
         if(mc.left && mc.down) {
             if(materialsList.getSelectedItemIndex() == -1) return true;
             auto color = selectedMaterial.color;
-
-            import win32.windows;
+            import windows;
             COLORREF asRef = color.toColorUInt();
             COLORREF[16] customs;
             foreach(ref clr ; customs) {
                 clr = asRef;
             }
-            CHOOSECOLOR cc;
+            CHOOSECOLORA cc;
             cc.lStructSize = cc.sizeof;
             import util.window;
             cc.hwndOwner = getMainWindow();
@@ -173,7 +172,7 @@ void MaterialEditor() {
             cc.lCustData = 0;
             cc.lpfnHook = null;
             cc.lpTemplateName  = null;
-            if(ChooseColor(&cc)) {
+            if(ChooseColorA(&cc)) {
                 import graphics.image;
                 Image colorImg = Image(null, 1, 1);
                 colorImg.setPixel(0, 0, cc.rgbResult);

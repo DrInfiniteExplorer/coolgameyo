@@ -281,12 +281,10 @@ class Sector {
         entities ~= o;
     }
     void removeUnit(Unit u) {
-        bool pred(Unit a) { return a == u; }
-        units = remove!pred(units);
+        units = units.remove(units.countUntil(u));
     }
     void removeEntity(Entity o) {
-        bool pred(Entity a) { return a == o; }
-        entities = remove!pred(entities);
+        entities = entities.remove(entities.countUntil(o));
     }
     
     SectorNum getSectorNum() const @property { return sectorNum; }

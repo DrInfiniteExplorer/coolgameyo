@@ -138,7 +138,7 @@ class SplineEditor : GuiElementWindow {
     }
 
     void onMoveUp() {
-        int cnt = listBox.getItemCount();
+        int cnt = cast(int)listBox.getItemCount();
         if(cnt < 2) {
             return;
         }
@@ -154,7 +154,7 @@ class SplineEditor : GuiElementWindow {
 
     }
     void onMoveDown() {
-        int cnt = listBox.getItemCount();
+        int cnt = cast(int)listBox.getItemCount();
         if(cnt < 2) {
             return;
         }
@@ -201,7 +201,7 @@ class SplineEditor : GuiElementWindow {
         }
 
         auto Knotify(alias Mixer)(float t, vec3f[] ar) {
-            int count = ar.length;
+            int count = cast(int)ar.length;
             int nspans = count-3;
 
             double x = clamp(cast(double)t, 0.0, 1.0) * to!double(nspans);

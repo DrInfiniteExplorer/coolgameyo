@@ -107,7 +107,7 @@ class TileRenderer {
 
         auto primitiveCount = geometry.faces.length;
         auto geometrySize = primitiveCount * GRFace.sizeof;
-        info.quadCount = primitiveCount;
+        info.quadCount = cast(int)primitiveCount;
         scope(exit) geometry.clear();
 
         if(oldInfo !is null && oldInfo.vbo){

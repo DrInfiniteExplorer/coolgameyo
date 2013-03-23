@@ -141,10 +141,8 @@ mixin template Heightmap() {
             }
             if(heightmapTasks !is null) {
                 synchronized(heightmapTasks) {
-                    bool pred(HeightmapTaskState a) {
-                        return a == state;
-                    }
-                    heightmapTasks.list = remove!pred(heightmapTasks.list);
+                    heightmapTasks.list = heightmapTasks.list.remove(heightmapTasks.list.countUntil(state));
+
                     if (heightmapTasks.list.empty) {
                         g_Statistics.HeightmapsNew(0);
                     }

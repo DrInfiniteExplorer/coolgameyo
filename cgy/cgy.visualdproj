@@ -4,7 +4,7 @@
   <obj>0</obj>
   <link>0</link>
   <lib>0</lib>
-  <subsystem>0</subsystem>
+  <subsystem>1</subsystem>
   <multiobj>0</multiobj>
   <singleFileCompilation>0</singleFileCompilation>
   <oneobj>0</oneobj>
@@ -82,11 +82,12 @@
   <cv2pdbOptions />
   <objfiles />
   <linkswitches />
-  <libfiles>comdlg32.lib gdi32.lib win32.lib advapi32.lib derelictil.lib derelictgl.lib derelictutil.lib derelictsdl.lib</libfiles>
+  <libfiles>comdlg32.lib gdi32.lib advapi32.lib derelictil.lib derelictgl.lib derelictutil.lib derelictsdl.lib</libfiles>
   <libpaths />
   <deffile />
   <resfile />
   <exefile>$(OutDir)\$(ProjectName).exe</exefile>
+  <useStdLibPath>1</useStdLibPath>
   <additionalOptions>-L/SUBSYSTEM:CONSOLE:4.0</additionalOptions>
   <preBuildCommand>@taskkill /f /im cgy.exe &gt;nul 2&gt;&amp;1
 @ver &gt; nul</preBuildCommand>
@@ -180,27 +181,28 @@
   <deffile />
   <resfile />
   <exefile>$(OutDir)\$(ProjectName).exe</exefile>
+  <useStdLibPath>1</useStdLibPath>
   <additionalOptions>-L/SUBSYSTEM:CONSOLE:4.0</additionalOptions>
   <preBuildCommand />
   <postBuildCommand />
   <filesToClean>*.obj;*.cmd;*.build;*.json;*.dep</filesToClean>
  </Config>
- <Config name="Release_Release" platform="Win32">
+ <Config name="Debug" platform="x64">
   <obj>0</obj>
   <link>0</link>
   <lib>0</lib>
-  <subsystem>0</subsystem>
+  <subsystem>1</subsystem>
   <multiobj>0</multiobj>
-  <singleFileCompilation>0</singleFileCompilation>
+  <singleFileCompilation>2</singleFileCompilation>
   <oneobj>0</oneobj>
   <trace>0</trace>
   <quiet>0</quiet>
   <verbose>0</verbose>
   <vtls>0</vtls>
-  <symdebug>2</symdebug>
-  <optimize>1</optimize>
+  <symdebug>1</symdebug>
+  <optimize>0</optimize>
   <cpu>0</cpu>
-  <isX86_64>0</isX86_64>
+  <isX86_64>1</isX86_64>
   <isLinux>0</isLinux>
   <isOSX>0</isOSX>
   <isWindows>0</isWindows>
@@ -213,12 +215,12 @@
   <useIn>0</useIn>
   <useOut>0</useOut>
   <useArrayBounds>0</useArrayBounds>
-  <noboundscheck>1</noboundscheck>
+  <noboundscheck>0</noboundscheck>
   <useSwitchError>0</useSwitchError>
-  <useUnitTests>0</useUnitTests>
+  <useUnitTests>1</useUnitTests>
   <useInline>0</useInline>
-  <release>1</release>
-  <preservePaths>0</preservePaths>
+  <release>0</release>
+  <preservePaths>1</preservePaths>
   <warnings>1</warnings>
   <infowarnings>1</infowarnings>
   <checkProperty>0</checkProperty>
@@ -250,7 +252,7 @@
   <debuglevel>0</debuglevel>
   <debugids />
   <versionlevel>0</versionlevel>
-  <versionids />
+  <versionids>WindowsXP</versionids>
   <dump_source>0</dump_source>
   <mapverbosity>0</mapverbosity>
   <createImplib>0</createImplib>
@@ -267,23 +269,25 @@
   <cv2pdbOptions />
   <objfiles />
   <linkswitches />
-  <libfiles>gdi32.lib win32.lib advapi32.lib derelictil.lib derelictgl.lib derelictutil.lib derelictsdl.lib</libfiles>
+  <libfiles>user32.lib comdlg32.lib gdi32.lib advapi32.lib derelictil.lib derelictgl.lib derelictutil.lib derelictsdl.lib</libfiles>
   <libpaths />
   <deffile />
   <resfile />
   <exefile>$(OutDir)\$(ProjectName).exe</exefile>
-  <additionalOptions>-L/SUBSYSTEM:CONSOLE:4.0 -wi</additionalOptions>
-  <preBuildCommand />
+  <useStdLibPath>1</useStdLibPath>
+  <additionalOptions />
+  <preBuildCommand>@taskkill /f /im cgy.exe &gt;nul 2&gt;&amp;1
+@ver &gt; nul</preBuildCommand>
   <postBuildCommand />
   <filesToClean>*.obj;*.cmd;*.build;*.json;*.dep</filesToClean>
  </Config>
- <Config name="Release_UniLink" platform="Win32">
+ <Config name="Release" platform="x64">
   <obj>0</obj>
   <link>0</link>
   <lib>0</lib>
-  <subsystem>0</subsystem>
+  <subsystem>1</subsystem>
   <multiobj>0</multiobj>
-  <singleFileCompilation>0</singleFileCompilation>
+  <singleFileCompilation>2</singleFileCompilation>
   <oneobj>0</oneobj>
   <trace>0</trace>
   <quiet>0</quiet>
@@ -292,7 +296,7 @@
   <symdebug>0</symdebug>
   <optimize>1</optimize>
   <cpu>0</cpu>
-  <isX86_64>0</isX86_64>
+  <isX86_64>1</isX86_64>
   <isLinux>0</isLinux>
   <isOSX>0</isOSX>
   <isWindows>0</isWindows>
@@ -308,9 +312,9 @@
   <noboundscheck>1</noboundscheck>
   <useSwitchError>0</useSwitchError>
   <useUnitTests>0</useUnitTests>
-  <useInline>0</useInline>
-  <release>0</release>
-  <preservePaths>0</preservePaths>
+  <useInline>1</useInline>
+  <release>1</release>
+  <preservePaths>1</preservePaths>
   <warnings>1</warnings>
   <infowarnings>1</infowarnings>
   <checkProperty>0</checkProperty>
@@ -342,7 +346,7 @@
   <debuglevel>0</debuglevel>
   <debugids />
   <versionlevel>0</versionlevel>
-  <versionids />
+  <versionids>WindowsXP</versionids>
   <dump_source>0</dump_source>
   <mapverbosity>0</mapverbosity>
   <createImplib>0</createImplib>
@@ -359,16 +363,15 @@
   <cv2pdbOptions />
   <objfiles />
   <linkswitches />
-  <libfiles>gdi32.lib win32.lib advapi32.lib derelictil.lib derelictgl.lib derelictutil.lib derelictsdl.lib</libfiles>
+  <libfiles>user32.lib comdlg32.lib gdi32.lib advapi32.lib derelictil.lib derelictgl.lib derelictutil.lib derelictsdl.lib</libfiles>
   <libpaths />
   <deffile />
   <resfile />
   <exefile>$(OutDir)\$(ProjectName).exe</exefile>
-  <additionalOptions>-L/SUBSYSTEM:CONSOLE:4.0 -wi -c</additionalOptions>
+  <useStdLibPath>1</useStdLibPath>
+  <additionalOptions>-L/SUBSYSTEM:CONSOLE:4.0</additionalOptions>
   <preBuildCommand />
-  <postBuildCommand>move $(IntDir)\$(TargetName).exe $(IntDir)\$(TargetName).obj
-d:\D\ulnb0333\ulink.exe $(IntDir)\$(TargetName).obj gdi32.lib win32.lib advapi32.lib derelictil.lib derelictgl.lib derelictutil.lib derelictsdl.lib -ZO$(IntDir)\$(TargetName).exe -v
-</postBuildCommand>
+  <postBuildCommand />
   <filesToClean>*.obj;*.cmd;*.build;*.json;*.dep</filesToClean>
  </Config>
  <Folder name="cgy">
@@ -409,7 +412,6 @@ d:\D\ulnb0333\ulink.exe $(IntDir)\$(TargetName).obj gdi32.lib win32.lib advapi32
    <File path="graphics\misc.d" />
    <File path="graphics\obj.d" />
    <File path="graphics\ogl.d" />
-   <File path="graphics\raycastgpu.d" />
    <File path="graphics\renderconstants.d" />
    <File path="graphics\renderer.d" />
    <File path="graphics\shader.d" />
@@ -599,7 +601,6 @@ d:\D\ulnb0333\ulink.exe $(IntDir)\$(TargetName).obj gdi32.lib win32.lib advapi32
    <File path="worldstate\block.d" />
    <File path="worldstate\floodfill.d" />
    <File path="worldstate\heightmap.d" />
-   <File path="worldstate\population.d" />
    <File path="worldstate\sector.d" />
    <File path="worldstate\sizes.d" />
    <File path="worldstate\tile.d" />
@@ -626,5 +627,6 @@ d:\D\ulnb0333\ulink.exe $(IntDir)\$(TargetName).obj gdi32.lib win32.lib advapi32
   <File path="treemanager.d" />
   <File path="unit.d" />
   <File path="unittypemanager.d" />
+  <File path="windows.d" />
  </Folder>
 </DProject>

@@ -57,12 +57,6 @@ import worldstate.heightmap;
 
 alias ValueMap2Dd ValueMap;
 
-immutable Dim = 400;
-//immutable ptPerLayer = 400;
-alias Dim ptPerLayer;
-
-
-immutable StepIter = 4*25;
 
 /* pos 0 not used */
 /* pt2tile-scale*/
@@ -71,7 +65,7 @@ immutable StepIter = 4*25;
 //immutable mapScale = [0, 3200, 12800, 51200, 204800, /*start mipmaps */ 819200,  819200, 819200];
 
 //1 mil värt av värld. Yeah.
-immutable worldSize = 10 * 1_000;
+immutable worldSize = 2 * 10 * 1_000;
 //immutable worldSize = 1 * 1_000;
 
 immutable halfWorldSize = vec3i(worldSize/2, worldSize/2, 0);

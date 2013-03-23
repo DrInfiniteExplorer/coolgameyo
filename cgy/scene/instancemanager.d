@@ -59,7 +59,7 @@ final class InstanceManager {
         auto ptr = instanceData.ptr;
         instanceData.length = instanceData.length + 1;
         if(ptr !is instanceData.ptr) {
-            foreach(idx, ptrPtr ; instancePtrArray) {
+            foreach(idx, _ptrPtr ; instancePtrArray) {
                 *ptrPtr = &instanceData[idx];
             }
         } else {
@@ -76,8 +76,8 @@ final class InstanceManager {
         instancePtrArray.length = instancePtrArray.length - 1;
 
         if(ptr !is instanceData.ptr) {
-            foreach(idx, ptrPtr ; instancePtrArray) {
-                *ptrPtr = &instanceData[idx];
+            foreach(instanceIdx, _ptrPtr ; instancePtrArray) {
+                *ptrPtr = &instanceData[instanceIdx];
             }
         }
     }
@@ -143,7 +143,7 @@ final class InstanceManager {
         glVertexAttribPointer(8, 1, GL_UNSIGNED_BYTE, GL_FALSE, InstanceData.sizeof, cast(void*)InstanceData().frameIndex.offsetof); glError();
         */
 
-        glDrawElementsInstanced(GL_TRIANGLES, 3*mesh.triangles.length, GL_UNSIGNED_INT, cast(void*)0, instanceData.length); glError();
+        glDrawElementsInstanced(GL_TRIANGLES, 3*cast(int)mesh.triangles.length, GL_UNSIGNED_INT, cast(void*)0, cast(int)instanceData.length); glError();
         //glDrawElements(GL_TRIANGLES, 3*mesh.triangles.length, GL_UNSIGNED_INT, cast(void*)0);
 
         glVertexAttribDivisor(5, 0); glError();

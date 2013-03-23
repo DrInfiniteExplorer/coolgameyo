@@ -131,7 +131,7 @@ class LineShader {
         glVertexAttribPointer(lineProgram.color, 3, GL_FLOAT, GL_FALSE, LineVertex.sizeof, cast(void*)&l.vertices[0].color.x);
         glError();
 
-        glDrawArrays(GL_LINE_STRIP, 0, l.vertices.length);
+        glDrawArrays(GL_LINE_STRIP, 0, cast(int)l.vertices.length);
         glError();
 
         glDisableVertexAttribArray(lineProgram.position);

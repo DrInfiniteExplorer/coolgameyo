@@ -27,7 +27,11 @@ version (Posix) {
     import std.c.stdlib;
 }
 
-int workerID = -1; // thread local, set by scheduler
+version(Windows) {
+    import windows;
+}
+
+ptrdiff_t workerID = -1; // thread local, set by scheduler
 
 __gshared int g_gameTick;
 
@@ -129,6 +133,7 @@ void BREAKPOINT(uint doBreak=1) {
 alias BREAKPOINT BREAK_IF;
 
 unittest {
+    import windows;
     SYSTEM_INFO si;
     GetSystemInfo(&si);
     assert(si.dwPageSize == 4096);
@@ -219,10 +224,11 @@ void setThreadName(string threadName) {
         info.dwFlags = 0;
 
         uint* ptr = cast(uint*)&info;
+        DWORD_PTR ptrAsDWORD = cast(DWORD_PTR)ptr;
 
         try//__try
         {
-            RaiseException( MS_VC_EXCEPTION, 0u, info.sizeof/ptr.sizeof, ptr );
+            RaiseException( MS_VC_EXCEPTION, 0u, info.sizeof/ptr.sizeof, ptrAsDWORD );
         }
         catch(Throwable o) //__except(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -245,11 +251,10 @@ version(Windows){
     /*import win32.windows : GlobalAlloc, GlobalLock, GlobalUnlock, GMEM_MOVEABLE,
         OpenClipboard, EmptyClipboard, SetClipboardData, CF_TEXT, CloseClipboard, GetClipboardData;
     */
-    import win32.windows;
 
     void setCopyString(string str) {
         auto strZ = str.toStringz();
-        DWORD len = str.length+1;
+        DWORD len = cast(DWORD)str.length+1;
         HANDLE hMem =  GlobalAlloc(GMEM_MOVEABLE, len);
         memcpy(GlobalLock(hMem), strZ, len);
         GlobalUnlock(hMem);
@@ -298,14 +303,14 @@ version(Windows) {
     //ret: 1 is affermative, 2 is negative, 3 is HERPDERPBACON?
     int NativeDialogBox(string msg, string title, NDBAnswer a) {
         if(a == NDBAnswer.Retry_Cancel) {
-            auto b = MessageBox(null, msg.toStringz, title.toStringz, cast(uint)MB_RETRYCANCEL);
+            auto b = MessageBoxA(null, msg.toStringz, title.toStringz, cast(uint)MB_RETRYCANCEL);
             if(b == IDCANCEL) return 2;
             if(b == IDRETRY) return 1;
             enforce(0, "Derp? NOOOO! " ~ to!string(b));
         } else if(a == NDBAnswer.Ok) {
-            auto b = MessageBox(null, msg.toStringz, title.toStringz, cast(uint)MB_OK);
+            auto b = MessageBoxA(null, msg.toStringz, title.toStringz, cast(uint)MB_OK);
         } else if(a == NDBAnswer.Yes_No) {
-            auto b = MessageBox(null, msg.toStringz, title.toStringz, cast(uint)MB_YESNO);
+            auto b = MessageBoxA(null, msg.toStringz, title.toStringz, cast(uint)MB_YESNO);
             if(b == IDYES) return 1;
             if(b == IDNO) return 2;
             enforce(0, "Derp? NOOOO! " ~ to!string(b));

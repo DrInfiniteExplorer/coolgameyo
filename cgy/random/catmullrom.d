@@ -35,7 +35,7 @@ body{
     
         return cast(Unqual!Type)  (((c3*t + c2)*t + c1)*t + c0);
     } else {
-        int count = ar.length;
+        int count = cast(int)ar.length;
         int nspans = count-3;
     
         double x = clamp(t, 0.0, 1.0) * to!double(nspans);

@@ -64,7 +64,7 @@ mixin template WorldGenerator() {
         return heightMaps.getSoil!true(pos);
     }
 
-    void fillSector(Sector sector, SectorHeightmap heightmap) {
+    void fillSector(Sector sector, SectorHeightmap _heightmap) {
 
         double[SectorSize.x][SectorSize.y] heightValues;
         double[SectorSize.x][SectorSize.y] soilValues;
@@ -75,7 +75,7 @@ mixin template WorldGenerator() {
             soilValues[y][x] = getSoil(pos); //getValueInterpolated(1, ));
         }
 
-        auto heightmap = heightmap.getMaxPerBlock();
+        auto heightmap = _heightmap.getMaxPerBlock();
 
         auto sectorNum = sector.getSectorNum();
         auto abs = sectorNum.toBlockNum().value;
@@ -196,11 +196,11 @@ mixin template WorldGenerator() {
 
 
     }
-    ushort getBasicTileType(string group) { 
+    ushort getBasicTileType(string _group) { 
         randomNumber++;
 
-        auto group = tileSys.getGroup(group);
-        int idx = randomNumber % group.length;
+        auto group = tileSys.getGroup(_group);
+        int idx = randomNumber % cast(int)group.length;
         auto id = group[idx].id;
         return id;
     }

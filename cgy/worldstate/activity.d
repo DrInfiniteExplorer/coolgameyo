@@ -22,7 +22,7 @@ import worldstate.time;
 immutable SectorTimeoutTicks = TICKS_PER_SECOND * 15;
 
 
-private mixin template ActivityHandlerMethods() {
+mixin template ActivityHandlerMethods() {
 
     int[SectorNum] activeSectors; //Number of clans active in sector X.
 
@@ -178,7 +178,8 @@ struct WallBetweenSectors {
         auto wall = map!(b)(RangeFromTo (bb+start, bb+end));
 
         foreach (bn; wall) {
-            if (y(BlockNum(bn.value+delta), bn)) return 1;
+            auto derp = BlockNum(bn.value+delta);
+            if (y(derp, bn)) return 1;
         }
 
         return 0;

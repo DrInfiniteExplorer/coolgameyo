@@ -77,8 +77,8 @@ bool tcpSendFile(Socket sock, string filePath, int bufferSize = int.max) {
     auto memfile = new MmFile(filePath, MmFile.Mode.readWrite, 0, null, 0);
     scope(exit) delete memfile;
     auto filePtr = cast(byte[])memfile[];
-    int sentSoFar = 0;
-    int totalSize = filePtr.length;
+    size_t sentSoFar = 0;
+    size_t totalSize = filePtr.length;
 
     if(sock.send((&totalSize)[0..1]) != 4) {
         msg("Error sending file size: " ~ filePath);
@@ -86,8 +86,8 @@ bool tcpSendFile(Socket sock, string filePath, int bufferSize = int.max) {
     }
 
     while(sentSoFar != totalSize) {
-        int toSend = min(bufferSize, totalSize - sentSoFar);
-        int sent = sock.send(filePtr[sentSoFar .. sentSoFar + toSend]);
+        size_t toSend = min(bufferSize, totalSize - sentSoFar);
+        ptrdiff_t sent = sock.send(filePtr[sentSoFar .. sentSoFar + toSend]);
         if(sent < 1) {
             msg("Socket error while sending file: " ~ filePath);
             return false;
@@ -100,8 +100,8 @@ bool tcpSendFile(Socket sock, string filePath, int bufferSize = int.max) {
 bool tcpReceiveFile(Socket sock, string filePath, int bufferSize = int.max) {
     import std.algorithm : min;
     import std.mmfile;
-    int readSoFar = 0;
-    int totalSize;
+    size_t readSoFar = 0;
+    size_t totalSize;
 
     if(sock.receive((&totalSize)[0..1]) != 4) {
         msg("Error receiving file size: " ~ filePath);
@@ -113,8 +113,8 @@ bool tcpReceiveFile(Socket sock, string filePath, int bufferSize = int.max) {
     auto filePtr = cast(byte[])memfile[];
 
     while(readSoFar != totalSize) {
-        int toRead = min(bufferSize, totalSize - readSoFar);
-        int read = sock.receive(filePtr[readSoFar .. readSoFar + toRead]);
+        size_t toRead = min(bufferSize, totalSize - readSoFar);
+        ptrdiff_t read = sock.receive(filePtr[readSoFar .. readSoFar + toRead]);
         if(read < 1) {
             msg("Socket error while receiving file: " ~ filePath);
             return false;

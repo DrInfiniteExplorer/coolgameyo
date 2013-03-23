@@ -97,7 +97,7 @@ class GuiElementEditbox : public GuiElement {
         }
     }
     
-    int getPixelFromPos(size_t pos) {
+    int getPixelFromPos(int pos) {
         vec2i charSize = font.glyphSize();
         return 2 + pos * charSize.x;
     }
@@ -201,11 +201,11 @@ class GuiElementEditbox : public GuiElement {
                 bool inWhitespace, foundWhitespace;
                 foreach(pos ; startMarker .. content.length) {
                     auto ch = content[pos];
-                    startMarker = pos+1;
+                    startMarker = cast(int)pos+1;
                     inWhitespace = -1 != std.string.indexOf(std.string.whitespace, ch);
                     if(inWhitespace){ foundWhitespace = true; }
                     if(foundWhitespace && !inWhitespace) {
-                        startMarker = pos;
+                        startMarker = cast(int)pos;
                         break;
                     }
                 }
@@ -238,7 +238,7 @@ class GuiElementEditbox : public GuiElement {
             startMarker = 0;
             moved = true;
         } else if (sdlSym == SDLK_END || (sdlSym == SDLK_KP1 && !(sdlMod & KMOD_NUM))) {
-            startMarker = content.length;
+            startMarker = cast(int)content.length;
             moved = true;
         }
         if (moved && !(sdlMod & KMOD_SHIFT)) {
@@ -275,7 +275,7 @@ class GuiElementEditbox : public GuiElement {
             return true;
         }
         if (sdlSym == SDLK_a && sdlMod & KMOD_CTRL) {
-            startMarker = content.length;
+            startMarker = cast(int)content.length;
             stopMarker = 0;
             return true;
         }
@@ -300,8 +300,8 @@ class GuiElementEditbox : public GuiElement {
             auto m = e.mouseClick;
             if (m.left && m.down) {
                 size_t stop = determineCharPos(m.pos);
-                startMarker = stop;
-                stopMarker = stop;
+                startMarker = cast(int)stop;
+                stopMarker = cast(int)stop;
                 selecting = true;
             }
             //TODO: Add checking so that we pressed down inside this editbox as well.
@@ -313,7 +313,7 @@ class GuiElementEditbox : public GuiElement {
         if (e.type == GuiEventType.MouseMove && selecting) {
             auto m = e.mouseMove;
             size_t start = determineCharPos(m.pos);
-            startMarker = start;
+            startMarker = cast(int)start;
         }
         return super.onEvent(e);
     }

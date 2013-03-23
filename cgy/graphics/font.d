@@ -139,7 +139,7 @@ class StringTexture {
         destroyed = true;
     }
 
-    void resize(uint length){
+    void resize(size_t length){
         vertices.length = length;
         if(vbo){
             destroy();
@@ -184,8 +184,8 @@ class StringTexture {
             BREAK_IF(cnt != currentText.length);
             BREAK_IF(cnt > vertices.length);
             vec2i pos = vec2i(0);
-            foreach(cnt, ch ; currentText.str) {
-                if (cnt < 0 || cnt > currentText.length) {
+            foreach(idx, ch ; currentText.str) {
+                if (idx < 0 || idx > currentText.length) {
                     writeln(text);
                     BREAKPOINT;
                 }
@@ -198,7 +198,7 @@ class StringTexture {
                     pos.y++;
                     pos.x = 0;
                 }
-                vertices[cnt] = font.getQuad(ch, pos);
+                vertices[idx] = font.getQuad(ch, pos);
             }
             if(!resized){
                 glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -234,7 +234,7 @@ class StringTexture {
         glError();
         glBindTexture(GL_TEXTURE_2D, texId);
         glError();
-        FontShader().render(rect, vbo, currentText.str.length, transparent, color);
+        FontShader().render(rect, vbo, cast(int)currentText.str.length, transparent, color);
     }
 };
 

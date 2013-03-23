@@ -43,10 +43,10 @@ shared static this() {
 
 
 class HeightMaps {
-    int worldSize; //In meters
-    int mapSize; //In samples
-    int mapSizeSQ;
-    uint mapSizeBytes;
+    size_t worldSize; //In meters
+    size_t mapSize; //In samples
+    size_t mapSizeSQ;
+    size_t mapSizeBytes;
     WorldMap worldMap;
 
     MmFile heightmapFile;
@@ -127,16 +127,16 @@ class HeightMaps {
         soilFile = new MmFile(soilPath, MmFile.Mode.readWrite, mapSizeBytes, null, 0);
         soilData = cast(float[])soilFile[];
 
-        uint LIMIT_STEP = mapSizeSQ / 2500;
+        size_t LIMIT_STEP = mapSizeSQ / 2500;
         //for(uint i = 0; i < LIMIT; i++) {
-        uint progress = 0;
+        size_t progress = 0;
         //foreach(uint i, ref value ; parallel(mapData)) {
-        foreach(uint i, ref value ; mapData) {
+        foreach(size_t i, ref value ; mapData) {
                 if( (i % LIMIT_STEP) == 0) {
                 progress += LIMIT_STEP;
                 msg("Progress: ", 100.0f * cast(float)progress / mapSizeSQ);
             }
-            auto pos = vec2i(i % mapSize, i / mapSize);
+            auto pos = vec2i(cast(int)(i % mapSize), cast(int)(i / mapSize));
             value = getOriginalHeight(pos*sampleIntervall);
         }
 

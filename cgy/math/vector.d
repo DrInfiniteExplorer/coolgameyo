@@ -73,8 +73,8 @@ struct vector3(T) {
         ubyte[4] clr = toColorUByte(alpha);
         return *cast(uint*)clr.ptr;
     }
-    void fromColor(uint clr) {
-        ubyte[4] clr = *cast(ubyte[4]*)&clr;
+    void fromColor(uint _clr) {
+        ubyte[4] clr = *cast(ubyte[4]*)&_clr;
         x = cast(T)clr[0];
         y = cast(T)clr[1];
         z = cast(T)clr[2];

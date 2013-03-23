@@ -103,7 +103,7 @@ void renderLineList(vec3d camPos, void delegate (vec3f color, float radius) set)
         glVertexAttribPointer(0, 3, GL_DOUBLE, GL_FALSE, vec3d.sizeof, cast(const void*)data.points.ptr);
         glError();
         set(cast(vec3f)data.color, data.radius);
-        glDrawArrays(GL_LINE_STRIP, 0, data.points.length);
+        glDrawArrays(GL_LINE_STRIP, 0, cast(int)data.points.length);
         foreach(ref pt ; data.points) {
             auto a = (cast(vec3d)pt)+camPos;
             //pt.x = a.x;

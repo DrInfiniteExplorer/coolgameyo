@@ -233,7 +233,7 @@ final class FortuneVoronoi {
         Event[] startEvents;
         startEvents.length = sites.length;
         foreach(idx, pt ; points) {
-            auto site = new Site(pt, idx);
+            auto site = new Site(pt, cast(int)idx);
             sites[idx] = site;
             startEvents[idx] = cast(Event)newSite(site);
         }
@@ -294,10 +294,7 @@ final class PQ {
 
     void remove(Event e) {
         cnt++;
-        bool pred(Event f) {
-            return f == e;
-        }
-        events = std.algorithm.remove!pred(events);
+        events = events.remove(countUntil(events, e));
         events.sort; //Dunno if nexxxecccarry but wutlol!
     }
     bool empty() @property const { return events.length == 0; }

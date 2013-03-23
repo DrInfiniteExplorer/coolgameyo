@@ -30,7 +30,7 @@ final class Vert {
 }
 
 final class Tri {
-    size_t[3] verts;
+    uint[3] verts;
 }
 
 

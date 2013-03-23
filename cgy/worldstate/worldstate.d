@@ -54,7 +54,6 @@ import          worldstate.ambient;
 public import   worldstate.block;
 import          worldstate.floodfill;
 import          worldstate.heightmap;
-import          worldstate.population;
 public import   worldstate.sector;
 public import   worldstate.sizes;
 public import   worldstate.tile;
@@ -100,7 +99,6 @@ class WorldState {
 
     WorldMap worldMap;
 
-    mixin WorldPopulationMixin;
     mixin WorldTimeClockCode;
     mixin LightStorageMethods;
     mixin ActivityHandlerMethods;

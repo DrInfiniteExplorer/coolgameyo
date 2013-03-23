@@ -20,8 +20,6 @@ immutable deltaTime = 0.02;
 immutable rainRate = 0.012;
 immutable evaporationConstant = 0.015; //  5% of water will evaporate hurr durr.
 
-immutable minSlopeConstant = 0.2;
-
 immutable waterDepthMax = 5.0;
 immutable sedimentCapacity = 0.3;
 
@@ -38,9 +36,9 @@ immutable rockTalusConstant = 5.0;
 
 class GPUErosion {
     int seed = void;
-    int sizeX = void;
-    int sizeY = void;
-    int sizeSQ = void;
+    size_t sizeX = void;
+    size_t sizeY = void;
+    size_t sizeSQ = void;
     const(float)[] sourceHeight;
 
     int workGroupsX;
@@ -74,7 +72,7 @@ class GPUErosion {
     Heightmap waterMap;
     Random r;
 
-    void init(float[] startHeightmap, float[] startSoilmap, int _sizeX, int _sizeY, int _seed) {
+    void init(float[] startHeightmap, float[] startSoilmap, size_t _sizeX, size_t _sizeY, int _seed) {
         seed = _seed;
         r.seed(seed);
         sizeX = _sizeX;
@@ -106,8 +104,8 @@ class GPUErosion {
         int groupSizeY = mixin(S_Y);
         BREAK_IF( (sizeX % groupSizeX) != 0);
         BREAK_IF( (sizeY % groupSizeY) != 0);
-        workGroupsX = sizeX / groupSizeX;
-        workGroupsY = sizeY / groupSizeY;
+        workGroupsX = cast(int)sizeX / groupSizeX;
+        workGroupsY = cast(int)sizeY / groupSizeY;
 
         string header = q{
             #version 430
@@ -202,7 +200,7 @@ class GPUErosion {
                     uint[2] tex;
                     tex[0] = height;
                     tex[1] = soil;
-                    heightMap.loadTexture(tex, sizeX, sizeY);
+                    heightMap.loadTexture(tex, cast(int)sizeX, cast(int)sizeY);
                     heightMap.setColor(vec3f(0.4, 0.7, 0.3));
                 }
             }
@@ -213,7 +211,7 @@ class GPUErosion {
                     tex[0] = height;
                     tex[1] = soil;
                     tex[2] = water;
-                    waterMap.loadTexture(tex, sizeX, sizeY);
+                    waterMap.loadTexture(tex, cast(int)sizeX, cast(int)sizeY);
                     waterMap.setColor(vec3f(0.0, 0.0, 0.4));
                 }
             }
@@ -221,7 +219,7 @@ class GPUErosion {
     }
 
     void setConstants(T)(T prog) {
-        prog.uniform.size = vec2i(sizeX, sizeY);
+        prog.uniform.size = vec2i(cast(int)sizeX, cast(int)sizeY);
         prog.uniform.gravity = gravity;
         prog.uniform.deltaTime = deltaTime;
 
@@ -350,7 +348,7 @@ class GPUErosion {
     void computeWater() {
         waterShader.use();
         waterShader.uniform.deltaTime = deltaTime;
-        waterShader.uniform.size = vec2i(sizeX, sizeY);
+        waterShader.uniform.size = vec2i(cast(int)sizeX, cast(int)sizeY);
         glBindImageTexture(0, water, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F); glError();
         glBindImageTexture(1, waterFlow, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F); glError();
         glDispatchCompute(workGroupsX, workGroupsY, 1); glError();

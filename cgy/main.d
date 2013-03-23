@@ -18,7 +18,6 @@ import derelict.sdl.sdl;
 import derelict.opengl.gl;
 import derelict.devil.il;
 import derelict.devil.ilu;
-import win32.windows;
 
 import alloc;
 import game;
@@ -196,7 +195,7 @@ void main(string[] args) {
         }
     } catch (Exception e) {
         import util.util;
-        writeln("Exception:\n\n", e.msg);
+        writeln("Exception:\n\n", e);
         NativeDialogBox("Exception:\n\n" ~ e.msg, "Exception", NDBAnswer.Ok);
     }
 

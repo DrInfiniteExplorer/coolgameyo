@@ -125,7 +125,7 @@ class DialogBox : GuiElementWindow {
                         }
                         destroy();
                     };
-                }(idx, str)
+                }(cast(int)idx, str)
             );
             if(focused) {
                 setFocus(butt);

@@ -44,7 +44,6 @@ struct Mission {
     alias to target;
     alias to this;
 
-    enum none = Mission(Type.nothing);
 
     this(Type mt) { type = mt; }
     this(Type mt, Target target) {
@@ -56,4 +55,9 @@ struct Mission {
         from = from_;
         to = to_;
     }
+
+    static Mission none() {
+        return Mission(Mission.Type.nothing);
+    }
 }
+

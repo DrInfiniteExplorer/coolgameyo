@@ -102,10 +102,7 @@ final class HalfEdge {
     }
 
     void nuke() {
-        bool pred(HalfEdge e) {
-            return e is this;
-        }
-        left.halfEdges = remove!pred(left.halfEdges);
+        left.halfEdges = left.halfEdges.remove(countUntil(left.halfEdges, this));
         if(vertex !is null) {
             vertex.unRef();
         }
@@ -371,7 +368,7 @@ final class Site {
     void serialize(BinaryFile writer, int[HalfEdge] halfEdgeMap) {
         writer.write(siteId);
         writer.write(pos);
-        int len = halfEdges.length;
+        int len = cast(int)halfEdges.length;
         writer.write(len);
         foreach(idx, he ; halfEdges) {
             if(he in halfEdgeMap) {
@@ -416,22 +413,22 @@ final class VoronoiPoly {
         int halfEdgeMap[HalfEdge];
 
         foreach(idx, edge ; edges) {
-            edgeMap[edge] = idx;
+            edgeMap[edge] = cast(int)idx;
         }
         foreach(idx, vertex; vertices) {
-            vertexMap[vertex] = idx;
+            vertexMap[vertex] = cast(int)idx;
         }
         foreach(idx, site ; sites) {
-            siteMap[site] = idx;
+            siteMap[site] = cast(int)idx;
         }
         foreach(idx, he; halfEdges) {
-            halfEdgeMap[he] = idx;
+            halfEdgeMap[he] = cast(int)idx;
         }
 
-        writer.write(sites.length);
-        writer.write(vertices.length);
-        writer.write(halfEdges.length);
-        writer.write(edges.length);
+        writer.write!int(cast(int)sites.length);
+        writer.write!int(cast(int)vertices.length);
+        writer.write!int(cast(int)halfEdges.length);
+        writer.write!int(cast(int)edges.length);
 
         foreach(site ; sites) {
             site.serialize(writer, halfEdgeMap);
@@ -449,8 +446,6 @@ final class VoronoiPoly {
 
     void deserialize(string path) {
         auto reader = BinaryFile(path, "r");
-
-        static assert(int.sizeof == size_t.sizeof);
 
         sites.length = reader.read!int();
         vertices.length = reader.read!int();
@@ -592,25 +587,33 @@ final class VoronoiPoly {
         }
 
         Site[HalfEdge] toRemoveHalf;
-        bool pred(Edge e) {
+        int[] edgesToRemove;
+        foreach(idx, e ; edges) {
             if(e in toRemove) {
                 toRemoveHalf[e.halfLeft] = e.halfLeft.left;
                 toRemoveHalf[e.halfRight] = e.halfRight.left;
                 e.nuke();
-                //remove e
-                return true;
+                edgesToRemove ~= cast(int)idx;
             }
-            return false;
         }
+        edges = edges.remove(edgesToRemove);
 
-        edges = remove!pred(edges);
-
-        bool pred2(HalfEdge e) {
-            return (e in toRemoveHalf) !is null;
+        edgesToRemove.length = 0;
+        foreach(idx, e ; halfEdges) {
+            if(e in toRemoveHalf) {
+                edgesToRemove ~= cast(int)idx;
+            }
         }
-        halfEdges = remove!pred2(halfEdges);
+        halfEdges = halfEdges.remove(edgesToRemove);
+
         foreach(site ; toRemoveHalf) {
-            site.halfEdges = remove!pred2(site.halfEdges);
+            edgesToRemove.length = 0;
+            foreach(idx, e ; site.halfEdges) {
+                if(e in toRemoveHalf) {
+                    edgesToRemove ~= cast(int)idx;
+                }
+            }
+            site.halfEdges = site.halfEdges.remove(edgesToRemove);
         }
         vertices = remove!"!a.isAlive()"(vertices);
 
@@ -627,7 +630,7 @@ final class VoronoiPoly {
 
         foreach(site ; sites) {
             site.halfEdges.sort;
-            int edgeCount = site.halfEdges.length;
+            int edgeCount = cast(int)site.halfEdges.length;
             int c = 0;
             for(int i = 0 ; i < edgeCount; i++) {
                 auto curr = site.halfEdges[i];
