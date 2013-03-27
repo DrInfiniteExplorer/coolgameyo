@@ -229,8 +229,8 @@ mixin template WorldGenerator() {
     }
 
     float getApproxHeight(TileXYPos pos, int level) {
-        pos.value.x = clamp(pos.value.x, 0, worldSize-sampleIntervall);
-        pos.value.y = clamp(pos.value.y, 0, worldSize-sampleIntervall);
+        pos.value.x = clamp(pos.value.x, 0, worldSize-SampleIntervall);
+        pos.value.y = clamp(pos.value.y, 0, worldSize-SampleIntervall);
         auto height = heightMaps.getHeight!false(pos);
         auto soil = heightMaps.getSoil!false(pos);
         return cast(int)ceil(height + soil);
