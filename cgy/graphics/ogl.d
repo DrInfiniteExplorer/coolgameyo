@@ -71,7 +71,7 @@ void initOpenGL(){
     glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &MaxVertexAttribs);
     writeln("Supports max " ~ to!string(MaxVertexAttribs) ~ " attribute slots");
 
-    glClearColor(1.0, 0.7, 0.4, 0.0);
+    glClearColor(1.0, 0.7, 0.4, 1.0);
     glError();
 
     glEnable(GL_DEPTH_TEST);
@@ -81,6 +81,37 @@ void initOpenGL(){
     glDepthFunc(GL_LEQUAL);
     
     initQuad();
+
+    int preferred_format;
+    glGetInternalformativ(GL_TEXTURE_2D, GL_RGBA8, GL_TEXTURE_IMAGE_FORMAT, 1, &preferred_format);
+    if(preferred_format == GL_RGBA) {
+        writeln("GL_RGBA");
+    } else if(preferred_format == GL_BGRA) {
+        writeln("GL_BGRA");
+        writeln("Säg till luben att ditt grafikkort rapporterar att BGRA är föredraget format");
+        BREAKPOINT; 
+    } else {
+        writeln("Säg till luben att ditt grafikkort är efterblivet.");
+        BREAKPOINT; 
+    }
+
+    immutable GPU_MEMORY_INFO_DEDICATED_VIDMEM_NVX          = 0x9047;
+    immutable GPU_MEMORY_INFO_TOTAL_AVAILABLE_MEMORY_NVX    = 0x9048;
+    immutable GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX  = 0x9049;
+    immutable GPU_MEMORY_INFO_EVICTION_COUNT_NVX            = 0x904A;
+    immutable GPU_MEMORY_INFO_EVICTED_MEMORY_NVX            = 0x904B;
+
+
+    void asd(string what)() {
+        int i;
+        glGetIntegerv(mixin(what), &i);
+        msg(what, ": ", i);
+    }
+    asd!"GPU_MEMORY_INFO_DEDICATED_VIDMEM_NVX";
+    asd!"GPU_MEMORY_INFO_TOTAL_AVAILABLE_MEMORY_NVX";
+    asd!"GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX";
+    asd!"GPU_MEMORY_INFO_EVICTION_COUNT_NVX";
+    asd!"GPU_MEMORY_INFO_EVICTED_MEMORY_NVX";
 
 
     renderSettings.canUseFBO = initFBO();
@@ -151,7 +182,7 @@ bool initFBO() {
 
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, g_lightTexture, 0); glError();
 
-    immutable UseRenderBuffer = false;
+    immutable UseRenderBuffer = true;
     static if(UseRenderBuffer) {
         glGenRenderbuffers(1, &g_FBODepthBuffer); glError();
         glBindRenderbuffer(GL_RENDERBUFFER, g_FBODepthBuffer); glError();
@@ -232,7 +263,7 @@ bool initFBO() {
 
 
 void deinitFBO() {
-
+    if(g_FBO == 0) return;
     //Dont care if shit is fucked up! :D
 
     glBindFramebuffer(GL_FRAMEBUFFER, g_FBO);
@@ -305,16 +336,37 @@ uint TypeToGLTypeEnum(Type)() {
     }
 }
 
+auto TypeToGLInternalType(Type)() {
+    static if( is( Type == float) || is( Type == float[1])) {
+        return GL_R32F;
+    } else static if( is( Type == float[2])) {
+        return GL_RG32F;
+    } else static if( is( Type == float[3])) {
+        return GL_RGB32F;
+    } else static if( is( Type == float[4])) {
+        return GL_RGBA32F;
+    } else {
+        pragma(msg, Type);
+        static assert(0, "Type unrecognized!");
+    }
+    assert(0);
+}
+
 uint InternalTypeToFormatType(uint Type) {
     if(Type == GL_RGBA8) return GL_RGBA;
+    else if(Type == GL_R16F) return GL_RED;
     else if(Type == GL_R32F) return GL_RED;
+    else if(Type == GL_RG16F) return GL_RG;
     else if(Type == GL_RG32F) return GL_RG;
+    else if(Type == GL_RGBA16F) return GL_RGBA;
     else if(Type == GL_RGBA32F) return GL_RGBA;
     else {
         BREAKPOINT;
         assert(0, "Unknown mapping: " ~ Type.stringof);
     }
 }
+
+
 //textureType: for example GL_RGB8, GL_R32F, etc
 uint Create2DTexture(uint textureType, DataType = void)(size_t width, size_t height, DataType* data = null) {
 
@@ -336,6 +388,8 @@ uint Create2DTexture(uint textureType, DataType = void)(size_t width, size_t hei
     //glBindTexture(GL_TEXTURE_2D, 0);
     return tex;
 }
+
+
 
 void BindTexture(uint tex, uint textureUnit) {
     glActiveTexture(GL_TEXTURE0 + textureUnit);
@@ -433,5 +487,6 @@ Image screenCap() {
     Image img = Image(null, renderSettings.windowWidth, renderSettings.windowHeight);
     glReadPixels(0, 0, renderSettings.windowWidth, renderSettings.windowHeight,
                  GL_RGBA, GL_UNSIGNED_BYTE, img.imgData.ptr);
+    img.flipHorizontal();
     return img;
 }

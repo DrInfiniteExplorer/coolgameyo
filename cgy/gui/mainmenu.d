@@ -52,11 +52,6 @@ class MainMenu : GuiElementWindow {
         JoinButton = new PushButton(this, Rectd(startX, 0.3, width, height), "Join", &onJoinGame);
         OptionsButton = new PushButton(this, Rectd(startX, 0.5, width, height), "Options", &onOptions);
         ExitButton = new PushButton(this, Rectd(startX, 0.7, width, height), "Exit", &onExitGame);
-
-        void printScreen() {
-            new PrintScreenMenu(this);
-        }
-        guiSystem.addHotkey(SDLK_PRINT, &printScreen);
     }
     
     void onHostGame() {

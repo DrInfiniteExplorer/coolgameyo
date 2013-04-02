@@ -10,6 +10,7 @@ import derelict.devil.il;
 import derelict.devil.ilu;
 
 import graphics.ogl;
+import log : LogError;
 import math.math;
 import util.rect;
 import util.util;
@@ -34,6 +35,8 @@ void ilError(string file = __FILE__, int line = __LINE__) {
             break;
         }
         auto derp = file ~ to!string(line) ~ "\n" ~str;
+        LogError(derp);
+        BREAKPOINT;
         assert(0, derp);
     }
 }
@@ -280,6 +283,7 @@ struct Image {
         ilEnable(IL_FILE_OVERWRITE);
         ilError();
         ilSaveImage(ptr);
+        //ilSave(IL_PNG, ptr);
         ilError();
     }
 
@@ -315,6 +319,26 @@ struct Image {
             }
         }
         return 0;
+    }
+
+    void flipHorizontal() {
+        size_t line1 = 0;
+        size_t line2 = imgHeight - 1;
+        ubyte[] buff;
+        buff.length = imgWidth * 4;
+        void swap(size_t l1, size_t l2) {
+            size_t stride = imgWidth * 4;
+            size_t idx1 = l1 * stride;
+            size_t idx2 = l2 * stride;
+            buff[] = imgData[idx1 .. idx1 + stride];
+            imgData[idx1 .. idx1 + stride] = imgData[idx2 .. idx2 + stride];
+            imgData[idx2 .. idx2 + stride] = buff[];
+        }
+        while(line1 < line2) {
+            swap(line1, line2);
+            line1++;
+            line2--;
+        }
     }
 
 }

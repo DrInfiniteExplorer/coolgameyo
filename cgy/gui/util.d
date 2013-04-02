@@ -94,6 +94,7 @@ class FreeFlightCamera : GuiEventDump {
     void updateCamera(double dTime) {
         double speed = 10.0;
         speed *= dTime;
+        speed *= camera.speed;
         if(keyMap[SDLK_LSHIFT]) speed *= 30;
         if(keyMap[SDLK_a]){ camera.axisMove(-speed, 0.0, 0.0); }
         if(keyMap[SDLK_d]){ camera.axisMove( speed, 0.0, 0.0); }

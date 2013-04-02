@@ -25,6 +25,7 @@ import graphics.ogl;
 import gui.guisystem.guisystem;
 import gui.joinmenu;
 import gui.mainmenu;
+import gui.printscreenmenu;
 import log;
 
 import statistics;
@@ -283,19 +284,23 @@ bool handleSDLEvent(in SDL_Event event, float now, GuiSystem guiSystem) {
             break;
         case SDL_KEYDOWN:
         case SDL_KEYUP:
-            guiEvent.type = GuiEventType.Keyboard;
-            auto kb = &guiEvent.keyboardEvent;
-            kb.pressed = event.key.state == SDL_PRESSED;
-            kb.repeat = 0; //TODO: Implement later?
-            auto unicode = event.key.keysym.unicode;
-            if (unicode & 0xFF80) { // Haha i dont know what this is about now. Prolly multi-byte keys? maybe? :D
+            if(event.key.state == SDL_PRESSED && event.key.keysym.sym == SDLK_PRINT) {
+                PrintScreen();
             } else {
-                kb.ch = unicode & 0x7F;
-            }
-            kb.SdlSym = event.key.keysym.sym;
-            kb.SdlMod = event.key.keysym.mod;
+                guiEvent.type = GuiEventType.Keyboard;
+                auto kb = &guiEvent.keyboardEvent;
+                kb.pressed = event.key.state == SDL_PRESSED;
+                kb.repeat = 0; //TODO: Implement later?
+                auto unicode = event.key.keysym.unicode;
+                if (unicode & 0xFF80) { // Haha i dont know what this is about now. Prolly multi-byte keys? maybe? :D
+                } else {
+                    kb.ch = unicode & 0x7F;
+                }
+                kb.SdlSym = event.key.keysym.sym;
+                kb.SdlMod = event.key.keysym.mod;
 
-            guiSystem.onEvent(guiEvent);
+                guiSystem.onEvent(guiEvent);
+            }
             //onKey(event.key);
             break;
         case SDL_MOUSEMOTION:

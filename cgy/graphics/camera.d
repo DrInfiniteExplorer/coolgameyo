@@ -21,6 +21,7 @@ class Camera{
 
     float farPlane;
     float nearPlane;
+    float speed = 1.0;
 
     this() {
         farPlane = renderSettings.farPlane;

@@ -20,25 +20,26 @@ import util.util : BREAK_IF, msg, utime;
 immutable vertShaderSource = q{
     #version 430
     layout(location = 0) in ivec2 pos;
-    layout(location = 2) in vec4 col;
+    layout(location = 2) in vec3 col;
 
     uniform mat4 transform;
     layout(binding=0, r32f) readonly uniform image2D height;
     layout(binding=1, r32f) readonly uniform image2D h2;
-    layout(binding=2, r32f) readonly uniform image2D h3;
-    layout(binding=3, r32f) readonly uniform image2D h4;
+    layout(binding=2, r16f) readonly uniform image2D h3;
+    layout(binding=3, r16f) readonly uniform image2D h4;
     uniform vec2 cellSize;
     uniform int count;
 
     out vec3 normal;
-    out vec4 color;
+    out vec3 color;
+    flat out ivec2 posss;
 
     float get(ivec2 pos) {
         float h = imageLoad(height, pos);
         if(count > 1) {
             h += imageLoad(h2, pos);
             if(count > 2) {
-                h += imageLoad(h3, pos);
+                //h += imageLoad(h3, pos);
                 if(count > 3) {
                     h += imageLoad(h4, pos);
                 }
@@ -51,6 +52,7 @@ immutable vertShaderSource = q{
         float h = get(pos);
         vec3 vert = vec3(pos * cellSize, h);
         gl_Position = (transform * vec4(vert, 1.0));
+        posss = pos;
 
         //*
         vec3 x_n = vec3(2.0 * cellSize.x, 0.0, get(pos + ivec2(-1, 0)) - get(pos + ivec2(1, 0)));
@@ -64,22 +66,38 @@ immutable vertShaderSource = q{
         /*/
         normal = vec3(0.1, 0.0, 1.0);
         //*/
-        color = col;
+        vec3 clr = col;
+        if(count > 2) {
+            float water = clamp(imageLoad(h3, pos).x, 0.0, 1.0);
+            clr = mix(col, vec3(0.1, 0.1, 0.9), water);
+            if(count > 3) {
+                clr.r += imageLoad(h4, pos).x;
+            }
+        }
+        color = clr;
     }
 };
 immutable fragShaderSource = q{
-    #version 150 core
-    #extension GL_ARB_explicit_attrib_location : enable
+    #version 430
+
     in vec3 normal;
-    in vec4 color;
+    in vec3 color;
+    flat in ivec2 posss;
     layout(location = 0) out vec4 frag_color;
     layout(location = 1) out vec4 light;
+    layout(binding=2, r16f) readonly uniform image2D h3;
     //layout(location = 2) out vec4 depth;
     void main() {
         vec3 n = normalize(normal);
         vec3 sun = normalize(vec3(0.1, 0.1, 1));
         light = vec4(1.0, 1.0, 1.0, 1.0);
-        frag_color = dot(n, sun) * color;
+        float dottt = dot(n, sun);
+        float water = imageLoad(h3, posss).x;
+        if(water > 0.3) {
+            dottt = pow(dottt, 15);
+        }
+
+        frag_color = vec4(dottt * color, 1.0);
     }
 };
 
@@ -217,7 +235,7 @@ class Heightmap : ShaderProgram!() {
     void build() {
         rebuild = false;
         int len = 4 * (sizeX-1)*(sizeY-1);
-        float[4][] colors;
+        float[3][] colors;
         if(colorMap.length > 1) {
             colors.length = len;
         }
@@ -276,7 +294,7 @@ class Heightmap : ShaderProgram!() {
             */
             BREAKPOINT;
         } else if(colorMap.length == 1) {
-            glVertexAttrib4f(2, colorMap[0].x, colorMap[0].y, colorMap[0].z, alpha);
+            glVertexAttrib3f(2, colorMap[0].x, colorMap[0].y, colorMap[0].z);
             glDisableVertexAttribArray(2); glError();
         } else {
             glVertexAttrib3f(2, 1, 1, 1);
@@ -306,8 +324,17 @@ class Heightmap : ShaderProgram!() {
         glBindVertexArray(vao); glError();
         glBindImageTexture(0, heightImg, 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F); glError();
         foreach(idx ; 1 .. _loadTextures.length) {
-            glBindImageTexture(cast(int)idx, _loadTextures[idx], 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F); glError();
+            glBindImageTexture(cast(int)idx, _loadTextures[idx], 0, GL_FALSE, 0, GL_READ_ONLY, idx >= 2 ? GL_R16F : GL_R32F); glError();
         }
+
+        if(colorMap.length == 1) {
+            glVertexAttrib4f(2, colorMap[0].x, colorMap[0].y, colorMap[0].z, alpha);
+            glDisableVertexAttribArray(2); glError();
+        } else {
+            glVertexAttrib3f(2, 1, 1, 1);   
+            glDisableVertexAttribArray(2); glError();
+        }
+
         glDrawArrays(GL_QUADS, 0, (sizeX-1)*(sizeY-1)*4); glError();
         glBindVertexArray(0); glError();
         use(false);
