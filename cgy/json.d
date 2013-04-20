@@ -579,3 +579,22 @@ string prettifyJSON(string text){
 	
 	return text;
 }
+
+
+/*
+Does not work. Fix plol! :D
+unittest {
+
+    string complexString = "abc\"def\"ghi\0åäö'";
+
+    auto val = encode(complexString);
+
+    auto str = to!string(val);
+    val = parse(str);
+    
+    string decoded;
+    val.read(decoded);
+    BREAK_IF(decoded != complexString);
+
+}
+*/
