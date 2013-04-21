@@ -97,13 +97,14 @@ void startServer() {
 
     auto txt = new GuiElementText(guiSystem, vec2d(0), fullText);
 
-    memoryGraph = new typeof(memoryGraph)(guiSystem, Rectd(0, 0, 0.6, 0.25), false);
+    memoryGraph = new typeof(memoryGraph)(guiSystem, Rectd(0.1, 0, 0.6, 0.25), false);
     auto memoryBlockGraph = new typeof(memoryGraph)(guiSystem, memoryGraph.getRelativeRect, true);
-    auto memoryTextMB = new GuiElementText(memoryGraph, vec2d(0,0), "");
+    memoryBlockGraph.setColor(vec3f(0, 1, 0));
+    auto memoryTextMB = new GuiElementText(memoryGraph, vec2d(0, memoryGraph.topOf), "");
     auto memoryTextKB = new GuiElementText(memoryGraph, vec2d(0, memoryTextMB.bottomOf), "");
     auto memoryTextDelta = new GuiElementText(memoryGraph, vec2d(0, memoryTextKB.bottomOf), "");
 
-    CPUGraph = new typeof(CPUGraph)(guiSystem, Rectd(0, memoryGraph.bottomOf, memoryGraph.widthOf, memoryGraph.heightOf), false);
+    CPUGraph = new typeof(CPUGraph)(guiSystem, Rectd(memoryGraph.leftOf, memoryGraph.bottomOf, memoryGraph.widthOf, memoryGraph.heightOf), false);
     auto CPUText = new GuiElementText(CPUGraph, vec2d(0, 0), "");
 
     auto handleMsg = (string s) {
@@ -132,15 +133,15 @@ void startServer() {
             memoryBlockGraph.setData(memoryBlockSamples, 0, memMax);
             //memoryPrivateGraph
             auto mem = memorySamples[$-1];
-            auto megabytes = (mem / 1024).to!string;
-            auto kilobytes = (mem % 1024).to!string;
-            auto deltaKB = (mem - memorySamples[$-2]).to!string;
-            memoryTextMB.setText(megabytes);
-            memoryTextKB.setText(kilobytes);
-            memoryTextDelta.setText(deltaKB);
+            auto megabytes = mem / 1024;
+            auto kilobytes = mem % 1024;
+            auto deltaKB = mem - memorySamples[$-2];
+            memoryTextMB.format(   "MB:    %4d", cast(int)megabytes);
+            memoryTextKB.format(   "KB:    %4d", cast(int)kilobytes);
+            memoryTextDelta.format("Delta: %4d", cast(int)deltaKB);
 
             CPUGraph.setData(CPUSamples, 0.0, 1.0);
-            CPUText.setText(CPUSamples[$-1].to!string);
+            CPUText.format("CPU:%5.1f%%", 100.0f*CPUSamples[$-1]);
         }
     }));
 

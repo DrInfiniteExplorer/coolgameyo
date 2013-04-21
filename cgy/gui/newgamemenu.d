@@ -4,6 +4,7 @@
 
 module gui.newgamemenu;
 
+import std.algorithm : canFind;
 import std.conv;
 
 import game;
@@ -91,6 +92,18 @@ class NewGameMenu : GuiElementWindow {
     }    
 
     void onNewGame() {
+        auto saves = enumerateSaves();
+
+        if(canFind(saves, worldName)) {
+            new DialogBox(this, "Eliminate all life?", "A game already exists in what world.\nTerminate all life and start again?",
+                          "yes", &onNewGameYES,
+                          "no", { },
+                          );
+        } else {
+            onNewGameYES();
+        }
+    }
+    void onNewGameYES() {
         if(page1.isVisible) {
             page1.setVisible(false);
             initPage2();

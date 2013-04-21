@@ -65,6 +65,11 @@ class GuiElementText : GuiElement {
         }
         text.setText(str);
     }
+
+    void format(T...)(T t) {
+        text.format(t);
+    }
+
     void setTransparency(bool transp) {
         text.setTransparent(transp);
     }

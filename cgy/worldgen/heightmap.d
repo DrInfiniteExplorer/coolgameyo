@@ -45,7 +45,7 @@ __gshared int IterModValue;
 
 shared static this() {
     octaves = cast(int)logb(startIntervall / endIntervall);
-    octaves = 4;
+    //octaves = 4;
     msg("octaves: ", octaves);
     endAmplitude = startAmplitude * (0.5 ^^ octaves);
 

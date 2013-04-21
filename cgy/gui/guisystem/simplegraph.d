@@ -63,8 +63,8 @@ class GuiElementSimpleGraph(Type) : GuiElement {
         if (!transparent) {
             renderRect(absoluteRect, vec3f(0.75, 0.75, 0.75));
         }
-        renderOutlineRect(absoluteRect, vec3f(0, 0, 0));
         renderLines(lines, color);
+        renderOutlineRect(absoluteRect, vec3f(0, 0, 0));
         super.render();
     }
 }

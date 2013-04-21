@@ -225,7 +225,7 @@ void initLibraries() {
     DerelictGL.load(); //Init opengl regardless?
     DerelictIL.load();
     DerelictILU.load();
-    DerelictAL.load();
+//    DerelictAL.load();
 
     ilInit();
     iluInit();
@@ -235,7 +235,7 @@ void deinitLibraries() {
     //TODO: destroy "surface" and how? :P        
     deinitOpenGL();
     SDL_Quit();
-    DerelictAL.unload();
+//    DerelictAL.unload();
     DerelictIL.unload();
     DerelictGL.unload();
     DerelictSDL.unload();
@@ -368,7 +368,7 @@ void EventAndDrawLoop(bool canYield)(GuiSystem guiSystem, scope void delegate(fl
     SDL_Event event;
     while (!exit) {
         while (SDL_PollEvent(&event)) {
-            exit = handleSDLEvent(event, now / 1_000_000.0, guiSystem);
+            exit |= handleSDLEvent(event, now / 1_000_000.0, guiSystem);
         } //Out of sdl-messages
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -389,7 +389,8 @@ void EventAndDrawLoop(bool canYield)(GuiSystem guiSystem, scope void delegate(fl
             exit = endLoop();
         }
         static if(canYield) {
-            Thread.yield();
+            //Thread.yield();
+            Thread.sleep(dur!"msecs"(1));
         }
     }
 }

@@ -167,6 +167,13 @@ class StringTexture {
         }
     }
 
+    void format(T...)(T t) {
+        synchronized(this) {
+            currentText.write(t);
+            updatedText = true;
+        }
+    }
+
     void updateText() {
         if(!updatedText) return;
         synchronized(this) {

@@ -181,12 +181,13 @@ final class WorldMap {
         while(zDepth > depth) {
             num++;
             if(num == stratas.length) {
-                return stratas.length - 1;
+                return cast(int)stratas.length - 1;
             }
             depth += stratas[num].getHeight(xyPos);
         }
         return num;
     }
+
     void heightOnHeight() {
         import graphics.image;
         import materials;

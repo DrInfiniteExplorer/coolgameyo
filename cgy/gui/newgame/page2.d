@@ -40,7 +40,7 @@ mixin template Page2() {
                 msg("WARNING: " ~ g_worldPath ~ " exists. Terminating the previous existance!");
                 rmdir(g_worldPath ~ "");
             }
-            move("worlds/" ~ worldName, "saves/" ~ worldName);
+            copy("worlds/" ~ worldName, "saves/" ~ worldName);
             gameName = worldName;
             onResumeGame();
         });
