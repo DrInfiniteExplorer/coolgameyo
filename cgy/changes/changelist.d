@@ -76,14 +76,18 @@ final class ChangeList {
             ubyte type = *ptr;
             ptr++;
             switch(type) {
-            foreach(idx, T ; ChangeTypes)   {
-                case idx:
-                    {
-                        auto changePtr = cast(T*)ptr;
-                        changePtr.apply(world);
-                        ptr += (*changePtr).sizeof;
-                    }
+                default: // If default is below the foreach, wierd stuff is wierd.
+                    LogError("Unexpected change type! :", type);
+                    BREAKPOINT;
                     break;
+                foreach(idx, T ; ChangeTypes)   {
+                    case idx:
+                        {
+                            auto changePtr = cast(T*)ptr;
+                            changePtr.apply(world);
+                            ptr += (*changePtr).sizeof;
+                        }
+                        break;
                 }
             }
 
