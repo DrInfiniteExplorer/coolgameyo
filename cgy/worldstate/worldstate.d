@@ -27,7 +27,7 @@ import graphics.debugging;
 import json;
 import light;
 
-import game;
+import globals : g_isServer;
 
 //import worldgen.worldgen;
 
@@ -821,10 +821,12 @@ class WorldState {
         auto y = rel.y;
 
         auto t = xy.getSectorXYNum();
-        auto sectorXY = getSectorXY(t);
-
-
-        auto heightmap = sectorXY.heightmap;
+        SectorXY* xyPtr = t in sectorsXY;
+        SectorHeightmap heightmap;
+        if(xyPtr !is null) {
+            heightmap = xyPtr.heightmap;
+        }
+        
         if (heightmap is null ) {
             int z = worldMap.getRealTopTilePos(xy);
             auto tp = TilePos(vec3i(xy.value.x, xy.value.y, z));

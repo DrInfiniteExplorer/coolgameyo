@@ -8,6 +8,7 @@ import derelict.sdl.sdl;
 
 import main;
 import game;
+import globals : g_isServer, g_worldPath;
 import graphics._2d.rect;
 import gui.all;
 import gui.loadscreen;
@@ -96,7 +97,7 @@ string mainMenu() {
     MainMenu mainMenu;
     mainMenu = new MainMenu(guiSystem);
 
-    EventAndDrawLoop(guiSystem, null, { return mainMenu.done; } );
+    EventAndDrawLoop!true(guiSystem, null, { return mainMenu.done; } );
     if(mainMenu.exit) {
         return "exit";
     }

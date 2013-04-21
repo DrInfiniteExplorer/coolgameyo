@@ -215,7 +215,7 @@ void MaterialEditor() {
     */
 
 
-    EventAndDrawLoop(guiSystem, null);
+    EventAndDrawLoop!true(guiSystem, null);
 }
 
 

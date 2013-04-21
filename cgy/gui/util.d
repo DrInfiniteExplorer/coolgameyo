@@ -37,6 +37,7 @@ class FreeFlightCamera : GuiEventDump {
     }
 
     void mouseMove(GuiEvent e){
+        if(!camera.mouseMoveEnabled) return;
         auto m = e.mouseMove;
         auto x = m.pos.x;
         auto y = m.pos.y;

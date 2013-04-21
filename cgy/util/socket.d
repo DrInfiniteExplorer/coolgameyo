@@ -2,7 +2,7 @@ module util.socket;
 
 import std.socket;
 import util.util : msg, BREAK_IF;
-import util.filesystem: mkdir;
+import util.filesystem: mkdir, fileSize, writeText;
 
 
 // Very unefficient method to read a line.
@@ -67,20 +67,39 @@ bool tcpSendFile(Socket sock, string filePath, int bufferSize = int.max) {
     import std.mmfile;
     import std.algorithm : min;
 
-    // Shouldn't need the write-part, but it seems that if it is first opened
-    // as readwrite (for example the heightmap) then it can't be opened for
-    // read after that, but a readwrite is fine.
-    // read = GENERIC_READ, FILE_SHARE_READ
-    // readwride = GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE
-    // see http://msdn.microsoft.com/en-us/library/windows/desktop/aa363874%28v=vs.85%29.aspx
-    // for a table of compabilities.
-    auto memfile = new MmFile(filePath, MmFile.Mode.readWrite, 0, null, 0);
-    scope(exit) delete memfile;
-    auto filePtr = cast(byte[])memfile[];
-    size_t sentSoFar = 0;
-    size_t totalSize = filePtr.length;
+    ulong size = fileSize(filePath);
 
-    if(sock.send((&totalSize)[0..1]) != 4) {
+    MmFile memfile;
+    byte[] filePtr;
+    size_t sentSoFar = 0;
+
+    // MmFiles crash when loading zero-length files.
+    if(size > 0) {
+        // Shouldn't need the write-part, but it seems that if it is first opened
+        // as readwrite (for example the heightmap) then it can't be opened for
+        // read after that, but a readwrite is fine.
+        // read = GENERIC_READ, FILE_SHARE_READ
+        // readwride = GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE
+        // see http://msdn.microsoft.com/en-us/library/windows/desktop/aa363874%28v=vs.85%29.aspx
+        // for a table of compabilities.
+        memfile = new MmFile(filePath, MmFile.Mode.readWrite, 0, null, 0);
+        filePtr = cast(byte[])memfile[];
+
+        BREAK_IF(filePtr.length != size);
+        BREAK_IF(size > uint.max);
+    }
+    scope(exit) {
+        if(memfile) {
+            delete memfile;
+        }
+    }
+
+    uint totalSize = cast(uint)size;
+
+    uint[1] sendSize;
+    sendSize[0] = cast(uint)totalSize;
+
+    if(sock.send(sendSize) != sendSize.sizeof) {
         msg("Error sending file size: " ~ filePath);
         return false;
     }
@@ -102,10 +121,16 @@ bool tcpReceiveFile(Socket sock, string filePath, int bufferSize = int.max) {
     import std.mmfile;
     size_t readSoFar = 0;
     size_t totalSize;
+    uint size[1];
 
-    if(sock.receive((&totalSize)[0..1]) != 4) {
+    if(sock.receive(size) != size.sizeof) {
         msg("Error receiving file size: " ~ filePath);
         return false;
+    }
+    totalSize = size[0];
+    if(totalSize == 0) {
+        writeText(filePath, "");
+        return true;
     }
 
     auto memfile = new MmFile(filePath, MmFile.Mode.readWriteNew, totalSize, null, 0);

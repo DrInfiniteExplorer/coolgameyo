@@ -141,10 +141,14 @@ mixin template Heightmap() {
             }
             if(heightmapTasks !is null) {
                 synchronized(heightmapTasks) {
-                    heightmapTasks.list = heightmapTasks.list.remove(heightmapTasks.list.countUntil(state));
+                    auto idx = heightmapTasks.list.countUntil(state);
+                    if(idx != -1) {
+                        BREAK_IF(idx == -1);
+                        heightmapTasks.list = heightmapTasks.list.remove(idx);
 
-                    if (heightmapTasks.list.empty) {
-                        g_Statistics.HeightmapsNew(0);
+                        if (heightmapTasks.list.empty) {
+                            g_Statistics.HeightmapsNew(0);
+                        }
                     }
                 }
             }

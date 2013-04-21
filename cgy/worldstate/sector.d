@@ -16,7 +16,7 @@ import clans;
 import entitytypemanager;
 import json;
 import light;
-import game;
+import globals : g_worldPath;
 import worldgen.maps;
 import worldstate.worldstate;
 import worldstate.block;

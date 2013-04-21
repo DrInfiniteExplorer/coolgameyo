@@ -23,25 +23,30 @@ immutable vertShaderSource = q{
     layout(location = 2) in vec3 col;
 
     uniform mat4 transform;
-    layout(binding=0, r32f) readonly uniform image2D height;
-    layout(binding=1, r32f) readonly uniform image2D h2;
-    layout(binding=2, r16f) readonly uniform image2D h3;
-    layout(binding=3, r16f) readonly uniform image2D h4;
+    //layout(binding=0, r32f) readonly uniform image2D height;
+    //layout(binding=1, r32f) readonly uniform image2D h2;
+    //layout(binding=2, r16f) readonly uniform image2D h3;
+    //layout(binding=3, r16f) readonly uniform image2D h4;
+    layout(binding = 0) uniform sampler2D height;
+    layout(binding = 1) uniform sampler2D h2;
+    layout(binding = 2) uniform sampler2D h3;
+    layout(binding = 3) uniform sampler2D h4;
     uniform vec2 cellSize;
     uniform int count;
 
     out vec3 normal;
     out vec3 color;
+    out vec3 transformedPos;
     flat out ivec2 posss;
 
     float get(ivec2 pos) {
-        float h = imageLoad(height, pos);
+        float h = texelFetch(height, pos, 0);
         if(count > 1) {
-            h += imageLoad(h2, pos);
+            h += texelFetch(h2, pos, 0);
             if(count > 2) {
-                //h += imageLoad(h3, pos);
+                //h += texelFetch(h3, pos, 0);
                 if(count > 3) {
-                    h += imageLoad(h4, pos);
+                    h += texelFetch(h4, pos, 0);
                 }
             }
         }
@@ -51,7 +56,8 @@ immutable vertShaderSource = q{
     void main() {
         float h = get(pos);
         vec3 vert = vec3(pos * cellSize, h);
-        gl_Position = (transform * vec4(vert, 1.0));
+        gl_Position = transform * vec4(vert, 1.0);
+        transformedPos = (transform * vec4(vert, 1.0)).xyz;
         posss = pos;
 
         //*
@@ -68,10 +74,12 @@ immutable vertShaderSource = q{
         //*/
         vec3 clr = col;
         if(count > 2) {
-            float water = clamp(imageLoad(h3, pos).x, 0.0, 1.0);
-            clr = mix(col, vec3(0.1, 0.1, 0.9), water);
+            float water = clamp(texelFetch(h3, pos, 0).x, 0.0, 1.0);
+            //clr = mix(col, vec3(0.1, 0.1, 0.9), water);
+            clr.b += water;
+            clr.b += texelFetch(h4, pos, 0).x;
             if(count > 3) {
-                clr.r += imageLoad(h4, pos).x;
+                //clr.r += imageLoad(h4, pos).x;
             }
         }
         color = clr;
@@ -82,22 +90,37 @@ immutable fragShaderSource = q{
 
     in vec3 normal;
     in vec3 color;
+    in vec3 transformedPos;
     flat in ivec2 posss;
     layout(location = 0) out vec4 frag_color;
     layout(location = 1) out vec4 light;
-    layout(binding=2, r16f) readonly uniform image2D h3;
+    //layout(binding=2, r16f) readonly uniform image2D h3;
     //layout(location = 2) out vec4 depth;
+    layout(binding = 0) uniform sampler2D height;
+    layout(binding = 1) uniform sampler2D h2;
+    layout(binding = 2) uniform sampler2D h3;
+    layout(binding = 3) uniform sampler2D h4;
+    uniform int renderLines;
+
+
     void main() {
         vec3 n = normalize(normal);
         vec3 sun = normalize(vec3(0.1, 0.1, 1));
         light = vec4(1.0, 1.0, 1.0, 1.0);
         float dottt = dot(n, sun);
-        float water = imageLoad(h3, posss).x;
+        float water = texelFetch(h3, posss, 0).x;
         if(water > 0.3) {
             dottt = pow(dottt, 15);
         }
 
-        frag_color = vec4(dottt * color, 1.0);
+        if(renderLines == 1) {
+            frag_color = vec4(vec3(0.0), 1.0);
+            if(length(transformedPos.xy) > 500) {
+                discard;
+            }
+        } else {
+            frag_color = vec4(dottt * color, 1.0);
+        }
     }
 };
 
@@ -116,6 +139,7 @@ class Heightmap : ShaderProgram!() {
     uint posVbo;
     uint heightImg;
     uint[] _loadTextures;
+    uint[] _loadTextureFormats;
     uint colorVbo;
     uint vao;
 
@@ -178,12 +202,17 @@ class Heightmap : ShaderProgram!() {
         map = data.dup;
         rebuild = true;
     }
-    void loadTexture(uint[] tex, int w, int h) {
-        _loadTextures = tex.dup;
-        heightImg = tex[0];
+    void loadTexture(uint[] texes, int w, int h) {
+        _loadTextures = texes.dup;
+        _loadTextureFormats.length = texes.length;
+        heightImg = texes[0];
         sizeX = w;
         sizeY = h;
         rebuild = true;
+        foreach(size_t idx, tex ; texes) {
+            _loadTextureFormats[idx] = GetInternalFormat(tex);
+        }
+
     }
 
     float maxHeight() {
@@ -311,7 +340,7 @@ class Heightmap : ShaderProgram!() {
     }
 
 
-    void render(Camera camera) {
+    void render(Camera camera, bool renderLines = false) {
         if(map.length == 0 && _loadTextures.length == 0) return;
         if(rebuild) {
             build();
@@ -322,9 +351,11 @@ class Heightmap : ShaderProgram!() {
         auto transform = camera.getProjectionMatrix * camera.getViewMatrix;
         uniform.transform = transform;
         glBindVertexArray(vao); glError();
-        glBindImageTexture(0, heightImg, 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F); glError();
+        //glBindImageTexture(0, heightImg, 0, GL_FALSE, 0, GL_READ_ONLY, _loadTextureFormats[0]); glError();
+        BindTexture(heightImg, 0);
         foreach(idx ; 1 .. _loadTextures.length) {
-            glBindImageTexture(cast(int)idx, _loadTextures[idx], 0, GL_FALSE, 0, GL_READ_ONLY, idx >= 2 ? GL_R16F : GL_R32F); glError();
+            //glBindImageTexture(cast(int)idx, _loadTextures[idx], 0, GL_FALSE, 0, GL_READ_ONLY, _loadTextureFormats[idx]); glError();
+            BindTexture(_loadTextures[idx], cast(uint)idx);
         }
 
         if(colorMap.length == 1) {
@@ -336,6 +367,16 @@ class Heightmap : ShaderProgram!() {
         }
 
         glDrawArrays(GL_QUADS, 0, (sizeX-1)*(sizeY-1)*4); glError();
+
+        if(renderLines) {
+            uniform.renderLines = 1;
+
+            auto old = setWireframe(true);
+            glDrawArrays(GL_QUADS, 0, (sizeX-1)*(sizeY-1)*4); glError();
+            setWireframe(old);
+            uniform.renderLines = 0;
+        }
+
         glBindVertexArray(0); glError();
         use(false);
         //setWireframe(false);
@@ -398,7 +439,7 @@ bool displayHeightmap(T)(T t) {
     }
 
 
-    EventAndDrawLoop(guiSystem, (float deltaT){ heightmap.render(camera);});
+    EventAndDrawLoop!true(guiSystem, (float deltaT){ heightmap.render(camera);});
     return true;
 
 }
@@ -412,9 +453,10 @@ void renderLoop(Camera camera, bool delegate() exitWhen, void delegate() render)
 
     scope(exit) {
         guiSystem.destroy();
+        freeFlight.destroy();
     }
 
-    EventAndDrawLoop(guiSystem, (float deltaT){ render(); }, exitWhen);
+    EventAndDrawLoop!true(guiSystem, (float deltaT){ render(); }, exitWhen);
 /*
     long then;
     long now, nextTime = utime();

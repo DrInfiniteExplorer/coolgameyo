@@ -22,13 +22,15 @@ import std.range;
 version(Windows) import std.c.windows.windows;
 
 public import changes.changelist;
+import util.filesystem : copy;
 import statistics;
+import settings : g_maxThreadCount;
 
 import worldstate.time;
 import worldstate.worldstate;
 
 import modules.module_;
-import modules.network;
+import network.all;
 import util.util;
 import util.queue;
 
@@ -85,9 +87,10 @@ private void workerFun(Scheduler sched,
         }
     } catch (Throwable t) {
         Log(t);
-        msg("Thread exception!\n", t.msg);
+        Log(t.info);
+        msg("Thread exception!\n", t);
         version(Windows) {
-            MessageBoxA(null, cast(char *)toStringz(t.msg),
+            MessageBoxA(null, cast(char *)toStringz(to!string(t)),
                     "Thread Error", MB_OK | MB_ICONEXCLAMATION);
         }
     }
@@ -145,7 +148,7 @@ final class Scheduler {
         proxies ~= enforce(cast(WorldProxy)world._worldProxy, "Uh nuh!");
     }
 
-    void start(int workerCount=core.cpuid.threadsPerCPU) {
+    void start(int workerCount=g_maxThreadCount) {
         msg("using ", workerCount, " workers");
 
         /*
@@ -154,7 +157,11 @@ final class Scheduler {
         }
         */
 
+        //workerCount = 1;
+
         activeWorkers = workerCount;
+
+
         syncTime = utime();
         //workers ~= thisTid();
         //auto myProxy = new WorldProxy(world);
@@ -315,6 +322,11 @@ final class Scheduler {
         foreach (mod; modules) {
             mod.serializeModule();
         }
+        BREAK_IF(!g_isServer);
+        auto gameName = game.worldMap.worldSeed.to!string();
+        copy(g_worldPath, "saves/" ~ gameName); //Will keep old save until we exit deliberately or somehow else.
+
+
         shouldSerialize = false;
         while(game.sendingSaveGame){
             pragma(msg, "Fix proper thread communication for handling sending of games after sync.");

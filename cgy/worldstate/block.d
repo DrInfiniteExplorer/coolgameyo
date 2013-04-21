@@ -11,6 +11,7 @@ import std.exception;
 import std.stdio;
 
 import core.sync.mutex;
+import core.atomic;
 
 import light;
 import util.pos;
@@ -83,10 +84,18 @@ shared static this() {
     freeblock = AllocationBlock.create();
 }
 
+shared int blockCount = 0;
+
+ulong getBlockMemorySize() {
+    return blockCount * BlockTiles.sizeof / 1024;
+}
+
 Block_t alloc() {
     Block_t block;
     block.tiles = new typeof(*block.tiles);
     setFlag(block.flags, BlockFlags.valid, true);
+    blockCount = core.atomic.atomicOp!"+="(blockCount, 1);
+
     return block;
 
     /*
@@ -103,6 +112,8 @@ Block_t alloc() {
     */
 }
 void free(Block_t block) {
+    delete block.tiles;
+    blockCount = core.atomic.atomicOp!"-="(blockCount, 1);
     return;
     /*
     synchronized(blockAllocatorMutex) {

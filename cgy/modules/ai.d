@@ -8,6 +8,7 @@ import std.stdio;
 import changes.worldproxy;
 import json;
 import game;
+import globals : g_worldPath;
 import modules.module_;
 import modules.path;
 import unit;

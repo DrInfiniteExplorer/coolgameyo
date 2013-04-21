@@ -13,7 +13,7 @@ import util.util;
 import util.rect;
 
 
-class GuiElementProgressBar : public GuiElement {
+class GuiElementProgressBar : GuiElement {
     protected GuiElementText text;
     protected uint max;
     protected uint progress;

@@ -22,7 +22,7 @@
   <isFreeBSD>0</isFreeBSD>
   <isSolaris>0</isSolaris>
   <scheduler>0</scheduler>
-  <useDeprecated>1</useDeprecated>
+  <useDeprecated>0</useDeprecated>
   <useAssert>0</useAssert>
   <useInvariants>0</useInvariants>
   <useIn>0</useIn>
@@ -82,7 +82,7 @@
   <cv2pdbOptions />
   <objfiles />
   <linkswitches />
-  <libfiles>comdlg32.lib gdi32.lib advapi32.lib derelictil.lib derelictgl.lib derelictutil.lib derelictsdl.lib</libfiles>
+  <libfiles>comdlg32.lib gdi32.lib advapi32.lib</libfiles>
   <libpaths />
   <deffile />
   <resfile />
@@ -91,7 +91,7 @@
   <additionalOptions>-L/SUBSYSTEM:CONSOLE:4.0</additionalOptions>
   <preBuildCommand>@taskkill /f /im cgy.exe &gt;nul 2&gt;&amp;1
 @ver &gt; nul</preBuildCommand>
-  <postBuildCommand />
+  <postBuildCommand>@echo Debug&gt; $(SolutionDir)\gameroot\latestBuildType</postBuildCommand>
   <filesToClean>*.obj;*.cmd;*.build;*.json;*.dep</filesToClean>
  </Config>
  <Config name="Release" platform="Win32">
@@ -176,7 +176,7 @@
   <cv2pdbOptions />
   <objfiles />
   <linkswitches />
-  <libfiles>comdlg32.lib gdi32.lib win32.lib advapi32.lib derelictil.lib derelictgl.lib derelictutil.lib derelictsdl.lib</libfiles>
+  <libfiles>comdlg32.lib gdi32.lib advapi32.lib</libfiles>
   <libpaths />
   <deffile />
   <resfile />
@@ -184,7 +184,7 @@
   <useStdLibPath>1</useStdLibPath>
   <additionalOptions>-L/SUBSYSTEM:CONSOLE:4.0</additionalOptions>
   <preBuildCommand />
-  <postBuildCommand />
+  <postBuildCommand>@echo Release&gt; $(SolutionDir)\gameroot\latestBuildType</postBuildCommand>
   <filesToClean>*.obj;*.cmd;*.build;*.json;*.dep</filesToClean>
  </Config>
  <Config name="Debug" platform="x64">
@@ -269,7 +269,7 @@
   <cv2pdbOptions />
   <objfiles />
   <linkswitches />
-  <libfiles>user32.lib comdlg32.lib gdi32.lib advapi32.lib derelictil.lib derelictgl.lib derelictutil.lib derelictsdl.lib</libfiles>
+  <libfiles>user32.lib comdlg32.lib gdi32.lib advapi32.lib</libfiles>
   <libpaths />
   <deffile />
   <resfile />
@@ -363,7 +363,7 @@
   <cv2pdbOptions />
   <objfiles />
   <linkswitches />
-  <libfiles>user32.lib comdlg32.lib gdi32.lib advapi32.lib derelictil.lib derelictgl.lib derelictutil.lib derelictsdl.lib</libfiles>
+  <libfiles>comdlg32.lib gdi32.lib advapi32.lib</libfiles>
   <libpaths />
   <deffile />
   <resfile />
@@ -395,6 +395,13 @@
    <File path="entities\treelikeinstance.d" />
    <File path="entities\workshop.d" />
   </Folder>
+  <Folder name="network">
+   <File path="network\all.d" />
+   <File path="network\client.d" />
+   <File path="network\common.d" />
+   <File path="network\server.d" />
+  </Folder>
+  <Folder name="sound" />
   <Folder name="graphics">
    <Folder name="_2d">
     <File path="graphics\_2d\image.d" />
@@ -460,6 +467,7 @@
    <File path="gui\newgamemenu.d" />
    <File path="gui\optionmenu.d" />
    <File path="gui\printscreenmenu.d" />
+   <File path="gui\serverinterface.d" />
    <File path="gui\splineedit.d" />
    <File path="gui\statistics.d" />
    <File path="gui\unitcontrol.d" />
@@ -486,7 +494,6 @@
   <Folder name="modules">
    <File path="modules\ai.d" />
    <File path="modules\module_.d" />
-   <File path="modules\network.d" />
    <File path="modules\path.d" />
   </Folder>
   <Folder name="opencl">
@@ -588,12 +595,12 @@
    <File path="util\window.d" />
   </Folder>
   <Folder name="worldgen">
-   <File path="worldgen\erosion.d" />
    <File path="worldgen\gpuerosion.d" />
    <File path="worldgen\heightmap.d" />
    <File path="worldgen\maps.d" />
    <File path="worldgen\strata.d" />
    <File path="worldgen\worldgen.d" />
+   <File path="worldgen\worldpop.d" />
   </Folder>
   <Folder name="worldstate">
    <File path="worldstate\activity.d" />
@@ -613,6 +620,7 @@
   <File path="entitytypemanager.d" />
   <File path="gaia.d" />
   <File path="game.d" />
+  <File path="globals.d" />
   <File path="inventory.d" />
   <File path="json.d" />
   <File path="light.d" />

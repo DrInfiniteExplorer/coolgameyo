@@ -148,10 +148,8 @@ class ShaderProgram(T...){
             alias GL_COMPUTE_SHADER TypeEnum;
         }
         if(shader == 0) {
-            shader = glCreateShader(TypeEnum);
-            glGetError();
-            glAttachShader(program, shader);
-            glError();
+            shader = glCreateShader(TypeEnum); glError();
+            glAttachShader(program, shader); glError();
         }
         immutable(char)*[1] ptr;
         int[1] length;
@@ -169,6 +167,9 @@ class ShaderProgram(T...){
             BREAKPOINT;
         }
     }
+    alias compileSource!(ShaderType.Vertex) compileVertex;
+    alias compileSource!(ShaderType.Fragment) compileFragment;
+    alias compileSource!(ShaderType.Compute) compileCompute;
 
     void vertex(string filename) @property{
         vertexShader = filename;

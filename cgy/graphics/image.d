@@ -196,6 +196,40 @@ struct Image {
         glError();
     }
 
+    void fromGLFloatTex(uint tex, float min, float max) {
+        int width, height;
+
+        glBindTexture(GL_TEXTURE_2D, tex); glError();
+        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width); glError();
+        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height); glError();
+
+
+        if(width * height <= 0) {
+            msg("ALERT! Image captured is not very interesting, it has 0 area! Making it 1x1");
+            imgWidth = 1;
+            imgHeight = 1;
+            imgData.length = 4;
+            return;
+        }
+
+        imgWidth = width;
+        imgHeight = height;
+        imgData.length = 4 * width * height;
+        float[] flt;
+        flt.length = imgData.length;
+        glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, flt.ptr); glError();
+        flt[] -= min;
+        flt[] *= 255 / (max-min);
+        foreach(size_t idx ; 0 .. imgData.length) {
+            imgData[idx] = cast(ubyte)flt[idx];
+            if((idx % 4) == 3) {
+                imgData[idx] = 255; // Force alpha to be non see trouhj
+            }
+        }
+    }
+
+
+
     uint toGLTex(uint tex){
         int width, height;
         version(derpderp){
@@ -233,7 +267,7 @@ struct Image {
     }
     
 
-    void setPixel(int x, int y, int r, int g, int b, int a=0) {
+    void setPixel(int x, int y, int r, int g, int b, int a=255) {
         imgData[4*(x + y * imgWidth) + 0] = cast(ubyte)clamp(r, 0, 255);
         imgData[4*(x + y * imgWidth) + 1] = cast(ubyte)clamp(g, 0, 255);
         imgData[4*(x + y * imgWidth) + 2] = cast(ubyte)clamp(b, 0, 255);

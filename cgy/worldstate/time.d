@@ -38,8 +38,8 @@ mixin template WorldTimeClockCode() {
     vec3d getSunPosition() {
 
         auto sincos = expi(2*PI*getDayTime());
-        immutable double worldSize = worldSize;
-        immutable worldSize2 = 2 * worldSize * 100;
+        immutable double WorldSize = WorldSize;
+        immutable worldSize2 = 2 * WorldSize * 100;
         return vec3d(worldSize2*sincos.im, 0, abs(worldSize2*sincos.re));
     }
 

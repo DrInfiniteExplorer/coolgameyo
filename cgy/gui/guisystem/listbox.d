@@ -12,7 +12,7 @@ import util.util;
 import util.rect;
 import inventory;
 
-class GuiElementListBox : public GuiElement {
+class GuiElementListBox : GuiElement {
 
 	int selectedIndex = -1; // -1 is no item selected
     string[] items;

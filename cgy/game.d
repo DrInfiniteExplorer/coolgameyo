@@ -38,8 +38,8 @@ import json;
 //import changes.changelist;
 import main;
 import modules.ai;
-import modules.network;
 import modules.path;
+import network.all;
 import util.pos;
 import scheduler;
 import scene.scenemanager;
@@ -58,10 +58,6 @@ import changes.worldproxy;
 //import worldgen.worldgen;
 import worldgen.maps;
 
-__gshared bool g_isServer;
-__gshared string g_worldPath;
-
-string SDLError() { return to!string(SDL_GetError()); }
 
 final class PlayerInformation {
     string name;
@@ -235,7 +231,7 @@ class Game{
 
         auto clan = newClan(worldState);
 
-        // halfWorldSize_xy
+        // HalfWorldSize_xy
         Unit addUnitAtPos()(vec2i pos) {
             auto xy = TileXYPos(pos);
             auto u = newUnit();

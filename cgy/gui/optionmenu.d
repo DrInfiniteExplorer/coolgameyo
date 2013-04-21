@@ -5,6 +5,7 @@
 module gui.optionmenu;
 
 import std.conv;
+import core.cpuid;
 
 import main;
 
@@ -34,6 +35,9 @@ class OptionMenu : GuiElementWindow {
     GuiElementComboBox smoothSetting;
     GuiElementComboBox raycastSetting;
 
+    GuiElementSlider!int maxThreads;
+
+
     MainMenu main;
     this(MainMenu m) {
         main = m;
@@ -56,6 +60,8 @@ class OptionMenu : GuiElementWindow {
         
         sensX = new GuiElementSlider!float(this, Rectd(vec2d(0.10, 0.40), vec2d(0.3, 0.05)), controlSettings.mouseSensitivityX, 0.25, 5.0, &onMouseX);
         sensY = new GuiElementSlider!float(this, Rectd(vec2d(0.10, 0.45), vec2d(0.3, 0.05)), controlSettings.mouseSensitivityY, 0.25, 5.0, &onMouseY);
+
+        maxThreads = new typeof(maxThreads)(this, Rectd(vec2d(sensY.rightOf + 0.025, 0.45), vec2d(0.3, 0.05)), g_maxThreadCount, 1, core.cpuid.threadsPerCPU, &onMaxThread);
         
         // Was only to test out the gui element
         //new GuiElementEditbox(this, Rectd(vec2d(0.10, 0.35), vec2d(0.3, 0.05)), "Render invalid tiles?",);
@@ -134,6 +140,9 @@ class OptionMenu : GuiElementWindow {
     }
     void onMouseY(float y) {
         controlSettings.mouseSensitivityY = y;
+    }
+    void onMaxThread(int y) {
+        g_maxThreadCount = y;
     }
 
     void onSmoothChange(int selectedIndex) {

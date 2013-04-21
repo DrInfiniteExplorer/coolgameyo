@@ -14,7 +14,7 @@ import util.rect;
 
 
 
-class GuiElementWindow : public GuiElement {
+class GuiElementWindow : GuiElement {
     private string caption;
     private bool dragable;
     

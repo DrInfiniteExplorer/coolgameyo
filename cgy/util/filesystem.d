@@ -10,11 +10,17 @@ import std.traits;
 
 import util.util;
 
+
 bool exists(string path) {
     return std.file.exists(path);
 }
 bool existsDir(string path) {
     return exists(path) && isDir(path);
+}
+
+ulong fileSize(string path) {
+//    import std.stdio : getSize;
+    return getSize(path);
 }
 
 //Reads a whole file as text
@@ -144,7 +150,7 @@ body{
 struct BinaryFile {
     File file;
     this(string path, string mode) {
-        if(std.algorithm.indexOf(mode, "b") == -1) {
+        if(countUntil(mode, "b") == -1) {
             mode = mode ~ "b";
         }
         file = std.stdio.File(path, mode);

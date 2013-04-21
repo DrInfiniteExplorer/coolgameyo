@@ -22,6 +22,8 @@ class Camera{
     float farPlane;
     float nearPlane;
     float speed = 1.0;
+    bool mouseMoveEnabled = true;
+    bool printPosition = false;
 
     this() {
         farPlane = renderSettings.farPlane;
@@ -124,6 +126,9 @@ class Camera{
 
         //Does not work perfectly, since it's done as one rotation, messing up stuff sortof like :P
         //viewQuat = quatd.stealRotation(vec3d(0, 1, 0), targetDir);
+        if(printPosition) {
+            msg("targetDir:", targetDir);
+        }
     }
     void setTarget(vec3d target){
         setTargetDir((target-position).normalizeThis());
@@ -134,6 +139,7 @@ class Camera{
 
     const double PI2 = PI*2.0;
     void mouseMove(int dx, int dy){
+        if(!mouseMoveEnabled) return;
         //matrix4 mat;
         double degZ; //Degrees rotation around Z-axis(up).
         double degX; //Degrees rotation around X-axis(left->right-axis)
@@ -153,6 +159,10 @@ class Camera{
         auto pitchQuat = quaternion!double.rotationQuat(degX, 0, -1, 0);
         viewQuat = rotQuat * viewQuat * pitchQuat;
         targetDir = viewQuat.rotate(vec3d(1, 0, 0));
+        if(printPosition) {
+            msg("targetDir:", targetDir);
+        }
+
     }
 
     void axisMove(double right, double forward, double up){
@@ -161,5 +171,8 @@ class Camera{
         vec3d _right = _fwd.crossProduct(_up).normalizeThis();
         vec3d movement = _fwd*forward + _up*up + _right*right;
         position += movement;
+        if(printPosition) {
+            msg("position:", position);
+        }
     }
 }

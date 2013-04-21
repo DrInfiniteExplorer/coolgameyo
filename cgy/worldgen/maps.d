@@ -9,6 +9,7 @@ import std.conv;
 import std.exception;
 import std.math;
 import std.md5;
+import std.random;
 import std.stdio;
 
 
@@ -51,6 +52,7 @@ import util.voronoi.voronoi;
 import worldgen.heightmap;
 import worldgen.strata;
 import worldgen.worldgen;
+import worldgen.worldpop;
 
 import worldstate.worldstate;
 import worldstate.heightmap;
@@ -65,16 +67,19 @@ alias ValueMap2Dd ValueMap;
 //immutable mapScale = [0, 3200, 12800, 51200, 204800, /*start mipmaps */ 819200,  819200, 819200];
 
 //1 mil värt av värld. Yeah.
-//immutable worldSize = 1 * 1_000;
-immutable worldSize = 2 * 25 * 1_024;
+//immutable WorldSize = 1 * 1_000;
+immutable WorldSize = 2 * 25 * 1_024;
+immutable SampleIntervall = 25; //10 meters between each sample
+immutable TotalSamples = WorldSize / SampleIntervall;
 
-immutable halfWorldSize = vec3i(worldSize/2, worldSize/2, 0);
-immutable halfWorldSize_xy = vec2i(worldSize/2);
+immutable HalfWorldSize = vec3i(WorldSize/2, WorldSize/2, 0);
+immutable HalfWorldSize_xy = vec2i(WorldSize/2);
 
 
 final class WorldMap {
 
     mixin WorldGenerator;
+    mixin WorldPopulation;
 
     HeightMaps heightMaps;
     MaterialStratum[] stratas;
@@ -82,6 +87,7 @@ final class WorldMap {
     int worldSeed;
     int strataSeed;
     int heightmapSeed;
+    int walkSeed;
     string worldPath;
 
     this() {
@@ -113,7 +119,7 @@ final class WorldMap {
         if(exists(worldPath)) {
             import log : LogWarning;
             LogWarning("A folder already exists at '", worldPath, "'. Will ignore totally ignore that.");
-            rmdir(worldPath);
+            //rmdir(worldPath);
             //BREAKPOINT;
         }
         mkdir(worldPath);
@@ -125,6 +131,7 @@ final class WorldMap {
         }
         heightMaps.generate(heightmapSeed);
 
+        generateLife();
     }
 
     void loadWorld(string path) {
@@ -146,6 +153,7 @@ final class WorldMap {
         auto rnd = new RandSourceUniform(worldSeed);
         strataSeed = rnd.get(int.min, int.max);
         heightmapSeed = rnd.get(int.min, int.max);
+        walkSeed = rnd.get(int.min, int.max);
     }
 
     void save() {
@@ -159,8 +167,11 @@ final class WorldMap {
 
 
     //Assumes z=0 == surface of world and Z+ is upwards
-    // May have to offset with world contour first.
+    // May have to offset with world contour first. 
     int getStrataNum(int x, int y, int z) {
+        if(z >= 0) {
+            return 0;
+        }
         BREAK_IF(z > 20);
         z = min(z, 0); // Allow for some retardedness in calculations.
         int num = 0;
@@ -169,6 +180,9 @@ final class WorldMap {
         int zDepth = -z;
         while(zDepth > depth) {
             num++;
+            if(num == stratas.length) {
+                return stratas.length - 1;
+            }
             depth += stratas[num].getHeight(xyPos);
         }
         return num;

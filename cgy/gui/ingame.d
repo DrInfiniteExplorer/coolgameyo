@@ -12,7 +12,7 @@ import unit;
 import util.util;
 import worldstate.worldstate;
 
-class InGameGui : public GuiElement{
+class InGameGui : GuiElement{
 
     Game game;
     GuiSystem guiSystem;
@@ -112,6 +112,15 @@ class FpsHandler : GuiEventDump {
         } else if (m.right) {
 
         } else if (m.middle) {
+            vec3d start, dir;
+            camera.getRayFromScreenCoords(mousecoords, start, dir);
+            Tile tile;
+
+            import util.tileiterator;
+            foreach(tilePos ; TileIterator(start, dir, 25, null)) {
+                game.damageTile(tilePos, 5);
+            }
+
         }
     }
     void onKey(GuiEvent.KeyboardEvent k) {
@@ -192,7 +201,7 @@ class FpsHandler : GuiEventDump {
 
         auto pos = possessAI.getUnitPos();
         auto dir = camera.getTargetDir();
-        pos += vec3d(0, 0, 0.50); //Unit is 1.5 big now; unitpos is at 0.5 above feets
+        pos += vec3d(0, 0, 1.0); // 0.5 from possesai - collidemove and 1.0 from here -> eye at 1.5 over ground
         camera.setPosition(pos);
         import std.math : atan2;
         auto rad = atan2(dir.y, dir.x);

@@ -6,12 +6,12 @@
 	"strength":10,
 	"tintFromMaterial":1,
 	"tintColor":{ "x":255, "y":255, "z":255 },
-	"texturePathTop":"textures/001.png",
-	"texturePathSides":"textures/001.png",
-	"texturePathBottom":"textures/001.png",
-	"textureCoordTop":{ "x":32, "y":0 },
-	"textureCoordSides":{ "x":32, "y":32 },
-	"textureCoordBottom":{ "x":32, "y":64 }
+	"texturePathTop":"textures/dirt.png",
+	"texturePathSides":"textures/dirt.png",
+	"texturePathBottom":"textures/dirt.png",
+	"textureCoordTop":{ "x":0, "y":0 },
+	"textureCoordSides":{ "x":0, "y":32 },
+	"textureCoordBottom":{ "x":0, "y":0 }
   },
   "grass":{
     "displayName":"Grassly grass",

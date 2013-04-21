@@ -10,7 +10,7 @@ import util.rect;
 
 
 
-class GuiElementText : public GuiElement {
+class GuiElementText : GuiElement {
     StringTexture text;
     this(GuiElement parent) {
         super(parent);

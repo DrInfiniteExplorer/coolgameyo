@@ -1,12 +1,13 @@
 
 module gui.guisystem.editbox;
 
+import std.ascii : digits;
 import std.algorithm;
 import std.array;
 import std.conv;
 import std.exception;
 import std.stdio;
-import std.string;
+import std.string : indexOf;
 
 //TODO: Make this a public import in some gui-module.
 import derelict.sdl.sdl;
@@ -21,7 +22,7 @@ import util.rect;
 
 
 
-class GuiElementEditbox : public GuiElement {
+class GuiElementEditbox : GuiElement {
     alias bool delegate(char ch) ValidCharFilter;
     void delegate(string) onEnter; //When enter is pressed.
     ValidCharFilter filter; //Return true to allow!

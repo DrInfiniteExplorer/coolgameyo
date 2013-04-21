@@ -14,18 +14,26 @@ import std.getopt;
 import std.stdio;
 import std.string;
 
+pragma(lib, "derelictal.lib");
+pragma(lib, "derelictil.lib");
+pragma(lib, "derelictgl.lib");
+pragma(lib, "derelictutil.lib");
+pragma(lib, "derelictsdl.lib");
+
+import derelict.openal.al;
 import derelict.sdl.sdl;
 import derelict.opengl.gl;
 import derelict.devil.il;
 import derelict.devil.ilu;
 
 import alloc;
-import game;
+import globals;
 import graphics.ogl;
 import gui.guisystem.guisystem;
 import gui.joinmenu;
 import gui.mainmenu;
 import gui.printscreenmenu;
+import gui.serverinterface;
 import log;
 
 import statistics;
@@ -35,11 +43,13 @@ import util.memory;
 import util.pos;
 import util.util;
 import util.window;
-import worldgen.maps : worldSize;
+import worldgen.maps : WorldSize;
 
 
 import modelparser.cgyparser;
 
+
+string SDLError() { return to!string(SDL_GetError()); }
 
 SDL_Surface* surface;     
 
@@ -192,6 +202,9 @@ void main(string[] args) {
                     //menu = hostMenu();
                     startServer();
                     break;
+                default:
+                    LogError("Bad menu option:", menu);
+                    BREAKPOINT;
             }
         }
     } catch (Exception e) {
@@ -207,6 +220,8 @@ void initLibraries() {
     DerelictGL.load(); //Init opengl regardless?
     DerelictIL.load();
     DerelictILU.load();
+    DerelictAL.load();
+
     ilInit();
     iluInit();
 }
@@ -215,6 +230,7 @@ void deinitLibraries() {
     //TODO: destroy "surface" and how? :P        
     deinitOpenGL();
     SDL_Quit();
+    DerelictAL.unload();
     DerelictIL.unload();
     DerelictGL.unload();
     DerelictSDL.unload();
@@ -340,7 +356,7 @@ bool handleSDLEvent(in SDL_Event event, float now, GuiSystem guiSystem) {
     return exit;
 }
 
-void EventAndDrawLoop(GuiSystem guiSystem, scope void delegate(float) render, scope bool delegate() endLoop = null) {
+void EventAndDrawLoop(bool canYield)(GuiSystem guiSystem, scope void delegate(float) render, scope bool delegate() endLoop = null) {
     long then;
     long now = utime();
     bool exit = false;
@@ -367,36 +383,10 @@ void EventAndDrawLoop(GuiSystem guiSystem, scope void delegate(float) render, sc
         if(endLoop) {
             exit = endLoop();
         }
-    }
-}
-
-void startServer() {
-
-    if(!exists(g_worldPath)) {
-        msg("Alert! Tried to main.d:startServer() without a " ~ g_worldPath ~ "!");
-        return;
-    }
-
-    GuiSystem guiSystem;
-    guiSystem = new GuiSystem;
-
-    string fullText = "Server log\n";
-    import gui.guisystem.text;
-    auto txt = new GuiElementText(guiSystem, vec2d(0), fullText);
-    auto handleMsg = (string s) {
-        synchronized(txt) {
-            fullText ~= s;
-            txt.setText(fullText);
+        static if(canYield) {
+            Thread.yield();
         }
-    };
-    logCallback = handleMsg;
-
-    Game game = new Game(true);
-    game.loadGame();
-    EventAndDrawLoop(guiSystem,  null);
-
-    game.destroy();
-    guiSystem.destroy();
-
+    }
 }
+
 

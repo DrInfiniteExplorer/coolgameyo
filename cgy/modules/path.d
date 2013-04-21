@@ -9,6 +9,7 @@ import std.conv;
 
 import json;
 import game;
+import globals : g_worldPath;
 import modules.module_;
 import scheduler;
 import util.util;

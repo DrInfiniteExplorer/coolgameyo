@@ -5,8 +5,8 @@ import util.rect;
 import random.valuesource;
 
 //Scale and offset. For example, to use a valuemap(width, height) as source for world height,
-// we want to scale with width/(worldSize*sectorsize.x) and offset with (width/2, height/2) to make sampling of
-// 0, SectorSize.y*worldSize/2 sample the value at width/2, height
+// we want to scale with width/(WorldSize*sectorsize.x) and offset with (width/2, height/2) to make sampling of
+// 0, SectorSize.y*WorldSize/2 sample the value at width/2, height
 final class ModScaleOffset : ValueSource {
     ValueSource source;
     vec3d scale;

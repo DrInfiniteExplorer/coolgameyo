@@ -34,7 +34,7 @@ import util.rect;
 */
 
 //For now only just vertical
-class GuiElementScrollBar : public GuiElement {
+class GuiElementScrollBar : GuiElement {
 
     auto scrollWidth = 16;
 

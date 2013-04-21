@@ -14,6 +14,8 @@ import graphics.camera;
 import graphics.heightmap;
 alias graphics.heightmap.Heightmap HMap;
 
+import json;
+
 import math.math : equals;
 import math.math : advect, clamp, fastFloor;
 import random.random : BSpline;
@@ -26,24 +28,25 @@ import worldgen.gpuerosion;
 import worldgen.maps;
 import worldgen.strata;
 
-enum SampleIntervall = 25; //10 meters between each sample
-
 immutable maxHeight = 10_000;
 immutable startAmplitude = maxHeight / 2;
 immutable startIntervall = 60000;
 immutable endIntervall = SampleIntervall * 3;
 immutable baseFrequency = 1.0f / startIntervall;
-int octaves;
-float endAmplitude;
+
+__gshared int octaves;
+__gshared float endAmplitude;
 
 immutable InitSoilDepth = 0.0;
 
 immutable Ridged = true;
 
-int IterModValue;
+__gshared int IterModValue;
 
 shared static this() {
     octaves = cast(int)logb(startIntervall / endIntervall);
+    octaves = 4;
+    msg("octaves: ", octaves);
     endAmplitude = startAmplitude * (0.5 ^^ octaves);
 
     //1 -> Always
@@ -54,26 +57,30 @@ shared static this() {
 
 
 class HeightMaps {
-    size_t worldSize; //In meters
+    size_t WorldSize; //In meters
     size_t mapSize; //In samples
     size_t mapSizeSQ;
     size_t mapSizeBytes;
     WorldMap worldMap;
 
     MmFile heightmapFile;
-    float[] mapData; // Pointer to memory in heightmapfile.
+    float[] heightData; // Pointer to memory in heightmapfile.
     MmFile soilFile;
     float[] soilData;
     MmFile waterFile;
     float[] waterData;
+    MmFile flowFile;
+    vec2f[] flowData;
+
+    float mean = 0.0;
 
     SimplexNoise baseHeightNoise;
 
     this(WorldMap _worldMap) {
         worldMap = _worldMap;
-        auto size = .worldSize; // 1 mil
-        worldSize = size; // In meters woah.
-        mapSize = worldSize / SampleIntervall;
+        auto size = .WorldSize; // 1 mil
+        WorldSize = size; // In meters woah.
+        mapSize = WorldSize / SampleIntervall;
         mapSizeSQ = mapSize ^^ 2;
         mapSizeBytes = mapSize * mapSize * float.sizeof;
         msg("mapSize(kilo)Bytes: ", mapSizeBytes / 1024);
@@ -88,25 +95,39 @@ class HeightMaps {
         delete heightmapFile;
         delete soilFile;
         delete waterFile;
-        mapData = null;
+        delete flowFile;
+        heightData = null;
         soilData = null;
         waterData = null;
+        flowData = null;
     }
 
-    void load(int seed) {
+    void loadFiles(bool create) {
+        auto mode = create ? MmFile.Mode.readWriteNew : MmFile.Mode.readWrite;
         auto heightPath = worldMap.worldPath ~ "/map1";
-        msg("Loading heightmap at: ", heightPath);
-        heightmapFile = new MmFile(heightPath, MmFile.Mode.readWrite, mapSizeBytes, null, 0);
-        mapData = cast(float[])heightmapFile[];
+        heightmapFile = new MmFile(heightPath, mode, mapSizeBytes, null, 0);
+        heightData = cast(float[])heightmapFile[];
 
         auto soilPath = worldMap.worldPath ~ "/map2";
-        soilFile = new MmFile(soilPath, MmFile.Mode.readWrite, mapSizeBytes, null, 0);
+        soilFile = new MmFile(soilPath, mode, mapSizeBytes, null, 0);
         soilData = cast(float[])soilFile[];
 
         auto waterPath = worldMap.worldPath ~ "/map3";
-        waterFile = new MmFile(waterPath, MmFile.Mode.readWrite, mapSizeBytes, null, 0);
+        waterFile = new MmFile(waterPath, mode, mapSizeBytes, null, 0);
         waterData = cast(float[])waterFile[];
 
+        auto flowPath = worldMap.worldPath ~ "/map4";
+        flowFile = new MmFile(flowPath, mode, 2 * mapSizeBytes, null, 0);
+        flowData = cast(vec2f[])flowFile[];
+
+        if(!create) {
+            loadJSON(worldMap.worldPath ~ "/worldMean.json").
+                readJSONObject("worldMean", &mean);
+        }
+    }
+
+    void load(int seed) {
+        loadFiles(false);
         baseHeightNoise = new SimplexNoise(seed);
     }
 
@@ -136,7 +157,7 @@ class HeightMaps {
         dst /= (mapSize*0.25 * SampleIntervall);
         //msg(dst);
 
-        return value;
+        return value - mean;
         //return dst < 1 ? 100 : 0;
         //return dst < 1 ? sqrt(1-dst^^2)*100 : 0;
         //return dst < 1 ? (1-dst)*100 : 0;
@@ -162,19 +183,17 @@ class HeightMaps {
     void generate(int seed) {
         baseHeightNoise = new SimplexNoise(seed);
 
-        auto heightPath = worldMap.worldPath ~ "/map1";
-        msg("Creating heightmap at: ", heightPath);
-        BREAK_IF(heightmapFile !is null);
-        heightmapFile = new MmFile(heightPath, MmFile.Mode.readWriteNew, mapSizeBytes, null, 0);
-        mapData = cast(float[])heightmapFile[];
-
-        auto soilPath = worldMap.worldPath ~ "/map2";
-        soilFile = new MmFile(soilPath, MmFile.Mode.readWrite, mapSizeBytes, null, 0);
-        soilData = cast(float[])soilFile[];
+        auto erodedPath = worldMap.worldPath ~ "/eroded";
+        if(exists(erodedPath)) {
+            loadFiles(false);
+            return;
+        } else {
+            loadFiles(true);
+        }
 
         size_t LIMIT_STEP = mapSizeSQ / 2500;
         size_t progress = 0;
-        foreach(size_t i, ref value ; mapData) {
+        foreach(size_t i, ref value ; heightData) {
                 if( (i % LIMIT_STEP) == 0) {
                 progress += LIMIT_STEP;
                 msg("Progress: ", 100.0f * cast(float)progress / mapSizeSQ);
@@ -183,12 +202,16 @@ class HeightMaps {
             value = getOriginalHeight(pos*SampleIntervall);
         }
 
-        msg("h max", reduce!max(mapData));
-        msg("h min", reduce!min(mapData));
-        msg("h mean", reduce!"a+b"(mapData) / mapSizeSQ);
-        mapData[] -= reduce!"a+b"(mapData) / mapSizeSQ;
+        msg("h max", reduce!max(heightData));
+        msg("h min", reduce!min(heightData));
+        msg("h mean", reduce!"a+b"(heightData) / mapSizeSQ);
+        mean = reduce!"a+b"(heightData) / mapSizeSQ;
+        heightData[] -= mean;
+        makeJSONObject("worldMean", mean).saveJSON(worldMap.worldPath ~ "/worldMean.json");
+
 
         applyErosion(seed);
+        writeText(erodedPath, "");
     }
 
     void addSoil(GPUErosion ero) {
@@ -219,14 +242,15 @@ class HeightMaps {
 
         auto ero = new GPUErosion();
         soilData[] = InitSoilDepth; // 2 meters worth of soil to begin with.
-        ero.init(mapData, soilData, mapSize, mapSize, seed);
+        ero.init(heightData, soilData, mapSize, mapSize, seed);
 
         HMap height = new HMap;
-        HMap wtr = new HMap;
+        scope(exit) {
+            height.destroy();
+        }
         ero.heightMap = height;
-        //ero.waterMap = wtr;
-        height.depth = wtr.depth = mapSize * SampleIntervall;
-        height.width = wtr.width = mapSize * SampleIntervall;
+        height.depth = mapSize * SampleIntervall;
+        height.width = mapSize * SampleIntervall;
         // ERODE ERODE ERODE
 
         // Start erosion thread.
@@ -234,51 +258,24 @@ class HeightMaps {
         Camera camera = new Camera;
         camera.speed *= 7;
         camera.farPlane *= 25;
-        camera.setPosition(vec3d(0, 0, 20));
-        camera.setTargetDir(vec3d(0.7, 0.7, 0));
+        camera.setPosition(vec3d(WorldSize / 3.0, -(WorldSize / 5.0), WorldSize / 3.0));
+        camera.setTargetDir(vec3d(0.1, 0.7, -0.4));
+        //camera.mouseMoveEnabled = false;
         int c = 0;
         immutable limit = 5750;
         renderLoop(camera, 
                    { return c > limit; },
                    {
-                       /*
-                       synchronized(wtr) {
-                           import derelict.opengl.gl;
-                           
-                           glEnable( GL_POLYGON_OFFSET_FILL );      
-                           glPolygonOffset( 1f, 1f );
 
-                           wtr.alpha = 1.0;
-                           //glEnable(GL_BLEND);
-                           //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-                           
-                           wtr.render(camera);
-                           //glDisable(GL_BLEND);
-                           glDisable( GL_POLYGON_OFFSET_FILL );      
-                       }
-                       */
                        synchronized(height) {
                            height.render(camera);
                        }
-                       /+
-                       if(c == 0) {
-                           addSoil(ero);
-                           rainRate = 0.0012;
-                           depositToSoil = 1;
-                           transportSoil = 1;
-                           ero.rain();
-                       } else {
-                           ero.erode();
-                       }+/
-
                        
                        if(c == 0) {
                            depositToSoil = 0;
                            transportSoil = 0;
                            rainRate = 1000;
                            ero.rain();
-                       } else {
-                           ero.erode();
                        }
                        if(c == 5000) {
                            addSoil(ero);
@@ -291,6 +288,9 @@ class HeightMaps {
                        if(c > 5000) {
                            rainRate = 0.012;
                            ero.rain();
+                       }
+                       if(c < 5750) {
+                           ero.erode();
                        }
 
                        
@@ -305,9 +305,11 @@ class HeightMaps {
                        */
                        c++;
                    });
-        ero.getHeight(mapData);
+        ero.getHeight(heightData);
         ero.getSoil(soilData);
         ero.getWater(waterData);
+        ero.getFlow(flowData);
+        ero.destroy();
     }
 
     ref float getMapValue(string which, bool clamp)(int x, int y) {
@@ -324,8 +326,12 @@ class HeightMaps {
         return mixin(which)[idx];
     }
 
-    alias getMapValue!("mapData",false) getHeightValue;
+    alias getMapValue!("heightData",true) getHeightValueClamp;
+    alias getMapValue!("soilData",true) getSoilValueClamp;
+    alias getMapValue!("waterData",true) getWaterValueClamp;
+    alias getMapValue!("heightData",false) getHeightValue;
     alias getMapValue!("soilData", false) getSoilValue;
+    alias getMapValue!("waterData", false) getWaterValue;
 
     float getMap(string which, bool interpolate = true)(TileXYPos pos) {
         vec2f pt = pos.value.convert!float / cast(float)SampleIntervall;
@@ -343,11 +349,26 @@ class HeightMaps {
         }
     }
 
+    vec2f getSampleSlope(vec2i samplePos) {
+        int x = samplePos.x;
+        int y = samplePos.y;
+        float getHeight(int x, int y) {
+            return getHeightValueClamp(x, y) + getSoilValueClamp(x, y);
+        }
+        float slopeX = getHeight(x - 1, y) - getHeight(x + 1, y);
+        float slopeY = getHeight(x, y - 1) - getHeight(x, y + 1);
+        immutable float mult = 1.0 / ( 2.0 * SampleIntervall);
+        return vec2f(slopeX, slopeY) * mult;
+    }
+
     auto getHeight(bool interpolate = true)(TileXYPos pt) {
-        return getMap!("mapData", interpolate)(pt);
+        return getMap!("heightData", interpolate)(pt);
     }
     auto getSoil(bool interpolate = true)(TileXYPos pt) {
         return getMap!("soilData", interpolate)(pt);
+    }
+    auto getWater(bool interpolate = true)(TileXYPos pt) {
+        return getMap!("waterData", interpolate)(pt);
     }
 }
 

@@ -63,16 +63,22 @@ mixin template WorldGenerator() {
         //return heightMaps.getSoil!false(pos);
         return heightMaps.getSoil!true(pos);
     }
+    auto getWater(TileXYPos pos) {
+        //return heightMaps.getSoil!false(pos);
+        return heightMaps.getWater!true(pos);
+    }
 
     void fillSector(Sector sector, SectorHeightmap _heightmap) {
 
         double[SectorSize.x][SectorSize.y] heightValues;
         double[SectorSize.x][SectorSize.y] soilValues;
+        double[SectorSize.x][SectorSize.y] waterValues;
         auto sectorStart = sector.getSectorNum().toTileXYPos();
         foreach(int x, int y ; Range2D(vec2i(0, 0), vec2i(SectorSize.x, SectorSize.y))) {
             auto pos = TileXYPos(sectorStart.value + vec2i(x, y));
             heightValues[y][x] = getHeight(pos); //getValueInterpolated(1, ));
             soilValues[y][x] = getSoil(pos); //getValueInterpolated(1, ));
+            waterValues[y][x] = getWater(pos); //getValueInterpolated(1, ));
         }
 
         auto heightmap = _heightmap.getMaxPerBlock();
@@ -88,7 +94,7 @@ mixin template WorldGenerator() {
             }
             Block_t block = tempBlock;
             block.blockNum = blockNum;
-            if(fillBlockInternal(&block, heightValues, soilValues)) {
+            if(fillBlockInternal(&block, heightValues, soilValues, waterValues)) {
                 tempBlock = block.allocBlock();
             }
             sector.unsafe_setBlock(block);
@@ -100,7 +106,8 @@ mixin template WorldGenerator() {
     //It is the callers responsibility to make sure the block is free'd
     private bool fillBlockInternal(Block block,
                                    ref double[SectorSize.x][SectorSize.y] heightMap,
-                                   ref double[SectorSize.x][SectorSize.y] soilMap) {
+                                   ref double[SectorSize.x][SectorSize.y] soilMap,
+                                   ref double[SectorSize.x][SectorSize.y] waterMap) {
         auto blockNum = block.blockNum;
         auto blockRel = blockNum.rel();
         auto tp0 = blockNum.toTilePos();
@@ -120,7 +127,8 @@ mixin template WorldGenerator() {
             tp.value += relPos;
             auto heightValue = heightMap[tileOffset_y + relPos.y][tileOffset_x + relPos.x];
             auto soilValue = soilMap[tileOffset_y + relPos.y][tileOffset_x + relPos.x];
-            auto tile = getTile(tp, heightValue, soilValue);
+            auto waterValue = waterMap[tileOffset_y + relPos.y][tileOffset_x + relPos.x];
+            auto tile = getTile(tp, heightValue, soilValue, waterValue);
             block.tiles.tiles[relPos.z][relPos.y][relPos.x] = tile;
 
             if (first) {
@@ -151,11 +159,12 @@ mixin template WorldGenerator() {
 
     Tile getTile(TilePos pos) {
         auto height = getHeight(TileXYPos(pos));
-        auto soil = getHeight(TileXYPos(pos));
-        return getTile(pos, height, soil);
+        auto soil = getSoil(TileXYPos(pos));
+        auto water = getWater(TileXYPos(pos));
+        return getTile(pos, height, soil, water);
     }
 
-    Tile getTile(TilePos pos, double heightValue, double soilValue) {
+    Tile getTile(TilePos pos, double heightValue, double soilValue, double waterValue) {
 
         TileFlags flags = cast(TileFlags)(TileFlags.valid);
         if(! isInsideWorld(pos)) {
@@ -163,9 +172,16 @@ mixin template WorldGenerator() {
         }
         float distanceAboveGround = pos.value.z - (heightValue + soilValue);
         if(distanceAboveGround > 0) {
-            auto tile = Tile(TileTypeAir, flags);
-            tile.sunLightValue = 15;
-            return tile;
+            if(distanceAboveGround > waterValue) {
+                auto tile = Tile(TileTypeAir, flags);
+                tile.sunLightValue = 15;
+                return tile;
+            } else {
+                auto tileType = getBasicTileType("genericLiquid");
+                auto  tile = Tile(tileType, flags);
+                tile.sunLightValue = 15;
+                return tile;
+            }
         }
         float distanceBelowGround = -distanceAboveGround;
         if(pos.value.z > heightValue) { // Soil tile, determine soil type yeah!
@@ -205,11 +221,11 @@ mixin template WorldGenerator() {
         return id;
     }
 
-    long worldRadius = worldSize;
-    long worldRadiusSquare = (cast(long)worldSize) ^^2;
+    long worldRadius = WorldSize;
+    long worldRadiusSquare = (cast(long)WorldSize) ^^2;
     bool isInsideWorld(TilePos pos) {
-        if(pos.value.x < 0 || pos.value.x >= worldSize ||
-           pos.value.y < 0 || pos.value.y >= worldSize) {
+        if(pos.value.x < 0 || pos.value.x >= WorldSize ||
+           pos.value.y < 0 || pos.value.y >= WorldSize) {
             return false;
         }
         return true;
@@ -229,8 +245,8 @@ mixin template WorldGenerator() {
     }
 
     float getApproxHeight(TileXYPos pos, int level) {
-        pos.value.x = clamp(pos.value.x, 0, worldSize-SampleIntervall);
-        pos.value.y = clamp(pos.value.y, 0, worldSize-SampleIntervall);
+        pos.value.x = clamp(pos.value.x, 0, WorldSize-SampleIntervall);
+        pos.value.y = clamp(pos.value.y, 0, WorldSize-SampleIntervall);
         auto height = heightMaps.getHeight!false(pos);
         auto soil = heightMaps.getSoil!false(pos);
         return cast(int)ceil(height + soil);

@@ -7,7 +7,7 @@ import std.file;
 import graphics.texture;
 
 import json;
-import game;
+import globals : g_worldPath;
 import statistics;
 import util.singleton; 
 import util.util;

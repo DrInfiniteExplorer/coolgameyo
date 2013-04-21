@@ -48,7 +48,7 @@ mixin template params(ButtonCallbackPolicies policy, T...) {
 
 //Difference between this and subclass PushButton
 //is that PushButton only calls callback on released click on button.
-class Button(ButtonCallbackPolicies policy) : public GuiElement {
+class Button(ButtonCallbackPolicies policy) : GuiElement {
     protected GuiElementText buttonText;
 
     protected bool pushedDown;    

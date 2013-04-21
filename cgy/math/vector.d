@@ -3,6 +3,7 @@ module math.vector;
 import std.traits : isFloatingPoint;
 import std.math : atan2, sqrt, sin, cos;
 
+import log : LogError;
 import math.math;
 import util.util : BREAKPOINT;
 
@@ -330,7 +331,11 @@ struct vector2(T) {
         switch(idx) {
             case 0: return x;
             case 1: return y;
+            default:
         }
+        LogError("Dont index 2d vectors with stuff other than 0 or 1");
+        BREAKPOINT;
+        assert(0);
     }
 
 
@@ -352,6 +357,9 @@ struct vector2(T) {
 
     T getLength() const {
         return cast(T)sqrt(cast(real)x^^2 + y^^2);
+    }
+    T getLengthSQ() const {
+        return cast(T) cast(real) (x^^2 + y^^2);
     }
     void setLength(T length) {
         if(x == 0 && y == 0) return;

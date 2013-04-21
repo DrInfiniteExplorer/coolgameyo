@@ -107,6 +107,42 @@ extern(Windows) {
     BOOL MoveWindow(HWND, int, int, int, int, BOOL);
 
     BOOL ChooseColorA(LPCHOOSECOLORA);
+
+
+
+}
+//*
+extern(Windows) BOOL SetDllDirectoryA(LPCTSTR lpPathName);
+/*/
+template LoadWrapper(string Func, string dll, string funcName) {
+    import std.traits;
+    import util.util;
+    mixin("alias ParameterTypeTuple!" ~ Func ~ "  Params;");
+    mixin("alias ReturnType!" ~ Func ~ "  Return;");
+    // Falls on unautomatic detection of extern(Windows) atm.
+    Return LoadWrapper(Params params) {
+        HANDLE hh = LoadLibraryA(dll);
+        mixin(Func) = cast(typeof(mixin(Func)))GetProcAddress(hh, funcName);
+        if(mixin(Func) is null) {
+            msg("Could not load ", funcName, " from ", dll, " to ", Func);
+            BREAKPOINT;
+        }
+        msg("asd",params[0],"asd");
+        return mixin(Func)(params);
+        pragma(msg, typeof(return));
+        pragma(msg, Params);
+    }
 }
 
+alias extern(Windows) BOOL function(LPCTSTR lpPathName) SetDllDirectoryFunc;
+__gshared SetDllDirectoryFunc SetDllDirectoryA = &LoadWrapper!("SetDllDirectoryA", "kernel32.dll", "SetDllDirectoryA");
+//*/
 
+shared static this() {
+    version(Win32) {
+        SetDllDirectoryA("bin\\x86\\");
+    }
+    version(Win64) {
+        SetDllDirectoryA("bin\\x64\\");
+    }
+}

@@ -36,7 +36,7 @@ class WorldMenu : GuiElementWindow {
 
         super(guiSystem, Rectd(vec2d(0.0, 0.0), vec2d(1, 1)), "World Mapexperiment Menu~~~!", false, false);
 
-        worldMap = new WorldMap(880129);
+        worldMap = new WorldMap(880128);
         worldMap.generate();
 
         auto button = new PushButton(this, Rectd(vec2d(0.75, 0.75), vec2d(0.2, 0.10)), "Back", &onBack);

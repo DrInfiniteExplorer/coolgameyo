@@ -13,6 +13,8 @@ version(Windows){
     //    import win32.windows : SYSTEM_INFO, GetSystemInfo, RaiseException; //Not available in std.c.windows.windows
 }
 
+
+
 void[] allocateBlob(size_t count, size_t blobSize) {
     version (Windows) {
         auto ret = VirtualAlloc(null, blobSize * count, MEM_COMMIT, PAGE_READWRITE);
@@ -27,6 +29,7 @@ void[] allocateBlob(size_t count, size_t blobSize) {
         static assert (0, "version?");
     }
 }
+
 void freeBlob(void* blob) {
     version (Windows) {
         VirtualFree(blob, 0, MEM_RELEASE);
@@ -78,6 +81,7 @@ extern(Windows) BOOL initGPMI(HANDLE h, PPROCESS_MEMORY_COUNTERS p, DWORD d) {
 
 __gshared GetProcessMemoryInfoPtr getProcessMemoryInfo = &initGPMI;
 
+// Returns number of kilobytes of memory used.
 ulong getMemoryUsage() {
     PROCESS_MEMORY_COUNTERS pmc;
     enforce(getProcessMemoryInfo(GetCurrentProcess(), &pmc, pmc.sizeof), "Error calling GetProcessMemoryInfo");
@@ -94,7 +98,6 @@ string MemDiff(string label, string varname = "memDiffStart")(){
     immutable diffName = varname ~ "Diff";
     return "auto " ~ varname ~ " = getMemoryUsage(); scope(exit) { auto "~diffName~"= getMemoryUsage() - "~varname~"; if("~diffName~") msg(\""~label~": \", "~diffName~");}";
 }
-
 
 
 

@@ -6,7 +6,7 @@ import gui.all;
 import util.util;
 import util.rect;
 
-class TabBar : public GuiElement {
+class TabBar : GuiElement {
 
     SimpleElementButton[] buttons;
 

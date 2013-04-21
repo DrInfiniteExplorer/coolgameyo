@@ -13,7 +13,7 @@ import util.rect;
 
 //TODO: Remake this, so that a new window is spawned when one selects, instead of hacking with sizes ;)
 
-class GuiElementComboBox : public GuiElement {
+class GuiElementComboBox : GuiElement {
 	private struct RowItem{
 		Recti rect;
 		GuiElementText text;

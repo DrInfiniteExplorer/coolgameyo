@@ -115,7 +115,7 @@ void PrintScreen() {
     scope(exit) {
         guiSystem.destroy();
     }
-    EventAndDrawLoop(guiSystem, null, &ps.isDone);
+    EventAndDrawLoop!true(guiSystem, null, &ps.isDone);
 
 }
 

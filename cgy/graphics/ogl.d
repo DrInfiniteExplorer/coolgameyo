@@ -367,8 +367,28 @@ uint InternalTypeToFormatType(uint Type) {
 }
 
 
+uint GetInternalFormat(uint tex) {
+    glBindTexture(GL_TEXTURE_2D, tex); glError();
+    int format;
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_INTERNAL_FORMAT, &format); glError();
+    return format;
+}
+
+vec2i GetTextureSize(uint tex) {
+    int width, height;
+    glBindTexture(GL_TEXTURE_2D, tex); glError();
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width); glError();
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height); glError();
+    //glBindTexture(GL_TEXTURE_2D, 0); glError();
+    return vec2i(width, height);
+}
+
+
 //textureType: for example GL_RGB8, GL_R32F, etc
 uint Create2DTexture(uint textureType, DataType = void)(size_t width, size_t height, DataType* data = null) {
+    return Create2DTexture!(textureType, DataType)(cast(int)width, cast(int)height, data);
+}
+uint Create2DTexture(uint textureType, DataType = void)(int width, int height, DataType* data = null) {
 
     uint format = InternalTypeToFormatType(textureType);
     uint dataType = TypeToGLTypeEnum!DataType;
@@ -382,7 +402,28 @@ uint Create2DTexture(uint textureType, DataType = void)(size_t width, size_t hei
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); glError();
     // automatic mipmap
     glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_FALSE); glError();
-    glTexImage2D(GL_TEXTURE_2D, 0, textureType, cast(int)width, cast(int)height, 0,
+    glTexImage2D(GL_TEXTURE_2D, 0, textureType, width, height, 0,
+                 format, dataType, data);
+    glError();
+    //glBindTexture(GL_TEXTURE_2D, 0);
+    return tex;
+}
+
+uint Create1DTexture(uint textureType, DataType = void)(int width, DataType* data = null) {
+
+    uint format = InternalTypeToFormatType(textureType);
+    uint dataType = TypeToGLTypeEnum!DataType;
+
+    uint tex = 0;
+    glGenTextures(1, &tex); glError();
+    glBindTexture(GL_TEXTURE_1D, tex); glError();
+    glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); glError();
+    glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); glError();
+    glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); glError();
+    glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); glError();
+    // automatic mipmap
+    glTexParameteri(GL_TEXTURE_1D, GL_GENERATE_MIPMAP, GL_FALSE); glError();
+    glTexImage1D(GL_TEXTURE_1D, 0, textureType, width, 0,
                  format, dataType, data);
     glError();
     //glBindTexture(GL_TEXTURE_2D, 0);
@@ -390,19 +431,20 @@ uint Create2DTexture(uint textureType, DataType = void)(size_t width, size_t hei
 }
 
 
+void DeleteTexture(uint tex) {
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glDeleteTextures(1, &tex);
+}
+void DeleteTextures(T...)(T t) {
+    foreach(item ; t) {
+        DeleteTexture(item);
+    }
+}
+
 
 void BindTexture(uint tex, uint textureUnit) {
     glActiveTexture(GL_TEXTURE0 + textureUnit);
     glBindTexture(GL_TEXTURE_2D, tex);
-}
-
-vec2i GetTextureSize(uint tex) {
-    int width, height;
-    glBindTexture(GL_TEXTURE_2D, tex); glError();
-    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width); glError();
-    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height); glError();
-    //glBindTexture(GL_TEXTURE_2D, 0); glError();
-    return vec2i(width, height);
 }
 
 void FillTexture(uint tex, float r, float g, float b, float a) {

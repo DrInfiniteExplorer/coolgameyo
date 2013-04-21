@@ -44,6 +44,11 @@ long utime() {
     return TickDuration.currSystemTick().usecs;
 }
 
+long mstime() {
+    return TickDuration.currSystemTick().msecs;
+}
+
+
 Thread spawnThread(T)(T func) {
     auto thread = new Thread(func);
     thread.start();
@@ -81,38 +86,7 @@ vec3i getTilePos(T)(vector3!T v){
     */
 }
 
-const(TypeInfo_Class) isDerivedClass(string base, string derived) {
-    bool check(const TypeInfo_Class base, const TypeInfo_Class derived) {
-        if(base is derived) {
-            return true;
-        }
-        if(derived.base is null) return false;
-        return check(base, derived.base);
-    }
-    auto baseInfo = TypeInfo_Class.find(base);
-    auto derivedInfo = TypeInfo_Class.find(derived);
-    return check(baseInfo, derivedInfo) ? derivedInfo : null;
-}
 
-BaseType safeFactory(BaseType, alias DerivedType)() {
-    auto baseClassName = BaseType.classinfo.name;
-    //    pragma(msg, typeof(DerivedType));
-    static if( is( typeof(DerivedType) : string)) {
-        alias DerivedType derivedClassName;
-    } else {
-        auto derivedClassName = typeof(DerivedType).classinfo.name;
-    }
-    auto type = isDerivedClass(baseClassName, derivedClassName);
-    if(type is null) {
-
-        return null;
-    }
-    Object o = type.create();
-    enforce(o, "Could not create class of class-type " ~ derivedClassName);
-    BaseType t = cast(BaseType) o;
-    enforce(t, "Could not cast to base class-type " ~ baseClassName);
-    return t;
-}
 
 //TODO: Replace this shit with stuff from std.bitmanip.
 void setFlag(A,B)(ref A flags, B flag, bool value) {
@@ -164,8 +138,20 @@ template tuples(int n, Rest...) {
     }
 }
 
+T[4] neighbors2D(T)(T t) {
+    alias T V;
+    T[4] ret;
+    ret[] = t;
+    ret[0] += V(0,1);
+    ret[1] -= V(0,1);
+    ret[2] += V(1,0);
+    ret[3] -= V(1,0);
+    return ret;
+}
+
 T[6] neighbors(T)(T t) {
-    alias typeof(t.value) V;
+    alias typeof(T.value) V;
+
     T[6] ret;
     ret[] = t;
     ret[0].value += V(0,0,1);

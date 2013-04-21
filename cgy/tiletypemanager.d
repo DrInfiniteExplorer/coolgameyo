@@ -10,7 +10,7 @@ import std.string;
 import graphics.texture;
 
 import json;
-import game;
+import globals : g_worldPath;
 import materials;
 
 import statistics;

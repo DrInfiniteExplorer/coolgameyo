@@ -24,7 +24,7 @@ auto gaiaRange(SectorXYNum base) {
 }
 
 
-class Gaia : public Clan {
+class Gaia : Clan {
 
     import util.singleton;
     mixin Singleton;

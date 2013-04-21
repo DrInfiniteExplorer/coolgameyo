@@ -8,7 +8,7 @@ mixin template Page2() {
     GuiElementImage bigWorldImage;
     GuiElementImage smallWorldImage;
     WorldMap worldMap;
-    vec2i startPos = halfWorldSize_xy;
+    vec2i startPos = HalfWorldSize_xy;
 
 
 

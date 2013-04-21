@@ -2,6 +2,7 @@
 
 module gui.guisystem.simplegraph;
 
+import std.algorithm : reduce, min, max;
 import std.stdio;
 
 import gui.guisystem.guisystem;
@@ -12,7 +13,7 @@ import graphics._2d.line;
 import util.util;
 import util.rect;
 
-class GuiElementSimpleGraph(Type) : public GuiElement {
+class GuiElementSimpleGraph(Type) : GuiElement {
     
     private Lines lines;
     private uint length;
@@ -36,10 +37,8 @@ class GuiElementSimpleGraph(Type) : public GuiElement {
     void setData(const(Type)[] data) {
         Type min = Type.max;
         Type max = -Type.max;
-        foreach( value ; data ) {
-            min = std.algorithm.min(min, value);
-            max = std.algorithm.max(max, value);
-        }
+        min = reduce!(std.algorithm.min)(data);
+        max = reduce!(std.algorithm.max)(data);
         setData(data, min, max);
     }
 

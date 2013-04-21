@@ -17,7 +17,7 @@ import util.rect;
 immutable checkboxSizeInPixels = 12;
 
 
-class CheckBox : public Button!(ButtonCallbackPolicies.State) {
+class CheckBox : Button!(ButtonCallbackPolicies.State) {
     
     protected bool checked;
     

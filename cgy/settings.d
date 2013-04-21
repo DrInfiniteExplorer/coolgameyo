@@ -19,6 +19,8 @@ __gshared string g_playerName = "BurntFaceMan"; //Default player name
 __gshared string g_settingsFilePath = "settings.json";
 __gshared string[] g_serverList;
 
+__gshared int g_maxThreadCount = 0;
+
 void loadSettings(){
     Value rootVal;
 
@@ -34,7 +36,8 @@ void loadSettings(){
                            "controlSettings", &controlSettings.serializableSettings,
                            "windowSettings", &windowSettings.serializableSettings,
                            "playerName", &g_playerName,
-                           "serverList", &g_serverList);
+                           "serverList", &g_serverList,
+                           "maxThreads", &g_maxThreadCount);
 }
 
 
@@ -45,7 +48,8 @@ void saveSettings(){
                    "controlSettings", controlSettings.serializableSettings,
                    "windowSettings", windowSettings.serializableSettings,
                    "playerName", g_playerName,
-                   "serverList", g_serverList
+                   "serverList", g_serverList,
+                   "maxThreads", g_maxThreadCount,
                    ).saveJSON(g_settingsFilePath);
 
 

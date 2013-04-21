@@ -4,6 +4,7 @@ import std.algorithm;
 import std.array;
 
 import game;
+import globals;
 import gui.all;
 import main;
 import settings;
@@ -88,7 +89,7 @@ string joinMenu() {
 
     auto menu = new JoinMenu(guiSystem);
 
-    EventAndDrawLoop(guiSystem, null, { return menu.done; } );
+    EventAndDrawLoop!true(guiSystem, null, { return menu.done; } );
     guiSystem.destroy();
     delete guiSystem;
     guiSystem = null;
@@ -134,7 +135,7 @@ bool startClient(string host) {
         guiSystem.destroy();
     }
 
-    EventAndDrawLoop(guiSystem,
+    EventAndDrawLoop!false(guiSystem,
                      (float deltaT){ game.render(deltaT);},
                      { return error; });
     return error;

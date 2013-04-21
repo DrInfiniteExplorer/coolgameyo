@@ -189,8 +189,24 @@ class GPUErosion {
         glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT, destination.ptr); glError();
     }
     void getWater(float[] destination) {
+        vec2f[] vel;
+        vel.length = sizeSQ;
+        glBindTexture(GL_TEXTURE_2D, velocity);
+        glGetTexImage(GL_TEXTURE_2D, 0, GL_RG, GL_FLOAT, vel.ptr); glError();
+
         glBindTexture(GL_TEXTURE_2D, water);
         glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT, destination.ptr); glError();
+
+        foreach(size_t idx, ref value ; destination) {
+            auto val = vel[idx].getLength();
+            val *= 0.5;
+            if(val < 0.3) continue;
+            value += clamp(val, 0, 1);
+        }
+    }
+    void getFlow(vec2f[] destination) {
+        glBindTexture(GL_TEXTURE_2D, velocity);
+        glGetTexImage(GL_TEXTURE_2D, 0, GL_RG, GL_FLOAT, destination.ptr); glError();
     }
     void setHeight(float[] source) {
         glBindTexture(GL_TEXTURE_2D, height);

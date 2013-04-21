@@ -13,7 +13,7 @@ import graphics._2d.rect;
 import util.util;
 import util.rect;
 
-class GuiElementSlider(ValueType) : public GuiElement {
+class GuiElementSlider(ValueType) : GuiElement {
 
     alias void delegate(ValueType value) ChangeCallback;    
     ChangeCallback cb;
@@ -31,6 +31,7 @@ class GuiElementSlider(ValueType) : public GuiElement {
         value = _value;
         cb = _cb;
         onMove();
+        updateText();
     }    
         
     override void onMove() {
@@ -51,8 +52,10 @@ class GuiElementSlider(ValueType) : public GuiElement {
         
         Recti sliderRect = Recti(-2, 0, 4, absoluteRect.size.y);
         sliderRect.start += absoluteRect.start;
-        sliderRect.start.x += to!int(to!ValueType(absoluteRect.size.x) * ((value-min) / (max-min)));
+        int startX = cast(int)(absoluteRect.size.x * (cast(float)(value-min) / (max-min)));
+        sliderRect.start.x += startX;
         renderRect(sliderRect, vec3f(0.75, 0.75, 0.75));
+        renderOutlineRect(sliderRect, vec3f(0.0));
 
         if(pushedDown) {
             //Use any indicator when slider is pressed down? Other color of slidery thing?
@@ -67,7 +70,7 @@ class GuiElementSlider(ValueType) : public GuiElement {
         relativeX = std.algorithm.max(relativeX, 0.0);
         relativeX = std.algorithm.min(relativeX, 1.0);
         
-        value = relativeX * (max-min) + min;
+        value = cast(ValueType) (relativeX * (max-min) + min);
         if (cb !is null) {
             cb(value);
         }

@@ -14,7 +14,7 @@ import util.rect;
 
 
 
-class GuiElementImage : public GuiElement {
+class GuiElementImage : GuiElement {
     
     uint image;
     Rectf imgSource;

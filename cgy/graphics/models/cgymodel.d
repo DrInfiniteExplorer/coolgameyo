@@ -173,7 +173,7 @@ final class cgyModel {
         foreach(mesh ; meshes) {
             glBindBuffer(GL_ARRAY_BUFFER, mesh.meshVBO); glError();
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.idxVBO); glError();
-            glDrawElements(GL_TRIANGLES, cast(int)mesh.triangles.length, GL_UNSIGNED_INT, /*offset in idx-vbo*/cast(void*)0); glError();
+            glDrawElements(GL_TRIANGLES, cast(int)mesh.triangles.length, GL_UNSIGNED_INT, cast(void*)0); glError();
         }
 
         glDisableVertexAttribArray(0); glError();
