@@ -96,7 +96,7 @@ class TileTextureAtlas{
         int maxMipMapLevel = bitsPerAxis-bitsPerTile -1; //ex 6
         glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAX_LEVEL, maxMipMapLevel);
         glError();
-        if(renderSettings.glVersion < 3.0){
+        if(g_glVersion < 3.0){
             glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_GENERATE_MIPMAP, GL_TRUE);
             glError();
         }
@@ -162,7 +162,7 @@ class TileTextureAtlas{
         atlasData = null;
         tileMap = null;
 
-        if(renderSettings.glVersion >= 3.0){
+        if(g_glVersion >= 3.0){
             debug msg("Generating mipmaps 'manually' for tile atlas...");
             glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
             glError();

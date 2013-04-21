@@ -98,10 +98,7 @@ struct RenderSettings {
 
     int renderTrueWorld = 1;
 
-    bool canUseFBO;
-    
-    double glVersion = 0;
-    
+    bool canUseFBO;    
 }
 
 struct ControlSettings {

@@ -11,20 +11,16 @@ public import derelict.opengl.gl;
 public import derelict.opengl.glext;
 import derelict.opengl.wgl;
 
+import globals : g_glVersion;
 import graphics.image;
 import graphics.shader;
 import settings;
 import util.util;
 
 void initOpenGL(){
-    string derp = to!string(glGetString(GL_VERSION));
-    auto a = split(derp, ".");
-    auto major = to!int(a[0]);
-    auto minor = to!int(a[1]);
-
-    //TODO: POTENTIAL BUG EEAPASASALPDsAPSLDPLASDsPLQWPRMtopmkg>jfekofsaplPSLFPsLSDF
-    renderSettings.glVersion=major + 0.1*minor; //TODO: version might be 3.45 in which case this will not work.
-    msg("OGL version ", renderSettings.glVersion);
+    // Version returns for example "4.3.0" so grabbing the first 3 chars should be enough to get the version information
+    g_glVersion = glGetString(GL_VERSION)[0..3].to!string.to!double;
+    msg("OGL version ", g_glVersion);
 
     DerelictGL.loadExtensions();
     glError();
@@ -33,7 +29,7 @@ void initOpenGL(){
     DerelictGL.loadClassicVersions(GLVersion.GL21); //BECAUSE THERE IS ONLY UP TO 2.1 IN THE CLASSIC VERSION! :s
     glError();
 
-    if(renderSettings.glVersion >= 3.0) {
+    if(g_glVersion >= 3.0) {
         try {
             DerelictGL.loadModernVersions(GLVersion.GL30);
         } catch (Exception e) {
@@ -85,39 +81,38 @@ void initOpenGL(){
     glDepthFunc(GL_LEQUAL);
     
     initQuad();
-/*
-    int preferred_format;
-    glGetInternalformativ(GL_TEXTURE_2D, GL_RGBA8, GL_TEXTURE_IMAGE_FORMAT, 1, &preferred_format);
-    if(preferred_format == GL_RGBA) {
-        writeln("GL_RGBA");
-    } else if(preferred_format == GL_BGRA) {
-        writeln("GL_BGRA");
-        writeln("Säg till luben att ditt grafikkort rapporterar att BGRA är föredraget format");
-        BREAKPOINT; 
-    } else {
-        writeln("Säg till luben att ditt grafikkort är efterblivet.");
-        BREAKPOINT; 
+
+    if(g_glVersion > 4.0) {
+        int preferred_format;
+        glGetInternalformativ(GL_TEXTURE_2D, GL_RGBA8, GL_TEXTURE_IMAGE_FORMAT, 1, &preferred_format);
+        if(preferred_format == GL_RGBA) {
+            writeln("Preffered internal format: GL_RGBA");
+        } else if(preferred_format == GL_BGRA) {
+            writeln("Preffered internal format: GL_BGRA");
+            writeln("Säg till luben att ditt grafikkort rapporterar att BGRA är föredraget format");
+            BREAKPOINT; 
+        } else {
+            writeln("Säg till luben att ditt grafikkort är totalt efterblivet.");
+            BREAKPOINT; 
+        }
+
+        immutable GPU_MEMORY_INFO_DEDICATED_VIDMEM_NVX          = 0x9047;
+        immutable GPU_MEMORY_INFO_TOTAL_AVAILABLE_MEMORY_NVX    = 0x9048;
+        immutable GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX  = 0x9049;
+        immutable GPU_MEMORY_INFO_EVICTION_COUNT_NVX            = 0x904A;
+        immutable GPU_MEMORY_INFO_EVICTED_MEMORY_NVX            = 0x904B;
+
+        void asd(string what)() {
+            int i;
+            glGetIntegerv(mixin(what), &i);
+            msg(what, ": ", i);
+        }
+        asd!"GPU_MEMORY_INFO_DEDICATED_VIDMEM_NVX";
+        asd!"GPU_MEMORY_INFO_TOTAL_AVAILABLE_MEMORY_NVX";
+        asd!"GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX";
+        asd!"GPU_MEMORY_INFO_EVICTION_COUNT_NVX";
+        asd!"GPU_MEMORY_INFO_EVICTED_MEMORY_NVX";
     }
-
-    immutable GPU_MEMORY_INFO_DEDICATED_VIDMEM_NVX          = 0x9047;
-    immutable GPU_MEMORY_INFO_TOTAL_AVAILABLE_MEMORY_NVX    = 0x9048;
-    immutable GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX  = 0x9049;
-    immutable GPU_MEMORY_INFO_EVICTION_COUNT_NVX            = 0x904A;
-    immutable GPU_MEMORY_INFO_EVICTED_MEMORY_NVX            = 0x904B;
-
-
-    void asd(string what)() {
-        int i;
-        glGetIntegerv(mixin(what), &i);
-        msg(what, ": ", i);
-    }
-    asd!"GPU_MEMORY_INFO_DEDICATED_VIDMEM_NVX";
-    asd!"GPU_MEMORY_INFO_TOTAL_AVAILABLE_MEMORY_NVX";
-    asd!"GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX";
-    asd!"GPU_MEMORY_INFO_EVICTION_COUNT_NVX";
-    asd!"GPU_MEMORY_INFO_EVICTED_MEMORY_NVX";
-
-    */
 
     renderSettings.canUseFBO = initFBO();
 
