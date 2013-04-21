@@ -48,6 +48,11 @@ import worldgen.maps : WorldSize;
 
 import modelparser.cgyparser;
 
+version (Win64) {
+
+    pragma (msg, "YEEEEEEEEEEEEEEEEEEEEE 64");
+
+}
 
 string SDLError() { return to!string(SDL_GetError()); }
 

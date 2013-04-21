@@ -395,13 +395,6 @@
    <File path="entities\treelikeinstance.d" />
    <File path="entities\workshop.d" />
   </Folder>
-  <Folder name="network">
-   <File path="network\all.d" />
-   <File path="network\client.d" />
-   <File path="network\common.d" />
-   <File path="network\server.d" />
-  </Folder>
-  <Folder name="sound" />
   <Folder name="graphics">
    <Folder name="_2d">
     <File path="graphics\_2d\image.d" />
@@ -496,6 +489,12 @@
    <File path="modules\module_.d" />
    <File path="modules\path.d" />
   </Folder>
+  <Folder name="network">
+   <File path="network\all.d" />
+   <File path="network\client.d" />
+   <File path="network\common.d" />
+   <File path="network\server.d" />
+  </Folder>
   <Folder name="opencl">
    <File path="..\gameroot\opencl\yourfather.cl" />
   </Folder>
@@ -558,6 +557,7 @@
    <File path="..\gameroot\shaders\renderGR.frag" />
    <File path="..\gameroot\shaders\renderGR.vert" />
   </Folder>
+  <Folder name="sound" />
   <Folder name="stolen">
    <File path="stolen\aabbox3d.d" />
    <File path="stolen\all.d" />

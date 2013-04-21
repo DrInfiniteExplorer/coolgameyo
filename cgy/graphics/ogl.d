@@ -34,7 +34,11 @@ void initOpenGL(){
     glError();
 
     if(renderSettings.glVersion >= 3.0) {
-        DerelictGL.loadModernVersions(GLVersion.GL30);
+        try {
+            DerelictGL.loadModernVersions(GLVersion.GL30);
+        } catch (Exception e) {
+            msg("Failed to load some modern gl function");
+        }
         glError();
     } else {
         msg("ALERT! Don't have opengl 3.0, stuff amy crash randomly, and probably will!");
@@ -81,7 +85,7 @@ void initOpenGL(){
     glDepthFunc(GL_LEQUAL);
     
     initQuad();
-
+/*
     int preferred_format;
     glGetInternalformativ(GL_TEXTURE_2D, GL_RGBA8, GL_TEXTURE_IMAGE_FORMAT, 1, &preferred_format);
     if(preferred_format == GL_RGBA) {
@@ -113,6 +117,7 @@ void initOpenGL(){
     asd!"GPU_MEMORY_INFO_EVICTION_COUNT_NVX";
     asd!"GPU_MEMORY_INFO_EVICTED_MEMORY_NVX";
 
+    */
 
     renderSettings.canUseFBO = initFBO();
 
