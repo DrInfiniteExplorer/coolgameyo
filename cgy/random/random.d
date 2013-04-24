@@ -76,8 +76,8 @@ T CubicInter(T)(
                         T y2,T y3,
                         double mu)
 {
-    T a0,a1,a2,a3;
-    double mu2;
+    T a0 = void,a1 = void,a2 = void,a3 = void;
+    double mu2 = void;
 
     mu2 = mu*mu;
     a0 = y3 - y2 - y0 + y1;

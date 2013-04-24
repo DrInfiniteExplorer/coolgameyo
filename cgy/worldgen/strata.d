@@ -18,6 +18,10 @@ alias SimplexNoise RandomType;
 
 struct MaterialStratum {
     string materialName;
+    float depthStart;
+
+
+
     float thickness;
     float baseIntervall;
     byte octaves;
@@ -241,6 +245,7 @@ auto generateStratas(int seed) {
         }
         if(prevMaterial == stratum.materialName) continue;
         prevMaterial = stratum.materialName;
+        stratum.depthStart = depth;
         strata ~= stratum;
         depth += stratum.thickness;
     }

@@ -29,6 +29,7 @@ import random.map;
 import random.modscaleoffset;
 import random.random;
 import random.randsource;
+import random.simplex;
 import random.valuemap;
 import random.valuesource;
 import random.vectormap;
@@ -89,6 +90,8 @@ final class WorldMap {
     int walkSeed;
     string worldPath;
 
+    SimplexNoise strataNoise;
+
     this() {
         //Try load stuff if not already loaded
         loadStrataInfo();
@@ -130,6 +133,8 @@ final class WorldMap {
         }
         heightMaps.generate(heightmapSeed);
 
+        strataNoise = new SimplexNoise(worldSeed);
+
         generateLife();
     }
 
@@ -145,6 +150,7 @@ final class WorldMap {
             materials[idx] = &g_materials[stratum.materialName];
         }
         heightMaps.load(heightmapSeed);
+        strataNoise = new SimplexNoise(worldSeed);
     }
 
     void setSeeds() {
@@ -168,6 +174,7 @@ final class WorldMap {
     //Assumes z=0 == surface of world and Z+ is upwards
     // May have to offset with world contour first. 
     int getStrataNum(int x, int y, int z) {
+        /*
         if(z >= 0) {
             return 0;
         }
@@ -185,32 +192,22 @@ final class WorldMap {
             depth += stratas[num].getHeight(xyPos);
         }
         return num;
-    }
+        */
 
-    void getStrataInterpolationData(int startX, int endX, int startY, int endY, int startZ, int endZ) {
-        vec2f[4] positions = makeStackArray(
-            vec2f(startX, startY),
-            vec2f(startX, endY),
-            vec2f(endX, startY),
-            vec2f(endX, endY));
+        vec2f baseHeightPos = vec2f(x, y) / (10_000); // Slowly changing wave. one(two?) cycles per 10 km.
+        float baseHeightScale = 100.0f; // Undulate up to 100 meters!
+        float baseHeightOffset = (strataNoise.getVal2(baseHeightPos) + 1.0f) * 0.5f * baseHeightScale;
 
-        float depths[][4];
-        foreach(idx ; 0 .. 4) {
-            auto pos = positions[idx];
-            float depth = stratas[0].getHeight(pos);
-            int num = 0;
-            while(depth <= startZ) {
-                num++;
-                //depths[idx] ~= depth;
-                depth += stratas[num].getHeight(pos);
-            }
-        }
+        float depth = -z;
+        depth += baseHeightOffset;
 
+        vec3f perturbPos = vec3f(x, y, z) / 60.0f;
+        float perturbStrength = 6.0;
+        depth += strataNoise.getVal3(perturbPos) * perturbStrength;
+        depth = max(0, depth);
 
-
-
-        // Go down along one corner until finds derp.
-
+        int idx = countUntil!"a.depthStart > b"(stratas, depth) - 1;
+        return idx;
     }
 
     void heightOnHeight() {

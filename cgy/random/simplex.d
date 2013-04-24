@@ -101,8 +101,8 @@ class SimplexNoise : ValueSource {
 
     override double getValue2(vec2d p) {
         alias double T;
-        return getVal3(vector3!T(p.x, p.y, 0));
-        //return getVal2(p);
+        //return getVal3(vector3!T(p.x, p.y, 0));
+        return getVal2(p);
     };
 
     T getVal3_2d(T)(vector2!T v) {
@@ -112,7 +112,7 @@ class SimplexNoise : ValueSource {
     immutable F3 = 1.0/3.0;
     immutable G3 = 1.0/6.0;
     T getVal3(T)(vector3!T pos) {
-        T n0, n1, n2, n3;
+        T n0 = void, n1 = void, n2 = void, n3 = void;
 
         pos *= 0.6;
         
@@ -128,8 +128,8 @@ class SimplexNoise : ValueSource {
         T y0 = pos.y-Y0;
         T z0 = pos.z-Z0;
 
-        int i1, j1, k1;
-        int i2, j2, k2;
+        int i1 = void, j1 = void, k1 = void;
+        int i2 = void, j2 = void, k2 = void;
         if(x0>=y0) {
             if(y0>=z0)
             { i1=1; j1=0; k1=0; i2=1; j2=1; k2=0; }

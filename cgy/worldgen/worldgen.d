@@ -179,7 +179,7 @@ mixin template WorldGenerator() {
         int x = pos.value.x;
         int y = pos.value.y;
         int z = pos.value.z;
-        z = fastFloor(z - heightMaps.getOriginalHeight(pos.value.v2)); // Depth under 'normal' generated world
+        z = fastFloor(z - heightMaps.getOriginalHeight(pos.value.v2.TileXYPos)); // Depth under 'normal' generated world
         int materialNum = getStrataNum(x, y, z);
         BREAK_IF(materialNum < 0);
         BREAK_IF(materialNum >= materials.length);
