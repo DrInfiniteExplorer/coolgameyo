@@ -65,6 +65,8 @@ class HeightMaps {
 
     MmFile heightmapFile;
     short[] heightData; // Pointer to memory in heightmapfile.
+    MmFile originalHeightmapFile;
+    short[] originalHeightData; // Pointer to memory in heightmapfile.
     MmFile soilFile;
     short[] soilData;
     MmFile waterFile;
@@ -93,10 +95,12 @@ class HeightMaps {
     void destroy() {
         destroyed = true;
         delete heightmapFile;
+        delete originalHeightmapFile;
         delete soilFile;
         delete waterFile;
         delete flowFile;
         heightData = null;
+        originalHeightData = null;
         soilData = null;
         waterData = null;
         flowData = null;
@@ -120,6 +124,10 @@ class HeightMaps {
         flowFile = new MmFile(flowPath, mode, 4 * mapSizeBytes, null, 0);
         flowData = cast(vec2f[])flowFile[];
 
+        auto originalHeightPath = worldMap.worldPath ~ "/map5";
+        originalHeightmapFile = new MmFile(originalHeightPath, mode, mapSizeBytes, null, 0);
+        originalHeightData = cast(short[])originalHeightmapFile[];
+
         if(!create) {
             loadJSON(worldMap.worldPath ~ "/worldMean.json").
                 readJSONObject("worldMean", &mean);
@@ -131,30 +139,55 @@ class HeightMaps {
         baseHeightNoise = new SimplexNoise(seed);
     }
 
-    float getOriginalHeight(vec2i _pos) {
-        float value = 0;
-        vec2f pos = _pos.convert!float;
-        pos *= baseFrequency;
-        pos += vec2f(3.435123, 4.41231);
+    void generateOriginalHeightmap() {
 
-        float amplitude = startAmplitude;
+        short getVal(vec2i _pos) {
+            float value = 0;
+            vec2f pos = _pos.convert!float;
+            pos *= baseFrequency;
+            pos += vec2f(3.435123, 4.41231);
 
-        for(int iter = 0; iter < octaves; iter++) {
-            if(iter % IterModValue == 0) {
-                static if(Ridged) {
-                    value += amplitude * (1 - abs(baseHeightNoise.getValue2(pos.convert!double)));
+            float amplitude = startAmplitude;
+
+            for(int iter = 0; iter < octaves; iter++) {
+                if(iter % IterModValue == 0) {
+                    static if(Ridged) {
+                        value += amplitude * (1 - abs(baseHeightNoise.getValue2(pos.convert!double)));
+                    } else {
+                        value += amplitude * ( abs(baseHeightNoise.getValue2(pos.convert!double)));
+                    }
                 } else {
-                    value += amplitude * ( abs(baseHeightNoise.getValue2(pos.convert!double)));
+                    value += amplitude * baseHeightNoise.getValue2(pos.convert!double);
                 }
-            } else {
-                value += amplitude * baseHeightNoise.getValue2(pos.convert!double);
+                amplitude *= 0.5;
+                pos *= 2;
             }
-            amplitude *= 0.5;
-            pos *= 2;
+
+            return cast(short)value;
         }
 
-        return value - mean;
+        size_t LIMIT_STEP = mapSizeSQ / 2500;
+        size_t progress = 0;
+        foreach(size_t i, ref value ; heightData) {
+            if( (i % LIMIT_STEP) == 0) {
+                progress += LIMIT_STEP;
+                msg("Progress: ", 100.0f * cast(float)progress / mapSizeSQ);
+            }
+            auto pos = vec2i(cast(int)(i % mapSize), cast(int)(i / mapSize));
+            value = cast(short)getVal(pos*SampleIntervall);
+        }
+        float[] tmp;
+        tmp.length = heightData.length;
+        tmp.convertArray(heightData);
+        msg("h max", reduce!max(tmp));
+        msg("h min", reduce!min(tmp));
+        mean = reduce!"a+b"(tmp) / mapSizeSQ;
+        msg("h mean", mean);
+        heightData[] -= cast(short)mean;
+        originalHeightData[] = heightData[];
     }
+
+
 
     float getOriginalSoil(vec2i _pos) {
         float value = 0;
@@ -184,24 +217,7 @@ class HeightMaps {
             loadFiles(true);
         }
 
-        size_t LIMIT_STEP = mapSizeSQ / 2500;
-        size_t progress = 0;
-        foreach(size_t i, ref value ; heightData) {
-                if( (i % LIMIT_STEP) == 0) {
-                progress += LIMIT_STEP;
-                msg("Progress: ", 100.0f * cast(float)progress / mapSizeSQ);
-            }
-            auto pos = vec2i(cast(int)(i % mapSize), cast(int)(i / mapSize));
-            value = cast(short)getOriginalHeight(pos*SampleIntervall);
-        }
-
-        msg("h max", reduce!max(heightData));
-        msg("h min", reduce!min(heightData));
-        mean = reduce!"cast(short)(a+b)"(heightData) / mapSizeSQ;
-        msg("h mean", mean);
-        heightData[] -= cast(short)mean;
-        makeJSONObject("worldMean", mean).saveJSON(worldMap.worldPath ~ "/worldMean.json");
-
+        generateOriginalHeightmap();
 
         applyErosion(seed);
         writeText(erodedPath, "");
@@ -344,6 +360,7 @@ class HeightMaps {
     }
 
     vec2f getSampleSlope(vec2i samplePos) {
+        BREAKPOINT; // Is this function used?
         int x = samplePos.x;
         int y = samplePos.y;
         float getHeight(int x, int y) {
@@ -355,6 +372,9 @@ class HeightMaps {
         return vec2f(slopeX, slopeY) * mult;
     }
 
+    auto getOriginalHeight(bool interpolate = true)(TileXYPos pt) {
+        return getMap!("originalHeightData", interpolate)(pt);
+    }
     auto getHeight(bool interpolate = true)(TileXYPos pt) {
         return getMap!("heightData", interpolate)(pt);
     }

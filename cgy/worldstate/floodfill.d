@@ -23,6 +23,8 @@ mixin template FloodFill() {
     size_t current;
     RangeFromTo r;
 
+    ulong startTime;
+
     private void reset_r() {
         r = RangeFromTo(
                 0, BlocksPerSector.x - 1,
@@ -113,9 +115,16 @@ mixin template FloodFill() {
         worldMap.fillSector(sector, heightmap);
         g_Statistics.FloodFillProgress(BlocksPerSector.total);
         notifySectorLoad(state.sectorNum);
+        if(startTime > 0) {
+            msg("Possible end time: ", (mstime() - startTime) / 1000.0f);
+        }
+
     }
 
     void addFloodFillSector(SectorNum num) {
+        if(startTime == 0) {
+            startTime = mstime();
+        }
         //_floodingSectors ~= num;
         BREAK_IF(num.value.getLengthSQ() == 0);
         msg("Adding sector to filling queueue: ", num.value);
