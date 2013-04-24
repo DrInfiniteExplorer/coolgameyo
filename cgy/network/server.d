@@ -190,6 +190,8 @@ mixin template ServerModule() {
             } else {
                 //Else add unit & send unit-id to be controlled.
                 //For now just ignore unit creation and assume control of unit 0
+                player.unitId = 1;
+                player.unit = Clans().getUnitById(player.unitId);
                 player.commSock.send("controlUnit:1\n");
             }
         }

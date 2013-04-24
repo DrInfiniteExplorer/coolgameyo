@@ -56,39 +56,15 @@ Thread spawnThread(T)(T func) {
 }
 
 public import math.vector;
-/*
-alias vector2d!(ubyte)  vec2ub;
-alias vector2d!(int)  vec2i;
-alias vector2d!(float)  vec2f;
-alias vector2d!(double)  vec2d;
-
-alias vector3d!(ubyte)  vec3ub;
-alias vector3d!(short)  vec3s;
-alias vector3d!(int)  vec3i;
-alias vector3d!(float)  vec3f;
-alias vector3d!(double) vec3d;
-*/
-
 import stolen.aabbox3d;
 alias aabbox3d!double aabbd;
 
+// We no longer handle tileposes etc below 0
+// So a simple cast to int will suffice
 vec3i getTilePos(T)(vector3!T v){
-    return vec3i(
-                 fastFloor(v.x),
-                 fastFloor(v.y),
-                 fastFloor(v.z));
-                 /*
-    return vec3i(
-        to!int(floor(v.x)),
-        to!int(floor(v.y)),
-        to!int(floor(v.z))
-    );
-    */
+    return vec3i( cast(int)v.x, cast(int)v.y, cast(int)v.z);
 }
 
-
-
-//TODO: Replace this shit with stuff from std.bitmanip.
 void setFlag(A,B)(ref A flags, B flag, bool value) {
     if (value) {
         flags |= flag;
@@ -97,14 +73,14 @@ void setFlag(A,B)(ref A flags, B flag, bool value) {
     }
 }
 
-
-
-void BREAKPOINT(uint doBreak=1) {
+void BREAK_IF(uint doBreak) {
     if(doBreak) {
         asm { int 3; }
     }
 }
-alias BREAKPOINT BREAK_IF;
+void BREAKPOINT() {
+    asm { int 3; }
+}
 
 unittest {
     import windows;
@@ -319,5 +295,15 @@ CommonType!(T)[T.length] makeStackArray(T...)(T ts) {
 void lazyInit(T, Us...)(ref T t, Us us) {
     if (t is null) {
         t = new T(us);
+    }
+}
+
+void convertArray(string Op = "=", To, From)(To[] to, From[] from) {
+    static if( is(To : From) && is(From : To) && To.sizeof == From.sizeof) {
+        mixin("to[] " ~ Op ~" from[];");
+    } else {
+        foreach(idx, ref val ; to) {
+            mixin("val " ~ Op ~" cast(To)from[idx];");
+        }
     }
 }

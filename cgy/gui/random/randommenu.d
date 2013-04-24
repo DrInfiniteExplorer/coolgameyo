@@ -7,7 +7,6 @@ import std.math;
 import std.stdio;
 
 import main;
-import gui.mainmenu;
 import gui.all;
 import random.catmullrom;
 import random.fractal;
@@ -46,7 +45,6 @@ import util.voronoi.wrapper;
 class RandomMenu : GuiElementWindow {
     GuiElement guiSystem;
     GuiElement container;
-    MainMenu main;
 
     Lines[] lines;
 
@@ -56,9 +54,8 @@ class RandomMenu : GuiElementWindow {
 
     int seed;
 
-    this(MainMenu m) {
-        main = m;
-        guiSystem = m.getGuiSystem();
+    this(GuiSystem _guiSystem) {
+        guiSystem = _guiSystem;
         
         
         super(guiSystem, Rectd(vec2d(0.0, 0.0), vec2d(1, 1)), "Randomness experiment Menu~~~!", false, false);
@@ -100,8 +97,9 @@ class RandomMenu : GuiElementWindow {
         super.destroy();
     }
     
+    bool done = false;
     void onBack() {
-        main.setVisible(true);
+        done = true;
         destroy();
     }    
 
@@ -209,5 +207,19 @@ class RandomMenu : GuiElementWindow {
     }
     double[4] delegate(double) colorMode;
 
+}
+
+
+bool displayRandomMenu() {
+    GuiSystem guiSystem;
+    guiSystem = new GuiSystem;
+
+
+    auto menu = new RandomMenu(guiSystem);
+
+    EventAndDrawLoop!true(guiSystem, null, { return menu.done; });
+    guiSystem.destroy();
+
+    return true;
 }
 

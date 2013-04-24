@@ -39,7 +39,6 @@ import statistics;
 import tiletypemanager;
 
 import util.filesystem;
-import util.math;
 import util.memory;
 import util.pos;
 import util.rangefromto;
@@ -186,6 +185,32 @@ final class WorldMap {
             depth += stratas[num].getHeight(xyPos);
         }
         return num;
+    }
+
+    void getStrataInterpolationData(int startX, int endX, int startY, int endY, int startZ, int endZ) {
+        vec2f[4] positions = makeStackArray(
+            vec2f(startX, startY),
+            vec2f(startX, endY),
+            vec2f(endX, startY),
+            vec2f(endX, endY));
+
+        float depths[][4];
+        foreach(idx ; 0 .. 4) {
+            auto pos = positions[idx];
+            float depth = stratas[0].getHeight(pos);
+            int num = 0;
+            while(depth <= startZ) {
+                num++;
+                //depths[idx] ~= depth;
+                depth += stratas[num].getHeight(pos);
+            }
+        }
+
+
+
+
+        // Go down along one corner until finds derp.
+
     }
 
     void heightOnHeight() {

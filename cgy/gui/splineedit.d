@@ -132,7 +132,7 @@ class SplineEditor : GuiElementWindow {
         vec3f color;
         auto str = editBox.getText();
         if(parseColor(str, color)) {
-            listBox.setText(str, listBox.getSelectedItemIndex());
+            listBox.setItemText(listBox.getSelectedItemIndex(), str);
         }
         redraw();
     }

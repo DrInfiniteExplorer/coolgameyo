@@ -90,8 +90,9 @@
   <useStdLibPath>1</useStdLibPath>
   <additionalOptions>-L/SUBSYSTEM:CONSOLE:4.0</additionalOptions>
   <preBuildCommand>@taskkill /f /im cgy.exe &gt;nul 2&gt;&amp;1
-@ver &gt; nul</preBuildCommand>
-  <postBuildCommand>@echo Debug&gt; $(SolutionDir)\gameroot\latestBuildType</postBuildCommand>
+@ver &gt; nul
+@echo Debug&gt; $(SolutionDir)\gameroot\latestBuildType</preBuildCommand>
+  <postBuildCommand />
   <filesToClean>*.obj;*.cmd;*.build;*.json;*.dep</filesToClean>
  </Config>
  <Config name="Release" platform="Win32">
@@ -183,8 +184,10 @@
   <exefile>$(OutDir)\$(ProjectName).exe</exefile>
   <useStdLibPath>1</useStdLibPath>
   <additionalOptions>-L/SUBSYSTEM:CONSOLE:4.0</additionalOptions>
-  <preBuildCommand />
-  <postBuildCommand>@echo Release&gt; $(SolutionDir)\gameroot\latestBuildType</postBuildCommand>
+  <preBuildCommand>@taskkill /f /im cgy.exe &gt;nul 2&gt;&amp;1
+@ver &gt; nul
+@echo Release&gt; $(SolutionDir)\gameroot\latestBuildType</preBuildCommand>
+  <postBuildCommand />
   <filesToClean>*.obj;*.cmd;*.build;*.json;*.dep</filesToClean>
  </Config>
  <Config name="Debug" platform="x64">
@@ -277,7 +280,8 @@
   <useStdLibPath>1</useStdLibPath>
   <additionalOptions />
   <preBuildCommand>@taskkill /f /im cgy.exe &gt;nul 2&gt;&amp;1
-@ver &gt; nul</preBuildCommand>
+@ver &gt; nul
+@echo Debug&gt; $(SolutionDir)\gameroot\latestBuildType</preBuildCommand>
   <postBuildCommand />
   <filesToClean>*.obj;*.cmd;*.build;*.json;*.dep</filesToClean>
  </Config>
@@ -370,7 +374,9 @@
   <exefile>$(OutDir)\$(ProjectName).exe</exefile>
   <useStdLibPath>1</useStdLibPath>
   <additionalOptions>-L/SUBSYSTEM:CONSOLE:4.0</additionalOptions>
-  <preBuildCommand />
+  <preBuildCommand>@taskkill /f /im cgy.exe &gt;nul 2&gt;&amp;1
+@ver &gt; nul
+@echo Release&gt; $(SolutionDir)\gameroot\latestBuildType</preBuildCommand>
   <postBuildCommand />
   <filesToClean>*.obj;*.cmd;*.build;*.json;*.dep</filesToClean>
  </Config>
@@ -580,7 +586,6 @@
    <File path="util\gc.d" />
    <File path="util\httpupload.d" />
    <File path="util\intersect.d" />
-   <File path="util\math.d" />
    <File path="util\memory.d" />
    <File path="util\pos.d" />
    <File path="util\queue.d" />

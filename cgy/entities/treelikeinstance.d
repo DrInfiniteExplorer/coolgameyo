@@ -340,7 +340,7 @@ mixin template TreeLike() {
     private void clearTiles(WorldProxy proxy)
     {
         foreach (TilePos tilePos ; ownedTiles) {
-            Tile tile = Tile(TileTypeAir, TileFlags.valid);
+            Tile tile = Tile(TileTypeAir, TileFlags.valid, 0);
             proxy.setTile(tilePos, tile);
         }
         ownedTiles.length = 0;
@@ -365,11 +365,11 @@ mixin template TreeLike() {
                         Tile tile;
                         if (getThicknessOfNode(branch, branch.nodes[b+1], getBranchType(branch)) < THICKNESS_SCALE*1.0 &&
                             (proxy.getTile(tilePosArray[i]).type != proxy.tileTypeManager.idByName(type.treelikeType.woodMaterial))) {
-                                auto tileType = proxy.tileTypeManager.idByName(type.treelikeType.leafMaterial);
+                                auto tileType = proxy.tileTypeManager.byName(type.treelikeType.leafMaterial);
                                 tile = Tile(tileType, TileFlags.valid);
                             }
                         else {
-                            auto tileType = proxy.tileTypeManager.idByName(type.treelikeType.woodMaterial);
+                            auto tileType = proxy.tileTypeManager.byName(type.treelikeType.woodMaterial);
                             tile = Tile(tileType, TileFlags.valid);
                         }
 
@@ -442,7 +442,7 @@ mixin template TreeLike() {
                                             tilePos.value.z += z;
                                             auto tile = proxy.getTile(tilePos);
                                             if (tile.type == TileTypeAir) {
-                                                auto tileType = proxy.tileTypeManager.idByName(this.type.treelikeType.leafMaterial);
+                                                auto tileType = proxy.tileTypeManager.byName(this.type.treelikeType.leafMaterial);
                                                 Tile newTile = Tile(tileType, TileFlags.valid);
                                                 proxy.setTile(tilePos, newTile);
                                                 ownedTiles ~= tilePos;
@@ -468,7 +468,7 @@ mixin template TreeLike() {
                                             tilePos.value.z += z;
                                             auto tile = proxy.getTile(tilePos);
                                             if (tile.type == TileTypeAir) {
-                                                auto tileType = proxy.tileTypeManager.idByName(this.type.treelikeType.leafMaterial);
+                                                auto tileType = proxy.tileTypeManager.byName(this.type.treelikeType.leafMaterial);
                                                 Tile newTile = Tile(tileType, TileFlags.valid);
                                                 proxy.setTile(tilePos, newTile);
                                                 ownedTiles ~= tilePos;

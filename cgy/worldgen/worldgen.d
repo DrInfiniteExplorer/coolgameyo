@@ -25,30 +25,6 @@ import random.randsource;
 import random.gradientnoise;
 
 
-
-
-/*
-
-layer5: 256 mil
-
-layer4: 64 mil
-
-layer3: 16 mil
-
-layer2: 4 mil
-
-layer1: 10km², 1mil
-
-*/
-
-//alias ValueMap2D!(double, false) ValueMap;
-
-
-
-//alias double[ptPerLayer][ptPerLayer] Map;
-
-
-
 mixin template WorldGenerator() {
 
     int randomNumber = 0;
@@ -168,16 +144,18 @@ mixin template WorldGenerator() {
 
         TileFlags flags = cast(TileFlags)(TileFlags.valid);
         if(! isInsideWorld(pos)) {
-            return Tile(TileTypeAir, flags);
+            return Tile(TileTypeAir, flags, 0);
         }
         float distanceAboveGround = pos.value.z - (heightValue + soilValue);
         if(distanceAboveGround > 0) {
             if(distanceAboveGround > waterValue) {
-                auto tile = Tile(TileTypeAir, flags);
+                auto tile = Tile(TileTypeAir, flags, 0);
                 tile.sunLightValue = 15;
                 return tile;
             } else {
                 auto tileType = getBasicTileType("genericLiquid");
+                auto tileTypeId = tileType.id;
+                auto tileTypeHealth = tileType.strength;
                 auto  tile = Tile(tileType, flags);
                 tile.sunLightValue = 15;
                 return tile;
@@ -212,13 +190,12 @@ mixin template WorldGenerator() {
 
 
     }
-    ushort getBasicTileType(string _group) { 
+    TileType getBasicTileType(string _group) { 
         randomNumber++;
 
         auto group = tileSys.getGroup(_group);
         int idx = randomNumber % cast(int)group.length;
-        auto id = group[idx].id;
-        return id;
+        return group[idx];
     }
 
     long worldRadius = WorldSize;

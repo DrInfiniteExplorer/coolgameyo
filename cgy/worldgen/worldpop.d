@@ -349,10 +349,12 @@ mixin template WorldPopulation() {
         roadCompute.use();
         roadCompute.uniform.size = vec2i(TotalSamples);
         roadCompute.uniform.SampleIntervall = cast(float)SampleIntervall;
-        roadTmp = heightMaps.heightData.dup;
-        roadTmp[] += heightMaps.soilData[];
+        roadTmp.length = heightMaps.heightData.length;
+        roadTmp.convertArray(heightMaps.heightData);
+        roadTmp.convertArray!"+="(heightMaps.soilData);
         roadHeightTex = Create2DTexture!(GL_R32F, float)(TotalSamples, TotalSamples, roadTmp.ptr);
-        roadWaterTex = Create2DTexture!(GL_R32F, float)(TotalSamples, TotalSamples, heightMaps.waterData.ptr);
+        roadTmp.convertArray(heightMaps.waterData);
+        roadWaterTex = Create2DTexture!(GL_R32F, float)(TotalSamples, TotalSamples, roadTmp.ptr);
         roadDistanceTex = Create2DTexture!(GL_R32F, float)(TotalSamples, TotalSamples, null);
         roadRoadTex = Create2DTexture!(GL_R32F, float)(TotalSamples, TotalSamples, null);
         FillTexture(roadRoadTex, 0.0, 0, 0, 0);
@@ -465,9 +467,12 @@ mixin template WorldPopulation() {
         height.depth = WorldSize;
         height.width = WorldSize;
 
-        uint heightTex = Create2DTexture!(GL_R32F,float)(TotalSamples, TotalSamples, heightMaps.heightData.ptr);
-        uint soilTex = Create2DTexture!(GL_R32F,float)(TotalSamples, TotalSamples, heightMaps.soilData.ptr);
-        uint waterTex = Create2DTexture!(GL_R32F,float)(TotalSamples, TotalSamples, heightMaps.waterData.ptr);
+        roadTmp.convertArray(heightMaps.heightData);
+        uint heightTex = Create2DTexture!(GL_R32F,float)(TotalSamples, TotalSamples, roadTmp.ptr);
+        roadTmp.convertArray(heightMaps.soilData);
+        uint soilTex = Create2DTexture!(GL_R32F,float)(TotalSamples, TotalSamples, roadTmp.ptr);
+        roadTmp.convertArray(heightMaps.waterData);
+        uint waterTex = Create2DTexture!(GL_R32F,float)(TotalSamples, TotalSamples, roadTmp.ptr);
         scope(exit) {
             DeleteTextures(heightTex, soilTex, waterTex);
         }

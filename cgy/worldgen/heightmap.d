@@ -37,7 +37,7 @@ immutable baseFrequency = 1.0f / startIntervall;
 __gshared int octaves;
 __gshared float endAmplitude;
 
-immutable InitSoilDepth = 0.0;
+immutable InitSoilDepth = 0;
 
 immutable Ridged = true;
 
@@ -64,11 +64,11 @@ class HeightMaps {
     WorldMap worldMap;
 
     MmFile heightmapFile;
-    float[] heightData; // Pointer to memory in heightmapfile.
+    short[] heightData; // Pointer to memory in heightmapfile.
     MmFile soilFile;
-    float[] soilData;
+    short[] soilData;
     MmFile waterFile;
-    float[] waterData;
+    short[] waterData;
     MmFile flowFile;
     vec2f[] flowData;
 
@@ -82,7 +82,7 @@ class HeightMaps {
         WorldSize = size; // In meters woah.
         mapSize = WorldSize / SampleIntervall;
         mapSizeSQ = mapSize ^^ 2;
-        mapSizeBytes = mapSize * mapSize * float.sizeof;
+        mapSizeBytes = mapSize * mapSize * short.sizeof;
         msg("mapSize(kilo)Bytes: ", mapSizeBytes / 1024);
     }
 
@@ -106,18 +106,18 @@ class HeightMaps {
         auto mode = create ? MmFile.Mode.readWriteNew : MmFile.Mode.readWrite;
         auto heightPath = worldMap.worldPath ~ "/map1";
         heightmapFile = new MmFile(heightPath, mode, mapSizeBytes, null, 0);
-        heightData = cast(float[])heightmapFile[];
+        heightData = cast(short[])heightmapFile[];
 
         auto soilPath = worldMap.worldPath ~ "/map2";
         soilFile = new MmFile(soilPath, mode, mapSizeBytes, null, 0);
-        soilData = cast(float[])soilFile[];
+        soilData = cast(short[])soilFile[];
 
         auto waterPath = worldMap.worldPath ~ "/map3";
         waterFile = new MmFile(waterPath, mode, mapSizeBytes, null, 0);
-        waterData = cast(float[])waterFile[];
+        waterData = cast(short[])waterFile[];
 
         auto flowPath = worldMap.worldPath ~ "/map4";
-        flowFile = new MmFile(flowPath, mode, 2 * mapSizeBytes, null, 0);
+        flowFile = new MmFile(flowPath, mode, 4 * mapSizeBytes, null, 0);
         flowData = cast(vec2f[])flowFile[];
 
         if(!create) {
@@ -153,14 +153,7 @@ class HeightMaps {
             pos *= 2;
         }
 
-        auto dst = _pos.convert!float.getDistance(vec2f(mapSize * 0.5 * SampleIntervall));
-        dst /= (mapSize*0.25 * SampleIntervall);
-        //msg(dst);
-
         return value - mean;
-        //return dst < 1 ? 100 : 0;
-        //return dst < 1 ? sqrt(1-dst^^2)*100 : 0;
-        //return dst < 1 ? (1-dst)*100 : 0;
     }
 
     float getOriginalSoil(vec2i _pos) {
@@ -199,14 +192,14 @@ class HeightMaps {
                 msg("Progress: ", 100.0f * cast(float)progress / mapSizeSQ);
             }
             auto pos = vec2i(cast(int)(i % mapSize), cast(int)(i / mapSize));
-            value = getOriginalHeight(pos*SampleIntervall);
+            value = cast(short)getOriginalHeight(pos*SampleIntervall);
         }
 
         msg("h max", reduce!max(heightData));
         msg("h min", reduce!min(heightData));
-        msg("h mean", reduce!"a+b"(heightData) / mapSizeSQ);
-        mean = reduce!"a+b"(heightData) / mapSizeSQ;
-        heightData[] -= mean;
+        mean = reduce!"cast(short)(a+b)"(heightData) / mapSizeSQ;
+        msg("h mean", mean);
+        heightData[] -= cast(short)mean;
         makeJSONObject("worldMean", mean).saveJSON(worldMap.worldPath ~ "/worldMean.json");
 
 
@@ -224,7 +217,7 @@ class HeightMaps {
                 msg("Progress: ", 100.0f * cast(float)progress / mapSizeSQ);
             }
             auto pos = vec2i(cast(int)(i % mapSize), cast(int)(i / mapSize));
-            value += getOriginalSoil(pos*SampleIntervall);
+            value += cast(short)getOriginalSoil(pos*SampleIntervall);
         }
         ero.setSoil(soilData);
     }
@@ -312,7 +305,7 @@ class HeightMaps {
         ero.destroy();
     }
 
-    ref float getMapValue(string which, bool clamp)(int x, int y) {
+    float getMapValue(string which, bool clamp)(int x, int y) {
         static if(clamp) {
             x = .clamp(x, 0, mapSize-1);
             y = .clamp(y, 0, mapSize-1);
@@ -323,7 +316,7 @@ class HeightMaps {
             BREAK_IF(y >= mapSize);
         }
         auto idx = y * mapSize + x;
-        return mixin(which)[idx];
+        return cast(float)mixin(which)[idx];
     }
 
     alias getMapValue!("heightData",true) getHeightValueClamp;
@@ -339,10 +332,11 @@ class HeightMaps {
         static if(interpolate) {
             import random.xinterpolate;
             import random.random;
-            //*
-            return XInterpolate2!(SmootherInter, get)(pt);
+            /*
+            return XInterpolate2!(SmootherInter, get)(pt); // Produces bad looking terrain
             /*/
-            return XInterpolate24!(BSpline, get)(pt);
+            //return XInterpolate24!(BSpline, get)(pt);
+            return XInterpolate24!(CubicInter, get)(pt);
             //*/
         } else {
             return get(cast(int)pt.x, cast(int)pt.y);

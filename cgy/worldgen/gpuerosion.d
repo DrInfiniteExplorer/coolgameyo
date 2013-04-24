@@ -10,7 +10,7 @@ import graphics.shader;
 import math.vector;
 import math.math;
 import statistics : MeasureTime, StupWatch;
-import util.util : msg, BREAK_IF, BREAKPOINT;
+import util.util : msg, BREAK_IF, BREAKPOINT, convertArray;
 
 
 immutable pipeArea = 30;
@@ -61,15 +61,19 @@ class GPUErosion {
     Heightmap waterMap;
     Random r;
 
-    void init(float[] startHeightmap, float[] startSoilmap, size_t _sizeX, size_t _sizeY, int _seed) {
+    float[] tmpFloats;
+    void init(short[] startHeightmap, short[] startSoilmap, size_t _sizeX, size_t _sizeY, int _seed) {
         seed = _seed;
         r.seed(seed);
         sizeX = _sizeX;
         sizeY = _sizeY;
         sizeSQ = sizeX * sizeY;
 
-        height = Create2DTexture!(GL_R32F, float)(sizeX, sizeY, startHeightmap.ptr);
-        soil = Create2DTexture!(GL_R32F, float)(sizeX, sizeY, startSoilmap.ptr);
+        tmpFloats.length = sizeSQ;
+        convertArray(tmpFloats, startHeightmap);
+        height = Create2DTexture!(GL_R32F, float)(sizeX, sizeY, tmpFloats.ptr);
+        convertArray(tmpFloats, startSoilmap);
+        soil = Create2DTexture!(GL_R32F, float)(sizeX, sizeY, tmpFloats.ptr);
 
         water = Create2DTexture!(GL_R16F, float)(sizeX, sizeY, null);
         sediment = Create2DTexture!(GL_R16F, float)(sizeX, sizeY, null);
@@ -180,41 +184,45 @@ class GPUErosion {
         evaporateShader.use(false);
     }
 
-    void getHeight(float[] destination) {
+    void getHeight(short[] destination) {
         glBindTexture(GL_TEXTURE_2D, height);
-        glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT, destination.ptr); glError();
+        glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT, tmpFloats.ptr); glError();
+        destination.convertArray(tmpFloats);
     }
-    void getSoil(float[] destination) {
+    void getSoil(short[] destination) {
         glBindTexture(GL_TEXTURE_2D, soil);
-        glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT, destination.ptr); glError();
+        glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT, tmpFloats.ptr); glError();
+        destination.convertArray(tmpFloats);
     }
-    void getWater(float[] destination) {
+    void getWater(short[] destination) {
         vec2f[] vel;
         vel.length = sizeSQ;
         glBindTexture(GL_TEXTURE_2D, velocity);
         glGetTexImage(GL_TEXTURE_2D, 0, GL_RG, GL_FLOAT, vel.ptr); glError();
 
         glBindTexture(GL_TEXTURE_2D, water);
-        glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT, destination.ptr); glError();
+        glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT, tmpFloats.ptr); glError();
 
         foreach(size_t idx, ref value ; destination) {
             auto val = vel[idx].getLength();
             val *= 0.5;
             if(val < 0.3) continue;
-            value += clamp(val, 0, 1);
+            value = cast(short)(tmpFloats[idx] + clamp(val, 0, 1));
         }
     }
     void getFlow(vec2f[] destination) {
         glBindTexture(GL_TEXTURE_2D, velocity);
         glGetTexImage(GL_TEXTURE_2D, 0, GL_RG, GL_FLOAT, destination.ptr); glError();
     }
-    void setHeight(float[] source) {
+    void setHeight(short[] source) {
+        tmpFloats.convertArray(source);
         glBindTexture(GL_TEXTURE_2D, height);
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, cast(int)sizeX, cast(int)sizeY, GL_RED, GL_FLOAT, source.ptr); glError();
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, cast(int)sizeX, cast(int)sizeY, GL_RED, GL_FLOAT, tmpFloats.ptr); glError();
     }
-    void setSoil(float[] source) {
+    void setSoil(short[] source) {
+        tmpFloats.convertArray(source);
         glBindTexture(GL_TEXTURE_2D, soil);
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, cast(int)sizeX, cast(int)sizeY, GL_RED, GL_FLOAT, source.ptr); glError();
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, cast(int)sizeX, cast(int)sizeY, GL_RED, GL_FLOAT, tmpFloats.ptr); glError();
     }
 
     

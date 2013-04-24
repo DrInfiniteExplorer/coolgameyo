@@ -750,7 +750,7 @@ class WorldState {
         auto blockNum = tilePos.getBlockNum();
         //auto block = getBlock(blockNum, true);
         auto block = sector.getBlock(blockNum); //No blocks are generated here :)
-        BREAKPOINT(!block.valid);
+        BREAK_IF(!block.valid);
         auto oldTile = block.getTile(tilePos);
         block.setTile(tilePos, newTile);
 

@@ -8,7 +8,6 @@ import random.randsource;
 
 mixin template Permutation(alias SIZE) {
 import std.conv;
-import util.math;
     uint[] permutations;
     
     void initPermutations(RandSourceUniform rsu) {

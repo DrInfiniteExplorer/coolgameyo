@@ -338,13 +338,13 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
 
                     return ret;
                 }
-                Tile tile = Tile(world.tileTypeManager.idByName("birchtree"), TileFlags.valid);
+                Tile tile = Tile(world.tileTypeManager.byName("birchtree"), TileFlags.valid);
                 auto tilePos = topOfTheWorld2(TileXYPos(vec2i(3,2)));
                 world.unsafeSetTile(tilePos, tile);
-                tile = Tile(world.tileTypeManager.idByName("birchleaf"), TileFlags.valid);
+                tile = Tile(world.tileTypeManager.byName("birchleaf"), TileFlags.valid);
                 tilePos = topOfTheWorld2(TileXYPos(vec2i(3,3)));
                 world.unsafeSetTile(tilePos, tile);
-                tile = Tile(world.tileTypeManager.idByName("smoothstone"), TileFlags.valid);
+                tile = Tile(world.tileTypeManager.byName("smoothstone"), TileFlags.valid);
                 tilePos = topOfTheWorld2(TileXYPos(vec2i(3,4)));
                 world.unsafeSetTile(tilePos, tile);
             }

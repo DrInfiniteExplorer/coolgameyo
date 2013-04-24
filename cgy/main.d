@@ -127,6 +127,7 @@ void main(string[] args) {
     //args ~= "--HeightMapType=float";
     //args ~= "--MaterialEditor";
     //args ~= "--hostServer=880128";
+    //args ~= "--RandomMenu";
 
     /*
     g_commandLine.length = args.length;
@@ -143,11 +144,13 @@ void main(string[] args) {
 
 
         bool materialEditor;
+        bool randomMenu;
         string joinGame;
         string heightmap;
         getopt(args,
                std.getopt.config.passThrough,
                "MaterialEditor", &materialEditor,
+               "RandomMenu", &randomMenu,
                "HeightMap", &heightmap,
                "settingsFile", &g_settingsFilePath,
                "playerName", &g_playerName,
@@ -169,6 +172,11 @@ void main(string[] args) {
 
 
         init_temp_alloc(1024*1024);
+
+        if(randomMenu) {
+            import gui.random.randommenu;
+            displayRandomMenu();
+        }
 
         if(heightmap) {
             import graphics.heightmap;

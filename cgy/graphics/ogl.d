@@ -118,8 +118,6 @@ void initOpenGL(){
 
     //Refactor raycasting!!
     //initOCL();
-
-
 }
 
 void deinitOpenGL() {

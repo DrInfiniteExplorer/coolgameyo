@@ -11,7 +11,6 @@ import math.vector;
 
 import util.util;
 import util.filesystem;
-import util.math;
 import random.random;
 import random.xinterpolate;
 import graphics.image;

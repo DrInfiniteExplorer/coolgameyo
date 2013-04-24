@@ -15,7 +15,6 @@ import graphics.debugging;
 
 import stolen.aabbox3d;
 
-import util.math;
 import util.singleton;
 import util.util;
 

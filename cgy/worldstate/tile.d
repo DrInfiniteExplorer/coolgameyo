@@ -6,7 +6,7 @@ import std.conv;
 
 import light;
 import math.math;
-import tiletypemanager : TileTypeAir;
+import tiletypemanager : TileTypeAir, TileType;
 import util.util;
 
 
@@ -23,11 +23,14 @@ struct Tile {
     ushort type;
     TileFlags flags = TileFlags.none;
 
-    this(ushort type, TileFlags flags) {
+    this(TileType type, TileFlags flags) {
+        this(type.id, flags, type.strength);
+    }
+    this(ushort type, TileFlags flags, int strength) {
         this.type = type;
         this.flags = flags;
         lightValue = 0;
-        hitpoints = 0;
+        hitpoints = cast(ubyte)strength;
         restofderpystuff = 0;
     }
 
@@ -80,6 +83,6 @@ struct Tile {
     }
 }
 
-immutable airTile = Tile(TileTypeAir, TileFlags.valid);
-immutable INVALID_TILE = Tile(0, TileFlags.none);
+immutable airTile = Tile(TileTypeAir, TileFlags.valid, 0);
+immutable INVALID_TILE = Tile(0, TileFlags.none, 0);
 

@@ -23,7 +23,7 @@ struct MaterialStratum {
     byte octaves;
     float threshold;
     bool randSource01;
-    ValueSource noise;
+    SimplexNoise noise;
     //Extra information that makes awesome stuff happen. Absolute value to make 2d lavastreams? etc! :D
 
     float getHeight(vec2f position) {
@@ -35,7 +35,7 @@ struct MaterialStratum {
         if(randSource01) {
             amplitude = 0.5; //Max will be 1.0 then, minimum will be 0.0
             for(int iter = 0; iter < octaves; iter++) {
-                value += amplitude * (noise.getValue2(pos.convert!double) * 0.5f + 0.5f);
+                value += amplitude * (noise.getVal2!float(pos) * 0.5f + 0.5f);
                 amplitude *= 0.5;
                 pos *= 2;
                 frequency *= 2;
@@ -183,7 +183,7 @@ auto generateStratas(int seed) {
     float magmaDepth = 0.0;
     string prevMaterial;
     while(depth < targetDepth) {
-        msg("depth: ", depth, " ", targetDepth);
+        //msg("depth: ", depth, " ", targetDepth);
         auto sedimentChance = clamp( 0.8 - depth / 3000.0, 0.0, 1.0);
         auto extrusiveChance = clamp(0.2 - depth / 1000.0, 0.0, 1.0);
         auto metamorphChance = clamp(0.05 + depth / 2000.0, 0.0, 0.7);

@@ -70,7 +70,9 @@ final class PlayerInformation {
     int send_index;
     int recv_index;
 
-    vec2d position;
+    int unitId;
+    Unit unit;
+
     //WHAT ELSE?? D:
     //Information about which client he is?
 
@@ -251,6 +253,7 @@ class Game{
         init();
         scheduler.deserialize();
         scheduler.start();
+        Log("Server running!");
     }
 
     void connect(string host) {

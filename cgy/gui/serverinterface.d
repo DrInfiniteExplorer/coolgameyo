@@ -87,15 +87,12 @@ void startServer() {
         return;
     }
 
+    Game game;
     GuiSystem guiSystem;
     guiSystem = new GuiSystem;
 
     GuiElementSimpleGraph!ulong memoryGraph;
     GuiElementSimpleGraph!float CPUGraph;
-
-    string fullText = "Server log\n";
-
-    auto txt = new GuiElementText(guiSystem, vec2d(0), fullText);
 
     memoryGraph = new typeof(memoryGraph)(guiSystem, Rectd(0.1, 0, 0.6, 0.25), false);
     auto memoryBlockGraph = new typeof(memoryGraph)(guiSystem, memoryGraph.getRelativeRect, true);
@@ -107,10 +104,27 @@ void startServer() {
     CPUGraph = new typeof(CPUGraph)(guiSystem, Rectd(memoryGraph.leftOf, memoryGraph.bottomOf, memoryGraph.widthOf, memoryGraph.heightOf), false);
     auto CPUText = new GuiElementText(CPUGraph, vec2d(0, 0), "");
 
+    auto playerList = new GuiElementListBox(guiSystem, Rectd(memoryGraph.rightOf, memoryGraph.topOf, 1.0 - memoryGraph.rightOf, CPUGraph.bottomOf),
+                                            guiSystem.getFont.glyphHeight, null);
+
+    auto gameLog = new GuiElementListBox(guiSystem, Rectd(CPUGraph.leftOf, CPUGraph.bottomOf, CPUGraph.widthOf, 0.2),
+                                         guiSystem.getFont.glyphHeight+15, null);
+
+    auto buttonBar = new PushButton(guiSystem, Rectd(0.025, 0.05, 0.05, 0.05), "Save!", {
+        game.getScheduler.saveGame();
+    });
+
+    string fullMsg = "";
     auto handleMsg = (string s) {
-        synchronized(txt) {
-            fullText ~= s;
-            txt.setText(fullText);
+        synchronized(gameLog) {
+            fullMsg ~= s;
+            if(s == "\n") {
+                gameLog.addItem(fullMsg);
+                fullMsg = null;
+                while(gameLog.getItemCount() > 50) {
+                    gameLog.removeItem(0);
+                }
+            }
         }
     };
     logCallback = handleMsg;
@@ -120,8 +134,10 @@ void startServer() {
 
 
 
-    Game game = new Game(true);
+    game = new Game(true);
     game.loadGame();
+    import util.strings;
+    StringBuilder tmpString;
     EventAndDrawLoop!true(guiSystem,  DownwardDelegate((float){
         if(now + sampleIntervall < mstime()) {
             now = mstime();
@@ -142,6 +158,17 @@ void startServer() {
 
             CPUGraph.setData(CPUSamples, 0.0, 1.0);
             CPUText.format("CPU:%5.1f%%", 100.0f*CPUSamples[$-1]);
+
+            synchronized(game) {
+                playerList.setItemCount(game.players.length);
+                int idx = 0;
+                foreach(name, player ; game.players) {
+                    if(player.unit is null) continue;
+                    auto pos = player.unit.pos.value.convert!float;
+                    tmpString.write("%16s   %.2f, %.2f, %.2f", name, pos.x, pos.y, pos.z);
+                    playerList.setItemText(idx, tmpString.str);
+                }
+            }
         }
     }));
 

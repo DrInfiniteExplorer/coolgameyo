@@ -315,6 +315,7 @@ final class Scheduler {
     }
 
     private void serialize() {
+        Log("Saving world...");
         game.serialize();
         foreach (task; chain(sync[], async[])) {
             //task.writeTo(output);
@@ -331,6 +332,7 @@ final class Scheduler {
         while(game.sendingSaveGame){
             pragma(msg, "Fix proper thread communication for handling sending of games after sync.");
         }
+        Log("Done saving world");
     }
 
     void deserialize() {

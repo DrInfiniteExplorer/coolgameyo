@@ -79,7 +79,7 @@ class GuiElementListBox : GuiElement {
             selectionChangedCallback(index);
         }
     }
-    void setText(string text, int index) {
+    void setItemText(int index, string text) {
         items[index] = text;
     }
 
@@ -125,6 +125,18 @@ class GuiElementListBox : GuiElement {
 
     void clear() {
         items.length = 0;
+        updateScroll();
+    }
+
+    void setItemCount(size_t count) {
+        if(items.length > count) {
+            items.length = count;
+            assumeSafeAppend(items);
+            return;
+        }
+        while(items.length != count) {
+            items ~= "";
+        }
         updateScroll();
     }
 
