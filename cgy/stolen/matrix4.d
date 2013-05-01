@@ -97,7 +97,7 @@ struct CMatrix4(T)
     ref const(T) opIndex(uint index) const { return M[index]; }
 
     void opIndexAssign(T val, uint index)  { M[index] = val; }
-    void opIndexAssign(const T val, uint index) const { (cast(T[16]) M) = val; }
+    void opIndexAssign(const T val, uint index) const { (cast(T[16]) M)[] = val; }
 
     //! Sets this matrix equal to the other matrix.
     CMatrix4!(T) opAssign(const CMatrix4!(T) other)

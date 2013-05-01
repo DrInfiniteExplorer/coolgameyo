@@ -284,7 +284,7 @@ class Heightmap : ShaderProgram!() {
                 heightImg = Create2DTexture!(GL_R32F,float)(sizeX, sizeY, map.ptr);
             } else {
                 glBindTexture(GL_TEXTURE_2D, heightImg); glError();
-                glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, sizeX, sizeY, GL_RED, GL_FLOAT, map); glError();
+                glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, sizeX, sizeY, GL_RED, GL_FLOAT, map.ptr); glError();
             }
         }
         immutable size = len * vec2i.sizeof;

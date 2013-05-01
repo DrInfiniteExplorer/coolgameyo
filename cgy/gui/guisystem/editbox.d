@@ -1,7 +1,7 @@
 
 module gui.guisystem.editbox;
 
-import std.ascii : digits;
+import std.ascii : digits, whitespace;
 import std.algorithm;
 import std.array;
 import std.conv;
@@ -203,7 +203,7 @@ class GuiElementEditbox : GuiElement {
                 foreach(pos ; startMarker .. content.length) {
                     auto ch = content[pos];
                     startMarker = cast(int)pos+1;
-                    inWhitespace = -1 != std.string.indexOf(std.string.whitespace, ch);
+                    inWhitespace = -1 != std.string.indexOf(whitespace, ch);
                     if(inWhitespace){ foundWhitespace = true; }
                     if(foundWhitespace && !inWhitespace) {
                         startMarker = cast(int)pos;
@@ -223,7 +223,7 @@ class GuiElementEditbox : GuiElement {
                     msg(i, " ",tmp, " ", pos);
                     auto ch = content[pos];
                     startMarker = pos;
-                    inWhitespace = -1 != std.string.indexOf(std.string.whitespace, ch);
+                    inWhitespace = -1 != std.string.indexOf(whitespace, ch);
                     if(!inWhitespace){ foundText = true; }
                     if(foundText && inWhitespace) {
                         startMarker = pos+1;

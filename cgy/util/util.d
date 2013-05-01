@@ -125,6 +125,22 @@ T[4] neighbors2D(T)(T t) {
     return ret;
 }
 
+T[8] neighbors2D_8(T)(T t) {
+    alias T V;
+    T[8] ret;
+    ret[] = t;
+    ret[0] += V( 0, 1);
+    ret[1] += V( 1, 1);
+    ret[2] += V(-1, 1);
+    ret[3] += V( 1, 0);
+    ret[4] += V(-1, 0);
+    ret[5] += V( 0,-1);
+    ret[6] += V( 1,-1);
+    ret[7] += V(-1,-1);
+    return ret;
+}
+
+
 T[6] neighbors(T)(T t) {
     alias typeof(T.value) V;
 

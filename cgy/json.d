@@ -430,7 +430,7 @@ private void update(T)(T* t, Value val) {
     enforce(t !is null, "Can not update t of type " ~ T.stringof ~ " because t is null!");
     foreach (m; __traits(allMembers, T)) {
 
-        static if( RealThing!(T, m)) {
+        static if( RealThing!(t, m)) {
             alias typeof(__traits(getMember, *t, m)) M;
             static if (isSomeFunction!(__traits(getMember, T, m))){
                 continue;
@@ -475,7 +475,7 @@ Value encode(T)(T t) {
     } else static if (is (T == struct)) {
         Value[string] blep;
         foreach (m; __traits(allMembers, T)) { 
-            static if (RealThing!(T, m)) {
+            static if (RealThing!(t, m)) {
 				static if (isSomeFunction!(__traits(getMember, T, m))) {
 					continue;
 				} else {

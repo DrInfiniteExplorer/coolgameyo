@@ -36,7 +36,7 @@ private struct AllocationBlock {
 
     //static assert (T.sizeof == 4096);
 
-    immutable dataSize = 128; //dataSize = number of T's to allocate
+    enum dataSize = 128; //dataSize = number of T's to allocate
 
     AllocationBlock* next;
 

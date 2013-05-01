@@ -100,5 +100,19 @@ string MemDiff(string label, string varname = "memDiffStart")(){
 }
 
 
+ulong getCpuTimeMs() {
+    import windows : FILETIME, GetProcessTimes, GetCurrentProcess;
+    FILETIME creation, exit;
+    FILETIME kernel;
+    FILETIME user;
+    GetProcessTimes(GetCurrentProcess(), &creation, &exit, &kernel, &user);
 
+    ulong ulKernel = *cast(ulong*)&kernel;
+    ulong ulUser = *cast(ulong*)&user;
+
+    ulong total = ulKernel + ulUser;
+
+    //filetime == X * 100ns = X * 0.1us
+    return total / 10_000; // Should be ms?
+}
 

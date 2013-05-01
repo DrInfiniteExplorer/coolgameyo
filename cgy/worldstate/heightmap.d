@@ -50,8 +50,8 @@ mixin template Heightmap() {
 
     //Someday in the future, version'ize this and make automatic performance testing scripts where we
     // measure performance with and without this feature compiled to do anything.
-    immutable compileHeightmaps = true;
-    immutable parallelHeightmaps = true;
+    enum compileHeightmaps = true;
+    enum parallelHeightmaps = true;
 
 
     static final class HeightmapTasks {

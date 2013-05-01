@@ -11,11 +11,12 @@ public import derelict.opengl.gl;
 public import derelict.opengl.glext;
 import derelict.opengl.wgl;
 
-import globals : g_glVersion;
+import globals : g_glVersion, g_videoMemoryBuffers, g_videoMemoryTextures;
 import graphics.image;
 import graphics.shader;
 import settings;
 import util.util;
+import util.rangefromto;
 
 void initOpenGL(){
     // Version returns for example "4.3.0" so grabbing the first 3 chars should be enough to get the version information
@@ -284,35 +285,39 @@ void initQuad(){
         vec3f( 1,-1, 0),
         vec3f( 1, 1, 0),
     ];
-    glGenBuffers(1, &g_quadVBO);
-    glError();
-    glBindBuffer(GL_ARRAY_BUFFER, g_quadVBO);
-    glError();
-    glBufferData(GL_ARRAY_BUFFER, quad.sizeof, quad.ptr, GL_STATIC_DRAW);
-    glError();
+    g_quadVBO = CreateBuffer(false, quad.sizeof, quad.ptr, GL_STATIC_DRAW);
 }
 
 void renderQuad() {
-    glBindBuffer(GL_ARRAY_BUFFER, g_quadVBO);
-    glError();
-    glEnableVertexAttribArray(0);
-    glError();
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, vec3f.sizeof, null /* offset in vbo */);
-    glError();
+    glBindBuffer(GL_ARRAY_BUFFER, g_quadVBO); glError();
+    glEnableVertexAttribArray(0); glError();
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, vec3f.sizeof, null); glError();
     
     glDisable(GL_DEPTH_TEST);
 
-    glDrawArrays(GL_QUADS, 0, 4);
-    glError();
+    glDrawArrays(GL_QUADS, 0, 4); glError();
 
     glEnable(GL_DEPTH_TEST);        
-
-    glDisableVertexAttribArray(0);
-    glError();
-
+    glDisableVertexAttribArray(0); glError();
 }
 
+uint CreateBuffer(bool indexBuffer, size_t size, void* data, uint typeHint) {
+    uint ret;
+    glGenBuffers(1, &ret); glError();
+    uint bufferType = indexBuffer ? GL_ELEMENT_ARRAY_BUFFER : GL_ARRAY_BUFFER;
+    glBindBuffer(bufferType, ret); glError();
+    glBufferData(bufferType, size, data, typeHint); glError();
 
+    core.atomic.atomicOp!"+="(g_videoMemoryBuffers, size);
+    return ret;
+}
+
+void ReleaseBuffer(uint buffer) {
+    size_t size = BufferSize(buffer);
+    core.atomic.atomicOp!"-="(g_videoMemoryBuffers, size);
+    glDeleteBuffers(1, &buffer);
+
+}
 
 int BufferSize(uint buffer) {
     int bufferSize;
@@ -364,6 +369,19 @@ uint InternalTypeToFormatType(uint Type) {
     }
 }
 
+uint InternalTypeToSize(uint Type) {
+    if(Type == GL_RGBA8) return 4;
+    else if(Type == GL_R16F) return 2;
+    else if(Type == GL_R32F) return 4;
+    else if(Type == GL_RG16F) return 4;
+    else if(Type == GL_RG32F) return 8;
+    else if(Type == GL_RGBA16F) return 8;
+    else if(Type == GL_RGBA32F) return 16;
+    else {
+        BREAKPOINT;
+        assert(0, "Unknown mapping: " ~ Type.stringof);
+    }
+}
 
 uint GetInternalFormat(uint tex) {
     glBindTexture(GL_TEXTURE_2D, tex); glError();
@@ -404,6 +422,10 @@ uint Create2DTexture(uint textureType, DataType = void)(int width, int height, D
                  format, dataType, data);
     glError();
     //glBindTexture(GL_TEXTURE_2D, 0);
+    uint pixelSize = InternalTypeToSize(textureType);
+    uint size = pixelSize * width * height;
+    core.atomic.atomicOp!"+="(g_videoMemoryTextures, size);
+
     return tex;
 }
 
@@ -425,11 +447,22 @@ uint Create1DTexture(uint textureType, DataType = void)(int width, DataType* dat
                  format, dataType, data);
     glError();
     //glBindTexture(GL_TEXTURE_2D, 0);
+
+    uint pixelSize = InternalTypeToSize(textureType);
+    uint size = pixelSize * width;
+    core.atomic.atomicOp!"+="(g_videoMemoryTextures, size);
+
     return tex;
 }
 
 
 void DeleteTexture(uint tex) {
+    auto dim = GetTextureSize(tex);
+    auto internalType = GetInternalFormat(tex);
+    uint pixelSize = InternalTypeToSize(internalType);
+    uint size = pixelSize * dim.x * dim.y;
+    core.atomic.atomicOp!"-="(g_videoMemoryTextures, size);
+
     glBindTexture(GL_TEXTURE_2D, 0);
     glDeleteTextures(1, &tex);
 }
@@ -446,23 +479,30 @@ void BindTexture(uint tex, uint textureUnit) {
 }
 
 void FillTexture(uint tex, float r, float g, float b, float a) {
-    int width, height, rs, gs, bs, as;
+    int width, height;
     glBindTexture(GL_TEXTURE_2D, tex); glError();
     glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width); glError();
     glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height); glError();
+    FillTexture(tex, 0, 0, width, height, r, g, b, a);
+}
+
+void FillTexture(uint tex, int x, int y, int width, int height, float r, float g, float b, float a) {
+    glBindTexture(GL_TEXTURE_2D, tex); glError();
     int totalSize = width * height;
     uint count = totalSize;
-    float[4][] tmp;
-    tmp.length = count;
-    float[4] rgba;
+    float[4] rgba = void;
     rgba[0] = r;
     rgba[1] = g;
     rgba[2] = b;
     rgba[3] = a;
+    float[4][] tmp;
+    tmp.length = width * height;
     tmp[] = rgba;
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_FLOAT, tmp.ptr); glError();
+    glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, width, height, GL_RGBA, GL_FLOAT, tmp.ptr); glError();
+    delete tmp;
     glBindTexture(GL_TEXTURE_2D, 0); glError();
 }
+
 
 string makeLookupTable(string[] enums) {
     string ret = "[";

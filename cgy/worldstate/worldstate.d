@@ -248,7 +248,7 @@ class WorldState {
             string folder = text(g_worldPath ~ "/world/", xy.value.x, ",", xy.value.y, "/");
             if (util.filesystem.exists(folder ~ "heightmap.bin")) {
                 SectorHeightmap heightmap = new SectorHeightmap;            
-                heightmap.heightmap = cast(int[128][])std.file.read(folder ~ "heightmap.bin");
+                heightmap.heightmap[] = (cast(int[128][])std.file.read(folder ~ "heightmap.bin"))[];
                 xyPtr.heightmap = heightmap;
             } else {
                 addHeightmapTask(xy);

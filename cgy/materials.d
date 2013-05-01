@@ -167,7 +167,7 @@ void MaterialEditor() {
             cc.hwndOwner = getMainWindow();
             cc.hInstance = null;
             cc.rgbResult = asRef;
-            cc.lpCustColors = customs;
+            cc.lpCustColors = customs.ptr;
             cc.Flags = CC_FULLOPEN | CC_RGBINIT;
             cc.lCustData = 0;
             cc.lpfnHook = null;

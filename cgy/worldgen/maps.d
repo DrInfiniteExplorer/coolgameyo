@@ -10,6 +10,7 @@ import std.exception;
 import std.math;
 import std.md5;
 import std.random;
+import std.range : assumeSorted, SortedRange, SearchPolicy;
 import std.stdio;
 
 
@@ -83,6 +84,7 @@ final class WorldMap {
 
     HeightMaps heightMaps;
     MaterialStratum[] stratas;
+    SortedRange!(MaterialStratum[], "a.depthStart < b.depthStart") sortedStratas;
     MaterialInformation*[] materials;
     int worldSeed;
     int strataSeed;
@@ -127,6 +129,7 @@ final class WorldMap {
         mkdir(worldPath);
 
         stratas = generateStratas(strataSeed);
+        sortedStratas = assumeSorted!"a.depthStart < b.depthStart"(stratas);
         materials.length = stratas.length;
         foreach(idx, stratum ; stratas) {
             materials[idx] = &g_materials[stratum.materialName];
@@ -145,6 +148,7 @@ final class WorldMap {
             readJSONObject("worldSeed", &worldSeed);
         setSeeds();
         stratas = generateStratas(strataSeed);
+        sortedStratas = assumeSorted!"a.depthStart < b.depthStart"(stratas);
         materials.length = stratas.length;
         foreach(idx, stratum ; stratas) {
             materials[idx] = &g_materials[stratum.materialName];
@@ -174,26 +178,6 @@ final class WorldMap {
     //Assumes z=0 == surface of world and Z+ is upwards
     // May have to offset with world contour first. 
     int getStrataNum(int x, int y, int z) {
-        /*
-        if(z >= 0) {
-            return 0;
-        }
-        BREAK_IF(z > 20);
-        z = min(z, 0); // Allow for some retardedness in calculations.
-        int num = 0;
-        auto xyPos = vec2f(x, y);
-        float depth = stratas[0].getHeight(xyPos);
-        int zDepth = -z;
-        while(zDepth > depth) {
-            num++;
-            if(num == stratas.length) {
-                return cast(int)stratas.length - 1;
-            }
-            depth += stratas[num].getHeight(xyPos);
-        }
-        return num;
-        */
-
         vec2f baseHeightPos = vec2f(x, y) / (10_000); // Slowly changing wave. one(two?) cycles per 10 km.
         float baseHeightScale = 100.0f; // Undulate up to 100 meters!
         float baseHeightOffset = (strataNoise.getVal2(baseHeightPos) + 1.0f) * 0.5f * baseHeightScale;
@@ -206,7 +190,15 @@ final class WorldMap {
         depth += strataNoise.getVal3(perturbPos) * perturbStrength;
         depth = max(0, depth);
 
-        int idx = countUntil!"a.depthStart > b"(stratas, depth) - 1;
+        //int idx = countUntil!"a.depthStart > b"(stratas, depth) - 1;
+
+        MaterialStratum derp = void;
+        derp.depthStart = depth;
+        int idx = cast(int)sortedStratas.lowerBound!(SearchPolicy.binarySearch)(derp).length;
+        import globals;
+        g_derp1 += idx;
+        g_derp2 ++;
+
         return idx;
     }
 

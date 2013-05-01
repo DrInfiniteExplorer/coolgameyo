@@ -155,7 +155,7 @@ class ShaderProgram(T...){
         int[1] length;
         ptr[0] = source.ptr;
         length[0] = cast(int)source.length;
-        glShaderSource(shader, 1, ptr, length); glError();
+        glShaderSource(shader, 1, ptr.ptr, length.ptr); glError();
         glCompileShader(shader); glError();
         int error;
         glGetShaderiv(shader, GL_COMPILE_STATUS, &error); glError();

@@ -24,6 +24,7 @@ mixin template FloodFill() {
     RangeFromTo r;
 
     ulong startTime;
+    ulong startTimeCPU;
 
     private void reset_r() {
         r = RangeFromTo(
@@ -116,14 +117,18 @@ mixin template FloodFill() {
         g_Statistics.FloodFillProgress(BlocksPerSector.total);
         notifySectorLoad(state.sectorNum);
         if(startTime > 0) {
-            msg("Possible end time: ", (mstime() - startTime) / 1000.0f);
+            msg("Possible end time: ", (mstime() - startTime) / 1000.0f, "\t", (getCpuTimeMs() - startTimeCPU) / 1000.0f);
+            import globals;
+            msg("avg layer index: ", cast(double)g_derp1 / cast(double)g_derp2);
+
         }
 
     }
 
     void addFloodFillSector(SectorNum num) {
-        if(startTime == 0) {
+        if(fillingTasks.list.length == 0) {
             startTime = mstime();
+            startTimeCPU = getCpuTimeMs();
         }
         //_floodingSectors ~= num;
         BREAK_IF(num.value.getLengthSQ() == 0);

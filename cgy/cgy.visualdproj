@@ -483,6 +483,7 @@
    <File path="heightsheets\level5.d" />
   </Folder>
   <Folder name="math">
+   <File path="math\aabb.d" />
    <File path="math\math.d" />
    <File path="math\quat.d" />
    <File path="math\vector.d" />

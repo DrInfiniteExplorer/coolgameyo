@@ -91,6 +91,14 @@ struct Image {
         imgHeight = height;
     }
 
+    void destroy() {
+        imgWidth = 0;
+        imgHeight = 0;
+        delete imgData;
+        imgData = null;
+        filename = null;
+    }
+
     void clear(ubyte r, ubyte g, ubyte b, ubyte a) {
         ubyte[4] rgba = [r, g, b, a];
         (cast(ubyte[4][]) imgData)[] = rgba;
@@ -226,6 +234,7 @@ struct Image {
                 imgData[idx] = 255; // Force alpha to be non see trouhj
             }
         }
+        delete flt;
     }
 
 
@@ -275,10 +284,10 @@ struct Image {
     }
 
     void setPixel(int x, int y, ubyte[4] pixel) {
-        imgData[4*(x + y * imgWidth) .. 4*(x + y * imgWidth) + 4] = pixel;
+        imgData[4*(x + y * imgWidth) .. 4*(x + y * imgWidth) + 4] = pixel[];
     }
     void setPixel(int x, int y, uint pixel) {
-        imgData[4*(x + y * imgWidth) .. 4*(x + y * imgWidth) + 4] = *cast(ubyte[4]*)&pixel;
+        imgData[4*(x + y * imgWidth) .. 4*(x + y * imgWidth) + 4] = (*cast(ubyte[4]*)&pixel)[];
     }
 
     void getPixel(int x, int y, ref ubyte r, ref ubyte g, ref ubyte b, ref ubyte a) {

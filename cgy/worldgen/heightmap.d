@@ -359,8 +359,8 @@ class HeightMaps {
         }
     }
 
+    // Used to calculate village score
     vec2f getSampleSlope(vec2i samplePos) {
-        BREAKPOINT; // Is this function used?
         int x = samplePos.x;
         int y = samplePos.y;
         float getHeight(int x, int y) {
