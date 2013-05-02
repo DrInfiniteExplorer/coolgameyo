@@ -155,6 +155,7 @@ final class WorldMap {
         }
         heightMaps.load(heightmapSeed);
         strataNoise = new SimplexNoise(worldSeed);
+        loadRoads();
     }
 
     void setSeeds() {

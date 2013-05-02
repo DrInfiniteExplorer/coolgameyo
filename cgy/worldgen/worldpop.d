@@ -90,9 +90,6 @@ mixin template WorldPopulation() {
             }
         }
 
-        aabb2i aabb;
-        Endpoint a, b;
-        vec2i[] points;
         void add(vec2i pt) {
             if(points.length == 0) {
                 if(a !is null) {
@@ -141,6 +138,10 @@ mixin template WorldPopulation() {
             return a && b;
         }
 
+        aabb2i aabb;
+        Endpoint a, b;
+        vec2i[] points;
+
     }
 
     class Endpoint {
@@ -178,6 +179,95 @@ mixin template WorldPopulation() {
     Endpoint[] endpoints;
     Road[] roads;
 
+    void saveRoads() {
+        //worldPath = "asd/derp/map"
+        string roadPath = worldPath ~ "/roads";
+        mkdir(roadPath);
+
+        Value serializeCity(City city) {
+            int endpointId = endpoints.countUntil(city.endpoint);
+            return makeJSONObject("pos", city.pos,
+                                  "closestCities", city.closestCities,
+                                  "endpointId", endpointId);
+        }
+        Value serializeEndpoint(Endpoint e) {
+            return makeJSONObject("pos", e.pos);
+        }
+        Value serializeRoad(Road r) {
+            int a = endpoints.countUntil(r.a);
+            int b = endpoints.countUntil(r.b);
+            return makeJSONObject("aabb", r.aabb,
+                                  "points", r.points,
+                                  "endpointA", a,
+                                  "endpointB", b);
+
+        }
+
+        auto val = makeJSONObject("cityCount", cities.length,
+                                  "endpointCount", endpoints.length,
+                                  "roadCount", roads.length);
+
+        val.populateJSONObject("cities", Value(array(map!serializeCity(cities))));
+        val.populateJSONObject("endpoints", Value(array(map!serializeEndpoint(endpoints))));
+        val.populateJSONObject("roads", Value(array(map!serializeRoad(roads))));
+
+        val.saveJSON(roadPath ~ "/roads.json");
+    }
+
+    bool loadRoads() {
+        string roadPath = worldPath ~ "/roads/roads.json";
+        if(!exists(roadPath)) {
+            return false;
+        }
+        auto value = loadJSON(roadPath);
+        int cityCount, endpointCount, roadCount;
+        Value cityVal, endpointVal, roadVal;
+        value.readJSONObject("cityCount", &cityCount,
+                             "endpointCount", &endpointCount,
+                             "roadCount", &roadCount,
+                             "cities", &cityVal,
+                             "endpoints", &endpointVal,
+                             "roads", &roadVal);
+        cities.length = cityCount;
+        endpoints.length = endpointCount;
+        roads.length = roadCount;
+        foreach(ref c ; cities) {
+            c = new City;
+        }
+        foreach(ref e ; endpoints) {
+            e = new Endpoint;
+        }
+        foreach(ref r ; roads) {
+            r = new Road(null, null);
+        }
+
+        foreach(idx, val ; cityVal.asArray) {
+            City city = cities[idx];
+            int endpointId;
+            val.readJSONObject("pos", &city.pos,
+                               "closestCities", &city.closestCities,
+                               "endpointId", &endpointId);
+            city.endpoint = endpoints[endpointId];
+            city.endpoint.city = city;
+        }
+        foreach(idx, val ; endpointVal.asArray) {
+            Endpoint endpoint = endpoints[idx];
+            val.readJSONObject("pos", &endpoint.pos);
+        }
+        foreach(idx, val ; roadVal.asArray) {
+            Road road = roads[idx];
+
+            int endpointA, endpointB;
+            val.readJSONObject("endpointA", &endpointA,
+                               "endpointB", &endpointB);
+            road.addEndpoint(endpoints[endpointA]);
+            road.addEndpoint(endpoints[endpointB]);
+            val.readJSONObject("aabb", &road.aabb,
+                               "points", &road.points);
+        }        
+        return true;
+    }
+
     bool cityNear(vec2i pos) {
         foreach(data ; cities) {
             if(data.pos.getDistanceSQ(pos) < (NearCityDistance ^^ 2) ) {
@@ -189,11 +279,17 @@ mixin template WorldPopulation() {
 
     Random popGen;
     void generateLife() {
+        string roadPath = worldPath ~ "/roads/roads.json";
 
         initGenerateLife();
         scope(exit) {
             deinitGenerateLife();
         }
+        if(loadRoads()) {
+            render();
+            return;
+        }
+
         popGen.seed(walkSeed);
 
         foreach(size_t idx; 0 .. StartCityCount) {
@@ -272,6 +368,7 @@ mixin template WorldPopulation() {
             computeRoad(connection[0], connection[1]);
         }
 
+        saveRoads();
         render();
     }
 

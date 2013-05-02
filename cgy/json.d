@@ -90,30 +90,19 @@ struct Value {
         enforce (type == Type.array, new JsonException(text("Cant do arrayLength on json-value when type is ", type)));
         return elements.length;
     }
-    //Could "return elements" for the same effect. Weight the pros and cons for it. Maybe version(...) it?
+
+    //Change: returning the thing takes up 0 extra memory everywhere and does not produce
+    // wierd code flow. Yay!
     auto asArray() {
         enforce (type == Type.array, new JsonException(text("Cant do asArray on json-value when type is ", type)));
-        return (int delegate(ref size_t i, ref Value v) Body) {
-            int ret;
-            foreach(size_t i ; 0 .. elements.length) {
-                ret = Body(i, elements[i]);
-                if(ret) return ret;
-            }
-            return 0;
-        };
+        return elements;
     }
 
-    //Could "return pairs" for the same effect. Weight the pros and cons for it. Maybe version(...) it?
+    //Change: returning the thing takes up 0 extra memory everywhere and does not produce
+    // wierd code flow. Yay!
     auto asObject() {
         enforce (type == Type.object, new JsonException(text("Cant do asObject on json-value when type is ", type)));
-        return (int delegate(ref string str, ref Value v) Body) {
-            int ret;
-            foreach(key, ref value ; pairs) {
-                ret = Body(key, value);
-                if(ret) return ret;
-            }
-            return 0;
-        };
+        return pairs;
     }
 
     bool opEquals(ref const Value other) const {
@@ -363,7 +352,10 @@ void read(T)(string s, ref T t)  if(! is( T : Value)) {
 }
 void read(T)(Value val, ref T t) if(! is( T : Value)) {
 //    writeln(T.stringof);
-    static if (isNumeric!T) {
+    static if( is( T : Value)) {
+        t = val;
+    }
+    else static if (isNumeric!T) {
         t = to!T(val.num);
     } else static if (is (T : string)) {
         t = val.str;
@@ -449,11 +441,14 @@ private void update(T)(T* t, Value val) {
 
 
 Value encode(T)(T t) {
-    static if (isNumeric!T || is (T : string) || is (T : bool)) { //Normal primitive
+    static if( is(T : Value)) {
+        return t;
+    }
+    else static if (isNumeric!T || is (T : string) || is (T : bool)) { //Normal primitive
         return Value(t);
     } else static if (is (T U : U[])) { //Array of things
 
-        return Value(array(map!(encode!U)(t)));
+        return Value(array(map!(encode!U)(t[])));
     } else static if (is (T U : U[string])) { //Map of things with string as key
         Value[string] ret;
         foreach(key, value ; t) {
@@ -545,7 +540,11 @@ void readJSONObject(T...)(Value value, T t) if( (t.length % 2) == 0) {
             assert(isPointer!(typeof(valuePtr)));
 
             if(key in value) {
-                value[key].read(*valuePtr);
+                static if( is(typeof(valuePtr) == Value*)) {
+                    *valuePtr = value[key];
+                } else {
+                    value[key].read(*valuePtr);
+                }
             }
         }
     }
