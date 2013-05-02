@@ -78,11 +78,10 @@ final class TextureArray {
                     glBindTexture(GL_TEXTURE_2D_ARRAY, textureId); glError();
                     glGetTexImage(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA, GL_UNSIGNED_BYTE, data.ptr); glError();
 
-                    glDeleteTextures(1, &textureId);
+                    DeleteTextures(textureId);
                 }
 
-                glGenTextures(1, &textureId);
-                glBindTexture(GL_TEXTURE_2D_ARRAY, textureId); glError();
+                textureId = Create2DArrayTexture(GL_RGBA8, width, height, capacity, data.ptr);
                 glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST); glError();
                 glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR); glError();
                 glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); glError();
@@ -92,9 +91,6 @@ final class TextureArray {
                     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_GENERATE_MIPMAP, GL_TRUE);
                     glError();
                 }
-
-                glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA8, width, height, capacity, 0, GL_RGBA, GL_UNSIGNED_BYTE, data.ptr);
-                glError();
             }
             glBindTexture(GL_TEXTURE_2D_ARRAY, textureId);
             foreach(idx, img ; toUpload) {

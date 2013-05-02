@@ -161,14 +161,14 @@ class Heightmap : ShaderProgram!() {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
         if(posVbo) {
             glBindBuffer(GL_ARRAY_BUFFER, 0);
-            glDeleteBuffers(1, &posVbo);
+            ReleaseBuffer(posVbo);
         }
         if(heightImg && heightImg != _loadTextures[0]) {
             glBindTexture(GL_TEXTURE_2D, 0);
-            glDeleteTextures(1, &heightImg);
+            DeleteTextures(heightImg);
         }
         if(colorVbo) {
-            glDeleteBuffers(1, &colorVbo);
+            ReleaseBuffer(colorVbo);
         }
         if(vao) {
             glBindVertexArray(0);
@@ -277,11 +277,11 @@ class Heightmap : ShaderProgram!() {
         if(_loadTextures.length == 0) {
             if(heightImg && GetTextureSize(heightImg) != vec2i(sizeX, sizeY)) {
                 glBindTexture(GL_TEXTURE_2D, 0);
-                glDeleteTextures(1, &heightImg);
+                DeleteTextures(heightImg);
                 heightImg = 0;
             }
             if(!heightImg) {
-                heightImg = Create2DTexture!(GL_R32F,float)(sizeX, sizeY, map.ptr);
+                heightImg = Create2DTexture!float(GL_R32F, sizeX, sizeY, map.ptr);
             } else {
                 glBindTexture(GL_TEXTURE_2D, heightImg); glError();
                 glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, sizeX, sizeY, GL_RED, GL_FLOAT, map.ptr); glError();
@@ -289,12 +289,9 @@ class Heightmap : ShaderProgram!() {
         }
         immutable size = len * vec2i.sizeof;
         if(posVbo && BufferSize(posVbo) != size) {
-            glDeleteBuffers(1, &posVbo); glError();
-            posVbo = 0;
+            ReleaseBuffer(posVbo);
         }
         if(!posVbo) {
-            glGenBuffers(1, &posVbo); glError();
-            glBindBuffer(GL_ARRAY_BUFFER, posVbo); glError();
             vec2i[] positions;
             positions.length = len;
             foreach(x, y ; Range2D(0, sizeX-1, 0, sizeY-1)) {
@@ -304,7 +301,7 @@ class Heightmap : ShaderProgram!() {
                 positions[idx + 2].set(x+1, 1+y);
                 positions[idx + 3].set(x  , 1+y);
             }
-            glBufferData(GL_ARRAY_BUFFER, size, positions.ptr, GL_STATIC_DRAW); glError();
+            posVbo = CreateBuffer(false, size, positions.ptr, GL_STATIC_DRAW);
         }
 
         glVertexAttribIPointer(0u, 2, GL_INT, vec2i.sizeof, cast(void*)0); glError();

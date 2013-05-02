@@ -132,10 +132,8 @@ final class cgyModel {
     void clearMesh(CGYMesh mesh) {
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-        glDeleteBuffers(1, &mesh.idxVBO);
-        glDeleteBuffers(1, &mesh.meshVBO);
-        mesh.idxVBO = 0;
-        mesh.meshVBO = 0;
+        ReleaseBuffer(mesh.meshVBO);
+        ReleaseBuffer(mesh.idxVBO);
     }
 
     void prepare() {

@@ -61,13 +61,10 @@ class TileRenderer {
 
     bool destroyed = false;
     void destroy() {
-
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         foreach(renderInfo ; vertexBuffers) {
-            glDeleteBuffers(1, &renderInfo.vbo);
+            ReleaseBuffer(renderInfo.vbo);
         }
-
-
         destroyed = true;
     }
 
@@ -124,13 +121,12 @@ class TileRenderer {
             }else{
                 //Delete old vbo
                 glBindBuffer(GL_ARRAY_BUFFER, 0);
-                glDeleteBuffers(1, &oldInfo.vbo);
+                ReleaseBuffer(oldInfo.vbo);
             }
         }
         if(geometrySize > 0){
-            glGenBuffers(1, &info.vbo);
-            glBindBuffer(GL_ARRAY_BUFFER, info.vbo);
-            glBufferData(GL_ARRAY_BUFFER, geometrySize, geometry.faces.ptr, GL_STATIC_DRAW);
+            info.vbo = CreateBuffer(false, geometrySize, geometry.faces.ptr, GL_STATIC_DRAW);
+            
         } else {
             //msg("GOT NOTHING FROM GRAPHREGION! >:( ", region.grNum);
             //addAABB(region.grNum.getAABB());
@@ -163,7 +159,7 @@ class TileRenderer {
                     RenderInfo *renderInfo = grNum in vertexBuffers;
                     if(renderInfo is null) continue;
                     glBindBuffer(GL_ARRAY_BUFFER, 0);
-                    glDeleteBuffers(1, &renderInfo.vbo);
+                    ReleaseBuffer(renderInfo.vbo);
                     vertexBuffers.remove(grNum);
                 }
                 toRemove = null;

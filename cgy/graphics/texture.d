@@ -69,37 +69,9 @@ class TileTextureAtlas{
     }
 
     void destroy(){
-        glDeleteTextures(1, &texId);
+        DeleteTextures(texId);
         texId = 0;
         destroyed = true;
-    }
-
-    void genTex(){
-        assert(texId == 0, "texId != 0");
-        glGenTextures(1, &texId);
-        glError();
-        enforce(texId != 0, "Error generating ogl texture name!");
-        glBindTexture(GL_TEXTURE_2D_ARRAY, texId);
-        glError();
-        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glError();
-        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
-        glError();
-        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glError();
-        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glError();
-        glTexParameterf(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAX_ANISOTROPY_EXT, renderSettings.anisotropy);
-        glError();
-        int bitsPerAxis = to!int(log2(renderSettings.maxTextureSize)); //ex 1024 -> 10
-        int bitsPerTile = to!int(log2(renderSettings.pixelsPerTile)); //ex 16 -> 4
-        int maxMipMapLevel = bitsPerAxis-bitsPerTile -1; //ex 6
-        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAX_LEVEL, maxMipMapLevel);
-        glError();
-        if(g_glVersion < 3.0){
-            glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_GENERATE_MIPMAP, GL_TRUE);
-            glError();
-        }
     }
 
     void setMinFilter(bool mipLevelInterpolate, bool textureInterpolate){
@@ -125,28 +97,28 @@ class TileTextureAtlas{
         int tileCount = cast(int)tileMap.length();
         enforce(tileCount <= maxTileCount, "Derp e ti derp! can't allocate space for all tiles!");
         int layerCount = (tileCount / tilesPerLayer) + tileCount%tilesPerLayer==0 ? 0 : 1;
-        genTex();
         auto size = renderSettings.maxTextureSize;
 
         uint bytesPerLayer = layerCount*(size^^2)*4;
         uint now = cast(uint)atlasData.length;
-        version(none){
-            uint d = now % bytesPerLayer;
-            uint padCount = d == 0 ? 0 : bytesPerLayer - d;
-
-            char[] asd;
-            asd.length = padCount;
-            asd[] = 255;
-
-            //atlasData.length += padCount;
-            atlasData ~= asd;
-
-            Image img = Image(atlasData.ptr, size, size);
-            img.save("derp.bmp");
-        }
 
         glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA8, size, size, layerCount, 0, GL_RGBA, GL_UNSIGNED_BYTE, null);
         glError();
+        texId = Create2DArrayTexture(GL_RGBA8, size, size, layerCount);
+        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST); glError();
+        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR); glError();
+        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); glError();
+        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); glError();
+        glTexParameterf(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAX_ANISOTROPY_EXT, renderSettings.anisotropy); glError();
+        int bitsPerAxis = to!int(log2(renderSettings.maxTextureSize)); //ex 1024 -> 10
+        int bitsPerTile = to!int(log2(renderSettings.pixelsPerTile)); //ex 16 -> 4
+        int maxMipMapLevel = bitsPerAxis-bitsPerTile -1; //ex 6
+        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAX_LEVEL, maxMipMapLevel); glError();
+        if(g_glVersion < 3.0){
+            glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_GENERATE_MIPMAP, GL_TRUE);
+            glError();
+        }
+
 
         vec2i tileSize = vec2i(1,1)*renderSettings.pixelsPerTile;
         ubyte* dataPtr = atlasData.ptr;

@@ -134,8 +134,7 @@ class StringTexture {
     }
     void destroy() {
         msg("destroying text: '", currentText.str, "' vbo:", vbo);
-        glDeleteBuffers(1, &vbo);
-        glError();
+        ReleaseBuffer(vbo);
         destroyed = true;
     }
 
@@ -144,13 +143,8 @@ class StringTexture {
         if(vbo){
             destroy();
         }
-        glGenBuffers(1, &vbo);
-        glError();
-        glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glError();
         auto size = FontQuad.sizeof * length;
-        glBufferData(GL_ARRAY_BUFFER, size, null, GL_STATIC_DRAW);
-        glError();
+        vbo = CreateBuffer(false, size, null, GL_STATIC_DRAW);
     }
     
     string getText() {
@@ -278,7 +272,7 @@ class Font {
     void destroy() {
         destroyed = true;
         if (texId) {
-            glDeleteTextures(1, &texId);
+            DeleteTextures(texId);
         }
     }
 

@@ -40,11 +40,9 @@ final class InstanceManager {
             if(instanceSize != cap) {
                 //Different size, we has capacity?
                 instanceSize =  cap;
-                glDeleteBuffers(1, &instanceVBO); glError();
-                glGenBuffers(1, &instanceVBO); glError();
-                glBindBuffer(GL_ARRAY_BUFFER, instanceVBO); glError();
+                ReleaseBuffer(instanceVBO);
                 size_t size = InstanceData.sizeof * instanceSize;
-                glBufferData(GL_ARRAY_BUFFER, size, null, GL_DYNAMIC_DRAW); glError();
+                instanceVBO = CreateBuffer(false, size, null, GL_DYNAMIC_DRAW);
             }
         }
         size_t size = InstanceData.sizeof * instanceData.length;

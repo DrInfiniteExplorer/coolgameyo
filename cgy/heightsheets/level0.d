@@ -150,18 +150,13 @@ final class Level0Sheet {
         if(alloc != -1) {
             writeln("Re-allocing");
             if(vertexVBO) {
-                glDeleteBuffers(1, &vertexVBO); glError();
+                ReleaseBuffer(vertexVBO);
             }
             if(colorVBO) {
-                glDeleteBuffers(1, &colorVBO); glError();
+                ReleaseBuffer(colorVBO);
             }
-            glGenBuffers(1, &vertexVBO); glError();
-            glBindBuffer(GL_ARRAY_BUFFER, vertexVBO); glError();
-            glBufferData(GL_ARRAY_BUFFER, capacity * vertices[0].sizeof, null, GL_STATIC_DRAW); glError();
-
-            glGenBuffers(1, &colorVBO); glError();
-            glBindBuffer(GL_ARRAY_BUFFER, colorVBO); glError();
-            glBufferData(GL_ARRAY_BUFFER, capacity * colors[0].sizeof, null, GL_STATIC_DRAW); glError();
+            vertexVBO = CreateBuffer(false, capacity * vertices[0].sizeof, null, GL_STATIC_DRAW);
+            colorVBO = CreateBuffer(false, capacity * colors[0].sizeof, null, GL_STATIC_DRAW); 
         }
         glBindBuffer(GL_ARRAY_BUFFER, vertexVBO); glError();
         glBufferSubData(GL_ARRAY_BUFFER, 0, size * vertices[0].sizeof, vertices.ptr); glError();

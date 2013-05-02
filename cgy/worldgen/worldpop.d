@@ -632,11 +632,11 @@ mixin template WorldPopulation() {
         roadTmp.length = heightMaps.heightData.length;
         roadTmp.convertArray(heightMaps.heightData);
         roadTmp.convertArray!"+="(heightMaps.soilData);
-        roadHeightTex = Create2DTexture!(GL_R32F, float)(TotalSamples, TotalSamples, roadTmp.ptr);
+        roadHeightTex = Create2DTexture!float(GL_R32F, TotalSamples, TotalSamples, roadTmp.ptr);
         roadTmp.convertArray(heightMaps.waterData);
-        roadWaterTex = Create2DTexture!(GL_R32F, float)(TotalSamples, TotalSamples, roadTmp.ptr);
-        roadDistanceTex = Create2DTexture!(GL_R32F, float)(TotalSamples, TotalSamples, null);
-        roadRoadTex = Create2DTexture!(GL_R32F, float)(TotalSamples, TotalSamples, null);
+        roadWaterTex = Create2DTexture!float(GL_R32F, TotalSamples, TotalSamples, roadTmp.ptr);
+        roadDistanceTex = Create2DTexture(GL_R32F, TotalSamples, TotalSamples);
+        roadRoadTex = Create2DTexture(GL_R32F, TotalSamples, TotalSamples);
         FillTexture(roadRoadTex, 0.0, 0, 0, 0);
     }
 
@@ -726,11 +726,11 @@ mixin template WorldPopulation() {
         height.width = WorldSize;
 
         roadTmp.convertArray(heightMaps.heightData);
-        uint heightTex = Create2DTexture!(GL_R32F,float)(TotalSamples, TotalSamples, roadTmp.ptr);
+        uint heightTex = Create2DTexture!float(GL_R32F, TotalSamples, TotalSamples, roadTmp.ptr);
         roadTmp.convertArray(heightMaps.soilData);
-        uint soilTex = Create2DTexture!(GL_R32F,float)(TotalSamples, TotalSamples, roadTmp.ptr);
+        uint soilTex = Create2DTexture!float(GL_R32F, TotalSamples, TotalSamples, roadTmp.ptr);
         roadTmp.convertArray(heightMaps.waterData);
-        uint waterTex = Create2DTexture!(GL_R32F,float)(TotalSamples, TotalSamples, roadTmp.ptr);
+        uint waterTex = Create2DTexture!float(GL_R32F, TotalSamples, TotalSamples, roadTmp.ptr);
         scope(exit) {
             DeleteTextures(heightTex, soilTex, waterTex);
         }

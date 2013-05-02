@@ -71,21 +71,21 @@ class GPUErosion {
 
         tmpFloats.length = sizeSQ;
         convertArray(tmpFloats, startHeightmap);
-        height = Create2DTexture!(GL_R32F, float)(sizeX, sizeY, tmpFloats.ptr);
+        height = Create2DTexture!float(GL_R32F, sizeX, sizeY, tmpFloats.ptr);
         convertArray(tmpFloats, startSoilmap);
-        soil = Create2DTexture!(GL_R32F, float)(sizeX, sizeY, tmpFloats.ptr);
+        soil = Create2DTexture!float(GL_R32F, sizeX, sizeY, tmpFloats.ptr);
 
-        water = Create2DTexture!(GL_R16F, float)(sizeX, sizeY, null);
-        sediment = Create2DTexture!(GL_R16F, float)(sizeX, sizeY, null);
-        waterFlow = Create2DTexture!(GL_RGBA16F, float)(sizeX, sizeY, null);
-        velocity = Create2DTexture!(GL_RG16F, float)(sizeX, sizeY, null);
+        water = Create2DTexture!float(GL_R16F, sizeX, sizeY, null);
+        sediment = Create2DTexture!float(GL_R16F, sizeX, sizeY, null);
+        waterFlow = Create2DTexture!float(GL_RGBA16F, sizeX, sizeY, null);
+        velocity = Create2DTexture!float(GL_RG16F, sizeX, sizeY, null);
 
-        newHeight = Create2DTexture!(GL_R32F, float)(sizeX, sizeY, null);
-        newSoil = Create2DTexture!(GL_R32F, float)(sizeX, sizeY, null);
-        newSediment = Create2DTexture!(GL_R16F, float)(sizeX, sizeY, null);
+        newHeight = Create2DTexture!float(GL_R32F, sizeX, sizeY, null);
+        newSoil = Create2DTexture!float(GL_R32F, sizeX, sizeY, null);
+        newSediment = Create2DTexture!float(GL_R16F, sizeX, sizeY, null);
 
-        talusMovement1 = Create2DTexture!(GL_RGBA16F, float)(sizeX, sizeY, null);
-        talusMovement2 = Create2DTexture!(GL_RGBA16F, float)(sizeX, sizeY, null);
+        talusMovement1 = Create2DTexture!float(GL_RGBA16F, sizeX, sizeY, null);
+        talusMovement2 = Create2DTexture!float(GL_RGBA16F, sizeX, sizeY, null);
 
         FillTexture(water, 0, 0, 0, 0);
         FillTexture(sediment, 0, 0, 0, 0);

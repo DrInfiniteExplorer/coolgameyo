@@ -152,31 +152,14 @@ bool initFBO() {
     glBindRenderbuffer(GL_RENDERBUFFER, 0); glError();
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth); glError();
 
-    glGenTextures(1, &g_albedoTexture); glError();
-    glBindTexture(GL_TEXTURE_2D, g_albedoTexture); glError();
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); glError();
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); glError();
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); glError();
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); glError();
-    glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_FALSE);  glError();
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, renderSettings.windowWidth, renderSettings.windowHeight, 0,
-                 GL_RGBA, GL_UNSIGNED_BYTE, null);
+    g_albedoTexture = Create2DTexture(GL_RGBA8, renderSettings.windowWidth, renderSettings.windowHeight, null);
+
     glError();
     glBindTexture(GL_TEXTURE_2D, 0);
 
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, g_albedoTexture, 0); glError();
 
-    glGenTextures(1, &g_lightTexture); glError();
-    glBindTexture(GL_TEXTURE_2D, g_lightTexture); glError();
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); glError();
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); glError();
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); glError();
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); glError();
-    glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_FALSE); // automatic mipmap
-    glError();
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, renderSettings.windowWidth, renderSettings.windowHeight, 0,
-                 GL_RGBA, GL_UNSIGNED_BYTE, null);
-    glError();
+    g_lightTexture = Create2DTexture(GL_RGBA8, renderSettings.windowWidth, renderSettings.windowHeight);
     glBindTexture(GL_TEXTURE_2D, 0);
 
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, g_lightTexture, 0); glError();
@@ -189,16 +172,7 @@ bool initFBO() {
         glBindRenderbuffer(GL_RENDERBUFFER, 0); glError();
         glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_RENDERBUFFER, g_FBODepthBuffer); glError();
     } else {
-        glGenTextures(1, &g_FBODepthBuffer); glError();
-        glBindTexture(GL_TEXTURE_2D, g_FBODepthBuffer); glError();
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); glError();
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); glError();
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); glError();
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); glError();
-        glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_FALSE); glError();
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, renderSettings.windowWidth, renderSettings.windowHeight, 0,
-                     derelict.opengl.gltypes.GL_RGBA, GL_FLOAT, null);
-        glError();
+        g_FBODepthBuffer = Create2DTexture(GL_RGBA32F, renderSettings.windowWidth, renderSettings.windowHeight);
         glBindTexture(GL_TEXTURE_2D, 0);
 
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, g_FBODepthBuffer, 0); glError();
@@ -233,27 +207,14 @@ bool initFBO() {
         return false;
     }
 
-    glGenTextures(1, &g_rayCastOutput);
-    glError();
-    glBindTexture(GL_TEXTURE_2D, g_rayCastOutput);
-    glError();
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glError();
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glError();
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glError();
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glError();
-    glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_FALSE); // automatic mipmap
-    glError();
     int resultWidth = renderSettings.windowWidth / renderSettings.raycastPixelSkip;
     int resultHeight = renderSettings.windowHeight / renderSettings.raycastPixelSkip;
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, resultWidth, resultHeight, 0,
-                 GL_RGBA, GL_UNSIGNED_BYTE, null);
-    glError();
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glError();
+    g_rayCastOutput = Create2DTexture(GL_RGBA8, resultWidth, resultHeight);
+    glTexParameterf(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR); glError();
+    glTexParameterf(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR); glError();
+
+
+    glBindTexture(GL_TEXTURE_2D, 0); glError();
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -312,14 +273,16 @@ uint CreateBuffer(bool indexBuffer, size_t size, void* data, uint typeHint) {
     return ret;
 }
 
-void ReleaseBuffer(uint buffer) {
+void ReleaseBuffer(ref uint buffer) {
+    if(buffer == 0) return;
     size_t size = BufferSize(buffer);
     core.atomic.atomicOp!"-="(g_videoMemoryBuffers, size);
-    glDeleteBuffers(1, &buffer);
-
+    glDeleteBuffers(1, &buffer); glError();
+    buffer = 0;
 }
 
 int BufferSize(uint buffer) {
+    if(buffer == 0) return 0;
     int bufferSize;
     glBindBuffer(GL_ARRAY_BUFFER, buffer); glError();
     glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &bufferSize); glError();
@@ -327,7 +290,8 @@ int BufferSize(uint buffer) {
 }
 
 uint TypeToGLTypeEnum(Type)() {
-    static if( is(Type == ubyte)) return GL_UNSIGNED_BYTE;
+    static if( is(Type == void)) return GL_UNSIGNED_BYTE; // Huerr hurr
+    else static if( is(Type == ubyte)) return GL_UNSIGNED_BYTE;
     else static if( is(Type == byte)) return GL_BYTE;
     else static if( is(Type == ushort)) return GL_UNSIGNED_SHORT;
     else static if( is(Type == short)) return GL_SHORT;
@@ -399,12 +363,39 @@ vec2i GetTextureSize(uint tex) {
     return vec2i(width, height);
 }
 
+uint Create2DArrayTexture(DataType = void)(uint textureType, int width, int height, int layers, void* data = null) {
+
+    uint format = InternalTypeToFormatType(textureType);
+    uint dataType = TypeToGLTypeEnum!DataType;
+
+    uint tex = 0;
+    glGenTextures(1, &tex); glError();
+    glBindTexture(GL_TEXTURE_2D_ARRAY, tex); glError();
+    glTexParameterf(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST); glError();
+    glTexParameterf(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST); glError();
+    glTexParameterf(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); glError();
+    glTexParameterf(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); glError();
+    // automatic mipmap
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_GENERATE_MIPMAP, GL_FALSE); glError();
+    glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, textureType, width, height, layers, 0,
+                 format, dataType, data);
+    glError();
+    //glBindTexture(GL_TEXTURE_2D, 0);
+    uint pixelSize = InternalTypeToSize(textureType);
+    uint size = pixelSize * width * height * layers;
+    core.atomic.atomicOp!"+="(g_videoMemoryTextures, size);
+
+    return tex;
+}
+
 
 //textureType: for example GL_RGB8, GL_R32F, etc
-uint Create2DTexture(uint textureType, DataType = void)(size_t width, size_t height, DataType* data = null) {
-    return Create2DTexture!(textureType, DataType)(cast(int)width, cast(int)height, data);
+static if(! is(size_t : int)) {
+    uint Create2DTexture(DataType = void)(uint textureType, size_t width, size_t height, DataType* data = null) {
+        return Create2DTexture!(DataType)(textureType, cast(int)width, cast(int)height, data);
+    }
 }
-uint Create2DTexture(uint textureType, DataType = void)(int width, int height, DataType* data = null) {
+uint Create2DTexture(DataType = void)(uint textureType, int width, int height, void* data = null) {
 
     uint format = InternalTypeToFormatType(textureType);
     uint dataType = TypeToGLTypeEnum!DataType;
@@ -534,7 +525,7 @@ void glError(string file = __FILE__, int line = __LINE__){
     auto derp = file ~":" ~ to!string(line) ~ "\n" ~str;
     writeln(derp);
     BREAKPOINT;
-    assert(0, derp);
+    //assert(0, derp);
 }
 
 static bool oldValue = false;
