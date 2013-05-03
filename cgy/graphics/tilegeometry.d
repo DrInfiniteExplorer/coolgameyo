@@ -210,7 +210,7 @@ final class TileGeometry : Module, WorldStateListener
         //TODO: Implement a method in world, which returns a collection of all tiles
         // within a specified area, for fast access instead of getTile all the time.
         foreach( pos ; RangeFromTo (min.value, max.value)) {
-            auto tile = world.getTile(TilePos(pos), false);
+            auto tile = world.getTile(TilePos(pos));
             newFace.quad[0].lightValue = 0;
            if (!tile.valid)  {
                 continue;
@@ -218,12 +218,12 @@ final class TileGeometry : Module, WorldStateListener
             if (tile.isAir) {
                 continue;
             }            
-            auto tileXp = world.getTile(TilePos(pos+vec3i(1,0,0)), false);
-            auto tileXn = world.getTile(TilePos(pos-vec3i(1,0,0)), false);
-            auto tileYp = world.getTile(TilePos(pos+vec3i(0,1,0)), false);
-            auto tileYn = world.getTile(TilePos(pos-vec3i(0,1,0)), false);
-            auto tileZp = world.getTile(TilePos(pos+vec3i(0,0,1)), false);
-            auto tileZn = world.getTile(TilePos(pos-vec3i(0,0,1)), false);
+            auto tileXp = world.getTile(TilePos(pos+vec3i(1,0,0)));
+            auto tileXn = world.getTile(TilePos(pos-vec3i(1,0,0)));
+            auto tileYp = world.getTile(TilePos(pos+vec3i(0,1,0)));
+            auto tileYn = world.getTile(TilePos(pos-vec3i(0,1,0)));
+            auto tileZp = world.getTile(TilePos(pos+vec3i(0,0,1)));
+            auto tileZn = world.getTile(TilePos(pos-vec3i(0,0,1)));
             //To generate where is invalid tiles, replace == with <=
             bool Xp;
             bool Xn;

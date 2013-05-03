@@ -153,7 +153,7 @@ class FPSControlAI {
             }
             foreach( ppp ; RangeFromTo(start, stop)) {
                 auto p = (axis * wallNum) + ppp;
-                auto tile = world.getTile(TilePos(p), false);
+                auto tile = world.getTile(TilePos(p));
                 if (tile.isAir) {
                     continue;
                 }

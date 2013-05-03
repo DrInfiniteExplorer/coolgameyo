@@ -271,44 +271,6 @@ class WorldState {
         return sector;
     }
 
-
-    //This function generates a block of world.
-    //If the block is decidedly above ground level, we use a shortcut and set it as a sparse air block immediately.
-    //Otherwise we let the world-generator produce a block for us.
-    //TODO: Measure the time it takes to check for above-ground-level for comparisons.
-    private void generateBlock(BlockNum blockNum) {
-        //This function is now deprecated. We generate whole sectors at a time now.
-        BREAKPOINT;
-
-        SectorXY* xy;
-        auto sectorNum = blockNum.getSectorNum();
-        auto sector = getSector(sectorNum, &xy);
-        enforce(sector !is null, "Cant generate block in sector that isnt allocated yet");
-        auto heightmap = xy.heightmap;
-        bool above = true;
-        if(heightmap !is null) {
-            auto tp = blockNum.toTilePos();
-            auto sectTp = sectorNum.toTilePos();
-            auto sectToBlock = tp.value - sectTp.value;
-            foreach(rel ; RangeFromTo (0, BlockSize.x-1,
-                        0, BlockSize.y-1,
-                        0, 0)) {
-                auto heightmapIndex = rel + sectToBlock;
-                if (tp.value.z <= heightmap[heightmapIndex.x, heightmapIndex.y]){
-                    above = false;
-                    break;
-                }
-            }
-            if (above) {
-                sector.makeAirBlock(blockNum);
-                return;
-            }
-        }
-        //sector.generateBlock(blockNum, worldMap);
-    }
-
-
-
     bool hasSectorXY(SectorXYNum xy) {
         return (xy in sectorsXY) !is null;
     }
@@ -392,7 +354,7 @@ class WorldState {
 
     Block getBlockLastBlock = null;
     BlockNum getBlockLastBlockNum = BlockNum(vec3i(int.min));
-    private Block getBlock(BlockNum blockNum, bool generate=false) {
+    private Block getBlock(BlockNum blockNum) {
         /*
            if (blockNum == getBlockLastBlockNum) {
            return getBlockLastBlock;
@@ -403,12 +365,7 @@ class WorldState {
 
         auto block = sector.getBlock(blockNum);
         if (!block.valid) {
-            if (!generate) return &INVALID_BLOCK;
-
-            //TODO: Pass sector as parameter, to make generateBlock not have to look it up itself?
-            generateBlock(blockNum); //Somewhere in this, we make a new sector. Or an old one. Dont know yet.
-            block = sector.getBlock(blockNum);
-
+            return &INVALID_BLOCK;
         }
         BREAK_IF(!block.valid);
         assert (block.valid);
@@ -656,8 +613,8 @@ class WorldState {
 
     //We only create blocks when we floodfill; this the default for this parameter is henceforth "false"
 
-    Tile getTile(TilePos tilePos, bool createBlock=false) {
-        auto block = getBlock(tilePos.getBlockNum(), createBlock);
+    Tile getTile(TilePos tilePos) {
+        auto block = getBlock(tilePos.getBlockNum());
         if(!block.valid){
             return INVALID_TILE;
         }
@@ -679,7 +636,7 @@ class WorldState {
         int cnt;
         foreach(tilePos ; TileIterator(start, dir, tileIter, intersectionTime)) {
             cnt++;
-            auto tile = getTile(tilePos, false);
+            auto tile = getTile(tilePos);
             if (tile.type == TileTypeInvalid) {
                 return -1;
             }
@@ -704,7 +661,7 @@ class WorldState {
             if(intersectionTime > len) {
                 return false;
             }
-            auto tile = getTile(tilePos, false);
+            auto tile = getTile(tilePos);
             if (tile.type == TileTypeInvalid) {
                 return true;
             }
@@ -719,7 +676,7 @@ class WorldState {
         //TODO: Make sure penis penis penis, penises.
         //Durr, i mean, make sure to floodfill as well! :)
         auto blockNum = tilePos.getBlockNum();
-        auto block = getBlock(blockNum, false); //Dont arbitrarily create blocks. Why would we set lightvals in blocks that dont exist?
+        auto block = getBlock(blockNum); //Dont arbitrarily create blocks. Why would we set lightvals in blocks that dont exist?
         if(!block.valid) {
             return;
         }
@@ -771,7 +728,7 @@ class WorldState {
             if (newTile.type is TileTypeAir) {
                 auto pos = tilePos;
                 //Iterate down until find ground, set Z
-                while (getTile(pos, false).type is TileTypeAir) { //Create geometry if we need to
+                while (getTile(pos).type is TileTypeAir) { //Create geometry if we need to
                     pos.value.z -= 1;
                 }
                 heightmap[sectRel.x, sectRel.y] = pos.value.z;

@@ -104,7 +104,7 @@ mixin template WorldGenerator() {
             auto heightValue = heightMap[tileOffset_y + relPos.y][tileOffset_x + relPos.x];
             auto soilValue = soilMap[tileOffset_y + relPos.y][tileOffset_x + relPos.x];
             auto waterValue = waterMap[tileOffset_y + relPos.y][tileOffset_x + relPos.x];
-            auto tile = getTile(tp, heightValue, soilValue, waterValue);
+            auto tile = getTileInternal(tp, heightValue, soilValue, waterValue);
             block.tiles.tiles[relPos.z][relPos.y][relPos.x] = tile;
 
             if (first) {
@@ -137,10 +137,14 @@ mixin template WorldGenerator() {
         auto height = getHeight(TileXYPos(pos));
         auto soil = getSoil(TileXYPos(pos));
         auto water = getWater(TileXYPos(pos));
-        return getTile(pos, height, soil, water);
+        return getTileInternal(pos, height, soil, water);
     }
 
-    Tile getTile(TilePos pos, double heightValue, double soilValue, double waterValue) {
+    // Returns the tile which would be placed when nothing affects the world.
+    // Ie no roads, no cities, no nothing.
+    // Care to handle these thingies must be taken before calling this function.
+    // Yeah. Either that, or replace the tiles after they are generated. Yeah.
+    private Tile getTileInternal(TilePos pos, double heightValue, double soilValue, double waterValue) {
 
         TileFlags flags = cast(TileFlags)(TileFlags.valid);
         if(! isInsideWorld(pos)) {
