@@ -95,6 +95,29 @@ T BSpline(T)(T x0, T x1, T x2, T x3, double t) {
     return (x0 + 4*x1 + x2 + t*( 3*(x2 - x0) +  t*( 3*(x0 + x2) - 6*x1 + t*(-x0 + 3*(x1 - x2) + x3)))) / 6.0;
 }
 
+// Takes a mixer (for example b-spline or cubicinter), an array of values and a time between 0 and 1.
+// The result is an interpolated value from the array. Guess you didn't see that comming.
+auto Knotify(alias Mixer, T, V)(T t, V[] ar) {
+    import std.functional : ParameterTypeTuple;
+    alias ParameterTypeTuple!(Mixer!V) mixerArgs;
+    enum AlmostSpanSize = mixerArgs.length - 2;
+    static assert(AlmostSpanSize == 1 || AlmostSpanSize == 3, "Bad mixer. Something should be done.");
+    int count = cast(int)ar.length;
+    int nspans = count-AlmostSpanSize;
 
+    double x = clamp(cast(double)t, 0.0, 1.0) * cast(double)nspans;
+    int span = cast(int)x;
+    if (span >= count - AlmostSpanSize) {
+        span = count - AlmostSpanSize;
+    }
+    x -= span;
+    V* knot = &ar[span];
+    static if(mixerArgs.length == 5) {
+        return Mixer(knot[0], knot[1], knot[2], knot[3], x);
+    } else {
+        return Mixer(knot[0], knot[1], x);
+    }
+
+}
 
 

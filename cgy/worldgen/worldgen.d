@@ -7,6 +7,7 @@ import std.conv;
 import std.exception;
 import std.math;
 import std.random;
+import std.range : chain;
 import std.typecons;
 
 
@@ -44,12 +45,103 @@ mixin template WorldGenerator() {
         return heightMaps.getWater!true(pos);
     }
 
+    private void setTile(Sector s, TilePos tp, Tile tile) {
+        if(s.getSectorNum() != tp.getSectorNum()) return;
+        auto block = s.getBlock(tp.getBlockNum);
+        block.setTile(tp, tile);
+    }
+
+    void drawRoads(Sector sector,
+                   ref double[SectorSize.x][SectorSize.y] heightValues,
+                   ref double[SectorSize.x][SectorSize.y] soilValues
+                   ) {
+        // Now the fun part!
+        // Place roads in the world! :D
+        // Yeah!
+        auto sectorNum = sector.getSectorNum();
+        auto sectorStart = sectorNum.toTileXYPos();
+        auto roads = getRoadsInSector(sectorNum);
+
+        vec2i sectorCenter = sectorStart.value + vec2i(SectorSize.x / 2, SectorSize.y / 2);
+        enum closeByLimit = SectorSize.x ^^ 2 + SectorSize.y ^^ 2;
+        bool closeByFilter(vec2i tilePos) {
+            return tilePos.getDistanceSQ(sectorCenter) < closeByLimit;
+        }
+
+        int getHeight(vec2i tp) {
+            auto rel = TileXYPos(tp).sectorRel();
+            return cast(int)(heightValues[rel.y][rel.x] + soilValues[rel.y][rel.x]);
+        }
+
+        TileFlags flags = cast(TileFlags)(TileFlags.valid);
+        foreach(road ; roads) {
+            auto aPos = makeStackArray(road.a.pos);
+            auto bPos = makeStackArray(road.b.pos);
+            auto sourcePoints = chain(aPos[], road.points, bPos[]);
+            vec2i[] roadTilePos = array(filter!closeByFilter(map!"a*25"(sourcePoints)));
+            vec2d[] points;
+            points.length = roadTilePos.length;
+            //points[] = vec2d(12.5);
+            points.convertArray(roadTilePos);
+
+            alias Knotify!(CubicInter, double, vec2d) interpolate4;
+            alias Knotify!(SmoothInter, double, vec2d) interpolate2;
+
+            enum int stepsPerPoint = 50;
+            enum int roadWidthSteps = 10;
+            enum double roadWidth = 3;
+            vec2d prevPos;
+            foreach(idx ; 0 .. points.length * stepsPerPoint) {
+                double t = idx / cast(double)(points.length * stepsPerPoint);
+                vec2d pos;
+                if(points.length >= 4) {
+                    pos = interpolate4(t, points);
+                } else {
+                    pos = interpolate2(t, points);
+                }
+                scope(exit) prevPos = pos;
+                if(idx == 0) continue;
+                int centerPosHeight = getHeight(pos.convert!int);
+                vec2d normal = (pos-prevPos);
+                normal = normal.rotate90();
+                normal.normalizeThis();
+                foreach(orthoIdx ; -roadWidthSteps/2 .. roadWidthSteps/2) {
+                    double orthoLength = (orthoIdx / cast(double)roadWidthSteps) * roadWidth;
+                    vec2d tpPos = pos + normal * orthoLength;
+                    vec2i tp2 = tpPos.convert!int;
+                    vec3i tp3 = tp2.v3(centerPosHeight);
+                    auto tileType = getBasicTileType("genericGravel");
+                    auto tile = Tile(tileType, flags);
+                    setTile(sector, TilePos(tp3), tile);
+
+                    int thisZ = getHeight(tp2);
+                    if(thisZ > centerPosHeight) {
+                        foreach(z ;  centerPosHeight+1 .. thisZ) {
+                            tp3 = tp2.v3(z);
+                            tile = airTile;
+                            setTile(sector, TilePos(tp3), tile);
+                        }
+                    } else if(thisZ < centerPosHeight) {
+                        foreach(z ;  thisZ .. centerPosHeight) {
+                            tp3 = tp2.v3(z);
+                            tileType = getBasicTileType("genericDirt");
+                            tile = Tile(tileType, flags);
+                            setTile(sector, TilePos(tp3), tile);
+                        }
+                    }
+
+                }
+            }
+        }
+    }
+
     void fillSector(Sector sector, SectorHeightmap _heightmap) {
 
         double[SectorSize.x][SectorSize.y] heightValues;
         double[SectorSize.x][SectorSize.y] soilValues;
         double[SectorSize.x][SectorSize.y] waterValues;
-        auto sectorStart = sector.getSectorNum().toTileXYPos();
+        auto sectorNum = sector.getSectorNum();
+        auto sectorStart = sectorNum.toTileXYPos();
         foreach(int x, int y ; Range2D(vec2i(0, 0), vec2i(SectorSize.x, SectorSize.y))) {
             auto pos = TileXYPos(sectorStart.value + vec2i(x, y));
             heightValues[y][x] = getHeight(pos); //getValueInterpolated(1, ));
@@ -59,7 +151,6 @@ mixin template WorldGenerator() {
 
         auto heightmap = _heightmap.getMaxPerBlock();
 
-        auto sectorNum = sector.getSectorNum();
         auto abs = sectorNum.toBlockNum().value;
         Block_t tempBlock = Block.allocBlock();
         foreach(rel ; RangeFromTo( 0, BlocksPerSector.x - 1, 0, BlocksPerSector.y - 1, 0, BlocksPerSector.z - 1)) {
@@ -76,6 +167,10 @@ mixin template WorldGenerator() {
             sector.unsafe_setBlock(block);
         }
         tempBlock.free();
+
+        drawRoads(sector, heightValues, soilValues);
+
+  
     }
 
     //Returns true if the block is solid, false if it is sparse.
@@ -131,13 +226,6 @@ mixin template WorldGenerator() {
         }
 
         return true;
-    }
-
-    Tile getTile(TilePos pos) {
-        auto height = getHeight(TileXYPos(pos));
-        auto soil = getSoil(TileXYPos(pos));
-        auto water = getWater(TileXYPos(pos));
-        return getTileInternal(pos, height, soil, water);
     }
 
     // Returns the tile which would be placed when nothing affects the world.

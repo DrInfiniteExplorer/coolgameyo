@@ -200,23 +200,10 @@ class SplineEditor : GuiElementWindow {
             colors ~= color;
         }
 
-        auto Knotify(alias Mixer)(float t, vec3f[] ar) {
-            int count = cast(int)ar.length;
-            int nspans = count-3;
 
-            double x = clamp(cast(double)t, 0.0, 1.0) * to!double(nspans);
-            int span = cast(int)x;
-            if (span >= count - 3) {
-                span = count - 3;
-            }
-            x -= span;
-            vec3f* knot = &ar[span];
-            return Mixer(knot[0], knot[1], knot[2], knot[3], x);
 
-        }
-
-        alias Knotify!CubicInter cubic;
-        alias Knotify!BSpline bspline;
+        alias Knotify!(CubicInter, float, vec3f) cubic;
+        alias Knotify!(BSpline, float, vec3f) bspline;
 
         int width = colorImg.getAbsoluteRect().widthOf;
         float[] r, g, b;

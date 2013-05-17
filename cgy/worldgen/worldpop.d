@@ -368,6 +368,18 @@ mixin template WorldPopulation() {
             computeRoad(connection[0], connection[1]);
         }
 
+        foreach(road ; roads) {
+            if(road.points.length > 0) {
+                auto pt = road.points[0];
+                int distance = road.a.pos.getDistanceSQ(pt);
+                if(distance > 2) {
+                    swap(road.a, road.b);
+                }
+            }
+        }
+        // Make code to split roads which are longer than X long,
+        // to help reduce the size of BB's of roads.
+
         saveRoads();
         render();
     }
@@ -381,6 +393,22 @@ mixin template WorldPopulation() {
             }
         }
         return null;
+    }
+
+    Road[] getRoadsInSector(SectorNum sectorNum) {
+        // What
+        auto startTilePos = sectorNum.toTileXYPos.value;
+        auto endTilePos = startTilePos + vec2i(SectorSize.x, SectorSize.y);
+        vec2i minRoadPos = (startTilePos.convert!float / 25.0f).fastFloor;
+        vec2i maxRoadPos = (  endTilePos.convert!float / 25.0f).fastCeil;
+        bool[Road] roads;
+        foreach(x, y ; Range2D(minRoadPos, maxRoadPos)) {
+            auto road = getRoad(vec2i(x,y));
+            if(road !is null){
+                roads[road] = true;
+            }
+        }
+        return roads.keys;
     }
 
     Endpoint getEndpoint(vec2i pt) {

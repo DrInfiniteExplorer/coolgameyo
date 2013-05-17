@@ -13,6 +13,20 @@
 	"textureCoordSides":{ "x":0, "y":32 },
 	"textureCoordBottom":{ "x":0, "y":0 }
   },
+  "gravel":{
+    "displayName":"Gravel",
+    "material":"gravel",
+	"group":"gravel",
+	"strength":2,
+	"tintFromMaterial":1,
+	"tintColor":{ "x":255, "y":255, "z":255 },
+	"texturePathTop":"textures/gravel.png",
+	"texturePathSides":"textures/gravel.png",
+	"texturePathBottom":"textures/gravel.png",
+	"textureCoordTop":{ "x":0, "y":0 },
+	"textureCoordSides":{ "x":0, "y":0 },
+	"textureCoordBottom":{ "x":0, "y":0 }
+  },
   "grass":{
     "displayName":"Grassly grass",
     "material":"grass",

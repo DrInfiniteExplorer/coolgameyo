@@ -2,6 +2,12 @@
   "genericSoil":[
 	"dirt",
   ],
+  "genericDirt":[
+	"dirt",
+  ],
+  "genericGravel":[
+	"gravel",
+  ],
   "genericSand":[
     "birchtree",
     "birchleaf"

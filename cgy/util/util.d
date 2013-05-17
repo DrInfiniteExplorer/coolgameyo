@@ -317,7 +317,11 @@ void lazyInit(T, Us...)(ref T t, Us us) {
 void convertArray(string Op = "=", To, From)(To[] to, From[] from) {
     static if( is(To : From) && is(From : To) && To.sizeof == From.sizeof) {
         mixin("to[] " ~ Op ~" from[];");
-    } else {
+    } else static if( __traits(compiles, to[0].x)) {
+        foreach(idx, ref val ; to) {
+            mixin("val " ~ Op ~" from[idx].convert!(typeof(to[0].x));");
+        }
+    }else {
         foreach(idx, ref val ; to) {
             mixin("val " ~ Op ~" cast(To)from[idx];");
         }

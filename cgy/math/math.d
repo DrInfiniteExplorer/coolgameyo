@@ -15,14 +15,14 @@ bool equals(T, Y)(T a, Y b, T tolerance = cast(T)0.000001) {
 import math.vector;
 import util.rangefromto : Range2D;
 
-auto fastCeil(T)(T val) {
+int fastCeil(T)(T val) {
     int ret = cast(int)val;
     return val > ret ? ret + 1 : ret;
 }
 
 // Awesomely much faster than std.math.floor!
 // Also seems to be correct!
-auto fastFloor(T)(T val) {
+int fastFloor(T)(T val) {
     int ret = cast(int)val;
     return val < ret ? ret - 1 : ret;
 }

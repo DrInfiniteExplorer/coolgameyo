@@ -53,6 +53,19 @@ struct vector3(T) {
         }
     }
 
+    vec3!int fastCeil() const {
+        static if(isFloatingPoint!T) {
+            return vec3!int(
+                            .fastCeil(x),
+                            .fastCeil(y),
+                            .fastCeil(z)
+                            );
+        } else {
+            return convert!int;
+        }
+    }
+
+
     vec2!T v2() const {
         return vec2!T(x, y);
     }
@@ -323,6 +336,29 @@ struct vector2(T) {
         }
     }
 
+    vec2!int fastFloor() const {
+        static if(isFloatingPoint!T) {
+            return vec2!int(
+                            .fastFloor(x),
+                            .fastFloor(y)
+                            );
+        } else {
+            return convert!int;
+        }
+    }
+
+    vec2!int fastCeil() const {
+        static if(isFloatingPoint!T) {
+            return vec2!int(
+                            .fastCeil(x),
+                            .fastCeil(y)
+                            );
+        } else {
+            return convert!int;
+        }
+    }
+
+
     auto convert(O)() const {
         return vector2!O( cast(O)x, cast(O)y);
     }
@@ -397,6 +433,11 @@ struct vector2(T) {
         return cast(T)(x + y);
     }
 
+    vec rotate90() const {
+        return vec(-y, x);
+    }
+
+
     double getAngleWith(const vec o) {
         BREAKPOINT;
         assert(0);
@@ -411,4 +452,3 @@ struct vector2(T) {
 		}
 	}
 }
-
