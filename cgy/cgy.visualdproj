@@ -634,6 +634,7 @@
   <File path="main.d" />
   <File path="materials.d" />
   <File path="mission.d" />
+  <File path="playerinformation.d" />
   <File path="scheduler.d" />
   <File path="settings.d" />
   <File path="statistics.d" />

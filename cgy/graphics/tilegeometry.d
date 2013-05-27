@@ -5,7 +5,6 @@ import core.sync.mutex;
 
 import std.algorithm;
 import std.array;
-import std.container;
 import std.conv;
 import std.datetime;
 import std.exception;
@@ -499,7 +498,7 @@ final class TileGeometry : Module, WorldStateListener
 
         foreach(i, num; nums) {
             taskedRegions[i] = NumWrapper(num, this);
-            scheduler.push(syncTask(&taskedRegions[i].taskFunc));
+            scheduler.push(task(&taskedRegions[i].taskFunc));
         }
     }
 

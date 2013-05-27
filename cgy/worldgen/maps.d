@@ -8,7 +8,7 @@ import std.array;
 import std.conv;
 import std.exception;
 import std.math;
-import std.md5;
+import std.digest.md;
 import std.random;
 import std.range : assumeSorted, SortedRange, SearchPolicy;
 import std.stdio;

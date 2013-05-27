@@ -12,7 +12,7 @@ import unit;
 import util.util;
 import worldstate.worldstate;
 
-class InGameGui : GuiElement{
+class InGameGui : GuiElement {
 
     Game game;
     GuiSystem guiSystem;

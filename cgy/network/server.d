@@ -74,7 +74,9 @@ mixin template ServerModule() {
     int sendingSaveGame;
 
     private void accept_new_client() {
+        msg("accepting new client");
         auto newSock = listener.accept();
+        msg("accepted new client");
         if (players.length >= max_clients) {
             Log("Too many clients!");
             newSock.send("Too many clients!\n");
@@ -229,6 +231,7 @@ mixin template ServerModule() {
     // figure out sizes of buffers
     //todo: lol buffers
     void doNetworkStuffUntil(long nextSync) {
+        //msg("doing network stuff until ", nextSync);
         //We now have all changes that will be applied this tick in toWrite.
         if(sendingSaveGame) {
             int changeSize = cast(int)toWrite.length;

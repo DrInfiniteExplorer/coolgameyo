@@ -13,6 +13,8 @@ import std.traits;
 import std.typecons;
 import std.typetuple;
 
+import derelict.sdl.sdl;
+
 import math.math : fastFloor;
 
 //public import std.datetime;
@@ -30,6 +32,8 @@ version (Posix) {
 version(Windows) {
     import windows;
 }
+
+string SDLError() { return to!string(SDL_GetError()); }
 
 ptrdiff_t workerID = -1; // thread local, set by scheduler
 

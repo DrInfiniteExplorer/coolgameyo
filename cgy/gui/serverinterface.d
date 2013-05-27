@@ -127,7 +127,7 @@ void startServer() {
             }
         }
     };
-    logCallback = handleMsg;
+    setLogCallback(handleMsg);
 
     auto now = mstime();
     auto sampleIntervall = 1000; // 1000 ms

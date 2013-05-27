@@ -84,7 +84,7 @@ class AIModule : Module, WorldStateListener {
                 continue;
             }
             assert (state.restTime == 0);
-            scheduler.push(syncTask(&state.runState));
+            scheduler.push(task(&state.runState));
         }
     }
 

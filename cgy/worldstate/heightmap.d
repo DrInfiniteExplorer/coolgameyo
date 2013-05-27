@@ -167,7 +167,7 @@ mixin template Heightmap() {
                     (HeightmapTaskState state){
 
                                     scheduler.push(
-                                       asyncTask(
+                                       task(
                                                  (WorldProxy world){
                                                      generateHeightmapTaskFunc(state);
                                                  }));

@@ -19,7 +19,7 @@ __gshared string g_playerName = "BurntFaceMan"; //Default player name
 __gshared string g_settingsFilePath = "settings.json";
 __gshared string[] g_serverList;
 
-__gshared int g_maxThreadCount = 0;
+__gshared int g_maxThreadCount = 2;
 
 void loadSettings(){
     Value rootVal;

@@ -1,45 +1,34 @@
 module log;
 
-import std.stdio;
+import std.stdio, std.conv;
 
-__gshared void delegate(string) logCallback;
+import util.util;
 
-enum LogLevel {
-    Undefined = 0,
-    Critical,
-    Error,
-    Warning,
-    Information,
-    Verbose,    
+private __gshared void delegate(string) logCallback;
+
+shared static this() {
+    logCallback = (string) {};
 }
 
-void LogBase(LogLevel level = LogLevel.Information, Us...)(Us us) {
-    import std.conv : to;
+void setLogCallback(void delegate(string) callback) {
+    logCallback = callback;
+}
+
+void Log(string file=__FILE__, int line=__LINE__, Us...)(Us us) {
     foreach(item ; us) {
-        write(item);
-        if(logCallback) {
-            static if(is(item : string)) {
-                logCallback(item);
-            } else {
-                logCallback(to!string(item));
-            }
-        }
+        logCallback(to!string(item));
     }
-    write("\n");
+    logCallback("\n");
+    msg!(file, line)(us);
     stdout.flush();
-    if(logCallback) {
-        logCallback("\n");
-    }
 }
 
-alias LogBase Log;
-
-void LogError(Us...)(Us us) {
-    Log!(LogLevel.Error, string, Us)("ERROR: ",us);
+void LogError(string file=__FILE__, int line=__LINE__, Us...)(Us us) {
+    Log!(file, line)("ERROR: ",us);
 }
-void LogWarning(Us...)(Us us) {
-    Log!(LogLevel.Warning, string, Us)("WARNING: ",us);
+void LogWarning(string file=__FILE__, int line=__LINE__, Us...)(Us us) {
+    Log!(file, line)("WARNING: ",us);
 }
-void LogVerbose(Us...)(Us us) {
-    Log!(LogLevel.Verbose,string, Us)("VERBOSE: ", us);
+void LogVerbose(string file=__FILE__, int line=__LINE__, Us...)(Us us) {
+    Log!(file, line)("VERBOSE: ", us);
 }

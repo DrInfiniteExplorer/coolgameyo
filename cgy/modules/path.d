@@ -151,7 +151,7 @@ final class PathModule : Module {
                 i += 1;
                 if (i >= maxPathTicks) { break; }
 
-                scheduler.push(asyncTask(&state.tick));
+                scheduler.push(task(&state.tick));
             }
         }
     }

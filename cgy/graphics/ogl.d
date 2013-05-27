@@ -85,7 +85,7 @@ void initOpenGL(){
     
     initQuad();
 
-    if(g_glVersion > 4.0) {
+    if(g_glVersion > 4.3) {
         int preferred_format;
         glGetInternalformativ(GL_TEXTURE_2D, GL_RGBA8, GL_TEXTURE_IMAGE_FORMAT, 1, &preferred_format);
         if(preferred_format == GL_RGBA) {
@@ -95,7 +95,7 @@ void initOpenGL(){
             writeln("Säg till luben att ditt grafikkort rapporterar att BGRA är föredraget format");
             BREAKPOINT; 
         } else {
-            writeln("Säg till luben att ditt grafikkort är totalt efterblivet.");
+            writeln("Säg till luben att ditt grafikkort är totalt efterblivet. ", g_glVersion, [4,0,0] < [4,2,0]);
             BREAKPOINT; 
         }
 

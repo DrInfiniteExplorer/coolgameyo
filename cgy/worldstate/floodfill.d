@@ -91,7 +91,7 @@ mixin template FloodFill() {
                 //Trixy trick below; if we dont do this, the value num will be shared by all pushed tasks.
                 (FillingTaskState state){
                     scheduler.push(
-                                   asyncTask(
+                                   task(
                                              (WorldProxy world){
                                                  fillingTaskFunc(state);
                                              }));

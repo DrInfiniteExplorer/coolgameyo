@@ -49,6 +49,7 @@ import statistics;
 import tiletypemanager;
 import treemanager;
 
+import playerinformation;
 import unittypemanager;
 import unit;
 import util.util;
@@ -58,72 +59,32 @@ import changes.worldproxy;
 //import worldgen.worldgen;
 import worldgen.maps;
 
+class Game {
 
-final class PlayerInformation {
-    string name;
-    string address;     //ip address of connecting player
-    int magicNumber;    //Magic identification number of player.
-    Socket commSock;
-    Socket dataSock;
+    WorldMap worldMap;
+    private WorldState worldState;
 
     ubyte[] receiveBuffer;
     int send_index;
 
-    int unitId;
-    Unit unit;
+    private bool isClient;
+    private bool isServer;
 
-    //WHAT ELSE?? D:
-    //Information about which client he is?
-
-
-    bool connected;
-    bool disconnected;
-
-    void disconnect() {
-        // SHUT
-        // DOWN
-        // EVERYTHING
-        if(commSock) {
-            commSock.shutdown(SocketShutdown.BOTH);
-            commSock.close();
-        }
-        if(dataSock) {
-            dataSock.shutdown(SocketShutdown.BOTH);
-            dataSock.close();
-        }
-        receiveBuffer.length = 0;
-        connected = false;
-        disconnected = true;
-        Log("Disconnecting ", name);
-    }
-
-}
-
-class Game{
-
-    WorldMap            worldMap;
-    private WorldState          worldState;
-
-    private bool            isClient;
-    private bool            isServer;
-
-    private AIModule            aiModule;
-    private Camera              camera;
-    private EntityTypeManager   entityTypeManager;
-    private PathModule          pathModule;
-    private Renderer            renderer;
-    private SceneManager        sceneManager;
-    private Scheduler           scheduler;
-    private TileGeometry        tileGeometry;
-    private TreeManager         treeManager;
-    private TileTextureAtlas    atlas;
-    private TileTypeManager     tileTypeManager;
-    private UnitTypeManager     unitTypeManager;
+    private AIModule aiModule;
+    private Camera camera;
+    private EntityTypeManager entityTypeManager;
+    private PathModule pathModule;
+    private Renderer renderer;
+    private SceneManager sceneManager;
+    private Scheduler scheduler;
+    private TileGeometry tileGeometry;
+    private TreeManager treeManager;
+    private TileTextureAtlas atlas;
+    private TileTypeManager tileTypeManager;
+    private UnitTypeManager unitTypeManager;
 
 
-    private vec2i               spawnPoint;
-
-    //Client variables
+    private vec2i spawnPoint;
 
     this(bool server) {
         isServer = server;
@@ -250,7 +211,7 @@ class Game{
     void loadGame() {
         init();
         scheduler.deserialize();
-        scheduler.start();
+        scheduler.start(g_maxThreadCount);
         Log("Server running!");
     }
 
@@ -258,7 +219,7 @@ class Game{
         client.initModule(host);
         init();
         scheduler.deserialize();
-        scheduler.start();
+        scheduler.start(g_maxThreadCount);
     }
 
     //Herp derp will be called from scheduler.deserialize. Yeah.
@@ -330,7 +291,7 @@ class Game{
     }
 
     void damageTile(TilePos tp, int damage) {
-        BREAKPOINT; // Implement again, send command over comm channel.
+        msg("damageTile: Implement again, send command over comm channel");
     }
 
     mixin ServerModule server;

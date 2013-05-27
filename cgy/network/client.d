@@ -32,7 +32,7 @@ mixin template ClientModule() {
         msg("Looking up address...");
         auto address = new std.socket.InternetAddress(host, PORT);
 
-        msg("Trying to connect...");
+        msg("Trying to connect to ", address);
         commSock = connectTimeout(address, dur!"seconds"(10));
         enforce(commSock, "Timeout connecting comm sock to server!");
         simpleHandshake(commSock);

@@ -83,7 +83,7 @@ class Clan : WorldStateListener {
     void update(WorldState world, Scheduler scheduler) {
         foreach(entity ; clanEntities) {
             import changes.worldproxy;
-            scheduler.push(syncTask((WorldProxy worldProxy) {
+            scheduler.push(task((WorldProxy worldProxy) {
                 //msg(&entity);
                 entity.tick(worldProxy);
             }));
