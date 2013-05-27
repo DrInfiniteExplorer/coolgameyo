@@ -42,10 +42,8 @@ class SplineEditor : GuiElementWindow {
 
     GuiElementEditbox editBox;
 
-    MainMenu main;
-    this(MainMenu m) {
-        main = m;
-        guiSystem = m.getGuiSystem();
+    this(GuiSystem _guiSystem) {
+        guiSystem = _guiSystem;
         
         super(guiSystem, Rectd(vec2d(0.0, 0.0), vec2d(1.0, 1.0)), "Color Spline Editor~~~!", false, false);
 
@@ -80,16 +78,15 @@ class SplineEditor : GuiElementWindow {
 
 
         auto butt = new PushButton(this, Rectd(vec2d(colorImg.leftOf, colorImg.bottomOf + 0.05), vec2d(0.3, 0.10)), "Back", &onBack);
-  
-        main = m;
     }
     
     override void destroy() {
         super.destroy();
     }
     
+    bool done = false;
     void onBack() {
-        main.setVisible(true);
+        done = true;
         destroy();
     }    
     
@@ -202,14 +199,15 @@ class SplineEditor : GuiElementWindow {
 
 
 
-        alias Knotify!(CubicInter, float, vec3f) cubic;
-        alias Knotify!(BSpline, float, vec3f) bspline;
+        alias Interpolate!(CubicInter, false, float, vec3f) cubic;
+        alias Interpolate!(BSpline, true, float, vec3f) bspline;
 
         int width = colorImg.getAbsoluteRect().widthOf;
         float[] r, g, b;
         foreach(idx ; 0 .. width) {
             float time = cast(float)idx/cast(float)width;
             color = bspline(time, colors);
+            //color = cubic(time, colors);
             r ~= color.x;
             g ~= color.y;
             b ~= color.z;
@@ -225,5 +223,17 @@ class SplineEditor : GuiElementWindow {
     }
 }
 
-     
+bool displaySplineEditor() {
+    GuiSystem guiSystem;
+    guiSystem = new GuiSystem;
+
+
+    auto menu = new SplineEditor(guiSystem);
+
+    EventAndDrawLoop!true(guiSystem, null, { return menu.done; });
+    guiSystem.destroy();
+
+    return true;
+}
+
 

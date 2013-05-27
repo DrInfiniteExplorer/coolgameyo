@@ -68,13 +68,16 @@ void main(string[] args) {
 
     bool materialEditor;
     bool randomMenu;
+    bool splineEditor;
     string joinGame;
     string heightmap;
+    //args ~= "--SplineEditor";
 
     getopt(args,
             std.getopt.config.passThrough,
             "MaterialEditor", &materialEditor,
             "RandomMenu", &randomMenu,
+            "SplineEditor", &splineEditor,
             "HeightMap", &heightmap,
             "settingsFile", &g_settingsFilePath,
             "playerName", &g_playerName,
@@ -89,6 +92,9 @@ void main(string[] args) {
 
     initLibraries();
 
+
+    loadSettings();
+    saveSettings();
     scope(exit) {
         saveSettings();
         deinitLibraries();
@@ -102,6 +108,10 @@ void main(string[] args) {
         displayRandomMenu();
     }
 
+    if(splineEditor) {
+        import gui.splineedit;
+        displaySplineEditor();
+    }
     if (heightmap) {
         displayHeightmap(heightmap);
     }

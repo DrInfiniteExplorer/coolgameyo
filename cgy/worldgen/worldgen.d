@@ -75,6 +75,20 @@ mixin template WorldGenerator() {
 
         TileFlags flags = cast(TileFlags)(TileFlags.valid);
         foreach(road ; roads) {
+            // Builds a pile of gravel at endpoints.
+            auto derp = road.a.pos*25;
+            auto asdf = derp.v3(getHeight(derp));
+            if( asdf.TilePos.getSectorNum() == sectorNum) {
+                auto tp = asdf.TilePos;
+                auto tileType = getBasicTileType("genericGravel");
+                auto tile = Tile(tileType, flags);
+                foreach(i ; 0 .. 10) {
+                    setTile(sector, tp, tile);
+                    tp.value.z++;
+                }
+            }
+
+            // Builds road.
             auto aPos = makeStackArray(road.a.pos);
             auto bPos = makeStackArray(road.b.pos);
             auto sourcePoints = chain(aPos[], road.points, bPos[]);
@@ -84,8 +98,8 @@ mixin template WorldGenerator() {
             //points[] = vec2d(12.5);
             points.convertArray(roadTilePos);
 
-            alias Knotify!(CubicInter, double, vec2d) interpolate4;
-            alias Knotify!(SmoothInter, double, vec2d) interpolate2;
+            alias Interpolate!(CubicInter, false, double, vec2d) interpolate4;
+            alias Interpolate!(lerp, false, double, vec2d) interpolate2;
 
             enum int stepsPerPoint = 50;
             enum int roadWidthSteps = 10;
@@ -100,6 +114,12 @@ mixin template WorldGenerator() {
                     pos = interpolate2(t, points);
                 }
                 scope(exit) prevPos = pos;
+                scope(exit) {
+                    auto tp = pos.v3(getHeight(pos.convert!int)).convert!int.TilePos;
+                    auto tileType = getBasicTileType("genericGravel");
+                    auto tile = Tile(tileType, flags);
+                    setTile(sector, tp, tile);
+                    }
                 if(idx == 0) continue;
                 int centerPosHeight = getHeight(pos.convert!int);
                 vec2d normal = (pos-prevPos);

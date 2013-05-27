@@ -4,6 +4,7 @@ module random.random;
 import std.algorithm;
 import std.conv;
 import std.exception;
+import std.functional : ParameterTypeTuple;
 import std.math;
 import std.random;
 import std.stdio;
@@ -88,17 +89,29 @@ T CubicInter(T)(
     return(a0*mu*mu2+a1*mu2+a2*mu+a3);
 }
 
+unittest{
+    BREAK_IF( CubicInter(0.0, 1.0, 2.0, 0.0, 0.0) != 1.0);
+    BREAK_IF( CubicInter(0.0, 1.0, 2.0, 0.0, 1.0) != 2.0);
+}
+
 
 //B-splines are stable and convex and awesome?
 // mu goes from 0 to 1 and interpolates between x1 and x2
 T BSpline(T)(T x0, T x1, T x2, T x3, double t) {
     return (x0 + 4*x1 + x2 + t*( 3*(x2 - x0) +  t*( 3*(x0 + x2) - 6*x1 + t*(-x0 + 3*(x1 - x2) + x3)))) / 6.0;
 }
+unittest{
+    // Should not be same as CubicInter since convex interpolation.
+//    BREAK_IF( BSpline(0.0, 1.0, 2.0, 0.0, 0.0) != 1.0);
+//    BREAK_IF( BSpline(0.0, 1.0, 2.0, 0.0, 1.0) != 2.0);
+
+}
 
 // Takes a mixer (for example b-spline or cubicinter), an array of values and a time between 0 and 1.
 // The result is an interpolated value from the array. Guess you didn't see that comming.
+// Note that this function does not interpolate to the endpoint values; they are just used for the gradient
+// at the ends.
 auto Knotify(alias Mixer, T, V)(T t, V[] ar) {
-    import std.functional : ParameterTypeTuple;
     alias ParameterTypeTuple!(Mixer!V) mixerArgs;
     enum AlmostSpanSize = mixerArgs.length - 2;
     static assert(AlmostSpanSize == 1 || AlmostSpanSize == 3, "Bad mixer. Something should be done.");
@@ -120,4 +133,37 @@ auto Knotify(alias Mixer, T, V)(T t, V[] ar) {
 
 }
 
+auto Interpolate(alias Mixer, bool extend = false, T, V)(T t, V[] ar) if( 5 == ParameterTypeTuple!(Mixer!V).length ) {
+
+    immutable int span = 3;
+    double pos = cast(double)t * (ar.length-1);
+    int idx = cast(int)pos;
+
+    double local = pos - idx;
+
+    static if(extend) {
+        if(idx == 0) {
+            return Mixer(2*ar[0]-ar[1], ar[0], ar[1], ar[2], local);
+        } else if(idx >= ar.length - 2) {
+            idx = ar.length-2;
+            return Mixer(ar[idx-1], ar[idx], ar[idx+1], 2*ar[idx+1]-ar[idx], local);
+        }
+    } else {
+        if(idx == 0) {
+            return Mixer(ar[0], ar[0], ar[1], ar[2], local);
+        } else if(idx >= ar.length - 2) {
+            idx = ar.length-2;
+            return Mixer(ar[idx-1], ar[idx], ar[idx+1], ar[idx+1], local);
+        }
+    }
+    return Mixer(ar[idx-1], ar[idx], ar[idx+1], ar[idx+2], local);
+}
+
+auto Interpolate(alias Mixer, bool extend = false, T, V)(T t, V[] ar) if( 3 == ParameterTypeTuple!(Mixer!V).length ) {
+    immutable int span = 1;
+    double pos = cast(double)t * (ar.length-1);
+    int idx = cast(int)pos;
+    double local = pos - idx;
+    return Mixer(ar[idx], ar[idx+1], local);
+}
 
