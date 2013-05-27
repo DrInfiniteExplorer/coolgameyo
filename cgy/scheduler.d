@@ -262,11 +262,18 @@ final class Scheduler {
             }        
             game.server.doNetworkStuffUntil(nextSync);
         } else {
-            if(game.doneLoading) {
-                foreach (proxy; proxies) {
-                    game.client.pushChanges(proxy.changeList);
+            foreach (proxy; proxies) {
+                if(proxy.changeList.changeListData.length != 0) {
+                    BREAKPOINT;
                 }
-                game.client.pushChanges();
+            }
+            if(game.doneLoading) {
+                if(game.activeUnit) {
+                    import settings;
+                    game.client.sendCommand(text("PlayerMove ", g_playerName, " ", game.activeUnitPos.value.x, " ",game.activeUnitPos.value.y, " ", game.activeUnitPos.value.z));
+                }
+
+
                 game.client.doNetworkStuffUntil(nextSync);
                 game.client.getNetworkChanges(proxies[0].changeList);
             } else {
@@ -285,14 +292,13 @@ final class Scheduler {
         foreach (proxy; proxies) {
             proxy.changeList.apply(world);
         }
+        if(g_isServer) {
+            game.server.commandProxy.changeList.apply(world);
+        }
+        
 
         reset_temp_alloc();
 
-        //Clients apply whatever changes they get from the server immediately,
-        // but the server applies the changes from the clients during the next tick.
-        if(g_isServer) {
-            game.server.getNetworkChanges(proxies[0].changeList);
-        }
 
         world.update(this);
         foreach (mod; modules) {

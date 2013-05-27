@@ -17,14 +17,15 @@ import util.util;
 import worldstate.sizes;
 
 
+struct RenderInfo {
+    uint vbo = 0;
+    uint quadCount = 0;
+}
+
 class TileRenderer {
 
     class Mutex {};
 
-    struct RenderInfo {
-        uint vbo = 0;
-        uint quadCount = 0;
-    }
     alias ShaderProgram!("offset", "VP", "atlas", "SkyColor") TileProgram;
 
     private TileProgram tileProgram;
@@ -125,7 +126,7 @@ class TileRenderer {
             }
         }
         if(geometrySize > 0){
-            info.vbo = CreateBuffer(false, geometrySize, geometry.faces.ptr, GL_STATIC_DRAW);
+            info.vbo = CreateBuffer(BufferType.Array, geometrySize, geometry.faces.ptr, GL_STATIC_DRAW);
             
         } else {
             //msg("GOT NOTHING FROM GRAPHREGION! >:( ", region.grNum);

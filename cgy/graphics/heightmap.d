@@ -301,7 +301,7 @@ class Heightmap : ShaderProgram!() {
                 positions[idx + 2].set(x+1, 1+y);
                 positions[idx + 3].set(x  , 1+y);
             }
-            posVbo = CreateBuffer(false, size, positions.ptr, GL_STATIC_DRAW);
+            posVbo = CreateBuffer(BufferType.Array, size, positions.ptr, GL_STATIC_DRAW);
         }
 
         glVertexAttribIPointer(0u, 2, GL_INT, vec2i.sizeof, cast(void*)0); glError();

@@ -184,7 +184,7 @@ template FixLighting(const string A, const int num, const int dir, const string 
         newFace.quad[" ~ vertIndex["UF"] ~ "].lightValue = (v12 +v11 +v22 +v21 )/(4.0*MaxLightStrength); //UF
         newFace.quad[" ~ vertIndex["UF"] ~ "].sunLightValue = (v12s+v11s+v22s+v21s)/(4.0*MaxLightStrength); //UF
         //*/
-        } else if ( 2 == smoothMethod) {
+        } else if ( smoothMethod == 2 ) {
         /*
         auto t00= world.getTile(TilePos(pos+vec3i(" ~ FixLighting_get(num, dir, 0) ~ ")));
         auto t01= world.getTile(TilePos(pos+vec3i(" ~ FixLighting_get(num, dir, 1) ~ ")));
@@ -213,7 +213,6 @@ template FixLighting(const string A, const int num, const int dir, const string 
         //*/
         }
         ";
-    // */
 }
 
 final class TileGeometry : Module, WorldStateListener
@@ -562,7 +561,7 @@ final class TileGeometry : Module, WorldStateListener
         }
 
     }
-    void onUpdateGeometry(TilePos tilePos) {
+    override void onUpdateGeometry(TilePos tilePos) {
         GraphRegionNum[] newRegions;
         auto tileAABB = tilePos.getAABB();
 

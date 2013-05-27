@@ -155,8 +155,8 @@ final class Level0Sheet {
             if(colorVBO) {
                 ReleaseBuffer(colorVBO);
             }
-            vertexVBO = CreateBuffer(false, capacity * vertices[0].sizeof, null, GL_STATIC_DRAW);
-            colorVBO = CreateBuffer(false, capacity * colors[0].sizeof, null, GL_STATIC_DRAW); 
+            vertexVBO = CreateBuffer(BufferType.Array, capacity * vertices[0].sizeof, null, GL_STATIC_DRAW);
+            colorVBO = CreateBuffer(BufferType.Array, capacity * colors[0].sizeof, null, GL_STATIC_DRAW); 
         }
         glBindBuffer(GL_ARRAY_BUFFER, vertexVBO); glError();
         glBufferSubData(GL_ARRAY_BUFFER, 0, size * vertices[0].sizeof, vertices.ptr); glError();

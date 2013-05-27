@@ -42,7 +42,7 @@ final class InstanceManager {
                 instanceSize =  cap;
                 ReleaseBuffer(instanceVBO);
                 size_t size = InstanceData.sizeof * instanceSize;
-                instanceVBO = CreateBuffer(false, size, null, GL_DYNAMIC_DRAW);
+                instanceVBO = CreateBuffer(BufferType.Array, size, null, GL_DYNAMIC_DRAW);
             }
         }
         size_t size = InstanceData.sizeof * instanceData.length;

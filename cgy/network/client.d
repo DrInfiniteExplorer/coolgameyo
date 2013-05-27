@@ -4,17 +4,14 @@ import network.common;
 
 mixin template ClientModule() {
 
-    SocketSet recv_set, write_set;
+    SocketSet recv_set;
     Socket commSock;
     Socket dataSock;
     int magicNumber;
     ubyte[] receiveBuffer;
-    ubyte[] toWrite;
-    size_t send_index;
     size_t recv_index;
 
 
-    WorldProxy  clientChangeProxy;
     Unit        activeUnit;
     UnitPos     activeUnitPos;
 
@@ -31,7 +28,6 @@ mixin template ClientModule() {
     void initModule(string host) {
         import util.socket;
         recv_set = new SocketSet(2);
-        write_set = new SocketSet(1);
 
         msg("Looking up address...");
         auto address = new std.socket.InternetAddress(host, PORT);
@@ -103,11 +99,15 @@ mixin template ClientModule() {
         }
     }
 
+    void sendCommand(string command) {
+        commSock.send(command);
+        commSock.send("\n");
+    }
+
     void doNetworkStuffUntil(long nextSync) {
         recv_index = 0;
-        send_index = 0;
 
-        int[2] frameInfo = [g_gameTick, cast(int)toWrite.length];
+        int[2] frameInfo = [g_gameTick, 0];
         if(dataSock.receive(frameInfo) != frameInfo.sizeof) {
             Log("Error receiveing frame info from server, disconnecting");
             BREAKPOINT;
@@ -118,7 +118,7 @@ mixin template ClientModule() {
         }
         receiveBuffer.length = frameInfo[1];
         assumeSafeAppend(receiveBuffer);
-        frameInfo[1] = cast(int)toWrite.length;
+        frameInfo[1] = 0; // Nothing to send over data socket
         if(dataSock.send(frameInfo) != frameInfo.sizeof) {
             Log("Error sending frame info to client, disconnecting");
             BREAKPOINT;
@@ -129,11 +129,10 @@ mixin template ClientModule() {
         while (stuffToTransfer) {
             stuffToTransfer = false; 
             recv_set.reset();
-            write_set.reset();
             recv_set.add(commSock);
             recv_set.add(dataSock);
-            write_set.add(dataSock);
-            int n = Socket.select(recv_set, write_set, null, 0);
+
+            int n = Socket.select(recv_set, null, null, 0);
             if(recv_set.isSet(commSock)) {
                 handleComm();
             }
@@ -147,18 +146,7 @@ mixin template ClientModule() {
                     recv_index += read;
                 }
             }
-            if (write_set.isSet(dataSock)) {
-                if(send_index != toWrite.length) {
-                    auto len = toWrite.length;
-                    ptrdiff_t sent = dataSock.send(toWrite[send_index .. $]);
-                    if(sent < 1) {
-                        BREAKPOINT;
-                    }
-                    send_index += sent;
-                }
-            }
-            stuffToTransfer |= send_index != toWrite.length;
-            stuffToTransfer |= recv_index != receiveBuffer.length;
+            stuffToTransfer = recv_index != receiveBuffer.length;
         }
 
         //Changed into use of variable; have encountered race condition in previous project
@@ -174,26 +162,10 @@ mixin template ClientModule() {
             }
             handleComm();
         }
-        toWrite.length = 0;
-        assumeSafeAppend(toWrite);
     }
 
     void getNetworkChanges(ref ChangeList list) {
         list.readFrom(receiveBuffer);
-    }
-
-    void pushChanges() {
-        synchronized(clientChangeProxy) {
-            if(activeUnit) {
-                clientChangeProxy.moveUnit(activeUnit, activeUnitPos, 1);
-            }
-            pushChanges(clientChangeProxy.changeList);
-            clientChangeProxy.changeList.reset(); //Think reset here is the right place?
-        }
-    }
-
-    void pushChanges(ChangeList list) {
-        toWrite ~= list.changeListData[];
     }
 
     void dummyClientNetwork() { 

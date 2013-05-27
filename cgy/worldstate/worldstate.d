@@ -352,6 +352,9 @@ class WorldState {
     }
 
 
+
+
+
     Block getBlockLastBlock = null;
     BlockNum getBlockLastBlockNum = BlockNum(vec3i(int.min));
     private Block getBlock(BlockNum blockNum) {
@@ -620,6 +623,19 @@ class WorldState {
         }
         return block.getTile(tilePos);
     }
+    Tile[] getTiles(TilePos tileStart, TilePos tileEnd, Tile[] tileBuffer = null) {
+        vec3i range = tileEnd.value - tileStart.value;
+        if(tileBuffer is null) {
+            size_t dim = range.sum();
+            tileBuffer = new Tile[dim];
+        }
+        // Implement caching for getting block?
+        foreach(pt; RangeFromTo(vec3i(0), range)) {
+            Tile tile = getTile( (pt + tileStart.value).TilePos);
+            tileBuffer[pt.x + range.y * (pt.y + range.z * pt.z)] = tile;
+        }
+        return tileBuffer;
+    }
 
     bool isSolid(TilePos tilePos) {
         auto sectorNum = tilePos.getSectorNum();
@@ -852,6 +868,7 @@ class WorldState {
     }
 
     // Notify sector load here. Try not to modify the state too much!
+    // Called when sector is loaded, or recently filled with tiles.
     void notifySectorLoad(SectorNum sectorNum) {
         if(sectorNum !in activeSectors) {
             msg("Sector no longer of interest after floodfill.");
@@ -867,17 +884,21 @@ class WorldState {
         }
     }
 
+    // Whenever a tile has been changed
     void notifyTileChange(TilePos tilePos) {
         foreach (listener; listeners) {
             listener.onTileChange(tilePos);
         }
     }
 
+    // Only called after notifySectorLoad, in loadSector.
     void notifyBuildGeometry(SectorNum sectorNum) {
         foreach (listener; listeners) {
             listener.onBuildGeometry(sectorNum);
         }
     }
+
+    // For now only called when lighting conditions have changed.
     void notifyUpdateGeometry(TilePos tilePos) {
         foreach (listener; listeners) {
             listener.onUpdateGeometry(tilePos);

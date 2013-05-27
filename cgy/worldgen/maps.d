@@ -156,6 +156,8 @@ final class WorldMap {
         heightMaps.load(heightmapSeed);
         strataNoise = new SimplexNoise(worldSeed);
         loadRoads();
+
+        //heightOnHeight();
     }
 
     void setSeeds() {
@@ -211,8 +213,8 @@ final class WorldMap {
         mixin(MeasureTime!("Time to generate "));
         int layerNum = 0;
         float depth = stratas[layerNum].thickness;
-        int height = 3500;
-        Image img = Image(null, 1280, height);
+        int height = 1500;
+        Image img = Image(null, 256, height);
         vec3f color;
         int oldy=-1;
         string prevMat;
@@ -225,7 +227,7 @@ final class WorldMap {
                 continue;
             }
             a = 255;
-            auto layerNum = getStrataNum(x, x, -y);
+            auto layerNum = getStrataNum(x-256, 0, -y);
             auto materialName = stratas[layerNum].materialName;
             color = g_materials[materialName].color.convert!float;
             color.toColor(r, g, b);

@@ -10,6 +10,8 @@ mixin template ServerModule() {
 
     ubyte[] toWrite;
 
+    WorldProxy commandProxy;
+
     void initModule() {
         listener = new TcpSocket;
         listener.bind(new InternetAddress(PORT));
@@ -18,6 +20,20 @@ mixin template ServerModule() {
         recv_set = new SocketSet(max_clients + 1);
         write_set = new SocketSet(max_clients);
         toWrite.length = 4;
+
+        commandProxy = new WorldProxy(worldState);
+
+        addCommand("PlayerMove", &playerMove);
+
+    }
+
+    void playerMove(WorldProxy proxy, string line, string[] words) {
+        string playerName = words[1];
+        float x = to!float(words[2]);
+        float y = to!float(words[3]);
+        float z = to!float(words[4]);
+        auto player = players[playerName];
+        proxy.moveUnit(player.unit, vec3d(x,y,z).UnitPos, 1);
     }
 
     bool simpleHandshake(Socket sock) { // Awesome handshake :P
@@ -177,6 +193,12 @@ mixin template ServerModule() {
         }
     }
 
+    alias void delegate(WorldProxy, string, string[]) CommandHandler;
+    CommandHandler[string] registeredCommands;
+    void addCommand(string command, CommandHandler handler) {
+        registeredCommands[command] = handler;
+    }
+
     void handleComm(PlayerInformation player) {
         //falsely assume that all stuff over comm is newline terminated
         // (In future will be async stuff like player positions as well)
@@ -195,6 +217,12 @@ mixin template ServerModule() {
                 player.commSock.send("controlUnit:1\n");
             }
         }
+        auto words = line.split();
+        auto command = words[0];
+        if(command in registeredCommands) {
+            registeredCommands[command](commandProxy, line, words);
+        }
+
     }
 
     // todo:
@@ -211,7 +239,6 @@ mixin template ServerModule() {
         foreach(player ; players) {
             if(!player.connected) continue;
             player.send_index = 0;
-            player.recv_index = 0;
         }
 
         int[2] frameInfo = [g_gameTick, cast(int)toWrite.length];
@@ -234,8 +261,7 @@ mixin template ServerModule() {
                 player.disconnect();
                 continue;
             }
-            player.receiveBuffer.length = frameInfo[1];
-            assumeSafeAppend(player.receiveBuffer);
+            BREAK_IF(frameInfo[1] != 0); // Clients dont send any data over data sock anymore.
         }
 
         //When leave this all is sent/received.... ?
@@ -248,7 +274,6 @@ mixin template ServerModule() {
             foreach(player ; players) {
                 if(!player.connected) continue;
                 recv_set.add(player.commSock);
-                recv_set.add(player.dataSock);
                 write_set.add(player.dataSock);
             }
             int n = Socket.select(recv_set, write_set, null, 0);
@@ -257,18 +282,6 @@ mixin template ServerModule() {
                 if(!player.connected) continue;
                 if(recv_set.isSet(player.commSock)) {
                     server.handleComm(player);
-                }
-                if(recv_set.isSet(player.dataSock)) {
-                    ptrdiff_t read = player.dataSock.receive(player.receiveBuffer[player.recv_index .. $]);
-                    if(read < 1) { 
-                        Log("Error reading changes from client, disconnecting");
-                        recv_set.remove(player.commSock);
-                        recv_set.remove(player.dataSock);
-                        write_set.remove(player.dataSock);
-                        player.disconnect();
-                        continue;
-                    }
-                    player.recv_index += read;
                 }
                 if (write_set.isSet(player.dataSock)) {
                     auto asd = toWrite.length;
@@ -284,8 +297,7 @@ mixin template ServerModule() {
                         player.send_index += sent;
                     }
                 }
-                stuffToTransfer |= player.send_index != toWrite.length;
-                stuffToTransfer |= player.recv_index != player.receiveBuffer.length;
+                stuffToTransfer = player.send_index != toWrite.length;
             }
 
             if (recv_set.isSet(listener)) {
@@ -321,12 +333,6 @@ mixin template ServerModule() {
         }
         toWrite.length = 0;
         assumeSafeAppend(toWrite);
-    }
-
-    void getNetworkChanges(ref ChangeList list) {
-        foreach (player; players) {
-            list.readFrom(player.receiveBuffer);
-        }
     }
 
     void pushNetworkChanges(ChangeList list) {

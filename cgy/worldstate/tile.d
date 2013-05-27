@@ -20,8 +20,6 @@ enum TileFlags : ushort {
 }
 
 struct Tile {
-    ushort type;
-    TileFlags flags = TileFlags.none;
 
     this(TileType type, TileFlags flags) {
         this(type.id, flags, type.strength);
@@ -36,9 +34,11 @@ struct Tile {
 
     static assert(2^^4 -1== MaxLightStrength);
 
-    ubyte hitpoints;
-    ubyte derppoints;
-    mixin(bitfields!(
+    ushort type;                            // 2 bytes
+    TileFlags flags = TileFlags.none;       // 2 bytes
+    ubyte hitpoints;                        // 1 bytes
+    ubyte derppoints;                       // 1 bytes
+    mixin(bitfields!(                       // 2 bytes
         ubyte, "lightVal",           4,
         ubyte, "sunLightVal",        4,
         uint, "restofderpystuff",    8 ));

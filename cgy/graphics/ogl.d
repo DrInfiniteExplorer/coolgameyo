@@ -18,6 +18,8 @@ import settings;
 import util.util;
 import util.rangefromto;
 
+enum int GL_SHADER_STORAGE_BUFFER = 0x90D2;
+
 void initOpenGL(){
     // Version returns for example "4.3.0" so grabbing the first 3 chars should be enough to get the version information
     g_glVersion = glGetString(GL_VERSION)[0..3].to!string.to!double;
@@ -246,7 +248,7 @@ void initQuad(){
         vec3f( 1,-1, 0),
         vec3f( 1, 1, 0),
     ];
-    g_quadVBO = CreateBuffer(false, quad.sizeof, quad.ptr, GL_STATIC_DRAW);
+    g_quadVBO = CreateBuffer(BufferType.Array, quad.sizeof, quad.ptr, GL_STATIC_DRAW);
 }
 
 void renderQuad() {
@@ -262,12 +264,27 @@ void renderQuad() {
     glDisableVertexAttribArray(0); glError();
 }
 
-uint CreateBuffer(bool indexBuffer, size_t size, void* data, uint typeHint) {
+enum BufferType {
+    Array,
+    ElementArray,
+    ShaderStorage
+}
+
+uint oglBufferType(BufferType type) {
+    if(type == BufferType.Array) return GL_ARRAY_BUFFER;
+    else if(type == BufferType.ElementArray) return GL_ELEMENT_ARRAY_BUFFER;
+    else if(type == BufferType.ShaderStorage) return GL_SHADER_STORAGE_BUFFER;
+    BREAKPOINT;
+    assert(0);
+}
+
+uint CreateBuffer(BufferType bufferType, size_t size, void* data, uint typeHint) {
     uint ret;
     glGenBuffers(1, &ret); glError();
-    uint bufferType = indexBuffer ? GL_ELEMENT_ARRAY_BUFFER : GL_ARRAY_BUFFER;
-    glBindBuffer(bufferType, ret); glError();
-    glBufferData(bufferType, size, data, typeHint); glError();
+
+    uint glBufferType = bufferType.oglBufferType;
+    glBindBuffer(glBufferType, ret); glError();
+    glBufferData(glBufferType, size, data, typeHint); glError();
 
     core.atomic.atomicOp!"+="(g_videoMemoryBuffers, size);
     return ret;

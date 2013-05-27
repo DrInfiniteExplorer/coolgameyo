@@ -68,7 +68,6 @@ final class PlayerInformation {
 
     ubyte[] receiveBuffer;
     int send_index;
-    int recv_index;
 
     int unitId;
     Unit unit;
@@ -214,7 +213,6 @@ class Game{
             scheduler.registerModule(tileGeometry);
             scheduler.registerModule(heightSheets);
             tileGeometry.setCamera(camera);
-            clientChangeProxy = new WorldProxy(worldState);
         }
         if(isServer) {
             server.initModule();
@@ -332,9 +330,7 @@ class Game{
     }
 
     void damageTile(TilePos tp, int damage) {
-        synchronized(clientChangeProxy) {
-            clientChangeProxy.damageTile(tp, damage);
-        }
+        BREAKPOINT; // Implement again, send command over comm channel.
     }
 
     mixin ServerModule server;

@@ -150,28 +150,28 @@ final class Level2Sheet {
 
 
         if(vertVBO == 0) {
-            vertVBO = CreateBuffer(false, vertices.sizeof, vertices.ptr, GL_STATIC_DRAW);
+            vertVBO = CreateBuffer(BufferType.Array, vertices.sizeof, vertices.ptr, GL_STATIC_DRAW);
         } else {
             glBindBuffer(GL_ARRAY_BUFFER, vertVBO);
             glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.sizeof, vertices.ptr);
         }
 
         if(normVBO == 0) {
-            normVBO = CreateBuffer(false, normals.sizeof, normals.ptr, GL_STATIC_DRAW);
+            normVBO = CreateBuffer(BufferType.Array, normals.sizeof, normals.ptr, GL_STATIC_DRAW);
         } else {
             glBindBuffer(GL_ARRAY_BUFFER, normVBO);
             glBufferSubData(GL_ARRAY_BUFFER, 0, normals.sizeof, normals .ptr);
         }
 
         if(colorVBO == 0) {
-            colorVBO = CreateBuffer(false, colors.sizeof, colors.ptr, GL_STATIC_DRAW); 
+            colorVBO = CreateBuffer(BufferType.Array, colors.sizeof, colors.ptr, GL_STATIC_DRAW); 
         } else {
             glBindBuffer(GL_ARRAY_BUFFER, colorVBO );
             glBufferSubData(GL_ARRAY_BUFFER, 0, colors.sizeof, colors.ptr);
         }
 
         if(idxVBO == 0) {
-            idxVBO = CreateBuffer(true, indices.sizeof, indices.ptr, GL_STATIC_DRAW);
+            idxVBO = CreateBuffer(BufferType.ElementArray, indices.sizeof, indices.ptr, GL_STATIC_DRAW);
         } else {
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, idxVBO);
             glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, indices.sizeof, indices.ptr);

@@ -144,7 +144,7 @@ class StringTexture {
             destroy();
         }
         auto size = FontQuad.sizeof * length;
-        vbo = CreateBuffer(false, size, null, GL_STATIC_DRAW);
+        vbo = CreateBuffer(BufferType.Array, size, null, GL_STATIC_DRAW);
     }
     
     string getText() {

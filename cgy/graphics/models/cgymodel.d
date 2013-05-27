@@ -115,11 +115,11 @@ final class cgyModel {
     void uploadMeshData(CGYMesh mesh) {
         clearMesh(mesh); //No fancy partial uploading here!
         auto geometrySize = mesh.vertices.length * cgyVertex.sizeof;
-        mesh.meshVBO = CreateBuffer(false, geometrySize, mesh.vertices.ptr, GL_STATIC_DRAW);
+        mesh.meshVBO = CreateBuffer(BufferType.Array, geometrySize, mesh.vertices.ptr, GL_STATIC_DRAW);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
         auto idxSize = 3 * mesh.triangles.length * uint.sizeof;
-        mesh.idxVBO = CreateBuffer(true, idxSize, mesh.triangles.ptr, GL_STATIC_DRAW);
+        mesh.idxVBO = CreateBuffer(BufferType.ElementArray, idxSize, mesh.triangles.ptr, GL_STATIC_DRAW);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     }
 
