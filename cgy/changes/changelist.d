@@ -68,8 +68,12 @@ final class ChangeList {
         add!T(T(us));
     }
     
+    void apply(WorldState world) {
+        applyNoReset(world);
+        reset();
+    }
 
-    void apply(WorldState world){
+    void applyNoReset(WorldState world){
         ubyte* ptr = changeListData.ptr;
         ubyte* endPtr = ptr + changeListData.length;
         while(ptr !is endPtr) {
@@ -77,7 +81,7 @@ final class ChangeList {
             ptr++;
             switch(type) {
                 default: // If default is below the foreach, wierd stuff is wierd.
-                    LogError("Unexpected change type! :", type);
+                    LogError("Unexpected change type! :", type); 
                     BREAKPOINT;
                     break;
                 foreach(idx, T ; ChangeTypes)   {
@@ -92,7 +96,6 @@ final class ChangeList {
             }
 
         }
-        reset();
     }
 
     void reset() {

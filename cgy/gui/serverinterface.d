@@ -119,10 +119,10 @@ void startServer() {
         synchronized(gameLog) {
             fullMsg ~= s;
             if(s == "\n") {
-                gameLog.addItem(fullMsg);
+                gameLog.insertItem(fullMsg, 0);
                 fullMsg = null;
                 while(gameLog.getItemCount() > 50) {
-                    gameLog.removeItem(0);
+                    gameLog.removeItem(50);
                 }
             }
         }

@@ -83,6 +83,14 @@ class GuiElementListBox : GuiElement {
         items[index] = text;
     }
 
+    void insertItem(string str, int idx) {
+        items.length += 1;
+        foreach(i ; idx .. items.length - 1) {
+            items[i + 1] = items[i];
+        }
+        items[idx] = str;
+    }
+
     int addItem(string str, int index) {
         if(index < 0) {
             index = cast(int)items.length;
