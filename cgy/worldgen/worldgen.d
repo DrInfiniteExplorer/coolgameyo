@@ -69,7 +69,8 @@ mixin template WorldGenerator() {
         }
 
         int getHeight(vec2i tp) {
-            auto rel = TileXYPos(tp).sectorRel();
+            if(tp.v3(sectorNum.toTilePos.value.z).TilePos.getSectorNum() != sectorNum) return -1;
+            auto rel = tp.TileXYPos.sectorRel();
             return cast(int)(heightValues[rel.y][rel.x] + soilValues[rel.y][rel.x]);
         }
 
@@ -122,6 +123,7 @@ mixin template WorldGenerator() {
                     }
                 if(idx == 0) continue;
                 int centerPosHeight = getHeight(pos.convert!int);
+                if(centerPosHeight == -1) continue; // Outside of sector.
                 vec2d normal = (pos-prevPos);
                 normal = normal.rotate90();
                 normal.normalizeThis();
@@ -136,9 +138,10 @@ mixin template WorldGenerator() {
 
                     int thisZ = getHeight(tp2);
                     if(thisZ > centerPosHeight) {
-                        foreach(z ;  centerPosHeight+1 .. thisZ) {
+                        foreach(z ;  centerPosHeight+1 .. thisZ+1) {
                             tp3 = tp2.v3(z);
                             tile = airTile;
+                            tile.sunLightVal = 15;
                             setTile(sector, TilePos(tp3), tile);
                         }
                     } else if(thisZ < centerPosHeight) {
