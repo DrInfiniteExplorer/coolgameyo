@@ -24,6 +24,7 @@ mixin template ServerModule() {
         commandProxy = new WorldProxy(worldState);
 
         addCommand("PlayerMove", &playerMove);
+        addCommand("DamageTile", &damageTile);
 
     }
 
@@ -34,6 +35,13 @@ mixin template ServerModule() {
         float z = to!float(words[4]);
         auto player = players[playerName];
         proxy.moveUnit(player.unit, vec3d(x,y,z).UnitPos, 1);
+    }
+    void damageTile(WorldProxy proxy, string line, string[] words) {
+        int x = to!int(words[1]);
+        int y = to!int(words[2]);
+        int z = to!int(words[3]);
+        int damage = to!int(words[4]);
+        proxy.damageTile(vec3i(x,y,z).TilePos, damage);
     }
 
     bool simpleHandshake(Socket sock) { // Awesome handshake :P

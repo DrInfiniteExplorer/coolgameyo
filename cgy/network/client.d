@@ -1,6 +1,14 @@
 module network.client;
 
 import network.common;
+import core.sync.mutex;
+
+__gshared string[] commandsToSend;
+__gshared Mutex commandsToSendMutex;
+
+shared static this() {
+    commandsToSendMutex = new Mutex;
+}
 
 mixin template ClientModule() {
 
@@ -100,8 +108,9 @@ mixin template ClientModule() {
     }
 
     void sendCommand(string command) {
-        commSock.send(command);
-        commSock.send("\n");
+        synchronized(commandsToSendMutex) {
+            commandsToSend ~= command;
+        }
     }
 
     void doNetworkStuffUntil(long nextSync) {
@@ -122,7 +131,16 @@ mixin template ClientModule() {
         if(dataSock.send(frameInfo) != frameInfo.sizeof) {
             Log("Error sending frame info to client, disconnecting");
             BREAKPOINT;
-        } 
+        }
+
+        synchronized(commandsToSendMutex) {
+            foreach(command ; commandsToSend) {
+                commSock.send(command);
+                commSock.send("\n");
+            }
+            commandsToSend = null;
+        }
+
 
         //When leave this all is sent/received.... ?
         bool stuffToTransfer = true;
