@@ -32,6 +32,7 @@ void loadSettings(){
         }
     }
 
+    g_serverList = null;
     rootVal.readJSONObject("renderSettings", &renderSettings.serializableSettings,
                            "controlSettings", &controlSettings.serializableSettings,
                            "windowSettings", &windowSettings.serializableSettings,
