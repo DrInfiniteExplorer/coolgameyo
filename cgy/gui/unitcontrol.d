@@ -47,7 +47,6 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
 
     private Game game;    
     private Renderer renderer;    //This and scheduler only used to get fps / tps info. Make proxy or thing?
-    private Scheduler scheduler;
     private WorldState world;
     private FPSControlAI possesAI;
     private Camera camera;
@@ -91,7 +90,6 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         renderer = game.getRenderer();
         world = game.getWorld();
         camera = game.getCamera();
-        scheduler = game.getScheduler();
         setControlledUnit(game.getActiveUnit());
 
         middleX = cast(ushort)renderSettings.windowWidth/2;

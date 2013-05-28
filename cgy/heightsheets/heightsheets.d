@@ -237,7 +237,7 @@ final class HeightSheets : Module, WorldStateListener {
 
     override void deserializeModule() { }
 
-    override void update(WorldState world, Scheduler scheduler) { // Module interface
+    override void update(WorldState world) { // Module interface
         //If work left
         //Queue a bit, or all!
 

@@ -27,9 +27,9 @@ final class Clans : Module {
         return clans;
     }
 
-    override void update(WorldState world, Scheduler scheduler) {
+    override void update(WorldState world) {
         foreach(clan ; clans) {
-            clan.update(world, scheduler);
+            clan.update(world);
         }
     }
 

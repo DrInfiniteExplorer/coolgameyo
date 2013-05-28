@@ -1,6 +1,7 @@
 module network.server;
 
 import network.common;
+import changes.changelist;
 
 mixin template ServerModule() {
 

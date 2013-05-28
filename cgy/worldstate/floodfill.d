@@ -85,7 +85,7 @@ mixin template FloodFill() {
 
     }
 
-    void pushFloodFillTasks(Scheduler scheduler) {
+    void pushFloodFillTasks() {
         synchronized (fillingTasks) {
             foreach (state; fillingTasks.list) {
                 //Trixy trick below; if we dont do this, the value num will be shared by all pushed tasks.

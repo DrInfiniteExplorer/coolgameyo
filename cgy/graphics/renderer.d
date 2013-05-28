@@ -23,7 +23,7 @@ import graphics.tilerenderer;
 import heightsheets.heightsheets;
 import modules.module_;
 import random.catmullrom;
-import scheduler;
+static import scheduler;
 import settings;
 import statistics;
 import unit;
@@ -34,7 +34,6 @@ __gshared SetDelegate setDelegate = null;
 
 class Renderer {
     //TODO: Leave comment on what these members are use for in this class
-    //Scheduler scheduler;
     SceneManager sceneManager;
     TileRenderer tileRenderer;
     TileTextureAtlas atlas;

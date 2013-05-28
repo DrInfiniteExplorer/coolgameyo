@@ -15,6 +15,7 @@ import util.rect;
 import util.traits;
 import util.util;
 import worldstate.block : getBlockMemorySize;
+import scheduler : scheduler;
 
 
 immutable SAMPLE_LIMIT = 256;
@@ -111,7 +112,7 @@ void startServer() {
                                          guiSystem.getFont.glyphHeight+15, null);
 
     auto buttonBar = new PushButton(guiSystem, Rectd(0.025, 0.05, 0.05, 0.05), "Save!", {
-        game.getScheduler.saveGame();
+        scheduler.saveGame();
     });
 
     string fullMsg = "";

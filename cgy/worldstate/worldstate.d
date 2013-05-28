@@ -34,7 +34,7 @@ import globals : g_isServer;
 public import util.pos;
 
 import scene.scenemanager;
-import scheduler;
+import scheduler : scheduler, task;
 import statistics;
 
 import tiletypemanager;
@@ -497,14 +497,14 @@ class WorldState {
     }
     ///////////////// inge mer entity kod! <- lol
 
-    void update(Scheduler scheduler){
+    void update(){
         updatePhase = true;
         allTilesUpdated(); //Updates lighting and triggers regeneration of geometry
         scope(exit) updatePhase = false;
         //floodFillSome();
 
-        pushFloodFillTasks(scheduler);
-        pushHeightmapTasks(scheduler);
+        pushFloodFillTasks();
+        pushHeightmapTasks();
         //MOVE UNITS
         //TODO: Make list of only-moving units, so as to not process every unit?
         //Maybe?

@@ -11,7 +11,7 @@ import json;
 import game;
 import globals : g_worldPath;
 import modules.module_;
-import scheduler;
+import scheduler : scheduler;
 import util.util;
 import util.filesystem;
 import util.array;
@@ -143,7 +143,7 @@ final class PathModule : Module {
         pragma(msg, "Implement PathModule.deserializeModule()");
     }
 
-    override void update(WorldState world, Scheduler scheduler) { //Module interface
+    override void update(WorldState world) { //Module interface
         synchronized(this) {
             size_t i = 0;
             foreach (id, ref state; activeStates) {

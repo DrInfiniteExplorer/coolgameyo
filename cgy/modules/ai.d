@@ -14,6 +14,7 @@ import modules.path;
 import unit;
 import util.filesystem;
 import util.util;
+import scheduler : scheduler;
 
 
 
@@ -76,7 +77,7 @@ class AIModule : Module, WorldStateListener {
     override void deserializeModule() { //module interface
         pragma(msg, "Implement AIModule.deserializeModule()");
     }
-    override void update(WorldState world, Scheduler scheduler) { //module interface
+    override void update(WorldState world) { //module interface
         foreach (ref state; states) {
             if (state.unit.ai is null) continue;
             if (state.restTime > 0) {

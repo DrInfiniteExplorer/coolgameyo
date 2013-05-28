@@ -159,7 +159,7 @@ mixin template Heightmap() {
         }
     }
 
-    void pushHeightmapTasks(Scheduler scheduler) {
+    void pushHeightmapTasks() {
         static if(compileHeightmaps) {
             synchronized (heightmapTasks) { //Not needed, since only thread working now. Anyway.. :)
                 foreach (state; heightmapTasks.list) {

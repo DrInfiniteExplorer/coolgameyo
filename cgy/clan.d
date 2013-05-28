@@ -11,7 +11,7 @@ import unit;
 
 import game;
 import mission;
-import scheduler;
+import scheduler : scheduler;
 
 import util.filesystem;
 import util.array;
@@ -80,7 +80,7 @@ class Clan : WorldStateListener {
     void onUpdateGeometry(TilePos tilePos) {}
     void onBuildGeometry(SectorNum sectorNum) {}
 
-    void update(WorldState world, Scheduler scheduler) {
+    void update(WorldState world) {
         foreach(entity ; clanEntities) {
             import changes.worldproxy;
             scheduler.push(task((WorldProxy worldProxy) {

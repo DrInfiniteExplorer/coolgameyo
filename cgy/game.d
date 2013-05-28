@@ -41,7 +41,7 @@ import modules.ai;
 import modules.path;
 import network.all;
 import util.pos;
-import scheduler;
+import scheduler : scheduler;
 import scene.scenemanager;
 import settings;
 import statistics;
@@ -56,6 +56,7 @@ import util.util;
 import util.filesystem;
 import worldstate.worldstate;
 import changes.worldproxy;
+import changes.changelist;
 //import worldgen.worldgen;
 import worldgen.maps;
 
@@ -76,7 +77,6 @@ class Game {
     private PathModule pathModule;
     private Renderer renderer;
     private SceneManager sceneManager;
-    private Scheduler scheduler;
     private TileGeometry tileGeometry;
     private TreeManager treeManager;
     private TileTextureAtlas atlas;
@@ -97,12 +97,10 @@ class Game {
 
     void destroy() {
         //Wait until done.
-        if(scheduler) {
-            scheduler.exit();
-            while(scheduler.running()){
-                msg("Waiting for scheduler to terminate worker threads...");
-                core.thread.Thread.sleep(dur!"seconds"(1));
-            }
+        scheduler.exit();
+        while(scheduler.running()){
+            msg("Waiting for scheduler to terminate worker threads...");
+            core.thread.Thread.sleep(dur!"seconds"(1));
         }
 
         //Also make policy on where stuff is destroyed.
@@ -151,7 +149,7 @@ class Game {
         worldMap.tileSys = tileTypeManager;
         worldState = new WorldState(worldMap, tileTypeManager, entityTypeManager, unitTypeManager, sceneManager);
 
-        scheduler = new Scheduler(this);
+        scheduler.init(this);
         scheduler.registerModule(Clans());
 
         if(isServer) {
@@ -262,10 +260,6 @@ class Game {
 
     Renderer getRenderer() {
         return renderer;
-    }
-
-    Scheduler getScheduler() {
-        return scheduler;
     }
 
     SceneManager getSceneManager() {

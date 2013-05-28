@@ -53,14 +53,13 @@ Task task(void delegate () run) {
 }
 
 struct WorkerThreadContext {
-    Scheduler scheduler;
     WorldProxy proxy;
     int threadId;
-    this(Scheduler s, WorldProxy p, int t) { 
-        scheduler = s; 
+    this(WorldProxy p, int t) { 
         proxy = p; 
         threadId = t;
     }
+
     void run() {
         workerID = threadId;
         bool should_continue = true;
@@ -95,13 +94,12 @@ struct WorkerThreadContext {
     }
 }
 
-
-final class Scheduler {
+struct Scheduler {
     enum State { update, running, wait, apply }
 
     bool shouldSerialize;
     bool exiting;
-    
+
     private StopWatch tickWatch;
 
     WorldState world;
@@ -120,22 +118,26 @@ final class Scheduler {
 
     Game game;
 
+    Mutex mutex;
     Condition cond;
 
     long syncTime;
     long nextSync() @property const {
         return syncTime + (dur!"seconds"(1) / TICKS_PER_SECOND).total!"usecs";
     }
+    @disable this(this);
 
-    this(Game _game) {
+    void init(Game _game) {
         game = _game;
         world = game.getWorld();
 
         state = State.wait;
 
-        cond = new Condition(new Mutex(this));
 
-        proxies ~= enforce(cast(WorldProxy)world._worldProxy);
+        mutex = new Mutex();
+        cond = new Condition(mutex);
+
+        proxies ~= enforce(world._worldProxy);
     }
 
     void start(int workerCount) {
@@ -147,7 +149,7 @@ final class Scheduler {
 
         foreach (x; 0 .. workerCount) {
             auto p = new WorldProxy(world);
-            auto context = new WorkerThreadContext(this, p, x);
+            auto context = new WorkerThreadContext(p, x);
             workers ~= spawnThread(&context.run);
             proxies ~= p;
         }
@@ -158,20 +160,20 @@ final class Scheduler {
     void exit() {
         exiting = true;
     }
-    
+
     bool running() {
         bool alive = false;
-        foreach(worker ; workers) {
-            if(worker.isRunning()) {
+        foreach (worker; workers) {
+            if (worker.isRunning()) {
                 alive = true;
             }
         }
         BREAK_IF(alive != (workers.length != 0));
         return workers.length != 0;
     }
-    
+
     void registerModule(Module mod) {
-        synchronized(this){
+        synchronized(mutex){
             modules ~= mod;
         }
     }
@@ -225,9 +227,9 @@ final class Scheduler {
         reset_temp_alloc();
 
 
-        world.update(this);
+        world.update();
         foreach (mod; modules) {
-            mod.update(world, this);
+            mod.update(world);
         }
 
         tickWatch.stop();
@@ -270,7 +272,7 @@ final class Scheduler {
     }
 
     void push(Task task) {
-        synchronized(this) {
+        synchronized(mutex) {
             for_next.insert(task);
         }
     }
@@ -284,7 +286,7 @@ final class Scheduler {
             g_Statistics.addGetTask(sw.peek().usecs);
         }
 
-        synchronized (this) {
+        synchronized (mutex) {
             return getTask_impl(task, changeList, sw);
         }
     }
@@ -370,3 +372,16 @@ final class Scheduler {
         }
     }
 }
+__gshared Scheduler scheduler;
+
+
+
+
+
+
+
+
+
+
+
+

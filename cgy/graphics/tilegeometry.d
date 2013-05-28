@@ -25,7 +25,7 @@ import graphics.tilerenderer;
 import light;
 import modules.module_;
 import util.pos;
-import scheduler;
+import scheduler : scheduler;
 import settings;
 import statistics;
 import stolen.aabbox3d;
@@ -454,7 +454,7 @@ final class TileGeometry : Module, WorldStateListener
         //BREAKPOINT;
     }
 
-    override void update(WorldState world, Scheduler scheduler) { // Module interface
+    override void update(WorldState world) { // Module interface
         updateMutex.lock();
         scope(exit) updateMutex.unlock();
 
