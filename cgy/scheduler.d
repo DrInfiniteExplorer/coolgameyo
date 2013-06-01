@@ -52,6 +52,12 @@ Task task(void delegate () run) {
     return Task(w => run());
 }
 
+static class Schexception : Exception
+{
+    this(string str) { super(str); }
+}
+
+
 struct WorkerThreadContext {
     WorldProxy proxy;
     int threadId;
@@ -62,21 +68,18 @@ struct WorkerThreadContext {
 
     void run() {
         workerID = threadId;
-        bool should_continue = true;
         thread_attachThis();
         setThreadName("Worker thread %s".format(threadId));
 
         Task task;
 
         try {
-            while (should_continue) {
-                should_continue = scheduler.getTask(task, proxy.changeList);
-                if (should_continue) {
-                    // try to receive message?
-                    //If scheduler syncs, this list is applied to the world.
-                    task.run(proxy); //Fill changelist!!
-                }
+            while(true) {
+                task = scheduler.getTask(proxy.changeList);
+                task.run(proxy); //Fill changelist!!
             }
+        } catch(Schexception e) {
+            Log("Scheduler exception", e);
         } catch (Throwable t) {
             Log(t);
             Log(t.info);
@@ -213,7 +216,8 @@ struct Scheduler {
                 }
                 //Do one last dummy-read and then apply the stuff, and we will be in sync.
                 game.client.getNetworkChanges(proxies[0].changeList);
-                game.client.commSock.send("ProperlyConnected\n"); 
+                import util.socket : readString, sendString;
+                game.client.commSock.sendString("ProperlyConnected"); 
             }
         }
         //Apply the current changes.
@@ -277,31 +281,21 @@ struct Scheduler {
         }
     }
 
-    bool getTask(ref Task task, ChangeList changeList) {
-        StopWatch sw;
-        sw.start();
-
-        scope (exit) {
-            sw.stop();
-            g_Statistics.addGetTask(sw.peek().usecs);
-        }
-
+    Task getTask(ChangeList changeList) {
+        Task task;
         synchronized (mutex) {
-            return getTask_impl(task, changeList, sw);
+            while(!getTask_impl(task, changeList)){}
+            return task;
         }
     }
 
     private {
-        void suspendMe(ref StopWatch sw) {
-            sw.stop();
-
+        void suspendMe() {
             activeWorkers -= 1;
             if (activeWorkers > 0) {
                 cond.wait();
             }
             activeWorkers += 1;
-
-            sw.start();
         }
 
         bool alone() {
@@ -312,29 +306,28 @@ struct Scheduler {
             cond.notifyAll();
         }
 
-        bool getTask_impl(ref Task task, ChangeList changeList,
-                ref StopWatch sw) {
+        bool getTask_impl(ref Task task, ChangeList changeList) {
 
             switch (state) {
                 default:
+                    BREAKPOINT;
                     assert (0);
                 case State.wait:
 
                     if (!alone()) {
 
-                        suspendMe(sw);
+                        suspendMe();
 
                         if (exiting) {
                             workers = workers.remove(workers.countUntil(Thread.getThis));
-                            return false;
                         }
-                        return getTask_impl(task, changeList, sw);
+                        return false;
                     }
                     BREAK_IF(!alone());
 
                     state = State.update;
 
-                    return getTask_impl(task, changeList, sw);
+                    return false;
 
                 case State.update:
 
@@ -348,7 +341,7 @@ struct Scheduler {
 
                     if (exiting) {
                         workers.length = 0;
-                        return false;
+                        throw new Schexception("Exiting");
                     }
 
                     current.length = 0;
@@ -356,7 +349,7 @@ struct Scheduler {
                     task_index = 0;
                     state = state.running;
                     wakeWorkers();
-                    return getTask_impl(task, changeList, sw);
+                    return false;
 
                 case State.running:
 
@@ -366,7 +359,7 @@ struct Scheduler {
                         return true;
                     } else {
                         state = state.wait;
-                        return getTask_impl(task, changeList, sw);
+                        return false;
                     }
             }
         }

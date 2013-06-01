@@ -94,7 +94,8 @@ mixin template ClientModule() {
 
     void handleComm() {
         //Assume falsely that all comm is newline terminated
-        auto line = readLine(commSock);
+        import util.socket : readString, sendString;
+        auto line = readString(commSock);
         if(line is null) {
             LogError("Received null from commSock");
             BREAKPOINT;
@@ -133,12 +134,14 @@ mixin template ClientModule() {
             BREAKPOINT;
         }
 
+        import util.socket : readString, sendString;
+
         synchronized(commandsToSendMutex) {
             foreach(command ; commandsToSend) {
-                commSock.send(command);
-                commSock.send("\n");
+                commSock.sendString(command);
             }
-            commandsToSend = null;
+            commandsToSend.length = 0;
+            assumeSafeAppend(commandsToSend);
         }
 
 

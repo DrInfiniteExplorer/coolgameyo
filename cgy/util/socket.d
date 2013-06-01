@@ -1,6 +1,8 @@
 module util.socket;
 
+import std.conv : to;
 import std.socket;
+
 import util.util : msg, BREAK_IF;
 import util.filesystem: mkdir, fileSize, writeText;
 
@@ -17,6 +19,42 @@ string readLine(Socket sock) {
         ret ~= _character;
     }
     return null;
+}
+
+void sendAll(T)(Socket sock, immutable T[] buffer) {
+    size_t sent = 0;
+    while(sent != buffer.length) {
+        auto tmp = sock.send(buffer[sent .. $]);
+        BREAK_IF(tmp < 1);
+        sent += tmp;
+    }
+}
+
+void readAll(T)(Socket sock, T[] buffer) {
+    size_t read = 0;
+    while(read != buffer.length) {
+        auto tmp = sock.receive(buffer[read .. $]);
+        BREAK_IF(tmp < 1);
+        read += tmp;
+    }
+}
+
+void sendString(Socket sock, string line) {
+    int[1] length;
+    length[0] = cast(int)line.length;
+    BREAK_IF(sock.send(length) != int.sizeof);
+    sock.sendAll(line);
+}
+
+
+string readString(Socket sock) {
+    int[1] length;
+    BREAK_IF(sock.receive(length) != int.sizeof);
+    char[] str;
+    str.length = length[0];
+    sock.readAll(str);
+    return cast(immutable)str;
+
 }
 
 void tcpSendDir(Socket sock, string dirPath) {

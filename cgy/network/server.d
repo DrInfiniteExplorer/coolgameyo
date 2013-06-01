@@ -213,7 +213,8 @@ mixin template ServerModule() {
     void handleComm(PlayerInformation player) {
         //falsely assume that all stuff over comm is newline terminated
         // (In future will be async stuff like player positions as well)
-        auto line = readLine(player.commSock);
+        import util.socket : readString, sendString;
+        auto line = player.commSock.readString();
         Log("Player sent: ", line);
         if(line == "ProperlyConnected") {
             auto path = g_worldPath ~ "/players/" ~ player.name ~ ".json";
@@ -225,7 +226,7 @@ mixin template ServerModule() {
                 //For now just ignore unit creation and assume control of unit 0
                 player.unitId = 1;
                 player.unit = Clans().getUnitById(player.unitId);
-                player.commSock.send("controlUnit:1\n");
+                player.commSock.sendString("controlUnit:1");
             }
         }
         auto words = line.split();
