@@ -52,7 +52,7 @@ Task task(void delegate () run) {
     return Task(w => run());
 }
 
-static class Schexception : Exception
+static class KillWorker : Exception
 {
     this(string str) { super(str); }
 }
@@ -75,10 +75,10 @@ struct WorkerThreadContext {
 
         try {
             while(true) {
-                task = scheduler.getTask(proxy.changeList);
+                task = scheduler.getTask();
                 task.run(proxy); //Fill changelist!!
             }
-        } catch(Schexception e) {
+        } catch(KillWorker e) {
             Log("Scheduler exception", e);
         } catch (Throwable t) {
             Log(t);
@@ -281,10 +281,10 @@ struct Scheduler {
         }
     }
 
-    Task getTask(ChangeList changeList) {
+    Task getTask() {
         Task task;
         synchronized (mutex) {
-            while(!getTask_impl(task, changeList)){}
+            while(!getTask_impl(task)){}
             return task;
         }
     }
@@ -306,7 +306,7 @@ struct Scheduler {
             cond.notifyAll();
         }
 
-        bool getTask_impl(ref Task task, ChangeList changeList) {
+        bool getTask_impl(ref Task task) {
 
             switch (state) {
                 default:
@@ -341,7 +341,7 @@ struct Scheduler {
 
                     if (exiting) {
                         workers.length = 0;
-                        throw new Schexception("Exiting");
+                        throw new KillWorker("Exiting");
                     }
 
                     current.length = 0;
