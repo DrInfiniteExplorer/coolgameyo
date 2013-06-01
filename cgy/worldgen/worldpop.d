@@ -185,7 +185,7 @@ mixin template WorldPopulation() {
         mkdir(roadPath);
 
         Value serializeCity(City city) {
-            int endpointId = endpoints.countUntil(city.endpoint);
+            int endpointId = cast(int)endpoints.countUntil(city.endpoint);
             return makeJSONObject("pos", city.pos,
                                   "closestCities", city.closestCities,
                                   "endpointId", endpointId);
@@ -194,8 +194,8 @@ mixin template WorldPopulation() {
             return makeJSONObject("pos", e.pos);
         }
         Value serializeRoad(Road r) {
-            int a = endpoints.countUntil(r.a);
-            int b = endpoints.countUntil(r.b);
+            int a = cast(int)endpoints.countUntil(r.a);
+            int b = cast(int)endpoints.countUntil(r.b);
             return makeJSONObject("aabb", r.aabb,
                                   "points", r.points,
                                   "endpointA", a,
@@ -437,7 +437,7 @@ mixin template WorldPopulation() {
             r.aabb.addInternal(p);
         }
 
-        int idx = r.points.countUntil(pt);
+        int idx = cast(int)r.points.countUntil(pt);
         BREAK_IF(idx == -1);
         newRoad.points = r.points[idx+1 .. $];
         foreach(p ; newRoad.points) {
@@ -771,7 +771,7 @@ mixin template WorldPopulation() {
         roadTmp = null;
     }
 
-    immutable roadComputeShader = q{
+    static immutable roadComputeShader = q{
         #version 430
         layout(local_size_x = 16 , local_size_y = 16, local_size_z = 1) in;
 

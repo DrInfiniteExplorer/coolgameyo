@@ -147,6 +147,16 @@ body{
     }
 }
 
+unittest {
+    import std.file : dirEntries, SpanMode, DirEntry, getcwd;
+    auto startDir = "data//";
+    msg(getcwd());
+    foreach(DirEntry dirEntry ; dirEntries(startDir, SpanMode.breadth)) {
+        BREAK_IF(dirEntry.name()[0 .. startDir.length] != startDir);
+    }
+}
+
+
 struct BinaryFile {
     File file;
     this(string path, string mode) {

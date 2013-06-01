@@ -58,7 +58,7 @@ class WorldMenu : GuiElementWindow {
         auto saveWorldButton = new PushButton(this, Rectd(randomButton.rightOf, randomButton.topOf, randomButton.widthOf, randomButton.heightOf), "Save world", {
             {
                 mixin(MeasureTime!("Time to save the world(All in a days work):"));
-                worldMap.save();
+                //worldMap.save();
             }
         });
 

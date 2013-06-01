@@ -145,14 +145,14 @@ auto Interpolate(alias Mixer, bool extend = false, T, V)(T t, V[] ar) if( 5 == P
         if(idx == 0) {
             return Mixer(2*ar[0]-ar[1], ar[0], ar[1], ar[2], local);
         } else if(idx >= ar.length - 2) {
-            idx = ar.length-2;
+            idx = cast(int)ar.length-2;
             return Mixer(ar[idx-1], ar[idx], ar[idx+1], 2*ar[idx+1]-ar[idx], local);
         }
     } else {
         if(idx == 0) {
             return Mixer(ar[0], ar[0], ar[1], ar[2], local);
         } else if(idx >= ar.length - 2) {
-            idx = ar.length-2;
+            idx = cast(int)ar.length-2;
             return Mixer(ar[idx-1], ar[idx], ar[idx+1], ar[idx+1], local);
         }
     }

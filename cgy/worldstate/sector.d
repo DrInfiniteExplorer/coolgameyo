@@ -36,9 +36,9 @@ immutable BitCount = 32;
 alias uint StorageType;
 
 struct SolidMap {
-    const int sizeX = SectorSize.x / BitCount;
-    const int sizeY = SectorSize.y;
-    const int sizeZ = SectorSize.z;
+    static immutable int sizeX = SectorSize.x / BitCount;
+    static immutable int sizeY = SectorSize.y;
+    static immutable int sizeZ = SectorSize.z;
     StorageType[sizeX][sizeY][sizeZ] data;
 
     bool dirty = false;

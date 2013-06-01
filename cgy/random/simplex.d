@@ -41,8 +41,8 @@ class SimplexNoise : ValueSource {
         return double.init;
     }
 
-    immutable F2 = 0.5 * (sqrt(3.0) - 1.0);
-    immutable G2 = (3.0 - sqrt(3.0)) / 6.0;
+    static immutable F2 = 0.5 * (sqrt(3.0) - 1.0);
+    static immutable G2 = (3.0 - sqrt(3.0)) / 6.0;
     T getVal2(T)(vector2!T pos) {
         pos *= 0.5; //To scale it somewhat into being more like perlin noise
 
@@ -109,8 +109,8 @@ class SimplexNoise : ValueSource {
         return getVal3(vector3!T(v.x, v.y, v.x-v.y));
     }
 
-    immutable F3 = 1.0/3.0;
-    immutable G3 = 1.0/6.0;
+    static immutable F3 = 1.0/3.0;
+    static immutable G3 = 1.0/6.0;
     T getVal3(T)(vector3!T pos) {
         T n0 = void, n1 = void, n2 = void, n3 = void;
 

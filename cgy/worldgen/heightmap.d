@@ -74,8 +74,6 @@ class HeightMaps {
     MmFile flowFile;
     vec2f[] flowData;
 
-    float mean = 0.0;
-
     SimplexNoise baseHeightNoise;
 
     this(WorldMap _worldMap) {
@@ -127,11 +125,6 @@ class HeightMaps {
         auto originalHeightPath = worldMap.worldPath ~ "/map5";
         originalHeightmapFile = new MmFile(originalHeightPath, mode, mapSizeBytes, null, 0);
         originalHeightData = cast(short[])originalHeightmapFile[];
-
-        if(!create) {
-            loadJSON(worldMap.worldPath ~ "/worldMean.json").
-                readJSONObject("worldMean", &mean);
-        }
     }
 
     void load(int seed) {
@@ -181,7 +174,7 @@ class HeightMaps {
         tmp.convertArray(heightData);
         msg("h max", reduce!max(tmp));
         msg("h min", reduce!min(tmp));
-        mean = reduce!"a+b"(tmp) / mapSizeSQ;
+        auto mean = reduce!"a+b"(tmp) / mapSizeSQ;
         msg("h mean", mean);
         heightData[] -= cast(short)mean;
         originalHeightData[] = heightData[];

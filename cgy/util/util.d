@@ -210,7 +210,13 @@ void setThreadName(string threadName) {
 
         try//__try
         {
-            RaiseException( MS_VC_EXCEPTION, 0u, info.sizeof/ptr.sizeof, ptrAsDWORD );
+            version(Win64){
+                if(IsDebuggerPresent()) {
+                    RaiseException( MS_VC_EXCEPTION, 0u, info.sizeof/ptr.sizeof, ptrAsDWORD );
+                }
+            } else {
+                RaiseException( MS_VC_EXCEPTION, 0u, info.sizeof/ptr.sizeof, ptrAsDWORD );
+            }
         }
         catch(Throwable o) //__except(EXCEPTION_EXECUTE_HANDLER)
         {

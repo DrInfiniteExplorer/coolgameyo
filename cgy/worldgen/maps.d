@@ -127,6 +127,7 @@ final class WorldMap {
             //BREAKPOINT;
         }
         mkdir(worldPath);
+        makeJSONObject("worldSeed", worldSeed).saveJSON(worldPath ~ "/seed.json");
 
         stratas = generateStratas(strataSeed);
         sortedStratas = assumeSorted!"a.depthStart < b.depthStart"(stratas);
@@ -168,11 +169,6 @@ final class WorldMap {
         walkSeed = rnd.get(int.min, int.max);
     }
 
-    void save() {
-        auto worldPath = worldPath;
-        mkdir(worldPath);
-        makeJSONObject("worldSeed", worldSeed).saveJSON(worldPath ~ "/seed.json");
-    }
 
 
 

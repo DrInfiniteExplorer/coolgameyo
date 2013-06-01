@@ -319,11 +319,11 @@ static struct PathFindState {
     }
 
     // costs, lol
-    immutable moveUpHalfstep = 1.6;
-    immutable moveDownHalfstep = 1.1;
-    immutable moveUpRegular = 4.5;
-    immutable moveDownRegular = 2.7;
-    immutable normalStep = 1.0;
+    static immutable moveUpHalfstep = 1.6;
+    static immutable moveDownHalfstep = 1.1;
+    static immutable moveUpRegular = 4.5;
+    static immutable moveDownRegular = 2.7;
+    static immutable normalStep = 1.0;
 
     double costBetween(WorldProxy world, TilePos a, TilePos b) {
 

@@ -137,7 +137,7 @@ class Camera{
         return targetDir;
     }
 
-    const double PI2 = PI*2.0;
+    static immutable double PI2 = PI*2.0;
     void mouseMove(int dx, int dy){
         if(!mouseMoveEnabled) return;
         //matrix4 mat;

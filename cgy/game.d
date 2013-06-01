@@ -286,8 +286,8 @@ class Game {
 
     void damageTile(TilePos tp, int damage) {
         client.sendCommand(text("DamageTile ", tp.value.x, " ", tp.value.y, " ", tp.value.z, " ", damage));
-        msg("damageTile: Implement again, send command over comm channel");
     }
+
 
     mixin ServerModule server;
     mixin ClientModule client;

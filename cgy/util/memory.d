@@ -7,6 +7,7 @@ import std.string;
 
 import windows;
 
+import util.util : BREAK_IF;
 
 version(Windows){
     //    import std.c.windows.windows;
@@ -75,6 +76,7 @@ extern(Windows) BOOL initGPMI(HANDLE h, PPROCESS_MEMORY_COUNTERS p, DWORD d) {
     if(getProcessMemoryInfo is null) {
         hh = LoadLibraryA("psapi.dll");
         getProcessMemoryInfo = cast(typeof(getProcessMemoryInfo))GetProcAddress(hh, "GetProcessMemoryInfo");
+        BREAK_IF(getProcessMemoryInfo is null);
     }
     return getProcessMemoryInfo(h,p,d);
 }
@@ -84,7 +86,9 @@ __gshared GetProcessMemoryInfoPtr getProcessMemoryInfo = &initGPMI;
 // Returns number of kilobytes of memory used.
 ulong getMemoryUsage() {
     PROCESS_MEMORY_COUNTERS pmc;
-    enforce(getProcessMemoryInfo(GetCurrentProcess(), &pmc, pmc.sizeof), "Error calling GetProcessMemoryInfo");
+    auto res = getProcessMemoryInfo(GetCurrentProcess(), &pmc, pmc.sizeof);
+    BREAK_IF(!res);
+    enforce(res, "Error calling GetProcessMemoryInfo");
     return pmc.WorkingSetSize/1024;
 }
 

@@ -28,7 +28,7 @@ class GuiElementComboBox : GuiElement {
     Recti droppedDownRect;
     Recti mainElementRect;
     Recti separatorRect;
-    const int separatorHeight = 2;
+    static const int separatorHeight = 2;
     int rowHeight;
     
     alias void delegate(int index) SelectionChangedCallback;

@@ -73,7 +73,7 @@ void main(string[] args) {
     string heightmap;
     //args ~= "--SplineEditor";
 
-    getopt(args,
+    getopt(g_commandLine,
             std.getopt.config.passThrough,
             "MaterialEditor", &materialEditor,
             "RandomMenu", &randomMenu,

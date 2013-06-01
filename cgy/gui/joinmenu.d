@@ -62,7 +62,7 @@ class JoinMenu : GuiElementWindow {
 
     void onJoinGame() {
         server = servEdit.getText();
-        int oldIdx = countUntil(g_serverList, server);
+        size_t oldIdx = countUntil(g_serverList, server);
         while(oldIdx != -1) {
             g_serverList = g_serverList.remove(oldIdx);
             oldIdx = countUntil(g_serverList, server);

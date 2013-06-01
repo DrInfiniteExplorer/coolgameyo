@@ -19,14 +19,6 @@ string readLine(Socket sock) {
     return null;
 }
 
-unittest {
-    import std.file : dirEntries, SpanMode, DirEntry;
-    auto startDir = "data//";
-    foreach(DirEntry dirEntry ; dirEntries(startDir, SpanMode.breadth)) {
-        BREAK_IF(dirEntry.name()[0 .. startDir.length] != startDir);
-    }
-}
-
 void tcpSendDir(Socket sock, string dirPath) {
     import std.file : dirEntries, SpanMode, DirEntry;
     dirPath ~= "/"; //As long as the unit test above doesnt fail, this should be ok!! :D

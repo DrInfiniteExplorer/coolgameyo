@@ -161,7 +161,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         }
     }
 
-    immutable renderMethods=[
+    static immutable renderMethods=[
         "A*(M+R)",
         "A*M",
         "A*R",

@@ -407,12 +407,15 @@ uint Create2DArrayTexture(DataType = void)(uint textureType, int width, int heig
 
 
 //textureType: for example GL_RGB8, GL_R32F, etc
-static if(! is(size_t : int)) {
-    uint Create2DTexture(DataType = void)(uint textureType, size_t width, size_t height, DataType* data = null) {
-        return Create2DTexture!(DataType)(textureType, cast(int)width, cast(int)height, data);
+
+uint Create2DTexture(DataType = void, INT)(uint textureType, INT _width, INT _height, void* data = null) if( is(INT == int) || is(INT : long)) {
+    static if( is(INT : long)) {
+        int width = cast(int)_width;
+        int height = cast(int)_height;
+    } else {
+        alias _width width;
+        alias _height height;
     }
-}
-uint Create2DTexture(DataType = void)(uint textureType, int width, int height, void* data = null) {
 
     uint format = InternalTypeToFormatType(textureType);
     uint dataType = TypeToGLTypeEnum!DataType;
@@ -436,6 +439,7 @@ uint Create2DTexture(DataType = void)(uint textureType, int width, int height, v
 
     return tex;
 }
+
 
 uint Create1DTexture(uint textureType, DataType = void)(int width, DataType* data = null) {
 

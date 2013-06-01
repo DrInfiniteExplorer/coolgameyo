@@ -43,7 +43,7 @@ class TileCompute : WorldStateListener {
     }
 
 
-    immutable string scanComputeShader = q{
+    static immutable string scanComputeShader = q{
         #version 430
         layout(local_size_x = 16 , local_size_y = 16, local_size_z = 1) in;
 
@@ -92,11 +92,11 @@ class TileCompute : WorldStateListener {
         auto tiles = worldState.getTiles(tileStart, tileEnd);
         scope(exit) delete tiles;
 
-        uint tileBufferSize = tiles.length * tiles[0].sizeof;
+        uint tileBufferSize = cast(uint)(tiles.length * tiles[0].sizeof);
         uint tileBuffer = CreateBuffer(BufferType.ShaderStorage, tileBufferSize, tiles.ptr, GL_STATIC_DRAW);
         scope(exit) ReleaseBuffer(tileBuffer);
 
-        uint scanBufferSize = char.sizeof * tiles.length;
+        uint scanBufferSize = char.sizeof * cast(uint)tiles.length;
         uint scanBuffer = CreateBuffer(BufferType.ShaderStorage, scanBufferSize, null, GL_STATIC_DRAW);
         scope(exit) ReleaseBuffer(scanBuffer);
 

@@ -64,7 +64,7 @@ class FPSControlAI {
     }
 
 
-    immutable dirs = [vec3i(1, 0, 0), vec3i(0, 1, 0), vec3i(0, 0, 1)];
+    static immutable dirs = [vec3i(1, 0, 0), vec3i(0, 1, 0), vec3i(0, 0, 1)];
     vec3i[3] sizes;
 
     vec3d collideMove(vec3d pos, vec3d dir){
