@@ -435,6 +435,7 @@
     <File path="gui\guisystem\element.d" />
     <File path="gui\guisystem\guisystem.d" />
     <File path="gui\guisystem\image.d" />
+    <File path="gui\guisystem\imagecache.d" />
     <File path="gui\guisystem\listbox.d" />
     <File path="gui\guisystem\progressbar.d" />
     <File path="gui\guisystem\scrollbar.d" />

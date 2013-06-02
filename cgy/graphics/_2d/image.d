@@ -118,7 +118,7 @@ class ImageRectShader {
 }
 
 void renderImage(uint img, Recti r, Rectf imgSource = Rectf(0, 0, 1, 1), ) {
-    ImageRectQuad quad;
+    ImageRectQuad quad = void;
     glActiveTexture(GL_TEXTURE2);
     glError();
     glBindTexture(GL_TEXTURE_2D, img);

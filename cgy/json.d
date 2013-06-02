@@ -250,6 +250,8 @@ static:
                 case '0': .. case '9':
                           return Token(eatReal(s, false, cast(char)c));
                 default:
+                          msg(c);
+                        BREAKPOINT;
                           enforce(false, new JsonException(
                                       text("invalid json, no case for ", c)));
                           assert (0);

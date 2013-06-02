@@ -6,6 +6,7 @@ import std.algorithm;
 import std.array;
 import std.conv;
 import std.stdio;
+import std.traits : isArray;
 
 public import derelict.opengl.gl;
 public import derelict.opengl.glext;
@@ -480,7 +481,13 @@ void DeleteTexture(uint tex) {
 }
 void DeleteTextures(T...)(T t) {
     foreach(item ; t) {
-        DeleteTexture(item);
+        static if( isArray!(typeof(item))) {
+            foreach(tex ; item) {
+                DeleteTexture(tex);
+            }
+        } else {
+            DeleteTexture(item);
+        }
     }
 }
 

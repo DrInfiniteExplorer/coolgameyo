@@ -9,6 +9,7 @@ import std.stdio;
 
 import gui.guisystem.guisystem;
 
+import graphics._2d.image;
 import graphics.font;
 import settings;
 import util.util;
@@ -68,7 +69,7 @@ class GuiElement {
     alias bool delegate(GuiElement, GuiEvent.MouseClick) MouseClickCallback;
     protected MouseClickCallback mouseClickCB;
 
-    protected GuiElement guiSystem;
+    protected GuiSystem guiSystem;
     private GuiElement[] children;
     protected GuiElement parent;
 
@@ -85,10 +86,12 @@ class GuiElement {
         if(parent) {
             setParent(parent);
             font = parent.font;        
-            while(parent.getParent() !is null) {
-                parent = parent.getParent();
+
+            if(cast(GuiSystem)parent !is null) {
+                guiSystem = cast(GuiSystem)parent;
+            } else {
+                guiSystem = parent.guiSystem;
             }
-            guiSystem = parent;
         }
     }
     
@@ -247,6 +250,43 @@ class GuiElement {
         return absoluteRect;
     }
     
+    void renderBorder(int borderSize) {
+        uint topLeft =      guiSystem.imageCache.getImage("border_topleft");
+        uint top =          guiSystem.imageCache.getImage("border_top");
+        uint topRight =     guiSystem.imageCache.getImage("border_topright");
+        uint right =        guiSystem.imageCache.getImage("border_right");
+        uint bottomRight =  guiSystem.imageCache.getImage("border_bottomright");
+        uint bottom =       guiSystem.imageCache.getImage("border_bottom");
+        uint bottomLeft =   guiSystem.imageCache.getImage("border_bottomleft");
+        uint left =         guiSystem.imageCache.getImage("border_left");
+
+        Recti abs = getAbsoluteRect();
+
+        vec2i borderSizeV = vec2i(borderSize);
+        Recti tl = Recti(abs.topLeft,                               borderSizeV);
+        Recti tr = Recti(abs.topRight    - vec2i(borderSize, 0),    borderSizeV);
+        Recti br = Recti(abs.bottomRight - borderSizeV,             borderSizeV);
+        Recti bl = Recti(abs.bottomLeft  - vec2i(0, borderSize),    borderSizeV);
+        topLeft.renderImage(tl);
+        topRight.renderImage(tr);
+        bottomRight.renderImage(br);
+        bottomLeft.renderImage(bl);
+
+        Recti leftR   = Recti(tl.bottomLeft, bl.topRight   - tl.bottomLeft);
+        Recti topR    = Recti(tl.topRight,   tr.bottomLeft - tl.topRight);
+        Recti rightR  = Recti(tr.bottomLeft, br.topRight   - tr.bottomLeft);
+        Recti bottomR = Recti(bl.topRight,   br.bottomLeft - bl.topRight);
+
+        float horiScale = cast(float)topR.size.x / borderSize;
+        float vertScale = cast(float)leftR.size.y / borderSize;
+
+        vec2f _0 = vec2f(0.0f);
+        top.renderImage(topR, Rectf(_0, vec2f(horiScale, 1.0f)));
+        bottom.renderImage(bottomR, Rectf(_0, vec2f(horiScale, 1.0f)));
+        left.renderImage(leftR, Rectf(_0, vec2f(1.0f, vertScale)));
+        right.renderImage(rightR, Rectf(_0, vec2f(1.0f, vertScale)));
+
+    }
     
     void render(){
         foreach(child ; children) {

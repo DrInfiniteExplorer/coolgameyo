@@ -116,7 +116,7 @@ bool startClient(string host) {
 
     //Yes yes...
     GuiSystem guiSystem;
-    guiSystem = new GuiSystem;
+    guiSystem = new GuiSystem;    
 
     bool error = false;
     Game game = new Game(false);

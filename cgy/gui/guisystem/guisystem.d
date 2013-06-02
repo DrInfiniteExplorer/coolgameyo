@@ -14,6 +14,7 @@ import util.rect;
 import util.util;
 
 public import gui.guisystem.element;
+import gui.guisystem.imagecache;
 
 interface GuiEventDump {
     GuiEventResponse onDumpEvent(GuiEvent e);
@@ -33,6 +34,8 @@ final class GuiSystem : GuiElement{
     private GuiEventDump eventDump;
 
     private Font standardFont;    
+
+    ImageCache imageCache;
     
     this() {
         guiSystem = this;
@@ -44,6 +47,7 @@ final class GuiSystem : GuiElement{
         focusElement = this;
         getAbsoluteRect();
 
+        imageCache = new ImageCache;
     }
     
     private bool destroyed;
@@ -58,6 +62,7 @@ final class GuiSystem : GuiElement{
             standardFont.destroy();
             standardFont = null;
         }
+        imageCache.destroy();
     }
     
     override bool isInside(vec2i p) {

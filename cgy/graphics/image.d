@@ -57,15 +57,11 @@ struct Image {
         BREAK_IF(filename.length == 0);
 
         uint ilImgID;
-        ilGenImages(1, &ilImgID);
-        ilError();
+        ilGenImages(1, &ilImgID); ilError();
         scope(exit) ilDeleteImages(1, &ilImgID);
-        ilBindImage(ilImgID);
-        ilError();
-        ilEnable(IL_ORIGIN_SET);
-        ilError();
-        ilSetInteger(IL_ORIGIN_MODE, IL_ORIGIN_UPPER_LEFT);
-        ilError();
+        ilBindImage(ilImgID); ilError();
+        ilEnable(IL_ORIGIN_SET); ilError();
+        ilSetInteger(IL_ORIGIN_MODE, IL_ORIGIN_UPPER_LEFT); ilError();
 
         auto cString = toStringz(filename);
         if (ilLoad(IL_TYPE_UNKNOWN, cString) == IL_FALSE) {

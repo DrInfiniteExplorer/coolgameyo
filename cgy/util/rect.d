@@ -9,10 +9,11 @@ import util.util;
 
 
 struct Rect(T) {
-    vector2!T start;
-    vector2!T size;
+    alias vector2!T vec;
+    vec start;
+    vec size;
     
-    this(vector2!T _start, vector2!T _size){
+    this(vec _start, vec _size){
         start = _start;
         size = _size;
     }
@@ -35,7 +36,7 @@ struct Rect(T) {
             pos.y > start.y+size.y);
     }
     
-    vector2!T getRelative(vector2!T pos){
+    vec getRelative(vec pos){
         return vector2!T(
             (pos.x - start.x) / size.x,
             (pos.y - start.y) / size.y,
@@ -59,7 +60,7 @@ struct Rect(T) {
     
     Rect!T centerRect(Rect!T toCenter, bool centerHorizontal = true, bool centerVertical = true) {
         auto newStart = start + (size - toCenter.size) / 2;
-        auto tmp = vector2!T( centerHorizontal ? newStart.x : toCenter.start.x,
+        auto tmp = vec( centerHorizontal ? newStart.x : toCenter.start.x,
                           centerVertical ? newStart.y : toCenter.start.y);
         return Rect!T(tmp, toCenter.size);
     }
@@ -69,13 +70,13 @@ struct Rect(T) {
         return diff(vector2!T(a,b), vector2!T(c,d));
     }
 */
-    Rect!T diff(vector2!T dStart, vector2!T dSize){
+    Rect!T diff(vec dStart, vec dSize){
         return Rect!T(  start + dStart,
                       size - dStart + dSize);
     }
     Rect!T diff(T dStartX, T dStartY, T dSizeX, T dSizeY){
         
-        return diff(vector2!T(dStartX, dStartY), vector2!T(dSizeX, dSizeY));
+        return diff(vec(dStartX, dStartY), vec(dSizeX, dSizeY));
     }
 
     Rect!T pad(T width, T height) {
@@ -108,6 +109,19 @@ struct Rect(T) {
     T heightOf() const {
         return size.y;
     }
+    vec topLeft() const {
+        return start;
+    }
+    vec topRight() const {
+        return start + vec(size.x, 0);
+    }
+    vec bottomRight() const {
+        return start + size;
+    }
+    vec bottomLeft() const {
+        return start + vec(0, size.y);
+    }
+
 }
 
 alias Rect!double Rectd;

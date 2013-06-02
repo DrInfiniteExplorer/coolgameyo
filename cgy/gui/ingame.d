@@ -272,7 +272,4 @@ class FpsHandler : GuiEventDump {
         }
         */
     }
-
-
-
 }

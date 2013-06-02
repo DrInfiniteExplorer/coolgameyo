@@ -215,7 +215,6 @@ mixin template ServerModule() {
         // (In future will be async stuff like player positions as well)
         import util.socket : readString, sendString;
         auto line = player.commSock.readString();
-        Log("Player sent: ", line);
         if(line == "ProperlyConnected") {
             auto path = g_worldPath ~ "/players/" ~ player.name ~ ".json";
             //If has unit, send unit-id to be controlled
