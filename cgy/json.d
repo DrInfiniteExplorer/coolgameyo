@@ -15,13 +15,10 @@ module json;
 import std.algorithm;
 import std.conv;
 import std.exception;
-//import std.file;
+import std.file;
 import std.range;
 import std.stdio;
 import std.traits;
-
-import util.util;
-import util.filesystem;
 
 class JsonException : Exception {
     this(string s) {
@@ -38,14 +35,14 @@ struct Value {
         string str_;
         double num_;
         Value[string] pairs;
-        Value[] elements;   // TODO: Make getter setter range thing
+        Value[] elements;
         bool boolval;
     }
 
     bool opIn_r(string name) {
         enforce (type == Type.object, new JsonException(text(
                     "Attempted to opIn_r a non-object (", this, ")")));
-        return !!(name in pairs); //TODO: WTF is !! ????
+        return !!(name in pairs);
     }
 
     void opIndexAssign(Value v, string name) {
@@ -59,7 +56,7 @@ struct Value {
         enforce (type == Type.object, new JsonException(text(
                     "Attempted to index a non-object with string (",
                     this, ")")));
-        BREAK_IF(name !in pairs);
+        enforce(name in pairs, new JsonException(name ~ " not found"));
         return pairs[name];
     }
     
@@ -91,15 +88,11 @@ struct Value {
         return elements.length;
     }
 
-    //Change: returning the thing takes up 0 extra memory everywhere and does not produce
-    // wierd code flow. Yay!
     auto asArray() {
         enforce (type == Type.array, new JsonException(text("Cant do asArray on json-value when type is ", type)));
         return elements;
     }
 
-    //Change: returning the thing takes up 0 extra memory everywhere and does not produce
-    // wierd code flow. Yay!
     auto asObject() {
         enforce (type == Type.object, new JsonException(text("Cant do asObject on json-value when type is ", type)));
         return pairs;
@@ -178,17 +171,6 @@ static:
                           end = true;
             }
         }
-        /*
-        auto r = text(negative ? "-" : "", n, old[0 .. old.length - s.length]);
-        msg(old.length);
-        msg(s.length);
-        msg(old.length - s.length);
-        ptrdiff_t d = old.length - s.length;
-        msg(s);
-        msg(r);
-        msg(old[0 .. d]);
-        return to!real(r); // BUG LINE?
-        */
 
         ptrdiff_t diff = old.length - s.length;
         if(negative) {
@@ -250,8 +232,6 @@ static:
                 case '0': .. case '9':
                           return Token(eatReal(s, false, cast(char)c));
                 default:
-                          msg(c);
-                        BREAKPOINT;
                           enforce(false, new JsonException(
                                       text("invalid json, no case for ", c)));
                           assert (0);
@@ -291,7 +271,6 @@ static:
     Value parseValue(string s) { return parseValue(new Input(s)); }
     Value parseValue(Input i) {
         string s; double n;
-        //msg(to!string(i.front.tag));
         switch (i.front.tag) {
             case Tag.string: s = i.front.str; i.popFront(); return Value(s);
             case Tag.number: n = i.front.num; i.popFront(); return Value(n);
@@ -314,7 +293,6 @@ static:
             enforce(i.front.tag == Tag.string, new JsonException("derp"));
             string s = i.front.str;
             i.popFront();
-            //msg("parsed ", s);
             i.skip(Tag.colon);
             blep[s] = parseValue(i);
             if (i.front.tag != Tag.comma) break;
@@ -353,7 +331,6 @@ void read(T)(string s, ref T t)  if(! is( T : Value)) {
     return read!T(t, parse(s));
 }
 void read(T)(Value val, ref T t) if(! is( T : Value)) {
-//    writeln(T.stringof);
     static if( is( T : Value)) {
         t = val;
     }
@@ -364,12 +341,9 @@ void read(T)(Value val, ref T t) if(! is( T : Value)) {
     } else static if (is (T : bool)) {
         t = val.boolVal;
     } else static if (is (T U : U[])) {
-        //U[] us;
         foreach (e; val.elements) {
-            //us ~= read!U(e);
             t ~= read!U(e);
         }
-        //return us;
     } else static if (is (T U : U[string])) { //Map of things with string as key
         foreach(key, value ; val.pairs) {            
             t[key] = read!U(value);
@@ -399,14 +373,6 @@ void read(T)(Value val, ref T t) if(! is( T : Value)) {
                 " because I don't know what it is!"));
     }
 }
-
-/*
-template RealThing(T...) if(T.length == 1)
-{
-    enum bool RealThing = true;
-}
-*/
-
 
 template RealThing(alias Class, string Member) {
     static if(__traits(compiles, typeof(__traits(getMember, Class, Member)))) {
@@ -459,7 +425,7 @@ Value encode(T)(T t) {
         return Value(ret);
 
     } else static if (is (T U : U[V], V)) { //Map of things
-        //Yes it is encoded as an array of two-object arrays; all kind of things can now be keys.
+        // it is encoded as an array of two-object arrays; all kind of things can now be keys.
         Value ret[];
         foreach(key, value ; t) {
             ret ~= Value([encode(key), encode(value)]);
@@ -473,11 +439,11 @@ Value encode(T)(T t) {
         Value[string] blep;
         foreach (m; __traits(allMembers, T)) { 
             static if (RealThing!(t, m)) {
-				static if (isSomeFunction!(__traits(getMember, T, m))) {
-					continue;
-				} else {
-					blep[m] = encode(__traits(getMember, t, m));
-				}
+                static if (isSomeFunction!(__traits(getMember, T, m))) {
+                    continue;
+                } else {
+                    blep[m] = encode(__traits(getMember, t, m));
+                }
             } 
         }
         return Value(blep);
@@ -505,7 +471,7 @@ Value loadJSON(string path) {
 }
 
 void saveJSON(Value value, string path, bool prettify = true) {
-    writeText(path, prettify ? prettifyJSON(value) : to!string(value));
+    std.file.write(path, prettify ? prettifyJSON(value) : to!string(value));
 }
 
 //Example:

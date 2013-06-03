@@ -1,5 +1,11 @@
 module entities.treelikeinstance;
 
+__gshared int debugIdCounter = 0;
+__gshared bool drawDebugLines = true;
+__gshared bool drawTiles = true;
+__gshared bool drawLeafs = true;
+__gshared bool[10] drawBranchId = true;
+
 class NodeInstance {
     int debugId;
     byte[3] pos; // Pos is relative to the previous node. realPos = pos / NODE_DISTANCE_SCALE
@@ -23,10 +29,6 @@ class BranchInstance {
 
     ubyte nrOfChildBranches; // help variable. This could be calculated when needed instead of storing here.
 
-    /*BranchInstance copy()
-    {
-    return this; // lol, ska fixa senare
-    }*/
 }
 
 class TreelikeInstance {
@@ -44,8 +46,9 @@ mixin template TreeLike() {
     import std.random;
     //import std.stdio;
 
-    import treemanager;
     import changes.worldproxy;
+
+    import util.tileiterator;
 
     TreelikeInstance treelike;
 
@@ -53,54 +56,8 @@ mixin template TreeLike() {
     int THICKNESS_SCALE = 16;
     int NODE_DISTANCE_SCALE = 4;
 
-    //public EntityType currentType;
-    //Entity[] entities;
-
     Random gen;
     Random leafRandom;
-
-    //
-    //int[] lineId;
-    //int[] aabbId;
-
-
-    //private void printAllFuckingEntities()
-    //{
-    //    msg("====================================================");
-    //    foreach (Entity entity ; entities) {
-    //        msg("---", entity.type.displayName,"---");
-    //        foreach (BranchInstance branch ; entity.treelike.branches) {
-    //            msg("...Branch ",branch.typeId,"...");
-    //            foreach (NodeInstance node ; branch.nodes) {
-    //                msg(node.debugId, " Node parent:",(node.parentNode!is(null)?node.parentNode.debugId:-1));          
-    //            }
-    //        }
-    //    }
-    //}
-
-
-    //public void growTrees(int iterations = 1)
-    //{
-    //    msg("xxxxxxxxxxxxxxxxxx-growTrees()-xxxxxxxxxxxxxxxxxx");
-    //    makeDebugLines();
-    //
-    //    foreach (entity ; entities) {
-    //        foreach (branch ; entity.treelike.branches) {
-    //            for (int i = 0; i < iterations; i++) {
-    //                newBranch(entity, branch);
-    //                increaseNodeDistance(entity, branch);
-    //                increaseThickness(entity, branch);
-    //                newNode(entity, branch);
-    //            }
-    //        }
-    //        clearTiles(entity);
-    //        makeTiles(entity);
-    //    }
-    //    foreach (entity ; entities) {
-    //        makeLeafs(entity);
-    //    }
-    //    printAllFuckingEntities();
-    //}
 
     int cnt = 24;
     void treelikeTick(WorldProxy proxy) {
@@ -119,7 +76,7 @@ mixin template TreeLike() {
         TreelikeInstance tree = new TreelikeInstance;
         NodeInstance rootNode = new NodeInstance;
         rootNode.nodeDistance = 1;
-        rootNode.debugId = TreeManager().debugIdCounter++;
+        rootNode.debugId = debugIdCounter++;
         tree.branches ~= createAndInitializeBranch(treeType.treelikeType.branches[0], rootNode);
         //tree.branches[0].nodes.insertInPlace(0, rootNode);
         treelike = tree;
@@ -131,10 +88,9 @@ mixin template TreeLike() {
         proxy.apply();
     }
 
-    public void growTree(WorldProxy proxy, int iterations = 1)
-    {
-        for (int i = 0; i < iterations; i++) {
-            foreach (branch ; treelike.branches) {    
+    public void growTree(WorldProxy proxy, int iterations = 1) {
+        foreach (i; 0 .. iterations) {
+            foreach (branch; treelike.branches) {
                 newBranch(branch);
                 increaseNodeDistance(branch);
                 increaseThickness(branch);
@@ -146,13 +102,12 @@ mixin template TreeLike() {
         makeLeafs(proxy);
     }
 
-    private void newBranch(BranchInstance parentBranch)
-    {
+    private void newBranch(BranchInstance parentBranch) {
         //msg("newBranch()");
         if (parentBranch.nrOfChildBranches >= parentBranch.branchesPerBranchTarget) {
             return;
         }
-        foreach (ref branchType ; type.treelikeType.branches) {
+        foreach (ref branchType; type.treelikeType.branches) {
             if (branchType.growsOn == parentBranch.typeId) {
                 ubyte preferredNodePos = to!(ubyte)((parentBranch.nodes.length-1) * branchType.posOnParent);
                 NodeInstance bestNode;
@@ -172,7 +127,6 @@ mixin template TreeLike() {
                 }
             }
         }
-
     }
 
     private BranchInstance createAndInitializeBranch(BranchType type, NodeInstance parentNode)
@@ -192,7 +146,7 @@ mixin template TreeLike() {
         float angleHorizontal = uniform(0.0f, PI * 2.0f, gen);
 
         NodeInstance node = new NodeInstance;
-        node.debugId = TreeManager().debugIdCounter++;
+        node.debugId = debugIdCounter++;
         node.pos[0] = to!(byte)(1 * sin(angleVertical) * cos(angleHorizontal));
         node.pos[1] = to!(byte)(1 * sin(angleVertical) * sin(angleHorizontal));
         node.pos[2] = to!(byte)(1 * cos(angleVertical));
@@ -263,7 +217,7 @@ mixin template TreeLike() {
         }
         if ((branchType.newNodeChance - bestNodeCost) > uniform(0.0f, 1.0f, gen)) {
             NodeInstance node = new NodeInstance;
-            node.debugId = TreeManager().debugIdCounter++;
+            node.debugId = .debugIdCounter++;
 
             if (bestNodePos == branch.nodes.length) {
                 node.angleHorizontal = branch.nodes[branch.nodes.length-1].angleHorizontal;
@@ -339,37 +293,34 @@ mixin template TreeLike() {
 
     private void clearTiles(WorldProxy proxy)
     {
-        foreach (TilePos tilePos ; ownedTiles) {
+        foreach (TilePos tilePos; ownedTiles) {
             Tile tile = Tile(TileTypeAir, TileFlags.valid, 0);
             proxy.setTile(tilePos, tile);
         }
         ownedTiles.length = 0;
     }
 
-    private void makeTiles(WorldProxy proxy)
-    {
-        if (TreeManager().drawTiles == false) return;
+    private void makeTiles(WorldProxy proxy) {
+        if (!drawTiles) return;
 
-        auto drawBranchId = TreeManager().drawBranchId;
-
-        foreach(branch ; treelike.branches) {
+        foreach (branch; treelike.branches) {
             if (drawBranchId[branch.typeId]) {
                 for (int b = 0; b < branch.nodes.length-1; b++) {
                     TilePos start = getTilePosOfNode(branch.nodes[b]);
                     TilePos end = getTilePosOfNode(branch.nodes[b+1]);
 
                     TilePos[] tilePosArray = getTilesBetween(proxy, start.value.convert!double, end.value.convert!double,
-                                                             proxy.tileTypeManager.idByName(type.treelikeType.woodMaterial), proxy.tileTypeManager.idByName(type.treelikeType.leafMaterial));
+                            tileTypeManager.idByName(type.treelikeType.woodMaterial), tileTypeManager.idByName(type.treelikeType.leafMaterial));
 
                     for (int i = 0; i < tilePosArray.length; i++) {
                         Tile tile;
                         if (getThicknessOfNode(branch, branch.nodes[b+1], getBranchType(branch)) < THICKNESS_SCALE*1.0 &&
-                            (proxy.getTile(tilePosArray[i]).type != proxy.tileTypeManager.idByName(type.treelikeType.woodMaterial))) {
-                                auto tileType = proxy.tileTypeManager.byName(type.treelikeType.leafMaterial);
-                                tile = Tile(tileType, TileFlags.valid);
-                            }
+                                (proxy.getTile(tilePosArray[i]).type != tileTypeManager.idByName(type.treelikeType.woodMaterial))) {
+                            auto tileType = tileTypeManager.byName(type.treelikeType.leafMaterial);
+                            tile = Tile(tileType, TileFlags.valid);
+                        }
                         else {
-                            auto tileType = proxy.tileTypeManager.byName(type.treelikeType.woodMaterial);
+                            auto tileType = tileTypeManager.byName(type.treelikeType.woodMaterial);
                             tile = Tile(tileType, TileFlags.valid);
                         }
 
@@ -385,9 +336,7 @@ mixin template TreeLike() {
 
     //Returns all tile that are on the line between start and end
     //Turn into an opApply perchance?
-    TilePos[] getTilesBetween(WorldProxy proxy, vec3d start, vec3d end, ushort acceptedTileType, ushort acceptedTileType2=0, int tileIter=255)
-    {
-        import util.tileiterator;
+    TilePos[] getTilesBetween(WorldProxy proxy, vec3d start, vec3d end, ushort acceptedTileType, ushort acceptedTileType2=0, int tileIter=255) {
 
         start += vec3d(0.5, 0.5, 0.5);
         end += vec3d(0.5, 0.5, 0.5);
@@ -412,8 +361,7 @@ mixin template TreeLike() {
     {
         import math.math;
 
-        if (TreeManager().drawLeafs == false) return;
-        auto drawBranchId = TreeManager().drawBranchId;
+        if (drawLeafs == false) return;
 
         leafRandom.seed(0);
         BranchType type;
@@ -435,19 +383,19 @@ mixin template TreeLike() {
                             for (int x = -radius; x <= radius; x++) {
                                 for (int y = -radius; y <= radius; y++) {
                                     if ((x*x+y*y) < type.leafRadius*type.leafRadius*r*r &&
-                                        uniform(0.0, 1.0, leafRandom) < type.leafDensity) {
-                                            TilePos tilePos = getTilePosOfNode(branch.nodes[i]);
-                                            tilePos.value.x += x;
-                                            tilePos.value.y += y;
-                                            tilePos.value.z += z;
-                                            auto tile = proxy.getTile(tilePos);
-                                            if (tile.type == TileTypeAir) {
-                                                auto tileType = proxy.tileTypeManager.byName(this.type.treelikeType.leafMaterial);
-                                                Tile newTile = Tile(tileType, TileFlags.valid);
-                                                proxy.setTile(tilePos, newTile);
-                                                ownedTiles ~= tilePos;
-                                            }
+                                            uniform(0.0, 1.0, leafRandom) < type.leafDensity) {
+                                        TilePos tilePos = getTilePosOfNode(branch.nodes[i]);
+                                        tilePos.value.x += x;
+                                        tilePos.value.y += y;
+                                        tilePos.value.z += z;
+                                        auto tile = proxy.getTile(tilePos);
+                                        if (tile.type == TileTypeAir) {
+                                            auto tileType = tileTypeManager.byName(this.type.treelikeType.leafMaterial);
+                                            Tile newTile = Tile(tileType, TileFlags.valid);
+                                            proxy.setTile(tilePos, newTile);
+                                            ownedTiles ~= tilePos;
                                         }
+                                    }
                                 }
                             }
                         }
@@ -461,19 +409,19 @@ mixin template TreeLike() {
                             for (int y = -radius; y <= radius; y++) {
                                 for (int z = -radius; z <= radius; z++) {
                                     if ((x*x+y*y+z*z) < type.leafRadius*type.leafRadius*r*r &&
-                                        uniform(0.0, 1.0, leafRandom) < type.leafDensity) {
-                                            TilePos tilePos = getTilePosOfNode(branch.nodes[i]);
-                                            tilePos.value.x += x;
-                                            tilePos.value.y += y;
-                                            tilePos.value.z += z;
-                                            auto tile = proxy.getTile(tilePos);
-                                            if (tile.type == TileTypeAir) {
-                                                auto tileType = proxy.tileTypeManager.byName(this.type.treelikeType.leafMaterial);
-                                                Tile newTile = Tile(tileType, TileFlags.valid);
-                                                proxy.setTile(tilePos, newTile);
-                                                ownedTiles ~= tilePos;
-                                            }
+                                            uniform(0.0, 1.0, leafRandom) < type.leafDensity) {
+                                        TilePos tilePos = getTilePosOfNode(branch.nodes[i]);
+                                        tilePos.value.x += x;
+                                        tilePos.value.y += y;
+                                        tilePos.value.z += z;
+                                        auto tile = proxy.getTile(tilePos);
+                                        if (tile.type == TileTypeAir) {
+                                            auto tileType = tileTypeManager.byName(this.type.treelikeType.leafMaterial);
+                                            Tile newTile = Tile(tileType, TileFlags.valid);
+                                            proxy.setTile(tilePos, newTile);
+                                            ownedTiles ~= tilePos;
                                         }
+                                    }
                                 }
                             }
                         }
@@ -481,8 +429,6 @@ mixin template TreeLike() {
                 }
             }
         }
-
-
     }
 
     ubyte cap(float a, int lower, int upper)
@@ -494,7 +440,7 @@ mixin template TreeLike() {
 
     private float getThicknessOfNode(BranchInstance branch, NodeInstance node, BranchType type)
     {
-        for (int i = 0; i < branch.nodes.length; i++) {
+        foreach (i; 0 .. branch.nodes.length) {
             if (branch.nodes[i] == node) {
                 return branch.thickness - to!(ubyte)(to!(float)(THICKNESS_SCALE) * to!(float)(type.thicknessDistanceCost)) * i;
             }
@@ -525,36 +471,6 @@ mixin template TreeLike() {
         return t;
     }
 
-
-    //private void makeDebugLines()
-    //{
-    //    foreach (ref line ; lineId) {
-    //        removeLine(line);
-    //    }
-    //    foreach (ref aabb ; aabbId) {
-    //        removeAABB(aabb);
-    //    }
-    //
-    //    if (drawDebugLines == false) return;
-    //
-    //    vec3d[2] points;
-    //    foreach (entity ; entities) {
-    //        foreach (branch ; entity.treelike.branches) {
-    //            if (drawBranchId[branch.typeId]) {
-    //                for (int i = 0; i < branch.nodes.length; i++) {
-    //                    points[0] = getPosOfNode(entity, branch.nodes[i]); 
-    //                    if (i < branch.nodes.length - 1) {
-    //                        points[1] = getPosOfNode(entity, branch.nodes[i + 1]);
-    //                        lineId ~= addLine(points, vec3f(1, 0, 0));
-    //                    }
-    //                    aabbd aabb = aabbox3d!double(points[0] - vec3d(0.2, 0.2, 0.2), points[0] + vec3d(0.2, 0.2, 0.2));
-    //                    aabbId ~= addAABB(aabb);
-    //                }
-    //            }
-    //        }
-    //    }
-    //}
-
     private vec3d getPosOfNode(Entity entity, NodeInstance node)
     {
         vec3d v;
@@ -577,49 +493,6 @@ mixin template TreeLike() {
         v.z += entityData.pos.tilePos().value.z + 0.5;
         return v;
     }
-
-
-    //public void toggleDrawTiles()
-    //{
-    //    drawTiles = !drawTiles;
-    //    foreach (entity ; entities) {
-    //        clearTiles(entity);
-    //        makeTiles(entity);
-    //        makeLeafs(entity);
-    //    }
-    //    printAllFuckingEntities();
-    //    msg("Toggle DrawTiles ",drawTiles);
-    //}
-    //public void toggleDrawLeafs()
-    //{
-    //    drawLeafs = !drawLeafs;
-    //    foreach (entity ; entities) {
-    //        clearTiles(entity);
-    //        makeTiles(entity);
-    //        makeLeafs(entity);
-    //    }
-    //    printAllFuckingEntities();
-    //    msg("Toggle DrawLeafs ",drawLeafs);
-    //}
-    //public void toggleDrawDebugLines()
-    //{
-    //    drawDebugLines = !drawDebugLines;
-    //    makeDebugLines();
-    //    printAllFuckingEntities();
-    //    msg("Toggle DrawDebugLines ",drawDebugLines);
-    //}
-    //public void toggleDrawBranchId(int id)
-    //{
-    //    drawBranchId[id] = !drawBranchId[id];
-    //    foreach (entity ; entities) {
-    //        clearTiles(entity);
-    //        makeTiles(entity);
-    //        makeLeafs(entity);
-    //    }
-    //    makeDebugLines();
-    //    printAllFuckingEntities();
-    //    msg("Toggle DrawBranchId[",id,"] ",drawBranchId[id]);
-    //}    
 }
 
 

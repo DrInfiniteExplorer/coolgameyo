@@ -54,7 +54,7 @@ struct TileType_t {
 alias TileType_t* TileType;
 
 
-class TileTypeManager {
+struct TileTypeManager {
     TileTextureAtlas atlas;
     TileType_t[] types;
     ushort[string] _byName;
@@ -66,7 +66,7 @@ class TileTypeManager {
         assert (types.length < ushort.max);
     }
 
-    this(TileTextureAtlas _atlas) {
+    void init(TileTextureAtlas _atlas) {
         atlas = _atlas;
         mixin(LogTime!("TileTypeManagerCreation"));
 
@@ -239,6 +239,8 @@ class TileTypeManager {
         }
     }
 }
+
+__gshared TileTypeManager tileTypeManager;
 
 
 

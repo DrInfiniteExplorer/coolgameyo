@@ -8,7 +8,6 @@ import std.array;
 import std.conv;
 import std.exception;
 import std.math;
-import std.digest.md;
 import std.random;
 import std.range : assumeSorted, SortedRange, SearchPolicy;
 import std.stdio;
@@ -57,6 +56,13 @@ import worldgen.worldpop;
 
 import worldstate.worldstate;
 import worldstate.heightmap;
+
+import log : LogWarning;
+
+import globals;
+import graphics.image;
+import materials;
+import statistics;
 
 alias ValueMap2Dd ValueMap;
 
@@ -121,7 +127,6 @@ final class WorldMap {
     void generate() {
         setSeeds();
         if(exists(worldPath)) {
-            import log : LogWarning;
             LogWarning("A folder already exists at '", worldPath, "'. Will ignore totally ignore that.");
             //rmdir(worldPath);
             //BREAKPOINT;
@@ -194,7 +199,6 @@ final class WorldMap {
         MaterialStratum derp = void;
         derp.depthStart = depth;
         int idx = cast(int)sortedStratas.lowerBound!(SearchPolicy.binarySearch)(derp).length;
-        import globals;
         g_derp1 += idx;
         g_derp2 ++;
 
@@ -202,9 +206,6 @@ final class WorldMap {
     }
 
     void heightOnHeight() {
-        import graphics.image;
-        import materials;
-        import statistics;
 
         mixin(MeasureTime!("Time to generate "));
         int layerNum = 0;

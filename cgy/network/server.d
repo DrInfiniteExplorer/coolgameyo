@@ -1,5 +1,6 @@
 module network.server;
 
+import util.socket : readString, sendString;
 import network.common;
 import changes.changelist;
 
@@ -213,7 +214,6 @@ mixin template ServerModule() {
     void handleComm(PlayerInformation player) {
         //falsely assume that all stuff over comm is newline terminated
         // (In future will be async stuff like player positions as well)
-        import util.socket : readString, sendString;
         auto line = player.commSock.readString();
         if(line == "ProperlyConnected") {
             auto path = g_worldPath ~ "/players/" ~ player.name ~ ".json";
@@ -327,9 +327,6 @@ mixin template ServerModule() {
             players.remove(player.name);
         }
 
-        //Changed into use of variable; have encountered race condition in previous project
-        // where the time went into the next frame after the while-check, overflowing the
-        // value sent to select / sleep, producing a very long wait.
         auto timeLeft = nextSync - utime();
         recv_set.reset();
         recv_set.add(listener);

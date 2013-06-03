@@ -2,7 +2,6 @@
 module worldstate.worldstate;
 
 import std.algorithm;
-import std.container;
 import std.conv;
 import std.exception;
 //import std.file;
@@ -18,7 +17,6 @@ import clan;
 import clans;
 
 public import entities.entity;
-import entitytypemanager;
 
 import gaia;
 import graphics.camera;
@@ -40,7 +38,6 @@ import statistics;
 import tiletypemanager;
 
 public import unit;
-import unittypemanager;
 
 import util.util;
 import util.intersect;
@@ -92,9 +89,6 @@ class WorldState {
 
     WorldStateListener[] listeners;
 
-    TileTypeManager tileTypeManager;
-    EntityTypeManager entityTypeManager;
-    UnitTypeManager unitTypeManager;
     SceneManager sceneManager;
 
     WorldMap worldMap;
@@ -117,11 +111,8 @@ class WorldState {
         return _worldProxy;
     }
 
-    this(WorldMap _worldMap, TileTypeManager tilesys, EntityTypeManager entitysys, UnitTypeManager unitsys, SceneManager _sceneManager) {
-        tileTypeManager = tilesys;
+    this(WorldMap _worldMap, SceneManager _sceneManager) {
         worldMap = _worldMap;
-        entityTypeManager = entitysys;
-        unitTypeManager = unitsys;
         //worldGenParams = params;
         sceneManager = _sceneManager;
 
@@ -145,18 +136,6 @@ class WorldState {
 
     void serialize() { 
         //TODO: Totally redo serialization.
-
-        //TODO: Things commented should probably be serialized.
-        //HeightmapTasks heightmapTasks;
-        //WorldGenParams worldGenParams;
-        //WorldGenerator worldGen;
-
-        //worldGen.serialize();
-        //bool isServer;  //TODO: How, exactly, does the world function differently if it actually is a server? Find out!
-
-        //WorldStateListener[] listeners;
-        //TileTypeManager tileTypeManager;
-
 
         auto activeSectors = encode(activeSectors);
         auto jsonRoot = Value([
@@ -262,7 +241,7 @@ class WorldState {
         }
 
         auto sector = allocateSector(num);
-        if (sector.deserialize(entityTypeManager, this)) {
+        if (sector.deserialize(this)) {
             notifySectorLoad(num);
             notifyBuildGeometry(num);
         } else {

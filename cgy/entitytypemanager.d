@@ -119,19 +119,13 @@ struct EntityType_t {
 alias EntityType_t* EntityType;
 
 
-class EntityTypeManager {
+struct EntityTypeManager {
     EntityType_t[] types;
     ushort[string] _byName;
 	
     invariant() {
         //assert (types.length == _byName.length); // because of id definition file, types.length can be bigger than _byName.length
         assert (types.length < ushort.max);
-    }
-
-    import util.singleton;
-    mixin Singleton;
-	
-    private this() {
     }
 
     void init() {
@@ -246,5 +240,6 @@ class EntityTypeManager {
     }
 }
 
+__gshared EntityTypeManager entityTypeManager;
 
 

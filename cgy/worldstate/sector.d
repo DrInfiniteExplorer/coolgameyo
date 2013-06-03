@@ -6,7 +6,6 @@ module worldstate.sector;
 
 import std.algorithm;
 import std.conv;
-import std.container;
 import std.exception;
 //import std.file;
 import std.range;
@@ -173,7 +172,7 @@ class Sector {
         
     }
     
-    bool deserialize(EntityTypeManager entityTypeManager, WorldState world) {
+    bool deserialize(WorldState world) {
         string folder = text(g_worldPath ~ "/world/", sectorNum.value.x, ",", sectorNum.value.y, "/", sectorNum.value.z, "/");
         if (!std.file.exists(folder)) {
             return false;

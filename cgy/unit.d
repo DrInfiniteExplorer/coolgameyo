@@ -110,7 +110,7 @@ final class Unit {
         val.readJSONObject("typeId", &typeId,
                            "clanId", &clanId);
 
-        type = UnitTypeManager().byID(cast(ushort)typeId);
+        type = unitTypeManager.byID(cast(ushort)typeId);
         Clans().getClanById(clanId).addUnit(this);
 
         inventory = new Inventory(); // TODO: RAWR!!

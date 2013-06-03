@@ -356,17 +356,17 @@
   <createImplib>0</createImplib>
   <defaultlibname />
   <debuglibname />
-  <moduleDepsFile />
+`á'¨ˆËeDepsFile />
   <run>0</run>
   <runargs />
-  <runCv2pdb>0</runCv2pdb>
+@á'¨ˆË2pdb>0</runCv2pdb>
   <pathCv2pdb>$(VisualDInstallDir)cv2pdb\cv2pdb.exe</pathCv2pdb>
   <cv2pdbPre2043>0</cv2pdbPre2043>
   <cv2pdbNoDemangle>0</cv2pdbNoDemangle>
   <cv2pdbEnumType>0</cv2pdbEnumType>
-  <cv2pdbOptions />
+ á'¨ˆËbOptions />
   <objfiles />
-  <linkswitches />
+ á'¨ˆËwitches />
   <libfiles>comdlg32.lib gdi32.lib advapi32.lib</libfiles>
   <libpaths />
   <deffile />
@@ -377,7 +377,7 @@
   <preBuildCommand>@taskkill /f /im cgy.exe &gt;nul 2&gt;&amp;1
 @ver &gt; nul
 @echo Release&gt; $(SolutionDir)\gameroot\latestBuildType</preBuildCommand>
-  <postBuildCommand />
+àà'¨ˆËuildCommand />
   <filesToClean>*.obj;*.cmd;*.build;*.json;*.dep</filesToClean>
  </Config>
  <Folder name="cgy">

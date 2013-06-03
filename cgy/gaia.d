@@ -6,7 +6,6 @@ import clan;
 import json;
 import mission;
 import util.pos;
-import treemanager;
 import util.util;
 import util.rangefromto;
 
@@ -23,14 +22,12 @@ auto gaiaRange(SectorXYNum base) {
                               base.value + gaiaSize/2));
 }
 
-
 class Gaia : Clan {
 
     import util.singleton;
     mixin Singleton;
 
     int[SectorXYNum] activityMap;
-    TreeManager treeManager; //Totally owned by gaia.
 
     this() {
         msg(this);
@@ -39,8 +36,6 @@ class Gaia : Clan {
     override void init(WorldState _world) {
         _clanId = 0;
         super.init(_world);
-        treeManager = TreeManager();
-        treeManager.init(world);
     }
 
     override Mission unsafeGetMission() {

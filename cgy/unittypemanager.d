@@ -36,18 +36,13 @@ struct UnitType_t {
 alias UnitType_t* UnitType;
 
 
-class UnitTypeManager {
+struct UnitTypeManager {
     UnitType_t[] types;
     ushort[string] _byName;
 	
     invariant() {
         //assert (types.length == _byName.length); // because of id definition file, types.length can be bigger than _byName.length
         assert (types.length < ushort.max);
-    }
-
-    mixin Singleton!();
-	
-    private this() {
     }
 
     void init() {
@@ -157,5 +152,6 @@ class UnitTypeManager {
     }
 }
 
+__gshared UnitTypeManager unitTypeManager;
 
 

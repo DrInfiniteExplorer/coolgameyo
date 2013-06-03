@@ -1,6 +1,6 @@
 module modules.path;
 
-import std.container;
+import std.container : RedBlackTree;
 import std.algorithm;
 import std.math;
 import std.range;

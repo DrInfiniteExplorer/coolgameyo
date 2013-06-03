@@ -23,6 +23,8 @@ import entities.treelikeinstance;
 import entities.placeable;
 import entities.workshop;
 
+import tiletypemanager;
+
 
 immutable INVALID_ENTITY_ID = 0;
 shared int g_entityCount = INVALID_ENTITY_ID;

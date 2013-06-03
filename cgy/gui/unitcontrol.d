@@ -34,6 +34,7 @@ import util.rangefromto;
 import util.util;
 import worldstate.worldstate;
 import entities.entity;
+
 import entitytypemanager;
 
 
@@ -336,13 +337,13 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
 
                     return ret;
                 }
-                Tile tile = Tile(world.tileTypeManager.byName("birchtree"), TileFlags.valid);
+                Tile tile = Tile(tileTypeManager.byName("birchtree"), TileFlags.valid);
                 auto tilePos = topOfTheWorld2(TileXYPos(vec2i(3,2)));
                 world.unsafeSetTile(tilePos, tile);
-                tile = Tile(world.tileTypeManager.byName("birchleaf"), TileFlags.valid);
+                tile = Tile(tileTypeManager.byName("birchleaf"), TileFlags.valid);
                 tilePos = topOfTheWorld2(TileXYPos(vec2i(3,3)));
                 world.unsafeSetTile(tilePos, tile);
-                tile = Tile(world.tileTypeManager.byName("smoothstone"), TileFlags.valid);
+                tile = Tile(tileTypeManager.byName("smoothstone"), TileFlags.valid);
                 tilePos = topOfTheWorld2(TileXYPos(vec2i(3,4)));
                 world.unsafeSetTile(tilePos, tile);
             }
@@ -430,7 +431,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
             //vec3d pos = TilePos(selectedTilePos.value+selectedTileNormal).toEntityPos.value; // + 0.5 * selectedTileNormal.convert!double();
 
             //auto entityTypeId = world._worldProxy.entityTypeManager.byName("torch").id;
-            auto entityTypeId = world._worldProxy.entityTypeManager.byName("tree01").id;
+            auto entityTypeId = entityTypeManager.byName("tree01").id;
             auto pos = TilePos(selectedTilePos.value+selectedTileNormal).toEntityPos;
             auto entityId = INVALID_ENTITY_ID;
             auto clanId = 0; // Gaia

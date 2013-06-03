@@ -30,8 +30,6 @@ mixin template WorldGenerator() {
 
     int randomNumber = 0;
 
-    TileTypeManager tileSys;
-
     auto getHeight(TileXYPos pos) {
         //return heightMaps.getHeight!false(pos);
         return heightMaps.getHeight!true(pos);
@@ -308,7 +306,7 @@ mixin template WorldGenerator() {
     TileType getBasicTileType(string _group) { 
         randomNumber++;
 
-        auto group = tileSys.getGroup(_group);
+        auto group = tileTypeManager.getGroup(_group);
         int idx = randomNumber % cast(int)group.length;
         return group[idx];
     }

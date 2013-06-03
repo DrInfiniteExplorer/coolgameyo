@@ -8,10 +8,8 @@ import changes.changelist;
 import changes.worldproxy;
 import clan;
 import entities.entity;
-import entitytypemanager;
 import json;
 import unit;
-import unittypemanager;
 import util.pos;
 import tiletypemanager;
 import worldstate.worldstate;
@@ -53,14 +51,8 @@ mixin template mixinAllChangeListAdd(Ts...) {
 final class WorldProxy {
     WorldState world;
     ChangeList changeList;
-    EntityTypeManager entityTypeManager;
-    UnitTypeManager unitTypeManager;
-    TileTypeManager tileTypeManager;
 
     this(WorldState w) {
-        entityTypeManager = w.entityTypeManager;
-        unitTypeManager = w.unitTypeManager;
-        tileTypeManager = w.tileTypeManager;
         world = w;
         changeList = new ChangeList;
     }

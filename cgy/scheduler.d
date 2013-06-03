@@ -13,7 +13,6 @@ import std.algorithm;
 import std.exception;
 import std.c.stdlib;
 import std.conv;
-import std.container;
 import std.datetime;
 import std.stdio;
 import std.string;
@@ -33,6 +32,8 @@ import modules.module_;
 import network.all;
 import util.util;
 import util.queue;
+
+import util.socket : readString, sendString;
 
 import changes.worldproxy;
 import game;
@@ -216,7 +217,6 @@ struct Scheduler {
                 }
                 //Do one last dummy-read and then apply the stuff, and we will be in sync.
                 game.client.getNetworkChanges(proxies[0].changeList);
-                import util.socket : readString, sendString;
                 game.client.commSock.sendString("ProperlyConnected"); 
             }
         }

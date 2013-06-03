@@ -47,7 +47,6 @@ import settings;
 import statistics;
 
 import tiletypemanager;
-import treemanager;
 
 import playerinformation;
 import unittypemanager;
@@ -73,15 +72,11 @@ class Game {
 
     private AIModule aiModule;
     private Camera camera;
-    private EntityTypeManager entityTypeManager;
     private PathModule pathModule;
     private Renderer renderer;
     private SceneManager sceneManager;
     private TileGeometry tileGeometry;
-    private TreeManager treeManager;
     private TileTextureAtlas atlas;
-    private TileTypeManager tileTypeManager;
-    private UnitTypeManager unitTypeManager;
 
 
     private vec2i spawnPoint;
@@ -134,10 +129,8 @@ class Game {
             atlas = new TileTextureAtlas; // HACK
             //TODO: Find out what the above comment indicates.
         }
-        tileTypeManager = new TileTypeManager(atlas);
-        entityTypeManager = EntityTypeManager();
+        tileTypeManager.init(atlas);
         entityTypeManager.init();
-        unitTypeManager = UnitTypeManager();
         unitTypeManager.init();
         
         if(!isServer) {
@@ -146,8 +139,7 @@ class Game {
 
         worldMap = new WorldMap();
         worldMap.loadWorld(g_worldPath);
-        worldMap.tileSys = tileTypeManager;
-        worldState = new WorldState(worldMap, tileTypeManager, entityTypeManager, unitTypeManager, sceneManager);
+        worldState = new WorldState(worldMap, sceneManager);
 
         scheduler.init(this);
         scheduler.registerModule(Clans());
@@ -195,7 +187,7 @@ class Game {
             auto xy = TileXYPos(pos);
             auto u = newUnit();
             u.pos = topOfTheWorld(xy);
-            u.type = worldState.unitTypeManager.byName("dwarf");
+            u.type = unitTypeManager.byName("dwarf");
             clan.addUnit(u);
             return u;
         }

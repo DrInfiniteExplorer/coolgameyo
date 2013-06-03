@@ -37,6 +37,8 @@ import util.memory;
 import util.rangefromto;
 import util.util;
 
+import tiletypemanager;
+
 alias util.util.Direction Direction;
 
 immutable GraphRegionsPerTick = 4;
@@ -273,11 +275,11 @@ final class TileGeometry : Module, WorldStateListener
         void fixTex(bool side, bool upper)(ref GRFace f, const(Tile) t, Direction normalDir){
             ushort tileId;
             static if (side) {
-                tileId = world.tileTypeManager.byID(t.type).textures.side;
+                tileId = tileTypeManager.byID(t.type).textures.side;
             } else static if(upper) {
-                tileId = world.tileTypeManager.byID(t.type).textures.top;
+                tileId = tileTypeManager.byID(t.type).textures.top;
             } else {
-                tileId = world.tileTypeManager.byID(t.type).textures.bottom;
+                tileId = tileTypeManager.byID(t.type).textures.bottom;
             }
             vec3f tileTexCoord = settings.getTileCoords(tileId);
             foreach(ref vert ; f.quad){

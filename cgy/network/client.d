@@ -1,5 +1,6 @@
 module network.client;
 
+import util.socket : readString, sendString;
 import network.common;
 import core.sync.mutex;
 
@@ -94,7 +95,6 @@ mixin template ClientModule() {
 
     void handleComm() {
         //Assume falsely that all comm is newline terminated
-        import util.socket : readString, sendString;
         auto line = readString(commSock);
         if(line is null) {
             LogError("Received null from commSock");
@@ -134,7 +134,6 @@ mixin template ClientModule() {
             BREAKPOINT;
         }
 
-        import util.socket : readString, sendString;
 
         synchronized(commandsToSendMutex) {
             foreach(command ; commandsToSend) {
