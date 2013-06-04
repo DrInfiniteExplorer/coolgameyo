@@ -35,6 +35,7 @@ class FpsMode : GuiEventDump {
         world = game.getWorld;
         camera = game.getCamera;
 
+
         possessAI = new FPSControlAI(game.getActiveUnit, world, game.getSceneManager);
         game.setActiveUnitPos(UnitPos(possessAI.unitPos));
 
@@ -53,7 +54,6 @@ class FpsMode : GuiEventDump {
         }
         destroyed = true;
     }
-
 
     void mouseMove(GuiEvent e){
         auto m = e.mouseMove;
@@ -140,7 +140,13 @@ class FpsMode : GuiEventDump {
         return GuiEventResponse.Ignore;
     }
 
+
     override void activate(bool activated) {
+        if(activated) {
+            possessAI.setUnit(game.getActiveUnit());
+        } else {
+            possessAI.setUnit(null);
+        }
     }
 
     override void tick(float dTime) {

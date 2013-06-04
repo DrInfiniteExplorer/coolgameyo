@@ -15,7 +15,7 @@ class InGameGui : GuiElement {
 
     Game game;
     //GuiSystem guiSystem;
-    Unit playerUnit;
+
     FpsMode fpsMode;
     PlanningMode planningMode;
     bool usePlanningMode = true;
@@ -61,6 +61,7 @@ class InGameGui : GuiElement {
         if(usePlanning) {
             dump = planningMode;
         }
+        guiSystem.setEventDump(null);
         guiSystem.setEventDump(dump);
     }
 

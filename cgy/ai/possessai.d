@@ -49,7 +49,7 @@ class FPSControlAI {
         }
         if (unit) {
             unit.ai = oldAi;
-            scene.getProxy(u).scale = vec3f(1.0f);
+            scene.getProxy(unit).scale = vec3f(1.0f);
         }
         if (u is null) return;
         unit = u;        
