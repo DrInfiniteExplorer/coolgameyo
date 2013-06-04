@@ -3,7 +3,7 @@ module gui.ingame_first;
 import derelict.sdl.sdl;
 
 import ai.possessai;
-import game;
+import game: game;
 import graphics.camera;
 import gui.all;
 import gui.debuginfo;
@@ -15,7 +15,6 @@ import worldstate.worldstate;
 import gui.ingame;
 
 class FpsMode : GuiEventDump {
-    Game game;
     WorldState world;
     InGameGui gui;
     FPSControlAI possessAI;
@@ -29,9 +28,8 @@ class FpsMode : GuiEventDump {
     Camera camera;
     bool freeFlight;
 
-    this(InGameGui _gui, Game _game) {
+    this(InGameGui _gui) {
         gui = _gui;
-        game = _game;
         world = game.getWorld;
         camera = game.getCamera;
 

@@ -1,8 +1,9 @@
 module gui.serverinterface;
 
 import std.conv : to;
+import core.sync.mutex;
 
-import game;
+import game : game;
 import globals : g_worldPath;
 import gui.all;
 import gui.debuginfo;
@@ -24,7 +25,6 @@ void startServer() {
         return;
     }
 
-    Game game;
     GuiSystem guiSystem;
     guiSystem = new GuiSystem;
 
@@ -70,8 +70,9 @@ void startServer() {
     auto sampleIntervall = 1000; // 1000 ms
 
 
+    auto mutex = new Mutex();
 
-    game = new Game(true);
+    game.init(true);
     game.loadGame();
     import util.strings;
     StringBuilder tmpString;
@@ -95,7 +96,7 @@ void startServer() {
             CPUGraph.setData(CPUSamples, 0.0, 1.0);
             CPUText.format("CPU:%5.1f%%", 100.0f*CPUSamples[$-1]);
 
-            synchronized(game) {
+            synchronized (mutex) {
                 playerList.setItemCount(game.players.length);
                 int idx = 0;
                 foreach(name, player ; game.players) {

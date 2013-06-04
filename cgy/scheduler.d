@@ -36,7 +36,7 @@ import util.queue;
 import util.socket : readString, sendString;
 
 import changes.worldproxy;
-import game;
+import game : game;
 
 import alloc;
 
@@ -120,8 +120,6 @@ struct Scheduler {
 
     int activeWorkers;
 
-    Game game;
-
     Mutex mutex;
     Condition cond;
 
@@ -131,8 +129,7 @@ struct Scheduler {
     }
     @disable this(this);
 
-    void init(Game _game) {
-        game = _game;
+    void init() {
         world = game.getWorld();
 
         state = State.wait;

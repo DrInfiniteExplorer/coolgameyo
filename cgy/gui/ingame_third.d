@@ -3,7 +3,7 @@ module gui.ingame_third;
 import derelict.sdl.sdl;
 
 import ai.possessai;
-import game;
+import game: game;
 import graphics.camera;
 import gui.all;
 import gui.debuginfo;
@@ -15,7 +15,6 @@ import worldstate.worldstate;
 import gui.ingame;
 
 class PlanningMode : GuiEventDump {
-    Game game;
     WorldState world;
     InGameGui gui;
 
@@ -32,9 +31,8 @@ class PlanningMode : GuiEventDump {
 
     bool rotateCamera = false;
 
-    this(InGameGui _gui, Game _game) {
+    this(InGameGui _gui) {
         gui = _gui;
-        game = _game;
         world = game.getWorld;
         camera = game.getCamera;
 

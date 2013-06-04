@@ -99,7 +99,7 @@ class DebugInfo : GuiElement {
         BREAK_IF(!destroyed);
     }
 
-    void destroy() {
+    override void destroy() {
         destroyed = true;
     }
 

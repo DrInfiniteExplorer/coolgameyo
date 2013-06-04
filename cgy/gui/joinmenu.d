@@ -3,7 +3,7 @@ module gui.joinmenu;
 import std.algorithm;
 import std.array;
 
-import game;
+import game: game;
 import globals;
 import gui.all;
 import main;
@@ -11,6 +11,7 @@ import settings;
 import util.filesystem : exists, rmdir;
 import util.rect;
 import util.util;
+import gui.ingame;
 
 class JoinMenu : GuiElementWindow {
     PushButton joinButt;
@@ -119,7 +120,10 @@ bool startClient(string host) {
     guiSystem = new GuiSystem;    
 
     bool error = false;
-    Game game = new Game(false);
+
+    game.client.initModule(host);
+    game.init(false);
+
     try {
         game.connect(host);
     } catch(Exception e) {
@@ -128,10 +132,9 @@ bool startClient(string host) {
                       "Ok", { error = true; });
     }
 
-    import gui.ingame;
-    auto ingameGui = new InGameGui(guiSystem, game);
+    auto ingameGui = new InGameGui(guiSystem);
 
-    scope(exit) {
+    scope (exit) {
         game.destroy();
         guiSystem.destroy();
     }
@@ -140,5 +143,4 @@ bool startClient(string host) {
                      (float deltaT){ game.render(deltaT);},
                      { return error; });
     return error;
-
 }

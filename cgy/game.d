@@ -59,7 +59,7 @@ import changes.changelist;
 //import worldgen.worldgen;
 import worldgen.maps;
 
-class Game {
+struct Game {
 
     WorldMap worldMap;
     private WorldState worldState;
@@ -81,11 +81,8 @@ class Game {
 
     private vec2i spawnPoint;
 
-    this(bool server) {
-        isServer = server;
-    }
-
     private bool destroyed;
+    @disable this(this);
     ~this() {
         BREAK_IF(!destroyed);
     }
@@ -121,8 +118,8 @@ class Game {
     }
 
 
-    //This and finishInit are run in the thread which becomes the scheduler thread
-    private void init() {
+    void init(bool host) {
+        isServer = host;
 
         mixin(LogTime!("GameInit"));
         if (!isServer) {
@@ -141,7 +138,7 @@ class Game {
         worldMap.loadWorld(g_worldPath);
         worldState = new WorldState(worldMap, sceneManager);
 
-        scheduler.init(this);
+        scheduler.init();
         scheduler.registerModule(Clans());
 
         if(isServer) {
@@ -199,15 +196,13 @@ class Game {
     } 
 
     void loadGame() {
-        init();
         scheduler.deserialize();
         scheduler.start(g_maxThreadCount);
         Log("Server running!");
     }
 
     void connect(string host) {
-        client.initModule(host);
-        init();
+        //client.initModule(host);
         scheduler.deserialize();
         scheduler.start(g_maxThreadCount);
     }
@@ -285,5 +280,7 @@ class Game {
     mixin ClientModule client;
 
 }
+
+__gshared Game game;
 
 

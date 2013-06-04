@@ -3,7 +3,6 @@ module gui.ingame;
 
 import derelict.sdl.sdl;
 
-import game;
 import gui.all;
 import gui.debuginfo;
 import gui.ingame_first;
@@ -13,15 +12,13 @@ import unit;
 
 class InGameGui : GuiElement {
 
-    Game game;
     //GuiSystem guiSystem;
 
     FpsMode fpsMode;
     PlanningMode planningMode;
     bool usePlanningMode = true;
 
-    this(GuiSystem parent, Game _game) {
-        game = _game;
+    this(GuiSystem parent) {
 
         super(parent);
         setRelativeRect(Rectd(0.0, 0.0, 1.0, 1.0));
@@ -29,8 +26,8 @@ class InGameGui : GuiElement {
         guiSystem.addHotkey(SDLK_F4, &toggleDebugInfo);
         guiSystem.addHotkey(SDLK_TAB, &toggleMode);
 
-        planningMode = new PlanningMode(this, game);
-        fpsMode = new FpsMode(this, game);
+        planningMode = new PlanningMode(this);
+        fpsMode = new FpsMode(this);
 
         activateMode(usePlanningMode);
     }

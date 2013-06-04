@@ -85,9 +85,8 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
     private float camDemoTime = 0.0f;
     private int camDemoLine;
 
-    this(Game g, GuiSystem s) {
+    this(GuiSystem s) {
         guiSystem = s;
-        game = g;
         renderer = game.getRenderer();
         world = game.getWorld();
         camera = game.getCamera();

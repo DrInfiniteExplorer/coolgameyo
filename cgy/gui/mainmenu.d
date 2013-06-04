@@ -30,7 +30,6 @@ class MainMenu : GuiElementWindow {
     bool server = false;
     string host = null;
 
-    Game game;
     GuiSystem guiSystem;
     PushButton HostButton;
     PushButton JoinButton;
