@@ -356,17 +356,17 @@
   <createImplib>0</createImplib>
   <defaultlibname />
   <debuglibname />
-`á'¨ˆËeDepsFile />
+  <moduleDepsFile />
   <run>0</run>
   <runargs />
-@á'¨ˆË2pdb>0</runCv2pdb>
+  <runCv2pdb>0</runCv2pdb>
   <pathCv2pdb>$(VisualDInstallDir)cv2pdb\cv2pdb.exe</pathCv2pdb>
   <cv2pdbPre2043>0</cv2pdbPre2043>
   <cv2pdbNoDemangle>0</cv2pdbNoDemangle>
   <cv2pdbEnumType>0</cv2pdbEnumType>
- á'¨ˆËbOptions />
+  <cv2pdbOptions />
   <objfiles />
- á'¨ˆËwitches />
+  <linkswitches />
   <libfiles>comdlg32.lib gdi32.lib advapi32.lib</libfiles>
   <libpaths />
   <deffile />
@@ -377,7 +377,7 @@
   <preBuildCommand>@taskkill /f /im cgy.exe &gt;nul 2&gt;&amp;1
 @ver &gt; nul
 @echo Release&gt; $(SolutionDir)\gameroot\latestBuildType</preBuildCommand>
-àà'¨ˆËuildCommand />
+  <postBuildCommand />
   <filesToClean>*.obj;*.cmd;*.build;*.json;*.dep</filesToClean>
  </Config>
  <Folder name="cgy">
@@ -459,7 +459,10 @@
     <File path="gui\random\voronoi.d" />
    </Folder>
    <File path="gui\all.d" />
+   <File path="gui\debuginfo.d" />
    <File path="gui\ingame.d" />
+   <File path="gui\ingame_first.d" />
+   <File path="gui\ingame_third.d" />
    <File path="gui\inventorywindow.d" />
    <File path="gui\joinmenu.d" />
    <File path="gui\loadscreen.d" />

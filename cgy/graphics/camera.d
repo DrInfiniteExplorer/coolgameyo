@@ -138,31 +138,39 @@ class Camera{
     }
 
     static immutable double PI2 = PI*2.0;
-    void mouseMove(int dx, int dy){
+    void mouseLook(int dx, int dy){
         if(!mouseMoveEnabled) return;
-        //matrix4 mat;
+
         double degZ; //Degrees rotation around Z-axis(up).
         double degX; //Degrees rotation around X-axis(left->right-axis)
         degZ = -dx * controlSettings.mouseSensitivityX;
         degX = -dy * controlSettings.mouseSensitivityY;
 
-        degX *= DegToRad;
-        if(pitch + degX + 0.05 > PI_2) {
-            degX = PI_2 - pitch - 0.05;
+        auto radX = degX * DegToRad;
+        auto radZ = degZ * DegToRad;
+        if(pitch + radX + 0.05 > PI_2) {
+            radX = PI_2 - pitch - 0.05;
         }
-        if(pitch + degX - 0.05 < -PI_2) {
-            degX = -PI_2 - pitch + 0.05;
+        if(pitch + radX - 0.05 < -PI_2) {
+            radX = -PI_2 - pitch + 0.05;
         }
-        pitch += degX;
+        pitch += radX;
 
-        auto rotQuat = quaternion!double.rotationQuat(degZ * DegToRad, 0, 0, 1);
-        auto pitchQuat = quaternion!double.rotationQuat(degX, 0, -1, 0);
+        auto rotQuat = quaternion!double.rotationQuat(radZ, 0, 0, 1);
+        auto pitchQuat = quaternion!double.rotationQuat(radX, 0, -1, 0);
         viewQuat = rotQuat * viewQuat * pitchQuat;
         targetDir = viewQuat.rotate(vec3d(1, 0, 0));
         if(printPosition) {
             msg("targetDir:", targetDir);
         }
+    }
 
+    void rotateAround(float focusDistance, int dx, int dy) {
+        auto focusPoint = position + targetDir * focusDistance;
+        auto fromFocus = targetDir * -focusDistance;
+
+        mouseLook(dx, dy);
+        position = focusPoint - targetDir * focusDistance;
     }
 
     void axisMove(double right, double forward, double up){

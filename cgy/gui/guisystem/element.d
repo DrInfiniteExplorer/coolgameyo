@@ -13,7 +13,7 @@ import graphics._2d.image;
 import graphics.font;
 import settings;
 import util.util;
-import util.rect;
+public import util.rect;
 
 
 enum GuiEventType {
@@ -250,7 +250,7 @@ class GuiElement {
         return absoluteRect;
     }
     
-    void renderBorder(int borderSize) {
+    void renderBorder(int borderSize, bool fillMiddle) {
         uint topLeft =      guiSystem.imageCache.getImage("border_topleft");
         uint top =          guiSystem.imageCache.getImage("border_top");
         uint topRight =     guiSystem.imageCache.getImage("border_topright");
@@ -267,10 +267,10 @@ class GuiElement {
         Recti tr = Recti(abs.topRight    - vec2i(borderSize, 0),    borderSizeV);
         Recti br = Recti(abs.bottomRight - borderSizeV,             borderSizeV);
         Recti bl = Recti(abs.bottomLeft  - vec2i(0, borderSize),    borderSizeV);
-        topLeft.renderImage(tl);
-        topRight.renderImage(tr);
-        bottomRight.renderImage(br);
-        bottomLeft.renderImage(bl);
+        topLeft.renderTransparentImage(tl);
+        topRight.renderTransparentImage(tr);
+        bottomRight.renderTransparentImage(br);
+        bottomLeft.renderTransparentImage(bl);
 
         Recti leftR   = Recti(tl.bottomLeft, bl.topRight   - tl.bottomLeft);
         Recti topR    = Recti(tl.topRight,   tr.bottomLeft - tl.topRight);
@@ -281,14 +281,22 @@ class GuiElement {
         float vertScale = cast(float)leftR.size.y / borderSize;
 
         vec2f _0 = vec2f(0.0f);
-        top.renderImage(topR, Rectf(_0, vec2f(horiScale, 1.0f)));
-        bottom.renderImage(bottomR, Rectf(_0, vec2f(horiScale, 1.0f)));
-        left.renderImage(leftR, Rectf(_0, vec2f(1.0f, vertScale)));
-        right.renderImage(rightR, Rectf(_0, vec2f(1.0f, vertScale)));
+        top.renderTransparentImage(topR, Rectf(_0, vec2f(horiScale, 1.0f)));
+        bottom.renderTransparentImage(bottomR, Rectf(_0, vec2f(horiScale, 1.0f)));
+        left.renderTransparentImage(leftR, Rectf(_0, vec2f(1.0f, vertScale)));
+        right.renderTransparentImage(rightR, Rectf(_0, vec2f(1.0f, vertScale)));
+
+        if(fillMiddle) {
+            uint middle = guiSystem.imageCache.getImage("border_middle");
+            middle.renderTransparentImage(Recti(tl.bottomRight, br.topLeft - tl.bottomRight), Rectf(vec2f(0.0f), vec2f(horiScale, vertScale)));
+        }
+
+
 
     }
     
     void render(){
+        if(!visible) return;
         foreach(child ; children) {
             if (child.isVisible) {
                 child.render();

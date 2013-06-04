@@ -1,85 +1,21 @@
 module gui.serverinterface;
 
 import std.conv : to;
-import core.cpuid : threadsPerCPU;
 
 import game;
 import globals : g_worldPath;
 import gui.all;
+import gui.debuginfo;
 
 import log;
 import main : EventAndDrawLoop;
 import util.filesystem;
-import util.memory : getMemoryUsage;
 import util.rect;
 import util.traits;
 import util.util;
-import worldstate.block : getBlockMemorySize;
 import scheduler : scheduler;
 
 
-immutable SAMPLE_LIMIT = 256;
-
-__gshared ulong[SAMPLE_LIMIT] memorySamples;
-__gshared ulong[SAMPLE_LIMIT] memoryBlockSamples;
-__gshared float[SAMPLE_LIMIT] CPUSamples;
-
-shared static this() {
-    memorySamples[] = 0;
-    memoryBlockSamples[] = 0;
-    CPUSamples[] = 0.0;
-}
-
-// Should be elsewhere
-__gshared ulong lastUs = 0;
-__gshared ulong lastTotal = 0;
-float getCPUUtilization() {
-
-    import windows : FILETIME, GetProcessTimes, GetCurrentProcess;
-    FILETIME creation, exit;
-    FILETIME kernel;
-    FILETIME user;
-    GetProcessTimes(GetCurrentProcess(), &creation, &exit, &kernel, &user);
-
-    ulong ulKernel = *cast(ulong*)&kernel;
-    ulong ulUser = *cast(ulong*)&user;
-
-    ulong total = ulKernel + ulUser;
-
-    ulong diff = total - lastTotal;
-    lastTotal = total;
-
-    ulong nowUs = utime();
-    ulong diffUs = (nowUs - lastUs) * threadsPerCPU;
-    lastUs = nowUs;
-
-    //filetime == X * 100ns = X * 0.1us
-
-    ulong processInUs = diff / 10;
-
-    float percentage = cast(float)processInUs / cast(float)diffUs;
-    return percentage;
-}
-
-void sampleMemory() {
-    foreach(idx ; 0 .. SAMPLE_LIMIT-1) {
-        memorySamples[idx] = memorySamples[idx+1];
-    }
-    memorySamples[$-1] = getMemoryUsage();
-
-    foreach(idx ; 0 .. SAMPLE_LIMIT-1) {
-        memoryBlockSamples[idx] = memoryBlockSamples[idx+1];
-    }
-    memoryBlockSamples[$-1] = getBlockMemorySize();
-    
-}
-
-void sampleCPU() {
-    foreach(idx ; 0 .. SAMPLE_LIMIT-1) {
-        CPUSamples[idx] = CPUSamples[idx+1];
-    }
-    CPUSamples[$-1] = getCPUUtilization();
-}
 
 void startServer() {
 
@@ -143,8 +79,7 @@ void startServer() {
         if(now + sampleIntervall < mstime()) {
             now = mstime();
             //Sample cpu and memory information
-            sampleMemory();
-            sampleCPU();
+            sampleEverything();
             auto memMax = cast(ulong)(reduce!max(memorySamples)*1.1);
             memoryGraph.setData(memorySamples, 0, memMax);
             memoryBlockGraph.setData(memoryBlockSamples, 0, memMax);

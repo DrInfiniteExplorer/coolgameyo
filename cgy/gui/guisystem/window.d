@@ -102,7 +102,7 @@ class GuiElementWindow : GuiElement {
         renderRect(barRect, vec3f(1.0, 0.0, 0.0));
         renderOutlineRect(barRect, vec3f(0.0, 1.0, 0.0));
 
-        renderBorder(32);
+        renderBorder(32, true);
 
         super.render();
     }

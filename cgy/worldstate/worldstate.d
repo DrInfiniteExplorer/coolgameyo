@@ -698,6 +698,10 @@ class WorldState {
         auto sectorNum = tilePos.getSectorNum();
         SectorXY* sectorXY;
         auto sector = getSector(sectorNum, &sectorXY);
+        if(sector is null) {
+            LogError("Tried to set a tile in an nonloaded sector!");
+            return;
+        }
 
         auto blockNum = tilePos.getBlockNum();
         //auto block = getBlock(blockNum, true);

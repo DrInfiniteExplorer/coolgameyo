@@ -26,7 +26,7 @@ class GuiElementText : GuiElement {
         setSelectable(false);
         setText(str);
         setTransparency(transparent);
-        setRelativeRect(Rectd(pos, vec2d(0,0)));
+        setRelativeRect(Rectd(pos, vec2d(1,1)));
         absoluteRect.size = text.getSize();
         setAbsoluteRect(absoluteRect);
         if(!transparent) {

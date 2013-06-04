@@ -467,12 +467,13 @@ final class TileGeometry : Module, WorldStateListener
         
         mixin(LogTime!("MakeGeometryTasks"));
 
+        static immutable graphRegionAcross = sqrt(cast(double)(  GraphRegionSize.x*GraphRegionSize.x +
+                                                      GraphRegionSize.y*GraphRegionSize.y +
+                                                      GraphRegionSize.z*GraphRegionSize.z));
+        auto camDir = camera.getTargetDir().convert!double();
+        auto camPos = camera.getPosition() - camDir * graphRegionAcross;
+
         double computeValue(GraphRegionNum num) {
-            const auto graphRegionAcross = sqrt(to!double(  GraphRegionSize.x*GraphRegionSize.x +
-                                                            GraphRegionSize.y*GraphRegionSize.y +
-                                                            GraphRegionSize.z*GraphRegionSize.z));
-            auto camDir = camera.getTargetDir().convert!double();
-            auto camPos = camera.getPosition() - camDir * graphRegionAcross;
             vec3d toBlock = num.toTilePos().value.convert!double - camPos;
             double distSQ = toBlock.getLengthSQ();
             if(camDir.dotProduct(toBlock) < 0) {

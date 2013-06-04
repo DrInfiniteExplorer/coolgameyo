@@ -93,23 +93,15 @@ class ImageRectShader {
         //rect.start.y = 1.0 - rect.start.y;
         imageProgram.setUniform(imageProgram.tex, 2); //TODO: Make not hardcoded to texunit 2   .
         //TODO: Use rest of rect for clipping?
-        glEnableVertexAttribArray(imageProgram.position);
-        glError();
-        glEnableVertexAttribArray(imageProgram.texcoord);
-        glError();
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glError();
-        glVertexAttribPointer(imageProgram.position, 2, GL_FLOAT, GL_FALSE, ImageRectVertex.sizeof, &q.vertices[0].pos.x);
-        glError();
-        glVertexAttribPointer(imageProgram.texcoord, 2, GL_FLOAT, GL_FALSE, ImageRectVertex.sizeof, cast(void*)&q.vertices[0].texcoord.x);
-        glError();
-        glDrawArrays(GL_QUADS, 0, 4);
-        glError();
+        glEnableVertexAttribArray(imageProgram.position); glError();
+        glEnableVertexAttribArray(imageProgram.texcoord); glError();
+        glBindBuffer(GL_ARRAY_BUFFER, 0); glError();
+        glVertexAttribPointer(imageProgram.position, 2, GL_FLOAT, GL_FALSE, ImageRectVertex.sizeof, &q.vertices[0].pos.x); glError();
+        glVertexAttribPointer(imageProgram.texcoord, 2, GL_FLOAT, GL_FALSE, ImageRectVertex.sizeof, cast(void*)&q.vertices[0].texcoord.x); glError();
+        glDrawArrays(GL_QUADS, 0, 4); glError();
 
-        glDisableVertexAttribArray(imageProgram.position);
-        glError();
-        glDisableVertexAttribArray(imageProgram.texcoord);
-        glError();
+        glDisableVertexAttribArray(imageProgram.position); glError();
+        glDisableVertexAttribArray(imageProgram.texcoord); glError();
         imageProgram.use(false);
         //glDepthMask(1);
         //glDisable(GL_BLEND);
@@ -117,15 +109,23 @@ class ImageRectShader {
     }
 }
 
-void renderImage(uint img, Recti r, Rectf imgSource = Rectf(0, 0, 1, 1), ) {
+void renderImage(bool transparent = false)(uint img, Recti r, Rectf imgSource = Rectf(0, 0, 1, 1)) {
     ImageRectQuad quad = void;
-    glActiveTexture(GL_TEXTURE2);
-    glError();
-    glBindTexture(GL_TEXTURE_2D, img);
-    glError();
+    glActiveTexture(GL_TEXTURE2); glError();
+    glBindTexture(GL_TEXTURE_2D, img); glError();
+
+    static if(transparent) {
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        scope(exit) {
+            glDisable(GL_BLEND);
+        }
+    }
 
     quad.setPosition(r);
     quad.setTexcoord(imgSource);
     quad.renderQuad();
 }
+
+alias renderImage!true renderTransparentImage;
 

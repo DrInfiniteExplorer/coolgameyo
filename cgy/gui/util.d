@@ -45,7 +45,7 @@ class FreeFlightCamera : GuiEventDump {
         auto diffY = y - middleY;
         if((diffX != 0 || diffY != 0) && useMouse){
             SDL_WarpMouse(middleX, middleY);
-            camera.mouseMove( diffX,  diffY);
+            camera.mouseLook( diffX,  diffY);
         }
         mousecoords.set(x, y);
     }    

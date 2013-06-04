@@ -395,7 +395,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         if((diffX != 0 || diffY != 0) && useMouse){
             SDL_WarpMouse(middleX, middleY);
             if(!runCamDemo) {
-                camera.mouseMove( diffX,  diffY);
+                camera.mouseLook( diffX,  diffY);
             }
         }
         mousecoords.set(x, y);
