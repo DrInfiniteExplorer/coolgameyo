@@ -23,6 +23,8 @@ class PlanningMode : GuiEventDump {
 
     bool[SDLK_LAST]   keyMap;
 
+    bool rotateCamera = false;
+    bool moveDragMouse = false;
     vec2i mouseCoords;
     ushort middleX, middleY;
     bool useMouse = true;
@@ -34,7 +36,6 @@ class PlanningMode : GuiEventDump {
     float desiredFocusDistance = 10.0;
     vec2d focusXY;
 
-    bool rotateCamera = false;
 
     this(InGameGui _gui) {
         gui = _gui;
@@ -69,10 +70,14 @@ class PlanningMode : GuiEventDump {
         }
         */
 
-        if(rotateCamera) {
+        if(rotateCamera || moveDragMouse) {
             diffX = x - mouseCoords.x;
             diffY = y - mouseCoords.y;
-            camera.rotateAround(focusDistance, diffX, diffY);
+            if(rotateCamera) {
+                camera.rotateAround(focusDistance, diffX, diffY);
+            } else if(moveDragMouse) {
+                moveCamXY(diffX * dragScrollSpeed, -diffY * dragScrollSpeed);
+            }
             SDL_WarpMouse(cast(ushort)mouseCoords.x, cast(ushort)mouseCoords.y);
         } else {
             mouseCoords.set(x, y);
@@ -97,6 +102,9 @@ class PlanningMode : GuiEventDump {
                 auto mod = m.wheelUp ? 0.9 : 1.1;
                 desiredFocusDistance = clamp(desiredFocusDistance * mod, 1.0, 25.0);
             }
+        }
+        if(m.middle) {
+            moveDragMouse = m.down;
         }
         if (!m.down) {
             return;
@@ -155,10 +163,21 @@ class PlanningMode : GuiEventDump {
         updateCamera(dTime);
     }
 
+    void moveCamXY(float moveX, float moveY) {
+        auto fwd = camera.getTargetDir();
+        fwd.z = 0;
+        fwd.normalizeThis();
+        auto right = vec3d(fwd.y, -fwd.x, 0);
+
+        auto x = (fwd * moveY + right * moveX).x;
+        auto y = (fwd * moveY + right * moveX).y;
+        camera.absoluteAxisMove(x, y, 0);
+    }
+
     //Call to update free-flying camera
     void updateCamera(double dTime) {
         static immutable scrollRegion = 16;
-        static immutable scrollSpeed = 10.0f;
+        //static immutable borderScrollSpeed = 10.0f;
 
         float moveX = 0.0f;
         float moveY = 0.0f;
@@ -176,17 +195,9 @@ class PlanningMode : GuiEventDump {
             keyMap[SDLK_DOWN]) {
             moveY = -1.0f;
         }
-        moveX *= dTime * scrollSpeed;
-        moveY *= dTime * scrollSpeed;
-
-        auto fwd = camera.getTargetDir();
-        fwd.z = 0;
-        fwd.normalizeThis();
-        auto right = vec3d(fwd.y, -fwd.x, 0);
-
-        auto x = (fwd * moveY + right * moveX).x;
-        auto y = (fwd * moveY + right * moveX).y;
-        camera.absoluteAxisMove(x, y, 0);
+        moveX *= dTime * borderScrollSpeed;
+        moveY *= dTime * borderScrollSpeed;
+        moveCamXY(moveX, moveY);
 
         double camFocusZ = camera.position.z + camera.targetDir.z * focusDistance;
 

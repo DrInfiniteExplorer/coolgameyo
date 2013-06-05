@@ -21,6 +21,11 @@ __gshared string[] g_serverList;
 
 __gshared int g_maxThreadCount = 2;
 
+__gshared {
+    float dragScrollSpeed = 0.15f; // tiles per pixel moved
+    float borderScrollSpeed = 10.0f; // tiles per second when mouse at border.
+}
+
 void loadSettings(){
     Value rootVal;
 
