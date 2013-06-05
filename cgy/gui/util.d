@@ -97,12 +97,12 @@ class FreeFlightCamera : GuiEventDump {
         speed *= dTime;
         speed *= camera.speed;
         if(keyMap[SDLK_LSHIFT]) speed *= 30;
-        if(keyMap[SDLK_a]){ camera.axisMove(-speed, 0.0, 0.0); }
-        if(keyMap[SDLK_d]){ camera.axisMove( speed, 0.0, 0.0); }
-        if(keyMap[SDLK_w]){ camera.axisMove( 0.0, speed, 0.0); }
-        if(keyMap[SDLK_s]){ camera.axisMove( 0.0,-speed, 0.0); }
-        if(keyMap[SDLK_SPACE]){ camera.axisMove( 0.0, 0.0, speed); }
-        if(keyMap[SDLK_LCTRL]){ camera.axisMove( 0.0, 0.0,-speed); }
+        if(keyMap[SDLK_a]){ camera.relativeAxisMove(-speed, 0.0, 0.0); }
+        if(keyMap[SDLK_d]){ camera.relativeAxisMove( speed, 0.0, 0.0); }
+        if(keyMap[SDLK_w]){ camera.relativeAxisMove( 0.0, speed, 0.0); }
+        if(keyMap[SDLK_s]){ camera.relativeAxisMove( 0.0,-speed, 0.0); }
+        if(keyMap[SDLK_SPACE]){ camera.relativeAxisMove( 0.0, 0.0, speed); }
+        if(keyMap[SDLK_LCTRL]){ camera.relativeAxisMove( 0.0, 0.0,-speed); }
     }
 }
 

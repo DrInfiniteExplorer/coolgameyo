@@ -7,6 +7,7 @@ import game: game;
 import graphics.camera;
 import gui.all;
 import gui.debuginfo;
+import math.math;
 import settings;
 import unit;
 import util.util;
@@ -20,13 +21,15 @@ class PlanningMode : GuiEventDump {
 
     bool[SDLK_LAST]   keyMap;
 
-    vec2i mousecoords;
+    vec2i mouseCoords;
     ushort middleX, middleY;
     bool useMouse = true;
 
     Camera camera;
 
     double focusZ;
+    float focusDistance = 10.0;
+    float desiredFocusDistance = 10.0;
     vec2d focusXY;
 
     bool rotateCamera = false;
@@ -35,6 +38,7 @@ class PlanningMode : GuiEventDump {
         gui = _gui;
         world = game.getWorld;
         camera = game.getCamera;
+        focusZ = camera.position.z;
 
         middleX = cast(ushort)renderSettings.windowWidth / 2;
         middleY = cast(ushort)renderSettings.windowHeight / 2;
@@ -64,12 +68,12 @@ class PlanningMode : GuiEventDump {
         */
 
         if(rotateCamera) {
-            diffX = x - mousecoords.x;
-            diffY = y - mousecoords.y;
-            camera.rotateAround(10.0f, diffX, diffY);
-            SDL_WarpMouse(cast(ushort)mousecoords.x, cast(ushort)mousecoords.y);
+            diffX = x - mouseCoords.x;
+            diffY = y - mouseCoords.y;
+            camera.rotateAround(focusDistance, diffX, diffY);
+            SDL_WarpMouse(cast(ushort)mouseCoords.x, cast(ushort)mouseCoords.y);
         } else {
-            mousecoords.set(x, y);
+            mouseCoords.set(x, y);
         }
     }    
 
@@ -83,6 +87,15 @@ class PlanningMode : GuiEventDump {
             hideMouse(m.down);
             return;
         }
+        if( (m.wheelUp || m.wheelDown) && m.down) {
+            if(keyMap[SDLK_LCTRL]) {
+                int dir = m.wheelUp ? 1 : -1;
+                focusZ += dir;
+            } else {
+                auto mod = m.wheelUp ? 0.9 : 1.1;
+                desiredFocusDistance = clamp(desiredFocusDistance * mod, 1.0, 25.0);
+            }
+        }
         if (!m.down) {
             return;
         } else if (m.left) {
@@ -93,7 +106,7 @@ class PlanningMode : GuiEventDump {
             }
         } else if (m.middle) {
             vec3d start, dir;
-            camera.getRayFromScreenCoords(mousecoords, start, dir);
+            camera.getRayFromScreenCoords(mouseCoords, start, dir);
             Tile tile;
 
             import util.tileiterator;
@@ -137,6 +150,49 @@ class PlanningMode : GuiEventDump {
 
     //Call to update free-flying camera
     void updateCamera(double dTime) {
+        static immutable scrollRegion = 16;
+        static immutable scrollSpeed = 10.0f;
+
+        float moveX = 0.0f;
+        float moveY = 0.0f;
+        if(mouseCoords.x < scrollRegion ||
+            keyMap[SDLK_LEFT]) {
+            moveX = -1.0;
+        } else if(mouseCoords.x >= renderSettings.windowWidth - scrollRegion ||
+            keyMap[SDLK_RIGHT]) {
+            moveX =  1.0f;
+        }
+        if(mouseCoords.y < scrollRegion ||
+            keyMap[SDLK_UP]) {
+            moveY = 1.0;
+        } else if(mouseCoords.y >= renderSettings.windowHeight - scrollRegion ||
+            keyMap[SDLK_DOWN]) {
+            moveY = -1.0f;
+        }
+        moveX *= dTime * scrollSpeed;
+        moveY *= dTime * scrollSpeed;
+
+        auto fwd = camera.getTargetDir();
+        fwd.z = 0;
+        fwd.normalizeThis();
+        auto right = vec3d(fwd.y, -fwd.x, 0);
+
+        auto x = (fwd * moveY + right * moveX).x;
+        auto y = (fwd * moveY + right * moveX).y;
+        camera.absoluteAxisMove(x, y, 0);
+
+        double camFocusZ = camera.position.z + camera.targetDir.z * focusDistance;
+
+        if(camFocusZ != focusZ) {
+            auto deltaZ = dTime * 5.0 * (focusZ - camFocusZ);
+            camera.position.z += deltaZ;
+        }
+        if(desiredFocusDistance != focusDistance) {
+            auto deltaFocus = dTime * 5.0 * (desiredFocusDistance - focusDistance);
+            camera.relativeAxisMove(0, -deltaFocus, 0);
+            focusDistance +=deltaFocus;
+        }
+
         /*
         double speed = 10.0;
         speed *= dTime;
@@ -159,7 +215,7 @@ class PlanningMode : GuiEventDump {
     int selectedTileIterations; // if > 0 then valid pick
     void rayPickTile() {
         vec3d start, dir;
-        camera.getRayFromScreenCoords(mousecoords, start, dir);
+        camera.getRayFromScreenCoords(mouseCoords, start, dir);
         selectedTileIterations = world.intersectTile(start, dir, 25, selectedTile, selectedTilePos, selectedTileNormal, &selectedTileDistance);
     }
 

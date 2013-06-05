@@ -207,6 +207,9 @@ void createWindow() {
 
     SDL_EnableUNICODE(1);
     SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
+
+    // Forces the mouse to be within the window
+    SDL_WM_GrabInput(SDL_GRAB_ON);
 }
 
 __gshared bool inputActive = true;
@@ -219,6 +222,37 @@ bool handleSDLEvent(in SDL_Event event, float now, GuiSystem guiSystem) {
             if(event.active.state & SDL_APPINPUTFOCUS) {
                 inputActive = event.active.gain != 0;
             }
+
+            /*
+            // Manually resets the mouse within the window. Not as good as SDL_WM_GrabInput(SDL_GRAB_ON), which never lets the mouse out of the window.
+            if(event.active.state & SDL_APPMOUSEFOCUS) {
+
+                // If the mouse moves out of the window, we have input focus and we are within this
+                // limit from the border, tell the engine the cursor is actually at the border.
+                //Or... ?
+                static immutable snapLimit = 16;
+                if(event.active.gain == 0 && inputActive) {
+                    int x, y;
+                    SDL_GetMouseState(&x, &y);
+                    //msg(" ", x, " ", y);
+                    void set(int x, int y) {
+                        SDL_WarpMouse(cast(ushort)x, cast(ushort)y);
+                    }
+                    if(x < snapLimit) {
+                        set(0, y);
+                    }
+                    if(y < snapLimit) {
+                        set(x, 0);
+                    }
+                    if(x >= renderSettings.windowWidth - snapLimit) {
+                        set(renderSettings.windowWidth-1, y);
+                    }
+                    if(y >= renderSettings.windowHeight - snapLimit) {
+                        set(x, renderSettings.windowHeight-1);
+                    }
+                }
+            }
+            */
             break;
         case SDL_KEYDOWN:
         case SDL_KEYUP:
@@ -290,8 +324,8 @@ bool handleSDLEvent(in SDL_Event event, float now, GuiSystem guiSystem) {
 }
 
 void EventAndDrawLoop(bool canYield)(GuiSystem guiSystem, scope void delegate(float) render, scope bool delegate() endLoop = null) {
-    long then;
-    long now = utime();
+    long then = utime();
+    long now = utime()+1;
     bool exit = false;
     SDL_Event event;
     while (!exit) {

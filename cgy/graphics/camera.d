@@ -173,12 +173,18 @@ class Camera{
         position = focusPoint - targetDir * focusDistance;
     }
 
-    void axisMove(double right, double forward, double up){
+    void relativeAxisMove(double right, double forward, double up){
         vec3d _fwd = targetDir.convert!double();
-            vec3d _up = vec3d(0.0, 0.0, 1.0);
+        vec3d _up = vec3d(0.0, 0.0, 1.0);
         vec3d _right = _fwd.crossProduct(_up).normalizeThis();
         vec3d movement = _fwd*forward + _up*up + _right*right;
         position += movement;
+        if(printPosition) {
+            msg("position:", position);
+        }
+    }
+    void absoluteAxisMove(double x, double y, double z){
+        position += vec3d(x, y, z);
         if(printPosition) {
             msg("position:", position);
         }
