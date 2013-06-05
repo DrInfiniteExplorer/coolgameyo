@@ -294,6 +294,7 @@ mixin template ServerModule() {
                 if(!player.connected) continue;
                 if(recv_set.isSet(player.commSock)) {
                     server.handleComm(player);
+                    stuffToTransfer |= true;
                 }
                 if (write_set.isSet(player.dataSock)) {
                     auto asd = toWrite.length;
@@ -309,7 +310,7 @@ mixin template ServerModule() {
                         player.send_index += sent;
                     }
                 }
-                stuffToTransfer = player.send_index != toWrite.length;
+                stuffToTransfer |= player.send_index != toWrite.length;
             }
 
             if (recv_set.isSet(listener)) {

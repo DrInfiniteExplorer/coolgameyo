@@ -1,5 +1,7 @@
 module gui.ingame_third;
 
+import std.math : floor;
+
 import derelict.sdl.sdl;
 
 import ai.possessai;
@@ -142,6 +144,11 @@ class PlanningMode : GuiEventDump {
     }
 
     override void activate(bool activated) {
+        if(activated) {
+            focusDistance = 1.0;
+            focusZ = floor(camera.position.z);
+            camera.position -= camera.targetDir * focusDistance;
+        }
     }
 
     override void tick(float dTime) {
