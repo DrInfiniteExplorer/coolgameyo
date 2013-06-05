@@ -193,23 +193,24 @@ void createWindow() {
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS,  1);
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES,  16);
 
+    auto surfaceMode = SDL_HWSURFACE | SDL_GL_DOUBLEBUFFER | SDL_OPENGL;
+    if(!windowSettings.windowed) {
+        surfaceMode |= SDL_FULLSCREEN;
+    }
     surface = SDL_SetVideoMode(
                                renderSettings.windowWidth,
                                renderSettings.windowHeight,
                                32,
-                               SDL_HWSURFACE | SDL_GL_DOUBLEBUFFER | SDL_OPENGL
+                               surfaceMode
                                );
     enforce(surface, text("Could not set sdl video mode (", SDLError() , ")"));
     windowSettings.windowsInitialized = true;
-    repositionWindows();
+    applyWindowSettings();
 
     initOpenGL();
 
     SDL_EnableUNICODE(1);
     SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
-
-    // Forces the mouse to be within the window
-    SDL_WM_GrabInput(SDL_GRAB_ON);
 }
 
 __gshared bool inputActive = true;

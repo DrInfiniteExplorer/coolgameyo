@@ -6,22 +6,25 @@ import std.conv;
 import std.file;
 import std.stdio;
 
+import derelict.sdl.sdl : SDL_WM_GrabInput, SDL_GRAB_ON, SDL_GRAB_OFF;
+
 import json;
 import util.util;
 import util.window;
 
 // No need to make these shared, gshared works fine? IM A COWBOY
-__gshared RenderSettings renderSettings;
-__gshared ControlSettings controlSettings;
-__gshared WindowSettings windowSettings;
-__gshared string g_playerName = "BurntFaceMan"; //Default player name
-
-__gshared string g_settingsFilePath = "settings.json";
-__gshared string[] g_serverList;
-
-__gshared int g_maxThreadCount = 2;
 
 __gshared {
+    RenderSettings renderSettings;
+    ControlSettings controlSettings;
+    WindowSettings windowSettings;
+    string g_playerName = "BurntFaceMan"; //Default player name
+
+    string g_settingsFilePath = "settings.json";
+    string[] g_serverList;
+
+    int g_maxThreadCount = 2;
+
     float dragScrollSpeed = 0.15f; // tiles per pixel moved
     float borderScrollSpeed = 10.0f; // tiles per second when mouse at border.
 }
@@ -43,7 +46,9 @@ void loadSettings(){
                            "windowSettings", &windowSettings.serializableSettings,
                            "playerName", &g_playerName,
                            "serverList", &g_serverList,
-                           "maxThreads", &g_maxThreadCount);
+                           "maxThreads", &g_maxThreadCount,
+                           "dragScrollSpeed", &dragScrollSpeed,
+                           "borderScrollSpeed", &borderScrollSpeed);
 }
 
 
@@ -56,8 +61,19 @@ void saveSettings(){
                    "playerName", g_playerName,
                    "serverList", g_serverList,
                    "maxThreads", g_maxThreadCount,
+                   "dragScrollSpeed", dragScrollSpeed,
+                   "borderScrollSpeed", borderScrollSpeed,
                    ).saveJSON(g_settingsFilePath);
 
+
+}
+
+void applyWindowSettings() {
+    if(!windowSettings.windowsInitialized) return;
+    repositionWindows();
+
+    // Forces the mouse to be within the window
+    SDL_WM_GrabInput(windowSettings.trapMouse ? SDL_GRAB_ON : SDL_GRAB_OFF);
 
 }
 
@@ -120,6 +136,8 @@ struct WindowSettings {
 	static struct InnerWindowSettings {
         vec2i mainCoordinates = vec2i(-1);
         vec2i consoleCoordinates = vec2i(-1);
+        bool trapMouse = false;
+        bool windowed = true;
 	}
 	InnerWindowSettings serializableSettings;
 	alias serializableSettings this;

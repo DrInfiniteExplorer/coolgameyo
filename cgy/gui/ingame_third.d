@@ -114,7 +114,10 @@ class PlanningMode : GuiEventDump {
             if(selectedTileIterations > 0) {
                 game.damageTile(selectedTilePos, 5);
             }
-        } else if (m.middle) {
+
+        }
+        /*
+        if (m.middle) {
             vec3d start, dir;
             camera.getRayFromScreenCoords(mouseCoords, start, dir);
             Tile tile;
@@ -125,6 +128,7 @@ class PlanningMode : GuiEventDump {
             }
 
         }
+        */
     }
     void onKey(GuiEvent.KeyboardEvent k) {
         if (k.pressed) {
