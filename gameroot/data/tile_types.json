@@ -31,7 +31,7 @@
     "displayName":"Grassly grass",
     "material":"grass",
 	"group":"grass",
-	"strength":5
+	"strength":5,
 	"tintFromMaterial":1,
 	"tintColor":{ "x":192, "y":174, "z":192 },
 	"texturePathTop":"textures/grass.png",
