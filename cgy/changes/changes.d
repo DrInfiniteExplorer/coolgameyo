@@ -18,6 +18,14 @@ struct SetTile {
     void apply(WorldState world) {
         world.unsafeSetTile(tp, t);
     }
+
+    ubyte[] toBytes() {
+        return (cast(ubyte*)&this)[0 .. this.sizeof];
+    }
+    size_t fromBytes(ubyte *ptr) {
+        this = *(cast(typeof(&this))ptr);
+        return this.sizeof;
+    }
 }
 struct DamageTile {
     TilePos tp;
@@ -32,6 +40,14 @@ struct DamageTile {
             world.unsafeSetTile(tp, t);
         }
     }
+    ubyte[] toBytes() {
+        return (cast(ubyte*)&this)[0 .. this.sizeof];
+    }
+    size_t fromBytes(ubyte *ptr) {
+        this = *(cast(typeof(&this))ptr);
+        return this.sizeof;
+    }
+
 }
 struct RemoveTile {
     TilePos tp;
@@ -39,29 +55,92 @@ struct RemoveTile {
     void apply(WorldState world) {
         world.unsafeRemoveTile(tp);
     }
+    ubyte[] toBytes() {
+        return (cast(ubyte*)&this)[0 .. this.sizeof];
+    }
+    size_t fromBytes(ubyte *ptr) {
+        this = *(cast(typeof(&this))ptr);
+        return this.sizeof;
+    }
+
+}
+
+struct CreateClan {
+    Clan clan;
+
+    struct Inner {
+        uint id;
+    };
+    Inner inner;
+    alias inner this;
+
+    this(Clan _clan) {
+        clan = _clan;
+        id = clan.clanId;
+    }
+
+    void apply(WorldState world) {
+        import clans : Clans;
+        clan = Clans().getClanById(id);
+        if(clan) return; // Is on server, yay.
+        if(clan is null) {
+            clan = new NormalClan(id);
+        }
+        clan.init(world);
+    }
+    ubyte[] toBytes() {
+        return (cast(ubyte*)&inner)[0 .. inner.sizeof];
+    }
+    size_t fromBytes(ubyte *ptr) {
+        inner = *(cast(typeof(&inner))ptr);
+        return inner.sizeof;
+    }
+
 }
 
 struct CreateUnit {
 
-    this(Unit _u) {
-        /*
-        u = _u;
-        serialized = encode(u);
-        */
+    Unit unit;
+
+    struct Inner {
+        uint unitId;
+        uint typeId;
+        uint clanId;
+        UnitPos pos;
+    };
+    Inner inner;
+    alias inner this;
+
+
+    this(Unit _unit) {
+        unit = _unit;
+        unitId = unit.id;
+        typeId = unit.type.id;
+        clanId = unit.clan.clanId;
+        pos = unit.pos;
     }
 
-    //Unit u;
-    uint unitId;
     //Value serialized;
 
     void apply(WorldState world) {
-        /*
-        if(u is null) {
-            import std.exception;
-            enforce(0, "Implement creating of units over network");
+        if(unit is null) {
+            unit = new Unit(unitId);
+            unit.pos = pos;
+            import unittypemanager;
+            unit.type = unitTypeManager.byID(cast(ushort)typeId);
         }
-        */
+        import clan : Clans;
+        Clans().getClanById(clanId).addUnit(unit);
     }
+    ubyte[] toBytes() {
+        return (cast(ubyte*)&inner)[0 .. inner.sizeof];
+    }
+    size_t fromBytes(ubyte *ptr) {
+        inner = *(cast(typeof(&inner))ptr);
+        return inner.sizeof;
+    }
+
+
 }
 struct RemoveUnit {
     //Unit u;
@@ -70,6 +149,14 @@ struct RemoveUnit {
     void apply(WorldState world) {
         assert(0);
     }
+    ubyte[] toBytes() {
+        return (cast(ubyte*)&this)[0 .. this.sizeof];
+    }
+    size_t fromBytes(ubyte *ptr) {
+        this = *(cast(typeof(&this))ptr);
+        return this.sizeof;
+    }
+
 }
 struct MoveUnit {
     uint unitId;
@@ -87,6 +174,14 @@ struct MoveUnit {
         auto unit = Clans().getUnitById(unitId);
         world.unsafeMoveUnit(unit, destination, ticksToArrive);
     }
+    ubyte[] toBytes() {
+        return (cast(ubyte*)&this)[0 .. this.sizeof];
+    }
+    size_t fromBytes(ubyte *ptr) {
+        this = *(cast(typeof(&this))ptr);
+        return this.sizeof;
+    }
+
 }
 
 struct SetIntent {
@@ -98,6 +193,14 @@ struct SetIntent {
     void apply(WorldState world) {
         assert(0);
     }
+    ubyte[] toBytes() {
+        return (cast(ubyte*)&this)[0 .. this.sizeof];
+    }
+    size_t fromBytes(ubyte *ptr) {
+        this = *(cast(typeof(&this))ptr);
+        return this.sizeof;
+    }
+
 }
 struct SetAction {
     //Unit u;
@@ -108,6 +211,14 @@ struct SetAction {
     void apply(WorldState world) {
         assert(0);
     }
+    ubyte[] toBytes() {
+        return (cast(ubyte*)&this)[0 .. this.sizeof];
+    }
+    size_t fromBytes(ubyte *ptr) {
+        this = *(cast(typeof(&this))ptr);
+        return this.sizeof;
+    }
+
 }
 
 struct CreateEntity {
@@ -144,6 +255,14 @@ struct CreateEntity {
     void apply(WorldState world) {
         BREAKPOINT;
     }
+    ubyte[] toBytes() {
+        return (cast(ubyte*)&this)[0 .. this.sizeof];
+    }
+    size_t fromBytes(ubyte *ptr) {
+        this = *(cast(typeof(&this))ptr);
+        return this.sizeof;
+    }
+
 }
 struct RemoveEntity {
     //Entity e;
@@ -152,6 +271,14 @@ struct RemoveEntity {
     void apply(WorldState world) {
         assert(0);
     }
+    ubyte[] toBytes() {
+        return (cast(ubyte*)&this)[0 .. this.sizeof];
+    }
+    size_t fromBytes(ubyte *ptr) {
+        this = *(cast(typeof(&this))ptr);
+        return this.sizeof;
+    }
+
 }
 struct MoveEntity {
     //Entity e;
@@ -161,6 +288,14 @@ struct MoveEntity {
     void apply(WorldState world) {
         assert(0);
     }
+    ubyte[] toBytes() {
+        return (cast(ubyte*)&this)[0 .. this.sizeof];
+    }
+    size_t fromBytes(ubyte *ptr) {
+        this = *(cast(typeof(&this))ptr);
+        return this.sizeof;
+    }
+
 }
 struct PickupEntity {
     //Entity e;
@@ -170,6 +305,14 @@ struct PickupEntity {
     void apply(WorldState world) {
         assert(0);
     }
+    ubyte[] toBytes() {
+        return (cast(ubyte*)&this)[0 .. this.sizeof];
+    }
+    size_t fromBytes(ubyte *ptr) {
+        this = *(cast(typeof(&this))ptr);
+        return this.sizeof;
+    }
+
 }
 struct DepositEntity {
     //Entity e;
@@ -179,6 +322,14 @@ struct DepositEntity {
     void apply(WorldState world) {
         assert(0);
     }
+    ubyte[] toBytes() {
+        return (cast(ubyte*)&this)[0 .. this.sizeof];
+    }
+    size_t fromBytes(ubyte *ptr) {
+        this = *(cast(typeof(&this))ptr);
+        return this.sizeof;
+    }
+
 }
 struct ActivateEntity {
     //Unit activator;
@@ -189,6 +340,14 @@ struct ActivateEntity {
     void apply(WorldState world) {
         assert(0);
     }
+    ubyte[] toBytes() {
+        return (cast(ubyte*)&this)[0 .. this.sizeof];
+    }
+    size_t fromBytes(ubyte *ptr) {
+        this = *(cast(typeof(&this))ptr);
+        return this.sizeof;
+    }
+
 }
 
 struct GetMission {
@@ -198,6 +357,14 @@ struct GetMission {
     void apply(WorldState world) {
         //unit.mission = unit.clan.unsafeGetMission();
     }
+    ubyte[] toBytes() {
+        return (cast(ubyte*)&this)[0 .. this.sizeof];
+    }
+    size_t fromBytes(ubyte *ptr) {
+        this = *(cast(typeof(&this))ptr);
+        return this.sizeof;
+    }
+
 }
 
 struct DesignateMine {
@@ -208,6 +375,14 @@ struct DesignateMine {
     void apply(WorldState world) {
         //clan.unsafeDesignateMinePos(pos);
     }
+    ubyte[] toBytes() {
+        return (cast(ubyte*)&this)[0 .. this.sizeof];
+    }
+    size_t fromBytes(ubyte *ptr) {
+        this = *(cast(typeof(&this))ptr);
+        return this.sizeof;
+    }
+
 }
 
 

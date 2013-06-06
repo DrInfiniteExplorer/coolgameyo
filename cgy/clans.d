@@ -74,10 +74,10 @@ final class Clans : Module {
         foreach(clanId ; clanList) {
             Clan clan = Gaia();
             if(clanId) {
-                clan = new NormalClan();
+                clan = new NormalClan(clanId);
                 clan.init(worldState);
             }
-            clan.deserialize(clanId);
+            clan.deserialize();
         }
     }
 
@@ -85,7 +85,6 @@ final class Clans : Module {
         foreach(clan ; clans) {
             if(clan.clanId == clanId) return clan;
         }
-        enforce(false, "Could not find clan with specified id: " ~ to!string(clanId));
         return null;
     }
 

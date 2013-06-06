@@ -51,13 +51,10 @@ struct Demand {
 }
 
 Unit newUnit() {
-    auto unit = new Unit;
-    g_UnitCount = core.atomic.atomicOp!"+="(g_UnitCount, 1);
-    unit.id = g_UnitCount;
-    unit.inventory = new Inventory();
+    auto id = core.atomic.atomicOp!"+="(g_UnitCount, 1);
+    auto unit = new Unit(id);
     return unit;
 }
-
 
 final class Unit {
 
@@ -93,6 +90,11 @@ final class Unit {
     Inventory inventory;
 
     Mission mission;
+
+    this(uint _id) {
+        id = _id;
+        inventory = new Inventory;
+    }
 
 
     Value toJSON() {

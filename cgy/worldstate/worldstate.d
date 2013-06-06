@@ -852,6 +852,7 @@ class WorldState {
 
     // Notify sector load here. Try not to modify the state too much!
     // Called when sector is loaded, or recently filled with tiles.
+    //  Both are in response to update()
     void notifySectorLoad(SectorNum sectorNum) {
         if(sectorNum !in activeSectors) {
             msg("Sector no longer of interest after floodfill.");

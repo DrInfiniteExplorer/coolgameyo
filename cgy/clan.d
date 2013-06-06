@@ -21,12 +21,14 @@ import worldstate.worldstate;
 import worldstate.activity;
 
 //Clan id 0 is always reserved for GAIA.
-shared int g_ClanCount = 1; //Unique clan id.
+shared int g_ClanCount = 0; //Unique clan id.
 
 Clan newClan(WorldState world) {
-    Clan clan = new NormalClan();
-    clan.init(world);
-    clan._clanId = g_ClanCount++;
+    int id = core.atomic.atomicOp!"+="(g_ClanCount, 1);
+    Clan clan = new NormalClan(id);
+    //clan.init(world);
+    //clan._clanId = g_ClanCount++;
+    
     return clan;
 }
 
@@ -43,6 +45,10 @@ class Clan : WorldStateListener {
     protected Entity[int] clanEntities;
 
     protected WorldState world;
+
+    this(uint _id) {
+        _clanId = _id;
+    }
 
     void init(WorldState _world) {
         world = _world;
@@ -68,7 +74,7 @@ class Clan : WorldStateListener {
     }
 
     abstract void serialize();
-    abstract void deserialize(int _clanId);
+    abstract void deserialize();
 
 
     void onAddUnit(SectorNum sectorNum, Unit unit) {}
@@ -95,7 +101,8 @@ final class NormalClan : Clan {
 
     int[SectorNum] activityMap;
 
-    this() {
+    this(uint id) {
+        super(id);
     }
     
     override void init(WorldState _world) {
@@ -176,8 +183,7 @@ final class NormalClan : Clan {
 
     }
 
-    override void deserialize(int clanId) {
-        _clanId = clanId;
+    override void deserialize() {
         auto folder = g_worldPath ~ "/world/clans/" ~ to!string(clanId) ~"/";
         enforce(exists(folder), "Folder does not exist!" ~ folder);
 
@@ -185,7 +191,7 @@ final class NormalClan : Clan {
         auto members = json.parse(content);
 
         foreach (unitVal ; members.elements) {
-            Unit unit = new Unit;
+            Unit unit = new Unit(0);
             unit.fromJSON(unitVal);
             addUnit(unit);
         }

@@ -30,6 +30,7 @@ class Gaia : Clan {
     int[SectorXYNum] activityMap;
 
     this() {
+        super(0);
         msg(this);
     }
 
@@ -100,7 +101,7 @@ class Gaia : Clan {
         //Derp herp serialize all things ever.
     }
 
-    override void deserialize(int clanId) {
+    override void deserialize() {
         //Herp derp deserialize all things ever.
     }
 

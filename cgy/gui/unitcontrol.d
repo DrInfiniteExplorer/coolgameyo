@@ -434,7 +434,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
             auto pos = TilePos(selectedTilePos.value+selectedTileNormal).toEntityPos;
             auto entityId = INVALID_ENTITY_ID;
             auto clanId = 0; // Gaia
-            world._worldProxy.createEntity(entityId, entityTypeId, clanId, pos);
+            //world._worldProxy.createEntity(entityId, entityTypeId, clanId, pos);
         }
 
     }

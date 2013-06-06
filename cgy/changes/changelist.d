@@ -20,6 +20,8 @@ final class ChangeList {
             DamageTile,
             RemoveTile,
 
+            CreateClan,
+
             CreateUnit,
             RemoveUnit,
             MoveUnit,
@@ -37,6 +39,8 @@ final class ChangeList {
             GetMission,
             DesignateMine,
             ) ChangeTypes;
+
+    static assert(ChangeTypes.length < 256, " Some code which derp ubyte fix!");
 
     ubyte[] changeListData;
 
@@ -57,7 +61,8 @@ final class ChangeList {
     }
 
     void add(T)(auto ref T change) if(staticIndexOf!(T, ChangeTypes) != -1) {
-        ubyte[] asBytes = (cast(ubyte*)&change)[0..T.sizeof];
+        //ubyte[] asBytes = (cast(ubyte*)&change)[0..T.sizeof];
+        auto asBytes = change.toBytes();
         changeListData ~= cast(ubyte)staticIndexOf!(T, ChangeTypes) ~ asBytes;
     }
     
@@ -87,9 +92,14 @@ final class ChangeList {
                 foreach(idx, T ; ChangeTypes)   {
                     case idx:
                         {
+                            /*
                             auto changePtr = cast(T*)ptr;
                             changePtr.apply(world);
                             ptr += (*changePtr).sizeof;
+                            */
+                            T t;
+                            ptr += t.fromBytes(ptr);
+                            t.apply(world);
                         }
                         break;
                 }

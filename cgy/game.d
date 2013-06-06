@@ -177,7 +177,18 @@ struct Game {
             return ret;
         }
 
+        auto proxy = worldState._worldProxy;
+
         auto clan = newClan(worldState);
+        proxy.createClan(clan);
+
+        auto unit = newUnit();
+        auto unitPos = topOfTheWorld(spawnPoint.TileXYPos);
+        unit.pos = unitPos;
+        unit.type = unitTypeManager.byName("dwarf");
+        unit.clan = clan;
+        proxy.createUnit(unit);
+        /*
 
         // HalfWorldSize_xy
         Unit addUnitAtPos()(vec2i pos) {
@@ -192,6 +203,9 @@ struct Game {
         auto uu = addUnitAtPos(spawnPoint);
         activeUnit = uu;
         worldState._worldProxy.createUnit(uu);
+        */
+
+
 
     } 
 

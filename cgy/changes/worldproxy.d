@@ -70,6 +70,7 @@ final class WorldProxy {
             "moveUnit", MoveUnit,
             "setIntent", SetIntent,
             "setAction", SetAction,
+            "createClan", CreateClan,
             "createEntity", CreateEntity,
             "removeEntity", RemoveEntity,
             "moveEntity", MoveEntity,
