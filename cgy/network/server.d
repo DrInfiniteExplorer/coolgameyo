@@ -12,8 +12,6 @@ mixin template ServerModule() {
 
     ubyte[] toWrite;
 
-    WorldProxy commandProxy;
-
     void initModule() {
         listener = new TcpSocket;
         listener.bind(new InternetAddress(PORT));
@@ -22,28 +20,6 @@ mixin template ServerModule() {
         recv_set = new SocketSet(max_clients + 1);
         write_set = new SocketSet(max_clients);
         toWrite.length = 4;
-
-        commandProxy = new WorldProxy(worldState);
-
-        addCommand("PlayerMove", &playerMove);
-        addCommand("DamageTile", &damageTile);
-
-    }
-
-    void playerMove(WorldProxy proxy, string line, string[] words) {
-        string playerName = words[1];
-        float x = to!float(words[2]);
-        float y = to!float(words[3]);
-        float z = to!float(words[4]);
-        auto player = players[playerName];
-        proxy.moveUnit(player.unit, vec3d(x,y,z).UnitPos, 1);
-    }
-    void damageTile(WorldProxy proxy, string line, string[] words) {
-        int x = to!int(words[1]);
-        int y = to!int(words[2]);
-        int z = to!int(words[3]);
-        int damage = to!int(words[4]);
-        proxy.damageTile(vec3i(x,y,z).TilePos, damage);
     }
 
     bool simpleHandshake(Socket sock) { // Awesome handshake :P
@@ -205,35 +181,12 @@ mixin template ServerModule() {
         }
     }
 
-    alias void delegate(WorldProxy, string, string[]) CommandHandler;
-    CommandHandler[string] registeredCommands;
-    void addCommand(string command, CommandHandler handler) {
-        registeredCommands[command] = handler;
-    }
 
     void handleComm(PlayerInformation player) {
         //falsely assume that all stuff over comm is newline terminated
         // (In future will be async stuff like player positions as well)
         auto line = player.commSock.readString();
-        if(line == "ProperlyConnected") {
-            auto path = g_worldPath ~ "/players/" ~ player.name ~ ".json";
-            //If has unit, send unit-id to be controlled
-            if(exists(path)) {
-                BREAKPOINT;
-            } else {
-                //Else add unit & send unit-id to be controlled.
-                //For now just ignore unit creation and assume control of unit 0
-                player.unitId = 1;
-                player.unit = Clans().getUnitById(player.unitId);
-                player.commSock.sendString("controlUnit:1");
-            }
-        }
-        auto words = line.split();
-        auto command = words[0];
-        if(command in registeredCommands) {
-            registeredCommands[command](commandProxy, line, words);
-        }
-
+        commands.handleCommand(player, line);
     }
 
     // todo:

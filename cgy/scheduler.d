@@ -187,8 +187,8 @@ struct Scheduler {
             foreach (proxy; proxies) {
                 game.server.pushNetworkChanges(proxy.changeList);
             }
-            game.server.pushNetworkChanges(game.server.commandProxy.changeList);
-            game.server.commandProxy.changeList.reset();
+            game.server.pushNetworkChanges(game.commands.commandProxy.changeList);
+            game.commands.commandProxy.changeList.reset();
             game.server.doNetworkStuffUntil(nextSync);
         } else {
             foreach (proxy; proxies) {
@@ -222,7 +222,7 @@ struct Scheduler {
             proxy.changeList.apply(world);
         }
         if(g_isServer) {
-            game.server.commandProxy.changeList.applyNoReset(world);
+            game.commands.commandProxy.changeList.applyNoReset(world);
         }
 
         reset_temp_alloc();

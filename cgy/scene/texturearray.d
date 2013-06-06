@@ -112,10 +112,8 @@ final class TextureArray {
             reupload();
         }
         enforce(textureId != 0, "No texture set/uploaded/made! Sad sad sadness is overpowering!");
-        glActiveTexture(GL_TEXTURE0 + textureUnit);
-        glError();
-        glBindTexture(GL_TEXTURE_2D_ARRAY, textureId);
-        glError();
+        glActiveTexture(GL_TEXTURE0 + textureUnit); glError();
+        glBindTexture(GL_TEXTURE_2D_ARRAY, textureId); glError();
     }
     void unbind() {
         glBindTexture(GL_TEXTURE_2D_ARRAY, 0);

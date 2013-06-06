@@ -3,7 +3,6 @@ module game;
 
 
 import std.algorithm;
-import std.array;
 import std.conv;
 import std.exception;
 import std.math;
@@ -20,6 +19,7 @@ import ai.test;
 
 import clan;
 import clans;
+import commands : Commands;
 
 import entitytypemanager;
 
@@ -78,8 +78,8 @@ struct Game {
     private TileGeometry tileGeometry;
     private TileTextureAtlas atlas;
 
-
-    private vec2i spawnPoint;
+    Commands commands;
+    vec2i spawnPoint;
 
     private bool destroyed;
     @disable this(this);
@@ -146,6 +146,7 @@ struct Game {
             aiModule = new AIModule(pathModule, worldState);
             scheduler.registerModule(pathModule);
             scheduler.registerModule(aiModule);
+            commands = new Commands(worldState);
         }
 
         tileTypeManager.generateMaterials();
@@ -168,14 +169,14 @@ struct Game {
 
     }
 
+    UnitPos topOfTheWorld(TileXYPos xy) {
+        auto top = worldState.getTopTilePos(xy);
+        auto ret = top.toUnitPos();
+        return ret;
+    }
     private void populateWorld() {
         loadJSON(g_worldPath ~ "/start.json").readJSONObject("startPos", &spawnPoint);
 
-        UnitPos topOfTheWorld(TileXYPos xy) {
-            auto top = worldState.getTopTilePos(xy);
-            auto ret = top.toUnitPos();
-            return ret;
-        }
 
         auto proxy = worldState._worldProxy;
 
@@ -271,14 +272,30 @@ struct Game {
         return camera;
     }
 
+    Unit        activeUnit;
+    UnitPos     activeUnitPos;
+    uint        activeUnitId;
+
     Unit getActiveUnit() {
+        if(activeUnit) return activeUnit;
+        if(activeUnitId) {
+            activeUnit = Clans().getUnitById(activeUnitId);
+        }
         return activeUnit;
     }
 
+    void setActiveUnit(uint id) {
+        if(activeUnitId != id) {
+            activeUnit = null; // Derp herp lerp?
+        }
+        activeUnitId = id;
+    }
+    /*
     void setActiveUnit(Unit u) {
         activeUnit = u;
         activeUnitPos = u.pos;
     }
+    */
 
     void setActiveUnitPos(UnitPos pos) {
         if(activeUnit is null) return;

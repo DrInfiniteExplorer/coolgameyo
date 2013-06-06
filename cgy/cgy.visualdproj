@@ -627,6 +627,7 @@
   <File path="alloc.d" />
   <File path="clan.d" />
   <File path="clans.d" />
+  <File path="commands.d" />
   <File path="entitytypemanager.d" />
   <File path="gaia.d" />
   <File path="game.d" />

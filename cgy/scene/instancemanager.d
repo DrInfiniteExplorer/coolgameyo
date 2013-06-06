@@ -58,7 +58,7 @@ final class InstanceManager {
         instanceData.length = instanceData.length + 1;
         if(ptr !is instanceData.ptr) {
             foreach(idx, _ptrPtr ; instancePtrArray) {
-                *ptrPtr = &instanceData[idx];
+                *_ptrPtr = &instanceData[idx];
             }
         } else {
             *ptrPtr = &instanceData[$-1];

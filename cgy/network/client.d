@@ -20,10 +20,6 @@ mixin template ClientModule() {
     ubyte[] receiveBuffer;
     size_t recv_index;
 
-
-    Unit        activeUnit;
-    UnitPos     activeUnitPos;
-
     Thread dummyThread;
     bool doneLoading; // maybe make shared for automagic memory barrier ?
 
@@ -103,8 +99,8 @@ mixin template ClientModule() {
         msg("!!!!!! COMM MESSAGE !!!!\n", "   ", line, "\b\n\n");
         if(line.startsWith("controlUnit:")) {
             auto id = to!int(line[line.lastIndexOf(':')+1 .. $]);
-            auto unit = Clans().getUnitById(id);
-            setActiveUnit(unit);
+            //auto unit = Clans().getUnitById(id);
+            setActiveUnit(id);
         }
     }
 
