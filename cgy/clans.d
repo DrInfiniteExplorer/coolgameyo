@@ -98,6 +98,16 @@ final class Clans : Module {
         return null;
     }
 
+    Entity getEntityById(int entityId) {
+        foreach(clan ; clans) {
+            auto entity = clan.getEntityById(entityId);
+            if(entity !is null) {
+                return entity;
+            }
+        }
+        return null;
+    }
+
 
 
 

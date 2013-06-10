@@ -72,6 +72,11 @@ class Clan : WorldStateListener {
         if(unitPtr is null) return null;
         return *unitPtr;
     }
+    Entity getEntityById(int entityId) {
+        Entity* entityPtr = entityId in clanEntities;
+        if(entityPtr is null) return null;
+        return *entityPtr;
+    }
 
     abstract void serialize();
     abstract void deserialize();

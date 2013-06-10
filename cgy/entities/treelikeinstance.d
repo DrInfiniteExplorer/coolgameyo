@@ -1,5 +1,7 @@
 module entities.treelikeinstance;
 
+import json;
+
 __gshared int debugIdCounter = 0;
 __gshared bool drawDebugLines = true;
 __gshared bool drawTiles = true;
@@ -7,33 +9,41 @@ __gshared bool drawLeafs = true;
 __gshared bool[10] drawBranchId = true;
 
 class NodeInstance {
-    int debugId;
-    byte[3] pos; // Pos is relative to the previous node. realPos = pos / NODE_DISTANCE_SCALE
-    ubyte nrOfChildBranches; // help variable. This could be calculated when needed instead of storing here.
-    ubyte angleHorizontal; // realAngle = angleHorizontal * 2 * PI / 250
-    ubyte angleVertical;
-    ubyte nodeDistance;
+    struct Inner {
+        int debugId;
+        byte[3] pos; // Pos is relative to the previous node. realPos = pos / NODE_DISTANCE_SCALE
+        ubyte nrOfChildBranches; // help variable. This could be calculated when needed instead of storing here.
+        ubyte angleHorizontal; // realAngle = angleHorizontal * 2 * PI / 250
+        ubyte angleVertical;
+        ubyte nodeDistance;
+    }
+    Inner inner;
+    alias inner this;
     NodeInstance parentNode;
 }
 
 class BranchInstance {
-    ubyte typeId;
-    ubyte nrOfNodesTarget;
-    ubyte nodeDistanceTarget;
-    ubyte thickness; // realThickness = thickness / THICKNESS_SCALE
-    ubyte thicknessTarget; // this is the first node on the branch. All other nodes gets their thickness after cost payment
-    ubyte branchesPerBranchTarget;
+    struct Inner {
+        ubyte typeId;
+        ubyte nrOfNodesTarget;
+        ubyte nodeDistanceTarget;
+        ubyte thickness; // realThickness = thickness / THICKNESS_SCALE
+        ubyte thicknessTarget; // this is the first node on the branch. All other nodes gets their thickness after cost payment
+        ubyte branchesPerBranchTarget;
+        ubyte nrOfChildBranches; // help variable. This could be calculated when needed instead of storing here.
+    }
+    Inner inner;
+    alias inner this;
     NodeInstance[] nodes; // all nodes of this branch. The order in the array = the order in game.
     // nodes[0] is always stationary. It is the root node.
     NodeInstance parentNode;
-
-    ubyte nrOfChildBranches; // help variable. This could be calculated when needed instead of storing here.
 
 }
 
 class TreelikeInstance {
     BranchInstance[] branches;
     bool isAlive = true;
+    
 }
 
 mixin template TreeLike() {
@@ -68,24 +78,88 @@ mixin template TreeLike() {
 
     }
 
-    private void createTreeLikeEntity(WorldState world, WorldProxy proxy)
-    {
-        auto treeType = type;
-        if(!treeType.hasTreelike) return;
+    void serializeBinaryTreelike(BinaryWriter writer) {
 
-        TreelikeInstance tree = new TreelikeInstance;
-        NodeInstance rootNode = new NodeInstance;
+        int nodeCount = 0;
+        int[NodeInstance] nodeMap = [null : -1];
+        NodeInstance[] nodes;
+        foreach(branch ; treelike.branches) {
+            foreach(node ; branch.nodes) {
+                if(node in nodeMap) continue;
+                nodeMap[node] = nodeCount;
+                nodes ~= node;
+                nodeCount++;
+            }
+        }
+
+        writer.write(treelike.isAlive);
+        writer.write(nodeCount);
+        foreach(node ; nodes) {
+            writer.write(node.inner);
+            writer.write(nodeMap[node.parentNode]);
+        }
+
+        writer.write(treelike.branches.length.to!int);
+        foreach(branch ; treelike.branches) {
+            writer.write(branch.inner);
+            writer.write(nodeMap[branch.parentNode]);
+            writer.write(branch.nodes.length.to!int);
+            foreach(node ; branch.nodes) {
+                writer.write(nodeMap[node]);
+            }
+        }
+    }
+    void deserializeBinaryTreelike(BinaryReader reader) {
+        reader.read(treelike.isAlive);
+
+        int nodeCount = reader.read!int;
+        NodeInstance[] nodes;
+        nodes.length = nodeCount;
+        foreach(idx ; 0 .. nodeCount) {
+            nodes[idx] = new NodeInstance;
+        }
+        foreach(node ; nodes) {
+            reader.read(node.inner);
+            int id = reader.read!int;
+            if(id != -1) {
+                node.parentNode = nodes[id];
+            }
+        }
+
+        auto branchCount = reader.read!int;
+        treelike.branches.length = branchCount;
+        foreach(ref branch ; treelike.branches) {
+            branch = new BranchInstance;
+            reader.read(branch.inner);
+            int parentId = reader.read!int;
+            if(parentId != -1) {
+                branch.parentNode = nodes[parentId];
+            }
+            int myNodeCount = reader.read!int;
+            branch.nodes.length = myNodeCount;
+            foreach(ref node ; branch.nodes) {
+                int id = reader.read!int;
+                if(id != -1) {
+                    node = nodes[id];
+                }
+            }
+        }
+    }
+
+    public void createTreeLikeEntity(WorldProxy proxy, int iterations)
+    {
+        BREAK_IF(treelike is null);
+
+        auto rootNode = new NodeInstance;
         rootNode.nodeDistance = 1;
         rootNode.debugId = debugIdCounter++;
-        tree.branches ~= createAndInitializeBranch(treeType.treelikeType.branches[0], rootNode);
+        treelike.branches ~= createAndInitializeBranch(type.treelikeType.branches[0], rootNode);
         //tree.branches[0].nodes.insertInPlace(0, rootNode);
-        treelike = tree;
 
         clearTiles(proxy);
         makeTiles(proxy);
         makeLeafs(proxy);
-        growTree(proxy, 35);
-        proxy.apply();
+        growTree(proxy, iterations);
     }
 
     public void growTree(WorldProxy proxy, int iterations = 1) {
@@ -109,7 +183,7 @@ mixin template TreeLike() {
         }
         foreach (ref branchType; type.treelikeType.branches) {
             if (branchType.growsOn == parentBranch.typeId) {
-                ubyte preferredNodePos = to!(ubyte)((parentBranch.nodes.length-1) * branchType.posOnParent);
+                ubyte preferredNodePos = cast(ubyte)((parentBranch.nodes.length-1) * branchType.posOnParent);
                 NodeInstance bestNode;
                 float bestNodeCost = 9000.1f; // the first valid node will be cheaper than this
                 float currentNodeCost;
@@ -147,16 +221,15 @@ mixin template TreeLike() {
 
         NodeInstance node = new NodeInstance;
         node.debugId = debugIdCounter++;
-        node.pos[0] = to!(byte)(1 * sin(angleVertical) * cos(angleHorizontal));
-        node.pos[1] = to!(byte)(1 * sin(angleVertical) * sin(angleHorizontal));
-        node.pos[2] = to!(byte)(1 * cos(angleVertical));
+        node.pos[0] = cast(byte)(1 * sin(angleVertical) * cos(angleHorizontal));
+        node.pos[1] = cast(byte)(1 * sin(angleVertical) * sin(angleHorizontal));
+        node.pos[2] = cast(byte)(1 * cos(angleVertical));
         node.nodeDistance = 1;
         node.angleHorizontal = getAngleUByteFromFloat(angleHorizontal);
         node.angleVertical = getAngleUByteFromFloat(angleVertical);
         node.parentNode = parentNode;
         parentNode.nrOfChildBranches++;
-        branch.nodes ~= parentNode;
-        branch.nodes ~= node;
+        branch.nodes = [parentNode, node];
 
         return branch;
     }
@@ -175,9 +248,9 @@ mixin template TreeLike() {
                 angleVertical = getAngleFloatFromUbyte(branch.nodes[i].angleVertical);
                 if (branchType.nodeDistanceIncreaseChace > uniform(0.0f, 1.0f, gen)) {
                     branch.nodes[i].nodeDistance++;
-                    branch.nodes[i].pos[0] = to!(byte)(branch.nodes[i].nodeDistance * sin(angleVertical) * cos(angleHorizontal));
-                    branch.nodes[i].pos[1] = to!(byte)(branch.nodes[i].nodeDistance * sin(angleVertical) * sin(angleHorizontal));
-                    branch.nodes[i].pos[2] = to!(byte)(branch.nodes[i].nodeDistance * cos(angleVertical));
+                    branch.nodes[i].pos[0] = cast(byte)(branch.nodes[i].nodeDistance * sin(angleVertical) * cos(angleHorizontal));
+                    branch.nodes[i].pos[1] = cast(byte)(branch.nodes[i].nodeDistance * sin(angleVertical) * sin(angleHorizontal));
+                    branch.nodes[i].pos[2] = cast(byte)(branch.nodes[i].nodeDistance * cos(angleVertical));
                     //msg("Increased node distance to ", cast(int)branch.nodes[i].nodeDistance);
                 }
             }
@@ -204,7 +277,7 @@ mixin template TreeLike() {
 
         BranchType branchType = getBranchType(branch);
 
-        ubyte preferredNodePos = to!(ubyte)(branch.nodes.length * branchType.newNodePos);
+        ubyte preferredNodePos = cast(ubyte)(branch.nodes.length * branchType.newNodePos);
         ubyte bestNodePos;
         float bestNodeCost = 9000.1f; // the first valid node will be cheaper than this
         float currentNodeCost;
@@ -239,9 +312,9 @@ mixin template TreeLike() {
             }
             float angleHorizontal = getAngleFloatFromUbyte(node.angleHorizontal);
             float angleVertical = getAngleFloatFromUbyte(node.angleVertical);
-            node.pos[0] = to!(byte)(1 * sin(angleVertical) * cos(angleHorizontal));
-            node.pos[1] = to!(byte)(1 * sin(angleVertical) * sin(angleHorizontal));
-            node.pos[2] = to!(byte)(1 * cos(angleVertical));
+            node.pos[0] = cast(byte)(1 * sin(angleVertical) * cos(angleHorizontal));
+            node.pos[1] = cast(byte)(1 * sin(angleVertical) * sin(angleHorizontal));
+            node.pos[2] = cast(byte)(1 * cos(angleVertical));
             node.nodeDistance = 1;
 
             insertInPlace(branch.nodes, bestNodePos, node);
@@ -252,18 +325,18 @@ mixin template TreeLike() {
 
     private byte getDistanceOfNode(NodeInstance node)
     {
-        return to!(byte)(sqrt(cast(real)(NODE_DISTANCE_SCALE * (node.pos[0]^^2) + NODE_DISTANCE_SCALE * (node.pos[2]^^2) + NODE_DISTANCE_SCALE * (node.pos[2]^^2))) / NODE_DISTANCE_SCALE );
+        return cast(byte)(sqrt(cast(real)(NODE_DISTANCE_SCALE * (node.pos[0]^^2) + NODE_DISTANCE_SCALE * (node.pos[2]^^2) + NODE_DISTANCE_SCALE * (node.pos[2]^^2))) / NODE_DISTANCE_SCALE );
     }
 
     private ubyte getAngleUByteFromFloat(float f)
     {
-        if (f < 0) f += 2*PI;
-        if (f > 2*PI) f -= 2*PI;
-        return to!(ubyte)(f * 250 / (2 * PI));
+        if (f < 0.0f) f += 2.0f * PI;
+        if (f > 2.0f * PI) f -= 2.0f * PI;
+        return cast(ubyte)(f * 250.0f / (2.0f * PI));
     }
     private float getAngleFloatFromUbyte(ubyte b)
     {
-        return (b * 2 * PI / 250);
+        return (b * 2.0f * PI / 250.0f);
     }
 
     private BranchType getBranchType(BranchInstance branch)
@@ -433,16 +506,16 @@ mixin template TreeLike() {
 
     ubyte cap(float a, int lower, int upper)
     {
-        if (a < lower) return to!(ubyte)(lower);
-        if (a > upper) return to!(ubyte)(upper);
-        return to!(ubyte)(a);
+        if (a < lower) return cast(ubyte)(lower);
+        if (a > upper) return cast(ubyte)(upper);
+        return cast(ubyte)(a);
     }
 
     private float getThicknessOfNode(BranchInstance branch, NodeInstance node, BranchType type)
     {
         foreach (i; 0 .. branch.nodes.length) {
             if (branch.nodes[i] == node) {
-                return branch.thickness - to!(ubyte)(to!(float)(THICKNESS_SCALE) * to!(float)(type.thicknessDistanceCost)) * i;
+                return branch.thickness - cast(ubyte)(cast(float)(THICKNESS_SCALE) * cast(float)(type.thicknessDistanceCost)) * i;
             }
         }
         throw new Exception("Could not find node on branch");
@@ -465,9 +538,9 @@ mixin template TreeLike() {
         }
 
         auto t = entityData.pos.tilePos;
-        t.value.x += to!(int)(v.x/NODE_DISTANCE_SCALE);
-        t.value.y += to!(int)(v.y/NODE_DISTANCE_SCALE);
-        t.value.z += to!(int)(v.z/NODE_DISTANCE_SCALE);
+        t.value.x += cast(int)(v.x/NODE_DISTANCE_SCALE);
+        t.value.y += cast(int)(v.y/NODE_DISTANCE_SCALE);
+        t.value.z += cast(int)(v.z/NODE_DISTANCE_SCALE);
         return t;
     }
 

@@ -184,7 +184,7 @@ struct EntityTypeManager {
 
     }
 
-    EntityType byID(ushort id) {
+    EntityType byId(uint id) {
         return &types[id];
     }
     EntityType byName(string name) {

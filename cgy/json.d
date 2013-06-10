@@ -21,8 +21,8 @@ import std.stdio;
 import std.traits;
 
 class JsonException : Exception {
-    this(string s) {
-        super(s);
+    this(string s, ulong line = __LINE__) {
+        super(s, __FILE__, line);
     }
 }
 
@@ -199,8 +199,8 @@ static:
             auto c = s.front;
             s.popFront();
             switch (c) {
-                case '{': return Token(Tag.lmus);
-                case '}': return Token(Tag.rmus);
+                case '{': return Token(Tag.lmus); // left mustache
+                case '}': return Token(Tag.rmus); // right mustache
                 case '[': return Token(Tag.lbra);
                 case ']': return Token(Tag.rbra);
                 case ':': return Token(Tag.colon);
@@ -290,7 +290,8 @@ static:
         i.skip(Tag.lmus);
         Value[string] blep;
         while (i.front.tag != Tag.rmus) {
-            enforce(i.front.tag == Tag.string, new JsonException("derp"));
+            enforce(i.front.tag == Tag.string,
+                    new JsonException("derp: " ~ i.front.tag.to!string));
             string s = i.front.str;
             i.popFront();
             i.skip(Tag.colon);
@@ -382,9 +383,6 @@ template RealThing(alias Class, string Member) {
 	}
 }
 
-
-
-
 private void update(T)(T* t, string s) { return update!T(t, parse(s)); }
 private void update(T)(T* t, Value val) {
     enforce(t !is null, "Can not update t of type " ~ T.stringof ~ " because t is null!");
@@ -466,7 +464,11 @@ bool loadJSON(string path, out Value value) {
 
 Value loadJSON(string path) {
     Value val;
-    enforce(loadJSON(path, val), "Can't load json file:" ~ path);
+    try {
+        enforce(loadJSON(path, val), "Can't load json file:" ~ path);
+    } catch(JsonException e) {
+        throw new JsonException("Error loading json file " ~ path ~": " ~ e.msg, e.line);
+    }
     return val;
 }
 

@@ -1,11 +1,17 @@
 module changes.changes;
 
+import std.conv : to;
+
 import clan;
+import clans : Clans;
 import entities.entity;
 import inventory;
 import json;
 import util.pos;
 import unit;
+import unittypemanager : unitTypeManager;
+import util.filesystem;
+import util.memory : BinaryWriter;
 import util.util;
 import worldstate.worldstate;
 
@@ -62,58 +68,38 @@ struct RemoveTile {
         this = *(cast(typeof(&this))ptr);
         return this.sizeof;
     }
-
 }
 
 struct CreateClan {
-    Clan clan;
+    uint id;
 
-    struct Inner {
-        uint id;
-    };
-    Inner inner;
-    alias inner this;
-
-    this(Clan _clan) {
-        clan = _clan;
+    this(Clan clan) {
         id = clan.clanId;
     }
 
     void apply(WorldState world) {
         import clans : Clans;
-        clan = Clans().getClanById(id);
-        if(clan) return; // Is on server, yay.
-        if(clan is null) {
-            clan = new NormalClan(id);
-        }
+        auto clan = new NormalClan(id);
         clan.init(world);
     }
     ubyte[] toBytes() {
-        return (cast(ubyte*)&inner)[0 .. inner.sizeof];
+        return (cast(ubyte*)&this)[0 .. this.sizeof];
     }
     size_t fromBytes(ubyte *ptr) {
-        inner = *(cast(typeof(&inner))ptr);
-        return inner.sizeof;
+        this = *(cast(typeof(&this))ptr);
+        return this.sizeof;
     }
-
 }
 
 struct CreateUnit {
 
-    Unit unit;
-
-    struct Inner {
-        uint unitId;
-        uint typeId;
-        uint clanId;
-        UnitPos pos;
-    };
-    Inner inner;
-    alias inner this;
+    uint unitId;
+    uint typeId;
+    uint clanId;
+    UnitPos pos;
 
 
-    this(Unit _unit) {
-        unit = _unit;
+    this(Unit unit) {
         unitId = unit.id;
         typeId = unit.type.id;
         clanId = unit.clan.clanId;
@@ -123,24 +109,18 @@ struct CreateUnit {
     //Value serialized;
 
     void apply(WorldState world) {
-        if(unit is null) {
-            unit = new Unit(unitId);
-            unit.pos = pos;
-            import unittypemanager;
-            unit.type = unitTypeManager.byID(cast(ushort)typeId);
-        }
-        import clan : Clans;
+        auto unit = new Unit(unitId);
+        unit.pos = pos;
+        unit.type = unitTypeManager.byID(cast(ushort)typeId);
         Clans().getClanById(clanId).addUnit(unit);
     }
     ubyte[] toBytes() {
-        return (cast(ubyte*)&inner)[0 .. inner.sizeof];
+        return (cast(ubyte*)&this)[0 .. this.sizeof];
     }
     size_t fromBytes(ubyte *ptr) {
-        inner = *(cast(typeof(&inner))ptr);
-        return inner.sizeof;
+        this = *(cast(typeof(&this))ptr);
+        return this.sizeof;
     }
-
-
 }
 struct RemoveUnit {
     //Unit u;
@@ -170,7 +150,6 @@ struct MoveUnit {
     }
 
     void apply(WorldState world) {
-        import clans;
         auto unit = Clans().getUnitById(unitId);
         world.unsafeMoveUnit(unit, destination, ticksToArrive);
     }
@@ -222,45 +201,39 @@ struct SetAction {
 }
 
 struct CreateEntity {
-/*
-    this(Value value) {
-        e = null;
-        serializedData = value;
-    }
 
-    this(Entity _e, Value params) {
-        e = _e;
-        serializedData = encode(e);
-        foreach(key, val ; params.asObject()) {
-            serializedData[key] = val;
+    uint id;
+    ubyte[] serialized;
+
+    this(Entity entity) {
+        id = entity.entityId;
+        void write(ubyte[] data) {
+            serialized ~= data;
         }
+        auto writer = BinaryWriter(&write);
+        entity.serializeBinary(writer);
     }
-
-    Entity e;
-    Value serializedData;
 
     void apply(WorldState world) {
-        if(e is null) {
-            auto entity = newEntity(serializedData, world);
-        } else {
-            e.deserialize(serializedData, world);
-        }
+        Entity entity;
+        //auto  val = json.parse(serialized);
+        //entity = Entity.deserialize(val);
     }
-    */
 
-    uint entityId;
-    uint entityTypeId;
-    uint clanId;
-    EntityPos entityPos;
-    void apply(WorldState world) {
-        BREAKPOINT;
-    }
     ubyte[] toBytes() {
-        return (cast(ubyte*)&this)[0 .. this.sizeof];
+        ubyte[] tmp;
+        tmp.length = id.sizeof + uint.sizeof + serialized.length;
+        tmp[0..4] = (*cast(ubyte[4]*)&id)[];
+        uint len = cast(uint) serialized.length;
+        tmp[4..8] = (*cast(ubyte[4]*)&len)[];
+        tmp[8..$] = (cast(ubyte[])serialized)[];
+        return tmp;
     }
     size_t fromBytes(ubyte *ptr) {
-        this = *(cast(typeof(&this))ptr);
-        return this.sizeof;
+        id = *cast(uint*)ptr;
+        uint length = *cast(uint*)(ptr+4);
+        serialized = ptr[8 .. length+8];
+        return id.sizeof + length.sizeof + serialized.length;
     }
 
 }

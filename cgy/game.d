@@ -19,6 +19,7 @@ import ai.test;
 
 import clan;
 import clans;
+import gaia : Gaia;
 import commands : Commands;
 
 import entitytypemanager;
@@ -181,14 +182,24 @@ struct Game {
         auto proxy = worldState._worldProxy;
 
         auto clan = newClan(worldState);
+        scope(exit) delete clan;
         proxy.createClan(clan);
 
         auto unit = newUnit();
+        scope(exit) delete unit;
         auto unitPos = topOfTheWorld(spawnPoint.TileXYPos);
         unit.pos = unitPos;
         unit.type = unitTypeManager.byName("dwarf");
         unit.clan = clan;
         proxy.createUnit(unit);
+
+        auto tree = newEntity("debug");
+        scope(exit) delete tree;
+        auto treePos = topOfTheWorld((spawnPoint+vec2i(10,10)).TileXYPos).value.EntityPos;
+        tree.pos = treePos;
+        tree.clan = Gaia();
+        tree.createTreeLikeEntity(proxy, 35);
+        proxy.createEntity(tree);
         /*
 
         // HalfWorldSize_xy

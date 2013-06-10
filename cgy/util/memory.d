@@ -2,12 +2,15 @@
 
 module util.memory;
 
+import std.conv : to;
 import std.exception;
 import std.string;
+import std.traits : arity, isArray, isDynamicArray, isAssociativeArray, isPointer, isSomeFunction, isCallable;
 
 import windows;
 
 import util.util : BREAK_IF;
+import util.traits : RealMembers;
 
 version(Windows){
     //    import std.c.windows.windows;
@@ -119,4 +122,124 @@ ulong getCpuTimeMs() {
     //filetime == X * 100ns = X * 0.1us
     return total / 10_000; // Should be ms?
 }
+
+
+struct BinaryWriter {
+    alias void delegate(ubyte[]) WriterType;
+    WriterType writer;
+
+    void write(T)(T t) {
+        static if(isArray!T) {
+            ubyte[] array = cast(ubyte[])t;
+            static if(isDynamicArray!T) {
+                write(t.length.to!int);
+            }
+            writer(array);
+        } else static if(isAssociativeArray!T) {
+            write(t.length.to!int);
+            foreach(key, value ; t) {
+                write(key);
+                write(value);
+            }
+        } else static if(isPointer!T) {
+            static assert(0, "Cant write pointer types! Need some sort of.. magic.. conversion!");
+        } else static if(isSomeFunction!T) {
+            static assert(0, "Cant write function types! Need some sort of.. magic.. conversion!");
+        } else static if( is(T == struct)) {
+            /*
+            foreach(member ; __traits(allMembers, T)) {
+                static if(RealThing!(t, member)) {
+                    static if(isSomeFunction!(typeof(__traits(getMember, t, member)))) {
+                        continue;
+                    } else {
+                        alias typeof(__traits(getMember, t, member)) type;
+                        pragma(msg, type);
+                        write!type(__traits(getMember, t, member));
+                    }
+                }
+            }
+            */
+            foreach(member ; RealMembers!T) {
+                write(mixin("t." ~ member));
+            }
+        } else {
+            ubyte[] array = cast(ubyte[]) (&t)[0..1];
+            writer(array);
+        }
+    }
+}
+
+struct BinaryReader {
+    alias void delegate(ubyte[]) ReaderType;
+    ReaderType reader;
+
+    T read(T)() {
+        T t;
+        read!T(t);
+        return t;
+    }
+
+    void read(T)(ref T t) {
+        static if(isArray!T) {
+            static if(isDynamicArray!T) {
+                auto size = read!int;
+                t.length = size;
+            }
+            ubyte[] array = cast(ubyte[])t;
+            reader(array);
+        } else static if(isAssociativeArray!T) {
+            alias KeyType!T KeyType;
+            alias ValueType!T ValueType;
+            auto length = read!int;
+            foreach(idx ; 0 .. length) {
+                auto key = read!KeyType;
+                auto value = read!ValueType;
+                t[key] = value;
+            }
+        } else static if(isPointer!T) {
+            static assert(0, "Cant read pointer types! Need some sort of.. magic.. conversion!");
+        } else static if(isSomeFunction!T) {
+            static assert(0, "Cant read function types! Need some sort of.. magic.. conversion!");
+        } else static if( is(T == struct)) {
+            /*
+            foreach(member ; __traits(allMembers, T)) {
+                static if(RealThing!(t, member)) {
+                    alias typeof(__traits(getMember, t, member)) type;
+                    pragma(msg, type.stringof ~ " " ~ T.stringof ~ "." ~ member);
+                    static if(isSomeFunction!(typeof(__traits(getMember, t, member)))) {
+                        continue;
+                    //} else static if(isCallable!(typeof(__traits(getMember, t, member)))) {
+                    //    continue;
+                    } else static if(isSomeFunction!(typeof(&__traits(getMember, t, member)))) {
+                        continue;
+                    } else {
+                        pragma(msg, typeof(mixin("t." ~ member)).sizeof);
+                        pragma(msg, typeof(__traits(getMember, t, member)).sizeof);
+                        static if(member == "tilePos") {
+                            pragma(msg, arity!(typeof(mixin("(cast(T*)null)." ~ member))));
+                        }
+                        read!type(__traits(getMember, t, member));
+                        //mixin("read!type(t." ~ member ~ ");");
+                    }
+                }
+            }
+            */
+            foreach(member ; RealMembers!T) {
+                alias typeof(__traits(getMember, t, member)) type;
+                //pragma(msg, type.stringof ~ " " ~ T.stringof ~ "." ~ member);
+                //pragma(msg, typeof(mixin("t." ~ member)).sizeof);
+                //pragma(msg, typeof(__traits(getMember, t, member)).sizeof);
+                //read!type(__traits(getMember, t, member));
+                read(mixin("t." ~ member));
+            }
+        } else {
+            ubyte[] array = cast(ubyte[]) (&t)[0..1];
+            reader(array);
+        }
+
+    }
+}
+
+
+
 

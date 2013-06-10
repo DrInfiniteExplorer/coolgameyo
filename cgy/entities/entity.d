@@ -13,6 +13,7 @@ import light;
 import json;
 import util.pos;
 import stolen.aabbox3d;
+import util.memory;
 import util.util;
 import worldstate.worldstate;
 import changes.worldproxy;
@@ -29,35 +30,12 @@ import tiletypemanager;
 immutable INVALID_ENTITY_ID = 0;
 shared int g_entityCount = INVALID_ENTITY_ID;
 
-WorldProxy entityCreationProxy;
-private void createEntity(Entity entity, EntityType type, WorldState world) {
-    if(entityCreationProxy is null) {
-        entityCreationProxy = new WorldProxy(world);
-    }
-    entity.type = type;
-    entity.createTreeLikeEntity(world, entityCreationProxy);
-}
-
-Entity newEntity(Value serializedEntity, WorldState world) {
-    auto ent = newEntity();
-    ent.deserialize(serializedEntity, world);
-    return ent;
-}
-
-//When creating an entity trough this method, dont forget to
-// add it to a changelist with createEntity(ent, json.Value). the apply-
-// -function there deserializes, and deserialization binds and
-// creates the actual non-basic entity data and connections.
-Entity newEntity(EntityType type) {
-    auto ent = newEntity();
-    ent.type = type;
-    return ent;
-}
-
-private Entity newEntity() {
-    auto entity = new Entity;
-    g_entityCount = core.atomic.atomicOp!"+="(g_entityCount, 1);
-    entity.entityId = g_entityCount;
+Entity newEntity(string typeName) {
+    auto type = entityTypeManager.byName(typeName);
+    BREAK_IF(type is null);
+    
+    auto id = core.atomic.atomicOp!"+="(g_entityCount, 1);
+    auto entity = new Entity(id, type);
     return entity;
 }
 
@@ -95,10 +73,18 @@ final class Entity {
     Workshop* workshop;
     Placeable* placeable;
 
+    Inventory inventory;
+
     mixin TreeLike;
 
+    this(uint id, EntityType _type) {
+        entityId = id;
+        type = _type;
+        if(type.hasTreelike) {
+            treelike = new TreelikeInstance;
+        }
+    }
 
-    Inventory inventory;
 
     bool shouldTick() const @property {
         return workshop != null || treelike !is null;
@@ -108,40 +94,28 @@ final class Entity {
         entityData.isDropped = true;
     }
 
-    Value toJSON() {
-        Value val = encode(entityData);
 
-        val.populateJSONObject("entityTypeId", type.id);
-        if(clan !is null) {
-            val.populateJSONObject("clanId", clan.clanId);
-        }
-
-        return val;
+    void serializeBinary(BinaryWriter writer) {
+        writer.write(entityId);
+        writer.write(type.id);
+        writer.write(clan.clanId);
+        writer.write(entityData);
+        serializeBinaryTreelike(writer);
     }
 
-    //Formerly this. Only allow easy encoding of entities, deserialization must go trough controlled means.
-    //void fromJSON(Value val) {
+    static Entity deserializeBinary(BinaryReader reader) {
+        auto entityId = reader.read!int;
+        auto typeId = reader.read!int;
+        auto clanId = reader.read!int;
+        auto type = entityTypeManager.byId(typeId);
+        auto clan = Clans().getClanById(clanId);
+        auto ent = new Entity(entityId, type);
+        reader.read(ent.entityData);
+        ent.deserializeBinaryTreelike(reader);
 
-    void deserialize(Value val, WorldState world) {
-        val.read(entityData);
-
-        enforce("entityTypeId" in val, "Serialized entity does not have entityTypeId variable!");
-        enforce("clanId" in val, "Serialized entity does not have clanId variable!");
-        int entityTypeId;
-        int clanId;
-        val.readJSONObject("entityTypeId", &entityTypeId,
-                           "clanId", &clanId);
-        auto entityTypeManager = EntityTypeManager();
-        auto type = entityTypeManager.byID(cast(ushort)entityTypeId);
-
-        createEntity(this, type, world);
-
-        Clans().getClanById(clanId).addEntity(this);
-
-
+        clan.addEntity(ent);
+        return ent;
     }
-
-
 
     int tick(WorldProxy proxy) {
         treelikeTick(proxy);

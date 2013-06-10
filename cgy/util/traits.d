@@ -2,6 +2,7 @@ module util.traits;
 
 
 import std.traits : ParameterTypeTuple;
+import std.typetuple : Filter;
 
 // Implementera ett template för att få alla variabel-medlemmar ur en klass.
 
@@ -58,4 +59,44 @@ BaseType safeFactory(BaseType, alias DerivedType)() {
     BaseType t = cast(BaseType) o;
     enforce(t, "Could not cast to base class-type " ~ baseClassName);
     return t;
+}
+
+template RealMembers(T) {
+    import std.traits : isSomeFunction;
+    T t;
+    template RealShit(string thing) {
+        // Things which have no type are not real things
+        static if(!__traits(compiles, typeof(__traits(getMember, t, thing)))) {
+            enum RealShit = false;
+
+        // Things which are functions are not real things
+        } else static if(isSomeFunction!(typeof(__traits(getMember, t, thing)))) {
+            enum RealShit = false;
+
+        // Things which masquerade as real things but are functions are not real things.
+        } else static if(isSomeFunction!(typeof(&__traits(getMember, t, thing)))) {
+            enum RealShit = false;
+        } else {
+            enum RealShit = true;
+        }
+    }
+    alias Filter!(RealShit, __traits(allMembers, T)) RealMembers;
+}
+
+unittest {
+    import util.pos;
+    import util.util;
+    foreach(member ; RealMembers!EntityPos) {
+        msg(member);
+    }
+}
+
+unittest {
+    struct A{
+        int a, b;
+    }
+    A a;
+    import util.util : BREAK_IF;
+    a.tupleof[0] = 2;
+    BREAK_IF(a.a != 2);
 }
