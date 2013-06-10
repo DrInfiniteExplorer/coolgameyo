@@ -401,7 +401,7 @@ bool displayHeightmap(T)(T t) {
             case "float":
                 BinaryFile file = BinaryFile(t, "r");
                 floatMap.length = cast(uint)file.size / float.sizeof;
-                file.read(floatMap);
+                file.reader.read(floatMap);
                 file.close();
                 heightmap.load(floatMap);
                 break;

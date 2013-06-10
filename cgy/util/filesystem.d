@@ -8,6 +8,7 @@ import std.string;
 import std.stdio;
 import std.traits;
 
+import util.memory : BinaryWriter, BinaryReader;
 import util.util;
 
 
@@ -164,49 +165,21 @@ struct BinaryFile {
             mode = mode ~ "b";
         }
         file = std.stdio.File(path, mode);
+
+        writer = BinaryWriter(&rawWrite);
+        reader = BinaryReader(&rawRead);
+    }
+    BinaryWriter writer;
+    BinaryReader reader;
+    
+    void rawWrite(ubyte[] data) {
+        file.rawWrite(data);
+    }
+    void rawRead(ubyte[] data) {
+        file.rawRead(data);
     }
 
-    /*
-    void writeRetard(T)(T t) { //Because asd.length -> retarded error.
-        write(t);
-    }
-    solved with auto ref which takes ref if possible and not otherwise (according to plol)
-    More info under templates -page on dlang language reference
-    */
-    void write(T)(auto ref T t) {
 
-        static if(isArray!T) {
-            file.rawWrite(t);
-        } else static if(isAssociativeArray!T) {
-            static assert(0, "Wut no we dont write associative arrays, duh!");
-        } else {
-            T[] arr = (&t)[0..1];
-            file.rawWrite(arr);
-        }
-    }
-
-    auto read(T)() {
-        static if(isArray!T) {
-            T tmp;
-            file.rawRead(tmp);
-            return tmp;
-        } else {
-            T tmp;
-            T[] tmp2 = cast(T[])((&tmp)[0..1]);
-            file.rawRead(tmp2);
-            return tmp;
-        }
-    }
-    void read(T)(ref T t) {
-        static if(isArray!T) {
-            file.rawRead(t);
-        } else static if(isAssociativeArray!T) {
-            static assert(0, "Wut no we dont read associative arrays, duh!");
-        } else {
-            T[] tmp2 = ((&t)[0..1]);
-            file.rawRead(tmp2);
-        }
-    }
     ulong size() @property {
         return file.size;
     }

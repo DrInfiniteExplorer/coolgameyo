@@ -23,7 +23,7 @@ final class HalfEdge {
     Vertex _vertex;
     Site left;
 
-    void serialize(BinaryFile writer, int[HalfEdge] halfEdges, int[Vertex] vertices, int[Site] sites) {
+    void serialize(BinaryWriter writer, int[HalfEdge] halfEdges, int[Vertex] vertices, int[Site] sites) {
         if(_reverse is null) {
             writer.write(-1);
         } else {
@@ -37,7 +37,7 @@ final class HalfEdge {
         writer.write(vertices[_vertex]);
         writer.write(sites[left]);
     }
-    void deserialize(BinaryFile reader, HalfEdge[] halfEdges, Vertex[] vertices, Site[] sites) {
+    void deserialize(BinaryReader reader, HalfEdge[] halfEdges, Vertex[] vertices, Site[] sites) {
 
         _reverse = null;
         next = null;
@@ -175,7 +175,7 @@ final class Edge {
 
     bool derp = false;
 
-    void serialize(BinaryFile writer, int[HalfEdge] halfEdges) {
+    void serialize(BinaryWriter writer, int[HalfEdge] halfEdges) {
         if(halfLeft is null) {
             writer.write(-1);
         } else {
@@ -188,7 +188,7 @@ final class Edge {
         }
         writer.write(derp);
     }
-    void deserialize(BinaryFile reader, HalfEdge[] halfEdges) {
+    void deserialize(BinaryReader reader, HalfEdge[] halfEdges) {
         int id;
         halfLeft = null;
         halfRight = null;
@@ -328,7 +328,7 @@ final class Vertex {
     }
 
 
-    void serialize(BinaryFile writer, int[HalfEdge] halfEdges) {
+    void serialize(BinaryWriter writer, int[HalfEdge] halfEdges) {
         writer.write(pos);
         if(edge in halfEdges) {
             writer.write(halfEdges[edge]);
@@ -337,7 +337,7 @@ final class Vertex {
             writer.write(-1);
         }
     }
-    void deserialize(BinaryFile reader, HalfEdge[] halfEdges) {
+    void deserialize(BinaryReader reader, HalfEdge[] halfEdges) {
         reader.read(pos);
         edge = null;
         int id;
@@ -365,7 +365,7 @@ final class Site {
     vec2d pos;
     HalfEdge[] halfEdges;
 
-    void serialize(BinaryFile writer, int[HalfEdge] halfEdgeMap) {
+    void serialize(BinaryWriter writer, int[HalfEdge] halfEdgeMap) {
         writer.write(siteId);
         writer.write(pos);
         int len = cast(int)halfEdges.length;
@@ -380,7 +380,7 @@ final class Site {
         }
     }
 
-    void deserialize(BinaryFile reader, HalfEdge[] he) {
+    void deserialize(BinaryReader reader, HalfEdge[] he) {
         reader.read(siteId);
         reader.read(pos);
         this.halfEdges.length = reader.read!int;
@@ -405,7 +405,8 @@ final class VoronoiPoly {
     HalfEdge[] halfEdges;
 
     void serialize(string path) {
-        auto writer = BinaryFile(path, "w");
+        auto file = BinaryFile(path, "w");
+        auto writer = file.writer;
 
         int edgeMap[Edge];
         int vertexMap[Vertex];
@@ -445,7 +446,8 @@ final class VoronoiPoly {
     }
 
     void deserialize(string path) {
-        auto reader = BinaryFile(path, "r");
+        auto file = BinaryFile(path, "r");
+        auto reader = file.reader;
 
         sites.length = reader.read!int();
         vertices.length = reader.read!int();
