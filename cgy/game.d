@@ -193,7 +193,7 @@ struct Game {
         unit.clan = clan;
         proxy.createUnit(unit);
 
-        auto tree = newEntity("debug");
+        auto tree = newEntity("tree01");
         scope(exit) delete tree;
         auto treePos = topOfTheWorld((spawnPoint+vec2i(10,10)).TileXYPos).value.EntityPos;
         tree.pos = treePos;

@@ -71,7 +71,7 @@ mixin template TreeLike() {
 
     int cnt = 24;
     void treelikeTick(WorldProxy proxy) {
-        if((cnt % 1751) == 23) {
+        if((cnt % 75) == 23) {
             growTree(proxy);
         }
         cnt++;

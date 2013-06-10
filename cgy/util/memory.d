@@ -146,19 +146,6 @@ struct BinaryWriter {
         } else static if(isSomeFunction!T) {
             static assert(0, "Cant write function types! Need some sort of.. magic.. conversion!");
         } else static if( is(T == struct)) {
-            /*
-            foreach(member ; __traits(allMembers, T)) {
-                static if(RealThing!(t, member)) {
-                    static if(isSomeFunction!(typeof(__traits(getMember, t, member)))) {
-                        continue;
-                    } else {
-                        alias typeof(__traits(getMember, t, member)) type;
-                        pragma(msg, type);
-                        write!type(__traits(getMember, t, member));
-                    }
-                }
-            }
-            */
             foreach(member ; RealMembers!T) {
                 write(mixin("t." ~ member));
             }
@@ -166,6 +153,21 @@ struct BinaryWriter {
             ubyte[] array = cast(ubyte[]) (&t)[0..1];
             writer(array);
         }
+    }
+}
+
+struct BinaryMemoryReader {
+
+    this(ubyte[] buff) {
+        buffer = buff;
+        reader = BinaryReader(&this.read);
+    }
+    ubyte[] buffer;
+    BinaryReader reader;
+
+    void read(ubyte[] dst) {
+        dst[] = buffer[0 .. dst.length];
+        buffer = buffer[dst.length .. $];
     }
 }
 
@@ -201,29 +203,6 @@ struct BinaryReader {
         } else static if(isSomeFunction!T) {
             static assert(0, "Cant read function types! Need some sort of.. magic.. conversion!");
         } else static if( is(T == struct)) {
-            /*
-            foreach(member ; __traits(allMembers, T)) {
-                static if(RealThing!(t, member)) {
-                    alias typeof(__traits(getMember, t, member)) type;
-                    pragma(msg, type.stringof ~ " " ~ T.stringof ~ "." ~ member);
-                    static if(isSomeFunction!(typeof(__traits(getMember, t, member)))) {
-                        continue;
-                    //} else static if(isCallable!(typeof(__traits(getMember, t, member)))) {
-                    //    continue;
-                    } else static if(isSomeFunction!(typeof(&__traits(getMember, t, member)))) {
-                        continue;
-                    } else {
-                        pragma(msg, typeof(mixin("t." ~ member)).sizeof);
-                        pragma(msg, typeof(__traits(getMember, t, member)).sizeof);
-                        static if(member == "tilePos") {
-                            pragma(msg, arity!(typeof(mixin("(cast(T*)null)." ~ member))));
-                        }
-                        read!type(__traits(getMember, t, member));
-                        //mixin("read!type(t." ~ member ~ ");");
-                    }
-                }
-            }
-            */
             foreach(member ; RealMembers!T) {
                 alias typeof(__traits(getMember, t, member)) type;
                 //pragma(msg, type.stringof ~ " " ~ T.stringof ~ "." ~ member);
@@ -239,7 +218,4 @@ struct BinaryReader {
 
     }
 }
-
-
-
 

@@ -11,7 +11,7 @@ import util.pos;
 import unit;
 import unittypemanager : unitTypeManager;
 import util.filesystem;
-import util.memory : BinaryWriter;
+import util.memory : BinaryWriter, BinaryMemoryReader;
 import util.util;
 import worldstate.worldstate;
 
@@ -215,7 +215,8 @@ struct CreateEntity {
     }
 
     void apply(WorldState world) {
-        Entity entity;
+        auto reader = BinaryMemoryReader(serialized);
+        Entity entity = Entity.deserializeBinary(reader.reader);
         //auto  val = json.parse(serialized);
         //entity = Entity.deserialize(val);
     }

@@ -105,7 +105,7 @@ final class Entity {
 
     static Entity deserializeBinary(BinaryReader reader) {
         auto entityId = reader.read!int;
-        auto typeId = reader.read!int;
+        auto typeId = reader.read!ushort;
         auto clanId = reader.read!int;
         auto type = entityTypeManager.byId(typeId);
         auto clan = Clans().getClanById(clanId);
