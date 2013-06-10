@@ -87,7 +87,7 @@ final class Entity {
 
 
     bool shouldTick() const @property {
-        return workshop != null || treelike !is null;
+        return workshop !is null || treelike !is null;
     }
 
     void deconstruct() {
@@ -117,10 +117,8 @@ final class Entity {
         return ent;
     }
 
-    int tick(WorldProxy proxy) {
+    void tick(WorldProxy proxy) {
         treelikeTick(proxy);
-
-        return 1;
     }
 
     //Returns the bounding box of the unit, in world space.

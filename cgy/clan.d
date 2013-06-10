@@ -5,6 +5,7 @@ import std.array;
 import std.conv;
 import std.exception;
 
+import changes.worldproxy : WorldProxy;
 import clans;
 import json;
 import unit;
@@ -93,11 +94,7 @@ class Clan : WorldStateListener {
 
     void update(WorldState world) {
         foreach(entity ; clanEntities) {
-            import changes.worldproxy;
-            scheduler.push(task((WorldProxy worldProxy) {
-                //msg(&entity);
-                entity.tick(worldProxy);
-            }));
+            scheduler.push(task(&entity.tick));
         }
     }
 }

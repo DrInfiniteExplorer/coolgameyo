@@ -31,20 +31,33 @@ class PlanningMode : GuiEventDump {
 
     Camera camera;
 
-    double focusZ;
+    double _focusZ;
     float focusDistance = 10.0;
     float desiredFocusDistance = 10.0;
     vec2d focusXY;
 
+    void focusZ(double z) @property {
+        _focusZ = z;
+        game.getRenderer.minZ = cast(int)z + 1;
+    }
+
+    double focusZ() const @property {
+        return _focusZ;
+    }
+
+    GuiElementWindow designateWindow;
 
     this(InGameGui _gui) {
         gui = _gui;
         world = game.getWorld;
         camera = game.getCamera;
-        focusZ = camera.position.z;
+        focusZ = cast(int)camera.position.z;
 
         middleX = cast(ushort)renderSettings.windowWidth / 2;
         middleY = cast(ushort)renderSettings.windowHeight / 2;
+
+        designateWindow = new GuiElementWindow(gui, Rectd(0.8, 0, 0.2, 1.0), "Designate menu", false, false);
+        //CurrentGames = new GuiElementWindow(page1, Rectd(0.05, 0.05, 0.4, 0.75), "Current Games", false, false);
     }
 
     bool destroyed = false;
@@ -97,7 +110,7 @@ class PlanningMode : GuiEventDump {
         if( (m.wheelUp || m.wheelDown) && m.down) {
             if(keyMap[SDLK_LCTRL]) {
                 int dir = m.wheelUp ? 1 : -1;
-                focusZ += dir;
+                focusZ = focusZ + dir;
             } else {
                 auto mod = m.wheelUp ? 0.9 : 1.1;
                 desiredFocusDistance = clamp(desiredFocusDistance * mod, 1.0, 25.0);
@@ -160,6 +173,8 @@ class PlanningMode : GuiEventDump {
             focusDistance = 1.0;
             focusZ = floor(camera.position.z);
             camera.position -= camera.targetDir * focusDistance;
+        } else {
+            game.getRenderer.minZ = int.max;
         }
     }
 

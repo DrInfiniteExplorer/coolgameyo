@@ -41,16 +41,15 @@ class Renderer {
 
     HeightSheets heightSheets;
     
-    alias ShaderProgram!("VP", "M", "color") DudeShaderProgram;
     alias ShaderProgram!("VP", "V", "color", "radius") LineShaderProgram;
-    alias ShaderProgram!("albedo", "minecraft", "raycast", "method") LightMixerShaderProgram;
+    alias ShaderProgram!("method") LightMixerShaderProgram;
 
-    DudeShaderProgram dudeShader;
     LineShaderProgram lineShader;
     LightMixerShaderProgram lightMixShader;
-    
-    vec3d*[Unit] specialUnits;
-    
+
+    //int minZ = int.max;
+    int minZ = 420;
+
     this(Camera c, TileTextureAtlas _atlas, TileRenderer _tileRenderer, SceneManager _sceneManager, HeightSheets _heightSheets)
     {
         mixin(LogTime!("RendererInit"));
@@ -65,13 +64,6 @@ class Renderer {
     bool initialized = false;
 
     void init() {
-
-        dudeShader = new DudeShaderProgram("shaders/renderDude.vert", "shaders/renderDude.frag");
-        dudeShader.bindAttribLocation(0, "position");
-        dudeShader.link();
-        dudeShader.VP = dudeShader.getUniformLocation("VP");
-        dudeShader.M = dudeShader.getUniformLocation("M");
-        dudeShader.color = dudeShader.getUniformLocation("color");
         
         lineShader = new LineShaderProgram("shaders/lineShader.vert", "shaders/lineShader.frag");
         lineShader.bindAttribLocation(0, "position");
@@ -83,14 +75,8 @@ class Renderer {
         lightMixShader = new LightMixerShaderProgram("shaders/quadShader.vert", "shaders/lightMixer.frag");
         lightMixShader.bindAttribLocation(0, "vertex");
         lightMixShader.link();
-        lightMixShader.albedo = lightMixShader.getUniformLocation("albedoTex");
-        lightMixShader.minecraft = lightMixShader.getUniformLocation("minecraftLightTex");
-        lightMixShader.raycast = lightMixShader.getUniformLocation("raycastLightTex");
         lightMixShader.method = lightMixShader.getUniformLocation("method");
         lightMixShader.use();
-        lightMixShader.setUniform(lightMixShader.albedo, 5);
-        lightMixShader.setUniform(lightMixShader.minecraft, 6);
-        lightMixShader.setUniform(lightMixShader.raycast, 7);
         lightMixShader.use(false);
 
 
@@ -105,7 +91,6 @@ class Renderer {
         sceneManager.destroy();
         heightSheets.destroy();
         tileRenderer.destroy();
-        dudeShader.destroy();
         lineShader.destroy();
         atlas.destroy();
     }
@@ -148,27 +133,6 @@ class Renderer {
     // https://github.com/Wallbraker/Charged-Miners
     // wiki is down so arbitrary place is best for future reference and documentation.
 
-    void renderDudes(Camera camera, float tickTimeSoFar) {
-        //TODO: Remove camera position from dudes!! Matrix to set = proj*viewRotation
-        auto vp = camera.getProjectionMatrix() * camera.getViewMatrix();
-        dudeShader.use();
-        dudeShader.setUniform(dudeShader.VP, vp);
-        glEnableVertexAttribArray(0);
-        glError();
-        pragma(msg, "Implment scene graph");
-        auto dudes = []; //world.getVisibleUnits(camera);
-        /*
-        foreach(dude ; dudes) {
-            renderDude(dude, tickTimeSoFar);
-        }
-        */
-        glDisableVertexAttribArray(0);
-        dudeShader.use(false);
-        glError();
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-    }
-
-
     void castShadowRays() {
         if(renderSettings.renderTrueWorld == 1 || 
            renderSettings.renderTrueWorld == 3 || 
@@ -179,22 +143,14 @@ class Renderer {
 
     void finishHim() {
 
-        glActiveTexture(GL_TEXTURE5);
-        glError();
-        glBindTexture(GL_TEXTURE_2D, g_albedoTexture);
-        glError();
+        glActiveTexture(GL_TEXTURE5); glError();
+        glBindTexture(GL_TEXTURE_2D, g_albedoTexture); glError();
 
-        glActiveTexture(GL_TEXTURE6);
-        glError();
-        glBindTexture(GL_TEXTURE_2D, g_lightTexture);
-        glError();
+        glActiveTexture(GL_TEXTURE6); glError();
+        glBindTexture(GL_TEXTURE_2D, g_lightTexture); glError();
 
-        glActiveTexture(GL_TEXTURE7);
-        glError();
-        glBindTexture(GL_TEXTURE_2D, g_rayCastOutput);
-        glError();
-
-        //
+        glActiveTexture(GL_TEXTURE7); glError();
+        glBindTexture(GL_TEXTURE_2D, g_rayCastOutput); glError();
 
         lightMixShader.use();
         lightMixShader.setUniform(lightMixShader.method, renderSettings.renderTrueWorld);
@@ -212,7 +168,6 @@ class Renderer {
 
         vec3f skyColor = CatmullRomSpline(timeOfDay, SkyColors);
 
-        //TODO: Make function setWireframe(bool yes) that does this.
         //Render world
         glBindFramebuffer(GL_FRAMEBUFFER, g_FBO); glError();
         glClearColor(skyColor.x, skyColor.y, skyColor.z, 1.0f); glError();
@@ -220,21 +175,14 @@ class Renderer {
 
         setWireframe(renderSettings.renderWireframe);
 
-
-
         atlas.use();
         triCount = 0;
 
         heightSheets.render(camera);
-
-        tileRenderer.render(camera, skyColor);
-
+        tileRenderer.render(camera, skyColor, minZ);
         sceneManager.renderScene(camera);
 
-        //renderDudes(camera, 0.0f);
-		//renderEntities(camera, 0.0f);
         renderDebug(camera);
-
 
         setWireframe(false);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -244,30 +192,5 @@ class Renderer {
         finishHim();
 
   }
-
-	
-    // D MINECRAFT MAP VIEWER CLONE INSPIRATION ETC
-    // https://github.com/Wallbraker/Charged-Miners
-    // wiki is down so arbitrary place is best for future reference and documentation.
-
-    void renderEntities(Camera camera, float tickTimeSoFar) {
-        //TODO: Remove camera position from dudes!! Matrix to set = proj*viewRotation
-        auto vp = camera.getProjectionMatrix() * camera.getViewMatrix();
-        dudeShader.use();
-        dudeShader.setUniform(dudeShader.VP, vp);
-        glEnableVertexAttribArray(0);
-        glError();
-        auto entities = []; //Implement scenegraph world.getVisibleEntities(camera);
-        /*
-        foreach(entity ; entities) {
-            renderEntity(entity, tickTimeSoFar);
-        }
-        */
-        glDisableVertexAttribArray(0);
-        dudeShader.use(false);
-        glError();
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-    }
-
 }
 

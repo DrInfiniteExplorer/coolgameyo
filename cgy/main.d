@@ -331,7 +331,7 @@ void EventAndDrawLoop(bool canYield)(GuiSystem guiSystem, scope void delegate(fl
     SDL_Event event;
     while (!exit) {
         while (SDL_PollEvent(&event)) {
-            exit = handleSDLEvent(event, now / 1_000_000.0, guiSystem);
+            exit |= handleSDLEvent(event, now / 1_000_000.0, guiSystem);
         }
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -349,7 +349,7 @@ void EventAndDrawLoop(bool canYield)(GuiSystem guiSystem, scope void delegate(fl
         guiSystem.render();
         SDL_GL_SwapBuffers();
         if (endLoop) {
-            exit = endLoop();
+            exit |= endLoop();
         }
         static if (canYield) {
             //Thread.yield();

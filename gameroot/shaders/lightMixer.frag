@@ -1,10 +1,8 @@
-#version 150 core
+#version 420
 
-#extension GL_ARB_separate_shader_objects : enable
-
-uniform sampler2D albedoTex;
-uniform sampler2D minecraftLightTex;
-uniform sampler2D raycastLightTex;
+layout(binding=5) uniform sampler2D albedoTex;
+layout(binding=6) uniform sampler2D minecraftLightTex;
+layout(binding=7) uniform sampler2D raycastLightTex;
 uniform int method;
 
 in vec2 texcoord;

@@ -97,13 +97,13 @@ string mainMenu() {
     mainMenu = new MainMenu(guiSystem);
 
     EventAndDrawLoop!true(guiSystem, null, { return mainMenu.done; } );
-    if(mainMenu.exit) {
-        return "exit";
-    }
     if(mainMenu.server) {
         return "host";
     }
-    return "join";
+    if(!mainMenu.exit) { // -> logic like this -> if just closing window -> exit.
+        return "join";
+    }
+    return "exit";
 }
 
 

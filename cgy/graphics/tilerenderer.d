@@ -26,7 +26,7 @@ class TileRenderer {
 
     class Mutex {};
 
-    alias ShaderProgram!("offset", "VP", "atlas", "SkyColor") TileProgram;
+    alias ShaderProgram!("offset", "VP", "atlas", "SkyColor", "minZ") TileProgram;
 
     private TileProgram tileProgram;
     private RenderInfo[GraphRegionNum] vertexBuffers;
@@ -55,6 +55,7 @@ class TileRenderer {
         tileProgram.VP          = tileProgram.getUniformLocation("VP");
         tileProgram.atlas       = tileProgram.getUniformLocation("atlas");
         tileProgram.SkyColor    = tileProgram.getUniformLocation("SkyColor");
+        tileProgram.minZ        = tileProgram.getUniformLocation("minZ");
         tileProgram.use();
         tileProgram.setUniform(tileProgram.atlas, 0); //Texture atlas will always reside in texture unit 0 yeaaaah
 
@@ -169,7 +170,7 @@ class TileRenderer {
 
     }
 
-    void render(Camera camera, vec3f skyColor) {
+    void render(Camera camera, vec3f skyColor, int minZ) {
         uploadGeometry();
 
         tileProgram.use();
@@ -184,6 +185,8 @@ class TileRenderer {
         tileProgram.setUniform(tileProgram.SkyColor, skyColor);
 
         auto camPos = camera.getPosition();
+        tileProgram.uniform.minZ = cast(float)(minZ - camPos.z) + 0.01;
+
 
         foreach(grNum, renderInfo ; vertexBuffers){
             if(camera.inFrustum(grNum.getAABB())){

@@ -198,7 +198,7 @@ struct Game {
         auto treePos = topOfTheWorld((spawnPoint+vec2i(10,10)).TileXYPos).value.EntityPos;
         tree.pos = treePos;
         tree.clan = Gaia();
-        tree.createTreeLikeEntity(proxy, 35);
+        tree.createTreeLikeEntity(proxy, 1);
         proxy.createEntity(tree);
         /*
 
