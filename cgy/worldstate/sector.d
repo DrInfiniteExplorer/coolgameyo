@@ -163,7 +163,12 @@ class Sector {
         
         auto writer = file.writer;
         
-        foreach( block ; (&blocks[0][0][0])[0 .. BlocksPerSector.total]) {
+        Block_t[] allBlocks = (&blocks[0][0][0])[0 .. BlocksPerSector.total];
+        //int validBlocks = allBlocks.reduce!"a + cast(int)b.valid";
+        uint validBlocks = allBlocks.count!"a.valid".to!uint;
+        writer.write(validBlocks);
+
+        foreach( block ; allBlocks) {
             if (!block.valid) continue;
             block.serialize(writer);
         }
@@ -178,13 +183,15 @@ class Sector {
         //auto file = BinaryFile(folder ~ "blocks.bin", "rb");
         auto file = CompressedBinaryFile(folder ~ "blocks.bin", "rb");
         auto reader = file.reader;
+
+        uint blockCount = reader.read!int;
         
-        ulong fileSize = file.size();
-        while (file.tell < fileSize) {
+        foreach(blockNum ; 0 .. blockCount) {
             Block_t block;
             block.deserialize(reader);
             auto num = block.blockNum.rel();
-            enforce(blocks[num.z][num.y][num.x].tiles is null, "DERP!");
+            BREAK_IF(blocks[num.z][num.y][num.x].tiles !is null);
+            enforce(blocks[num.z][num.y][num.x].tiles is null, "Two blocks deserialized to same place in sector!");
             blocks[num.z][num.y][num.x] = block;
             solidMap.updateBlock(block);
             block.tiles = null;
