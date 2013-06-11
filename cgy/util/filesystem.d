@@ -307,21 +307,10 @@ unittest {
     }
     file.close();
 
-
-    /*
-    auto f = BinaryFile("compress.test", "rb");
-    buff.length = f.size;
-    f.reader.read(buff);
-    f.close();
-    auto uncomp = new UnCompress();
-    ubyte[] un = cast(ubyte[])uncomp.uncompress(buff);
-    un ~= cast(ubyte[])uncomp.flush();
-    */
-
     file = CompressedBinaryFile("compress.test", "rb");
     auto reader = file.reader;
     foreach(idx ; 0 .. count) {
-        msg(" idx ", idx, " len ", buff.length);
+        //msg(" idx ", idx, " len ", buff.length);
         reader.read(buff);
         if(buff != orig) {
             msg("Error at idx ", idx);
@@ -329,20 +318,4 @@ unittest {
         }
     }
     file.close();
-
-
-/*
-    file = CompressedBinaryFile("compress.test", "rb");
-    auto reader = file.reader;
-    foreach(idx ; 0 .. count) {
-        msg(" idx ", idx, " len ", buff.length);
-        reader.read(buff);
-        if(buff != orig) {
-            msg("Error at idx ", idx);
-            BREAKPOINT;
-        }
-    }
-    file.close();
-*/
-
 }

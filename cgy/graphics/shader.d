@@ -49,6 +49,10 @@ class ShaderProgram(T...){
 
     struct UniformMagic {
         SP outer;
+        this(SP sp) {
+            outer = sp;
+            ignore = Magicker(sp);
+        }
         void opDispatch(string name, T)(T t) {
             static if(__traits(hasMember, SP, name)) {
                 static assert( is(typeof(__traits(getMember, this.outer, name)) : uint), " variable " ~ name ~ " is not of type uint, bailing out!");
@@ -61,6 +65,25 @@ class ShaderProgram(T...){
                 this.outer.setUniform(location, t);
             }
         }
+        struct Magicker {
+            SP outer;
+            void opDispatch(string name, T)(T t) {
+                static if(__traits(hasMember, SP, name)) {
+                    static assert( is(typeof(__traits(getMember, this.outer, name)) : uint), " variable " ~ name ~ " is not of type uint, bailing out!");
+                    if(__traits(getMember, this.outer, name) == -1) {
+                        __traits(getMember, this.outer, name) = this.outer.getUniformLocation!(UniformMissingPolicy.Ignore)(name);
+                        if(__traits(getMember, this.outer, name) == -1) {
+                            return;
+                        }
+                    }
+                    this.outer.setUniform(__traits(getMember, this.outer, name), t);
+                } else {
+                    uint location = this.outer.getUniformLocation!(UniformMissingPolicy.Ignore)(name);
+                    this.outer.setUniform(location, t);
+                }
+            }
+        };
+        Magicker ignore;
     };
     UniformMagic uniform;
 

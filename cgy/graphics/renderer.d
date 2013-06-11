@@ -80,7 +80,7 @@ class Renderer {
         glEnableVertexAttribArray(0); glError();
 
         lineShader.uniform.color = vec3f(0.1, 0.1, 0.7);
-        lineShader.uniform.radius = 10.0f;
+        lineShader.uniform.ignore.radius = 10.0f;
         glBindBuffer(GL_ARRAY_BUFFER, 0); glError();
 
         glLineWidth(2.5);

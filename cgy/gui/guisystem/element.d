@@ -77,9 +77,9 @@ class GuiElement {
     protected Recti absoluteRect;
     protected Font font;
 
-    protected bool visible = true;
-    protected bool selectable = true;
-    protected bool enabled = true;
+    private bool _visible = true;
+    private bool _selectable = true;
+    private bool _enabled = true;
     
     this(GuiElement parent){
         //Uh, yeah! make sure that if parent == null then we are a GuiSystem.
@@ -296,7 +296,7 @@ class GuiElement {
     }
     
     void render(){
-        if(!visible) return;
+        if(!isVisible) return;
         foreach(child ; children) {
             if (child.isVisible) {
                 child.render();
@@ -332,14 +332,14 @@ class GuiElement {
     }
 
     GuiElement getElementFromPoint(vec2i pos, bool all = false){
-        if (visible && isInside(pos)) {
+        if (isVisible && isInside(pos)) {
             foreach(child ; retro(children)) {
                 auto ret = child.getElementFromPoint(pos);
                 if(ret !is null){
                     return ret;
                 }
             }
-            if(all || selectable) {
+            if(all || isSelectable) {
                 return this;
             }
         }
@@ -353,28 +353,36 @@ class GuiElement {
         return font;
     }
     
+    // Invisibility ->
+    //   Looses focus
+    //   Not rendered
+    //   Still ticks
+    //   getElementFromPoint depends on visibility
     void setVisible(bool enable) {
-        if (visible && !enable) {
+        if (_visible && !enable) {
             looseFocus();
         }
-        visible = enable;
+        _visible = enable;
     }
     bool isVisible() const @property{
-        return visible;
+        return _visible;
     }
 
+    // Used by buttons!
     void setEnabled(bool enable) {
-        enabled = enable;
+        _enabled = enable;
     }
     bool isEnabled() const @property {
-        return enabled;
+        return _enabled;
     }
     
+    // getElementFromPoint depends on selectable!
+    // cycleFocus depends on selectable!
     void setSelectable(bool v) {
-        selectable = v;
+        _selectable = v;
     }
     bool isSelectable() const @property {
-        return selectable;
+        return _selectable;
     }
     
     void bringToFront(bool uncursive = false) { //True to bring element and all parents to front.

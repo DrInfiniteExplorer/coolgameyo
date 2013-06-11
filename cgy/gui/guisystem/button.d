@@ -133,7 +133,7 @@ class Button(ButtonCallbackPolicies policy) : GuiElement {
     }
     
     override GuiEventResponse onEvent(GuiEvent e) {
-        if(!enabled) {
+        if(!isEnabled) {
             return super.onEvent(e);
         }
         if (e.type == GuiEventType.MouseClick) {
