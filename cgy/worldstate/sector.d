@@ -106,6 +106,13 @@ struct SolidMap {
 }
 static assert(SolidMap.data.sizeof == 2*65536); //64k yeah :)
 
+version=UseCompressedFiles;
+version(UseCompressedFiles) {
+    alias CompressedBinaryFile FileInterface;
+} else {
+    alias BinaryFile FileInterface;
+}
+
 class Sector {
 
 //    private TilePos pos;
@@ -159,7 +166,7 @@ class Sector {
         util.filesystem.mkdir(folder);
         
         //auto file = BinaryFile(folder ~ "blocks.bin", "wb");
-        auto file = CompressedBinaryFile(folder ~ "blocks.bin", "wb");
+        auto file = FileInterface(folder ~ "blocks.bin", "wb");
         
         auto writer = file.writer;
         
@@ -181,7 +188,7 @@ class Sector {
             return false;
         }
         //auto file = BinaryFile(folder ~ "blocks.bin", "rb");
-        auto file = CompressedBinaryFile(folder ~ "blocks.bin", "rb");
+        auto file = FileInterface(folder ~ "blocks.bin", "rb");
         auto reader = file.reader;
 
         uint blockCount = reader.read!int;
