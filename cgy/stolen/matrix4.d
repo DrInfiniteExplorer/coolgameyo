@@ -544,15 +544,23 @@ struct CMatrix4(T)
     }
 
     //! Transforms the vector by this matrix
+    auto transformVect(vector3!float vect)
+    {
+        float vector[3];
+
+        auto x = vect.x*M[0] + vect.y*M[4] + vect.z*M[8] + M[12];
+        auto y = vect.x*M[1] + vect.y*M[5] + vect.z*M[9] + M[13];
+        auto z = vect.x*M[2] + vect.y*M[6] + vect.z*M[10] + M[14];
+        return vector3!float(x,y,z);
+    }
     void transformVect( ref vector3!float vect) const
     {
-      float vector[3];
+        float vector[3];
 
-      vector[0] = vect.x*M[0] + vect.y*M[4] + vect.z*M[8] + M[12];
-      vector[1] = vect.x*M[1] + vect.y*M[5] + vect.z*M[9] + M[13];
-      vector[2] = vect.x*M[2] + vect.y*M[6] + vect.z*M[10] + M[14];
-
-      vect.x = vector[0];
+        vector[0] = vect.x*M[0] + vect.y*M[4] + vect.z*M[8] + M[12];
+        vector[1] = vect.x*M[1] + vect.y*M[5] + vect.z*M[9] + M[13];
+        vector[2] = vect.x*M[2] + vect.y*M[6] + vect.z*M[10] + M[14];
+        vect.x = vector[0];
       vect.y = vector[1];
       vect.z = vector[2];
     }

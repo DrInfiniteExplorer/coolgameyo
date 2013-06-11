@@ -559,8 +559,6 @@
    <File path="..\gameroot\shaders\heightsheetsI.frag" />
    <File path="..\gameroot\shaders\heightsheetsI.vert" />
    <File path="..\gameroot\shaders\lightMixer.frag" />
-   <File path="..\gameroot\shaders\lineShader.frag" />
-   <File path="..\gameroot\shaders\lineShader.vert" />
    <File path="..\gameroot\shaders\quadShader.frag" />
    <File path="..\gameroot\shaders\quadShader.vert" />
    <File path="..\gameroot\shaders\renderDude.frag" />

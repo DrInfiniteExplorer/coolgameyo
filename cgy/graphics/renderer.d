@@ -32,7 +32,83 @@ import util.util;
 alias void delegate (vec3f color, float radius) SetDelegate;
 __gshared SetDelegate setDelegate = null;
 
+immutable lineShaderVert = q{
+    #version 420
+    uniform mat4 V;
+    uniform mat4 VP;
+    in vec3 position;
+    out vec3 viewPos;   
+    smooth out vec3 worldPosition;
+    void main(){
+        viewPos = (V * vec4(position, 1.0)).xyz;
+        gl_Position = VP * vec4(position, 1.0);
+        worldPosition = position;
+    }
+};
+
+immutable lineShaderFrag = q{
+    #version 420
+
+    uniform vec3 color;
+    uniform float radius;
+    in vec3 viewPos;
+    smooth in vec3 worldPosition;
+    layout(location = 0) out vec4 frag_color;
+    layout(location = 1) out vec4 light;
+    layout(location = 2) out vec4 depth;
+    void main() {
+        //float dist = length(viewPos);
+        //float tmp = 1.0 - dist/radius;
+        frag_color = vec4(color, 1.0);
+        depth = vec4(worldPosition, float(1.0));
+        light = vec4(1.0);
+    } 
+};
+
 class Renderer {
+
+    void renderGrid() {
+        if(minZ == int.max) {
+            return;
+        }
+        // Render grid. Wooh.
+        auto v = camera.getTargetMatrix();
+        auto vp = camera.getProjectionMatrix() * v;
+        lineShader.use();
+        lineShader.setUniform(lineShader.VP, vp);
+        lineShader.setUniform(lineShader.V, v);
+        glEnableVertexAttribArray(0); glError();
+
+        lineShader.uniform.color = vec3f(0.1, 0.1, 0.7);
+        lineShader.uniform.radius = 10.0f;
+        glBindBuffer(GL_ARRAY_BUFFER, 0); glError();
+
+        glLineWidth(2.5);
+        //bool oldWireframe = setWireframe(true);
+        //scope(exit) setWireframe(oldWireframe);
+
+        int gridSize = 25;
+        vec3f[2][] pts;
+        float z = cast(float)(minZ - camera.position.z);
+        float x1 = -gridSize;
+        float x2 = gridSize;
+        float y1 = -gridSize;
+        float y2 = gridSize;
+        vec3f off = vec3f(camera.position.x % 1.0, camera.position.y % 1.0, 0);
+        foreach(y ; -gridSize .. gridSize) {
+            pts ~= makeStackArray( vec3f(x1, y, z) - off, vec3f(x2, y, z) - off);
+        }
+        foreach(x ; -gridSize .. gridSize) {
+            pts ~= makeStackArray( vec3f(x, y1, z) - off, vec3f(x, y2, z) - off);
+        }
+
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, vec3f.sizeof, cast(const void*)pts.ptr); glError();
+        glDrawArrays(GL_LINES, 0, cast(int)pts.length * 2);
+
+        glDisableVertexAttribArray(0); glError();
+        lineShader.use(false);
+    }
+
     //TODO: Leave comment on what these members are use for in this class
     SceneManager sceneManager;
     TileRenderer tileRenderer;
@@ -65,12 +141,15 @@ class Renderer {
 
     void init() {
         
-        lineShader = new LineShaderProgram("shaders/lineShader.vert", "shaders/lineShader.frag");
+        lineShader = new LineShaderProgram(makeStackArray(lineShaderVert, lineShaderFrag));
         lineShader.bindAttribLocation(0, "position");
+        lineShader.link();
         lineShader.VP = lineShader.getUniformLocation("VP");
         lineShader.V = lineShader.getUniformLocation("V");
         lineShader.color = lineShader.getUniformLocation("color");
         lineShader.radius = lineShader.getUniformLocation("radius");
+        lineShader.use();
+        lineShader.use(false);
 
         lightMixShader = new LightMixerShaderProgram("shaders/quadShader.vert", "shaders/lightMixer.frag");
         lightMixShader.bindAttribLocation(0, "vertex");
@@ -181,6 +260,8 @@ class Renderer {
         heightSheets.render(camera);
         tileRenderer.render(camera, skyColor, minZ);
         sceneManager.renderScene(camera);
+
+        renderGrid();
 
         renderDebug(camera);
 

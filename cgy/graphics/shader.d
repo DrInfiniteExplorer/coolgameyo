@@ -76,10 +76,17 @@ class ShaderProgram(T...){
         link();
     }
 
-    this(string vertex, string fragment){
+    this(string vertexPath, string fragmentPath){
         this();
-        this.vertex = vertex;
-        this.fragment = fragment;
+        this.vertex = vertexPath;
+        this.fragment = fragmentPath;
+        link();
+    }
+
+    this(string[2] source){
+        this();
+        compileVertex(source[0]);
+        compileFragment(source[1]);
         link();
     }
 

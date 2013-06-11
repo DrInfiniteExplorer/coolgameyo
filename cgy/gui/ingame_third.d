@@ -38,7 +38,7 @@ class PlanningMode : GuiEventDump {
 
     void focusZ(double z) @property {
         _focusZ = z;
-        game.getRenderer.minZ = cast(int)z + 1;
+        game.getRenderer.minZ = cast(int)z;
     }
 
     double focusZ() const @property {
