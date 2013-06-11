@@ -158,18 +158,14 @@ class Sector {
         string folder = text(g_worldPath ~ "/world/", sectorNum.value.x, ",", sectorNum.value.y, "/", sectorNum.value.z, "/");
         util.filesystem.mkdir(folder);
         
-        auto file = std.stdio.File(folder ~ "blocks.bin", "wb");
-        
-        void write(const void[] buff) {
-            file.rawWrite(buff);
-        }
+        auto file = BinaryFile(folder ~ "blocks.bin", "wb");
+        auto writer = file.writer;
         
         foreach( block ; (&blocks[0][0][0])[0 .. BlocksPerSector.total]) {
             if (!block.valid) continue;
-            block.serialize(&write);
+            block.serialize(writer);
         }
         file.close();
-        
     }
     
     bool deserialize(WorldState world) {
@@ -177,20 +173,13 @@ class Sector {
         if (!std.file.exists(folder)) {
             return false;
         }
-        auto file = std.stdio.File(folder ~ "blocks.bin", "rb");
+        auto file = BinaryFile(folder ~ "blocks.bin", "rb");
+        auto reader = file.reader;
         
-        ulong readBytes = 0;
         ulong fileSize = file.size();
-        void read(size_t amount, ubyte* buff) {
-            enforce(readBytes + amount <= fileSize, "Error, trying to read more data from a file than there is!");
-            readBytes += amount;
-            auto herp = buff[0 .. amount];
-            enforce( file.rawRead(herp) !is null, "Failed reading block!");
-        }
-
-        while (readBytes < fileSize) {
+        while (file.tell < fileSize) {
             Block_t block;
-            block.deserialize(&read);
+            block.deserialize(reader);
             auto num = block.blockNum.rel();
             enforce(blocks[num.z][num.y][num.x].tiles is null, "DERP!");
             blocks[num.z][num.y][num.x] = block;

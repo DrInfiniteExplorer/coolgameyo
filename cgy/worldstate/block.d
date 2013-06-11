@@ -244,37 +244,34 @@ struct Block_t {
     bool sparse() const @property { return (flags & BlockFlags.sparse) != 0; }
     void sparse(bool val) @property { setFlag(flags, BlockFlags.sparse, val); }
     
-    void serialize(void delegate(const void[]) write)
+    void serialize(BinaryWriter writer)
     in{
         BREAK_IF(!valid);
     }
     body{
-        auto a = [blockNum];
-        write(a);
-        auto b = [flags];
-        write(b);
+        writer.write(blockNum);
+        writer.write(flags);
+
         if (sparse) {
-            auto c = [sparseTileType];
-            write(c);
-            auto d = [sunLightVal];
-            write(d);
+            writer.write(sparseTileType);
+            writer.write(sunLightVal);
         } else {
-            BREAK_IF(tiles is null);            
-            write((&tiles.tiles[0][0][0])[0 .. BlockSize.total]);
+            BREAK_IF(tiles is null);
+            writer.write(tiles.tiles);
         }
     }
     
-    void deserialize(void delegate(size_t size, ubyte* buff) read) {
-        read(blockNum.sizeof, cast(ubyte*)&blockNum);
-        read(flags.sizeof, cast(ubyte*)&flags);
+    void deserialize(BinaryReader reader) {
+        reader.read(blockNum);
+        reader.read(flags);
         if ((flags & BlockFlags.sparse) != 0) {
-            read(sparseTileType.sizeof, cast(ubyte*)&sparseTileType);
-            read(sunLightVal.sizeof, cast(ubyte*)&sunLightVal);
+            reader.read(sparseTileType);
+            reader.read(sunLightVal);
         } else {
             auto block = alloc();
             tiles = block.tiles;
             static assert(BlockSize.total * Tile.sizeof == tiles.tiles.sizeof);
-            read(tiles.tiles.sizeof, cast(ubyte*)&block.tiles.tiles);
+            reader.read(block.tiles.tiles);
             block.tiles = null;
         }
     }

@@ -219,3 +219,44 @@ struct BinaryReader {
     }
 }
 
+/*
+import std.traits;
+import util.traits;
+template isPOD(T) {
+    T t;
+    template isMemberPOD(string member) {
+        enum isMemberPOD = isPOD!(typeof(mixin("T." ~ member)));
+    }
+    static if(isStaticArray!T && isPOD!(typeof(t[0]))) {
+        enum isPOD = true;
+    } else static if( is( T == struct)) {
+        enum isPOD = Filter!(isMemberPOD, RealMembers!T).length == RealMembers!T.length;
+    } else {
+        enum isPOD = true;
+    }
+}
+
+unittest {
+    import math.vector : vec3d;
+    import util.pos : BlockNum;
+    char[8][8] asd;
+    auto arr = cast(ubyte[])asd;
+    pragma(msg, __traits(isPOD, typeof(asd)));
+    pragma(msg, __traits(isPOD, typeof(arr)));
+    pragma(msg, __traits(isPOD, vec3d));
+    pragma(msg, __traits(isPOD, BlockNum));
+
+    pragma(msg, isPOD!(typeof(asd)));
+    pragma(msg, isPOD!(typeof(arr)));
+    pragma(msg, isPOD!(vec3d));
+    pragma(msg, isPOD!(BlockNum));
+
+    import game;
+    pragma(msg, isPOD!(Game));
+
+    import util.util;
+    msg(arr.length);
+    BREAKPOINT;
+
+}
+*/

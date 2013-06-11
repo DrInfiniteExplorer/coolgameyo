@@ -179,9 +179,12 @@ struct BinaryFile {
         file.rawRead(data);
     }
 
-
     ulong size() @property {
         return file.size;
+    }
+
+    ulong tell() @property {
+        return file.tell();
     }
 
     auto close() {
