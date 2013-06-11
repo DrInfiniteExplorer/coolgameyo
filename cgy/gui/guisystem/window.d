@@ -97,10 +97,12 @@ class GuiElementWindow : GuiElement {
     
     override void render() {
         //Render background, etc, etc.
-        renderRect(absoluteRect, vec3f(0.85, 0.85, 0.5)); //Background color
+        renderRect(absoluteRect.diff(3,3,-6,-6), vec3f(0.85, 0.85, 0.5)); //Background color
+        /*
         renderOutlineRect(clientRect, vec3f(0.0, 0.0, 1.0));
         renderRect(barRect, vec3f(1.0, 0.0, 0.0));
         renderOutlineRect(barRect, vec3f(0.0, 1.0, 0.0));
+        */
 
         renderBorder(32, true);
 

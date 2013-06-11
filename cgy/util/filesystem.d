@@ -218,7 +218,7 @@ struct CompressedBinaryFile {
             compress = new Compress(1);
             writer = BinaryWriter(&compressIt);
         }
-        buffer.length = 32*1024;
+        buffer.length = 128*1024;
 
     }
     BinaryWriter writer;
@@ -241,7 +241,7 @@ struct CompressedBinaryFile {
                 buffer[bufferFillLevel .. $] = data[0 .. untilBufferFilled];
                 data = data[untilBufferFilled .. $];
                 bufferFillLevel = 0;
-                ubyte[] compressed = cast(ubyte[])compress.compress(buffer);
+                ubyte[] compressed = cast(ubyte[])compress.compress(buffer.dup);
                 file.rawWrite(compressed);
             }
         }
@@ -264,7 +264,7 @@ struct CompressedBinaryFile {
                 }
                 if(leftOfFile > 0) {
                     file.rawRead(buffer);
-                    uncompressed = cast(ubyte[])uncompress.uncompress(buffer);
+                    uncompressed = cast(ubyte[])uncompress.uncompress(buffer.dup);
                 } else {
                     uncompressed = cast(ubyte[])uncompress.flush();
                 }
