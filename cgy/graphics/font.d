@@ -129,11 +129,11 @@ class StringTexture {
 
     bool destroyed;
     ~this() {
-        msg("dtor text: ", currentText.str, " ", vbo);
+        //msg("dtor text: ", currentText.str, " ", vbo);
         BREAK_IF(!destroyed);
     }
     void destroy() {
-        msg("destroying text: '", currentText.str, "' vbo:", vbo);
+        //msg("destroying text: '", currentText.str, "' vbo:", vbo);
         ReleaseBuffer(vbo);
         destroyed = true;
     }

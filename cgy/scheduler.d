@@ -82,9 +82,6 @@ struct WorkerThreadContext {
         } catch(KillWorker e) {
             Log("Scheduler exception", e);
         } catch (Throwable t) {
-            Log(t);
-            Log(t.info);
-            msg("Thread exception!");
             msg(t);
             version (Windows) {
                 version (AnnoyingMessageBoxes) {
