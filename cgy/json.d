@@ -21,7 +21,7 @@ import std.stdio;
 import std.traits;
 
 class JsonException : Exception {
-    this(string s, ulong line = __LINE__) {
+    this(string s, size_t line = __LINE__) {
         super(s, __FILE__, line);
     }
 }

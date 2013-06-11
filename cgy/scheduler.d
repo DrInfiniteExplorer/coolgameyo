@@ -249,6 +249,7 @@ struct Scheduler {
 
     private void serialize() {
         Log("Saving world...");
+        auto now = mstime();
         game.serialize();
         foreach (mod; modules) {
             mod.serializeModule();
@@ -263,6 +264,7 @@ struct Scheduler {
             Thread.sleep(dur!"seconds"(1));
         }
         Log("Done saving world");
+        Log("Took ", mstime() - now, " ms");
     }
 
     void deserialize() {

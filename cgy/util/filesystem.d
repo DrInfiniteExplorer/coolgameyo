@@ -7,6 +7,7 @@ import std.file;
 import std.string;
 import std.stdio;
 import std.traits;
+import std.zlib : Compress, UnCompress;
 
 import util.memory : BinaryWriter, BinaryReader;
 import util.util;
@@ -171,7 +172,7 @@ struct BinaryFile {
     }
     BinaryWriter writer;
     BinaryReader reader;
-    
+
     void rawWrite(ubyte[] data) {
         file.rawWrite(data);
     }
@@ -191,3 +192,157 @@ struct BinaryFile {
         return file.close();
     }
 };
+
+struct CompressedBinaryFile {
+    File file;
+    bool read;
+    Compress compress;
+    UnCompress uncompress;
+    ubyte[] buffer;
+    ubyte[] uncompressed;
+    int bufferFillLevel = 0;
+    this(string path, string mode) {
+        if(countUntil(mode, "b") == -1) {
+            mode = mode ~ "b";
+        }
+        file = std.stdio.File(path, mode);
+        read = mode.countUntil("r") != -1;
+
+
+        reader = BinaryReader(&sorry);
+        writer = BinaryWriter(&sorry);
+        if(read) {
+            uncompress = new UnCompress();
+            reader = BinaryReader(&decompressIt);
+        } else {
+            compress = new Compress(1);
+            writer = BinaryWriter(&compressIt);
+        }
+        buffer.length = 32*1024;
+
+    }
+    BinaryWriter writer;
+    BinaryReader reader;
+
+    void sorry(ubyte[] data) {
+        LogError("Sorry, cannot do that operation, the file is opened for ", read ? "reading" : "writing", " only.");
+        BREAKPOINT;
+    }
+
+    void compressIt(ubyte[] data) {
+        while(true) {
+            if(data.length == 0) break;
+            if(data.length + bufferFillLevel < buffer.length) {
+                buffer[bufferFillLevel .. bufferFillLevel + data.length] = data[];
+                bufferFillLevel += data.length;
+                break;
+            } else {
+                auto untilBufferFilled = buffer.length - bufferFillLevel;
+                buffer[bufferFillLevel .. $] = data[0 .. untilBufferFilled];
+                data = data[untilBufferFilled .. $];
+                bufferFillLevel = 0;
+                ubyte[] compressed = cast(ubyte[])compress.compress(buffer);
+                file.rawWrite(compressed);
+            }
+        }
+    }
+    void decompressIt(ubyte[] data) {
+        while(true) {
+            if(uncompressed.length >= data.length) {
+                data[] = uncompressed[0 .. data.length];
+                uncompressed = uncompressed[data.length .. $];
+                break;
+            } else {
+                if(uncompressed.length) {
+                    data[0 .. uncompressed.length] = uncompressed[];
+                    data = data[uncompressed.length .. $];
+                    uncompressed = uncompressed[$..$]; // just setting length = 0 :P
+                }
+                auto leftOfFile = size - tell;
+                if(leftOfFile < buffer.length) {
+                    buffer.length = cast(size_t)leftOfFile;
+                }
+                if(leftOfFile > 0) {
+                    file.rawRead(buffer);
+                    uncompressed = cast(ubyte[])uncompress.uncompress(buffer);
+                } else {
+                    uncompressed = cast(ubyte[])uncompress.flush();
+                }
+            }
+        }
+    }
+
+    ulong size() @property {
+        return file.size;
+    }
+
+    ulong tell() @property {
+        return file.tell();
+    }
+
+    auto close() {
+        if(read) {
+        } else {
+            if(bufferFillLevel) {
+                ubyte[] compressed = cast(ubyte[])compress.compress(buffer[0 .. bufferFillLevel]);
+                file.rawWrite(compressed);
+            }
+            ubyte[] flushed = cast(ubyte[])compress.flush();
+            file.rawWrite(flushed);
+        }
+        return file.close();
+    }
+};
+
+unittest {
+    auto orig = "0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789";
+
+    ubyte[] buff = cast(ubyte[])orig;
+
+    CompressedBinaryFile file = CompressedBinaryFile("compress.test", "wb");
+    auto writer = file.writer;
+    auto count = 1000;
+    foreach(idx ; 0 .. count) {
+        writer.write(buff);
+    }
+    file.close();
+
+
+    /*
+    auto f = BinaryFile("compress.test", "rb");
+    buff.length = f.size;
+    f.reader.read(buff);
+    f.close();
+    auto uncomp = new UnCompress();
+    ubyte[] un = cast(ubyte[])uncomp.uncompress(buff);
+    un ~= cast(ubyte[])uncomp.flush();
+    */
+
+    file = CompressedBinaryFile("compress.test", "rb");
+    auto reader = file.reader;
+    foreach(idx ; 0 .. count) {
+        msg(" idx ", idx, " len ", buff.length);
+        reader.read(buff);
+        if(buff != orig) {
+            msg("Error at idx ", idx);
+            BREAKPOINT;
+        }
+    }
+    file.close();
+
+
+/*
+    file = CompressedBinaryFile("compress.test", "rb");
+    auto reader = file.reader;
+    foreach(idx ; 0 .. count) {
+        msg(" idx ", idx, " len ", buff.length);
+        reader.read(buff);
+        if(buff != orig) {
+            msg("Error at idx ", idx);
+            BREAKPOINT;
+        }
+    }
+    file.close();
+*/
+
+}

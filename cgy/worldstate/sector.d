@@ -158,7 +158,9 @@ class Sector {
         string folder = text(g_worldPath ~ "/world/", sectorNum.value.x, ",", sectorNum.value.y, "/", sectorNum.value.z, "/");
         util.filesystem.mkdir(folder);
         
-        auto file = BinaryFile(folder ~ "blocks.bin", "wb");
+        //auto file = BinaryFile(folder ~ "blocks.bin", "wb");
+        auto file = CompressedBinaryFile(folder ~ "blocks.bin", "wb");
+        
         auto writer = file.writer;
         
         foreach( block ; (&blocks[0][0][0])[0 .. BlocksPerSector.total]) {
@@ -173,7 +175,8 @@ class Sector {
         if (!std.file.exists(folder)) {
             return false;
         }
-        auto file = BinaryFile(folder ~ "blocks.bin", "rb");
+        //auto file = BinaryFile(folder ~ "blocks.bin", "rb");
+        auto file = CompressedBinaryFile(folder ~ "blocks.bin", "rb");
         auto reader = file.reader;
         
         ulong fileSize = file.size();

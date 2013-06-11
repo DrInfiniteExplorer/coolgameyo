@@ -131,9 +131,6 @@ struct BinaryWriter {
     void write(T)(T t) {
         static if(isArray!T) {
             ubyte[] array = cast(ubyte[])t;
-            static if(isDynamicArray!T) {
-                write(t.length.to!int);
-            }
             writer(array);
         } else static if(isAssociativeArray!T) {
             write(t.length.to!int);
@@ -183,10 +180,6 @@ struct BinaryReader {
 
     void read(T)(ref T t) {
         static if(isArray!T) {
-            static if(isDynamicArray!T) {
-                auto size = read!int;
-                t.length = size;
-            }
             ubyte[] array = cast(ubyte[])t;
             reader(array);
         } else static if(isAssociativeArray!T) {
