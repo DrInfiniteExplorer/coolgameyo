@@ -178,7 +178,11 @@ final class GuiSystem : GuiElement{
                 if (hoverElement != focusElement) {
                     if(m.wheelUp || m.wheelDown) {
                         if (hoverElement !is null) {
-                            return hoverElement.onEvent(e);
+                            auto ret = hoverElement.onEvent(e);
+                            if(ret != GuiEventResponse.Ignore) {
+                                return ret;
+                            }
+                            break;
                         }
                     }
                 }

@@ -30,6 +30,7 @@ class InGameGui : GuiElement {
         fpsMode = new FpsMode(this);
 
         activateMode(usePlanningMode);
+        setSelectable = false;
     }
 
     override void destroy() {
