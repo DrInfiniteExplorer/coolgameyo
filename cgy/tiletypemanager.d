@@ -27,27 +27,27 @@ static struct TileTextureID {
 }
 
 struct TileType_t {
-	static struct InnerTileType {
-		string displayName;
-		string material;
+    static struct InnerTileType {
+        string displayName;
+        string material;
         //string group; // Not needededed.
-		int strength;
-		float tintFromMaterial; // Hurr durr used is supposed to how?
-		vec3ub tintColor;
-		string texturePathTop;
-		string texturePathSides;
-		string texturePathBottom;
-		vec2i textureCoordTop;
-		vec2i textureCoordSides;
-		vec2i textureCoordBottom;
-	}
-	
-	InnerTileType serializableSettings;
+        int strength;
+        float tintFromMaterial; // Hurr durr used is supposed to how?
+        vec3ub tintColor;
+        string texturePathTop;
+        string texturePathSides;
+        string texturePathBottom;
+        vec2i textureCoordTop;
+        vec2i textureCoordSides;
+        vec2i textureCoordBottom;
+    }
+    
+    InnerTileType serializableSettings;
     alias serializableSettings this;
 
-	// These settings are generated in the program, not from settings file
+    // These settings are generated in the program, not from settings file
     TileTextureID textures;
-	string name;
+    string name;
     ushort id = 0;
     bool transparent = false;
 }
@@ -70,42 +70,42 @@ struct TileTypeManager {
         atlas = _atlas;
         mixin(LogTime!("TileTypeManagerCreation"));
 
-		TileType_t invalid;
+        TileType_t invalid;
         TileType_t air;
         air.name = "air";
         air.transparent = true;
         add(invalid);
         add(air);
         if(atlas !is null) {
-    		atlas.addTile("textures/001.png", vec2i(0, 0)); // Invalid tile texture
+            atlas.addTile("textures/001.png", vec2i(0, 0)); // Invalid tile texture
         }
-		
+        
         // Loads the tile type id configuration
         Value idRootVal;
         bool hasTypeIdConfFile = loadJSON(g_worldPath ~ "/tiletypeidconfiguration.json", idRootVal);
 
-		TileType_t tempType;
-		if(!exists("data/tile_types.json")){
-			msg("Could not load tile types");
-			return;
-		}
-		auto content = readText("data/tile_types.json");
-		auto rootVal = json.parse(content);
-		enforce(rootVal.type == json.Value.Type.object, "rootval in tiltypejson not object roawoaowoawo: " ~ to!string(rootVal.type));
-		foreach(name, rsVal ; rootVal.pairs) {
-			rsVal.read(tempType.serializableSettings);
-			
-			tempType.name = name;
+        TileType_t tempType;
+        if(!exists("data/tile_types.json")){
+            msg("Could not load tile types");
+            return;
+        }
+        auto content = readText("data/tile_types.json");
+        auto rootVal = json.parse(content);
+        enforce(rootVal.type == json.Value.Type.object, "rootval in tiltypejson not object roawoaowoawo: " ~ to!string(rootVal.type));
+        foreach(name, rsVal ; rootVal.pairs) {
+            rsVal.read(tempType.serializableSettings);
+            
+            tempType.name = name;
             if ( hasTypeIdConfFile == true && tempType.name in idRootVal) {
                 ushort id;
                 idRootVal[tempType.name].read(id);
                 enforce(id > 1, "Some tile type wants to hijack the invalid or air tile type");
-			    add(tempType, id, true);
+                add(tempType, id, true);
             }
             else {
                 add(tempType);
             }
-		}
+        }
 
         util.filesystem.mkdir(g_worldPath ~ "");
         // don't save invalid or air
@@ -168,7 +168,7 @@ struct TileTypeManager {
         enforce(!(tile.name in _byName));
 
         loadTextures(tile);
-		
+        
         if (isSendingId) {
             tile.id = id;
             if (tile.id >= types.length) {
@@ -195,14 +195,14 @@ struct TileTypeManager {
                 types[intrudingBastard.id] = intrudingBastard;
             }
             types[tile.id] = tile;
-		}
+        }
         else {
             tile.id = to!ushort(types.length);
             types ~= tile;
         }
         
         _byName[tile.name] = tile.id;
-		
+        
         return tile.id;
     }
 

@@ -377,10 +377,10 @@ void read(T)(Value val, ref T t) if(! is( T : Value)) {
 
 template RealThing(alias Class, string Member) {
     static if(__traits(compiles, typeof(__traits(getMember, Class, Member)))) {
-		immutable bool RealThing = true;
-	} else {
-		immutable bool RealThing = false;
-	}
+        immutable bool RealThing = true;
+    } else {
+        immutable bool RealThing = false;
+    }
 }
 
 private void update(T)(T* t, string s) { return update!T(t, parse(s)); }
@@ -526,27 +526,27 @@ string prettifyJSON(Value val){
     return prettifyJSON(to!string(val));
 }
 string prettifyJSON(string text){
-	int tabs = 0;
-	text = std.array.replace(text, "," ,",\n");
-	text = std.array.replace(text, "{" ,"{\n");
-	text = std.array.replace(text, "}" ,"\n}");
-	string[] asdf = std.string.splitLines(text);
-	text = "";
-	foreach(fdsa; asdf){
-		if (countUntil(fdsa, "}") != -1){
-			tabs--;
-		}
-		for (int a = 0; a < tabs; a++){
-			std.array.insertInPlace(fdsa, 0, "  ");
-		}
-		if (countUntil(fdsa, "{") != -1){
-			tabs++;
-		}
-		text = text ~ fdsa;
-		text = text ~ "\n";
-	}
-	
-	return text;
+    int tabs = 0;
+    text = std.array.replace(text, "," ,",\n");
+    text = std.array.replace(text, "{" ,"{\n");
+    text = std.array.replace(text, "}" ,"\n}");
+    string[] asdf = std.string.splitLines(text);
+    text = "";
+    foreach(fdsa; asdf){
+        if (countUntil(fdsa, "}") != -1){
+            tabs--;
+        }
+        for (int a = 0; a < tabs; a++){
+            std.array.insertInPlace(fdsa, 0, "  ");
+        }
+        if (countUntil(fdsa, "{") != -1){
+            tabs++;
+        }
+        text = text ~ fdsa;
+        text = text ~ "\n";
+    }
+    
+    return text;
 }
 
 
