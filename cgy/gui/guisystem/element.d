@@ -33,7 +33,7 @@ enum GuiEventResponse {
     Ignore
 };
 
-struct GuiEvent{
+struct GuiEvent {
     GuiEventType type;
     double eventTimeStamp;
     union{
@@ -81,13 +81,13 @@ class GuiElement {
     private bool _selectable = true;
     private bool _enabled = true;
     
-    this(GuiElement parent){
+    this(GuiElement parent) {
         //Uh, yeah! make sure that if parent == null then we are a GuiSystem.
-        if(parent) {
+        if (parent) {
             setParent(parent);
             font = parent.font;        
 
-            if(cast(GuiSystem)parent !is null) {
+            if (cast(GuiSystem)parent !is null) {
                 guiSystem = cast(GuiSystem)parent;
             } else {
                 guiSystem = parent.guiSystem;
@@ -126,9 +126,9 @@ class GuiElement {
     }
 
     private GuiElement getNextSibling(GuiElement child) {
-        foreach(idx, ch ; children) {
-            if(ch is child) {
-                if(idx+1 == children.length) {
+        foreach (idx, ch; children) {
+            if (ch is child) {
+                if (idx+1 == children.length) {
                     return null;
                 }
                 return children[idx+1];
@@ -146,7 +146,7 @@ class GuiElement {
             parent.removeChild(this);
         }
         
-        if(p) {
+        if (p) {
             p.addChild(this);
         }
     }
@@ -165,18 +165,16 @@ class GuiElement {
     }
     
     void setFocus(GuiElement e)
-    in{
+    in {
         assert(guiSystem !is null, "Element missing guisystem; cant set focus!");
-    }
-    body{
+    } body {
         guiSystem.setFocus(e);
     }
     
     GuiElement getFocusElement()
-    in{
+    in {
         assert(guiSystem !is null, "Element missing guisystem; cant set focus!");
-    }
-    body{
+    } body {
         return guiSystem.getFocusElement();
     }
     
@@ -187,7 +185,7 @@ class GuiElement {
     //Note: not a OnLooseFocus but more "Relinquish focus from this element!"
     // Use GuiEvent e.type == GuiEventType.FocusOff instead
     void looseFocus() {
-        foreach(child ; children) {
+        foreach (child; children) {
             child.looseFocus();
         }
         if (hasFocus()) {
@@ -196,14 +194,13 @@ class GuiElement {
     }
 
     void cycleFocus()
-    in{
+    in {
         assert(guiSystem !is null, "Element missing guisystem; cant cycle focus!");
-    }
-    body{
+    } body {
         return guiSystem.cycleFocus();
     }
 
-    bool isInside(vec2i pos){
+    bool isInside(vec2i pos) {
         return absoluteRect.isInside(pos);
     }
     
@@ -213,14 +210,8 @@ class GuiElement {
         onMove();
     }
     
-    void setAbsoluteRect(Recti r)
-/*
-    out{
-        assert(getAbsoluteRect() == r, text("Derp errrooooor ", r, " ",getAbsoluteRect));
-    }
-*/
-    body{
-        if(parent is null) return;
+    void setAbsoluteRect(Recti r) {
+        if (parent is null) return;
 
         absoluteRect = r;
         auto parentScreenRelative = parent.getScreenRelativeRect();
@@ -286,7 +277,7 @@ class GuiElement {
         left.renderTransparentImage(leftR, Rectf(_0, vec2f(1.0f, vertScale)));
         right.renderTransparentImage(rightR, Rectf(_0, vec2f(1.0f, vertScale)));
 
-        if(fillMiddle) {
+        if (fillMiddle) {
             uint middle = guiSystem.imageCache.getImage("border_middle");
             middle.renderTransparentImage(Recti(tl.bottomRight, br.topLeft - tl.bottomRight), Rectf(vec2f(0.0f), vec2f(horiScale, vertScale)));
         }
@@ -295,9 +286,9 @@ class GuiElement {
 
     }
     
-    void render(){
-        if(!isVisible) return;
-        foreach(child ; children) {
+    void render() {
+        if (!isVisible) return;
+        foreach (child; children) {
             if (child.isVisible) {
                 child.render();
             }
@@ -306,16 +297,18 @@ class GuiElement {
     
     //Do things such as animating or controlling unit motion, derp etc
     void tick(float dTime) {
-        foreach(child ; children) {
+        foreach (child; children) {
             child.tick(dTime);
-        }        
+        }
     }
     
     GuiEventResponse onEvent(GuiEvent e){
-        switch(e.type) {
+        switch (e.type) {
             case GuiEventType.MouseClick:
-                if(mouseClickCB !is null) {
-                    if(mouseClickCB(this, e.mouseClick)) return GuiEventResponse.Accept;
+                if (mouseClickCB !is null) {
+                    if (mouseClickCB(this, e.mouseClick)) {
+                        return GuiEventResponse.Accept;
+                    }
                 }
                 break;
             default: /*msg("other event." ~ to!string(e.type)); */ break;
@@ -326,20 +319,20 @@ class GuiElement {
     
     void onMove() {
         absoluteRect = getAbsoluteRect();
-        foreach(child ; children) {
+        foreach (child; children) {
             child.onMove();
         }
     }
 
     GuiElement getElementFromPoint(vec2i pos, bool all = false){
         if (isVisible && isInside(pos)) {
-            foreach(child ; retro(children)) {
+            foreach (child; retro(children)) {
                 auto ret = child.getElementFromPoint(pos);
-                if(ret !is null){
+                if (ret !is null) {
                     return ret;
                 }
             }
-            if(all || isSelectable) {
+            if (all || isSelectable) {
                 return this;
             }
         }

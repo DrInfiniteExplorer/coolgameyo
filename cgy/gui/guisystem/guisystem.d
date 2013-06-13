@@ -22,7 +22,7 @@ interface GuiEventDump {
     void activate(bool activate);
 }
 
-final class GuiSystem : GuiElement{
+final class GuiSystem : GuiElement {
     
     alias void delegate() HotkeyCallback;
     
@@ -236,9 +236,9 @@ final class GuiSystem : GuiElement{
     
     override void render() {
         glDisable(GL_DEPTH_TEST);
-        glDepthMask(0);        
+        glDepthMask(0);
         super.render();
-        glDepthMask(1);        
+        glDepthMask(1);
         glEnable(GL_DEPTH_TEST);        
     }
     

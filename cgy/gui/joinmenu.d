@@ -12,6 +12,7 @@ import util.filesystem : exists, rmdir;
 import util.rect;
 import util.util;
 import gui.ingame;
+import gui.guisystem.dialogbox;
 
 class JoinMenu : GuiElementWindow {
     PushButton joinButt;
@@ -109,7 +110,7 @@ string joinMenu() {
 
 //Return true to return to main menu.
 bool startClient(string host) {
-    msg("Starting client...");
+    msg("Starting client connecting to ", host);
     if(exists(g_worldPath)) {
         msg("Alert! Old client stuff lingering; EXTERMINATING");
         rmdir(g_worldPath);
@@ -127,7 +128,6 @@ bool startClient(string host) {
     try {
         game.connect(host);
     } catch(Exception e) {
-        import gui.guisystem.dialogbox;
         new DialogBox(guiSystem, "An error occured", e.msg,
                       "Ok", { error = true; });
     }
