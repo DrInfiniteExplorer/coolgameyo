@@ -67,48 +67,6 @@ immutable lineShaderFrag = q{
 
 class Renderer {
 
-    void renderGrid() {
-        if(minZ == int.max) {
-            return;
-        }
-        // Render grid. Wooh.
-        auto v = camera.getTargetMatrix();
-        auto vp = camera.getProjectionMatrix() * v;
-        lineShader.use();
-        lineShader.setUniform(lineShader.VP, vp);
-        lineShader.setUniform(lineShader.V, v);
-        glEnableVertexAttribArray(0); glError();
-
-        lineShader.uniform.color = vec3f(0.1, 0.1, 0.7);
-        lineShader.uniform.ignore.radius = 10.0f;
-        glBindBuffer(GL_ARRAY_BUFFER, 0); glError();
-
-        glLineWidth(2.5);
-        //bool oldWireframe = setWireframe(true);
-        //scope(exit) setWireframe(oldWireframe);
-
-        int gridSize = 25;
-        vec3f[2][] pts;
-        float z = cast(float)(minZ - camera.position.z);
-        float x1 = -gridSize;
-        float x2 = gridSize;
-        float y1 = -gridSize;
-        float y2 = gridSize;
-        vec3f off = vec3f(camera.position.x % 1.0, camera.position.y % 1.0, 0);
-        foreach(y ; -gridSize .. gridSize) {
-            pts ~= makeStackArray( vec3f(x1, y, z) - off, vec3f(x2, y, z) - off);
-        }
-        foreach(x ; -gridSize .. gridSize) {
-            pts ~= makeStackArray( vec3f(x, y1, z) - off, vec3f(x, y2, z) - off);
-        }
-
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, vec3f.sizeof, cast(const void*)pts.ptr); glError();
-        glDrawArrays(GL_LINES, 0, cast(int)pts.length * 2);
-
-        glDisableVertexAttribArray(0); glError();
-        lineShader.use(false);
-    }
-
     //TODO: Leave comment on what these members are use for in this class
     SceneManager sceneManager;
     TileRenderer tileRenderer;
@@ -272,6 +230,52 @@ class Renderer {
         castShadowRays();
         finishHim();
 
-  }
+    }
+
+    vec3d derp;
+    void renderGrid() {
+        if(minZ == int.max) {
+            return;
+        }
+        // Render grid. Wooh.
+        auto v = camera.getTargetMatrix();
+        auto vp = camera.getProjectionMatrix() * v;
+        lineShader.use();
+        lineShader.setUniform(lineShader.VP, vp);
+        lineShader.setUniform(lineShader.V, v);
+        glEnableVertexAttribArray(0); glError();
+
+        lineShader.uniform.color = vec3f(0.1, 0.1, 0.7);
+        lineShader.uniform.ignore.radius = 10.0f;
+        glBindBuffer(GL_ARRAY_BUFFER, 0); glError();
+
+        glLineWidth(2.5);
+        //bool oldWireframe = setWireframe(true);
+        //scope(exit) setWireframe(oldWireframe);
+
+        int gridSize = 25;
+        vec3f[2][] pts;
+        float z = cast(float)(minZ - camera.position.z);
+        float x1 = -gridSize;
+        float x2 = gridSize;
+        float y1 = -gridSize;
+        float y2 = gridSize;
+        vec3f off = vec3f(camera.position.x % 1.0, camera.position.y % 1.0, 0);
+        foreach(y ; -gridSize .. gridSize) {
+            pts ~= makeStackArray( vec3f(x1, y, z) - off, vec3f(x2, y, z) - off);
+        }
+        foreach(x ; -gridSize .. gridSize) {
+            pts ~= makeStackArray( vec3f(x, y1, z) - off, vec3f(x, y2, z) - off);
+        }
+        auto relPt = (derp - camera.position).convert!float;
+        pts ~= makeStackArray(relPt, relPt + vec3f(0,0,1));
+
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, vec3f.sizeof, cast(const void*)pts.ptr); glError();
+        glDrawArrays(GL_LINES, 0, cast(int)pts.length * 2);
+
+        glDisableVertexAttribArray(0); glError();
+        lineShader.use(false);
+    }
+
 }
 

@@ -29,10 +29,10 @@ struct Deflate {
     private size_t deflate_impl(ubyte[]* next_in,
             ubyte[] next_out, bool flush) {
 
-        stream.avail_in = next_in.length;
+        stream.avail_in = cast(uint)next_in.length;
         stream.next_in = next_in.ptr;
 
-        stream.avail_out = next_out.length;
+        stream.avail_out = cast(uint)next_out.length;
         stream.next_out = next_out.ptr;
 
         auto err = etc.c.zlib.deflate(&stream,
@@ -77,10 +77,10 @@ struct Inflate {
     private size_t inflate_impl(ubyte[]* next_in,
             ubyte[] next_out, bool flush) {
 
-        stream.avail_in = next_in.length;
+        stream.avail_in = cast(uint)next_in.length;
         stream.next_in = next_in.ptr;
 
-        stream.avail_out = next_out.length;
+        stream.avail_out = cast(uint)next_out.length;
         stream.next_out = next_out.ptr;
 
         auto err = etc.c.zlib.inflate(&stream,

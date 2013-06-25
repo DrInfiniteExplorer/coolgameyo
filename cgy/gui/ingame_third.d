@@ -36,6 +36,8 @@ class PlanningMode : GuiEventDump {
     float desiredFocusDistance = 10.0;
     vec2d focusXY;
 
+    bool designateTiles;
+
     void focusZ(double z) @property {
         _focusZ = z;
         game.getRenderer.minZ = cast(int)z;
@@ -89,13 +91,23 @@ class PlanningMode : GuiEventDump {
             if(rotateCamera) {
                 camera.rotateAround(focusDistance, diffX, diffY);
             } else if(moveDragMouse) {
-                moveCamXY(diffX * dragScrollSpeed, -diffY * dragScrollSpeed);
+                moveCamXY(-diffX * dragScrollSpeed, diffY * dragScrollSpeed);
             }
             SDL_WarpMouse(cast(ushort)mouseCoords.x, cast(ushort)mouseCoords.y);
-        } else {
-            mouseCoords.set(x, y);
+            return;
         }
-    }    
+        mouseCoords.set(x, y);
+
+        vec3d start, dir;
+        camera.getRayFromScreenCoords(mouseCoords, start, dir);
+        auto focusBelowCam = focusZ - camera.position.z;
+        auto time = focusBelowCam / dir.z;
+        auto endPos = (camera.position.v2 + dir.v2 * time);
+        auto rel = endPos.convert!int - game.activeUnitPos.value.v2.convert!int;
+        msg(rel.x, " ", rel.y);
+        game.getRenderer.derp = endPos.v3(focusZ);
+
+    }
 
     void hideMouse(bool hide) {
     }
@@ -118,16 +130,14 @@ class PlanningMode : GuiEventDump {
         }
         if(m.middle) {
             moveDragMouse = m.down;
-        }
-        if (!m.down) {
-            return;
-        } else if (m.left) {
+        } else if (m.left && m.down) {
+            /*
             msg("Add damage to tile under cursor, like.");
             rayPickTile();
             if(selectedTileIterations > 0) {
                 game.damageTile(selectedTilePos, 5);
             }
-
+            */
         }
         /*
         if (m.middle) {

@@ -646,5 +646,6 @@
   <File path="unit.d" />
   <File path="unittypemanager.d" />
   <File path="windows.d" />
+  <File path="zstreamwrappers.d" />
  </Folder>
 </DProject>
