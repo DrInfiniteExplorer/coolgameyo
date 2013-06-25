@@ -344,10 +344,18 @@ struct GetMission {
 struct DesignateMine {
     //Clan clan;
     uint clanId;
+    bool set;
     TilePos pos;
 
+    this(Clan clan, bool _set, TilePos _pos) {
+        clanId = clan.clanId;
+        set = _set;
+        pos = _pos;
+    }
+
     void apply(WorldState world) {
-        //clan.unsafeDesignateMinePos(pos);
+        auto clan = Clans().getClanById(clanId);
+        clan.unsafeDesignateMinePos(pos, set);
     }
     ubyte[] toBytes() {
         return (cast(ubyte*)&this)[0 .. this.sizeof];

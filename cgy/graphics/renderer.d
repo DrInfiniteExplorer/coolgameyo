@@ -1,10 +1,12 @@
 
 module graphics.renderer;
 
+import std.algorithm : min, max;
 import std.array;
 import std.conv;
 import std.exception;
 import std.format;
+import std.math : abs;
 import std.stdio;
 import std.string;
 
@@ -36,13 +38,15 @@ immutable lineShaderVert = q{
     #version 420
     uniform mat4 V;
     uniform mat4 VP;
+    uniform vec3 offset;
     in vec3 position;
     out vec3 viewPos;   
     smooth out vec3 worldPosition;
     void main(){
-        viewPos = (V * vec4(position, 1.0)).xyz;
-        gl_Position = VP * vec4(position, 1.0);
-        worldPosition = position;
+        vec4 p = vec4(position + offset, 1.0);
+        viewPos = (V * p).xyz;
+        gl_Position = VP * p;
+        worldPosition = p.xyz;
     }
 };
 
@@ -75,7 +79,7 @@ class Renderer {
 
     HeightSheets heightSheets;
     
-    alias ShaderProgram!("VP", "V", "color", "radius") LineShaderProgram;
+    alias ShaderProgram!("VP", "V", "offset", "color", "radius") LineShaderProgram;
     alias ShaderProgram!("method") LightMixerShaderProgram;
 
     LineShaderProgram lineShader;
@@ -139,6 +143,7 @@ class Renderer {
         lineShader.use();
         lineShader.setUniform(lineShader.VP, vp);
         lineShader.setUniform(lineShader.V, v);
+        lineShader.uniform.offset = vec3f(0);
         glEnableVertexAttribArray(0);
         glError();
 
@@ -232,17 +237,48 @@ class Renderer {
 
     }
 
-    vec3d derp;
+
+    vec3f[4] selectionQuad;
+    vec2i selectionQuadStart;
+    vec2f selectionQuadSize;
+    vec3f selectionColor;
+    void setSelection(vec2i corner1, vec2i corner2, vec3f* color = null) {
+        if(color !is null) {
+            selectionColor = *color;
+        }
+        selectionQuadStart.x = min(corner1.x, corner2.x);
+        selectionQuadStart.y = min(corner1.y, corner2.y);
+        selectionQuadSize.x = abs(corner1.x - corner2.x);
+        selectionQuadSize.y = abs(corner1.y - corner2.y);
+    }
+
+    vec3f[2][] gridLines;
     void renderGrid() {
         if(minZ == int.max) {
             return;
         }
+        if(gridLines.length == 0) {
+            int gridSize = 25;
+            float x1 = -gridSize;
+            float x2 = gridSize;
+            float y1 = -gridSize;
+            float y2 = gridSize;
+            foreach(y ; -gridSize .. gridSize) {
+                gridLines ~= makeStackArray( vec3f(x1, y, 0), vec3f(x2, y, 0));
+            }
+            foreach(x ; -gridSize .. gridSize) {
+                gridLines ~= makeStackArray( vec3f(x, y1, 0), vec3f(x, y2, 0));
+            }
+        }
         // Render grid. Wooh.
         auto v = camera.getTargetMatrix();
         auto vp = camera.getProjectionMatrix() * v;
+        vec3f offset = vec3f(-camera.position.x % 1.0, -camera.position.y % 1.0, minZ - camera.position.z);
         lineShader.use();
-        lineShader.setUniform(lineShader.VP, vp);
-        lineShader.setUniform(lineShader.V, v);
+        lineShader.uniform.VP =  vp;
+        lineShader.uniform.V = v;
+        lineShader.uniform.offset = offset;
+
         glEnableVertexAttribArray(0); glError();
 
         lineShader.uniform.color = vec3f(0.1, 0.1, 0.7);
@@ -253,25 +289,25 @@ class Renderer {
         //bool oldWireframe = setWireframe(true);
         //scope(exit) setWireframe(oldWireframe);
 
-        int gridSize = 25;
-        vec3f[2][] pts;
-        float z = cast(float)(minZ - camera.position.z);
-        float x1 = -gridSize;
-        float x2 = gridSize;
-        float y1 = -gridSize;
-        float y2 = gridSize;
-        vec3f off = vec3f(camera.position.x % 1.0, camera.position.y % 1.0, 0);
-        foreach(y ; -gridSize .. gridSize) {
-            pts ~= makeStackArray( vec3f(x1, y, z) - off, vec3f(x2, y, z) - off);
+        /*
+        if(gridPointSelectionMarker !is null) {
+            auto relPt = (gridPointSelectionMarker - camera.position).convert!float;
+            pts ~= makeStackArray(relPt, relPt + vec3f(0,0,1));
         }
-        foreach(x ; -gridSize .. gridSize) {
-            pts ~= makeStackArray( vec3f(x, y1, z) - off, vec3f(x, y2, z) - off);
-        }
-        auto relPt = (derp - camera.position).convert!float;
-        pts ~= makeStackArray(relPt, relPt + vec3f(0,0,1));
+        */
 
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, vec3f.sizeof, cast(const void*)pts.ptr); glError();
-        glDrawArrays(GL_LINES, 0, cast(int)pts.length * 2);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, vec3f.sizeof, cast(const void*)gridLines.ptr); glError();
+        glDrawArrays(GL_LINES, 0, cast(int)gridLines.length * 2);
+
+        selectionQuad[] = (selectionQuadStart.v3(minZ).convert!double - camera.position).convert!float;
+        selectionQuad[1].x += selectionQuadSize.x;
+        selectionQuad[2] += selectionQuadSize.v3(0);
+        selectionQuad[3].y += selectionQuadSize.y;
+
+        lineShader.uniform.color = selectionColor;
+        lineShader.uniform.offset = vec3f(0, 0, 0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, vec3f.sizeof, cast(const void*)selectionQuad.ptr); glError();
+        glDrawArrays(GL_QUADS, 0, cast(int)selectionQuad.length);
 
         glDisableVertexAttribArray(0); glError();
         lineShader.use(false);

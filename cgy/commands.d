@@ -14,6 +14,7 @@ import unit;
 import unittypemanager : unitTypeManager;
 import util.pos;
 import util.filesystem : exists;
+import util.rangefromto : RangeFromTo;
 import util.socket : sendString;
 import util.util : BREAKPOINT, BREAK_IF;
 import worldstate.worldstate : WorldState;
@@ -31,6 +32,7 @@ final class Commands {
         addCommand("ProperlyConnected", &properlyConnected);
         addCommand("PlayerMove", &playerMove);
         addCommand("DamageTile", &damageTile);
+        addCommand("Designate", &designate);
     }
 
     void addCommand(string command, CommandHandler handler) {
@@ -90,6 +92,24 @@ final class Commands {
         int z = to!int(words[3]);
         int damage = to!int(words[4]);
         proxy.damageTile(vec3i(x,y,z).TilePos, damage);
+    }
+
+    void designate(PlayerInformation player, WorldProxy proxy, string line, string[] words) {
+        string method = words[1];
+        bool set = words[2] == "set"; // else should be "clear"
+        int startX = to!int(words[3]);
+        int startY = to!int(words[4]);
+        int startZ = to!int(words[5]);
+        int sizeX = to!int(words[6]);
+        int sizeY = to!int(words[7]);
+        int sizeZ = to!int(words[8]);
+        vec3i start = vec3i(startX, startY, startZ);
+        vec3i size = vec3i(sizeX, sizeY, sizeZ);
+        foreach(pt ; RangeFromTo(start, start + size)) {
+            if(method == "mine") {
+                proxy.designateMine(player.unit.clan, set, pt.TilePos);
+            }
+        }
     }
 
 }

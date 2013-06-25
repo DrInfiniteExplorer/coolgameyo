@@ -42,7 +42,7 @@ class Gaia : Clan {
     override Mission unsafeGetMission() {
         return Mission.init;
     }
-    override void unsafeDesignateMinePos(TilePos pos) {
+    override void unsafeDesignateMinePos(TilePos pos, bool set) {
         toMine ~= pos;
     }
 

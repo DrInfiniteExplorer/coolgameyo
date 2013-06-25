@@ -1,6 +1,7 @@
 module gui.ingame_third;
 
-import std.math : floor;
+import std.algorithm : min, max;
+import std.math : abs, floor;
 
 import derelict.sdl.sdl;
 
@@ -28,6 +29,8 @@ class PlanningMode : GuiEventDump {
     vec2i mouseCoords;
     ushort middleX, middleY;
     bool useMouse = true;
+
+    vec2i mouseGridPos;
 
     Camera camera;
 
@@ -103,9 +106,11 @@ class PlanningMode : GuiEventDump {
         auto focusBelowCam = focusZ - camera.position.z;
         auto time = focusBelowCam / dir.z;
         auto endPos = (camera.position.v2 + dir.v2 * time);
-        auto rel = endPos.convert!int - game.activeUnitPos.value.v2.convert!int;
-        msg(rel.x, " ", rel.y);
-        game.getRenderer.derp = endPos.v3(focusZ);
+        mouseGridPos = endPos.convert!int;
+
+        if(designating) {
+            moveDesignate(mouseGridPos);
+        }
 
     }
 
@@ -114,11 +119,6 @@ class PlanningMode : GuiEventDump {
 
     void mouseClick(GuiEvent e) {
         auto m = e.mouseClick;
-        if (m.right) {
-            rotateCamera = m.down;
-            hideMouse(m.down);
-            return;
-        }
         if( (m.wheelUp || m.wheelDown) && m.down) {
             if(keyMap[SDLK_LCTRL]) {
                 int dir = m.wheelUp ? 1 : -1;
@@ -129,6 +129,11 @@ class PlanningMode : GuiEventDump {
             }
         }
         if(m.middle) {
+            if(keyMap[SDLK_LSHIFT]) { // Recode so that letting go of shift leaves rotatecameramode as well. ololol.
+                rotateCamera = m.down;
+                hideMouse(m.down);
+                return;
+            }
             moveDragMouse = m.down;
         } else if (m.left && m.down) {
             /*
@@ -152,11 +157,61 @@ class PlanningMode : GuiEventDump {
 
         }
         */
+        if(designateTiles) {
+            if(!designating) {
+                startDesignate(mouseGridPos, m.down, m.left);
+            } else {
+                endDesignate(mouseGridPos, m.down);
+            }
+        }
     }
+
+    vec2i designateStartPos;
+    vec2i designateEndPos;
+    bool designating;
+    bool designateLeft;
+
+    void startDesignate(vec2i pos, bool mouseDown, bool leftButton) {
+        if(designating || !mouseDown) return;
+        designateStartPos = pos;
+        designateEndPos = pos;
+        designating = true;
+        designateLeft = leftButton;
+        auto designateColor = designateLeft ? vec3f(0.9) : vec3f(0.5, 0.2, 0.2);
+        game.getRenderer.setSelection(designateStartPos, designateEndPos+vec2i(1), &designateColor);
+    }
+    void endDesignate(vec2i pos, bool mouseDown) {
+        if(!designating || mouseDown) return;
+        designateEndPos = pos;
+
+        // Inform clan of designated tiles
+        // Stop rendering selection area
+        vec2i start = vec2i( min(designateStartPos.x, designateEndPos.x),
+                             min(designateStartPos.y, designateEndPos.y));
+        vec2i size = vec2i( abs(designateStartPos.x - designateEndPos.x),
+                            abs(designateStartPos.y - designateEndPos.y)) + vec2i(1,1);
+        game.designateTiles("mine", designateLeft, start.v3(cast(int)focusZ), size.v3(cast(int)focusZ));
+        game.getRenderer.setSelection(designateStartPos, designateStartPos);
+
+        designating = false;
+    }
+
+    void moveDesignate(vec2i pos) {
+        designateEndPos = pos;
+        vec2i endOffset = vec2i( designateStartPos.x <= designateEndPos.x,
+                                designateStartPos.y <= designateEndPos.y);
+        vec2i startOffset = vec2i( designateStartPos.x > designateEndPos.x,
+                                designateStartPos.y > designateEndPos.y);
+        game.getRenderer.setSelection(designateStartPos + startOffset, designateEndPos+endOffset);
+    }
+
     void onKey(GuiEvent.KeyboardEvent k) {
         if (k.pressed) {
             if (k.SdlSym == SDLK_F2) {
                 useMouse = !useMouse;
+            }
+            if(k.SdlSym == SDLK_m) {
+                designateTiles = !designateTiles;
             }
         }
     }

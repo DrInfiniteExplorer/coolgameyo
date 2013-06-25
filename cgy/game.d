@@ -317,6 +317,12 @@ struct Game {
         client.sendCommand(text("DamageTile ", tp.value.x, " ", tp.value.y, " ", tp.value.z, " ", damage));
     }
 
+    void designateTiles(string designation, bool set, vec3i start, vec3i size) {
+        client.sendCommand(text("Designate ", designation, " ", set ? "set" : "clear", " ",
+                                start.x, " ", start.y, " ", start.z, " ", 
+                                size.x, " ", size.y, " ", size.z));
+    }
+
 
     mixin ServerModule server;
     mixin ClientModule client;

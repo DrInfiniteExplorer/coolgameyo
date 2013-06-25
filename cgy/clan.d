@@ -59,7 +59,7 @@ class Clan : WorldStateListener {
     }
 
     abstract Mission unsafeGetMission();
-    abstract void unsafeDesignateMinePos(TilePos pos);
+    abstract void unsafeDesignateMinePos(TilePos pos, bool set);
 
     abstract void addUnit(Unit unit);
     abstract void addEntity(Entity entity);
@@ -117,8 +117,14 @@ final class NormalClan : Clan {
         auto ret = Mission(Mission.Type.mine, target(toMine.removeAny()));
         return ret;
     }
-    override void unsafeDesignateMinePos(TilePos pos) {
-        toMine ~= pos;
+    override void unsafeDesignateMinePos(TilePos pos, bool set) {
+        auto idx = toMine.countUntil(pos);
+        if(idx != -1) {
+            toMine = toMine.remove(idx);
+        }
+        if(set) {
+            toMine ~= pos;
+        }
     }
 
     override void addUnit(Unit unit) {
