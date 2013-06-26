@@ -24,6 +24,8 @@ import math.math : fastFloor;
 //import worldstate.block;
 import stolen.all;
 
+public import math.vector;
+
 version (Posix) {
     import core.sys.posix.stdlib: posix_memalign;
     import std.c.stdlib;
@@ -58,10 +60,6 @@ Thread spawnThread(T)(T func) {
     thread.start();
     return thread;
 }
-
-public import math.vector;
-import stolen.aabbox3d;
-alias aabbox3d!double aabbd;
 
 // We no longer handle tileposes etc below 0
 // So a simple cast to int will suffice
@@ -326,7 +324,7 @@ void lazyInit(T, Us...)(ref T t, Us us) {
 
 void convertArray(string Op = "=", To, From)(To[] to, From[] from) {
     static if( is(To : From) && is(From : To) && To.sizeof == From.sizeof) {
-        mixin("to[] " ~ Op ~" from[];");
+        mixin("to[] " ~ Op ~ " from[];");
     } else static if( __traits(compiles, to[0].x)) {
         foreach(idx, ref val ; to) {
             mixin("val " ~ Op ~" from[idx].convert!(typeof(to[0].x));");

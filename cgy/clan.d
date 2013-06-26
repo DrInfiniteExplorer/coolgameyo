@@ -40,7 +40,9 @@ class Clan : WorldStateListener {
         return _clanId;
     }
 
-    protected Array!TilePos toMine;
+    //protected Array!TilePos toMine;
+    protected TilePos[] toMine;
+    long toMineUpdated;
 
     protected Unit[int] clanMembers;
     protected Entity[int] clanEntities;
@@ -82,6 +84,9 @@ class Clan : WorldStateListener {
     abstract void serialize();
     abstract void deserialize();
 
+    TilePos[] getMineDesignations() {
+        return toMine.dup;
+    }
 
     void onAddUnit(SectorNum sectorNum, Unit unit) {}
     void onAddEntity(SectorNum sectorNum, Entity entity) {}
@@ -114,16 +119,21 @@ final class NormalClan : Clan {
 
     override Mission unsafeGetMission() {
         if (toMine.empty) return Mission.none;
-        auto ret = Mission(Mission.Type.mine, target(toMine.removeAny()));
+        auto lastOne = toMine[$-1];
+        toMine.length -= 1;
+        auto ret = Mission(Mission.Type.mine, target(lastOne));
         return ret;
     }
+
     override void unsafeDesignateMinePos(TilePos pos, bool set) {
         auto idx = toMine.countUntil(pos);
         if(idx != -1) {
             toMine = toMine.remove(idx);
+            if(!set) toMineUpdated = utime();
         }
         if(set) {
             toMine ~= pos;
+            toMineUpdated = utime();
         }
     }
 

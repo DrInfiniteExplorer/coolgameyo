@@ -10,6 +10,7 @@ import game : game;
 import globals : g_worldPath;
 import math.vector;
 import playerinformation : PlayerInformation;
+import tiletypemanager;
 import unit;
 import unittypemanager : unitTypeManager;
 import util.pos;
@@ -104,14 +105,17 @@ final class Commands {
         int sizeY = to!int(words[7]);
         int sizeZ = to!int(words[8]);
         vec3i start = vec3i(startX, startY, startZ);
-        vec3i size = vec3i(sizeX, sizeY, sizeZ);
+        vec3i size = vec3i(sizeX, sizeY, sizeZ) - vec3i(1);
         foreach(pt ; RangeFromTo(start, start + size)) {
             if(method == "mine") {
-                proxy.designateMine(player.unit.clan, set, pt.TilePos);
+                auto tilePos = pt.TilePos;
+                auto tile = proxy.getTile(tilePos);
+                //auto tileType = tileTypeManager.byId(tile.type);
+                if(tile.type <= TileTypeAir) continue;
+                proxy.designateMine(player.unit.clan, set, tilePos);
             }
         }
     }
-
 }
 
 

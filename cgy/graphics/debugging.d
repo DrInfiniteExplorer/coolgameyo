@@ -6,12 +6,13 @@ module graphics.debugging;
 import std.array : array;
 
 import graphics.ogl;
+import math.aabb : aabb3d;
 import util.util;
 
 struct AABBData{
     vec3f color;
     float radius;
-    aabbd aabb;
+    aabb3d aabb;
 
     bool opEquals(const AABBData o) const {
         return color == o.color && radius == o.radius && aabb == o.aabb;
@@ -24,7 +25,7 @@ struct AABBData{
 shared AABBData[int] aabbList;
 shared int aabbCount=1;
 
-int addAABB(aabbd aabb, vec3f color=vec3f(1, 0, 0), float radius=100) {
+int addAABB(aabb3d aabb, vec3f color=vec3f(1, 0, 0), float radius=100) {
 
 /*
     auto d = AABBData(color, radius, aabb);
@@ -42,18 +43,19 @@ void removeAABB(int id) {
 
 void renderAABBList(vec3d camPos, void delegate (vec3f color, float radius) set){
 
-    vec3d[8] edges;
-    vec3f[8] fedges;
+    vec3d[8] corners;
+    vec3f[8] fcorners;
     immutable ubyte[] indices = [0, 1, 0, 4, 0, 2, 2, 6, 2, 3, 5, 1, 5, 4, 6, 2, 6, 4, 6, 7, 7, 5, 7, 3];
     foreach(data ; aabbList) {
 
         //aabbd bb = cast(aabbd)data.aabb;
-        aabbd bb = (cast(aabbd)data.aabb).move(-camPos);
-        bb.getEdges(edges);
-        foreach(idx, v ; edges) {
-            fedges[idx] = v.convert!float; //Lol! Men om som innan att vi skickar doubles så kraschar det på lubens dator här :P
+        aabb3d bb = (cast(aabb3d)data.aabb);
+        bb.translate(-camPos);
+        corners = bb.getCorners();
+        foreach(idx, v ; corners) {
+            fcorners[idx] = v.convert!float; //Lol! Men om som innan att vi skickar doubles så kraschar det på lubens dator här :P
         }
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, vec3f.sizeof, fedges.ptr);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, vec3f.sizeof, fcorners.ptr);
         //glVertexAttribPointer(0, 3, GL_DOUBLE, GL_FALSE, vec3d.sizeof, edges.ptr);
         glError();
         set(cast(vec3f)data.color, data.radius);

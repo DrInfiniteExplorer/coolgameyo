@@ -423,9 +423,9 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
             auto pos = possesAI.getUnitPos();
             auto unitAABB = unit.aabb(&pos);
             auto tileAABB = whereToPlace.getAABB();
-            if (! intersectsExclusive(unitAABB, tileAABB)) {
+            //if (! intersectsExclusive(unitAABB, tileAABB)) {
                 //possesAI.changeTile(whereToPlace, copiedTile);
-            }
+            //}
         } else if (m.middle && tileSelected) {
             //vec3d pos = TilePos(selectedTilePos.value+selectedTileNormal).toEntityPos.value; // + 0.5 * selectedTileNormal.convert!double();
 
@@ -519,7 +519,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
                 removeAABB(selectedTileBox);
             }
             auto temp = TilePos(selectedTilePos.value); //Why? :S:S :P
-            aabbd aabb = temp.getAABB();
+            auto aabb = temp.getAABB();
             aabb.scale(vec3d(1.025f));
             selectedTileBox = addAABB(aabb);
         }

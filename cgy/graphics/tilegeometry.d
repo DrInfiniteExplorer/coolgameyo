@@ -275,11 +275,11 @@ final class TileGeometry : Module, WorldStateListener
         void fixTex(bool side, bool upper)(ref GRFace f, const(Tile) t, Direction normalDir){
             ushort tileId;
             static if (side) {
-                tileId = tileTypeManager.byID(t.type).textures.side;
+                tileId = tileTypeManager.byId(t.type).textures.side;
             } else static if(upper) {
-                tileId = tileTypeManager.byID(t.type).textures.top;
+                tileId = tileTypeManager.byId(t.type).textures.top;
             } else {
-                tileId = tileTypeManager.byID(t.type).textures.bottom;
+                tileId = tileTypeManager.byId(t.type).textures.bottom;
             }
             vec3f tileTexCoord = settings.getTileCoords(tileId);
             foreach(ref vert ; f.quad){

@@ -127,7 +127,7 @@ struct TileTypeManager {
 
     }
 
-    TileType byID(ushort id) {
+    TileType byId(ushort id) {
         return &types[id];
     }
     TileType byName(string name) {
@@ -233,7 +233,7 @@ struct TileTypeManager {
                 c++;
                 
                 auto id = add(tmpType);
-                newGroup ~= byID(id);
+                newGroup ~= byId(id);
             }
             tileTypeGroups[name] = newGroup;
         }

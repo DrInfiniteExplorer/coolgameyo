@@ -292,6 +292,9 @@ struct Game {
         if(activeUnitId) {
             activeUnit = Clans().getUnitById(activeUnitId);
         }
+        if(activeUnit) {
+            setActiveUnitPos(activeUnit.pos);
+        }
         return activeUnit;
     }
 

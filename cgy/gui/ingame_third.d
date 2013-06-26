@@ -190,7 +190,7 @@ class PlanningMode : GuiEventDump {
                              min(designateStartPos.y, designateEndPos.y));
         vec2i size = vec2i( abs(designateStartPos.x - designateEndPos.x),
                             abs(designateStartPos.y - designateEndPos.y)) + vec2i(1,1);
-        game.designateTiles("mine", designateLeft, start.v3(cast(int)focusZ), size.v3(cast(int)focusZ));
+        game.designateTiles("mine", designateLeft, start.v3(cast(int)focusZ), size.v3(1));
         game.getRenderer.setSelection(designateStartPos, designateStartPos);
 
         designating = false;
@@ -294,18 +294,6 @@ class PlanningMode : GuiEventDump {
             camera.relativeAxisMove(0, -deltaFocus, 0);
             focusDistance +=deltaFocus;
         }
-
-        /*
-        double speed = 10.0;
-        speed *= dTime;
-        if(keyMap[SDLK_LSHIFT]) speed *= 30;
-        if(keyMap[SDLK_a]){ camera.axisMove(-speed, 0.0, 0.0); }
-        if(keyMap[SDLK_d]){ camera.axisMove( speed, 0.0, 0.0); }
-        if(keyMap[SDLK_w]){ camera.axisMove( 0.0, speed, 0.0); }
-        if(keyMap[SDLK_s]){ camera.axisMove( 0.0,-speed, 0.0); }
-        if(keyMap[SDLK_SPACE]){ camera.axisMove( 0.0, 0.0, speed); }
-        if(keyMap[SDLK_LCTRL]){ camera.axisMove( 0.0, 0.0,-speed); }
-        */
     }
 
 

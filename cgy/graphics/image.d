@@ -96,7 +96,7 @@ struct Image {
     }
 
     void clear(ubyte r, ubyte g, ubyte b, ubyte a) {
-        ubyte[4] rgba = [r, g, b, a];
+        ubyte[4] rgba = makeStackArray(r, g, b, a);
         (cast(ubyte[4][]) imgData)[] = rgba;
     }
 
@@ -226,13 +226,16 @@ struct Image {
         flt[] *= 255 / (max-min);
         foreach(size_t idx ; 0 .. imgData.length) {
             imgData[idx] = cast(ubyte)flt[idx];
-            if((idx % 4) == 3) {
-                imgData[idx] = 255; // Force alpha to be non see trouhj
-            }
         }
+        clearAlpha();
         delete flt;
     }
 
+    void clearAlpha() {
+        foreach(size_t idx ; 0 .. imgData.length / 4) {
+            imgData[idx * 4 + 3] = 255; // Force alpha to be non see trouhj
+        }
+    }
 
 
     uint toGLTex(uint tex){

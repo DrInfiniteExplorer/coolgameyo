@@ -582,10 +582,11 @@ void enableVSync(bool enableVSync) {
     }
 }
 
-Image screenCap() {
+Image screenCap(bool ignoreAlpha = true) {
     Image img = Image(null, renderSettings.windowWidth, renderSettings.windowHeight);
     glReadPixels(0, 0, renderSettings.windowWidth, renderSettings.windowHeight,
                  GL_RGBA, GL_UNSIGNED_BYTE, img.imgData.ptr);
     img.flipHorizontal();
+    img.clearAlpha();
     return img;
 }

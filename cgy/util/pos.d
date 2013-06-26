@@ -4,9 +4,10 @@ module util.pos;
 import std.conv;
 
 import json;
-import stolen.aabbox3d;
+//import stolen.aabbox3d;
 
 import math.math : negDiv, posMod;
+import math.aabb : aabb3d;
 //import worldstate.sector;
 import worldstate.sizes;
 import util.util;
@@ -93,10 +94,10 @@ struct SectorNum {
                              value.x * SectorSize.x,
                              value.y * SectorSize.y));
     }
-    aabbox3d!double getAABB(){
+    aabb3d getAABB(){
         auto minPos = toTilePos().value.convert!double();
         auto maxPos = minPos + vec3d(SectorSize.x, SectorSize.y, SectorSize.z);
-        return aabbox3d!double(minPos, maxPos);
+        return aabb3d(minPos, maxPos);
     }
 
     mixin ToStringMethod3D;
@@ -123,10 +124,10 @@ struct BlockNum {
                     value.z * BlockSize.z));
     }
 
-    aabbox3d!double getAABB(){
+    aabb3d getAABB(){
         auto minPos = toTilePos().value.convert!double();
         auto maxPos = minPos + vec3d(BlockSize.x, BlockSize.y, BlockSize.z);
-        return aabbox3d!double(minPos, maxPos);
+        return aabb3d(minPos, maxPos);
     }
 
     // Relative index
@@ -247,10 +248,10 @@ struct TilePos {
         return TileXYPos(vec2i(value.x, value.y));
     }
 
-    aabbox3d!double getAABB(){
+    aabb3d getAABB(){
         auto minPos = value.convert!double();
         auto maxPos = minPos + vec3d(1.0, 1.0, 1.0);
-        return aabbox3d!double(minPos, maxPos);
+        return aabb3d(minPos, maxPos);
     }
 
 
@@ -322,10 +323,10 @@ struct GraphRegionNum{
                              ));
     }
     alias min toTilePos;
-    aabbox3d!double getAABB() const {
+    aabb3d getAABB() const {
         auto minPos = min().value.convert!double();
         auto maxPos = max().value.convert!double();
-        return aabbox3d!double(minPos, maxPos);
+        return aabb3d(minPos, maxPos);
     }
 
     mixin ToStringMethod3D;

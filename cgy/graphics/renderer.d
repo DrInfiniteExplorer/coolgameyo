@@ -225,6 +225,7 @@ class Renderer {
         sceneManager.renderScene(camera);
 
         renderGrid();
+        renderDesignations();
 
         renderDebug(camera);
 
@@ -234,6 +235,58 @@ class Renderer {
     
         castShadowRays();
         finishHim();
+
+    }
+
+    long lastMineDesignation;
+    vec3d designationUpdatedAt;
+    vec3f[24][] mineDesignations;
+    void renderDesignations() {
+        auto playerUnit = game.getActiveUnit();
+        if(playerUnit is null) return;
+        auto clan = playerUnit.clan;
+        auto cameraPos = camera.position;
+        if(lastMineDesignation != clan.toMineUpdated) {
+            lastMineDesignation = clan.toMineUpdated;
+            auto toMine = clan.getMineDesignations();
+            vec3d[24] mineDesignationsD;
+            mineDesignations.length = toMine.length;
+            foreach(idx, tilePos ; toMine) {
+                auto aabb = tilePos.getAABB();
+                aabb.scale(1.05);
+                mineDesignationsD = aabb.getQuads();
+                foreach(ref vec ; mineDesignationsD) {
+                    vec -= cameraPos;
+                }
+                mineDesignations[idx].convertArray(mineDesignationsD);
+            }
+            designationUpdatedAt = cameraPos;
+        }
+        if(mineDesignations.length == 0) return;
+        auto v = camera.getTargetMatrix();
+        auto vp = camera.getProjectionMatrix() * v;
+
+        lineShader.use();
+        lineShader.uniform.VP =  vp;
+        lineShader.uniform.V = v;
+
+        lineShader.uniform.color = vec3f(0.9, 0.65, 0.2);
+        lineShader.uniform.ignore.radius = 10.0f;
+
+        lineShader.uniform.offset = (designationUpdatedAt - cameraPos).convert!float;
+
+        glEnableVertexAttribArray(0); glError();
+        glBindBuffer(GL_ARRAY_BUFFER, 0); glError();
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, vec3f.sizeof, cast(const void*)mineDesignations.ptr); glError();
+
+        auto a = vp.transformVect((cast(vec3f*)mineDesignations.ptr)[0]);
+
+        glDrawArrays(GL_QUADS, 0, cast(int)mineDesignations.length * 24);
+        glDrawArrays(GL_LINES, 0, cast(int)mineDesignations.length * 24);
+
+        glDisableVertexAttribArray(0); glError();
+        lineShader.use(false);
+
 
     }
 
