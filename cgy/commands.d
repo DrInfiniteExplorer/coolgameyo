@@ -62,7 +62,7 @@ final class Commands {
             unit.pos = unitPos;
             unit.type = unitTypeManager.byName("dwarf");
             unit.clan = Clans().getClanById(1);
-            proxy.createUnit(unit);
+            proxy.createUnit(unit, true);
 
             player.unitId = unit.id;
             player.unit = unit;

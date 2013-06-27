@@ -2,6 +2,7 @@ module changes.changes;
 
 import std.conv : to;
 
+import ai.test;
 import clan;
 import clans : Clans;
 import entities.entity;
@@ -97,13 +98,15 @@ struct CreateUnit {
     uint typeId;
     uint clanId;
     UnitPos pos;
+    bool playerControlled;
 
-
-    this(Unit unit) {
+    this(Unit unit, bool _playerControlled) {
         unitId = unit.id;
         typeId = unit.type.id;
         clanId = unit.clan.clanId;
         pos = unit.pos;
+        playerControlled = _playerControlled;
+
     }
 
     //Value serialized;
@@ -113,6 +116,9 @@ struct CreateUnit {
         unit.pos = pos;
         unit.type = unitTypeManager.byID(cast(ushort)typeId);
         Clans().getClanById(clanId).addUnit(unit);
+        if(!playerControlled) {
+            unit.ai = new TestAI(unit);
+        }
     }
     ubyte[] toBytes() {
         return (cast(ubyte*)&this)[0 .. this.sizeof];

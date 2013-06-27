@@ -6,6 +6,7 @@ module util.array;
 //  deallocate memory, and no assumeSafeAppend is needed because
 //  the actuall storage array never shrank.
 
+import std.algorithm : countUntil;
 import std.traits;
 
 // Unsafe to initialize a binaryheap with an instance of this; does a bitblit, 
@@ -66,9 +67,10 @@ private mixin template ArrayFunctionality(T) {
     }
 
 
-    size_t length() @property {
+    size_t length() const @property {
         return virtualLength;
     }
+    alias length opDollar;
     void length(size_t newSize) @property {
         if(newSize > storage.length) {
             grow(findFittingSize(newSize));
@@ -90,6 +92,18 @@ private mixin template ArrayFunctionality(T) {
         assert (virtualLength >= howMany);
         virtualLength -= howMany;
     }
+
+
+    size_t removeKey(T t) {
+        auto idx = storage[0..virtualLength].countUntil(t);
+        if(idx == -1) return 0;
+        virtualLength -= 1;
+        foreach(i ; idx .. virtualLength) {
+            storage[i] = storage[i+1];
+        }
+        return 1 + removeKey(t);
+    }
+
     void reset() { virtualLength = 0; }
 
     T[] opSlice() {

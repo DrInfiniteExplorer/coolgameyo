@@ -171,7 +171,7 @@ struct Game {
     }
 
     UnitPos topOfTheWorld(TileXYPos xy) {
-        auto top = worldState.getTopTilePos(xy);
+        auto top = (worldState.getTopTilePos(xy).value + vec3i(0, 0, 1)).TilePos;
         auto ret = top.toUnitPos();
         return ret;
     }
@@ -191,7 +191,7 @@ struct Game {
         unit.pos = unitPos;
         unit.type = unitTypeManager.byName("dwarf");
         unit.clan = clan;
-        proxy.createUnit(unit);
+        proxy.createUnit(unit, false);
 
         auto tree = newEntity("tree01");
         scope(exit) delete tree;
@@ -217,8 +217,16 @@ struct Game {
         worldState._worldProxy.createUnit(uu);
         */
 
+        //auto clan = newClan(worldState);
 
+        auto workerUnit = newUnit();
+        scope(exit) delete workerUnit;
+        auto workerUnitPos = topOfTheWorld(spawnPoint.TileXYPos);
+        workerUnit.pos = workerUnitPos;
+        workerUnit.type = unitTypeManager.byName("dwarf");
+        workerUnit.clan = clan;
 
+        proxy.createUnit(workerUnit, false);
     } 
 
     void loadGame() {
