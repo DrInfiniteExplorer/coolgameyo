@@ -1,3 +1,4 @@
+
 module entitytypemanager;
 
 import std.exception;
@@ -62,6 +63,27 @@ final class TreelikeType {
                            "leafMaterial", &leafMaterial,
                            "branches", &branches);
     }
+}
+
+
+struct MaterialQuantityPair {
+	string material;
+	int quantity;
+}
+struct RecipyType {
+	MaterialQuantityPair[] input;
+	MaterialQuantityPair[] output;
+    int time;
+}
+final class WorkshopType {
+	RecipyType[] recipies;
+	char[][] tileMap;	/* Tile map legend:
+	d = dwarf that works stands here
+	i = input
+	o = output
+	s = solid (no other feature)
+	. = not solid (no other feature)
+	*/
 }
 
 class EntityModelInfo {
@@ -241,5 +263,4 @@ struct EntityTypeManager {
 }
 
 __gshared EntityTypeManager entityTypeManager;
-
 

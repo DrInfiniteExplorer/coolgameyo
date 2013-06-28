@@ -1,4 +1,17 @@
 {
+  "testworkshop":{
+    "displayName":"Workshop of DOOM",
+	"tintFromMaterial":1,
+	"tintColor":{ "x":200, "y":50, "z":50 },
+    "model":{
+        "name":"dorf/dorf.cgymesh",
+        "skeletonName":"dorf/dorf.cgyanim",
+        "meshTextures":[
+            "dorf/tex.png",
+            "dorf/tex2.png",
+        ],
+    },
+  },
   "debug":{
     "displayName":"Kalastrad",
 	"tintFromMaterial":1,

@@ -399,7 +399,7 @@
    <File path="entities\placeable.d" />
    <File path="entities\torch.d" />
    <File path="entities\treelikeinstance.d" />
-   <File path="entities\workshop.d" />
+   <File path="entities\workshopinstance.d" />
   </Folder>
   <Folder name="graphics">
    <Folder name="_2d">

@@ -54,7 +54,8 @@ final class Entity {
     struct EntityData {
         int entityId;
         EntityPos pos;
-        float rotation = 0; //radians
+		byte orientation; // 0=east, 1=north.. moturs // TODO: IMPLEMENT
+        //float rotation = 0; //radians
         bool isDropped = false;
 
         float entityWidth = 1.0;
@@ -70,7 +71,7 @@ final class Entity {
     LightSource light;
 
     // these need serairarleinzlaeniton IN SOME WAY
-    Workshop* workshop;
+    WorkshopInstance workshop;
     Placeable* placeable;
 
     Inventory inventory;

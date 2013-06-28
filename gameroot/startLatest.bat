@@ -12,3 +12,4 @@ goto exit
 :exit
 
 
+pause

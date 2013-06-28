@@ -268,7 +268,7 @@ class Renderer {
 
         lineShader.use();
         lineShader.uniform.VP =  vp;
-        lineShader.uniform.V = v;
+        lineShader.uniform.ignore.V = v;
 
         lineShader.uniform.color = vec3f(0.9, 0.65, 0.2);
         lineShader.uniform.ignore.radius = 10.0f;
@@ -329,7 +329,7 @@ class Renderer {
         vec3f offset = vec3f(-camera.position.x % 1.0, -camera.position.y % 1.0, minZ - camera.position.z);
         lineShader.use();
         lineShader.uniform.VP =  vp;
-        lineShader.uniform.V = v;
+        lineShader.uniform.ignore.V = v;
         lineShader.uniform.offset = offset;
 
         glEnableVertexAttribArray(0); glError();

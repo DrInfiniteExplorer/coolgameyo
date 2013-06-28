@@ -18,9 +18,16 @@ layout(location = 1) out vec4 light;
 layout(location = 2) out vec4 depth;
 void main() {
     vec4 color = texture(atlas, tex_texcoord); 
-    if(worldPosition.z > minZ) {
-        color = color * 0.1;
+    if(worldPosition.z > minZ+2.01) {
+        discard;
     }
+	if(worldPosition.z < minZ-0.1) {
+		float intensity = dot(color.xyz, vec3(0.2989, 0.5870, 0.1140));
+		float fadeRange = 0.8;
+		float distanceBelowGrid = -(worldPosition.z - minZ - 0.1);
+		float t = clamp(distanceBelowGrid, 0.0, fadeRange) / fadeRange;
+		color = mix(color, vec4(vec3(intensity), 1.0), t);
+	}
    frag_color = color;
    light = vec4(max(vec3(lightStrength), SkyColor * sunLightStrength), 1.0);
    depth = vec4(worldPosition, float(worldNormal));

@@ -181,11 +181,11 @@ class TileRenderer {
         glEnableVertexAttribArray(4); glError();
 
         auto transform = camera.getProjectionMatrix() * camera.getTargetMatrix();
-        tileProgram.setUniform(tileProgram.VP, transform);
-        tileProgram.setUniform(tileProgram.SkyColor, skyColor);
+        tileProgram.uniform.VP = transform;
+        tileProgram.uniform.SkyColor = skyColor;
 
         auto camPos = camera.getPosition();
-        tileProgram.uniform.minZ = cast(float)(minZ - camPos.z) + 0.01;
+        tileProgram.uniform.minZ = cast(float)(minZ - camPos.z);
 
 
         foreach(grNum, renderInfo ; vertexBuffers){
