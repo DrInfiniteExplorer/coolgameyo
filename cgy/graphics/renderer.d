@@ -31,9 +31,6 @@ import statistics;
 import unit;
 import util.util;
 
-alias void delegate (vec3f color, float radius) SetDelegate;
-__gshared SetDelegate setDelegate = null;
-
 immutable lineShaderVert = q{
     #version 420
     uniform mat4 V;
@@ -137,38 +134,6 @@ class Renderer {
     }
 
 
-    void renderDebug(Camera camera){
-        auto v = camera.getTargetMatrix();
-        auto vp = camera.getProjectionMatrix() * v;
-        lineShader.use();
-        lineShader.setUniform(lineShader.VP, vp);
-        lineShader.setUniform(lineShader.V, v);
-        lineShader.uniform.offset = vec3f(0);
-        glEnableVertexAttribArray(0);
-        glError();
-
-        if(setDelegate is null) {
-            static auto derp(LineShaderProgram lineShader) {
-                void set(vec3f color, float radius){
-                    lineShader.setUniform(lineShader.color, color);
-                    lineShader.setUniform(lineShader.radius, radius);            
-                }
-                return &set;
-            }
-            setDelegate = derp(lineShader);
-        }
-        
-        //Now set is the same always!
-        //msg("Set is same always? ", cast(void*)(setDelegate));
-
-        bool oldWireframe = setWireframe(true);
-        renderAABBList(camera.getPosition(), setDelegate);
-        renderLineList(camera.getPosition(), setDelegate);
-        setWireframe(oldWireframe);
-        glDisableVertexAttribArray(0);
-        glError();
-        lineShader.use(false);
-    }
     
 
     // D MINECRAFT MAP VIEWER CLONE INSPIRATION ETC
@@ -213,6 +178,7 @@ class Renderer {
         //Render world
         glBindFramebuffer(GL_FRAMEBUFFER, g_FBO); glError();
         glClearColor(skyColor.x, skyColor.y, skyColor.z, 1.0f); glError();
+        glClearColor(0, 0, 0, 1.0f); glError();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); glError();
 
         setWireframe(renderSettings.renderWireframe);
@@ -227,7 +193,6 @@ class Renderer {
         renderGrid();
         renderDesignations();
 
-        renderDebug(camera);
 
         setWireframe(false);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);

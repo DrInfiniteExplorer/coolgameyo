@@ -10,6 +10,3 @@ goto exit
 ..\cgy\%latest%\cgy.exe --settingsFile=debugSettings.json  --playerName=DebugPlayer --hostGame=880128
 goto exit
 :exit
-
-
-pause

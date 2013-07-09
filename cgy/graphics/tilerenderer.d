@@ -51,13 +51,9 @@ class TileRenderer {
         tileProgram.bindAttribLocation(3, "sunLight");
         tileProgram.bindAttribLocation(4, "normal");
         tileProgram.link();
-        tileProgram.offset      = tileProgram.getUniformLocation("offset");
-        tileProgram.VP          = tileProgram.getUniformLocation("VP");
-        tileProgram.atlas       = tileProgram.getUniformLocation("atlas");
-        tileProgram.SkyColor    = tileProgram.getUniformLocation("SkyColor");
-        tileProgram.minZ        = tileProgram.getUniformLocation("minZ");
+ 
         tileProgram.use();
-        tileProgram.setUniform(tileProgram.atlas, 0); //Texture atlas will always reside in texture unit 0 yeaaaah
+        tileProgram.uniform.atlas = 0; //Texture atlas will always reside in texture unit 0 yeaaaah
 
     }
 
@@ -194,7 +190,7 @@ class TileRenderer {
                 //TODO: Do the pos-camerapos before converting to float, etc
                 auto dPos = grNum.min().value.convert!double();
                 auto fPos = (dPos - camPos).convert!float();
-                tileProgram.setUniform(tileProgram.offset, fPos);
+                tileProgram.uniform.offset = fPos;
 
                 glBindBuffer(GL_ARRAY_BUFFER, renderInfo.vbo); glError();
                 glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, GRVertex.sizeof, null /* offset in vbo */); glError();

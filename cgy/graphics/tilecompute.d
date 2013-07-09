@@ -125,48 +125,7 @@ class TileCompute : WorldStateListener {
     void render(Camera camera, vec3f skyColor) {
         updateGeometry();
 
-        /*
-        tileProgram.use();
-        glEnableVertexAttribArray(0); glError();
-        glEnableVertexAttribArray(1); glError();
-        glEnableVertexAttribArray(2); glError();
-        glEnableVertexAttribArray(3); glError();
-        glEnableVertexAttribArray(4); glError();
 
-        auto transform = camera.getProjectionMatrix() * camera.getTargetMatrix();
-        tileProgram.setUniform(tileProgram.VP, transform);
-        tileProgram.setUniform(tileProgram.SkyColor, skyColor);
-
-        auto camPos = camera.getPosition();
-
-        foreach(grNum, renderInfo ; vertexBuffers){
-            if(camera.inFrustum(grNum.getAABB())){
-
-                //TODO: Do the pos-camerapos before converting to float, etc
-                auto dPos = grNum.min().value.convert!double();
-                auto fPos = (dPos - camPos).convert!float();
-                tileProgram.setUniform(tileProgram.offset, fPos);
-
-                glBindBuffer(GL_ARRAY_BUFFER, renderInfo.vbo); glError();
-                glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, GRVertex.sizeof, null /+ offset in vbo +/); glError();
-                glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, GRVertex.sizeof, cast(void*)GRVertex().texcoord.offsetof); glError();
-                glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, GRVertex.sizeof, cast(void*)GRVertex().lightValue.offsetof); glError();
-                glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, GRVertex.sizeof, cast(void*)GRVertex().sunLightValue.offsetof); glError();
-                glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, GRVertex.sizeof, cast(void*)GRVertex().normal.offsetof); glError();
-                glDrawArrays(GL_QUADS, 0, renderInfo.quadCount*4); glError();
-                triCount += renderInfo.quadCount*2;
-            }
-        }
-        //Get list of vbo's
-        //Do culling    
-        //Render vbo's.
-        glDisableVertexAttribArray(0); glError();
-        glDisableVertexAttribArray(1); glError();
-        glDisableVertexAttribArray(2); glError();
-        glDisableVertexAttribArray(3); glError();
-        glDisableVertexAttribArray(4); glError();
-        tileProgram.use(false);
-        */
     }
 
     void onAddUnit(SectorNum, Unit) { }

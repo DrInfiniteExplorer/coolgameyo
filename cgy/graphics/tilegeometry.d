@@ -515,7 +515,6 @@ final class TileGeometry : Module, WorldStateListener
     void onAddEntity(SectorNum, Entity) { }
 
     void onBuildGeometry(SectorNum sectorNum) {
-        //version(Windows) auto start = GetTickCount();
         auto grNumMin = sectorNum.toTilePos().getGraphRegionNum();
         sectorNum.value += vec3i(1,1,1);
         auto tmp = sectorNum.toTilePos();
@@ -523,9 +522,6 @@ final class TileGeometry : Module, WorldStateListener
         auto grNumMax = tmp.getGraphRegionNum();
         sectorNum.value -= vec3i(1,1,1);
 
-        //TODO: figure out what kind of problems i was referring to.
-        //ASSUMES THAT WE ARE IN THE UPDATE PHASE, OTHERWISE THIS MAY INTRODUCE PROBLEMS AND SUCH. :)
-        //*
         assert (this !is null);
         GraphRegionNum[] newRegions;
         foreach(pos ; RangeFromTo (grNumMin.value, grNumMax.value)) {
