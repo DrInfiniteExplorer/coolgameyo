@@ -1,0 +1,68 @@
+
+# /
+/Debug
+/coolgameyo.sdf
+/coolgameyo.suo
+/ipch
+/libraries
+/Release
+/x64
+
+# /cgy/
+/cgy/Debug
+/cgy/Release
+/cgy/Release_Release
+/cgy/Release_UniLink
+/cgy/settings.json
+
+# /cgy/changes/
+
+# /cgy/entities/
+
+# /cgy/graphics/models/
+
+# /cgy/gui/random/
+
+# /cgy/heightsheets/
+
+# /cgy/scene/
+
+# /cgy/util/voronoi/
+
+# /cgy/worldstate/
+
+# /gameroot/
+/gameroot/README-SDL.txt
+/gameroot/derp.png
+/gameroot/heightmap.png
+/gameroot/output.txt
+/gameroot/saves
+/gameroot/settings.json
+/gameroot/statistics.txt
+/gameroot/worlds
+/gameroot/debugSettings.json
+/gameroot/advectTest
+/gameroot/distance.png
+/gameroot/height.png
+/gameroot/ImgName.png
+/gameroot/latestBuildType
+
+# /gameroot/data/
+/gameroot/data/oldMaterials
+
+# /gameroot/models/
+
+# /gameroot/models/dorf/
+
+# /gameroot/opencl/
+
+# /gameroot/shaders/
+/gameroot/shaders/graphics.lnk
+
+# /gameroot/shaders/models/
+
+# /gameroot/textures/
+/gameroot/textures/1.png
+
+# /gameroot/worlds/
+/gameroot/worlds/*
