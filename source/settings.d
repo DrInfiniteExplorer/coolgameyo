@@ -6,7 +6,8 @@ import std.conv;
 import std.file;
 import std.stdio;
 
-import derelict.sdl.sdl : SDL_WM_GrabInput, SDL_GRAB_ON, SDL_GRAB_OFF;
+//import derelict.sdl.sdl : SDL_WM_GrabInput, SDL_GRAB_ON, SDL_GRAB_OFF;
+
 
 import json;
 import util.util;
@@ -73,7 +74,7 @@ void applyWindowSettings() {
     repositionWindows();
 
     // Forces the mouse to be within the window
-    SDL_WM_GrabInput(windowSettings.trapMouse ? SDL_GRAB_ON : SDL_GRAB_OFF);
+    msg("SDL_WM_GrabInput(windowSettings.trapMouse ? SDL_GRAB_ON : SDL_GRAB_OFF);");
 
 }
 

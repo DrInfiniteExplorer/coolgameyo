@@ -12,7 +12,7 @@ import modelparser.cgyparser;
 
 struct cgyVertex {
     vec3f pos;
-    float st[2];
+    float[2] st;
     vec3f normal;
     ubyte[4] bones;
     float[4] weights;
@@ -25,7 +25,7 @@ struct cgyJoint {
 }
 
 struct cgyTri {
-    uint idx[3];
+    uint[3] idx;
 }
 
 final class CGYMesh {

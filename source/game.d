@@ -12,7 +12,7 @@ import std.string;
 
 version(Windows) import std.c.windows.windows;
 
-import derelict.sdl.sdl;
+//import derelict.sdl2.sdl;
 
 import ai.patrolai;
 import ai.test;

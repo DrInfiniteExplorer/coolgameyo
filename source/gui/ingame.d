@@ -1,7 +1,7 @@
 module gui.ingame;
 
 
-import derelict.sdl.sdl;
+import derelict.sdl2.sdl;
 
 import gui.all;
 import gui.debuginfo;

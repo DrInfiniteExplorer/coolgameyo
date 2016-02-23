@@ -21,8 +21,8 @@ pragma(lib, "derelictutil.lib");
 pragma(lib, "derelictsdl.lib");
 
 import derelict.openal.al;
-import derelict.sdl.sdl;
-import derelict.opengl.gl;
+import derelict.sdl2.sdl;
+import derelict.opengl3.gl3;
 import derelict.devil.il;
 import derelict.devil.ilu;
 
@@ -59,7 +59,7 @@ version (Windows) {
     pragma (msg, "Compiling for windows");
 }
 
-__gshared SDL_Surface* surface;
+__gshared SDL_Window* sdlWindow;
 
 __gshared string[] g_commandLine;
 
@@ -156,8 +156,8 @@ void main(string[] args) {
 }
 
 void initLibraries() {
-    DerelictSDL.load();
-    DerelictGL.load();
+    DerelictSDL2.load();
+    DerelictGL3.load();
     DerelictIL.load();
     DerelictILU.load();
 //    DerelictAL.load();
@@ -172,8 +172,8 @@ void deinitLibraries() {
     SDL_Quit();
 //    DerelictAL.unload();
     DerelictIL.unload();
-    DerelictGL.unload();
-    DerelictSDL.unload();
+    DerelictGL3.unload();
+    DerelictSDL2.unload();
 }
 
 void createWindow() {
@@ -193,24 +193,29 @@ void createWindow() {
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS,  1);
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES,  16);
 
-    auto surfaceMode = SDL_HWSURFACE | SDL_GL_DOUBLEBUFFER | SDL_OPENGL;
+    auto surfaceMode = SDL_WINDOW_OPENGL;
     if(!windowSettings.windowed) {
-        surfaceMode |= SDL_FULLSCREEN;
+        surfaceMode |= SDL_WINDOW_FULLSCREEN;
     }
-    surface = SDL_SetVideoMode(
+    const(char)[] asd ="asd\0".dup;
+    sdlWindow = SDL_CreateWindow("asd".toStringz,
+        SDL_WINDOWPOS_UNDEFINED,
+        SDL_WINDOWPOS_UNDEFINED,
                                renderSettings.windowWidth,
                                renderSettings.windowHeight,
-                               32,
                                surfaceMode
                                );
-    enforce(surface, text("Could not set sdl video mode (", SDLError() , ")"));
+    enforce(sdlWindow, text("Could not set sdl video mode (", SDLError() , ")"));
+    SDL_GL_CreateContext(sdlWindow);
+
+    SDL_SysWMinfo info;
+    SDL_VERSION(&info.version_);
+    setMainWindow(info.info.win.window);
+
     windowSettings.windowsInitialized = true;
     applyWindowSettings();
 
     initOpenGL();
-
-    SDL_EnableUNICODE(1);
-    SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
 }
 
 __gshared bool inputActive = true;
@@ -219,9 +224,11 @@ bool handleSDLEvent(in SDL_Event event, float now, GuiSystem guiSystem) {
     guiEvent.eventTimeStamp = now;
     bool exit = false;
     switch (event.type){
-        case SDL_ACTIVEEVENT:
-            if(event.active.state & SDL_APPINPUTFOCUS) {
-                inputActive = event.active.gain != 0;
+        case SDL_WINDOWEVENT:
+            if(event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) {
+                inputActive = true;
+            }else if(event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) {
+                inputActive = false;
             }
 
             /*
@@ -270,7 +277,7 @@ bool handleSDLEvent(in SDL_Event event, float now, GuiSystem guiSystem) {
             break;
         case SDL_KEYDOWN:
         case SDL_KEYUP:
-            if(event.key.state == SDL_PRESSED && event.key.keysym.sym == SDLK_PRINT) {
+            if(event.key.state == SDL_PRESSED && event.key.keysym.sym == SDLK_PRINTSCREEN) {
                 PrintScreen();
             } else {
                 guiEvent.type = GuiEventType.Keyboard;
@@ -296,6 +303,9 @@ bool handleSDLEvent(in SDL_Event event, float now, GuiSystem guiSystem) {
             m.delta.set(event.motion.xrel,
                         event.motion.yrel);
             guiSystem.onEvent(guiEvent);
+            if(m.applyReposition) {
+                SDL_WarpMouseInWindow(sdlWindow, cast(ushort)m.reposition.x, cast(ushort)m.reposition.y);
+            }
             break;
         case SDL_MOUSEBUTTONDOWN:
         case SDL_MOUSEBUTTONUP:
@@ -305,11 +315,15 @@ bool handleSDLEvent(in SDL_Event event, float now, GuiSystem guiSystem) {
             m.left = event.button.button == SDL_BUTTON_LEFT;
             m.right = event.button.button == SDL_BUTTON_RIGHT;
             m.middle = event.button.button == SDL_BUTTON_MIDDLE;
-            m.wheelUp = event.button.button == SDL_BUTTON_WHEELUP;
-            m.wheelDown = event.button.button == SDL_BUTTON_WHEELDOWN;
             m.pos.set(event.button.x,
                       event.button.y);
             guiSystem.onEvent(guiEvent);                        
+            break;
+        case SDL_MOUSEWHEEL:
+            guiEvent.type = GuiEventType.MouseWheel;
+            auto m = &guiEvent.mouseWheel;
+            m.amount = event.wheel.y;
+            guiSystem.onEvent(guiEvent);
             break;
         default:
     }
@@ -347,7 +361,7 @@ void EventAndDrawLoop(bool canYield)(GuiSystem guiSystem, scope void delegate(fl
         }
         guiSystem.tick(deltaT); //Eventually add deltatime and such as well :)
         guiSystem.render();
-        SDL_GL_SwapBuffers();
+        SDL_GL_SwapWindow(sdlWindow);
         if (endLoop) {
             exit |= endLoop();
         }

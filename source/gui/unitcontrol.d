@@ -7,7 +7,7 @@ import std.exception;
 import std.math;
 import std.stdio;
 
-import derelict.sdl.sdl;
+import derelict.sdl2.sdl;
 
 import ai.possessai;
 import json;
@@ -53,7 +53,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
     private Camera camera;
     private Unit unit;
 
-    private bool[SDLK_LAST]   keyMap;    
+    private bool[int]   keyMap;
     private bool _3rdPerson;
     private bool freeFlight;
     private bool useMouse = true;
@@ -392,7 +392,8 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         auto diffX = x - middleX;
         auto diffY = y - middleY;
         if((diffX != 0 || diffY != 0) && useMouse){
-            SDL_WarpMouse(middleX, middleY);
+            m.reposition.set(middleX, middleY);
+            m.applyReposition=true;
             if(!runCamDemo) {
                 camera.mouseLook( diffX,  diffY);
             }

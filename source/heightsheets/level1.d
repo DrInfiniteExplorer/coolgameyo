@@ -30,8 +30,8 @@ final class Level1Sheet {
     vec3f[level1VertexCount][level1VertexCount] vertices; //lol 20k of vertex data on stack
     vec3f[level1VertexCount][level1VertexCount] normals;  //Another 20k! will it blend?
     vec3f[level1VertexCount][level1VertexCount] colors;   // EVEN MORE! WILL TEH STACK CORPPTU?
-    float sectorMin[level1SectorCount*level1SectorCount];
-    float sectorMax[level1SectorCount*level1SectorCount];
+    float[level1SectorCount*level1SectorCount] sectorMin;
+    float[level1SectorCount*level1SectorCount] sectorMax;
     ushort[level1QuadCount*level1QuadCount*6] indices;
 
     SectorNum center;

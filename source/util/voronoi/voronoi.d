@@ -158,13 +158,20 @@ final class HalfEdge {
         return vec2d.init;
     }
 
-    override int opCmp(Object _o) {
-        HalfEdge o = cast(HalfEdge) _o;
-        if(angle == o.angle) return 0;
-        if(angle > o.angle) return 1;
-        return -1;
-    }
+//    override int opCmp(Object _o) {
+//        HalfEdge o = cast(HalfEdge) _o;
+//        if(angle == o.angle) return 0;
+//        if(angle > o.angle) return 1;
+//        return -1;
+//    }
 
+//    override size_t toHash() { return vertex.toHash; }
+
+//    override bool opEquals(Object _o)
+//    {
+//        HalfEdge o = cast(HalfEdge) _o;
+//        return o && angle == o.angle;
+//    }
 }
 
 
@@ -408,10 +415,10 @@ final class VoronoiPoly {
         auto file = BinaryFile(path, "w");
         auto writer = file.writer;
 
-        int edgeMap[Edge];
-        int vertexMap[Vertex];
-        int siteMap[Site];
-        int halfEdgeMap[HalfEdge];
+        int[Edge] edgeMap;
+        int[Vertex] vertexMap;
+        int[Site] siteMap;
+        int[HalfEdge] halfEdgeMap;
 
         foreach(idx, edge ; edges) {
             edgeMap[edge] = cast(int)idx;
@@ -631,7 +638,7 @@ final class VoronoiPoly {
         }
 
         foreach(site ; sites) {
-            site.halfEdges.sort;
+            std.algorithm.sort(site.halfEdges);
             int edgeCount = cast(int)site.halfEdges.length;
             int c = 0;
             for(int i = 0 ; i < edgeCount; i++) {

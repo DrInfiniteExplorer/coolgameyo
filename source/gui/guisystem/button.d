@@ -9,7 +9,7 @@ import std.typecons;
 import std.typetuple;
 
 //TODO: Make this a public import in some gui-module.
-import derelict.sdl.sdl;
+import derelict.sdl2.sdl;
 
 
 import gui.guisystem.guisystem;

@@ -109,7 +109,7 @@ class TileRenderer {
             //See if VBO is reusable.
             int bufferSize;
             glBindBuffer(GL_ARRAY_BUFFER, oldInfo.vbo);
-            glGetBufferParameteriv(GL_ARRAY_BUFFER_ARB, GL_BUFFER_SIZE_ARB, &bufferSize);
+            glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &bufferSize);
 
             double ratio = to!double(geometrySize)/to!double(bufferSize);
             if(minReUseRatio <= ratio && ratio <= 1){
@@ -146,7 +146,8 @@ class TileRenderer {
                         vertexBuffers[grNum] = newInfo; 
                     }
                 }
-                toUpload.clear();
+                //toUpload.clear();
+                toUpload = null;
             }
         }
 

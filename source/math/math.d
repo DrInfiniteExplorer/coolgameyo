@@ -151,10 +151,11 @@ return val;
 }
 */
 
-T clamp(T, Y, U)(T value, Y low, U high) {
-    import std.algorithm : max, min;
-	return min(max(value,cast(T)low), cast(T)high);
-}
+// Now implemented in std.algorithm.comparison.clamp wooh!
+//T clamp(T, Y, U)(T value, Y low, U high) {
+//    import std.algorithm : max, min;
+//	return min(max(value,cast(T)low), cast(T)high);
+//}
 
 
 auto clampV(A)(const vector3!A wap, const vector3!(A) a, const vector3!(A) b){
@@ -188,6 +189,7 @@ auto posModV(A)(const vec2!A wap, const A b){
     return vector2!A(posMod(wap.x, b), posMod(wap.y,b));
 }
 
+//.... obtains the center of a circle that touches these three points?
 vector2!T CircumCircle(T)(vector2!T a, vector2!T b, vector2!T c) {
     T tx = (a.x + c.x)/2;
     T ty = (a.y + c.y)/2;

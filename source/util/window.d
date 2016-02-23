@@ -2,7 +2,8 @@ module util.window;
 
 import std.string;
 
-import derelict.sdl.sdl;
+//import derelict.sdl2.sdl;
+import derelict.sdl2.sdl;
 
 
 import settings;
@@ -16,25 +17,20 @@ version(Windows) {
 
 version(Windows) {
 
+    __gshared HWND __mainHwnd;
+    void setMainWindow(HWND wnd)
+    {
+        __mainHwnd =wnd;
+    }
+
     HWND getMainWindow() {
-        auto wierd_str = "I_am_a_flying_unicorn_who_farts_glitter";
-        auto strZ = wierd_str.toStringz();
-        SDL_WM_SetCaption(strZ, "derp");
-        auto mainHwnd = FindWindowA(null, strZ);
-        BREAK_IF(mainHwnd == null);
-        SDL_WM_SetCaption("CoolGameYo!", "Herp");
-        return mainHwnd;
+        return __mainHwnd;
     }
 
     void captureWindowPositions() {
         if(!windowSettings.windowsInitialized) return;
-        auto wierd_str = "I_am_a_flying_unicorn_who_farts_glitter";
-        auto strZ = wierd_str.toStringz();
         RECT rect;
-        SDL_WM_SetCaption(strZ, "derp");
-        auto mainHwnd = FindWindowA(null, strZ);
-        BREAK_IF(mainHwnd == null);
-        GetWindowRect(mainHwnd, &rect);
+        GetWindowRect(__mainHwnd, &rect);
         windowSettings.mainCoordinates.x = rect.left;
         windowSettings.mainCoordinates.y = rect.top;
 
@@ -42,8 +38,6 @@ version(Windows) {
         GetWindowRect(consoleHwnd, &rect);
         windowSettings.consoleCoordinates.x = rect.left;
         windowSettings.consoleCoordinates.y = rect.top;
-
-        SDL_WM_SetCaption("CoolGameYo!", "Herp");
     }
 
 
@@ -55,17 +49,11 @@ version(Windows) {
         y = windowSettings.mainCoordinates.y;
 
         if(x != -1 || y != -1) {
-            auto wierd_str = "I_am_a_flying_unicorn_who_farts_glitter";
-            auto strZ = wierd_str.toStringz();
             RECT rect;
-            SDL_WM_SetCaption(strZ, "derp");
-            auto mainHwnd = FindWindowA(null, strZ);
-            BREAK_IF(mainHwnd == null);
-            GetWindowRect(mainHwnd, &rect);
+            GetWindowRect(__mainHwnd, &rect);
             auto width = rect.right - rect.left;
             auto height = rect.bottom - rect.top;
-            MoveWindow(mainHwnd, x, y, width, height, true);
-            SDL_WM_SetCaption("CoolGameYo!", "Herp");
+            MoveWindow(__mainHwnd, x, y, width, height, true);
         }
         x = windowSettings.consoleCoordinates.x;
         y = windowSettings.consoleCoordinates.y;

@@ -335,9 +335,9 @@ struct Image {
         }
         auto color = _color.convert!float() * (1.0/255.0);
         for(int i=0; i < imgData.length; i+=4){
-            imgData[i+0] *= color.x;
-            imgData[i+1] *= color.y;
-            imgData[i+2] *= color.z;
+            imgData[i+0] = cast(ubyte)(imgData[i+0] * color.x);
+            imgData[i+1] = cast(ubyte)(imgData[i+1] * color.y);
+            imgData[i+2] = cast(ubyte)(imgData[i+2] * color.z);
         }
     }
 

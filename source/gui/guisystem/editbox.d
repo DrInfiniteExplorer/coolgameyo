@@ -10,7 +10,7 @@ import std.stdio;
 import std.string : indexOf;
 
 //TODO: Make this a public import in some gui-module.
-import derelict.sdl.sdl;
+import derelict.sdl2.sdl;
 
 
 import graphics._2d.rect;
@@ -235,10 +235,10 @@ class GuiElementEditbox : GuiElement {
                 writeln(startMarker);
             }
             moved = true;
-        } else if (sdlSym == SDLK_HOME || (sdlSym == SDLK_KP7 && !(sdlMod & KMOD_NUM))) {
+        } else if (sdlSym == SDLK_HOME || (sdlSym == SDLK_KP_7 && !(sdlMod & KMOD_NUM))) {
             startMarker = 0;
             moved = true;
-        } else if (sdlSym == SDLK_END || (sdlSym == SDLK_KP1 && !(sdlMod & KMOD_NUM))) {
+        } else if (sdlSym == SDLK_END || (sdlSym == SDLK_KP_1 && !(sdlMod & KMOD_NUM))) {
             startMarker = cast(int)content.length;
             moved = true;
         }

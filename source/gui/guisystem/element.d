@@ -19,6 +19,7 @@ public import util.rect;
 enum GuiEventType {
     MouseMove,
     MouseClick,
+    MouseWheel,
     Keyboard,
     HoverOn,
     HoverOff,
@@ -40,19 +41,23 @@ struct GuiEvent {
         struct MouseMove {
             vec2i pos;
             vec2i delta;
+            vec2i reposition;
+            bool applyReposition;
         };
         MouseMove mouseMove;
         struct MouseClick{
             bool left; //Otherwise right?
             bool right; //Otherwise right?
             bool middle; //Otherwise right?
-            bool wheelUp; //Otherwise right?
-            bool wheelDown; //Otherwise right?
-            
+
             bool down;
             vec2i pos;
         };
         MouseClick mouseClick;
+        struct MouseWheel {
+            float amount;
+        }
+        MouseWheel mouseWheel;
         struct KeyboardEvent{
             int SdlSym;
             int SdlMod;

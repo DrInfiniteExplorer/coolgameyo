@@ -111,8 +111,11 @@ mixin template Heightmap() {
             int iterations = 0;
             int done = 0;
             int yStart = state.y;
-            foreach (y ; yStart .. SectorSize.y) {
-                foreach (x ; state.x .. SectorSize.x) {
+            int yEnd = SectorSize.y;
+            foreach (y ; yStart .. yEnd) {
+                int xStart= state.x;
+                int xEnd =SectorSize.x;
+                foreach (x ; xStart .. xEnd) {
                     
                     yStart = 0;
                     auto tmp = p.value + vec2i(x, y);

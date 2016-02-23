@@ -8,9 +8,8 @@ import std.conv;
 import std.stdio;
 import std.traits : isArray;
 
-public import derelict.opengl.gl;
-public import derelict.opengl.glext;
-import derelict.opengl.wgl;
+public import derelict.opengl3.gl;
+//import derelict.opengl.wgl;
 
 import globals : g_glVersion, g_videoMemoryBuffers, g_videoMemoryTextures;
 import graphics.image;
@@ -26,16 +25,16 @@ void initOpenGL(){
     g_glVersion = glGetString(GL_VERSION)[0..3].to!string.to!double;
     msg("OGL version ", g_glVersion);
 
-    DerelictGL.loadExtensions();
+//    DerelictGL.loadExtensions();
     glError();
     glFrontFace(GL_CCW);
     glError();
-    DerelictGL.loadClassicVersions(GLVersion.GL21); //BECAUSE THERE IS ONLY UP TO 2.1 IN THE CLASSIC VERSION! :s
+//    DerelictGL.loadClassicVersions(GLVersion.GL21); //BECAUSE THERE IS ONLY UP TO 2.1 IN THE CLASSIC VERSION! :s
     glError();
 
     if(g_glVersion >= 3.0) {
         try {
-            DerelictGL.loadModernVersions(GLVersion.GL30);
+//            DerelictGL.loadModernVersions(GLVersion.GL30);
         } catch (Exception e) {
             msg("Failed to load some modern gl function");
         }
@@ -576,7 +575,7 @@ bool setWireframe(bool wireframe) {
 
 void enableVSync(bool enableVSync) {
     version (Windows) {
-        wglSwapIntervalEXT(enableVSync ? 1 : 0);
+        msg("wglSwapIntervalEXT(enableVSync ? 1 : 0);");
     } else {
         msg("Cannot poke with vsync unless wgl blerp");
     }

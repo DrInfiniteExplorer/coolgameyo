@@ -27,7 +27,7 @@ final class InstanceManager {
     bool dirty;
     uint instanceVBO;
     size_t instanceSize;
-    InstanceData instanceData[];
+    InstanceData[] instanceData;
 
 
     void uploadInstanceData() {

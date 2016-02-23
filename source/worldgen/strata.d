@@ -1,11 +1,10 @@
 module worldgen.strata;
 
 
-import std.algorithm : min, max;
+import std.algorithm : min, max, clamp;
 import std.math : abs;
 
 import log;
-import math.math : clamp;
 import random.gradientnoise;
 import random.simplex;
 import random.valuesource;

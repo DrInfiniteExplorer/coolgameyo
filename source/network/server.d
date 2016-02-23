@@ -241,7 +241,7 @@ mixin template ServerModule() {
                 recv_set.add(player.commSock);
                 write_set.add(player.dataSock);
             }
-            int n = Socket.select(recv_set, write_set, null, 0);
+            int n = Socket.select(recv_set, write_set, null);
             BREAK_IF(n == -1);
             foreach (player ; players) {
                 if(!player.connected) continue;
@@ -285,7 +285,7 @@ mixin template ServerModule() {
         recv_set.reset();
         recv_set.add(listener);
         while (timeLeft > 0) {
-            int n = Socket.select(recv_set, null, null, timeLeft);
+            int n = Socket.select(recv_set, null, null, dur!"usecs"(timeLeft));
             if (n == 0) {
                 break; // this is timeout, means we go on until next tick
             }

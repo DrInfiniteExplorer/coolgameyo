@@ -148,7 +148,7 @@ mixin template ClientModule() {
             recv_set.add(commSock);
             recv_set.add(dataSock);
 
-            int n = Socket.select(recv_set, null, null, 0);
+            int n = Socket.select(recv_set, null, null);
             if(recv_set.isSet(commSock)) {
                 handleComm();
             }
@@ -172,7 +172,7 @@ mixin template ClientModule() {
         recv_set.reset();
         recv_set.add(commSock);
         while (timeLeft > 0) {
-            int n = Socket.select(recv_set, null, null, timeLeft);
+            int n = Socket.select(recv_set, null, null, dur!"usecs"(timeLeft));
             if (n == 0) {
                 break; // this is timeout, means we go on until next tick
             }

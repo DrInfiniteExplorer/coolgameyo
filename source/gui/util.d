@@ -1,7 +1,7 @@
 
 module gui.util;
 
-import derelict.sdl.sdl;
+import derelict.sdl2.sdl;
 
 import graphics.camera;
 import gui.all;
@@ -13,7 +13,7 @@ import util.util : BREAK_IF;
 
 
 class FreeFlightCamera : GuiEventDump {
-    bool[SDLK_LAST]   keyMap;
+    bool[int]   keyMap;
 
     vec2i mousecoords;
     ushort middleX, middleY;
@@ -44,7 +44,8 @@ class FreeFlightCamera : GuiEventDump {
         auto diffX = x - middleX;
         auto diffY = y - middleY;
         if((diffX != 0 || diffY != 0) && useMouse){
-            SDL_WarpMouse(middleX, middleY);
+            m.reposition.set(middleX, middleY);
+            m.applyReposition=true;
             camera.mouseLook( diffX,  diffY);
         }
         mousecoords.set(x, y);

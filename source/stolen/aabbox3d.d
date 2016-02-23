@@ -345,21 +345,21 @@ struct aabbox3d(T)
     const vector3!T e = getExtent() * cast(T)0.5;
     const vector3!T t = getCenter() - linemiddle;
 
-    if ((fabs(t.x) > e.x + halflength * fabs(linevect.x)) ||
-      (fabs(t.y) > e.y + halflength * fabs(linevect.y)) ||
-      (fabs(t.z) > e.z + halflength * fabs(linevect.z)) )
+    if ((abs(t.x) > e.x + halflength * abs(linevect.x)) ||
+      (abs(t.y) > e.y + halflength * abs(linevect.y)) ||
+      (abs(t.z) > e.z + halflength * abs(linevect.z)) )
       return false;
 
-    T r = e.y * cast(T)fabs(linevect.z) + e.z * cast(T)fabs(linevect.y);
-    if (fabs(t.y*linevect.z - t.z*linevect.y) > r )
+    T r = e.y * cast(T)abs(linevect.z) + e.z * cast(T)abs(linevect.y);
+    if (abs(t.y*linevect.z - t.z*linevect.y) > r )
       return false;
 
-    r = e.x * cast(T)fabs(linevect.z) + e.z * cast(T)fabs(linevect.x);
-    if (fabs(t.z*linevect.x - t.x*linevect.z) > r )
+    r = e.x * cast(T)abs(linevect.z) + e.z * cast(T)abs(linevect.x);
+    if (abs(t.z*linevect.x - t.x*linevect.z) > r )
       return false;
 
-    r = e.x * cast(T)fabs(linevect.y) + e.y * cast(T)fabs(linevect.x);
-    if (fabs(t.x*linevect.y - t.y*linevect.x) > r)
+    r = e.x * cast(T)abs(linevect.y) + e.y * cast(T)abs(linevect.x);
+    if (abs(t.x*linevect.y - t.y*linevect.x) > r)
       return false;
 
     return true;

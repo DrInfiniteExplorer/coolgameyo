@@ -36,7 +36,7 @@ void computeYourMother(WorldState world, Image img, Camera camera) {
         foreach(x ; startX .. stopX) {
             double percentX = to!double(x) / to!double(img.imgWidth);
             double percentY = to!double(y) / to!double(img.imgHeight);
-            dir = (upperLeft + percentX*toRight + percentY * toDown).normalize();
+            dir = (upperLeft + percentX*toRight + percentY * toDown).normalized();
             int iter = world.intersectTile(startPos, dir, maxIter, tile, tilePos, tileNormal, &intersectionTime);
             if(iter > 0) {
                 /*

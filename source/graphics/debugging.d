@@ -85,7 +85,7 @@ int addLine(vec3d[] points, vec3f color = vec3f(0, 0, 1), float radius = 50){
     auto d = LineData(points.array, color, radius);
     auto t = lineCount;
     lineList[t] = cast(shared)d;
-    lineCount++;
+    core.atomic.atomicOp!"+="(lineCount,1);
     return t;
 }
 

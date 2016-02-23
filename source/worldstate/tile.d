@@ -1,6 +1,7 @@
 
 module worldstate.tile;
 
+import std.algorithm.comparison : clamp;
 import std.bitmanip;
 import std.conv;
 
@@ -44,11 +45,11 @@ struct Tile {
         uint, "restofderpystuff",    8 ));
 
 
-    byte lightValue() const @property { return lightVal; }
-    void lightValue(const byte light) @property { lightVal = clamp!byte(light, 0, 15); } //Do clamp in byte-domain to fix values like -1 etc
+    ubyte lightValue() const @property { return lightVal; }
+    void lightValue(const ubyte light) @property { lightVal = cast(ubyte)clamp(light, 0, 15); } //Do clamp in byte-domain to fix values like -1 etc
 
-    byte sunLightValue() const @property { return sunLightVal; }
-    void sunLightValue(const byte light) @property { sunLightVal = clamp!byte(light, 0, 15); } //Do clamp in byte-domain to fix values like -1 etc
+    ubyte sunLightValue() const @property { return sunLightVal; }
+    void sunLightValue(const ubyte light) @property { sunLightVal = cast(ubyte)clamp(light, 0, 15); } //Do clamp in byte-domain to fix values like -1 etc
 
     void setLight(bool sunLight, const byte light) {
         if(sunLight) {

@@ -424,7 +424,7 @@ Value encode(T)(T t) {
 
     } else static if (is (T U : U[V], V)) { //Map of things
         // it is encoded as an array of two-object arrays; all kind of things can now be keys.
-        Value ret[];
+        Value[] ret;
         foreach(key, value ; t) {
             ret ~= Value([encode(key), encode(value)]);
         }

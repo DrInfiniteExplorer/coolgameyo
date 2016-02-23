@@ -13,7 +13,7 @@ import std.traits;
 import std.typecons;
 import std.typetuple;
 
-import derelict.sdl.sdl;
+import derelict.sdl2.sdl;
 
 import math.math : fastFloor;
 
@@ -242,7 +242,7 @@ version(Windows){
         auto strZ = str.toStringz();
         DWORD len = cast(DWORD)str.length+1;
         HANDLE hMem =  GlobalAlloc(GMEM_MOVEABLE, len);
-        memcpy(GlobalLock(hMem), strZ, len);
+        core.stdc.string.memcpy(GlobalLock(hMem), strZ, len);
         GlobalUnlock(hMem);
         OpenClipboard(null);
         EmptyClipboard();

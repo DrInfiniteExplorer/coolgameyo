@@ -2,7 +2,7 @@ module gui.statistics;
 
 import std.conv;
 
-import derelict.sdl.sdl;
+import derelict.sdl2.sdl;
 
 import main;
 import game;

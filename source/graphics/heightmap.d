@@ -1,9 +1,9 @@
 module graphics.heightmap;
 
-import std.algorithm : max, map, reduce;
+import std.algorithm : max, map, reduce, clamp;
 import std.getopt;
 
-import derelict.sdl.sdl;
+import derelict.sdl2.sdl;
 
 import graphics.camera;
 import graphics.ogl;

@@ -2,6 +2,7 @@
 module random.random;
 
 import std.algorithm;
+//import math.math : clamp;
 import std.conv;
 import std.exception;
 import std.functional : ParameterTypeTuple;
@@ -10,7 +11,6 @@ import std.random;
 import std.stdio;
 import std.typecons;
 
-import math.math : clamp;
 import graphics.image;
 import util.util;
 

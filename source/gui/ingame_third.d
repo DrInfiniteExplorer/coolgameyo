@@ -3,7 +3,7 @@ module gui.ingame_third;
 import std.algorithm : min, max;
 import std.math : abs, floor;
 
-import derelict.sdl.sdl;
+import derelict.sdl2.sdl;
 
 import ai.possessai;
 import game: game;
@@ -22,7 +22,7 @@ class PlanningMode : GuiEventDump {
     WorldState world;
     InGameGui gui;
 
-    bool[SDLK_LAST]   keyMap;
+    bool[int]   keyMap;
 
     bool rotateCamera = false;
     bool moveDragMouse = false;
@@ -96,7 +96,8 @@ class PlanningMode : GuiEventDump {
             } else if(moveDragMouse) {
                 moveCamXY(-diffX * dragScrollSpeed, diffY * dragScrollSpeed);
             }
-            SDL_WarpMouse(cast(ushort)mouseCoords.x, cast(ushort)mouseCoords.y);
+            m.reposition.set(mouseCoords.x, mouseCoords.y);
+            m.applyReposition=true;
             return;
         }
         mouseCoords.set(x, y);
@@ -119,15 +120,6 @@ class PlanningMode : GuiEventDump {
 
     void mouseClick(GuiEvent e) {
         auto m = e.mouseClick;
-        if( (m.wheelUp || m.wheelDown) && m.down) {
-            if(keyMap[SDLK_LCTRL]) {
-                int dir = m.wheelUp ? 1 : -1;
-                focusZ = focusZ + dir;
-            } else {
-                auto mod = m.wheelUp ? 0.9 : 1.1;
-                desiredFocusDistance = clamp(desiredFocusDistance * mod, 1.0, 25.0);
-            }
-        }
         if(m.middle) {
             if(keyMap[SDLK_LSHIFT]) { // Recode so that letting go of shift leaves rotatecameramode as well. ololol.
                 rotateCamera = m.down;
@@ -163,6 +155,16 @@ class PlanningMode : GuiEventDump {
             } else {
                 endDesignate(mouseGridPos, m.down);
             }
+        }
+    }
+    void mouseWheel(GuiEvent e) {
+        auto m = e.mouseWheel;
+        if(keyMap[SDLK_LCTRL]) {
+            int dir = m.amount > 0 ? 1 : -1;
+            focusZ = focusZ + dir;
+        } else {
+            auto mod = m.amount > 0 ? 0.9 : 1.1;
+            desiredFocusDistance = clamp(desiredFocusDistance * mod, 1.0, 25.0);
         }
     }
 
@@ -229,6 +231,8 @@ class PlanningMode : GuiEventDump {
             return GuiEventResponse.Accept;
         } else if (e.type == GuiEventType.MouseClick) {
             mouseClick(e);
+        } else if (e.type == GuiEventType.MouseWheel) {
+            mouseWheel(e);
         }
         return GuiEventResponse.Ignore;
     }

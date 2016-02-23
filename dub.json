@@ -1,8 +1,13 @@
 {
-	"name": "CoolGameYo",
+	"name": "coolgameyo",
 	"description": "A cool stuffs.",
 	"copyright": "Copyright © 2016, Luben",
 	"authors": ["Luben"],
 	"dependencies": {
-	}
+      "derelict-gl3": "~>1.0.18",
+      "derelict-sdl2": "~>2.0.0",
+      "derelict-il": "~>1.0.0",
+      "derelict-sdl2": "~>2.0.0",
+      "derelict-al": "~>1.0.1"
+   }
 }

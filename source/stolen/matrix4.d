@@ -546,7 +546,7 @@ struct CMatrix4(T)
     //! Transforms the vector by this matrix
     auto transformVect(vector3!float vect)
     {
-        float vector[3];
+        float[3] vector;
 
         auto x = vect.x*M[0] + vect.y*M[4] + vect.z*M[8] + M[12];
         auto y = vect.x*M[1] + vect.y*M[5] + vect.z*M[9] + M[13];
@@ -555,7 +555,7 @@ struct CMatrix4(T)
     }
     void transformVect( ref vector3!float vect) const
     {
-        float vector[3];
+        float[3] vector;
 
         vector[0] = vect.x*M[0] + vect.y*M[4] + vect.z*M[8] + M[12];
         vector[1] = vect.x*M[1] + vect.y*M[5] + vect.z*M[9] + M[13];
@@ -627,11 +627,11 @@ struct CMatrix4(T)
     is slower than transformBox(). */
     void transformBoxEx(ref aabbox3d!(float) box) const
     {
-      const float Amin[3] = [box.MinEdge.x, box.MinEdge.y, box.MinEdge.z];
-      const float Amax[3] = [box.MaxEdge.x, box.MaxEdge.y, box.MaxEdge.z];
+      const float[3] Amin = [box.MinEdge.x, box.MinEdge.y, box.MinEdge.z];
+      const float[3] Amax = [box.MaxEdge.x, box.MaxEdge.y, box.MaxEdge.z];
 
-      float Bmin[3];
-      float Bmax[3];
+      float[3] Bmin;
+      float[3] Bmax;
 
       Bmin[0] = Bmax[0] = M[12];
       Bmin[1] = Bmax[1] = M[13];
@@ -678,7 +678,7 @@ struct CMatrix4(T)
       12 13 14 15
       */
 
-      T mat[4];
+      T[4] mat;
       mat[0] = matrix[0];
       mat[1] = matrix[1];
       mat[2] = matrix[2];

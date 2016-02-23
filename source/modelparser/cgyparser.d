@@ -25,8 +25,8 @@ final class Joint {
 final class Vert {
     vec3f pos;
     float s, t;
-    int jointId[4];
-    float weight[4];
+    int[4] jointId;
+    float[4] weight;
 }
 
 final class Tri {

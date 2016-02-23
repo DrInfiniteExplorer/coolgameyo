@@ -1,7 +1,7 @@
 
 module worldgen.gpuerosion;
 
-import std.algorithm : swap, max, min, reduce;
+import std.algorithm : swap, max, min, reduce, clamp;
 import std.random;
 
 import graphics.heightmap : Heightmap;

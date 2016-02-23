@@ -1,6 +1,6 @@
 module gui.ingame_first;
 
-import derelict.sdl.sdl;
+import derelict.sdl2.sdl;
 
 import ai.possessai;
 import game: game;
@@ -19,7 +19,7 @@ class FpsMode : GuiEventDump {
     InGameGui gui;
     FPSControlAI possessAI;
 
-    bool[SDLK_LAST]   keyMap;
+    bool[int]   keyMap;
 
     vec2i mousecoords;
     ushort middleX, middleY;
@@ -60,7 +60,8 @@ class FpsMode : GuiEventDump {
         auto diffX = x - middleX;
         auto diffY = y - middleY;
         if((diffX != 0 || diffY != 0) && useMouse){
-            SDL_WarpMouse(middleX, middleY);
+            m.reposition.set(middleX, middleY);
+            m.applyReposition = true;
             camera.mouseLook( diffX,  diffY);
         }
         mousecoords.set(x, y);

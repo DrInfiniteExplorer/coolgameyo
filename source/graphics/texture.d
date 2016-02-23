@@ -94,7 +94,7 @@ class TileTextureAtlas{
     void upload(){
         mixin(LogTime!("AtlasUpload"));
         enforce(!texId, "texId != 0, error error error crying babies");
-        int tileCount = cast(int)tileMap.length();
+        int tileCount = cast(int)tileMap.length;
         enforce(tileCount <= maxTileCount, "Derp e ti derp! can't allocate space for all tiles!");
         int layerCount = (tileCount / tilesPerLayer) + tileCount%tilesPerLayer==0 ? 0 : 1;
         auto size = renderSettings.maxTextureSize;

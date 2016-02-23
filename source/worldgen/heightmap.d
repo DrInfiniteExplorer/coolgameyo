@@ -8,7 +8,7 @@ import std.math;
 import std.random;
 import std.typecons;
 
-import derelict.sdl.sdl;
+import derelict.sdl2.sdl;
 
 import graphics.camera;
 import graphics.heightmap;
@@ -17,7 +17,7 @@ alias graphics.heightmap.Heightmap HMap;
 import json;
 
 import math.math : equals;
-import math.math : advect, clamp, fastFloor;
+import math.math : advect, fastFloor;
 import random.random : BSpline;
 import random.simplex;
 import random.xinterpolate4 : XInterpolate24;

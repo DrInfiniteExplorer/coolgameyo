@@ -472,14 +472,14 @@ public:
 		{
 			return makeIdentity();
 		}
-		else if (d <= -1.0f) // exactly opposite
+		else if (d <= -1.0f) // exactly opposite.
 		{
 			vector3!float axis = vector3!float(1.0f, 0.0f, 0.0f);
 			axis = axis.crossProduct(vector3!float(X,Y,Z));
 			if (axis.getLength()==0)
 			{
 				axis.set(0.0f,1.0f,0.0f);
-				axis.crossProduct(vector3!float(X,Y,Z));
+				axis = axis.crossProduct(vector3!float(X,Y,Z));
 			}
 			return this.fromAngleAxis(PI, axis);
 		}

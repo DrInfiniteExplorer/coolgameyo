@@ -1,5 +1,6 @@
 module random.catmullrom;
 
+import std.algorithm.comparison : clamp;
 import std.conv;
 import std.exception;
 import std.traits;

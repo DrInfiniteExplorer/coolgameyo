@@ -9,7 +9,7 @@ import std.file;
 import std.stdio;
 import std.string;
 
-import derelict.opengl.gl;
+import derelict.opengl3.gl;
 
 import graphics.renderer;
 import graphics.ogl;

@@ -175,19 +175,26 @@ final class GuiSystem : GuiElement {
             case GuiEventType.MouseClick:
                 auto m = e.mouseClick;
                 setHover(m.pos);
-                if (hoverElement != focusElement) {
-                    if(m.wheelUp || m.wheelDown) {
-                        if (hoverElement !is null) {
-                            auto ret = hoverElement.onEvent(e);
-                            if(ret != GuiEventResponse.Ignore) {
-                                return ret;
-                            }
-                            break;
-                        }
-                    }
-                }
                 if (m.left && m.down) {
                     setFocus(hoverElement);
+                }
+                if(focusElement && focusElement != this) {
+                    auto ret = focusElement.onEvent(e);
+                    if (ret != GuiEventResponse.Ignore) {
+                        return ret;
+                    }
+                }
+                break;
+            case GuiEventType.MouseWheel:
+                auto m = e.mouseWheel;
+                if (hoverElement != focusElement) {
+                    if (hoverElement !is null) {
+                        auto ret = hoverElement.onEvent(e);
+                        if(ret != GuiEventResponse.Ignore) {
+                            return ret;
+                        }
+                        break;
+                    }
                 }
                 if(focusElement && focusElement != this) {
                     auto ret = focusElement.onEvent(e);

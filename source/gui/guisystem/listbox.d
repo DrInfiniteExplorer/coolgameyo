@@ -226,11 +226,15 @@ class GuiElementListBox : GuiElement {
                     lastClickTime = e.eventTimeStamp;
 
                     return GuiEventResponse.Accept;
-                }                    
-            } else if((m.wheelUp || m.wheelDown) && canScrollAmount) {
+                }
+            }
+        }
+        else if(e.type == GuiEventType.MouseWheel)
+        {
+            if(canScrollAmount) {
                 import std.algorithm : min, max;
                 auto wheelAmount = 4 * rowHeight;
-                scrollAmount -= (m.wheelUp ? wheelAmount : -wheelAmount);
+                scrollAmount -= cast(int)e.mouseWheel.amount;
                 scrollAmount = max(0, min(canScrollAmount, scrollAmount));
                 scrollBar.amountScroll = scrollAmount / rowHeight;
             }

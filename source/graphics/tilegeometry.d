@@ -13,8 +13,8 @@ import std.stdio;
 import std.string;
 version(Windows) import std.c.windows.windows; //TODO: What uses this?
 
-import derelict.opengl.gl;
-import derelict.opengl.glext;
+import derelict.opengl3.gl3;
+//import derelict.opengl3.glext;
 
 
 import changes.worldproxy;

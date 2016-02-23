@@ -151,7 +151,7 @@ bool tcpReceiveFile(Socket sock, string filePath, int bufferSize = int.max) {
     import std.mmfile;
     size_t readSoFar = 0;
     size_t totalSize;
-    uint size[1];
+    uint[1] size;
 
     if(sock.receive(size) != size.sizeof) {
         msg("Error receiving file size: " ~ filePath);

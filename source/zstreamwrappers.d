@@ -61,12 +61,13 @@ struct Inflate {
 
     z_stream stream;
 
-    private this(int dummy_lol) {
-        inflateInit(&stream);
-    }
-    static Inflate opCall() {
-        return Inflate(0);
-    }
+    public this() @disable;
+//    private this(int dummy_lol) {
+//        inflateInit(&stream);
+//    }
+//    static Inflate opCall() {
+//        return Inflate(0);
+//    }
     ~this() {
         auto err = inflateEnd(&stream);
         if (err) {

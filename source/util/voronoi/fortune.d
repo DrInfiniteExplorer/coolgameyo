@@ -282,7 +282,7 @@ final class PQ {
     }
     void add(Event[] e) {
         events ~= e;
-        events.sort;
+        std.algorithm.sort(events);
     }
     Event get() {
         Event ret = events[$-1];
@@ -295,7 +295,7 @@ final class PQ {
     void remove(Event e) {
         cnt++;
         events = events.remove(countUntil(events, e));
-        events.sort; //Dunno if nexxxecccarry but wutlol!
+        std.algorithm.sort(events); //Dunno if nexxxecccarry but wutlol!
     }
     bool empty() @property const { return events.length == 0; }
 }
@@ -304,15 +304,15 @@ final class PQ {
 class Event {
 public:
     vec2d pos;
-    override int opCmp(Object _o) {
-        auto o = cast(Event)_o;
-        if(pos.y < o.pos.y) return 1;
-        if(pos.y == o.pos.y) {
-            if(pos.x < o.pos.x) return 1;
-            if(pos.x == o.pos.x) return 0;
-        }
-        return -1;
-    }
+//    override int opCmp(Object _o) {
+//        auto o = cast(Event)_o;
+//        if(pos.y < o.pos.y) return 1;
+//        if(pos.y == o.pos.y) {
+//            if(pos.x < o.pos.x) return 1;
+//            if(pos.x == o.pos.x) return 0;
+//        }
+//        return -1;
+//    }
 }
 
 final class SiteEvent : Event {
