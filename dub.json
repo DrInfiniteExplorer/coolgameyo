@@ -9,5 +9,9 @@
       "derelict-il": "~>1.0.0",
       "derelict-sdl2": "~>2.0.0",
       "derelict-al": "~>1.0.1"
-   }
+   },
+   "workingDirectory":"gameRoot",
+   "targetPath":"gameRoot",
+   "targetType":"executable",
+   "libs":["user32", "comdlg32", "legacy_stdio_definitions"]
 }
