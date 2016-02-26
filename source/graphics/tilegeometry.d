@@ -11,9 +11,9 @@ import std.exception;
 import std.math;
 import std.stdio;
 import std.string;
-version(Windows) import std.c.windows.windows; //TODO: What uses this?
+//version(Windows) import std.c.windows.windows; //TODO: What uses this?
 
-import derelict.opengl3.gl3;
+import derelict.opengl3.gl;
 //import derelict.opengl3.glext;
 
 

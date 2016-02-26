@@ -10,7 +10,7 @@ import std.socket;
 import std.stdio;
 import std.string;
 
-version(Windows) import std.c.windows.windows;
+version(Windows) import core.sys.windows.windows;
 
 //import derelict.sdl2.sdl;
 

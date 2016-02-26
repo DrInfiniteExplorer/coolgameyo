@@ -6,19 +6,19 @@ import core.thread;
 
 import core.sync.mutex;
 import core.sync.condition;
+import core.stdc.stdlib;
 
 import core.cpuid;
 
 import std.algorithm;
 import std.exception;
-import std.c.stdlib;
 import std.conv;
 import std.datetime;
 import std.stdio;
 import std.string;
 import std.range;
 
-version(Windows) import std.c.windows.windows;
+//version(Windows) import std.c.windows.windows;
 
 public import changes.changelist;
 import util.filesystem : copy;
@@ -90,7 +90,7 @@ struct WorkerThreadContext {
                 }
             }
             msg("A worker thread exited prematurely. Emergency crash!");
-            std.c.stdlib.exit(1);
+            exit(1);
         }
     }
 }

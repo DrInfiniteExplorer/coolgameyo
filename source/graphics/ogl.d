@@ -21,7 +21,15 @@ import util.rangefromto;
 enum int GL_SHADER_STORAGE_BUFFER = 0x90D2;
 
 void initOpenGL(){
+	DerelictGL3.reload();
     // Version returns for example "4.3.0" so grabbing the first 3 chars should be enough to get the version information
+	auto version_ = glGetString(GL_VERSION);
+	auto vendor = glGetString(GL_VENDOR);
+	auto renderer = glGetString(GL_RENDERER);
+	msg("OpenGl version : ", version_.to!string);
+	msg("OpenGl vendor  : ", vendor.to!string);
+	msg("OpenGl renderer: ", renderer.to!string);
+
     g_glVersion = glGetString(GL_VERSION)[0..3].to!string.to!double;
     msg("OGL version ", g_glVersion);
 

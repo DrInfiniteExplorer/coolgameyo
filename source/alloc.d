@@ -2,7 +2,7 @@ module alloc;
 
 import std.stdio;
 import core.atomic;
-import std.c.stdlib;
+import core.stdc.stdlib;
 
 
 void[] malloc2(size_t size) {

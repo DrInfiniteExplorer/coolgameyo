@@ -1,8 +1,6 @@
-// Copyright (C) 2002-2010 Nikolaus Gebhardt
-// This file is part of the "Irrlicht Engine".
-// For conditions of distribution and use, see copyright notice in irrlicht.h
-
 module stolen.matrix4;
+
+import core.stdc.string : memset, memcpy;
 
 import math.vector;
 
@@ -10,73 +8,9 @@ import stolen.plane3d;
 import stolen.aabbox3d;
 import stolen.math;
 
-import std.c.string;
-
-//! 4x4 matrix. Mostly used as transformation matrix for 3d calculations.
-/** The matrix is a D3D style matrix, row major with translations in the 4th row. */
 struct CMatrix4(T)
 {
   public:
-
-    //! Constructor Flags
-    enum eConstructor
-    {
-      EM4CONST_NOTHING,
-      EM4CONST_COPY,
-      EM4CONST_IDENTITY,
-      EM4CONST_TRANSPOSED,
-      EM4CONST_INVERSE,
-      EM4CONST_INVERSE_TRANSPOSED
-    };
-
-    //! Default constructor
-    /** \param constructor Choose the initialization style */
-    this( eConstructor constructor = eConstructor.EM4CONST_IDENTITY )
-    {
-      switch ( constructor )
-      {
-        case eConstructor.EM4CONST_NOTHING:
-        case eConstructor.EM4CONST_COPY:
-          break;
-        case eConstructor.EM4CONST_IDENTITY:
-        case eConstructor.EM4CONST_INVERSE:
-        default:
-          makeIdentity();
-          break;
-      }
-    }
-
-    //! Copy constructor
-    /** \param other Other matrix to copy from
-    \param constructor Choose the initialization style */
-    this(const CMatrix4!(T) other, eConstructor constructor = eConstructor.EM4CONST_COPY)
-    {
-      switch ( constructor )
-      {
-                default:
-        case eConstructor.EM4CONST_IDENTITY:
-          makeIdentity();
-          break;
-        case eConstructor.EM4CONST_NOTHING:
-          break;
-        case eConstructor.EM4CONST_COPY:
-          this = other;
-          break;
-        case eConstructor.EM4CONST_TRANSPOSED:
-          other.getTransposed(this);
-          break;
-        case eConstructor.EM4CONST_INVERSE:
-          if (!other.getInverse(this))
-            memset(M.ptr, 0, 16*T.sizeof);
-          break;
-        case eConstructor.EM4CONST_INVERSE_TRANSPOSED:
-          if (!other.getInverse(this))
-            memset(M.ptr, 0, 16*T.sizeof);
-          else
-            this=getTransposed();
-          break;
-      }
-    }
 
     //! Simple operator for directly accessing every element of the matrix.
     ref T at(const int row, const int col)
@@ -226,7 +160,7 @@ struct CMatrix4(T)
     //! Multiply by another matrix.
     CMatrix4!(T) opMulAssign(const CMatrix4!(T) other)
     {
-      CMatrix4!(T) temp = CMatrix4!(T)( this );
+      CMatrix4!(T) temp = this;
       return setbyproduct_nocheck( temp, other );
     }
 
@@ -598,7 +532,15 @@ struct CMatrix4(T)
       transformVect(member, plane.getMemberPoint());
 
       // Transform the normal by the transposed inverse of the matrix
-      CMatrix4!(T) transposedInverse = CMatrix4!(T)(this, eConstructor.EM4CONST_INVERSE_TRANSPOSED);
+
+      CMatrix4!(T) transposedInverse;//= CMatrix4!(T)(this, eConstructor.EM4CONST_INVERSE_TRANSPOSED);
+	  if(!getInverse(transposedInverse)){
+		  memset(transposedInverse.M.ptr, 0, 16*T.sizeof);
+	  }
+	  else {
+		  transposedInverse=transposedInverse.getTransposed();
+	  }
+
       vector3!float normal = plane.Normal;
       transposedInverse.transformVect(normal);
 

@@ -80,7 +80,7 @@ void saveMaterials() {
 
 void MaterialEditor() {
     import main;
-    //import derelict.opengl3.gl3;
+
     import graphics.ogl;
     import derelict.sdl2.sdl;
     import gui.all;

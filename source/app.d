@@ -5,8 +5,8 @@ module main;
 import core.memory;
 import core.runtime;
 import core.thread;
+import core.stdc.stdlib;
 
-import std.c.stdlib;
 import std.conv;
 import std.concurrency;
 import std.exception;
@@ -14,15 +14,15 @@ import std.getopt;
 import std.stdio;
 import std.string;
 
-pragma(lib, "derelictal.lib");
-pragma(lib, "derelictil.lib");
-pragma(lib, "derelictgl.lib");
-pragma(lib, "derelictutil.lib");
-pragma(lib, "derelictsdl.lib");
+//pragma(lib, "derelictal.lib");
+//pragma(lib, "derelictil.lib");
+//pragma(lib, "derelictgl.lib");
+//pragma(lib, "derelictutil.lib");
+//pragma(lib, "derelictsdl.lib");
 
 import derelict.openal.al;
 import derelict.sdl2.sdl;
-import derelict.opengl3.gl3;
+import derelict.opengl3.gl;
 import derelict.devil.il;
 import derelict.devil.ilu;
 
@@ -156,14 +156,19 @@ void main(string[] args) {
 }
 
 void initLibraries() {
-    DerelictSDL2.load();
-    DerelictGL3.load();
-    DerelictIL.load();
-    DerelictILU.load();
-//    DerelictAL.load();
+	try {
+		DerelictSDL2.load();
+		DerelictGL3.load();
+		DerelictIL.load();
+		DerelictILU.load();
+	//    DerelictAL.load();
 
-    ilInit();
-    iluInit();
+		ilInit();
+		iluInit();
+	} catch (Exception e) {
+		msg("Failed to load stuff");
+		BREAKPOINT;
+	}
 }
 
 void deinitLibraries() {

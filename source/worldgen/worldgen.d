@@ -2,7 +2,7 @@
 module worldgen.worldgen;
 
 import std.algorithm;
-import std.c.process;
+import core.stdc.stdlib; //std.c.process;
 import std.conv;
 import std.exception;
 import std.math;
