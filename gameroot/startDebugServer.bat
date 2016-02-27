@@ -1,1 +1,1 @@
-..\cgy\debug\cgy.exe --settingsFile=debugSettings.json --hostGame=880128
+coolgameyo.exe --settingsFile=debugSettings.json --hostGame=880128
