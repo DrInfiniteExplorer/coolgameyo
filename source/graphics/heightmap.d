@@ -40,13 +40,13 @@ immutable vertShaderSource = q{
     flat out ivec2 posss;
 
     float get(ivec2 pos) {
-        float h = texelFetch(height, pos, 0);
+        float h = texelFetch(height, pos, 0).x;
         if(count > 1) {
-            h += texelFetch(h2, pos, 0);
+            h += texelFetch(h2, pos, 0).x;
             if(count > 2) {
-                //h += texelFetch(h3, pos, 0);
+                //h += texelFetch(h3, pos, 0).x;
                 if(count > 3) {
-                    h += texelFetch(h4, pos, 0);
+                    h += texelFetch(h4, pos, 0).x;
                 }
             }
         }

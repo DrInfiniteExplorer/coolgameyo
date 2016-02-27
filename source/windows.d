@@ -143,6 +143,7 @@ __gshared SetDllDirectoryFunc SetDllDirectoryA = &LoadWrapper!("SetDllDirectoryA
 shared static this() {
 	import std.string : toStringz;
 	import std.path : dirName;
+    import std.conv : to;
 
     version(Win32) {
         SetDllDirectoryA("bin\\x86\\");
@@ -151,7 +152,7 @@ shared static this() {
 		char[512] exePath;
 		auto len = GetModuleFileNameA(null, exePath.ptr, exePath.sizeof);
 		exePath[len] = 0;
-		auto binPath = exePath.dirName ~ r"\bin\x64\";
+		auto binPath = exePath.to!string.dirName ~ r"\bin\x64\";
         SetDllDirectoryA(binPath.toStringz());
 		//SetDllDirectoryA(r"e:\D\coolgameyo\gameroot\bin\x64");
 	

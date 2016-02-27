@@ -15,6 +15,11 @@ import util.util : BREAK_IF;
 class FreeFlightCamera : GuiEventDump {
     bool[int]   keyMap;
 
+    bool keyPressed(int key)
+    {
+        return key in keyMap && keyMap[key];
+    }
+
     vec2i mousecoords;
     ushort middleX, middleY;
     bool useMouse = true;
@@ -97,13 +102,13 @@ class FreeFlightCamera : GuiEventDump {
         double speed = 10.0;
         speed *= dTime;
         speed *= camera.speed;
-        if(keyMap[SDLK_LSHIFT]) speed *= 30;
-        if(keyMap[SDLK_a]){ camera.relativeAxisMove(-speed, 0.0, 0.0); }
-        if(keyMap[SDLK_d]){ camera.relativeAxisMove( speed, 0.0, 0.0); }
-        if(keyMap[SDLK_w]){ camera.relativeAxisMove( 0.0, speed, 0.0); }
-        if(keyMap[SDLK_s]){ camera.relativeAxisMove( 0.0,-speed, 0.0); }
-        if(keyMap[SDLK_SPACE]){ camera.relativeAxisMove( 0.0, 0.0, speed); }
-        if(keyMap[SDLK_LCTRL]){ camera.relativeAxisMove( 0.0, 0.0,-speed); }
+        if(keyPressed(SDLK_LSHIFT)) speed *= 30;
+        if(keyPressed(SDLK_a)){ camera.relativeAxisMove(-speed, 0.0, 0.0); }
+        if(keyPressed(SDLK_d)){ camera.relativeAxisMove( speed, 0.0, 0.0); }
+        if(keyPressed(SDLK_w)){ camera.relativeAxisMove( 0.0, speed, 0.0); }
+        if(keyPressed(SDLK_s)){ camera.relativeAxisMove( 0.0,-speed, 0.0); }
+        if(keyPressed(SDLK_SPACE)){ camera.relativeAxisMove( 0.0, 0.0, speed); }
+        if(keyPressed(SDLK_LCTRL)){ camera.relativeAxisMove( 0.0, 0.0,-speed); }
     }
 }
 

@@ -64,6 +64,23 @@ __gshared SDL_Window* sdlWindow;
 __gshared string[] g_commandLine;
 
 void main(string[] args) {
+    version(LDC) {
+        try {
+            main2(args);
+        }
+        catch(Exception e)
+        {
+            msg(e.to!string);
+            BREAKPOINT;
+        }
+    }
+    else
+    {
+        main2(args);
+    }
+}
+
+void main2(string[] args) {
     g_commandLine = args.dup;
 
     bool materialEditor;
@@ -182,6 +199,11 @@ void deinitLibraries() {
 }
 
 void createWindow() {
+
+	auto version_ = glGetString(GL_VERSION);
+	auto vendor = glGetString(GL_VENDOR);
+	auto renderer = glGetString(GL_RENDERER);
+
     std.exception.enforce(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_NOPARACHUTE) == 0,
                           SDLError());
 
@@ -190,11 +212,11 @@ void createWindow() {
     SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,       8);
     SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE,      8);
 
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,      32);
+//    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,      32);
     SDL_GL_SetAttribute(SDL_GL_BUFFER_SIZE,     32);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER,      1);
 
-    //Smoothes the edges of the tiles, makes it look real nice
+//    //Smoothes the edges of the tiles, makes it look real nice
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS,  1);
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES,  16);
 

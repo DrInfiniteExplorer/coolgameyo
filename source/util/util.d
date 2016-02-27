@@ -208,12 +208,17 @@ void setThreadName(string threadName) {
 
         try//__try
         {
-            version(Win64){
-                if(IsDebuggerPresent()) {
+            version(LDC) {
+                msg("LDC compiled programs crashes with this");
+            }
+            else{
+                version(Win64){
+                    if(IsDebuggerPresent()) {
+                        RaiseException( MS_VC_EXCEPTION, 0u, info.sizeof/ptr.sizeof, ptrAsDWORD );
+                    }
+                } else {
                     RaiseException( MS_VC_EXCEPTION, 0u, info.sizeof/ptr.sizeof, ptrAsDWORD );
                 }
-            } else {
-                RaiseException( MS_VC_EXCEPTION, 0u, info.sizeof/ptr.sizeof, ptrAsDWORD );
             }
         }
         catch(Throwable o) //__except(EXCEPTION_EXECUTE_HANDLER)

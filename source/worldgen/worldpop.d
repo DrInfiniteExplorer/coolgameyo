@@ -28,9 +28,9 @@ immutable roadVertShader = q{
     flat out ivec2 posss;
 
     float get(ivec2 pos) {
-        float h = texelFetch(height, pos, 0);
-        h += texelFetch(h2, pos, 0);
-        //h += texelFetch(h3, pos, 0);
+        float h = texelFetch(height, pos, 0).x;
+        h += texelFetch(h2, pos, 0).x;
+        //h += texelFetch(h3, pos, 0).x;
         return h;
     }
 
@@ -787,7 +787,7 @@ mixin template WorldPopulation() {
 
 
         float computeDistance(ivec2 from, float myHeight, float myWater, float myRoad, float myDist) {
-            float slope = (myHeight - imageLoad(height, from)) / SampleIntervall;
+            float slope = (myHeight - imageLoad(height, from).x) / SampleIntervall;
             slope = abs(slope);
             float distance = 1 + 4.0 * slope + 6.0 * myWater;
             if(myRoad != 0.0) {
@@ -804,11 +804,11 @@ mixin template WorldPopulation() {
 
         void main() {
             ivec2 myPos = origin + ivec2(gl_GlobalInvocationID.xy);
-            float myHeight = imageLoad(height, myPos);
-            float myWater = imageLoad(water, myPos);
-            float myRoad = imageLoad(road, myPos);
+            float myHeight = imageLoad(height, myPos).x;
+            float myWater = imageLoad(water, myPos).x;
+            float myRoad = imageLoad(road, myPos).x;
 
-            float myDistance = imageLoad(distance, myPos);
+            float myDistance = imageLoad(distance, myPos).x;
             float oldDistance = myDistance;
             ivec2[8] dirs = ivec2[8](ivec2( 1, 1),
                                      ivec2( 1, 0),
@@ -829,7 +829,7 @@ mixin template WorldPopulation() {
                 ivec2 dir = dirs[idx];
                 ivec2 otherPos = myPos + dirs[idx];
                 if(inside(otherPos)) {
-                    float value = imageLoad(distance, otherPos);
+                    float value = imageLoad(distance, otherPos).x;
                     value += computeDistance(otherPos, myHeight, myWater, myRoad, length(vec2(dir.x, dir.y)));
                     myDistance = min(myDistance, value);
                 }
