@@ -25,6 +25,9 @@ import cgy.util.filesystem : copy;
 import cgy.util.statistics;
 import settings : g_maxThreadCount;
 
+import cgy.debug_.debug_ : setThreadName;
+
+
 import worldstate.time;
 import worldstate.worldstate;
 

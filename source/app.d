@@ -41,6 +41,7 @@ import log;
 
 import materials;
 
+import cgy.debug_.debug_ : setThreadName;
 import cgy.util.statistics;
 import settings;
 import cgy.util.filesystem;
@@ -59,6 +60,43 @@ version (X86_64) {
 version (Windows) {
     pragma (msg, "Compiling for windows");
 }
+
+
+void initializePaths(){
+    import std.file : getcwd, chdir, exists;
+	import std.string : toStringz, toLower;
+	import std.path : dirName, baseName;
+    import std.conv : to;
+    import cgy.windows : GetModuleFileNameA, SetDllDirectoryA;
+
+    void setBin(string path)
+    {
+		char[512] exePath;
+		auto len = GetModuleFileNameA(null, exePath.ptr, exePath.sizeof);
+		exePath[len] = 0;
+		auto binPath = exePath.to!string.dirName ~ path;
+        SetDllDirectoryA(binPath.toStringz());
+    }
+
+    void enterGameRoot()
+    {
+		auto dirName = getcwd.dirName.baseName;
+        if(dirName.toLower == "gameroot") return;
+        if(exists("gameroot")) {
+            chdir("gameroot");
+        }
+    }
+
+    version(Win32) {
+        setBin(r"\bin\x86\");
+    }
+    version(Win64) {
+        setBin(r"\bin\x64\");
+    }
+
+    enterGameRoot();
+}
+
 
 __gshared SDL_Window* sdlWindow;
 
@@ -82,6 +120,7 @@ void main(string[] args) {
 }
 
 void main2(string[] args) {
+    initializePaths();
     g_commandLine = args.dup;
 
     bool materialEditor;
@@ -361,14 +400,18 @@ bool handleSDLEvent(in SDL_Event event, float now, GuiSystem guiSystem) {
     return exit;
 }
 
-void EventAndDrawLoop(bool canYield)(GuiSystem guiSystem, scope void delegate(float) render, scope bool delegate() endLoop = null) {
+// Returns true if SDL things its time to quit.
+bool EventAndDrawLoop(bool canYield)(GuiSystem guiSystem, scope void delegate(float) render, scope bool delegate() endLoop = null) {
     long then = utime();
     long now = utime()+1;
     bool exit = false;
+    bool exitLoop = false;
     SDL_Event event;
-    while (!exit) {
+    while (!exitLoop) {
         while (SDL_PollEvent(&event)) {
-            exit |= handleSDLEvent(event, now / 1_000_000.0, guiSystem);
+            exit = handleSDLEvent(event, now / 1_000_000.0, guiSystem);
+            exitLoop |= exit;
+
         }
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -386,13 +429,14 @@ void EventAndDrawLoop(bool canYield)(GuiSystem guiSystem, scope void delegate(fl
         guiSystem.render();
         SDL_GL_SwapWindow(sdlWindow);
         if (endLoop) {
-            exit |= endLoop();
+            exitLoop |= endLoop();
         }
         static if (canYield) {
             //Thread.yield();
             Thread.sleep(dur!"msecs"(1));
         }
     }
+    return exit;
 }
 
 

@@ -161,57 +161,6 @@ enum Direction{ //DERP DERP POLLUTING STUFF YEAH! // <--wat
 }
 
 
-void setThreadName(string threadName) {
-    version(Windows){
-        //
-        // Usage: SetThreadName (-1, "MainThread");
-        //
-        //#include <windows.h>
-        uint MS_VC_EXCEPTION=0x406D1388;
-
-        struct THREADNAME_INFO{
-            align(8):
-           uint dwType; // Must be 0x1000.
-           char* szName; // Pointer to name (in user addr space).
-           uint dwThreadID; // Thread ID (-1=caller thread).
-           uint dwFlags; // Reserved for future use, must be zero.
-        }
-
-        //const char* name = toStringz(threadName);
-        char* name = cast(char*)(threadName ~ "\0").ptr;
-
-        THREADNAME_INFO info;
-        info.dwType = 0x1000;
-        info.szName = to!(char*)(name);
-        info.dwThreadID = GetCurrentThreadId();
-        info.dwFlags = 0;
-
-        uint* ptr = cast(uint*)&info;
-        DWORD_PTR ptrAsDWORD = cast(DWORD_PTR)ptr;
-
-        try//__try
-        {
-            version(LDC) {
-                msg("LDC compiled programs crashes with this");
-            }
-            else{
-                version(Win64){
-                    if(IsDebuggerPresent()) {
-                        RaiseException( MS_VC_EXCEPTION, 0u, info.sizeof/ptr.sizeof, ptrAsDWORD );
-                    }
-                } else {
-                    RaiseException( MS_VC_EXCEPTION, 0u, info.sizeof/ptr.sizeof, ptrAsDWORD );
-                }
-            }
-        }
-        catch(Throwable o) //__except(EXCEPTION_EXECUTE_HANDLER)
-        {
-            // wtf is this shit
-            //msg("asdasdasd");
-        }
-    }
-}
-
 version(Windows) {
     void RestartCoolGameYo() {
 		//Find out how to start us

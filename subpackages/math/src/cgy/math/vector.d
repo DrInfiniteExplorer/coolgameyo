@@ -144,21 +144,6 @@ struct vector3(T) {
         assert(0);
     }
 
-    //Rationale for this: according to http://dlang.org/struct.html a temporary object is copied to
-    // in every assignment, which is not necessary for vectors.
-    /*
-    void opAssign(const vec other) {
-        //TODO: use standard blitting?
-        x = other.x;
-        y = other.y;
-        z = other.z;
-        vec* ptr = &this; // WHY IS THIS NEEDED? SHOULDN'T this BE OF TYPE vec* ALREADY??
-        //pragma(msg, typeof(this));  -->  vec
-        //pragma(msg, typeof(&this)); -->  vec*
-        //return ptr;
-    }
-    */
-
     int opCmp(const vec other) const
     {
         T x = cast(T)(x - other.x);
@@ -372,14 +357,6 @@ struct vector2(T) {
         LogError("Dont index 2d vectors with stuff other than 0 or 1");
         BREAKPOINT;
         assert(0);
-    }
-
-
-    //Rationale for this: see implementation in vec3
-    void opAssign(const vec other) {
-        //TODO: use standard blitting?
-        x = other.x;
-        y = other.y;
     }
 
     T dotProduct(const vec o) {

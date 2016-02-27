@@ -88,7 +88,6 @@ enum : DWORD {
 extern(Windows) {
     BOOL GetProcessMemoryInfo(HANDLE, PPROCESS_MEMORY_COUNTERS, DWORD);
     DWORD GetCurrentThreadId();
-    void RaiseException(DWORD, DWORD, DWORD, DWORD_PTR);
     void ExitProcess(UINT);
 
     HGLOBAL GlobalAlloc(UINT, DWORD);
@@ -138,23 +137,3 @@ template LoadWrapper(string Func, string dll, string funcName) {
 alias extern(Windows) BOOL function(LPCTSTR lpPathName) SetDllDirectoryFunc;
 __gshared SetDllDirectoryFunc SetDllDirectoryA = &LoadWrapper!("SetDllDirectoryA", "kernel32.dll", "SetDllDirectoryA");
 //*/
-
-
-shared static this() {
-	import std.string : toStringz;
-	import std.path : dirName;
-    import std.conv : to;
-
-    version(Win32) {
-        SetDllDirectoryA("bin\\x86\\");
-    }
-    version(Win64) {
-		char[512] exePath;
-		auto len = GetModuleFileNameA(null, exePath.ptr, exePath.sizeof);
-		exePath[len] = 0;
-		auto binPath = exePath.to!string.dirName ~ r"\bin\x64\";
-        SetDllDirectoryA(binPath.toStringz());
-		//SetDllDirectoryA(r"e:\D\coolgameyo\gameroot\bin\x64");
-	
-    }
-}

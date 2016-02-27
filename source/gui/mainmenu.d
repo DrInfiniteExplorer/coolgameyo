@@ -47,8 +47,8 @@ class MainMenu : GuiElementWindow {
 
         auto text = new GuiElementText(this, vec2d(0.1, 0.1), "CoolGameYo!!");     
         auto text2 = new GuiElementText(this, vec2d(0.1, 0.2), "Where logic comes to die");
-        
-        HostButton = new PushButton(this, Rectd(startX, 0.1, width, height), "Host", &onHostGame);
+
+        HostButton = new PushButton(this, Rectd(startX+0.0, 0.1, width, height), "Host", &onHostGame);
         JoinButton = new PushButton(this, Rectd(startX, 0.3, width, height), "Join", &onJoinGame);
         OptionsButton = new PushButton(this, Rectd(startX, 0.5, width, height), "Options", &onOptions);
         ExitButton = new PushButton(this, Rectd(startX, 0.7, width, height), "Exit", &onExitGame);
@@ -96,7 +96,7 @@ string mainMenu() {
     MainMenu mainMenu;
     mainMenu = new MainMenu(guiSystem);
 
-    EventAndDrawLoop!true(guiSystem, null, { return mainMenu.done; } );
+    mainMenu.exit |= EventAndDrawLoop!true(guiSystem, null, { return mainMenu.done; } );
     if(mainMenu.server) {
         return "host";
     }
