@@ -24,7 +24,7 @@ import random.xinterpolate4 : XInterpolate24;
 import util.filesystem;
 import util.pos;
 import util.util;
-import worldgen.gpuerosion;
+import cgy.erosion.gpu;
 import worldgen.maps;
 import worldgen.strata;
 
@@ -250,7 +250,6 @@ class HeightMaps {
         scope(exit) {
             height.destroy();
         }
-        ero.heightMap = height;
         height.depth = mapSize * SampleIntervall;
         height.width = mapSize * SampleIntervall;
         // ERODE ERODE ERODE
@@ -293,6 +292,28 @@ class HeightMaps {
                        }
                        if(c < 5750) {
                            ero.erode();
+                           synchronized(height) {
+                               //heightMap.load(hm);
+                               uint[4] tex;
+                               tex[0] = ero.height;
+                               tex[1] = ero.soil;
+                               tex[2] = ero.water;
+                               tex[3] = ero.sediment;
+                               height.loadTexture(tex, cast(int)mapSize, cast(int)mapSize);
+                               height.setColor(vec3f(0.4, 0.7, 0.3));
+                           }
+                           //if(waterMap) {
+                           //    synchronized(waterMap) {
+                           //        uint[3] tex;
+                           //        tex[0] = height;
+                           //        tex[1] = soil;
+                           //        tex[2] = water;
+                           //        waterMap.loadTexture(tex, cast(int)mapSize, cast(int)mapSize);
+                           //        waterMap.setColor(vec3f(0.0, 0.0, 0.4));
+                           //    }
+                           //}
+
+
                        }
 
                        

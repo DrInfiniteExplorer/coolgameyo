@@ -1,10 +1,9 @@
 
-module worldgen.gpuerosion;
+module cgy.erosion.gpu;
 
 import std.algorithm : swap, max, min, reduce, clamp;
 import std.random;
 
-import graphics.heightmap : Heightmap;
 import graphics.ogl;
 import graphics.shader;
 import math.vector;
@@ -57,8 +56,6 @@ class GPUErosion {
     uint newSoil;
     uint newSediment;
 
-    Heightmap heightMap;
-    Heightmap waterMap;
     Random r;
 
     float[] tmpFloats;
@@ -252,46 +249,46 @@ class GPUErosion {
 
         }
         {
-            mixin(MeasureTime!"Ero Height");
-            //vec3f[] colors;
-            //colors.length = sizeSQ;
-            float[] hm;
-            float[] sl;
-            if(heightMap) {
-                /*
-                hm.length = sizeSQ;
-                sl.length = sizeSQ;
-                glBindTexture(GL_TEXTURE_2D, height); glError();
-                glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT, hm.ptr);glError();
-                glBindTexture(GL_TEXTURE_2D, soil); glError();
-                glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT, sl.ptr);glError();
-                hm[] += sl[];
-                //msg("h max", reduce!max(hm));
-                //msg("h min", reduce!min(hm));
-                */
-
-                synchronized(heightMap) {
-                    //heightMap.load(hm);
-                    uint[4] tex;
-                    tex[0] = height;
-                    tex[1] = soil;
-                    tex[2] = water;
-                    tex[3] = sediment;
-                    heightMap.loadTexture(tex, cast(int)sizeX, cast(int)sizeY);
-                    heightMap.setColor(vec3f(0.4, 0.7, 0.3));
-                }
-            }
-            if(waterMap) {
-
-                synchronized(waterMap) {
-                    uint[3] tex;
-                    tex[0] = height;
-                    tex[1] = soil;
-                    tex[2] = water;
-                    waterMap.loadTexture(tex, cast(int)sizeX, cast(int)sizeY);
-                    waterMap.setColor(vec3f(0.0, 0.0, 0.4));
-                }
-            }
+//            mixin(MeasureTime!"Ero Height");
+//            //vec3f[] colors;
+//            //colors.length = sizeSQ;
+//            float[] hm;
+//            float[] sl;
+//            if(heightMap) {
+//                /*
+//                hm.length = sizeSQ;
+//                sl.length = sizeSQ;
+//                glBindTexture(GL_TEXTURE_2D, height); glError();
+//                glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT, hm.ptr);glError();
+//                glBindTexture(GL_TEXTURE_2D, soil); glError();
+//                glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT, sl.ptr);glError();
+//                hm[] += sl[];
+//                //msg("h max", reduce!max(hm));
+//                //msg("h min", reduce!min(hm));
+//                */
+//
+//                synchronized(heightMap) {
+//                    //heightMap.load(hm);
+//                    uint[4] tex;
+//                    tex[0] = height;
+//                    tex[1] = soil;
+//                    tex[2] = water;
+//                    tex[3] = sediment;
+//                    heightMap.loadTexture(tex, cast(int)sizeX, cast(int)sizeY);
+//                    heightMap.setColor(vec3f(0.4, 0.7, 0.3));
+//                }
+//            }
+//            if(waterMap) {
+//
+//                synchronized(waterMap) {
+//                    uint[3] tex;
+//                    tex[0] = height;
+//                    tex[1] = soil;
+//                    tex[2] = water;
+//                    waterMap.loadTexture(tex, cast(int)sizeX, cast(int)sizeY);
+//                    waterMap.setColor(vec3f(0.0, 0.0, 0.4));
+//                }
+//            }
         }
     }
 
