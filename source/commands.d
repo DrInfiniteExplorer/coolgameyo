@@ -8,16 +8,16 @@ import changes.worldproxy : WorldProxy;
 import clans : Clans;
 import game : game;
 import globals : g_worldPath;
-import math.vector;
+import cgy.math.vector;
 import playerinformation : PlayerInformation;
 import tiletypemanager;
 import unit;
 import unittypemanager : unitTypeManager;
-import util.pos;
-import util.filesystem : exists;
-import util.rangefromto : RangeFromTo;
-import util.socket : sendString;
-import util.util : BREAKPOINT, BREAK_IF;
+import cgy.util.pos;
+import cgy.util.filesystem : exists;
+import cgy.util.rangefromto : RangeFromTo;
+import cgy.util.socket : sendString;
+import cgy.debug_.debug_ : BREAKPOINT, BREAK_IF;
 import worldstate.worldstate : WorldState;
 
 final class Commands {

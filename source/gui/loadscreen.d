@@ -3,9 +3,9 @@
 module gui.loadscreen;
 
 import gui.all;
-import statistics;
-import util.util;
-import util.rect;
+import cgy.util.statistics;
+import cgy.util.util;
+import cgy.util.rect;
 
 class LoadScreen : GuiElementWindow {
     GuiSystem guiSystem;

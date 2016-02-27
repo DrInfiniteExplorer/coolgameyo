@@ -9,9 +9,9 @@ import std.exception;
 import graphics._2d.rect;
 import graphics.font;
 import graphics.ogl;
-import util.memory;
-import util.rect;
-import util.util;
+import cgy.util.memory;
+import cgy.util.rect;
+import cgy.util.util;
 
 public import gui.guisystem.element;
 import gui.guisystem.imagecache;

@@ -6,9 +6,9 @@ import std.bitmanip;
 import std.conv;
 
 import light;
-import math.math;
+import cgy.math.math;
 import tiletypemanager : TileTypeAir, TileType;
-import util.util;
+import cgy.util.util;
 
 
 //TODO: Make things private?

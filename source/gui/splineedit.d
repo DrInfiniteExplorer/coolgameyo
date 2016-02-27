@@ -16,14 +16,15 @@ import graphics.image;
 import graphics.ogl;
 import graphics.renderconstants;
 
-import math.math;
+import cgy.math.math;
 
 import random.catmullrom;
 import random.random;
 
 import settings;
-import util.rect;
-import util.util;
+import cgy.util.rect;
+
+import cgy.math.vector : vec3f, vec3i;
 
 class SplineEditor : GuiElementWindow {
     GuiElement guiSystem;

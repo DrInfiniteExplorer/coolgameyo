@@ -1,6 +1,6 @@
 module random.modmultadd;
 
-import util.util;
+import cgy.util.util;
 import random.random;
 
 class ModMultAdd(double mult, double offset) : ValueSource {

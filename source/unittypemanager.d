@@ -6,12 +6,13 @@ import std.file;
 
 import graphics.texture;
 
-import json;
+import cgy.json;
 import globals : g_worldPath;
-import statistics;
-import util.singleton; 
-import util.util;
+import cgy.util.statistics;
+import cgy.util.singleton; 
 import worldstate.tile;
+
+import cgy.math.vector : vec3i;
 
 struct UnitModelInfo {
     string name;
@@ -57,8 +58,8 @@ struct UnitTypeManager {
 			return;
 		}
 		auto content = readText("data/unit_types.json");
-		auto rootVal = json.parse(content);
-		enforce(rootVal.type == json.Value.Type.object, "rootval in unittypejson not object roawoaowoawo: " ~ to!string(rootVal.type));
+		auto rootVal = cgy.json.parse(content);
+		enforce(rootVal.type == cgy.json.Value.Type.object, "rootval in unittypejson not object roawoaowoawo: " ~ to!string(rootVal.type));
 		foreach(name, rsVal ; rootVal.asObject) {
             UnitType_t tempType;
 			rsVal.read(tempType.serializableSettings);
@@ -89,7 +90,7 @@ struct UnitTypeManager {
         util.filesystem.mkdir(g_worldPath ~ "");
         std.file.write(g_worldPath ~ "/unittypeidconfiguration.json", jsonString);
         */
-        util.filesystem.mkdir(g_worldPath ~ "");
+        cgy.util.filesystem.mkdir(g_worldPath ~ "");
         ushort[string] typeAA;
         foreach(type ; types) {
             typeAA[type.name] = type.id;

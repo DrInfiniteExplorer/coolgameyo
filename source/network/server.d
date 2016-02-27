@@ -1,6 +1,6 @@
 module network.server;
 
-import util.socket : readString, sendString;
+import cgy.util.socket : readString, sendString;
 import network.common;
 import changes.changelist;
 
@@ -154,7 +154,7 @@ mixin template ServerModule() {
             }
             sendingSaveGame++;
             if(sendingSaveGame > 1) {
-                import util.socket : tcpSendFile;
+                import cgy.util.socket : tcpSendFile;
                 //Someone was already getting it. Get all changes from then till now and send to new client.
                 if(playerInfo.commSock.send("PreChanges\n") != 11){
                     Log("Error sending pre-changes");

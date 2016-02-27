@@ -10,14 +10,14 @@ import gui.all;
 import gui.guisystem.button;
 //import worldgen.worldgen;
 //import worldgen.newgen;
-import util.util;
-import util.rect;
+import cgy.util.util;
+import cgy.util.rect;
 
 import random.catmullrom;
 import random.randsource;
 
 
-import statistics;
+import cgy.util.statistics;
 import worldgen.maps;
 
 

@@ -1,4 +1,4 @@
-import util.pos;
+import cgy.util.pos;
 import unit;
 import entities.entity;
 

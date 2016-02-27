@@ -4,9 +4,11 @@ module random.simplex;
 import std.math;
 import std.random;
 
-import math.math : fastFloor;
+import cgy.math.math : fastFloor;
 import random.valuesource;
-import util.util;
+import cgy.math.vector;
+import cgy.debug_.debug_ : BREAKPOINT;
+import cgy.util.util : mstime;
 
 
 static immutable vec3i[12] gradients = [

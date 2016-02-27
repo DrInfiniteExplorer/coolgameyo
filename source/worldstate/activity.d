@@ -6,11 +6,11 @@ import std.algorithm;
 
 import graphics.debugging;
 
-import util.pos;
-import util.rangefromto;
-import util.util; 
+import cgy.util.pos;
+import cgy.util.rangefromto;
+import cgy.util.util; 
 
-import worldstate.sizes;
+import cgy.util.sizes;
 import worldstate.time;
 
 //debug {

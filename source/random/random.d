@@ -2,7 +2,7 @@
 module random.random;
 
 import std.algorithm;
-//import math.math : clamp;
+//import cgy.math.math : clamp;
 import std.conv;
 import std.exception;
 import std.functional : ParameterTypeTuple;
@@ -12,7 +12,7 @@ import std.stdio;
 import std.typecons;
 
 import graphics.image;
-import util.util;
+import cgy.util.util;
 
 
 

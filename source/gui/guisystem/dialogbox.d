@@ -7,8 +7,8 @@ import std.range;
 
 import gui.all;
 
-import util.util;
-import util.rect;
+import cgy.util.util;
+import cgy.util.rect;
 
 /*
 

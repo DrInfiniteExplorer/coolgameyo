@@ -10,7 +10,7 @@ import std.stdio;
 import derelict.sdl2.sdl;
 
 import ai.possessai;
-import json;
+import cgy.json;
 import gaia;
 import game;
 import graphics.camera;
@@ -24,14 +24,14 @@ import light;
 import random.catmullrom;
 import scheduler;
 import settings;
-import statistics;
+import cgy.util.statistics;
 import tiletypemanager;
 import unit;
-import util.intersect;
-//import util.gc;
-import util.strings;
-import util.rangefromto;
-import util.util;
+import cgy.util.intersect;
+//import cgy.util.gc;
+import cgy.util.strings;
+import cgy.util.rangefromto;
+import cgy.util.util;
 import worldstate.worldstate;
 import entities.entity;
 
@@ -438,7 +438,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
     }
 
     void tick(float dTime) {
-        import util.memory;
+        import cgy.util.memory;
 
 
         //mixin(MemDiff!("hyper.tick"));

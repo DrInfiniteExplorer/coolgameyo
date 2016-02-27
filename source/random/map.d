@@ -1,6 +1,6 @@
 module random.map;
 
-import util.util;
+import cgy.util.util;
 
 import random.valuesource;
 

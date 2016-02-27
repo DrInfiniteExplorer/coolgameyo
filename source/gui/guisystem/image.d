@@ -9,8 +9,8 @@ import gui.guisystem.guisystem;
 
 import graphics._2d.image;
 import graphics.image;
-import util.util;
-import util.rect;
+import cgy.util.rect;
+import cgy.util.util;
 
 
 

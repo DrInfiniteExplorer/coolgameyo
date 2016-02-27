@@ -24,22 +24,23 @@ import graphics.renderer;
 import graphics.tilerenderer;
 import light;
 import modules.module_;
-import util.pos;
+import cgy.util.pos;
 import scheduler : scheduler;
 import settings;
-import statistics;
-import stolen.aabbox3d;
+import cgy.util.statistics;
+import cgy.stolen.aabbox3d;
 
 import worldstate.worldstate;
 
-import util.intersect;
-import util.memory;
-import util.rangefromto;
-import util.util;
+import cgy.util.intersect;
+import cgy.util.memory;
+import cgy.util.rangefromto;
+import cgy.math.vector : vec3f;
 
 import tiletypemanager;
 
-alias util.util.Direction Direction;
+import cgy.util.util : workerID;
+alias cgy.util.util.Direction Direction;
 
 immutable GraphRegionsPerTick = 4;
 

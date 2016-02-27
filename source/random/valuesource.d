@@ -1,8 +1,8 @@
 module random.valuesource;
 
-import util.util;
+import cgy.util.util;
 
-public import util.util : vec3d, vec2d;
+import cgy.math.vector : vec3d, vec2d;
 
 class ValueSource {
     abstract double getValue3(vec3d);

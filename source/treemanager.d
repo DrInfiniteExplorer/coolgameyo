@@ -13,10 +13,10 @@ import entitytypemanager;
 
 import graphics.debugging;
 
-import stolen.aabbox3d;
+import cgy.stolen.aabbox3d;
 
-import util.singleton;
-import util.util;
+import cgy.util.singleton;
+import cgy.util.util;
 
 import worldstate.worldstate;
 import worldstate.sector;

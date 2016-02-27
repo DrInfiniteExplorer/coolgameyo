@@ -12,7 +12,7 @@ import graphics.shader;
 import modules.module_;
 import worldgen.maps;
 import worldstate.worldstate;
-import util.util;
+import cgy.math.vector : vec3f, vec2i;
 
 
 immutable int level1SectorCount = 16; //Spans 16 sectors

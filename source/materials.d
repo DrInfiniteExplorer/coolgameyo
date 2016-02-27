@@ -3,10 +3,11 @@ module materials;
 import std.path;
 
 
-import json;
-import log;
-import util.filesystem;
-import util.util;
+import cgy.json;
+import cgy.logger.log;
+import cgy.util.util : msg;
+import cgy.util.filesystem;
+import cgy.math.vector : vec3ub;
 
 struct MaterialInformation {
     string name;
@@ -84,7 +85,7 @@ void MaterialEditor() {
     import graphics.ogl;
     import derelict.sdl2.sdl;
     import gui.all;
-    import util.rect;
+    import cgy.util.rect;
 
     GuiSystem guiSystem;
     guiSystem = new GuiSystem;
@@ -155,7 +156,7 @@ void MaterialEditor() {
         if(mc.left && mc.down) {
             if(materialsList.getSelectedItemIndex() == -1) return true;
             auto color = selectedMaterial.color;
-            import windows;
+            import cgy.windows;
             COLORREF asRef = color.toColorUInt();
             COLORREF[16] customs;
             foreach(ref clr ; customs) {
@@ -163,7 +164,7 @@ void MaterialEditor() {
             }
             CHOOSECOLORA cc;
             cc.lStructSize = cc.sizeof;
-            import util.window;
+            import cgy.util.window;
             cc.hwndOwner = getMainWindow();
             cc.hInstance = null;
             cc.rgbResult = asRef;

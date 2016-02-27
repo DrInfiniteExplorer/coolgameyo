@@ -1,6 +1,6 @@
 module random.gradient;
 
-import util.util;
+import cgy.util.util;
 import random.valuesource;
 
 final class GradientField : ValueSource {

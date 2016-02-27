@@ -1,7 +1,7 @@
 module random.modscaleoffset;
 
-import util.util;
-import util.rect;
+import cgy.util.util;
+import cgy.util.rect;
 import random.valuesource;
 
 //Scale and offset. For example, to use a valuemap(width, height) as source for world height,

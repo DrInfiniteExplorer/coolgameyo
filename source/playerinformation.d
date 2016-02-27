@@ -2,7 +2,7 @@ module playerinformation;
 
 import std.socket;
 import unit;
-import util.util;
+import cgy.util.util;
 import log;
 
 final class PlayerInformation {

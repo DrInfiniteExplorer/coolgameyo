@@ -14,17 +14,17 @@ import core.sync.mutex;
 import core.atomic;
 
 import light;
-import util.pos;
+import cgy.util.pos;
 import tiletypemanager : TileTypeAir;
 //import tiletypemanager;
 
 //import worldgen.worldgen;
 import worldgen.maps;
 import worldstate.tile;
-import worldstate.sizes;
-import util.memory;
-import util.rangefromto;
-import util.util;
+import cgy.util.sizes;
+import cgy.util.memory;
+import cgy.util.rangefromto;
+import cgy.util.util;
 
 
 

@@ -3,9 +3,9 @@ module ai.minetileai;
 import ai.moveai;
 import changes.worldproxy;
 import modules.path;
-import util.pos;
+import cgy.util.pos;
 import unit;
-import util.util;
+import cgy.util.util;
 
 
 struct MineTileAI {

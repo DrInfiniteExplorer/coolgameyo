@@ -5,9 +5,9 @@ import derelict.sdl2.sdl;
 
 import graphics.camera;
 import gui.all;
-import math.vector;
+import cgy.math.vector;
 import settings;
-import util.util : BREAK_IF;
+import cgy.debug_.debug_: BREAK_IF;
 
 
 

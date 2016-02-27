@@ -11,8 +11,8 @@ import graphics.image;
 import graphics.ogl;
 import graphics.renderer;
 import settings;
-import statistics;
-import util.util;
+import cgy.util.statistics;
+import cgy.math.vector;
 
 
 

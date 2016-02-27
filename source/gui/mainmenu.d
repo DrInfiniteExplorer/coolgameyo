@@ -20,8 +20,8 @@ import gui.printscreenmenu;
 import gui.worldview;
 import gui.unitcontrol;
 import settings;
-import util.util;
-import util.rect;
+import cgy.util.util;
+import cgy.util.rect;
 
 class MainMenu : GuiElementWindow {
     

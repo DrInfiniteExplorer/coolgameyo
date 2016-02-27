@@ -7,9 +7,9 @@ import std.math;
 import random.random;
 import random.valuesource;
 
-import math.math: fastFloor;
-import util.traits;
-import util.util;
+import cgy.math.math: fastFloor;
+import cgy.util.traits;
+import cgy.util.util;
 
 
 double XInterpolate34(alias Mixer, alias get)(vec3d pos) {

@@ -13,9 +13,9 @@ import gui.optionmenu;
 import gui.random.randommenu;
 import gui.newgamemenu;
 import settings;
-import statistics;
-import util.util;
-import util.rect;
+import cgy.util.statistics;
+import cgy.util.util;
+import cgy.util.rect;
 
 class StatisticsWindow : GuiElement {
 

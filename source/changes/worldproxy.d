@@ -8,9 +8,9 @@ import changes.changelist;
 import changes.worldproxy;
 import clan;
 import entities.entity;
-import json;
+import cgy.json;
 import unit;
-import util.pos;
+import cgy.util.pos;
 import tiletypemanager;
 import worldstate.worldstate;
 

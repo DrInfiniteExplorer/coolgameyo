@@ -15,7 +15,7 @@ import std.stdio;
 
 //import worldgen.newgen;
 
-import json;
+import cgy.json;
 import graphics.image;
 
 import materials;
@@ -36,18 +36,18 @@ import random.vectormap;
 import random.xinterpolate4;
 
 
-import statistics;
+import cgy.util.statistics;
 import tiletypemanager;
 
-import util.filesystem;
-import util.memory;
-import util.pos;
-import util.rangefromto;
-import util.rect;
-import util.util;
-import util.voronoi.fortune;
-import util.voronoi.lattice;
-import util.voronoi.voronoi;
+import cgy.util.filesystem;
+import cgy.util.memory;
+import cgy.util.pos;
+import cgy.util.rangefromto;
+import cgy.util.rect;
+import cgy.util.util;
+import cgy.voronoi.fortune;
+import cgy.voronoi.lattice;
+import cgy.voronoi.voronoi;
 
 import worldgen.heightmap;
 import worldgen.strata;
@@ -62,7 +62,7 @@ import log : LogWarning;
 import globals;
 import graphics.image;
 import materials;
-import statistics;
+import cgy.util.statistics;
 
 alias ValueMap2Dd ValueMap;
 

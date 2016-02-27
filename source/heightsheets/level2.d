@@ -10,11 +10,11 @@ import heightsheets.level1;
 import graphics.camera;
 import graphics.ogl;
 import graphics.shader;
-import math.math;
+import cgy.math.math;
 import modules.module_;
 import worldgen.maps;
 import worldstate.worldstate;
-import util.util;
+import cgy.util.util;
 
 immutable int level2SectorCount = 64; //Spans 64 sectors
 immutable int level2QuadCount = level2SectorCount; //64 quads

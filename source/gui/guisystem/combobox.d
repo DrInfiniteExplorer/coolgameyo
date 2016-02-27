@@ -8,8 +8,8 @@ import gui.guisystem.text;
 import gui.guisystem.listbox;
 
 import graphics._2d.rect;
-import util.util;
-import util.rect;
+import cgy.util.util;
+import cgy.util.rect;
 
 //TODO: Remake this, so that a new window is spawned when one selects, instead of hacking with sizes ;)
 

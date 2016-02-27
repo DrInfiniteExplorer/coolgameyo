@@ -13,8 +13,8 @@ import light;
 import modules.path;
 import scene.scenemanager;
 import unit;
-import util.util;
-import util.rangefromto;
+import cgy.util.rangefromto;
+import cgy.math.vector : vec3f;
 
 import worldstate.worldstate;
 

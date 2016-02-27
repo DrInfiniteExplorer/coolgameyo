@@ -7,13 +7,13 @@ import clan;
 import clans : Clans;
 import entities.entity;
 import inventory;
-import json;
-import util.pos;
+import cgy.json;
+import cgy.util.pos;
 import unit;
 import unittypemanager : unitTypeManager;
-import util.filesystem;
-import util.memory : BinaryWriter, BinaryMemoryReader;
-import util.util;
+import cgy.util.filesystem;
+import cgy.util.memory : BinaryWriter, BinaryMemoryReader;
+import cgy.util.util;
 import worldstate.worldstate;
 
 

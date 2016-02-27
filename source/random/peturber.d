@@ -1,6 +1,6 @@
 module random.peturber;
 
-import util.util;
+import cgy.util.util;
 import random.valuesource;
 
 final class Peturber : ValueSource {

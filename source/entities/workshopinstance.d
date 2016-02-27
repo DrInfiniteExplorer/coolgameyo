@@ -2,7 +2,7 @@ module entities.workshop;
 
 import entities.entity;
 import entitytypemanager;
-import util.pos;
+import cgy.util.pos;
 
 
 

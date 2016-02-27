@@ -9,13 +9,13 @@ import std.string;
 
 import graphics.texture;
 
-import json;
+import cgy.json;
 import globals : g_worldPath;
 import materials;
 
-import statistics;
-import util.filesystem;
-import util.util;
+import cgy.math.vector : vec2i;
+import cgy.util.statistics;
+import cgy.util.filesystem;
 import worldstate.tile;
 
 //ALWAYS!!
@@ -90,8 +90,8 @@ struct TileTypeManager {
             return;
         }
         auto content = readText("data/tile_types.json");
-        auto rootVal = json.parse(content);
-        enforce(rootVal.type == json.Value.Type.object, "rootval in tiltypejson not object roawoaowoawo: " ~ to!string(rootVal.type));
+        auto rootVal = cgy.json.parse(content);
+        enforce(rootVal.type == cgy.json.Value.Type.object, "rootval in tiltypejson not object roawoaowoawo: " ~ to!string(rootVal.type));
         foreach(name, rsVal ; rootVal.pairs) {
             rsVal.read(tempType.serializableSettings);
             
@@ -107,7 +107,7 @@ struct TileTypeManager {
             }
         }
 
-        util.filesystem.mkdir(g_worldPath ~ "");
+        cgy.util.filesystem.mkdir(g_worldPath ~ "");
         // don't save invalid or air
         ushort[string] typeAA;
         foreach(type ; types) {

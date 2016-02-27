@@ -21,8 +21,8 @@ import std.range;
 //version(Windows) import std.c.windows.windows;
 
 public import changes.changelist;
-import util.filesystem : copy;
-import statistics;
+import cgy.util.filesystem : copy;
+import cgy.util.statistics;
 import settings : g_maxThreadCount;
 
 import worldstate.time;
@@ -30,17 +30,17 @@ import worldstate.worldstate;
 
 import modules.module_;
 import network.all;
-import util.util;
-import util.queue;
+import cgy.util.util;
+import cgy.util.queue;
 
-import util.socket : readString, sendString;
+import cgy.util.socket : readString, sendString;
 
 import changes.worldproxy;
 import game : game;
 
 import alloc;
 
-alias util.array.Array Array;
+alias cgy.util.array.Array Array;
 
 struct Task {
     void delegate(WorldProxy) run;

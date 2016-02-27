@@ -27,8 +27,8 @@ import random.xinterpolate;
 import settings;
 //import worldgen.worldgen;
 //import worldgen.newgen;
-import util.util;
-import util.rect;
+import cgy.util.util;
+import cgy.util.rect;
 
 import graphics.image;
 import graphics._2d.line;
@@ -38,9 +38,9 @@ import gui.random.perlin;
 import gui.random.ridgedfractal;
 import gui.random.hybridfractal;
 
-import util.voronoi.voronoi;
-import util.voronoi.fortune;
-import util.voronoi.wrapper;
+import cgy.voronoi.voronoi;
+import cgy.voronoi.fortune;
+import cgy.voronoi.wrapper;
 
 class RandomMenu : GuiElementWindow {
     GuiElement guiSystem;

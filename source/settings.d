@@ -8,10 +8,11 @@ import std.stdio;
 
 //import derelict.sdl.sdl : SDL_WM_GrabInput, SDL_GRAB_ON, SDL_GRAB_OFF;
 
+import cgy.math.vector;
 
-import json;
-import util.util;
-import util.window;
+import cgy.json;
+import cgy.util.util;
+import cgy.util.window;
 
 // No need to make these shared, gshared works fine? IM A COWBOY
 
@@ -55,7 +56,13 @@ void loadSettings(){
 
 void saveSettings(){
 
-    captureWindowPositions();
+    captureWindowPositions(delegate(immutable cgy.windows.RECT mainRect, immutable cgy.windows.RECT consoleRect) {
+        windowSettings.mainCoordinates.x = mainRect.left;
+        windowSettings.mainCoordinates.y = mainRect.top;
+        windowSettings.consoleCoordinates.x = consoleRect.left;
+        windowSettings.consoleCoordinates.y = consoleRect.top;
+    });
+
     makeJSONObject("renderSettings", renderSettings.serializableSettings,
                    "controlSettings", controlSettings.serializableSettings,
                    "windowSettings", windowSettings.serializableSettings,
@@ -71,7 +78,9 @@ void saveSettings(){
 
 void applyWindowSettings() {
     if(!windowSettings.windowsInitialized) return;
-    repositionWindows();
+    cgy.windows.RECT mainRect  =   {left : windowSettings.consoleCoordinates.x, top : windowSettings.consoleCoordinates.y};
+    cgy.windows.RECT consoleRect = {left : windowSettings.consoleCoordinates.x, top : windowSettings.consoleCoordinates.y};
+    repositionWindows(mainRect, consoleRect);
 
     // Forces the mouse to be within the window
     msg("SDL_WM_GrabInput(windowSettings.trapMouse ? SDL_GRAB_ON : SDL_GRAB_OFF);");

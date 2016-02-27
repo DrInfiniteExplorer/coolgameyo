@@ -71,9 +71,9 @@ mixin template WorldPopulation() {
     import graphics.shader;
     import graphics.heightmap : Heightmap, renderLoop;
     import graphics.camera : Camera;
-    import util.traits : DownwardDelegate;
-    import util.util;
-    import math.aabb;
+    import cgy.util.traits : DownwardDelegate;
+    import cgy.util.util;
+    import cgy.math.aabb;
 
     class Road {
 
@@ -467,7 +467,7 @@ mixin template WorldPopulation() {
         roadCompute.uniform.endPos = endPos;
 
         float highValue = WorldSize * 10;
-        import util.memory;
+        import cgy.util.memory;
         msg("mem ", getMemoryUsage());
         FillTexture(roadDistanceTex, highValue, 0, 0, 0);
         msg("mem ", getMemoryUsage());

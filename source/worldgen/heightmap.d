@@ -14,16 +14,16 @@ import graphics.camera;
 import graphics.heightmap;
 alias graphics.heightmap.Heightmap HMap;
 
-import json;
+import cgy.json;
 
-import math.math : equals;
-import math.math : advect, fastFloor;
+import cgy.math.advect : advect;
+import cgy.math.math : equals, fastFloor;
+import cgy.math.vector : vec2i, vec3d, vec3f;
 import random.random : BSpline;
 import random.simplex;
 import random.xinterpolate4 : XInterpolate24;
-import util.filesystem;
-import util.pos;
-import util.util;
+import cgy.util.filesystem;
+import cgy.util.pos;
 import cgy.erosion.gpu;
 import worldgen.maps;
 import worldgen.strata;

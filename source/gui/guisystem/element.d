@@ -12,8 +12,8 @@ import gui.guisystem.guisystem;
 import graphics._2d.image;
 import graphics.font;
 import settings;
-import util.util;
-public import util.rect;
+public import cgy.util.rect;
+import cgy.math.vector : vec2d;
 
 
 enum GuiEventResponse {

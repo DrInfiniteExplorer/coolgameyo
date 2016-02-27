@@ -34,26 +34,26 @@ import graphics.tilegeometry;
 import graphics.tilerenderer;
 
 import heightsheets.heightsheets;
-import json;
+import cgy.json;
 
 //import changes.changelist;
 import main;
 import modules.ai;
 import modules.path;
 import network.all;
-import util.pos;
+import cgy.util.pos;
 import scheduler : scheduler;
 import scene.scenemanager;
 import settings;
-import statistics;
+import cgy.util.statistics;
 
 import tiletypemanager;
 
 import playerinformation;
 import unittypemanager;
 import unit;
-import util.util;
-import util.filesystem;
+import cgy.util.util;
+import cgy.util.filesystem;
 import worldstate.worldstate;
 import changes.worldproxy;
 import changes.changelist;

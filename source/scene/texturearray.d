@@ -6,7 +6,7 @@ import graphics.image;
 import graphics.ogl;
 
 import settings;
-import util.util;
+import cgy.util.util;
 
 final class TextureArray {
 

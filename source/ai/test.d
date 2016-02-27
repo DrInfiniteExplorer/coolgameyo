@@ -12,9 +12,9 @@ import changes.worldproxy;
 import graphics.debugging;
 import mission;
 import modules.path;
-import util.pos;
+import cgy.util.pos;
 import unit;
-import util.util;
+import cgy.util.util;
 
 
 

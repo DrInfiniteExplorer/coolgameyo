@@ -8,8 +8,8 @@ import std.socket;
 import log : Log;
 import modules.module_;
 
-import util.socket : readLine, tcpSendDir;
-import util.util;
+import cgy.util.socket : readLine, tcpSendDir;
+import cgy.util.util;
 
 enum max_clients = 13;
 

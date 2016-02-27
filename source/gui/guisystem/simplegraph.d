@@ -10,8 +10,8 @@ import gui.guisystem.guisystem;
 
 import graphics._2d.rect;
 import graphics._2d.line;
-import util.util;
-import util.rect;
+import cgy.util.util;
+import cgy.util.rect;
 
 class GuiElementSimpleGraph(Type) : GuiElement {
     

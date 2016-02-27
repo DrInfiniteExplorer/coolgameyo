@@ -10,7 +10,7 @@ import std.math : abs;
 import std.stdio;
 import std.string;
 
-import stolen.all;
+import cgy.stolen.all;
 
 import graphics.camera;
 import graphics.debugging;
@@ -27,9 +27,9 @@ import modules.module_;
 import random.catmullrom;
 static import scheduler;
 import settings;
-import statistics;
+import cgy.util.statistics;
 import unit;
-import util.util;
+import cgy.util.util;
 
 immutable lineShaderVert = q{
     #version 420

@@ -5,9 +5,9 @@ import std.conv;
 import std.math;
 
 import changes.worldproxy;
-import util.pos;
+import cgy.util.pos;
 import unit;
-import util.util;
+import cgy.util.util;
 
 import modules.path;
 

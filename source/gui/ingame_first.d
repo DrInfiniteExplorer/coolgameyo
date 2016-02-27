@@ -9,8 +9,11 @@ import gui.all;
 import gui.debuginfo;
 import settings;
 import unit;
-import util.util;
 import worldstate.worldstate;
+
+import cgy.math.vector : vec3i;
+
+import cgy.util.util : msg;
 
 import gui.ingame;
 
@@ -83,7 +86,7 @@ class FpsMode : GuiEventDump {
             camera.getRayFromScreenCoords(mousecoords, start, dir);
             Tile tile;
 
-            import util.tileiterator;
+            import cgy.util.tileiterator;
             foreach(tilePos ; TileIterator(start, dir, 25, null)) {
                 game.damageTile(tilePos, 5);
             }

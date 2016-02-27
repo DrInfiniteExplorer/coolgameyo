@@ -15,8 +15,10 @@ import globals : g_glVersion, g_videoMemoryBuffers, g_videoMemoryTextures;
 import graphics.image;
 import graphics.shader;
 import settings;
-import util.util;
-import util.rangefromto;
+
+import cgy.util.rangefromto;
+
+import cgy.math.vector : vec3f;
 
 enum int GL_SHADER_STORAGE_BUFFER = 0x90D2;
 

@@ -8,7 +8,9 @@ import log;
 import random.gradientnoise;
 import random.simplex;
 import random.valuesource;
-import util.util;
+
+import cgy.math.vector : vec2f;
+import cgy.util.util : msg;
 
 float pmin = 12931923123.0f;
 float pmax = -12931923123.0f;
@@ -74,8 +76,8 @@ __gshared LayerInformation g_ExtrusiveTypes;
 __gshared LayerInformation g_MetamorphicTypes;
 __gshared LayerInformation g_IntrusiveTypes;
 
-import json;
-import util.filesystem;
+import cgy.json;
+import cgy.util.filesystem;
 import std.path;
 
 shared static bool strataLoaded = false;

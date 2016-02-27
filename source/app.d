@@ -41,13 +41,13 @@ import log;
 
 import materials;
 
-import statistics;
+import cgy.util.statistics;
 import settings;
-import util.filesystem;
-import util.memory;
-import util.pos;
-import util.util;
-import util.window;
+import cgy.util.filesystem;
+import cgy.util.memory;
+import cgy.util.pos;
+import cgy.util.util;
+import cgy.util.window;
 import worldgen.maps : WorldSize;
 
 
@@ -206,7 +206,7 @@ void createWindow() {
 	auto renderer = glGetString(GL_RENDERER);
 
     std.exception.enforce(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_NOPARACHUTE) == 0,
-                          SDLError());
+                          SDL_GetError.to!string);
 
     SDL_GL_SetAttribute(SDL_GL_RED_SIZE,        8);
     SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE,      8);
@@ -233,7 +233,7 @@ void createWindow() {
                                renderSettings.windowHeight,
                                surfaceMode
                                );
-    enforce(sdlWindow, text("Could not set sdl video mode (", SDLError() , ")"));
+    enforce(sdlWindow, text("Could not set sdl video mode (", SDL_GetError.to!string , ")"));
     SDL_GL_CreateContext(sdlWindow);
 
     SDL_SysWMinfo info;

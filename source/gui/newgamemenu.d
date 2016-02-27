@@ -15,18 +15,18 @@ import gui.all;
 import gui.mainmenu;
 import gui.worldview;
 
-import json;
-import util.pos;
+import cgy.json;
+import cgy.util.pos;
 
 import settings;
-import statistics;
+import cgy.util.statistics;
 //import worldgen.worldgen;
 //import worldgen.newgen;
 import worldgen.maps;
 //import worldgen.mapviz;
-import util.filesystem;
-import util.rect;
-import util.util;
+import cgy.util.filesystem;
+import cgy.util.rect;
+import cgy.util.util;
 
 import gui.newgame.page1;
 import gui.newgame.page2;

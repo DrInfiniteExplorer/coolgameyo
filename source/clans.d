@@ -6,10 +6,10 @@ import std.conv;
 import std.exception;
 
 import clan;
-import json;
+import cgy.json;
 import game;
 import modules.module_;
-import util.singleton;
+import cgy.util.singleton;
 import worldstate.worldstate;
 
 final class Clans : Module {
@@ -50,13 +50,13 @@ final class Clans : Module {
 
     void serializeClans() {
 
-        util.filesystem.mkdir(g_worldPath ~ "/world/clans/");
+        cgy.util.filesystem.mkdir(g_worldPath ~ "/world/clans/");
 
         auto clanList = encode(array(map!q{a.clanId}(clans)));
         auto jsonRoot = Value([
             "clanList" : clanList,
         ]);
-        auto jsonString = json.prettifyJSON(jsonRoot);
+        auto jsonString = cgy.json.prettifyJSON(jsonRoot);
 
         std.file.write(g_worldPath ~ "/world/clans/clans.json", jsonString);
 

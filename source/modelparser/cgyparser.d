@@ -4,8 +4,9 @@ import std.stdio, std.exception, std.range, std.regex, std.algorithm;
 import std.conv, std.string, std.file, std.typecons;
 import std.math;
 
-import util.util;
-import stolen.quaternion;
+import cgy.math.vector : vec3f;
+
+import cgy.stolen.quaternion;
 
 class cgyParserException : Exception {
     this(string msg, string file, size_t line) {

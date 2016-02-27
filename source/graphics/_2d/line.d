@@ -10,9 +10,10 @@ import std.stdio;
 import graphics.ogl;
 import graphics.shader;
 import settings;
-import util.util;
-import util.rect;
-alias util.util.convert convert;
+import cgy.util.rect;
+alias cgy.util.util.convert convert;
+
+import cgy.math.vector : vec3f, vec2f, vec2d;
 
 struct LineVertex {
     vec2f pos;
@@ -97,7 +98,7 @@ class LineShader {
     alias ShaderProgram!("position", "color") LineProgram;
     LineProgram lineProgram;
     
-    import util.singleton;
+    import cgy.util.singleton;
     mixin Singleton;
 
     private this() {

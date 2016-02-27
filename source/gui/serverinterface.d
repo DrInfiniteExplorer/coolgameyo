@@ -10,10 +10,10 @@ import gui.debuginfo;
 
 import log;
 import main : EventAndDrawLoop;
-import util.filesystem;
-import util.rect;
-import util.traits;
-import util.util;
+import cgy.util.filesystem;
+import cgy.util.rect;
+import cgy.util.traits;
+import cgy.util.util;
 import scheduler : scheduler;
 
 
@@ -74,7 +74,7 @@ void startServer() {
 
     game.init(true);
     game.loadGame();
-    import util.strings;
+    import cgy.util.strings;
     StringBuilder tmpString;
     EventAndDrawLoop!true(guiSystem,  DownwardDelegate((float){
         if(now + sampleIntervall < mstime()) {

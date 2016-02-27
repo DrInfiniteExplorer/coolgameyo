@@ -1,9 +1,10 @@
 module random.permutation;
 
-import math.math;
-import util.util;
+import cgy.math.math;
 import random.random;
 import random.randsource;
+
+import cgy.debug_.debug_ : BREAK_IF;
 
 
 mixin template Permutation(alias SIZE) {

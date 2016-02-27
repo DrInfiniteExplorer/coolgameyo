@@ -1,6 +1,6 @@
 module graphics.renderconstants;
 
-import util.util;
+import cgy.math.vector;
 
 immutable vec3f NightBlue = vec3f(0.2, 0.2, 0.5);
 immutable vec3f SunLighty = vec3f(1.0, 1.0, 1.0);

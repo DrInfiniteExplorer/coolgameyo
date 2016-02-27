@@ -22,10 +22,10 @@ import graphics.image;
 import graphics.camera;
 
 import settings;
-import util.filesystem : mkdir, rmdir;
-import util.httpupload;
-import util.rect;
-import util.util;
+import cgy.util.filesystem : mkdir, rmdir;
+import cgy.util.httpupload;
+import cgy.util.rect;
+import cgy.util.util;
 import worldstate.worldstate;
 
 class PrintScreenMenu : GuiElementWindow {

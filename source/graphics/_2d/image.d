@@ -7,9 +7,10 @@ import std.exception;
 import graphics.ogl;
 import graphics.shader;
 import settings;
-import util.util;
-import util.rect;
+import cgy.util.rect;
 //alias util.util.convert convert;
+
+import cgy.math.vector : vec2f;
 
 struct ImageRectVertex {
     vec2f pos;
@@ -68,7 +69,7 @@ class ImageRectShader {
     alias ShaderProgram!("position", "texcoord", "tex") ImageProgram;
     ImageProgram imageProgram;
     
-    import util.singleton;
+    import cgy.util.singleton;
     mixin Singleton;
     
     private this() {

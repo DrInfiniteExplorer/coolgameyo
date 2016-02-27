@@ -9,13 +9,13 @@ import changes.worldproxy;
 import clan;
 import clans;
 import inventory;
-import json;
+import cgy.json;
 import mission;
-import util.pos;
-import stolen.aabbox3d;
+import cgy.util.pos;
+import cgy.stolen.aabbox3d;
 
 import unittypemanager;
-import util.util;
+import cgy.math.vector : vec3d;
 import worldstate.worldstate;
 
 

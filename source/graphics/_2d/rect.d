@@ -7,8 +7,9 @@ import std.exception;
 import graphics.ogl;
 import graphics.shader;
 import settings;
-import util.util;
-import util.rect;
+import cgy.util.rect;
+import cgy.math.vector : vec2i;
+import cgy.math.vector : vec3f, vec2f;
 
 struct RectVertex {
     vec2f pos;
@@ -83,7 +84,7 @@ class RectShader {
     alias ShaderProgram!("position", "color", "stripes") RectProgram;
     RectProgram rectProgram;
     
-    import util.singleton;
+    import cgy.util.singleton;
     mixin Singleton;
 
     private this() {

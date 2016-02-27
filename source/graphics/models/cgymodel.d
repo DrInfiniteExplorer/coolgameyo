@@ -2,8 +2,8 @@ module graphics.models.cgymodel;
 
 import std.stdio;
 
-import util.util;
-import stolen.quaternion;
+import cgy.debug_.debug_ : BREAK_IF;
+import cgy.stolen.quaternion;
 
 import graphics.ogl;
 import scene.texturearray;

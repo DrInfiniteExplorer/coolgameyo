@@ -1,0 +1,10 @@
+{
+	"name": "voronoi",
+	"description": "Voronoi generation subpackage for CoolGameYo",
+	"copyright": "Copyright © 2016, Luben",
+	"authors": ["Luben"],
+    "targetType":"library",
+	"dependencies":{
+		"coolgameyo:util":"*"
+	}
+}

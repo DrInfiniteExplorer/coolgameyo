@@ -1,7 +1,7 @@
 module light;
 
-import util.pos;
-import util.util;
+import cgy.util.pos;
+import cgy.math.vector : vec3d;
 
 immutable MaxLightStrength = 15;
 

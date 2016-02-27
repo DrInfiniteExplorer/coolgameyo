@@ -5,8 +5,9 @@ import std.exception;
 
 import graphics.font;
 import gui.guisystem.guisystem;
-import util.util;
-import util.rect;
+import cgy.util.rect;
+
+import cgy.math.vector : vec2d;
 
 
 

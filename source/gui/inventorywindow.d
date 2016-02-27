@@ -12,15 +12,15 @@ import graphics.image;
 
 import gui.unitcontrol;
 
-import worldstate.sizes;
+import cgy.util.sizes;
 import worldstate.block;
 import worldstate.sector;
 import random.random;
-import util.pos;
+import cgy.util.pos;
 import settings;
-import statistics;
-import util.util;
-import util.rect;
+import cgy.util.statistics;
+import cgy.util.util;
+import cgy.util.rect;
 import entities.entity;
 import inventory;
 

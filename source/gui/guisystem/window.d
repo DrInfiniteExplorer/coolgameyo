@@ -9,9 +9,9 @@ import graphics._2d.rect;
 import gui.guisystem.guisystem;
 import gui.guisystem.text;
 import gui.guisystem.button;
-import util.util;
-import util.rect;
+import cgy.util.rect;
 
+import cgy.math.vector : vec2i;
 
 
 class GuiElementWindow : GuiElement {

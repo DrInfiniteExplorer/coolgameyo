@@ -17,13 +17,15 @@ import graphics.image;
 import graphics.shader;
 
 
-import settings;
-import util.rect;
-import util.singleton;
-import util.strings;
-import util.util;
+import cgy.debug_.debug_ : BREAKPOINT, BREAK_IF;;
 
-import json;
+import settings;
+import cgy.util.rect;
+import cgy.util.singleton;
+import cgy.util.strings;
+import cgy.math.vector : vec2i, vec3f, vec2f;
+
+import cgy.json;
 
 struct FontVertex{
     vec2f vertPos;

@@ -1,6 +1,6 @@
 module network.client;
 
-import util.socket : readString, sendString;
+import cgy.util.socket : readString, sendString;
 import network.common;
 import core.sync.mutex;
 
@@ -31,7 +31,7 @@ mixin template ClientModule() {
     }
 
     void initModule(string host) {
-        import util.socket;
+        import cgy.util.socket;
         recv_set = new SocketSet(2);
 
         msg("Looking up address...");

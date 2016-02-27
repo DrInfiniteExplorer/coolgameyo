@@ -28,7 +28,7 @@ import graphics.shader;
 import modules.module_;
 import worldgen.maps;
 import worldstate.worldstate;
-import util.util;
+import cgy.util.util;
 
 final class HeightSheets : Module, WorldStateListener {
 

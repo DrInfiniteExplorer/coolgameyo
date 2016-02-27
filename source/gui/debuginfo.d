@@ -4,9 +4,11 @@ import core.cpuid : threadsPerCPU;
 
 
 import gui.all;
-import util.memory : getMemoryUsage;
-import util.util;
+import cgy.util.memory : getMemoryUsage;
+import cgy.math.vector : vec3f;
 import worldstate.block : getBlockMemorySize;
+import cgy.util.util : utime;
+import cgy.debug_.debug_ : BREAK_IF;
 
 immutable SAMPLE_LIMIT = 256;
 __gshared ulong[SAMPLE_LIMIT] memorySamples;
@@ -24,7 +26,7 @@ __gshared ulong lastUs = 0;
 __gshared ulong lastTotal = 0;
 float getCPUUtilization() {
 
-    import windows : FILETIME, GetProcessTimes, GetCurrentProcess;
+    import cgy.windows : FILETIME, GetProcessTimes, GetCurrentProcess;
     FILETIME creation, exit;
     FILETIME kernel;
     FILETIME user;

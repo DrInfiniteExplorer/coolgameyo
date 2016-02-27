@@ -10,7 +10,8 @@ import scene.instancemanager;
 
 import unit;
 
-import util.util;
+import cgy.debug_.debug_ : BREAK_IF;
+import cgy.math.vector : vec3f;
 
 class UnitProxy {
     SceneManager sceneManager;

@@ -22,8 +22,8 @@ import gui.guisystem.combobox;
 import graphics.ogl;
 
 import settings;
-import util.util;
-import util.rect;
+import cgy.util.util;
+import cgy.util.rect;
 
 class OptionMenu : GuiElementWindow {
     GuiElement guiSystem;

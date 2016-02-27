@@ -17,8 +17,8 @@ import graphics._2d.rect;
 import graphics.font;
 import gui.guisystem.guisystem;
 import gui.guisystem.text;
-import util.util;
-import util.rect;
+import cgy.util.util;
+import cgy.util.rect;
 
 
 

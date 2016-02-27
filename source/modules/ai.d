@@ -6,14 +6,14 @@ import std.exception;
 import std.stdio;
 
 import changes.worldproxy;
-import json;
+import cgy.json;
 import game;
 import globals : g_worldPath;
 import modules.module_;
 import modules.path;
 import unit;
-import util.filesystem;
-import util.util;
+import cgy.util.filesystem;
+import cgy.util.util;
 import scheduler : scheduler;
 
 
@@ -69,7 +69,7 @@ class AIModule : Module, WorldStateListener {
             jsonStates ~= serializeState(state);
         }
         auto jsonRoot = Value(jsonStates);
-        auto jsonString = json.prettifyJSON(jsonRoot);
+        auto jsonString = cgy.json.prettifyJSON(jsonRoot);
         mkdir(g_worldPath ~ "/modules/ai");
         std.file.write(g_worldPath ~ "/modules/ai/states.json", jsonString);
 

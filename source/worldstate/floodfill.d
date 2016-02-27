@@ -1,8 +1,8 @@
 module worldstate.floodfill;
 
 
-import util.pos;
-import util.array;
+import cgy.util.pos;
+import cgy.util.array;
 
 static final class FillingTaskState {
     SectorNum sectorNum;

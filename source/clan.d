@@ -7,16 +7,16 @@ import std.exception;
 
 import changes.worldproxy : WorldProxy;
 import clans;
-import json;
+import cgy.json;
 import unit;
 
 import game;
 import mission;
 import scheduler : scheduler;
 
-import util.filesystem;
-import util.array;
-import util.util;
+import cgy.util.filesystem;
+import cgy.util.array;
+import cgy.util.util;
 
 import worldstate.worldstate;
 import worldstate.activity;
@@ -189,13 +189,13 @@ final class NormalClan : Clan {
 
     override void serialize() {
         auto folder = g_worldPath ~ "/world/clans/" ~ to!string(clanId) ~"/";
-        util.filesystem.mkdir(folder);
+        cgy.util.filesystem.mkdir(folder);
 
         Value darp(Unit unit) {
             return encode(unit);
         }
         auto clanMembers = Value(array(map!darp(array(clanMembers))));
-        auto jsonString = json.prettifyJSON(clanMembers);
+        auto jsonString = cgy.json.prettifyJSON(clanMembers);
         std.file.write(folder ~ "members.json", jsonString);
 
     }
@@ -205,7 +205,7 @@ final class NormalClan : Clan {
         enforce(exists(folder), "Folder does not exist!" ~ folder);
 
         auto content = readText(folder ~ "members.json");
-        auto members = json.parse(content);
+        auto members = cgy.json.parse(content);
 
         foreach (unitVal ; members.elements) {
             Unit unit = new Unit(0);

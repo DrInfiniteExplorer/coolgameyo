@@ -7,17 +7,18 @@ import std.range;
 import std.stdio;
 import std.conv;
 
-import json;
+import cgy.json;
 import game;
 import globals : g_worldPath;
 import modules.module_;
 import scheduler : scheduler;
-import util.util;
-import util.filesystem;
-import util.array;
+import cgy.util.filesystem;
+import cgy.util.array;
+import cgy.util.util : msg;
 import changes.worldproxy;
 
-alias util.array.Array Array;
+alias cgy.util.array.Array Array;
+import cgy.math.vector : vec3f, vec3i;
 
 
 import graphics.debugging;
@@ -133,7 +134,7 @@ final class PathModule : Module {
         values["finishedPaths"] = serializeFinishedPaths();
         values["activeStates"] = serializeActiveStates();
         Value jsonRoot = Value(values);
-	    auto jsonString = json.prettifyJSON(jsonRoot);
+	    auto jsonString = cgy.json.prettifyJSON(jsonRoot);
         
         mkdir(g_worldPath ~ "/modules/path");
         std.file.write(g_worldPath ~ "/modules/path/states.json", jsonString);

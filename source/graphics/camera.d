@@ -5,12 +5,12 @@ import std.conv;
 import std.math : PI;
 import std.stdio;
 
-import stolen.all;
-import math.math;
-import math.quat;
+import cgy.stolen.all;
+import cgy.math.math;
+import cgy.math.quat;
 
 import settings;
-import util.util;
+import cgy.util.util;
 
 
 class Camera{

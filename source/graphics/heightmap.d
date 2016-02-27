@@ -11,11 +11,12 @@ import graphics.shader;
 import gui.all;
 import gui.util;
 import main : g_commandLine, EventAndDrawLoop;
-import math.math;
-import math.vector;
-import util.filesystem;
-import util.rangefromto : Range2D;
-import util.util : BREAK_IF, msg, utime;
+import cgy.math.math;
+import cgy.math.vector;
+import cgy.util.filesystem;
+import cgy.util.rangefromto : Range2D;
+import cgy.debug_.debug_ : BREAK_IF;
+import cgy.util.util : msg, utime;
 
 immutable vertShaderSource = q{
     #version 430

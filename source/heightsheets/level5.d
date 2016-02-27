@@ -13,7 +13,7 @@ import graphics.shader;
 import modules.module_;
 import worldgen.maps;
 import worldstate.worldstate;
-import util.util;
+import cgy.math.vector : vec3f, vec2i;
 
 immutable int level5SectorCount = 4096;
 

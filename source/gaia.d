@@ -2,12 +2,14 @@ module gaia;
 
 import std.algorithm;
 
+import cgy.debug_.debug_ : BREAKPOINT;
+
 import clan;
-import json;
+import cgy.json;
 import mission;
-import util.pos;
-import util.util;
-import util.rangefromto;
+import cgy.util.pos;
+import cgy.util.util : msg;
+import cgy.util.rangefromto;
 
 import worldstate.worldstate;
 
@@ -24,7 +26,7 @@ auto gaiaRange(SectorXYNum base) {
 
 class Gaia : Clan {
 
-    import util.singleton;
+    import cgy.util.singleton;
     mixin Singleton;
 
     int[SectorXYNum] activityMap;

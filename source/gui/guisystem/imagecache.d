@@ -1,10 +1,10 @@
 module gui.guisystem.imagecache;
 
-import json;
+import cgy.json;
 import graphics.image : Image;
 import graphics.ogl;
-import math.vector;
-import util.util : BREAK_IF;
+import cgy.math.vector;
+import cgy.debug_.debug_ : BREAK_IF;
 
 
 

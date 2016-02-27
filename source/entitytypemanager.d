@@ -9,10 +9,11 @@ import std.file;
 
 import graphics.texture;
 
-import json;
+import cgy.debug_.debug_ : BREAKPOINT;
+import cgy.json;
 import globals : g_worldPath;
-import statistics;
-import util.util;
+import cgy.util.statistics;
+import cgy.math.vector : vec3d, vec3i;
 import worldstate.tile;
 
 struct BranchType {
@@ -163,8 +164,8 @@ struct EntityTypeManager {
 			return;
 		}
 		auto content = readText("data/entity_types.json");
-		auto rootVal = json.parse(content);
-		enforce(rootVal.type == json.Value.Type.object, "rootval in entitytypejson not object roawoaowoawo: " ~ to!string(rootVal.type));
+		auto rootVal = cgy.json.parse(content);
+		enforce(rootVal.type == cgy.json.Value.Type.object, "rootval in entitytypejson not object roawoaowoawo: " ~ to!string(rootVal.type));
 		foreach(name, rsVal ; rootVal.pairs) {
             EntityType_t tempType; // is is le working if this is here lololooo.
             // problem is tree gets light, shrubbery dont. neither should.
@@ -197,7 +198,7 @@ struct EntityTypeManager {
         util.filesystem.mkdir(g_worldPath ~ "");
         std.file.write(g_worldPath ~ "/entitytypeidconfiguration.json", jsonString);
         */
-        util.filesystem.mkdir(g_worldPath ~ "");
+        cgy.util.filesystem.mkdir(g_worldPath ~ "");
         ushort[string] typeAA;
         foreach(type ; types) {
             typeAA[type.name] = type.id;

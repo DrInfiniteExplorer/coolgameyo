@@ -2,7 +2,7 @@ module gui.newgame.page1;
 
 
 public static string[] enumerateSavedWorlds() {
-    import util.filesystem;
+    import cgy.util.filesystem;
     if(!exists("worlds/")) {
         return null;
     }
@@ -12,7 +12,7 @@ public static string[] enumerateSavedWorlds() {
 }
 
 public static string[] enumerateSaves() {
-    import util.filesystem;
+    import cgy.util.filesystem;
     if(!exists("saves/")) {
         return null;
     }

@@ -1,6 +1,6 @@
 module entities.treelikeinstance;
 
-import json;
+import cgy.json;
 
 __gshared int debugIdCounter = 0;
 __gshared bool drawDebugLines = true;
@@ -58,7 +58,7 @@ mixin template TreeLike() {
 
     import changes.worldproxy;
 
-    import util.tileiterator;
+    import cgy.util.tileiterator;
 
     TreelikeInstance treelike;
 
@@ -432,7 +432,7 @@ mixin template TreeLike() {
 
     void makeLeafs(WorldProxy proxy)
     {
-        import math.math;
+        import cgy.math.math;
 
         if (drawLeafs == false) return;
 

@@ -10,11 +10,12 @@ import game: game;
 import graphics.camera;
 import gui.all;
 import gui.debuginfo;
-import math.math;
+import cgy.math.math;
 import settings;
 import unit;
-import util.util;
 import worldstate.worldstate;
+
+import cgy.math.vector : vec3i;
 
 import gui.ingame;
 
@@ -142,7 +143,7 @@ class PlanningMode : GuiEventDump {
             camera.getRayFromScreenCoords(mouseCoords, start, dir);
             Tile tile;
 
-            import util.tileiterator;
+            import cgy.util.tileiterator;
             foreach(tilePos ; TileIterator(start, dir, 25, null)) {
                 game.damageTile(tilePos, 5);
             }

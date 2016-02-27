@@ -1,0 +1,9 @@
+{
+	"name": "debug",
+	"description": "Debugging help subpackage for CoolGameYo",
+	"copyright": "Copyright © 2016, Luben",
+	"authors": ["Luben"],
+    "targetType":"library",
+	"dependencies":{
+	}
+}

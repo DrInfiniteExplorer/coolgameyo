@@ -1,0 +1,9 @@
+{
+	"name": "json",
+	"description": "Json subpackage for CoolGameYo",
+	"copyright": "Copyright © 2016, Luben",
+	"authors": ["Luben"],
+    "targetType":"library",
+	"dependencies":{
+	}
+}

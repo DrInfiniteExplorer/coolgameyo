@@ -6,10 +6,12 @@ import std.random;
 
 import graphics.ogl;
 import graphics.shader;
-import math.vector;
-import math.math;
-import statistics : MeasureTime, StupWatch;
-import util.util : msg, BREAK_IF, BREAKPOINT, convertArray;
+import cgy.math.vector;
+import cgy.math.math;
+import cgy.util.statistics : MeasureTime, StupWatch;
+import cgy.debug_.debug_ : BREAK_IF, BREAKPOINT;
+import cgy.util.util : msg, convertArray;
+import cgy.util.rangefromto;
 
 
 immutable pipeArea = 30;

@@ -3,8 +3,8 @@ module gui.guisystem.tabbar;
 import std.exception;
 
 import gui.all;
-import util.util;
-import util.rect;
+import cgy.util.util;
+import cgy.util.rect;
 
 class TabBar : GuiElement {
 

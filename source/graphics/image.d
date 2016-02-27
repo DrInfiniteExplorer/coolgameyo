@@ -9,11 +9,16 @@ import std.string;
 import derelict.devil.il;
 import derelict.devil.ilu;
 
+import cgy.debug_.debug_ : BREAK_IF;
+
 import graphics.ogl;
-import log : LogError;
-import math.math;
-import util.rect;
-import util.util;
+import cgy.logger.log : LogError;
+import cgy.math.math;
+import cgy.math.vector;
+import cgy.util.rect;
+import cgy.util.util : makeStackArray, msg;
+
+import cgy.debug_.debug_ : BREAKPOINT;
 
 
 void ilError(string file = __FILE__, int line = __LINE__) {

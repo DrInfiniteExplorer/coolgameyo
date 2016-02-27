@@ -13,21 +13,21 @@ import std.stdio;
 
 import clans;
 import entitytypemanager;
-import json;
+import cgy.json;
 import light;
 import globals : g_worldPath;
 import worldgen.maps;
 import worldstate.worldstate;
 import worldstate.block;
-import worldstate.sizes;
+import cgy.util.sizes;
 //import worldgen.worldgen;
-import util.pos;
+import cgy.util.pos;
 import unit;
 import entities.entity;
-import util.util;
-import util.intersect;
-import util.filesystem;
-import util.rangefromto;
+import cgy.util.util;
+import cgy.util.intersect;
+import cgy.util.filesystem;
+import cgy.util.rangefromto;
 
 
 
@@ -163,7 +163,7 @@ class Sector {
     
     void serialize() {
         string folder = text(g_worldPath ~ "/world/", sectorNum.value.x, ",", sectorNum.value.y, "/", sectorNum.value.z, "/");
-        util.filesystem.mkdir(folder);
+        cgy.util.filesystem.mkdir(folder);
         
         //auto file = BinaryFile(folder ~ "blocks.bin", "wb");
         auto file = FileInterface(folder ~ "blocks.bin", "wb");

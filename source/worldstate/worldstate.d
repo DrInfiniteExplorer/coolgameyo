@@ -22,29 +22,29 @@ import gaia;
 import graphics.camera;
 import graphics.debugging;
 
-import json;
+import cgy.json;
 import light;
 
 import globals : g_isServer;
 
 //import worldgen.worldgen;
 
-public import util.pos;
+public import cgy.util.pos;
 
 import scene.scenemanager;
 import scheduler : scheduler, task;
-import statistics;
+import cgy.util.statistics;
 
 import tiletypemanager;
 
 public import unit;
 
-import util.util;
-import util.intersect;
-import util.memory;
-import util.rangefromto;
-import util.tileiterator;
-import util.filesystem;
+import cgy.util.util;
+import cgy.util.intersect;
+import cgy.util.memory;
+import cgy.util.rangefromto;
+import cgy.util.tileiterator;
+import cgy.util.filesystem;
 
 import          worldstate.activity;
 import          worldstate.ambient;
@@ -52,7 +52,7 @@ public import   worldstate.block;
 import          worldstate.floodfill;
 import          worldstate.heightmap;
 public import   worldstate.sector;
-public import   worldstate.sizes;
+public import   cgy.util.sizes;
 public import   worldstate.tile;
 import          worldstate.time;
 
@@ -147,8 +147,8 @@ class WorldState {
 
         serializeFloodfill(jsonRoot);
 
-        auto jsonString = json.prettifyJSON(jsonRoot);
-        util.filesystem.mkdir(g_worldPath ~ "/world/");
+        auto jsonString = cgy.json.prettifyJSON(jsonRoot);
+        cgy.util.filesystem.mkdir(g_worldPath ~ "/world/");
         std.file.write(g_worldPath ~ "/world/world.json", jsonString);
 
         Clans().serializeClans();
@@ -165,7 +165,7 @@ class WorldState {
 
     void serializeHeightmap(SectorXYNum xy, SectorXY* sectorXY) {
         string folder = text(g_worldPath ~ "/world/", xy.value.x, ",", xy.value.y, "/");
-        util.filesystem.mkdir(folder);
+        cgy.util.filesystem.mkdir(folder);
         if (sectorXY.heightmap !is null) {
             std.file.write(folder ~ "heightmap.bin", sectorXY.heightmap.heightmap);
         }
@@ -179,7 +179,7 @@ class WorldState {
             return; // Nothing to deserialize
         }
         auto content = readText(g_worldPath ~ "/world/world.json");
-        auto jsonRoot = json.parse(content);
+        auto jsonRoot = cgy.json.parse(content);
         uint activeUnitId;
 
         deserializeFloodfill(jsonRoot);
@@ -225,7 +225,7 @@ class WorldState {
         void loadSectorXY(SectorXYNum xy) {
             SectorXY* xyPtr = getSectorXY(xy, false);
             string folder = text(g_worldPath ~ "/world/", xy.value.x, ",", xy.value.y, "/");
-            if (util.filesystem.exists(folder ~ "heightmap.bin")) {
+            if (cgy.util.filesystem.exists(folder ~ "heightmap.bin")) {
                 SectorHeightmap heightmap = new SectorHeightmap;            
                 heightmap.heightmap[] = (cast(int[128][])std.file.read(folder ~ "heightmap.bin"))[];
                 xyPtr.heightmap = heightmap;

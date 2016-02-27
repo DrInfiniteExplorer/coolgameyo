@@ -2,8 +2,8 @@ module random.gradientnoise;
 
 import std.math;
 
-import math.math : fastFloor;
-import util.util;
+import cgy.math.math : fastFloor;
+import cgy.util.util;
 import random.random;
 import random.permutation;
 import random.randsource;

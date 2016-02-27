@@ -19,8 +19,8 @@ import modelparser.cgyparser;
 import entities.entity;
 
 import unit;
-import util.filesystem;
-import util.util;
+import cgy.util.filesystem;
+import cgy.math.vector : vec3d;
 
 
 enum SceneNodeType {

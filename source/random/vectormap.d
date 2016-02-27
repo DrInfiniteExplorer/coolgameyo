@@ -7,10 +7,10 @@ import std.math;
 import std.stdio;
 import std.string;
 
-import math.vector;
+import cgy.math.vector;
 
-import util.util;
-import util.filesystem;
+import cgy.util.util;
+import cgy.util.filesystem;
 import random.random;
 import random.xinterpolate;
 import graphics.image;

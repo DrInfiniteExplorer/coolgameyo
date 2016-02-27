@@ -5,9 +5,11 @@ module graphics.debugging;
 
 import std.array : array;
 
+import cgy.math.vector;
+
 import graphics.ogl;
-import math.aabb : aabb3d;
-import util.util;
+import cgy.math.aabb : aabb3d;
+import cgy.util.util;
 
 struct AABBData{
     vec3f color;

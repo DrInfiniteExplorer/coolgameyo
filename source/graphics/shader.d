@@ -8,9 +8,9 @@ import std.stdio;
 import std.string : splitLines;
 
 import graphics.ogl;
-import log : LogWarning, LogError;
-import stolen.all;
-import util.util;
+import cgy.logger.log : LogWarning, LogError;
+import cgy.stolen.all;
+import cgy.util.util;
 
 
 string makeUints(T...)() {
@@ -158,7 +158,7 @@ class ShaderProgram(T...){
         // ^ lololol :P
         // HOW TO MAKE less irritating?
         // maek totally own file derps? D:
-        import util.memory : ScopeMemory;
+        import cgy.util.memory : ScopeMemory;
         auto file = File(filename, "r");
         auto fileSize = cast(uint)file.size();
         auto mem = ScopeMemory!char(fileSize);

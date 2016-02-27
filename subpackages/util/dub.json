@@ -1,0 +1,12 @@
+{
+	"name": "util",
+	"description": "Utility subpackage for CoolGameYo",
+	"copyright": "Copyright © 2016, Luben",
+	"authors": ["Luben"],
+    "targetType":"library",
+	"dependencies":{
+		"coolgameyo:json":"*",
+		"coolgameyo:math":"*",
+		"coolgameyo:windows":"*",
+	}
+}

@@ -10,7 +10,7 @@ import scene.instancemanager;
 
 import entities.entity;
 
-import util.util;
+import cgy.debug_.debug_ : BREAK_IF;
 
 class EntityProxy {
     SceneManager sceneManager;

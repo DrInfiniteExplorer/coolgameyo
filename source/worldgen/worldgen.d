@@ -14,10 +14,10 @@ import std.typecons;
 import graphics.texture;
 import graphics.debugging;
 import light;
-import util.pos;
-import statistics;
-import util.rangefromto;
-import util.util;
+import cgy.util.pos;
+import cgy.util.statistics;
+import cgy.util.rangefromto;
+import cgy.util.util;
 
 import worldgen.maps;
 

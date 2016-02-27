@@ -2,7 +2,7 @@
 
 module scene.meshnode;
 
-import util.util;
+import cgy.util.util;
 
 import scene.scenemanager;
 

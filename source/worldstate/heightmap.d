@@ -2,10 +2,10 @@ module worldstate.heightmap;
 
 import std.algorithm;
 
-import util.rangefromto;
+import cgy.util.rangefromto;
 
-import util.pos;
-import worldstate.sizes;
+import cgy.util.pos;
+import cgy.util.sizes;
 
 
 final class SectorHeightmap {

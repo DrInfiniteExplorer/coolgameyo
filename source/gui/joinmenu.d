@@ -8,9 +8,9 @@ import globals;
 import gui.all;
 import main;
 import settings;
-import util.filesystem : exists, rmdir;
-import util.rect;
-import util.util;
+import cgy.util.filesystem : exists, rmdir;
+import cgy.util.rect;
+import cgy.util.util;
 import gui.ingame;
 import gui.guisystem.dialogbox;
 

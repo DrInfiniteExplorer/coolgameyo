@@ -2,7 +2,7 @@ module random.randsource;
 
 import std.random;
 
-import util.util;
+import cgy.util.util;
 import random.valuesource;
 
 final class RandSourceUniform : ValueSource {

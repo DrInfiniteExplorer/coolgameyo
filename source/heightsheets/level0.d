@@ -11,10 +11,10 @@ import graphics.camera;
 import graphics.ogl;
 import graphics.shader;
 import modules.module_;
-import statistics;
+import cgy.util.statistics;
 import worldgen.maps;
 import worldstate.worldstate;
-import util.util;
+import cgy.math.vector;
 
 final class Level0Sheet {
 

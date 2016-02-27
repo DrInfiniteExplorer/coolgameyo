@@ -10,11 +10,11 @@ import graphics.ogl;
 import graphics.shader;
 import graphics.tilegeometry;
 
-import util.pos;
-import statistics;
-import util.rangefromto;
-import util.util;
-import worldstate.sizes;
+import cgy.util.pos;
+import cgy.util.statistics;
+import cgy.util.rangefromto;
+import cgy.util.util;
+import cgy.util.sizes;
 
 
 struct RenderInfo {

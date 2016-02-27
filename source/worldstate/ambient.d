@@ -5,14 +5,14 @@ module worldstate.ambient;
 mixin template LightStorageMethods() {
 
     import std.container : BinaryHeap, heapify;
-    import util.array : Array;
+    import cgy.util.array : Array;
     import alloc : temp_alloc_malloc, temp_alloc_free, AA;
 
     struct LightPropagationData {
         TilePos tilePos;
         byte strength;
     }
-    alias util.array.Array!LightPropagationData LPDArray;
+    alias cgy.util.array.Array!LightPropagationData LPDArray;
     alias BinaryHeap!(LPDArray, "a.strength < b.strength") LightHeap;
     alias AA!(BlockNum, bool, temp_alloc_malloc, temp_alloc_free) BlockNumSet;
 

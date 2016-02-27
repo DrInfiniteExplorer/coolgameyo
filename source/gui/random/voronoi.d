@@ -4,6 +4,7 @@ module gui.random.voronoi;
 
 mixin template RandomVoronoi() {
 
+    import cgy.math.vector : vec3i;
     GuiElementImage voronoiImg;
 
     void initVoronoi() {

@@ -1,13 +1,13 @@
 module graphics.tilecompute;
 
-import math.vector;
+import cgy.math.vector;
 import graphics.camera;
 import graphics.ogl;
 import graphics.tilerenderer;
 import graphics.tilegeometry; // OR NOT? IM NOT SURE?
 import graphics.shader;
 
-import util.util;
+import cgy.util.util;
 import worldstate.worldstate;
 
 

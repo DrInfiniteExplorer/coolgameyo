@@ -1,0 +1,7 @@
+{
+	"name": "windows",
+	"description": "Windows api subpackage for CoolGameYo",
+	"copyright": "Copyright © 2016, Luben",
+	"authors": ["Luben"],
+    "targetType":"library",
+}

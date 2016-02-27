@@ -10,11 +10,11 @@ import clans;
 import changes.changelist;
 import entitytypemanager;
 import light;
-import json;
-import util.pos;
-import stolen.aabbox3d;
-import util.memory;
-import util.util;
+import cgy.json;
+import cgy.util.pos;
+import cgy.stolen.aabbox3d;
+import cgy.util.memory;
+import cgy.util.util;
 import worldstate.worldstate;
 import changes.worldproxy;
 
