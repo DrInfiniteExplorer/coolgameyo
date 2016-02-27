@@ -285,9 +285,8 @@ class GuiElementEditbox : GuiElement {
         
     private bool selecting;
     
-    override GuiEventResponse onEvent(GuiEvent e) {
-        if (e.type == GuiEventType.Keyboard) {
-            auto kb = e.keyboardEvent;
+    override GuiEventResponse onEvent(InputEvent e) {
+        if (auto kb = cast(KeyboardEvent) e ) {
             if (kb.pressed) {
                 //Also handles ctrl+c etc
                 if(handleMove(kb.SdlSym, kb.SdlMod)) {
@@ -297,8 +296,7 @@ class GuiElementEditbox : GuiElement {
                 
             }
         }
-        if (e.type == GuiEventType.MouseClick) {
-            auto m = e.mouseClick;
+        if (auto m = cast(MouseClick) e ) {
             if (m.left && m.down) {
                 size_t stop = determineCharPos(m.pos);
                 startMarker = cast(int)stop;
@@ -311,10 +309,11 @@ class GuiElementEditbox : GuiElement {
             }
         }
         //Maybe reposition stop with data from releaseevent as well?
-        if (e.type == GuiEventType.MouseMove && selecting) {
-            auto m = e.mouseMove;
-            size_t start = determineCharPos(m.pos);
-            startMarker = cast(int)start;
+        if (auto m = cast(MouseMove)e) {
+            if(selecting) {
+                size_t start = determineCharPos(m.pos);
+                startMarker = cast(int)start;
+            }
         }
         return super.onEvent(e);
     }

@@ -93,9 +93,8 @@ class GuiElementSlider(ValueType) : GuiElement {
         valueText.setText(str);
     }
         
-    override GuiEventResponse onEvent(GuiEvent e) {
-        if (e.type == GuiEventType.MouseClick) {
-            auto m = &e.mouseClick;
+    override GuiEventResponse onEvent(InputEvent e) {
+        if (auto m = cast(MouseClick)e) {
             if(m.left) {
                 if (m.down) {
                     if(absoluteRect.isInside(m.pos)) {
@@ -114,9 +113,8 @@ class GuiElementSlider(ValueType) : GuiElement {
                     return GuiEventResponse.Accept;
                 }
             }
-        } else if (e.type == GuiEventType.MouseMove) {
+        } else if (auto m = cast(MouseMove)e) {
             if (pushedDown) {
-                auto m = &e.mouseMove;
                 auto fAbs = absoluteRect.convert!double;
                 auto fPos = m.pos.convert!double();
                 auto relative = fAbs.getRelative(fPos);

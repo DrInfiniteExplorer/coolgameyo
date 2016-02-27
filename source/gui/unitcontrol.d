@@ -136,19 +136,18 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         possesAI.setUnit(unit);
     }
 
-    override GuiEventResponse onDumpEvent(GuiEvent e) {
-        if (e.type == GuiEventType.MouseMove) {
-            mouseMove(e);
+    override GuiEventResponse onDumpEvent(InputEvent e) {
+        if (auto m = cast(MouseMove)e) {
+            mouseMove(m);
             return GuiEventResponse.Accept;
-        } else if (e.type == GuiEventType.Keyboard) {
-            auto k = e.keyboardEvent;
+        } else if (auto k = cast(KeyboardEvent)e) {
             auto key = k.SdlSym;
             auto down = k.pressed;
             keyMap[key] = down;
             onKey(k);
             return GuiEventResponse.Accept;
-        } else if (e.type == GuiEventType.MouseClick) {
-            mouseClick(e);
+        } else if (auto m = cast(MouseClick) e) {
+            mouseClick(m);
         }
         return GuiEventResponse.Ignore;
     }
@@ -262,7 +261,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         }
     }
 
-    void onKey(GuiEvent.KeyboardEvent k) {
+    void onKey(KeyboardEvent k) {
         if (k.SdlSym == SDLK_LSHIFT) {
             turbo = k.pressed;
         }
@@ -385,8 +384,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
          */
     }
 
-    void mouseMove(GuiEvent e){
-        auto m = e.mouseMove;
+    void mouseMove(MouseMove m){
         auto x = m.pos.x;
         auto y = m.pos.y;
         auto diffX = x - middleX;
@@ -401,8 +399,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         mousecoords.set(x, y);
     }    
 
-    void mouseClick(GuiEvent e) {
-        auto m = e.mouseClick;
+    void mouseClick(MouseClick m) {
         if (!m.down) {
             return;
         } else if (m.left && entitySelected) {

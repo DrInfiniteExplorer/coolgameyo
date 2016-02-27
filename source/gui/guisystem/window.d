@@ -109,12 +109,11 @@ class GuiElementWindow : GuiElement {
         super.render();
     }
     
-    override GuiEventResponse onEvent(GuiEvent e) {
+    override GuiEventResponse onEvent(InputEvent e) {
         if (!dragable) {
             return super.onEvent(e);
         }
-        if (e.type == GuiEventType.MouseClick) {            
-            auto m = &e.mouseClick;
+        if (auto m = cast(MouseClick)e) {            
             if(m.left) {
                 if (m.down) {
                     //barRect is in absolute coordinates already                    
@@ -130,9 +129,8 @@ class GuiElementWindow : GuiElement {
                 }
             }
         }
-        if (e.type == GuiEventType.MouseMove) {
+        if (auto m = cast(MouseMove)e) {
             if (dragging) {
-                auto m = e.mouseMove;
                 auto r = absoluteRect;
                 r.start = m.pos + dragHold;
                 setAbsoluteRect(r);

@@ -75,8 +75,8 @@ class PlanningMode : GuiEventDump {
     }
 
 
-    void mouseMove(GuiEvent e){
-        auto m = e.mouseMove;
+    void mouseMove(InputEvent e){
+        auto m = cast(MouseMove)e;
         auto x = m.pos.x;
         auto y = m.pos.y;
         auto diffX = x - middleX;
@@ -118,8 +118,8 @@ class PlanningMode : GuiEventDump {
     void hideMouse(bool hide) {
     }
 
-    void mouseClick(GuiEvent e) {
-        auto m = e.mouseClick;
+    void mouseClick(InputEvent e) {
+        auto m = cast(MouseClick)e;
         if(m.middle) {
             if(keyMap[SDLK_LSHIFT]) { // Recode so that letting go of shift leaves rotatecameramode as well. ololol.
                 rotateCamera = m.down;
@@ -157,8 +157,7 @@ class PlanningMode : GuiEventDump {
             }
         }
     }
-    void mouseWheel(GuiEvent e) {
-        auto m = e.mouseWheel;
+    void mouseWheel(MouseWheel m) {
         if(keyMap[SDLK_LCTRL]) {
             int dir = m.amount > 0 ? 1 : -1;
             focusZ = focusZ + dir;
@@ -207,7 +206,7 @@ class PlanningMode : GuiEventDump {
         game.getRenderer.setSelection(designateStartPos + startOffset, designateEndPos+endOffset);
     }
 
-    void onKey(GuiEvent.KeyboardEvent k) {
+    void onKey(KeyboardEvent k) {
         if (k.pressed) {
             if (k.SdlSym == SDLK_F2) {
                 useMouse = !useMouse;
@@ -218,21 +217,20 @@ class PlanningMode : GuiEventDump {
         }
     }
 
-    override GuiEventResponse onDumpEvent(GuiEvent e) {
-        if (e.type == GuiEventType.MouseMove) {
-            mouseMove(e);
+    override GuiEventResponse onDumpEvent(InputEvent e) {
+        if (auto m = cast(MouseMove) e) {
+            mouseMove(m);
             return GuiEventResponse.Accept;
-        } else if (e.type == GuiEventType.Keyboard) {
-            auto k = e.keyboardEvent;
+        } else if (auto k = cast(KeyboardEvent)e) {
             auto key = k.SdlSym;
             auto down = k.pressed;
             keyMap[key] = down;
             onKey(k);
             return GuiEventResponse.Accept;
-        } else if (e.type == GuiEventType.MouseClick) {
-            mouseClick(e);
-        } else if (e.type == GuiEventType.MouseWheel) {
-            mouseWheel(e);
+        } else if (auto m = cast(MouseClick)e) {
+            mouseClick(m);
+        } else if (auto m = cast(MouseWheel) e) {
+            mouseWheel(m);
         }
         return GuiEventResponse.Ignore;
     }

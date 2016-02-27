@@ -157,9 +157,8 @@ class GuiElementComboBox : GuiElement {
         super.render();
     }
 
-    override GuiEventResponse onEvent(GuiEvent e) {
-        if (e.type == GuiEventType.MouseClick) {
-            auto m = &e.mouseClick;
+    override GuiEventResponse onEvent(InputEvent e) {
+        if (auto m = cast(MouseClick)e ) {
             if(m.left) {
                 if (m.down) {
                     if(mainElementRect.isInside(m.pos)) {
@@ -175,12 +174,10 @@ class GuiElementComboBox : GuiElement {
 							}
 						}
                     }
-                } else {
-
                 }
             }
         }
-        else if (e.type == GuiEventType.FocusOff) {
+        else if (cast(FocusOffEvent) e) {
             setDroppedDown(false);
         }
         return super.onEvent(e);

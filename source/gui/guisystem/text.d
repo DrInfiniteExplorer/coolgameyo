@@ -82,8 +82,8 @@ class GuiElementText : GuiElement {
         super.render();
     }
     
-    override GuiEventResponse onEvent(GuiEvent e) {
-        if (e.type == GuiEventType.FocusOn) {
+    override GuiEventResponse onEvent(InputEvent e) {
+        if (cast(FocusOnEvent) e) {
             return GuiEventResponse.Reject;
         }
         return super.onEvent(e);

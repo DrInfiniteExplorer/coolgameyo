@@ -151,7 +151,7 @@ void MaterialEditor() {
     foreach(material ; g_materials) {
         materialsList.addItem(material.name);
     }
-    colorEdit.setMouseClickCallback((GuiElement _, GuiEvent.MouseClick mc){
+    colorEdit.setMouseClickCallback((GuiElement _, MouseClick mc){
         if(mc.left && mc.down) {
             if(materialsList.getSelectedItemIndex() == -1) return true;
             auto color = selectedMaterial.color;

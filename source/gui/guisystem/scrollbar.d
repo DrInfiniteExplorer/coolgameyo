@@ -94,10 +94,10 @@ class GuiElementScrollBar : GuiElement {
         super.render();
     }
 
-    override GuiEventResponse onEvent(GuiEvent e) {
+    override GuiEventResponse onEvent(InputEvent e) {
         /*
-        if (e.type == GuiEventType.MouseClick) {
-            auto m = &e.mouseClick;
+        if (e is MouseClick) {
+            auto m = cast(MouseClick)e;
             if(m.left) {
                 if (m.down) {
                     if(absoluteRect.isInside(m.pos)) {
@@ -116,9 +116,9 @@ class GuiElementScrollBar : GuiElement {
                     return GuiEventResponse.Accept;
                 }
             }
-        } else if (e.type == GuiEventType.MouseMove) {
+        } else if (e is MouseMove) {
             if (pushedDown) {
-                auto m = &e.mouseMove;
+                auto m = cast(MouseMove)e;
                 auto fAbs = absoluteRect.convert!double;
                 auto fPos = m.pos.convert!double();
                 auto relative = fAbs.getRelative(fPos);

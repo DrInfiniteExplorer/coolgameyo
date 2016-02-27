@@ -67,7 +67,7 @@ class LoadScreen : GuiElementWindow {
 
 /*    
     override GuiEventResponse onEvent(GuiEvent e){
-        if (e.type == GuiEventType.FocusOn) {
+        if (e is FocusOn) {
             return GuiEventResponse.Reject;
         }
         return super.onEvent(e);

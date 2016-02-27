@@ -17,7 +17,7 @@ public import gui.guisystem.element;
 import gui.guisystem.imagecache;
 
 interface GuiEventDump {
-    GuiEventResponse onDumpEvent(GuiEvent e);
+    GuiEventResponse onDumpEvent(InputEvent e);
     void tick(float dTime);
     void activate(bool activate);
 }
@@ -104,8 +104,7 @@ final class GuiSystem : GuiElement {
         auto oldElement = focusElement;
         focusElement = e;
         if (focusElement) {
-            GuiEvent event;
-            event.type = GuiEventType.FocusOn;
+            scope FocusOnEvent event;
             while(focusElement != this) {
                 if (focusElement.onEvent(event) != GuiEventResponse.Reject) {
                     break;
@@ -119,8 +118,8 @@ final class GuiSystem : GuiElement {
         //Lololol maybe problem layer (solves things loosing focus, then setting focus on text in them which is rejected)
         // maybe add willAcceptFocus?()-functionality instead
         if (oldElement) {
-            GuiEvent event;
-            event.type = GuiEventType.FocusOff;
+            
+            scope FocusOffEvent event;
             oldElement.onEvent(event);
         }
     }
@@ -151,88 +150,73 @@ final class GuiSystem : GuiElement {
     private void setHover(vec2i pos) {
         auto element = getElementFromPoint(pos);
         if (hoverElement != element) {
-            GuiEvent hoverEvent;
-            hoverEvent.type = GuiEventType.HoverOn;
-            element.onEvent(hoverEvent);
-            hoverEvent.type = GuiEventType.HoverOff;
-            hoverElement.onEvent(hoverEvent);
+            
+            scope HoverOnEvent hoverOn;
+            element.onEvent(hoverOn);
+            scope HoverOffEvent hoverOff;
+            hoverElement.onEvent(hoverOff);
             hoverElement = element;
         }
     }
     
-    override GuiEventResponse onEvent(GuiEvent e) {
-        switch (e.type) {
-            case GuiEventType.MouseMove:
-                auto move = e.mouseMove;
-                setHover(move.pos);
-                if(focusElement && focusElement != this) {
-                    auto ret = focusElement.onEvent(e);
-                    if (ret != GuiEventResponse.Ignore) {
-                        return ret;
-                    }
-                }                
-                break;
-            case GuiEventType.MouseClick:
-                auto m = e.mouseClick;
-                setHover(m.pos);
-                if (m.left && m.down) {
-                    setFocus(hoverElement);
+    override GuiEventResponse onEvent(InputEvent e) {
+        if(auto move = cast(MouseMove)e ) {
+            setHover(move.pos);
+            if(focusElement && focusElement != this) {
+                auto ret = focusElement.onEvent(e);
+                if (ret != GuiEventResponse.Ignore) {
+                    return ret;
                 }
-                if(focusElement && focusElement != this) {
-                    auto ret = focusElement.onEvent(e);
-                    if (ret != GuiEventResponse.Ignore) {
-                        return ret;
-                    }
+            }                
+        }
+        if(auto m = cast(MouseClick) e) {
+            setHover(m.pos);
+            if (m.left && m.down) {
+                setFocus(hoverElement);
+            }
+            if(focusElement && focusElement != this) {
+                auto ret = focusElement.onEvent(e);
+                if (ret != GuiEventResponse.Ignore) {
+                    return ret;
                 }
-                break;
-            case GuiEventType.MouseWheel:
-                auto m = e.mouseWheel;
-                if (hoverElement != focusElement) {
-                    if (hoverElement !is null) {
-                        auto ret = hoverElement.onEvent(e);
-                        if(ret != GuiEventResponse.Ignore) {
-                            return ret;
-                        }
-                        break;
-                    }
-                }
-                if(focusElement && focusElement != this) {
-                    auto ret = focusElement.onEvent(e);
-                    if (ret != GuiEventResponse.Ignore) {
+            }
+        }
+        if(auto m = cast(MouseWheel) e) {
+            if (hoverElement != focusElement) {
+                if (hoverElement !is null) {
+                    auto ret = hoverElement.onEvent(e);
+                    if(ret != GuiEventResponse.Ignore) {
                         return ret;
                     }
                 }
-                break;
-           case GuiEventType.Keyboard:
-               //Handle hotkeys with modifiers, like ctrl+k
-               //Got focused object? Give him input
-               if (focusElement && focusElement != this) {
-                   auto ret = focusElement.onEvent(e);
-                   if (ret != GuiEventResponse.Ignore) {
-                       return ret;                   
-                   }
-               }
-               //Handle other hotkeys
-               auto kb = e.keyboardEvent;
-               if (kb.pressed) {
-                   auto sym = kb.SdlSym;
-                   if (sym in hotkeys) {
-                       hotkeys[sym]();
-                       return GuiEventResponse.Accept;
-                   }
-               }
-               //Else if non-focus-object'ish registered, send to it. (player walking etc..)
-               //Will be done automagically after this here break.
-               break;
-           case GuiEventType.HoverOn:
-           case GuiEventType.HoverOff:
-           case GuiEventType.FocusOn:
-           case GuiEventType.FocusOff:
-               break; //Dont handle these here.
-           default:
-               enforce(0, "Shouldnt get here, spank luben about it");
-               break;
-                
+            }
+            if(focusElement && focusElement != this) {
+                auto ret = focusElement.onEvent(e);
+                if (ret != GuiEventResponse.Ignore) {
+                    return ret;
+                }
+            }
+        }
+        if(cast(KeyboardEvent) e) {
+            //Handle hotkeys with modifiers, like ctrl+k
+            //Got focused object? Give him input
+            if (focusElement && focusElement != this) {
+                auto ret = focusElement.onEvent(e);
+                if (ret != GuiEventResponse.Ignore) {
+                    return ret;                   
+                }
+            }
+            //Handle other hotkeys
+            auto kb = cast(KeyboardEvent) e;
+            if (kb.pressed) {
+                auto sym = kb.SdlSym;
+                if (sym in hotkeys) {
+                    hotkeys[sym]();
+                    return GuiEventResponse.Accept;
+                }
+            }
+            //Else if non-focus-object'ish registered, send to it. (player walking etc..)
+            //Will be done automagically after this here break.
         }
         if (eventDump !is null) {
             return eventDump.onDumpEvent(e);

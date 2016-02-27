@@ -41,9 +41,8 @@ class FreeFlightCamera : GuiEventDump {
         destroyed = true;
     }
 
-    void mouseMove(GuiEvent e){
+    void mouseMove(MouseMove m){
         if(!camera.mouseMoveEnabled) return;
-        auto m = e.mouseMove;
         auto x = m.pos.x;
         auto y = m.pos.y;
         auto diffX = x - middleX;
@@ -56,7 +55,7 @@ class FreeFlightCamera : GuiEventDump {
         mousecoords.set(x, y);
     }    
 
-    void onKey(GuiEvent.KeyboardEvent k) {
+    void onKey(KeyboardEvent k) {
         if (k.pressed) {
             if (k.SdlSym == SDLK_F2) {
                 useMouse = !useMouse;
@@ -76,12 +75,11 @@ class FreeFlightCamera : GuiEventDump {
         }
     }
 
-    override GuiEventResponse onDumpEvent(GuiEvent e) {
-        if (e.type == GuiEventType.MouseMove) {
-            mouseMove(e);
+    override GuiEventResponse onDumpEvent(InputEvent e) {
+        if (auto m = cast(MouseMove) e) {
+            mouseMove(m);
             return GuiEventResponse.Accept;
-        } else if (e.type == GuiEventType.Keyboard) {
-            auto k = e.keyboardEvent;
+        } else if (auto k = cast(KeyboardEvent)e) {
             auto key = k.SdlSym;
             auto down = k.pressed;
             keyMap[key] = down;

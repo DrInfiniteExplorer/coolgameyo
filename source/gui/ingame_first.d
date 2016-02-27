@@ -53,8 +53,8 @@ class FpsMode : GuiEventDump {
         destroyed = true;
     }
 
-    void mouseMove(GuiEvent e){
-        auto m = e.mouseMove;
+    void mouseMove(InputEvent e){
+        auto m = cast(MouseMove)e;
         auto x = m.pos.x;
         auto y = m.pos.y;
         auto diffX = x - middleX;
@@ -67,8 +67,7 @@ class FpsMode : GuiEventDump {
         mousecoords.set(x, y);
     }    
 
-    void mouseClick(GuiEvent e) {
-        auto m = e.mouseClick;
+    void mouseClick(MouseClick m) {
         if (!m.down) {
             return;
         } else if (m.left) {
@@ -91,7 +90,7 @@ class FpsMode : GuiEventDump {
 
         }
     }
-    void onKey(GuiEvent.KeyboardEvent k) {
+    void onKey(KeyboardEvent k) {
         if (k.pressed) {
             if (k.SdlSym == SDLK_F2) {
                 useMouse = !useMouse;
@@ -122,19 +121,18 @@ class FpsMode : GuiEventDump {
         }
     }
 
-    override GuiEventResponse onDumpEvent(GuiEvent e) {
-        if (e.type == GuiEventType.MouseMove) {
-            mouseMove(e);
+    override GuiEventResponse onDumpEvent(InputEvent e) {
+        if (auto m = cast(MouseMove)e) {
+            mouseMove(m);
             return GuiEventResponse.Accept;
-        } else if (e.type == GuiEventType.Keyboard) {
-            auto k = e.keyboardEvent;
+        } else if (auto k = cast(KeyboardEvent)e) {
             auto key = k.SdlSym;
             auto down = k.pressed;
             keyMap[key] = down;
             onKey(k);
             return GuiEventResponse.Accept;
-        } else if (e.type == GuiEventType.MouseClick) {
-            mouseClick(e);
+        } else if (auto m = cast(MouseClick)e) {
+            mouseClick(m);
         }
         return GuiEventResponse.Ignore;
     }

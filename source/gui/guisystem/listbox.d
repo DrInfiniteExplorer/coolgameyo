@@ -207,15 +207,14 @@ class GuiElementListBox : GuiElement {
     }
     
     double lastClickTime = -double.max;
-    override GuiEventResponse onEvent(GuiEvent e) {
-        if (e.type == GuiEventType.MouseClick) {
-            auto m = &e.mouseClick;
+    override GuiEventResponse onEvent(InputEvent e) {
+        if (auto m = cast(MouseClick) e) {
             if(m.left && m.down) {
                 if(absoluteRect.isInside(m.pos)) {
 					foreach(idx, item ; items) {
 						if (getTextRect(cast(int)idx).isInside(m.pos)) {
                             if(selectedIndex == idx && 
-                                (e.eventTimeStamp - lastClickTime) < getDoubleClickTime() &&
+                                (e.timestamp - lastClickTime) < getDoubleClickTime() &&
                                 doubleClickCallback !is null) {
                                     doubleClickCallback(selectedIndex);
                             } else {
@@ -223,18 +222,18 @@ class GuiElementListBox : GuiElement {
                             }
 						}
 					}
-                    lastClickTime = e.eventTimeStamp;
+                    lastClickTime = e.timestamp;
 
                     return GuiEventResponse.Accept;
                 }
             }
         }
-        else if(e.type == GuiEventType.MouseWheel)
+        else if(auto m = cast(MouseWheel)e)
         {
             if(canScrollAmount) {
                 import std.algorithm : min, max;
                 auto wheelAmount = 4 * rowHeight;
-                scrollAmount -= cast(int)e.mouseWheel.amount;
+                scrollAmount -= cast(int)m.amount;
                 scrollAmount = max(0, min(canScrollAmount, scrollAmount));
                 scrollBar.amountScroll = scrollAmount / rowHeight;
             }

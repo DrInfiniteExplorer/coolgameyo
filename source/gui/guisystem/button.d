@@ -132,12 +132,12 @@ class Button(ButtonCallbackPolicies policy) : GuiElement {
         pressCallback(params(down, abort, this).expand);
     }
     
-    override GuiEventResponse onEvent(GuiEvent e) {
+    override GuiEventResponse onEvent(InputEvent e) {
         if(!isEnabled) {
             return super.onEvent(e);
         }
-        if (e.type == GuiEventType.MouseClick) {
-            auto m = &e.mouseClick;
+        if (cast(MouseClick)e) {
+            auto m = cast(MouseClick)e;
             if(m.left) {
                 if (m.down) {
                     if(absoluteRect.isInside(m.pos)) {
@@ -157,8 +157,8 @@ class Button(ButtonCallbackPolicies policy) : GuiElement {
                 }
             }
         }
-        if (e.type == GuiEventType.Keyboard && hasFocus) {
-            auto k = &e.keyboardEvent;
+        if (cast(KeyboardEvent)e && hasFocus) {
+            auto k = cast(KeyboardEvent)e;
             if(k.SdlSym == SDLK_RETURN ||k.SdlSym == SDLK_SPACE) {
                 onPushed(k.pressed, false);
             }

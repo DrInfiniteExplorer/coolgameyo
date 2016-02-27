@@ -13,6 +13,7 @@ import std.exception;
 import std.getopt;
 import std.stdio;
 import std.string;
+import std.typecons : scoped;
 
 //pragma(lib, "derelictal.lib");
 //pragma(lib, "derelictil.lib");
@@ -247,8 +248,6 @@ void createWindow() {
 
 __gshared bool inputActive = true;
 bool handleSDLEvent(in SDL_Event event, float now, GuiSystem guiSystem) {
-    GuiEvent guiEvent;
-    guiEvent.eventTimeStamp = now;
     bool exit = false;
     switch (event.type){
         case SDL_WINDOWEVENT:
@@ -307,8 +306,7 @@ bool handleSDLEvent(in SDL_Event event, float now, GuiSystem guiSystem) {
             if(event.key.state == SDL_PRESSED && event.key.keysym.sym == SDLK_PRINTSCREEN) {
                 PrintScreen();
             } else {
-                guiEvent.type = GuiEventType.Keyboard;
-                auto kb = &guiEvent.keyboardEvent;
+                auto kb = scoped!KeyboardEvent(now);
                 kb.pressed = event.key.state == SDL_PRESSED;
                 kb.repeat = 0; //TODO: Implement later?
                 auto unicode = event.key.keysym.unicode;
@@ -319,38 +317,36 @@ bool handleSDLEvent(in SDL_Event event, float now, GuiSystem guiSystem) {
                 kb.SdlSym = event.key.keysym.sym;
                 kb.SdlMod = event.key.keysym.mod;
 
-                guiSystem.onEvent(guiEvent);
+                guiSystem.onEvent(kb);
             }
             break;
         case SDL_MOUSEMOTION:
-            guiEvent.type = GuiEventType.MouseMove;
-            auto m = &guiEvent.mouseMove;
+            auto m = scoped!MouseMove(now);
             m.pos.set(event.motion.x,
                       event.motion.y);
             m.delta.set(event.motion.xrel,
                         event.motion.yrel);
-            guiSystem.onEvent(guiEvent);
+            guiSystem.onEvent(m);
             if(m.applyReposition) {
                 SDL_WarpMouseInWindow(sdlWindow, cast(ushort)m.reposition.x, cast(ushort)m.reposition.y);
             }
             break;
         case SDL_MOUSEBUTTONDOWN:
         case SDL_MOUSEBUTTONUP:
-            guiEvent.type = GuiEventType.MouseClick;
-            auto m = &guiEvent.mouseClick;
+
+            auto m = scoped!MouseClick(now);
             m.down = event.type == SDL_MOUSEBUTTONDOWN;
             m.left = event.button.button == SDL_BUTTON_LEFT;
             m.right = event.button.button == SDL_BUTTON_RIGHT;
             m.middle = event.button.button == SDL_BUTTON_MIDDLE;
             m.pos.set(event.button.x,
                       event.button.y);
-            guiSystem.onEvent(guiEvent);                        
+            guiSystem.onEvent(m);                        
             break;
         case SDL_MOUSEWHEEL:
-            guiEvent.type = GuiEventType.MouseWheel;
-            auto m = &guiEvent.mouseWheel;
+            auto m = scoped!MouseWheel(now);
             m.amount = event.wheel.y;
-            guiSystem.onEvent(guiEvent);
+            guiSystem.onEvent(m);
             break;
         default:
     }

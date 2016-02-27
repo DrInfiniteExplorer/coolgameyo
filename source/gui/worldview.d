@@ -91,10 +91,10 @@ class WorldMenu : GuiElementWindow {
         super.render();
     }
 
-    override GuiEventResponse onEvent(GuiEvent e) {
-        if (e.type == GuiEventType.MouseClick) {
+    override GuiEventResponse onEvent(InputEvent e) {
+        if (auto m = cast(MouseClick)e) {
             /*
-            auto m = e.mouseClick;
+            ;
             if (m.left && m.down) {
                 size_t stop = determineCharPos(m.pos);
                 startMarker = stop;

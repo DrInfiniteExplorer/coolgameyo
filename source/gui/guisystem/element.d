@@ -16,62 +16,58 @@ import util.util;
 public import util.rect;
 
 
-enum GuiEventType {
-    MouseMove,
-    MouseClick,
-    MouseWheel,
-    Keyboard,
-    HoverOn,
-    HoverOff,
-    FocusOn, //If return false, focus goes to parent, which may reject as well, up to rootobject.
-    FocusOff,
-    
-};
-
 enum GuiEventResponse {
     Accept,
     Reject,
     Ignore
 };
 
-struct GuiEvent {
-    GuiEventType type;
-    double eventTimeStamp;
-    union{
-        struct MouseMove {
-            vec2i pos;
-            vec2i delta;
-            vec2i reposition;
-            bool applyReposition;
-        };
-        MouseMove mouseMove;
-        struct MouseClick{
-            bool left; //Otherwise right?
-            bool right; //Otherwise right?
-            bool middle; //Otherwise right?
+abstract class InputEvent
+{
+    double timestamp;
+};
 
-            bool down;
-            vec2i pos;
-        };
-        MouseClick mouseClick;
-        struct MouseWheel {
-            float amount;
-        }
-        MouseWheel mouseWheel;
-        struct KeyboardEvent{
-            int SdlSym;
-            int SdlMod;
-            bool pressed;
-            int repeat;
-            char ch;
-        };        
-        KeyboardEvent keyboardEvent;
-    };
+class MouseMove : InputEvent
+{
+    this(double a_timestamp) { timestamp = a_timestamp; }
+    vec2i pos;
+    vec2i delta;
+    vec2i reposition;
+    bool applyReposition;
+};
+
+class MouseClick : InputEvent {
+    this(double a_timestamp) { timestamp = a_timestamp; }
+    bool left; //Otherwise right?
+    bool right; //Otherwise right?
+    bool middle; //Otherwise right?
+
+    bool down;
+    vec2i pos;
+};
+class MouseWheel : InputEvent {
+    this(double a_timestamp) { timestamp = a_timestamp; }
+    float amount;
 }
+
+class KeyboardEvent : InputEvent{
+    this(double a_timestamp) { timestamp = a_timestamp; }
+    int SdlSym;
+    int SdlMod;
+    bool pressed;
+    int repeat;
+    char ch;
+}
+
+class FocusOffEvent : InputEvent {};
+class FocusOnEvent : InputEvent {};
+class HoverOffEvent : InputEvent {};
+class HoverOnEvent : InputEvent {};
+
 
 class GuiElement {
 
-    alias bool delegate(GuiElement, GuiEvent.MouseClick) MouseClickCallback;
+    alias bool delegate(GuiElement, MouseClick) MouseClickCallback;
     protected MouseClickCallback mouseClickCB;
 
     protected GuiSystem guiSystem;
@@ -307,16 +303,13 @@ class GuiElement {
         }
     }
     
-    GuiEventResponse onEvent(GuiEvent e){
-        switch (e.type) {
-            case GuiEventType.MouseClick:
-                if (mouseClickCB !is null) {
-                    if (mouseClickCB(this, e.mouseClick)) {
-                        return GuiEventResponse.Accept;
-                    }
+    GuiEventResponse onEvent(InputEvent e){
+        if( auto m = cast(MouseClick)e) {
+            if (mouseClickCB !is null) {
+                if (mouseClickCB(this, m)) {
+                    return GuiEventResponse.Accept;
                 }
-                break;
-            default: /*msg("other event." ~ to!string(e.type)); */ break;
+            }
         }
 
         return GuiEventResponse.Ignore;
