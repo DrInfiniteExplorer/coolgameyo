@@ -327,7 +327,7 @@ class GPUErosion {
 
         void main() {
             ivec2 myPos = ivec2(gl_GlobalInvocationID.xy);
-            float myWater = imageLoad(water, myPos);
+            float myWater = imageLoad(water, myPos).x;
             if(uniformRain) {
                 myWater += rainAmount;
             } else {
@@ -387,17 +387,17 @@ class GPUErosion {
             ivec2[4] offsets = ivec2[4](ivec2(1, 0), ivec2(0, -1), ivec2(-1, 0), ivec2(0, 1));
             //Reads outside the image return 0. YEAH!
             ivec2 myPos = ivec2(gl_GlobalInvocationID.xy);
-            float myWater =  imageLoad(water, myPos);
-            float mySoil =   imageLoad(soil, myPos);
-            float myHeight = imageLoad(height, myPos);
+            float myWater =  imageLoad(water, myPos).x;
+            float mySoil =   imageLoad(soil, myPos).x;
+            float myHeight = imageLoad(height, myPos).x;
             float myTotal = myHeight + mySoil + myWater;
             vec4 myFlow = imageLoad(waterFlow, myPos);
             flows = float[4](myFlow.r, myFlow.g, myFlow.b, myFlow.a);
             for(int dir = 0; dir < 4; dir++) {
                 ivec2 offset = offsets[dir];
-                float otherWater  = imageLoad(water, clampPos(myPos + offset));
-                float otherSoil   = imageLoad(soil, clampPos(myPos + offset));
-                float otherHeight = imageLoad(height, clampPos(myPos + offset));
+                float otherWater  = imageLoad(water, clampPos(myPos + offset)).x;
+                float otherSoil   = imageLoad(soil, clampPos(myPos + offset)).x;
+                float otherHeight = imageLoad(height, clampPos(myPos + offset)).x;
                 float heightDiff = myTotal - otherHeight - otherSoil - otherWater;
                 flows[dir] = max(0, flows[dir] * 0.95 + flowMultiplier * heightDiff);
             }
@@ -434,7 +434,7 @@ class GPUErosion {
         }
         void main() {
             ivec2 myPos = ivec2(gl_GlobalInvocationID.xy);
-            float myWater = imageLoad(water, myPos);
+            float myWater = imageLoad(water, myPos).x;
             vec4 myFlow = imageLoad(waterFlow, myPos);
             float flowDiff = -(myFlow.r + myFlow.g + myFlow.b + myFlow.a);
             if(flowDiff > 0) {
@@ -482,7 +482,7 @@ class GPUErosion {
         void main() {
             ivec2 myPos = ivec2(gl_GlobalInvocationID.xy);
 
-            float myWater = imageLoad(water, myPos);
+            float myWater = imageLoad(water, myPos).x;
             vec4 myFlow = imageLoad(waterFlow, myPos);
             float[4] flows = float[4](myFlow.r, myFlow.g, myFlow.b, myFlow.a);
 
@@ -587,10 +587,10 @@ class GPUErosion {
             //// BEGIN SEDIMENT ////
             // height[0](global), soil[0](global), velocity[0](local), sediment[0](local) -> height[1], soil[1], sediment[1]
             ivec2 myPos = ivec2(gl_GlobalInvocationID.xy);
-            float myWater   = imageLoad(water, myPos);
-            float myHeight  = imageLoad(height, myPos);
-            float mySoil    = imageLoad(soil, myPos);
-            float mySediment= imageLoad(sediment, myPos);
+            float myWater   = imageLoad(water, myPos).x;
+            float myHeight  = imageLoad(height, myPos).x;
+            float mySoil    = imageLoad(soil, myPos).x;
+            float mySediment= imageLoad(sediment, myPos).x;
             vec2 myVelocity = imageLoad(velocity, myPos).xy;
 
 
@@ -676,7 +676,7 @@ class GPUErosion {
             myVel = myVel * deltaTime;
 
             vec2 sedimentSamplePos = vec2(1.0 / size.x, 1.0 / size.y) * (myPos + vec2(0.5, 0.5) - myVel);
-            float finalSediment = texture(sediment, sedimentSamplePos);
+            float finalSediment = texture(sediment, sedimentSamplePos).x;
             imageStore(newSediment, myPos, vec4(finalSediment));
         }
     };
@@ -720,11 +720,11 @@ class GPUErosion {
                                         ivec2(1, 1), ivec2(1, -1), ivec2(-1, 1), ivec2(-1, -1));
 
             ivec2 myPos = ivec2(gl_GlobalInvocationID.xy);
-            float myHeight = imageLoad(height, myPos);
+            float myHeight = imageLoad(height, myPos).x;
             float myTotal;
             float mySoil;
             if(transportSoil == 1) {
-                mySoil = imageLoad(soil, myPos);
+                mySoil = imageLoad(soil, myPos).x;
                 myTotal = myHeight + mySoil;
             } else {
                 myTotal = myHeight;
@@ -733,9 +733,9 @@ class GPUErosion {
             float flowSum = 0;
             for(int dir = 0; dir < 8; dir++) {
                 ivec2 offset = offsets[dir];
-                float otherHeight = imageLoad(height, clampPos(myPos + offset));
+                float otherHeight = imageLoad(height, clampPos(myPos + offset)).x;
                 if(transportSoil == 1) {
-                    otherHeight += imageLoad(soil, clampPos(myPos + offset));
+                    otherHeight += imageLoad(soil, clampPos(myPos + offset)).x;
                 }
                 float heightDiff = myTotal - otherHeight;
                 if(heightDiff > talusLimit) {
@@ -812,9 +812,9 @@ class GPUErosion {
 
             float myHeight;
             if(transportSoil == 1) {
-                myHeight = imageLoad(newSoil, myPos);
+                myHeight = imageLoad(newSoil, myPos).x;
             } else {
-                myHeight = imageLoad(newHeight, myPos);
+                myHeight = imageLoad(newHeight, myPos).x;
             }
             vec4 myFlow1 = imageLoad(talusFlow1, myPos);
             vec4 myFlow2 = imageLoad(talusFlow2, myPos);
@@ -871,7 +871,7 @@ class GPUErosion {
 
         void main() {
             ivec2 myPos = ivec2(gl_GlobalInvocationID.xy);
-            float waterLevel = imageLoad(water, myPos);
+            float waterLevel = imageLoad(water, myPos).x;
             waterLevel = waterLevel * max(0, 1 - evaporationConstant * deltaTime);
             imageStore(water, myPos, vec4(waterLevel));
         }
