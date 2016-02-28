@@ -67,6 +67,8 @@ immutable roadFragShader = q{
 
 mixin template WorldPopulation() {
 
+    import cgy.opengl.textures;
+
     import graphics.ogl;
     import graphics.shader;
     import graphics.heightmap : Heightmap, renderLoop;

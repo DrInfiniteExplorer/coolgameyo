@@ -5,7 +5,8 @@ import graphics.image : Image;
 import graphics.ogl;
 import cgy.math.vector;
 import cgy.debug_.debug_ : BREAK_IF;
-
+import cgy.opengl.textures;
+import cgy.opengl.error : glError;
 
 
 final class ImageCache {

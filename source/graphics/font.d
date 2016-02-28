@@ -20,6 +20,7 @@ import graphics.shader;
 import cgy.debug_.debug_ : BREAKPOINT, BREAK_IF;;
 
 import settings;
+import cgy.opengl.textures;
 import cgy.util.rect;
 import cgy.util.singleton;
 import cgy.util.strings;

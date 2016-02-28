@@ -4,10 +4,13 @@ module cgy.erosion.gpu;
 import std.algorithm : swap, max, min, reduce, clamp;
 import std.random;
 
-import graphics.ogl;
+import derelict.opengl3.gl;
+
+//import graphics.ogl;
 import graphics.shader;
 import cgy.math.vector;
 import cgy.math.math;
+import cgy.opengl.textures;
 import cgy.util.statistics : MeasureTime, StupWatch;
 import cgy.debug_.debug_ : BREAK_IF, BREAKPOINT;
 import cgy.util.util : msg, convertArray;

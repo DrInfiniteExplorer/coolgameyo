@@ -7,6 +7,8 @@ import graphics.ogl;
 
 import settings;
 import cgy.util.util;
+import cgy.opengl.error : glError;
+import cgy.opengl.textures;
 
 final class TextureArray {
 

@@ -11,6 +11,7 @@ import graphics.shader;
 import gui.all;
 import gui.util;
 import main : g_commandLine, EventAndDrawLoop;
+import cgy.opengl.textures;
 import cgy.math.math;
 import cgy.math.vector;
 import cgy.util.filesystem;
@@ -276,7 +277,7 @@ class Heightmap : ShaderProgram!() {
         glBindVertexArray(vao);
 
         if(_loadTextures.length == 0) {
-            if(heightImg && GetTextureSize(heightImg) != vec2i(sizeX, sizeY)) {
+            if(heightImg && vec2i(GetTextureSize(heightImg)) != vec2i(sizeX, sizeY)) {
                 glBindTexture(GL_TEXTURE_2D, 0);
                 DeleteTextures(heightImg);
                 heightImg = 0;

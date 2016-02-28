@@ -285,6 +285,10 @@ struct vector2(T) {
         x = o.x;
         y = o.y;
     }
+    this(const T[2] o) {
+        x = o[0];
+        y = o[1];
+    }
 
     void set(T _x, T _y) {
         x = _x;

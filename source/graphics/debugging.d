@@ -7,6 +7,7 @@ import std.array : array;
 
 import cgy.math.vector;
 
+import cgy.opengl.error : glError;
 import graphics.ogl;
 import cgy.math.aabb : aabb3d;
 import cgy.util.util;

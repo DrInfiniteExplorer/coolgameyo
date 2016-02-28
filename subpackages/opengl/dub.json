@@ -1,0 +1,10 @@
+{
+	"name": "opengl",
+	"description": "Opengl subpackage for CoolGameYo",
+	"copyright": "Copyright © 2016, Luben",
+	"authors": ["Luben"],
+    "targetType":"library",
+	"dependencies":{
+      "derelict-gl3": "~>1.0.18",
+	}
+}

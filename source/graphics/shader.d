@@ -7,6 +7,7 @@ import std.file;
 import std.stdio;
 import std.string : splitLines;
 
+import cgy.opengl.error : glError;
 import graphics.ogl;
 import cgy.logger.log : LogWarning, LogError;
 import cgy.stolen.all;

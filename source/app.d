@@ -41,6 +41,7 @@ import log;
 
 import materials;
 
+import cgy.opengl.error : glError;
 import cgy.debug_.debug_ : setThreadName;
 import cgy.util.statistics;
 import settings;

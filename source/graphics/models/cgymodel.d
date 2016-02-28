@@ -2,6 +2,7 @@ module graphics.models.cgymodel;
 
 import std.stdio;
 
+import cgy.opengl.error : glError;
 import cgy.debug_.debug_ : BREAK_IF;
 import cgy.stolen.quaternion;
 

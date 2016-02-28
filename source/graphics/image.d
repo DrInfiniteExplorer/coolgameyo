@@ -11,10 +11,12 @@ import derelict.devil.ilu;
 
 import cgy.debug_.debug_ : BREAK_IF;
 
+import cgy.opengl.textures;
 import graphics.ogl;
 import cgy.logger.log : LogError;
 import cgy.math.math;
 import cgy.math.vector;
+import cgy.opengl.error : glError;
 import cgy.util.rect;
 import cgy.util.util : makeStackArray, msg;
 
