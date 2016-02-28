@@ -6,9 +6,15 @@ import std.conv;
 import cgy.json;
 //import cgy.stolen.aabbox3d;
 
-import cgy.math.math : negDiv, posMod;
-import cgy.math.aabb : aabb3d;
-import cgy.math.vector;
+import gl3n.linalg : Vector, vec3d, vec3i, vec2i;
+import gl3n.aabb : AABBT;
+alias AABBT!float AABBf;
+alias AABBT!double AABBd;
+
+import cgy.math.math : negDiv, posMod, convert;
+//import cgy.math.aabb : aabb3d;
+//import cgy.math.vector;
+
 
 //import worldstate.sector;
 import cgy.util.sizes;
@@ -45,7 +51,7 @@ mixin template SerializeValue() {
 
 // We no longer handle tileposes etc below 0
 // So a simple cast to int will suffice
-vec3i getTilePos(T)(vector3!T v){
+vec3i getTilePos(T)(Vector!(T,3) v){
     return vec3i( cast(int)v.x, cast(int)v.y, cast(int)v.z);
 }
 
@@ -100,7 +106,7 @@ struct SectorNum {
                              value.x * SectorSize.x,
                              value.y * SectorSize.y));
     }
-    aabb3d getAABB(){
+    AABBd getAABB(){
         auto minPos = toTilePos().value.convert!double();
         auto maxPos = minPos + vec3d(SectorSize.x, SectorSize.y, SectorSize.z);
         return aabb3d(minPos, maxPos);
@@ -130,7 +136,7 @@ struct BlockNum {
                     value.z * BlockSize.z));
     }
 
-    aabb3d getAABB(){
+    AABBd getAABB(){
         auto minPos = toTilePos().value.convert!double();
         auto maxPos = minPos + vec3d(BlockSize.x, BlockSize.y, BlockSize.z);
         return aabb3d(minPos, maxPos);
@@ -254,7 +260,7 @@ struct TilePos {
         return TileXYPos(vec2i(value.x, value.y));
     }
 
-    aabb3d getAABB(){
+    AABBd getAABB(){
         auto minPos = value.convert!double();
         auto maxPos = minPos + vec3d(1.0, 1.0, 1.0);
         return aabb3d(minPos, maxPos);
@@ -329,7 +335,7 @@ struct GraphRegionNum{
                              ));
     }
     alias min toTilePos;
-    aabb3d getAABB() const {
+    AABBd getAABB() const {
         auto minPos = min().value.convert!double();
         auto maxPos = max().value.convert!double();
         return aabb3d(minPos, maxPos);

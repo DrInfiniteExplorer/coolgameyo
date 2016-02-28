@@ -5,31 +5,26 @@ pragma(msg, "Move into rewritten AABB thing later on");
 
 import std.algorithm;
 
-import cgy.stolen.aabbox3d;
+import gl3n.aabb;
 import cgy.util.util;
 import cgy.util.rangefromto;
 
 // Penetrating intersection
-bool intersectsExclusive(aabbox3d!double a, aabbox3d!double b){
-    auto minx = max(a.MinEdge.x, b.MinEdge.x);
-    auto miny = max(a.MinEdge.y, b.MinEdge.y);
-    auto minz = max(a.MinEdge.z, b.MinEdge.z);
-    auto maxx = min(a.MaxEdge.x, b.MaxEdge.x);
-    auto maxy = min(a.MaxEdge.y, b.MaxEdge.y);
-    auto maxz = min(a.MaxEdge.z, b.MaxEdge.z);
-
-    return minx < maxx && miny<maxy && minz<maxz;
+bool intersectsExclusive(AABBT!double a, AABBT!double b){
+    return a.intersects(b);
 }
 //And this one intersects for all intersecting ones, and ones which are right next to each other as well.
-bool intersectsInclusive(aabbox3d!double a, aabbox3d!double b){
-    auto minx = max(a.MinEdge.x, b.MinEdge.x);
-    auto miny = max(a.MinEdge.y, b.MinEdge.y);
-    auto minz = max(a.MinEdge.z, b.MinEdge.z);
-    auto maxx = min(a.MaxEdge.x, b.MaxEdge.x);
-    auto maxy = min(a.MaxEdge.y, b.MaxEdge.y);
-    auto maxz = min(a.MaxEdge.z, b.MaxEdge.z);
-
-    return minx <= maxx && miny <= maxy && minz <= maxz;
+bool intersectsInclusive(AABBT!double a, AABBT!double b){
+//    auto minx = max(a.MinEdge.x, b.MinEdge.x);
+//    auto miny = max(a.MinEdge.y, b.MinEdge.y);
+//    auto minz = max(a.MinEdge.z, b.MinEdge.z);
+//    auto maxx = min(a.MaxEdge.x, b.MaxEdge.x);
+//    auto maxy = min(a.MaxEdge.y, b.MaxEdge.y);
+//    auto maxz = min(a.MaxEdge.z, b.MaxEdge.z);
+//
+//    return minx <= maxx && miny <= maxy && minz <= maxz;
+    asm { int 3; }
+    assert(0);
 }
 
 

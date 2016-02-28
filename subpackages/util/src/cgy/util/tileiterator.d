@@ -5,7 +5,8 @@ import std.algorithm;
 import std.conv;
 import std.math;
 
-import cgy.math.vector : vec3i, vec3d;
+import gl3n.linalg : vec3i, vec3d;
+
 import cgy.util.pos : TilePos, getTilePos;
 
 //import cgy.util.util;
