@@ -10,7 +10,6 @@ import clans;
 import changes.changelist;
 import entitytypemanager;
 import light;
-import cgy.json;
 import cgy.util.pos;
 import cgy.stolen.aabbox3d;
 import cgy.util.memory;

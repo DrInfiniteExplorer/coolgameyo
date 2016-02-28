@@ -3,7 +3,6 @@ module cgy.util.pos;
 
 import std.conv;
 
-import cgy.json;
 //import cgy.stolen.aabbox3d;
 
 import gl3n.linalg : Vector, vec3d, vec3i, vec2i;
@@ -40,12 +39,16 @@ mixin template ToStringMethod2D() {
     }
 }
 
+// No need to make the wrapper classes introduce an extra scope level in json.
 mixin template SerializeValue() {
-    Value toJSON() {
-        return encode(value);
+
+    import painlessjson : toJSON, fromJSON;
+    import std.json : JSONValue;
+    auto _toJSON() {
+        value.toJSON;
     }
-    void fromJSON(Value v) {
-        v.read(value);
+    void _fromJSON(JSONValue v) {
+        value = fromJSON!(typeof(value))(v);
     }
 }
 

@@ -4,18 +4,19 @@ import std.exception;
 import std.algorithm;
 import std.array;
 import std.conv;
+import std.json;
 import std.stdio;
 import std.string;
 
 import graphics.texture;
 
-import cgy.json;
 import globals : g_worldPath;
 import materials;
 
 import cgy.math.vector : vec2i;
-import cgy.util.statistics;
 import cgy.util.filesystem;
+import cgy.util.json;
+import cgy.util.statistics;
 import worldstate.tile;
 
 //ALWAYS!!
@@ -81,24 +82,23 @@ struct TileTypeManager {
         }
         
         // Loads the tile type id configuration
-        Value idRootVal;
-        bool hasTypeIdConfFile = loadJSON(g_worldPath ~ "/tiletypeidconfiguration.json", idRootVal);
+        JSONValue idRootVal;
+        idRootVal = loadJSON(g_worldPath ~ "/tiletypeidconfiguration.json");
 
         TileType_t tempType;
         if(!exists("data/tile_types.json")){
             msg("Could not load tile types");
             return;
         }
-        auto content = readText("data/tile_types.json");
-        auto rootVal = cgy.json.parse(content);
-        enforce(rootVal.type == cgy.json.Value.Type.object, "rootval in tiltypejson not object roawoaowoawo: " ~ to!string(rootVal.type));
-        foreach(name, rsVal ; rootVal.pairs) {
-            rsVal.read(tempType.serializableSettings);
+        auto rootVal = loadJSON("data/tile_types.json");        
+        //enforce(rootVal.type == cgy.json.Value.Type.object, "rootval in tiltypejson not object roawoaowoawo: " ~ to!string(rootVal.type));
+        foreach(string name, ref JSONValue rsVal ; rootVal) {
+            rsVal.unJSON(tempType.serializableSettings);
             
             tempType.name = name;
-            if ( hasTypeIdConfFile == true && tempType.name in idRootVal) {
+            if ( tempType.name in idRootVal) {
                 ushort id;
-                idRootVal[tempType.name].read(id);
+                idRootVal[tempType.name].unJSON(id);
                 enforce(id > 1, "Some tile type wants to hijack the invalid or air tile type");
                 add(tempType, id, true);
             }
@@ -115,11 +115,11 @@ struct TileTypeManager {
                 typeAA[type.name] = type.id;
             }
         }
-        encode(typeAA).saveJSON(g_worldPath ~ "/tiletypeidconfiguration.json");
+        std.file.write(g_worldPath ~ "/tiletypeidconfiguration.json", typeAA.toJSON.toString);
 
-        foreach(groupName, val ; loadJSON("data/tile_groups.json").asObject()) {
+        foreach(string groupName, ref JSONValue val ; loadJSON("data/tile_groups.json")) {
             TileType[] group;
-            foreach(idx, typeName ; val.asArray()) {
+            foreach(size_t idx, ref JSONValue typeName ; val) {
                 group ~= byName(typeName.str());
             }
             tileTypeGroups[groupName] = group;

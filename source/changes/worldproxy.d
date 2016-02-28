@@ -8,7 +8,6 @@ import changes.changelist;
 import changes.worldproxy;
 import clan;
 import entities.entity;
-import cgy.json;
 import unit;
 import cgy.util.pos;
 import tiletypemanager;

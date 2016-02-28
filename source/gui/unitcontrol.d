@@ -4,13 +4,15 @@ module gui.unitcontrol;
 
 import std.conv;
 import std.exception;
+import std.file : readText, exists;
 import std.math;
 import std.stdio;
+import std.json : parseJSON;
 
+import painlessjson : fromJSON, toJSON;
 import derelict.sdl2.sdl;
 
 import ai.possessai;
-import cgy.json;
 import gaia;
 import game;
 import graphics.camera;
@@ -99,9 +101,10 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
         inventoryWindow = new InventoryWindow(guiSystem, this, &possesAI.unit.inventory);
         guiSystem.addHotkey(SDLK_i, &(inventoryWindow.onOpenInventory));
 
-        Value jsonRoot;
-        if(loadJSON("saves/camdemo.json", jsonRoot)) {
-            jsonRoot.read(camDemoPoints);
+        auto path = "saves/camdemo.json";
+        if(path.exists) {
+            auto jsonValue = std.file.readText(path).parseJSON;
+            camDemoPoints = jsonValue.fromJSON!(typeof(camDemoPoints));
         }
     }
 
@@ -111,8 +114,7 @@ class HyperUnitControlInterfaceInputManager /*OF DOOM!!!*/ : GuiEventDump{
     }    
     void destroy(){
 
-        auto jsonRoot = encode(camDemoPoints);
-        std.file.write("saves/camdemo.json", prettifyJSON(jsonRoot));
+        std.file.write("saves/camdemo.json", camDemoPoints.toJSON.toString);
 
         if( statistics !is null) {
             statistics.destroy();

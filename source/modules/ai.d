@@ -5,8 +5,9 @@ import std.conv;
 import std.exception;
 import std.stdio;
 
+import painlessjson : toJSON;
+
 import changes.worldproxy;
-import cgy.json;
 import game;
 import globals : g_worldPath;
 import modules.module_;
@@ -58,18 +59,18 @@ class AIModule : Module, WorldStateListener {
         destroyed = true;
     }
 
-    Value serializeState(UnitState state) {
+    JSONValue serializeState(UnitState state) {
         UnitStateJson data = UnitStateJson(state);
-        return encode(data);
+        return data.toJSON;
     }
 
     override void serializeModule() { //module interface
-        Value[] jsonStates;
+        JSONValue[] jsonStates;
         foreach (state; states) {
             jsonStates ~= serializeState(state);
         }
-        auto jsonRoot = Value(jsonStates);
-        auto jsonString = cgy.json.prettifyJSON(jsonRoot);
+        auto jsonRoot = JSONValue(jsonStates);
+        auto jsonString = jsonRoot.toString;
         mkdir(g_worldPath ~ "/modules/ai");
         std.file.write(g_worldPath ~ "/modules/ai/states.json", jsonString);
 

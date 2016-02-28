@@ -116,7 +116,15 @@ void main(string[] args) {
     }
     else
     {
-        main2(args);
+//        try
+        {
+            main2(args);
+        }
+//        catch(Exception e)
+//        {
+//            msg(e.to!string);
+//            BREAKPOINT;
+//        }
     }
 }
 

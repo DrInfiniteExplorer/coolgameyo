@@ -5,7 +5,6 @@ import std.exception;
 import std.stdio;
 
 import gui.guisystem.listbox;
-import cgy.json;
 import cgy.util.util;
 import worldstate.worldstate;
 import clan;

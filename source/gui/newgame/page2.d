@@ -4,6 +4,10 @@ module gui.newgame.page2;
 
 mixin template Page2() {
 
+    import std.json : JSONValue, parseJSON;
+    import painlessjson : fromJSON, toJSON;
+
+
     GuiElement page2;
     GuiElementImage bigWorldImage;
     GuiElementImage smallWorldImage;
@@ -22,7 +26,9 @@ mixin template Page2() {
         worldMap.loadWorld("worlds/" ~ worldName);
 
         if(exists("worlds/" ~ worldName ~ "/start.json")) {
-            loadJSON("worlds/" ~ worldName ~ "/start.json").readJSONObject("startPos", &startPos);
+            auto jsonValue = std.file.readText("worlds/" ~ worldName ~ "/start.json").parseJSON;
+
+            startPos = jsonValue["startPos"].fromJSON!(typeof(startPos));
         }
 
         double _400Pixels = 400.0 / renderSettings.windowWidth;
@@ -35,7 +41,9 @@ mixin template Page2() {
 
         auto StartButton = new PushButton(page2, Rectd(backButton.leftOf, backButton.bottomOf + 0.05, 0.2, 0.1), "Start", {
             worldMap.destroy();
-            makeJSONObject("startPos", startPos).saveJSON("worlds/" ~ worldName ~ "/start.json");
+            auto val = JSONValue(["startpos" : startPos.toJSON]);
+            std.file.write("worlds/" ~ worldName ~ "/start.json", val.toString);
+
             if(exists(g_worldPath)) {
                 msg("WARNING: " ~ g_worldPath ~ " exists. Terminating the previous existance!");
                 rmdir(g_worldPath ~ "");
