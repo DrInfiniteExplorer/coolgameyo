@@ -1,13 +1,21 @@
 .dub
+dub.selections.json
 docs.json
 __dummy.html
 *.o
 *.obj
+*.sln
+*.sdf
+*.suo
+*.visualdproj
+*.pdb
+*.a
+*.exe
+
+
 
 # /
 /Debug
-/coolgameyo.sdf
-/coolgameyo.suo
 /ipch
 /libraries
 /Release
