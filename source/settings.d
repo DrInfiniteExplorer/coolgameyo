@@ -4,13 +4,16 @@ module settings;
 
 import std.conv;
 import std.file;
+import std.json;
 import std.stdio;
 
 //import derelict.sdl.sdl : SDL_WM_GrabInput, SDL_GRAB_ON, SDL_GRAB_OFF;
 
+import painlessjson : toJSON;
+
 import cgy.math.vector;
 
-import cgy.json;
+import cgy.util.json : loadJSON, unJSON;
 import cgy.util.util;
 import cgy.util.window;
 
@@ -32,25 +35,22 @@ __gshared {
 }
 
 void loadSettings(){
-    Value rootVal;
+    JSONValue rootVal;
 
-    if(!loadJSON(g_settingsFilePath, rootVal)) {
-        msg("Assigned settings file could not be loaded. Trying default settings file.");
-        if(!loadJSON("settings.json", rootVal)) {
-            msg("Settings file does not exist.");
-            return;
-        }
-    }
+    rootVal = loadJSON(g_settingsFilePath);
+    rootVal = loadJSON("settings.json");
 
     g_serverList = null;
-    rootVal.readJSONObject("renderSettings", &renderSettings.serializableSettings,
-                           "controlSettings", &controlSettings.serializableSettings,
-                           "windowSettings", &windowSettings.serializableSettings,
-                           "playerName", &g_playerName,
-                           "serverList", &g_serverList,
-                           "maxThreads", &g_maxThreadCount,
-                           "dragScrollSpeed", &dragScrollSpeed,
-                           "borderScrollSpeed", &borderScrollSpeed);
+    msg(rootVal);
+
+    rootVal["renderSettings"   ].unJSON(renderSettings.serializableSettings);
+    rootVal["controlSettings"  ].unJSON(controlSettings.serializableSettings);
+    rootVal["windowSettings"   ].unJSON(windowSettings.serializableSettings);
+    rootVal["playerName"       ].unJSON(g_playerName);
+    rootVal["serverList"       ].unJSON(g_serverList);
+    rootVal["maxThreads"       ].unJSON(g_maxThreadCount);
+    rootVal["dragScrollSpeed"  ].unJSON(dragScrollSpeed);
+    rootVal["borderScrollSpeed"].unJSON(borderScrollSpeed);
 }
 
 
@@ -63,15 +63,17 @@ void saveSettings(){
         windowSettings.consoleCoordinates.y = consoleRect.top;
     });
 
-    makeJSONObject("renderSettings", renderSettings.serializableSettings,
-                   "controlSettings", controlSettings.serializableSettings,
-                   "windowSettings", windowSettings.serializableSettings,
-                   "playerName", g_playerName,
-                   "serverList", g_serverList,
-                   "maxThreads", g_maxThreadCount,
-                   "dragScrollSpeed", dragScrollSpeed,
-                   "borderScrollSpeed", borderScrollSpeed,
-                   ).saveJSON(g_settingsFilePath);
+    auto str = JSONValue([
+        "renderSettings" :    renderSettings.serializableSettings.toJSON,
+        "controlSettings":   controlSettings.serializableSettings.toJSON,
+        "windowSettings":     windowSettings.serializableSettings.toJSON,
+        "playerName":                                g_playerName.toJSON,
+        "serverList":                                g_serverList.toJSON,
+        "maxThreads":                            g_maxThreadCount.toJSON,
+        "dragScrollSpeed":                        dragScrollSpeed.toJSON,
+        "borderScrollSpeed":                    borderScrollSpeed.toJSON,
+    ]).toString;
+    std.file.write(g_settingsFilePath, str);
 
 
 }

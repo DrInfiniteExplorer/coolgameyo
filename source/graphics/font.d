@@ -6,9 +6,11 @@ import std.algorithm;
 import std.conv;
 import std.exception;
 import std.file;
+import std.json : parseJSON;
 import std.stdio;
 import std.string;
 
+import painlessjson : fromJSON;
 import derelict.opengl3.gl;
 
 import graphics.renderer;
@@ -26,7 +28,6 @@ import cgy.util.singleton;
 import cgy.util.strings;
 import cgy.math.vector : vec2i, vec3f, vec2f;
 
-import cgy.json;
 
 struct FontVertex{
     vec2f vertPos;
@@ -290,7 +291,8 @@ class Font {
         import std.path : dirName;
         auto path = dirName(fontFile) ~ "/";
 
-        loadJSON(fontFile ~ ".json").read(conf);
+        auto jsonVal = std.file.readText(fontFile ~ ".json").parseJSON;
+        conf = jsonVal.fromJSON!(typeof(conf));
 
         auto img = Image(path ~ conf.textureFile);
         texId = img.toGLTex(0);

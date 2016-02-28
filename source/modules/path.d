@@ -7,7 +7,8 @@ import std.range;
 import std.stdio;
 import std.conv;
 
-import cgy.json;
+import painlessjson : toJSON, fromJSON;
+
 import game;
 import globals : g_worldPath;
 import modules.module_;
@@ -56,13 +57,13 @@ struct Path {
         }
         return ret;
     }
-    Value serialize() {
-        Value derp(UnitPos a) {
-            return encode(a.value);
-        }
-        //auto a = array(map!(derp)(path));
-        return Value(array(map!derp(path)));
-    }
+//    JSONValue serialize() {
+//        Value derp(UnitPos a) {
+//            return encode(a.value);
+//        }
+//        //auto a = array(map!(derp)(path));
+//        return Value(array(map!derp(path)));
+//    }
 
     bool empty() const @property {
         return path.empty;
@@ -112,29 +113,31 @@ final class PathModule : Module {
      //Module interface
     override void serializeModule() {
         
-        Value serializeFinishedPaths() {
-            Value[string] values;
-            foreach(key, value ; finishedPaths) {
-                values[to!string(key.id)] = value.serialize();
-            }
-            return Value(values);
+        JSONValue serializeFinishedPaths() {
+//            JSONValue[string] values;
+//            foreach(key, value ; finishedPaths) {
+//                values[to!string(key.id)] = value.serialize();
+//            }
+//            return Value(values);
+            return finishedPaths.toJSON;
         }
-        Value serializeActiveStates() {
-            Value derp(PathFindState state) {
-                return Value([
-                    "from" : encode(array(map!(a => a.value)(state.from))),
-                    "goal" : encode(array(map!(a => a.value)(state.goal))),
-                    ]);
-            }
-            return Value(array(map!derp(activeStates.values[])));            
+        JSONValue serializeActiveStates() {
+            //Value derp(PathFindState state) {
+            //    return Value([
+            //        "from" : encode(array(map!(a => a.value)(state.from))),
+            //        "goal" : encode(array(map!(a => a.value)(state.goal))),
+            //        ]);
+            //}
+            //return Value(array(map!derp(activeStates.values[])));            
+            return activeStates.toJSON;
         }
         
-        Value[string] values;
-        values["nextIdNum"] = Value(nextIDNum);
-        values["finishedPaths"] = serializeFinishedPaths();
-        values["activeStates"] = serializeActiveStates();
-        Value jsonRoot = Value(values);
-	    auto jsonString = cgy.json.prettifyJSON(jsonRoot);
+        auto values = JSONValue([
+            "nextIdNum"     : JSONValue(nextIDNum),
+            "finishedPaths" : serializeFinishedPaths(),
+            "activeStates"  : serializeActiveStates()
+        ]);
+	    auto jsonString = values.toString;
         
         mkdir(g_worldPath ~ "/modules/path");
         std.file.write(g_worldPath ~ "/modules/path/states.json", jsonString);

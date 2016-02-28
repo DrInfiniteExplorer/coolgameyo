@@ -15,7 +15,6 @@ import gui.all;
 import gui.mainmenu;
 import gui.worldview;
 
-import cgy.json;
 import cgy.util.pos;
 
 import settings;

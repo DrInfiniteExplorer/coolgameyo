@@ -13,7 +13,6 @@ import std.stdio;
 
 import clans;
 import entitytypemanager;
-import cgy.json;
 import light;
 import globals : g_worldPath;
 import worldgen.maps;

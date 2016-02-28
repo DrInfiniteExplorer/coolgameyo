@@ -5,7 +5,6 @@ import std.algorithm;
 import cgy.debug_.debug_ : BREAKPOINT;
 
 import clan;
-import cgy.json;
 import mission;
 import cgy.util.pos;
 import cgy.util.util : msg;

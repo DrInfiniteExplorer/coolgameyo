@@ -14,7 +14,6 @@ import graphics.camera;
 import graphics.heightmap;
 alias graphics.heightmap.Heightmap HMap;
 
-import cgy.json;
 
 import cgy.math.advect : advect;
 import cgy.math.math : equals, fastFloor;

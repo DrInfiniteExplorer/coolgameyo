@@ -36,16 +36,16 @@ mixin template FloodFill() {
         fillingTasks = new FillingTasks;
         reset_r();
     }
-    void serializeFloodfill(Value v) {
-        v.populateJSONObject("toFlood", _floodingSectors,
-                             "floodcur", current,
-                             "floodr", r);
-    }
-    void deserializeFloodfill(Value v) {
-        v.readJSONObject("toFlood", &_floodingSectors,
-                         "floodcur", &current,
-                         "floodr", &r);
-    }
+//    void serializeFloodfill(JSONValue v) {
+//        v.populateJSONObject("toFlood", _floodingSectors,
+//                             "floodcur", current,
+//                             "floodr", r);
+//    }
+//    void deserializeFloodfill(JSONValue v) {
+//        v.readJSONObject("toFlood", &_floodingSectors,
+//                         "floodcur", &current,
+//                         "floodr", &r);
+//    }
 
 
     void initialFloodFill() {

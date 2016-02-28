@@ -6,10 +6,10 @@ import std.conv;
 import std.exception;
 
 import clan;
-import cgy.json;
 import game;
 import modules.module_;
 import cgy.util.singleton;
+import cgy.util.json;
 import worldstate.worldstate;
 
 final class Clans : Module {
@@ -52,11 +52,11 @@ final class Clans : Module {
 
         cgy.util.filesystem.mkdir(g_worldPath ~ "/world/clans/");
 
-        auto clanList = encode(array(map!q{a.clanId}(clans)));
-        auto jsonRoot = Value([
+        auto clanList = array(map!q{a.clanId}(clans)).toJSON;
+        auto jsonRoot = JSONValue([
             "clanList" : clanList,
         ]);
-        auto jsonString = cgy.json.prettifyJSON(jsonRoot);
+        auto jsonString = jsonRoot.toString;
 
         std.file.write(g_worldPath ~ "/world/clans/clans.json", jsonString);
 
@@ -68,8 +68,7 @@ final class Clans : Module {
     void deserializeClans() {
         import gaia;
         int[] clanList;
-        loadJSON(g_worldPath ~ "/world/clans/clans.json").
-            readJSONObject("clanList", &clanList);
+        loadJSON(g_worldPath ~ "/world/clans/clans.json")["clanList"].unJSON(clanList);
 
         foreach(clanId ; clanList) {
             Clan clan = Gaia();

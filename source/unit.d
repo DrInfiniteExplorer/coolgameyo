@@ -3,13 +3,13 @@ module unit;
 
 import std.exception;
 import std.stdio;
+import std.json : JSONValue;
 
 import changes.changelist;
 import changes.worldproxy;
 import clan;
 import clans;
 import inventory;
-import cgy.json;
 import mission;
 import cgy.util.pos;
 import cgy.stolen.aabbox3d;
@@ -97,20 +97,19 @@ final class Unit {
     }
 
 
-    Value toJSON() {
-        Value val = encode(unitData);
-        val.populateJSONObject("typeId", type.id,
-                               "clanId", clan.clanId);
+    JSONValue _toJSON() {
+        auto val = unitData.toJSON;
+        val["typeId"] = type.id;
+        val["clanId"] = clan.clanId;
         //Add ai
         return val;
     }
-    void fromJSON(Value val) {
+    void fromJSON(JSONValue val) {
         //msg(val);
-        val.read(unitData);
-        int typeId;
-        int clanId;
-        val.readJSONObject("typeId", &typeId,
-                           "clanId", &clanId);
+        unitData = val.fromJSON!(typeof(unitData));
+
+        int typeId = val["typeId"].fromJSON!int;
+        int clanId = val["clanId"].fromJSON!int;
 
         type = unitTypeManager.byID(cast(ushort)typeId);
         Clans().getClanById(clanId).addUnit(this);

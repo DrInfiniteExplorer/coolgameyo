@@ -76,8 +76,8 @@ __gshared LayerInformation g_ExtrusiveTypes;
 __gshared LayerInformation g_MetamorphicTypes;
 __gshared LayerInformation g_IntrusiveTypes;
 
-import cgy.json;
 import cgy.util.filesystem;
+import cgy.util.json;
 import std.path;
 
 shared static bool strataLoaded = false;
@@ -88,11 +88,12 @@ void loadStrataInfo() {
     }
     strataLoaded = true;
     try {
-        loadJSON("data/layers/soils.json").read(g_SoilTypes);
-        loadJSON("data/layers/sedimentary.json").read(g_SedimentaryTypes);
-        loadJSON("data/layers/extrusive.json").read(g_ExtrusiveTypes);
-        loadJSON("data/layers/metamorphic.json").read(g_MetamorphicTypes);
-        loadJSON("data/layers/intrusive.json").read(g_IntrusiveTypes);
+
+        loadJSON("data/layers/soils.json").unJSON(g_SoilTypes);
+        loadJSON("data/layers/sedimentary.json").unJSON(g_SedimentaryTypes);
+        loadJSON("data/layers/extrusive.json").unJSON(g_ExtrusiveTypes);
+        loadJSON("data/layers/metamorphic.json").unJSON(g_MetamorphicTypes);
+        loadJSON("data/layers/intrusive.json").unJSON(g_IntrusiveTypes);
     } catch(Exception e) {
         LogError("Exception loading layer information: ", e.msg);
     }

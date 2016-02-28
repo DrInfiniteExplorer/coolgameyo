@@ -1,6 +1,6 @@
 module entities.treelikeinstance;
 
-import cgy.json;
+
 
 __gshared int debugIdCounter = 0;
 __gshared bool drawDebugLines = true;

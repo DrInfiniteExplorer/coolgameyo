@@ -4,10 +4,10 @@ import std.algorithm;
 import std.array;
 import std.conv;
 import std.exception;
+import std.json : parseJSON;
 
 import changes.worldproxy : WorldProxy;
 import clans;
-import cgy.json;
 import unit;
 
 import game;
@@ -191,11 +191,11 @@ final class NormalClan : Clan {
         auto folder = g_worldPath ~ "/world/clans/" ~ to!string(clanId) ~"/";
         cgy.util.filesystem.mkdir(folder);
 
-        Value darp(Unit unit) {
-            return encode(unit);
+        JSONValue darp(Unit unit) {
+            return unit.toJSON;
         }
-        auto clanMembers = Value(array(map!darp(array(clanMembers))));
-        auto jsonString = cgy.json.prettifyJSON(clanMembers);
+        auto clanMembers = JSONValue(array(map!darp(array(clanMembers))));
+        auto jsonString = clanMembers.toString;
         std.file.write(folder ~ "members.json", jsonString);
 
     }
@@ -205,9 +205,9 @@ final class NormalClan : Clan {
         enforce(exists(folder), "Folder does not exist!" ~ folder);
 
         auto content = readText(folder ~ "members.json");
-        auto members = cgy.json.parse(content);
+        auto members = content.parseJSON;
 
-        foreach (unitVal ; members.elements) {
+        foreach (size_t idx, JSONValue unitVal ; members) {
             Unit unit = new Unit(0);
             unit.fromJSON(unitVal);
             addUnit(unit);

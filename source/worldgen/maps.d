@@ -15,7 +15,6 @@ import std.stdio;
 
 //import worldgen.newgen;
 
-import cgy.json;
 import graphics.image;
 
 import materials;
@@ -132,7 +131,7 @@ final class WorldMap {
             //BREAKPOINT;
         }
         mkdir(worldPath);
-        makeJSONObject("worldSeed", worldSeed).saveJSON(worldPath ~ "/seed.json");
+        std.file.write(worldPath ~ "/seed.json", JSONValue(["worldSeed" : worldSeed.toJSON]).toString);
 
         stratas = generateStratas(strataSeed);
         sortedStratas = assumeSorted!"a.depthStart < b.depthStart"(stratas);
@@ -150,8 +149,8 @@ final class WorldMap {
     void loadWorld(string path) {
         enforce(existsDir(path), "A world does not exist at: " ~ path);
         worldPath = path ~ "/map";
-        loadJSON(worldPath ~ "/seed.json").
-            readJSONObject("worldSeed", &worldSeed);
+        worldSeed = std.file.readText(worldPath ~ "/seed.json").parseJSON["worldSeed"].fromJSON!(typeof(worldSeed));
+
         setSeeds();
         stratas = generateStratas(strataSeed);
         sortedStratas = assumeSorted!"a.depthStart < b.depthStart"(stratas);

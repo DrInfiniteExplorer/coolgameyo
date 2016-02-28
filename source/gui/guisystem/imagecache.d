@@ -1,12 +1,16 @@
 module gui.guisystem.imagecache;
 
-import cgy.json;
+import std.json : JSONValue, parseJSON;
+import painlessjson : fromJSON;
+
+
 import graphics.image : Image;
 import graphics.ogl;
 import cgy.math.vector;
 import cgy.debug_.debug_ : BREAK_IF;
 import cgy.opengl.textures;
 import cgy.opengl.error : glError;
+import cgy.util.json : loadJSON;
 
 
 final class ImageCache {
@@ -69,18 +73,20 @@ final class ImageCache {
     }
 
     void loadImageDefinitions(string path) {
-        auto rootValue = loadJSON(path);
-        foreach(value ; rootValue.asArray) {
+        auto rootValue = path.loadJSON;
+        
+        foreach(size_t idx, JSONValue value ; rootValue) {
             string imgPath;
             string name;
             string wrapMode = "clamp";
             vec2i origin = vec2i(0,0);
             vec2i size = vec2i(0,0);
-            value.readJSONObject("path", &imgPath,
-                                 "name", &name,
-                                 "wrap", &wrapMode,
-                                 "origin", &origin,
-                                 "size", &size);
+            imgPath = value["path"].str;
+            name = value["name"].str;
+            wrapMode = value["wrap"].str;
+            origin = value["origin"].fromJSON!vec2i;
+            size = value["size"].fromJSON!vec2i;
+
             loadImage(imgPath, name, wrapMode, origin, size);
         }
     }
