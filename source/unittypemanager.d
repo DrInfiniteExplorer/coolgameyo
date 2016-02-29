@@ -6,7 +6,6 @@ import std.file;
 
 import graphics.texture;
 
-import cgy.json;
 import globals : g_worldPath;
 import cgy.util.statistics;
 import cgy.util.singleton; 
@@ -50,52 +49,52 @@ struct UnitTypeManager {
         mixin(LogTime!("UnitTypeManagerCreation"));
 		
         // Loads the unit type id configuration
-        Value idRootVal;
-        bool hasTypeIdConfFile = loadJSON(g_worldPath ~ "/unittypeidconfiguration.json", idRootVal);
-		
-		if(!std.file.exists("data/unit_types.json")){
-			msg("Could not load unit types");
-			return;
-		}
-		auto content = readText("data/unit_types.json");
-		auto rootVal = cgy.json.parse(content);
-		enforce(rootVal.type == cgy.json.Value.Type.object, "rootval in unittypejson not object roawoaowoawo: " ~ to!string(rootVal.type));
-		foreach(name, rsVal ; rootVal.asObject) {
-            UnitType_t tempType;
-			rsVal.read(tempType.serializableSettings);
-			
-			tempType.name = name;
-            if ( hasTypeIdConfFile == true && tempType.name in idRootVal) {
-                ushort id;
-                idRootVal[tempType.name].read(id);
-			    add(tempType, id, true);
-            }
-            else {
-                add(tempType);
-            }
-		}
-
-        /*
-        // This should be done with some fancy json function...
-        // Saves the unit type id configuration
-        string jsonString = "{\n";
-        for (int i = 0; i < types.length; i++) {
-            jsonString ~= "\"";
-            jsonString ~= types[i].name;
-            jsonString ~= "\":";
-            jsonString ~= to!string(types[i].id);
-            jsonString ~= ",\n";
-        }
-        jsonString~="}";
-        util.filesystem.mkdir(g_worldPath ~ "");
-        std.file.write(g_worldPath ~ "/unittypeidconfiguration.json", jsonString);
-        */
-        cgy.util.filesystem.mkdir(g_worldPath ~ "");
-        ushort[string] typeAA;
-        foreach(type ; types) {
-            typeAA[type.name] = type.id;
-        }
-        encode(typeAA).saveJSON(g_worldPath ~ "/unittypeidconfiguration.json");
+        //JSONValue idRootVal;
+        //bool hasTypeIdConfFile = loadJSON(g_worldPath ~ "/unittypeidconfiguration.json", idRootVal);
+		//
+		//if(!std.file.exists("data/unit_types.json")){
+		//	msg("Could not load unit types");
+		//	return;
+		//}
+		//auto content = readText("data/unit_types.json");
+		//auto rootVal = cgy.json.parse(content);
+		//enforce(rootVal.type == cgy.json.Value.Type.object, "rootval in unittypejson not object roawoaowoawo: " ~ to!string(rootVal.type));
+		//foreach(name, rsVal ; rootVal.asObject) {
+        //    UnitType_t tempType;
+		//	rsVal.read(tempType.serializableSettings);
+		//	
+		//	tempType.name = name;
+        //    if ( hasTypeIdConfFile == true && tempType.name in idRootVal) {
+        //        ushort id;
+        //        idRootVal[tempType.name].read(id);
+		//	    add(tempType, id, true);
+        //    }
+        //    else {
+        //        add(tempType);
+        //    }
+		//}
+        //
+        ///*
+        //// This should be done with some fancy json function...
+        //// Saves the unit type id configuration
+        //string jsonString = "{\n";
+        //for (int i = 0; i < types.length; i++) {
+        //    jsonString ~= "\"";
+        //    jsonString ~= types[i].name;
+        //    jsonString ~= "\":";
+        //    jsonString ~= to!string(types[i].id);
+        //    jsonString ~= ",\n";
+        //}
+        //jsonString~="}";
+        //util.filesystem.mkdir(g_worldPath ~ "");
+        //std.file.write(g_worldPath ~ "/unittypeidconfiguration.json", jsonString);
+        //*/
+        //cgy.util.filesystem.mkdir(g_worldPath ~ "");
+        //ushort[string] typeAA;
+        //foreach(type ; types) {
+        //    typeAA[type.name] = type.id;
+        //}
+        //encode(typeAA).saveJSON(g_worldPath ~ "/unittypeidconfiguration.json");
     }
 
     UnitType byID(ushort id) {

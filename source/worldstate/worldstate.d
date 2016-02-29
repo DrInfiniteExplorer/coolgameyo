@@ -11,6 +11,7 @@ import std.range;
 import std.stdio;
 import std.typecons;
 
+import painlessjson : toJSON;
 
 import changes.worldproxy;
 import clan;
@@ -22,7 +23,6 @@ import gaia;
 import graphics.camera;
 import graphics.debugging;
 
-import cgy.json;
 import light;
 
 import globals : g_isServer;
@@ -137,29 +137,27 @@ class WorldState {
     void serialize() { 
         //TODO: Totally redo serialization.
 
-        auto activeSectors = encode(activeSectors);
-        auto jsonRoot = Value([
-                "activeSectors" : activeSectors,
-                "g_UnitCount" : encode(g_UnitCount),
-                "g_entityCount" : encode(g_entityCount),
-                "g_ClanCount" : encode(g_ClanCount),
-                ]);
-
-        serializeFloodfill(jsonRoot);
-
-        auto jsonString = cgy.json.prettifyJSON(jsonRoot);
-        cgy.util.filesystem.mkdir(g_worldPath ~ "/world/");
-        std.file.write(g_worldPath ~ "/world/world.json", jsonString);
-
-        Clans().serializeClans();
-
-
-        foreach(xy, sectorXY ; sectorsXY) {
-            serializeHeightmap(xy, &sectorXY);
-            foreach(sector ; sectorXY.sectors) {
-                sector.serialize();
-            }
-        }
+        //auto jsonRoot = JSONValue([
+        //        "g_UnitCount" : g_UnitCount.toJSON,
+        //        "g_entityCount" : g_entityCount.toJSON,
+        //        "g_ClanCount" : g_ClanCount.toJSON,
+        //        ]);
+        //
+        ////serializeFloodfill(jsonRoot);
+        //
+        //auto jsonString = cgy.json.prettifyJSON(jsonRoot);
+        //cgy.util.filesystem.mkdir(g_worldPath ~ "/world/");
+        //std.file.write(g_worldPath ~ "/world/world.json", jsonString);
+        //
+        //Clans().serializeClans();
+        //
+        //
+        //foreach(xy, sectorXY ; sectorsXY) {
+        //    serializeHeightmap(xy, &sectorXY);
+        //    foreach(sector ; sectorXY.sectors) {
+        //        sector.serialize();
+        //    }
+        //}
 
     }
 
@@ -172,33 +170,33 @@ class WorldState {
     }
 
     void deserialize() {
-        //TODO: Totally redo serialization.
-        //worldGen.deserialize();
-
-        if(!exists(g_worldPath ~ "/world/world.json")) {
-            return; // Nothing to deserialize
-        }
-        auto content = readText(g_worldPath ~ "/world/world.json");
-        auto jsonRoot = cgy.json.parse(content);
-        uint activeUnitId;
-
-        deserializeFloodfill(jsonRoot);
-        jsonRoot.readJSONObject(
-                                "activeSectors",    &activeSectors,
-                                "g_UnitCount",      &g_UnitCount,
-                                "g_entityCount",    &g_entityCount,
-                                "g_ClanCount",      &g_ClanCount);
-
-        Clans().deserializeClans();
-
-        foreach(sectorNum, clanCount ; activeSectors) {
-            if(getSector(sectorNum) !is null) continue; //Means the sector is already loaded.
-            if(!clanCount) {
-                msg("Error, nonexistent clancount for sector, ignoring. ", sectorNum);
-            } else {
-                loadSector(sectorNum);
-            }
-        }
+        ////TODO: Totally redo serialization.
+        ////worldGen.deserialize();
+        //
+        //if(!exists(g_worldPath ~ "/world/world.json")) {
+        //    return; // Nothing to deserialize
+        //}
+        //auto content = readText(g_worldPath ~ "/world/world.json");
+        //auto jsonRoot = content.parseJSON;
+        //uint activeUnitId;
+        //
+        //deserializeFloodfill(jsonRoot);
+        //jsonRoot.readJSONObject(
+        //                        "activeSectors",    &activeSectors,
+        //                        "g_UnitCount",      &g_UnitCount,
+        //                        "g_entityCount",    &g_entityCount,
+        //                        "g_ClanCount",      &g_ClanCount);
+        //
+        //Clans().deserializeClans();
+        //
+        //foreach(sectorNum, clanCount ; activeSectors) {
+        //    if(getSector(sectorNum) !is null) continue; //Means the sector is already loaded.
+        //    if(!clanCount) {
+        //        msg("Error, nonexistent clancount for sector, ignoring. ", sectorNum);
+        //    } else {
+        //        loadSector(sectorNum);
+        //    }
+        //}
 
     }
 

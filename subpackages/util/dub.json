@@ -5,7 +5,10 @@
 	"authors": ["Luben"],
     "targetType":"library",
 	"dependencies":{
-		"coolgameyo:json":"*",
+        "gl3n": "~>1.3.1",
+		"coolgameyo:debug":"*",
+		"coolgameyo:logger":"*",
+        "painlessjson": "~>1.3.6",		
 		"coolgameyo:math":"*",
 		"coolgameyo:windows":"*",
 	}

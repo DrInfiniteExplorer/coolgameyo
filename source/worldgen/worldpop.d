@@ -67,6 +67,10 @@ immutable roadFragShader = q{
 
 mixin template WorldPopulation() {
 
+    import std.json : parseJSON;
+
+    import painlessjson : toJSON, fromJSON;
+
     import cgy.opengl.textures;
 
     import graphics.ogl;
@@ -186,34 +190,38 @@ mixin template WorldPopulation() {
         string roadPath = worldPath ~ "/roads";
         mkdir(roadPath);
 
-        Value serializeCity(City city) {
+        JSONValue serializeCity(City city) {
             int endpointId = cast(int)endpoints.countUntil(city.endpoint);
-            return makeJSONObject("pos", city.pos,
-                                  "closestCities", city.closestCities,
-                                  "endpointId", endpointId);
+            return JSONValue([
+                "pos" : city.pos.toJSON,
+                "closestCities" : city.closestCities.toJSON,
+                "endpointId" : endpointId.toJSON]);
         }
-        Value serializeEndpoint(Endpoint e) {
-            return makeJSONObject("pos", e.pos);
+        JSONValue serializeEndpoint(Endpoint e) {
+            return e.pos.toJSON;
         }
-        Value serializeRoad(Road r) {
+        JSONValue serializeRoad(Road r) {
             int a = cast(int)endpoints.countUntil(r.a);
             int b = cast(int)endpoints.countUntil(r.b);
-            return makeJSONObject("aabb", r.aabb,
-                                  "points", r.points,
-                                  "endpointA", a,
-                                  "endpointB", b);
-
+            return JSONValue([
+                "aabb" : r.aabb.toJSON,
+                "points" : r.points.toJSON,
+                "endpointA" : a.toJSON,
+                "endpointB" : b.toJSON
+            ]);
         }
 
-        auto val = makeJSONObject("cityCount", cities.length,
-                                  "endpointCount", endpoints.length,
-                                  "roadCount", roads.length);
+        auto val = JSONValue([
+            "cityCount" : cities.length,
+            "endpointCount" : endpoints.length,
+            "roadCount" : roads.length
+        ]);
 
-        val.populateJSONObject("cities", Value(array(map!serializeCity(cities))));
-        val.populateJSONObject("endpoints", Value(array(map!serializeEndpoint(endpoints))));
-        val.populateJSONObject("roads", Value(array(map!serializeRoad(roads))));
+        val["cities" ] = JSONValue(array(map!serializeCity(cities)));
+        val["endpoints"] = JSONValue(array(map!serializeEndpoint(endpoints)));
+        val["roads"] = JSONValue(array(map!serializeRoad(roads)));
 
-        val.saveJSON(roadPath ~ "/roads.json");
+        std.file.write(roadPath ~ "/roads.json", val.toString);
     }
 
     bool loadRoads() {
@@ -221,15 +229,17 @@ mixin template WorldPopulation() {
         if(!exists(roadPath)) {
             return false;
         }
-        auto value = loadJSON(roadPath);
-        int cityCount, endpointCount, roadCount;
-        Value cityVal, endpointVal, roadVal;
-        value.readJSONObject("cityCount", &cityCount,
-                             "endpointCount", &endpointCount,
-                             "roadCount", &roadCount,
-                             "cities", &cityVal,
-                             "endpoints", &endpointVal,
-                             "roads", &roadVal);
+        auto value = std.file.readText(roadPath).parseJSON;
+
+        long cityCount = value["cityCount"].integer;
+        long endpointCount = value["endpointCount"].integer;
+        long roadCount = value["roadCount"].integer;
+
+
+        auto cityVal = value["cities"];
+        auto endpointVal = value["endpoints"];
+        auto roadVal = value["roads"];
+
         cities.length = cityCount;
         endpoints.length = endpointCount;
         roads.length = roadCount;
@@ -243,29 +253,30 @@ mixin template WorldPopulation() {
             r = new Road(null, null);
         }
 
-        foreach(idx, val ; cityVal.asArray) {
+        foreach(size_t idx, JSONValue val ; cityVal) {
             City city = cities[idx];
-            int endpointId;
-            val.readJSONObject("pos", &city.pos,
-                               "closestCities", &city.closestCities,
-                               "endpointId", &endpointId);
+            long endpointId;
+            city.pos = val["pos"].fromJSON!(typeof(city.pos));
+            city.closestCities = val["closestCities"].fromJSON!(typeof(city.closestCities));
+            endpointId = val["endpointId"].integer;
+            
             city.endpoint = endpoints[endpointId];
             city.endpoint.city = city;
         }
-        foreach(idx, val ; endpointVal.asArray) {
+        foreach(size_t idx, JSONValue val ; endpointVal) {
             Endpoint endpoint = endpoints[idx];
-            val.readJSONObject("pos", &endpoint.pos);
+            endpoint.pos = val.fromJSON!vec2i;
         }
-        foreach(idx, val ; roadVal.asArray) {
+        foreach(size_t idx, JSONValue val ; roadVal) {
             Road road = roads[idx];
 
-            int endpointA, endpointB;
-            val.readJSONObject("endpointA", &endpointA,
-                               "endpointB", &endpointB);
+            long endpointA = val["endpointA"].integer;
+            long endpointB = val["endpointB"].integer;
+
             road.addEndpoint(endpoints[endpointA]);
             road.addEndpoint(endpoints[endpointB]);
-            val.readJSONObject("aabb", &road.aabb,
-                               "points", &road.points);
+            road.aabb = val["aabb"].fromJSON!(typeof(road.aabb));
+            road.points = val["points"].fromJSON!(typeof(road.points));
         }        
         return true;
     }

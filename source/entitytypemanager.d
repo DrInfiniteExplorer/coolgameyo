@@ -4,15 +4,19 @@ module entitytypemanager;
 import std.exception;
 import std.algorithm;
 import std.conv;
-import std.stdio;
 import std.file;
+import std.json : JSONValue;
+import std.stdio;
+
+import painlessjson;
+
 
 import graphics.texture;
 
 import cgy.debug_.debug_ : BREAKPOINT;
-import cgy.json;
 import globals : g_worldPath;
 import cgy.util.statistics;
+import cgy.util.json : unJSON, loadJSON;
 import cgy.math.vector : vec3d, vec3i;
 import worldstate.tile;
 
@@ -58,12 +62,6 @@ final class TreelikeType {
     string woodMaterial; // flytta till branches
 	string leafMaterial;
     BranchType[] branches;
-
-    void fromJSON(Value val) {
-        val.readJSONObject("woodMaterial", &woodMaterial,
-                           "leafMaterial", &leafMaterial,
-                           "branches", &branches);
-    }
 }
 
 
@@ -91,11 +89,6 @@ class EntityModelInfo {
     string name;
     string[] meshTextures;
     string skeletonName;//Skeleton family
-    void fromJSON(Value val) {
-        val.readJSONObject("name", &name,
-                           "skeletonName", &skeletonName,
-                           "meshTextures", &meshTextures);
-    }
 }
 
 
@@ -121,15 +114,15 @@ struct EntityType_t {
     bool hasModellike() const @property { return model !is null; }
 
 
-    void fromJSON(Value val) {
-        val.read(serializableSettings);
+    void _fromJSON(JSONValue val) {
+        val.unJSON(serializableSettings);
         if("treeable" in val) {
             treelikeType = new TreelikeType;
-            val.readJSONObject("treeable", &treelikeType);
+            val["treeable"].unJSON(treelikeType);
         }
         if("model" in val) {
             model = new EntityModelInfo;
-            val.readJSONObject("model", &model);
+            val["model"].unJSON(model);
         }
 
     }
@@ -154,57 +147,57 @@ struct EntityTypeManager {
     void init() {
         mixin(LogTime!("EntityTypeManagerCreation"));
 		
-        // Loads the entity type id configuration
-        Value idRootVal;
-        bool hasTypeIdConfFile = loadJSON(g_worldPath ~ "/entitytypeidconfiguration.json", idRootVal);
-
-		//EntityType tempType;
-		if(!std.file.exists("data/entity_types.json")){
-			msg("Could not load entity types");
-			return;
-		}
-		auto content = readText("data/entity_types.json");
-		auto rootVal = cgy.json.parse(content);
-		enforce(rootVal.type == cgy.json.Value.Type.object, "rootval in entitytypejson not object roawoaowoawo: " ~ to!string(rootVal.type));
-		foreach(name, rsVal ; rootVal.pairs) {
-            EntityType_t tempType; // is is le working if this is here lololooo.
-            // problem is tree gets light, shrubbery dont. neither should.
-            // build expansion then defense it
-            rsVal.read(tempType);
-
-			tempType.name = name;
-            if ( hasTypeIdConfFile == true && tempType.name in idRootVal) {
-                ushort id;
-                idRootVal[tempType.name].read(id);
-			    add(tempType, id, true);
-            }
-            else {
-                add(tempType);
-            }
-		}
-
-        /*
-        // This should be done with some fancy json function...
-        // Saves the entity type id configuration
-        string jsonString = "{\n";
-        for (int i = 0; i < types.length; i++) {
-            jsonString ~= "\"";
-            jsonString ~= types[i].name;
-            jsonString ~= "\":";
-            jsonString ~= to!string(types[i].id);
-            jsonString ~= ",\n";
-        }
-        jsonString~="}";
-        util.filesystem.mkdir(g_worldPath ~ "");
-        std.file.write(g_worldPath ~ "/entitytypeidconfiguration.json", jsonString);
-        */
-        cgy.util.filesystem.mkdir(g_worldPath ~ "");
-        ushort[string] typeAA;
-        foreach(type ; types) {
-            typeAA[type.name] = type.id;
-        }
-        encode(typeAA).saveJSON(g_worldPath ~ "/entitytypeidconfiguration.json");
-
+        //// Loads the entity type id configuration
+        //JSONValue idRootVal;
+        //idRootVal = loadJSON(g_worldPath ~ "/entitytypeidconfiguration.json");
+        //
+		////EntityType tempType;
+		//if(!std.file.exists("data/entity_types.json")){
+		//	msg("Could not load entity types");
+		//	return;
+		//}
+		//auto content = readText("data/entity_types.json");
+		//auto rootVal = content.parseJSON;
+		//enforce(rootVal.type == cgy.json.Value.Type.object, "rootval in entitytypejson not object roawoaowoawo: " ~ to!string(rootVal.type));
+		//foreach(name, rsVal ; rootVal.pairs) {
+        //    EntityType_t tempType; // is is le working if this is here lololooo.
+        //    // problem is tree gets light, shrubbery dont. neither should.
+        //    // build expansion then defense it
+        //    rsVal.read(tempType);
+        //
+		//	tempType.name = name;
+        //    if ( hasTypeIdConfFile == true && tempType.name in idRootVal) {
+        //        ushort id;
+        //        idRootVal[tempType.name].read(id);
+		//	    add(tempType, id, true);
+        //    }
+        //    else {
+        //        add(tempType);
+        //    }
+		//}
+        //
+        ///*
+        //// This should be done with some fancy json function...
+        //// Saves the entity type id configuration
+        //string jsonString = "{\n";
+        //for (int i = 0; i < types.length; i++) {
+        //    jsonString ~= "\"";
+        //    jsonString ~= types[i].name;
+        //    jsonString ~= "\":";
+        //    jsonString ~= to!string(types[i].id);
+        //    jsonString ~= ",\n";
+        //}
+        //jsonString~="}";
+        //util.filesystem.mkdir(g_worldPath ~ "");
+        //std.file.write(g_worldPath ~ "/entitytypeidconfiguration.json", jsonString);
+        //*/
+        //cgy.util.filesystem.mkdir(g_worldPath ~ "");
+        //ushort[string] typeAA;
+        //foreach(type ; types) {
+        //    typeAA[type.name] = type.id;
+        //}
+        //encode(typeAA).saveJSON(g_worldPath ~ "/entitytypeidconfiguration.json");
+        //
     }
 
     EntityType byId(uint id) {

@@ -7,7 +7,6 @@ import clan;
 import clans : Clans;
 import entities.entity;
 import inventory;
-import cgy.json;
 import cgy.util.pos;
 import unit;
 import unittypemanager : unitTypeManager;

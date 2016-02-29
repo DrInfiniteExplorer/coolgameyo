@@ -3,13 +3,14 @@ module cgy.util.rect;
 
 import std.conv;
 
-import cgy.math.vector;
+//import cgy.math.vector;
+import gl3n.linalg : Vector;
 
 //import cgy.util.util;
 
 
 struct Rect(T) {
-    alias vector2!T vec;
+    alias Vector!(T,2) vec;
     vec start;
     vec size;
     
@@ -29,7 +30,7 @@ struct Rect(T) {
             size.convert!To);
     }
         
-    bool isInside(vector2!T pos) {
+    bool isInside(Vector!(T,2) pos) {
         return !(pos.x < start.x ||
             pos.x > start.x+size.x ||
             pos.y < start.y ||

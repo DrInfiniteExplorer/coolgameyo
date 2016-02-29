@@ -8,11 +8,32 @@ immutable DegToRad = std.math.PI / 180.0;
 
 
 bool equals(T, Y)(T a, Y b, T tolerance = cast(T)0.000001) {
+    pragma(msg, "use gl3n func instead");
     return abs(a-b) <= tolerance;
 }
 
 
-import cgy.math.vector;
+//import cgy.math.vector;
+import gl3n.linalg : Vector;
+
+unittest {
+    import gl3n.linalg : vec3d, vec3i;
+    vec3d a = vec3d(0,1,2);
+    vec3i b = a.convert!int;
+}
+
+auto convert(RetType, SourceType, int Dim)(Vector!(SourceType, Dim) v)
+{
+    import std.conv : to;
+    import std.algorithm : map;
+    import gl3n.util : TupleRange;
+    Vector!(RetType, Dim) ret = void;
+    foreach(i; TupleRange!(0, Dim)) {
+        ret.vector[i] = cast(RetType)v.vector[i];
+    }
+    return ret;
+}
+
 
 int fastCeil(T)(T val) {
     int ret = cast(int)val;

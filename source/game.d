@@ -34,7 +34,6 @@ import graphics.tilegeometry;
 import graphics.tilerenderer;
 
 import heightsheets.heightsheets;
-import cgy.json;
 
 //import changes.changelist;
 import main;
@@ -52,8 +51,9 @@ import tiletypemanager;
 import playerinformation;
 import unittypemanager;
 import unit;
-import cgy.util.util;
 import cgy.util.filesystem;
+import cgy.util.json : fromJSON;
+import cgy.util.util;
 import worldstate.worldstate;
 import changes.worldproxy;
 import changes.changelist;
@@ -176,7 +176,7 @@ struct Game {
         return ret;
     }
     private void populateWorld() {
-        loadJSON(g_worldPath ~ "/start.json").readJSONObject("startPos", &spawnPoint);
+        loadJSON(g_worldPath ~ "/start.json")["startPos"].unJSON(spawnPoint);
 
 
         auto proxy = worldState._worldProxy;
@@ -251,9 +251,9 @@ struct Game {
         worldState.deserialize();
 
         if(exists(g_worldPath ~ "/game.json")) {
-            loadJSON(g_worldPath ~ "/game.json").readJSONObject(
-                "unitCount", &g_UnitCount,
-                "spawnPoint", &spawnPoint);
+            auto val = loadJSON(g_worldPath ~ "/game.json");
+            val["unitCount"].unJSON(g_UnitCount);
+            val["spawnPoint"].unJSON(spawnPoint);
         }
         if(!isServer) {
             auto top = worldState.getTopTilePos(TileXYPos(spawnPoint));
@@ -264,8 +264,10 @@ struct Game {
     }
 
     void serialize() {
-        makeJSONObject("unitCount", g_UnitCount,
-                       "spawnPoint", spawnPoint).saveJSON(g_worldPath ~ "/game.json");
+        auto val = JSONValue([
+            "unitCount" :  g_UnitCount.toJSON,
+            "spawnPoint" : spawnPoint.toJSON]);
+        std.file.write(g_worldPath ~ "/game.json", val.toString);
 
         worldState.serialize();
     }

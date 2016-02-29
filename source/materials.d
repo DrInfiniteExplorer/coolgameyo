@@ -2,9 +2,10 @@ module materials;
 
 import std.path;
 
+import painlessjson : toJSON;
 
-import cgy.json;
 import cgy.logger.log;
+import cgy.util.json : loadJSON, unJSON;
 import cgy.util.util : msg;
 import cgy.util.filesystem;
 import cgy.math.vector : vec3ub;
@@ -40,7 +41,7 @@ static void loadMaterial(string filename) {
     MaterialInformation mat;
     mat.dissolutionConstant = -1;
     mat.talusConstant = -1;
-    loadJSON(path).read(mat);
+    loadJSON(path).unJSON(mat);
     mat.name = name;
     mat.fancyName = mat.fancyName.idup; // Since strings loaded from json will ever never release the json file string D:
     mat.type = mat.type.idup;    
@@ -74,7 +75,7 @@ void saveMaterials() {
     mkdir("data/materials");
     foreach(mat ; g_materials) {
         auto path = "data/materials/" ~ mat.name ~ ".json";
-        encode(mat).saveJSON(path);
+        std.file.write(path, mat.toJSON.toString);
     }
 }
 

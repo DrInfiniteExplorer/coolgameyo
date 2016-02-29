@@ -3,7 +3,8 @@ module cgy.util.rangefromto;
 
 import std.stdio;
 
-import cgy.math.vector : vec2i, vec3i;
+//import cgy.math.vector : vec2i, vec3i;
+import gl3n.linalg : vec2i, vec3i;
 
 //import cgy.util.util;
 
