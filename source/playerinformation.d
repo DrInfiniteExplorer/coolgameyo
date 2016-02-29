@@ -3,7 +3,7 @@ module playerinformation;
 import std.socket;
 import unit;
 import cgy.util.util;
-import log;
+import cgy.logger.log;
 
 final class PlayerInformation {
     string name;

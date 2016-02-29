@@ -4,7 +4,7 @@ module worldgen.strata;
 import std.algorithm : min, max, clamp;
 import std.math : abs;
 
-import log;
+import cgy.logger.log;
 import random.gradientnoise;
 import random.simplex;
 import random.valuesource;

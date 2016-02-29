@@ -1,5 +1,5 @@
 
-module stolen.all;
+module cgy.stolen.all;
 
 public import cgy.stolen.aabbox3d;
 public import cgy.stolen.line2d;

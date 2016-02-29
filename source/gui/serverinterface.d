@@ -8,7 +8,7 @@ import globals : g_worldPath;
 import gui.all;
 import gui.debuginfo;
 
-import log;
+import cgy.logger.log;
 import main : EventAndDrawLoop;
 import cgy.util.filesystem;
 import cgy.util.rect;

@@ -5,7 +5,7 @@ import std.random : unpredictableSeed;
 import std.socket;
 
 
-import log : Log;
+import cgy.logger.log : Log;
 import modules.module_;
 
 import cgy.util.socket : readLine, tcpSendDir;

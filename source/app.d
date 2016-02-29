@@ -37,7 +37,7 @@ import gui.printscreenmenu;
 import gui.random.randommenu;
 import graphics.heightmap;
 import gui.serverinterface;
-import log;
+import cgy.logger.log;
 
 import materials;
 

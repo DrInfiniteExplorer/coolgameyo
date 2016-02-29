@@ -1,4 +1,4 @@
-module log;
+module cgy.logger.log;
 
 import std.stdio, std.conv;
 

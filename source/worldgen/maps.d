@@ -57,7 +57,7 @@ import worldgen.worldpop;
 import worldstate.worldstate;
 import worldstate.heightmap;
 
-import log : LogWarning;
+import cgy.logger.log : LogWarning;
 
 import globals;
 import graphics.image;
